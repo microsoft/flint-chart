@@ -5,9 +5,12 @@ node_modules/
 
 # Build output
 dist/
+dist-compiler/
 build/
 *.tsbuildinfo
 .tsup/
+.compiler-pack-staging/
+*.tgz
 
 # Test / coverage
 coverage/

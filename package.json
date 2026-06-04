@@ -87,7 +87,8 @@
     "release": "npm publish --access public",
     "site": "npm --prefix site run dev",
     "site:build": "npm --prefix site run build",
-    "mcp:build": "npm --prefix agents/mcp-server run build"
+    "mcp:build": "npm --prefix agents/mcp-server run build",
+    "pack:compiler": "node scripts/pack-compiler.mjs"
   },
   "peerDependencies": {
     "chart.js": "^4.0.0",

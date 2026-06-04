@@ -298,3 +298,42 @@ import {
    with a skeleton, channel list, and optional post-processor.
 6. **Backend-agnostic semantics** — the same semantic reasoning targets
    Vega-Lite, ECharts, and Chart.js through separate assembly functions.
+
+## Using as a standalone compiler package
+
+The Vega-Lite compilation pipeline (`assembleVegaLite` + core semantics) can be
+packaged independently as `@microsoft/flint-chart-compiler` for use in peer
+projects that only need spec generation without the full library.
+
+### Build the tarball
+
+```bash
+npm run pack:compiler
+# → produces microsoft-flint-chart-compiler-0.1.0.tgz
+```
+
+### Install in a sister repository
+
+```bash
+pnpm add ../flint-chart/microsoft-flint-chart-compiler-0.1.0.tgz
+```
+
+### Import
+
+```ts
+import { assembleVegaLite } from '@microsoft/flint-chart-compiler';
+import type { ChartAssemblyInput } from '@microsoft/flint-chart-compiler/core';
+
+const spec = assembleVegaLite(input);
+```
+
+The package exposes three subpath exports:
+
+| Import path | Contents |
+|-------------|----------|
+| `@microsoft/flint-chart-compiler` | All core + Vega-Lite exports |
+| `@microsoft/flint-chart-compiler/core` | Types, semantic types, layout, decisions |
+| `@microsoft/flint-chart-compiler/vegalite` | `assembleVegaLite`, templates, instantiation |
+
+Additional backends (`assembleECharts`, `assembleChartjs`) can be added to this
+package in the future without breaking existing consumers.

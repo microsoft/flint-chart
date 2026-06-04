@@ -1,0 +1,58 @@
+{
+  "name": "@microsoft/flint-chart-compiler",
+  "version": "0.1.0",
+  "description": "Compiles Flint chart specifications into Vega-Lite specs. Core compilation engine extracted from flint-chart.",
+  "keywords": [
+    "flint",
+    "visualization",
+    "charts",
+    "vega-lite",
+    "compiler",
+    "semantic-types"
+  ],
+  "license": "MIT",
+  "author": "Microsoft Corporation",
+  "homepage": "https://github.com/microsoft/flint-chart#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/flint-chart.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist-compiler/index.cjs",
+  "module": "./dist-compiler/index.js",
+  "types": "./dist-compiler/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist-compiler/index.d.ts",
+      "import": "./dist-compiler/index.js",
+      "require": "./dist-compiler/index.cjs"
+    },
+    "./core": {
+      "types": "./dist-compiler/core/index.d.ts",
+      "import": "./dist-compiler/core/index.js",
+      "require": "./dist-compiler/core/index.cjs"
+    },
+    "./vegalite": {
+      "types": "./dist-compiler/vegalite/index.d.ts",
+      "import": "./dist-compiler/vegalite/index.js",
+      "require": "./dist-compiler/vegalite/index.cjs"
+    }
+  },
+  "files": [
+    "dist-compiler",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "vega-lite": "^5.0.0 || ^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vega-lite": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
