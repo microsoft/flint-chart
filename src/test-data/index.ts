@@ -76,6 +76,15 @@ export type {
     GalleryPageRender,
     SingleRenderLibrary,
 } from './gallery-tree';
+export {
+    STATIC_SERIES_GALLERY_EXAMPLES,
+    STATIC_SERIES_LINE_BASIC,
+    STATIC_SERIES_LINE_THREE_KPIS,
+    STATIC_SERIES_LINE_MANY_SERIES,
+    STATIC_SERIES_DOTTED_LINE_STOCKS,
+    STATIC_SERIES_AREA_STACKED,
+    STATIC_SERIES_SCATTER,
+} from './static-series-tests';
 
 // ---------------------------------------------------------------------------
 // Master TEST_GENERATORS map
