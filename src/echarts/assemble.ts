@@ -71,6 +71,7 @@ import { DEFAULT_COLORS } from './templates/utils';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
 import { decideColorMaps } from '../core/color-decisions';
 import { getPaletteForScheme } from './colormap';
+import { normalizeStaticSeries } from '../core/static-series';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -92,8 +93,6 @@ import { getPaletteForScheme } from './colormap';
  */
 export function assembleECharts(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
-    const rawEncodings = input.chart_spec.encodings;
-    const data = input.data.values ?? [];
     const semanticTypes = input.semantic_types ?? {};
     const canvasSize = input.chart_spec.canvasSize ?? { width: 400, height: 320 };
     const chartProperties = input.chart_spec.chartProperties;
@@ -103,13 +102,23 @@ export function assembleECharts(input: ChartAssemblyInput): any {
         throw new Error(`Unknown ECharts chart type: ${chartType}. Use ecAllTemplateDefs to see available types.`);
     }
 
+    const warnings: ChartWarning[] = [];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRE-PHASE: Static Series Normalization
+    // ═══════════════════════════════════════════════════════════════════════
+    const rawData = input.data.values ?? [];
+    const normalized = normalizeStaticSeries(
+        input.chart_spec.encodings, rawData, semanticTypes,
+    );
+    const data = normalized.data;
+    const staticSeries = normalized.staticSeries;
+
     // Compose Category-B encoding-action overrides (stored by the host in
     // chartProperties, keyed by action key) onto the base encodings before any
     // pipeline phase runs. Flint owns the transform; the host only stores the
     // override value. See applyEncodingOverrides / EncodingActionDef.
-    const encodings = applyEncodingOverrides(chartTemplate, rawEncodings, chartProperties);
-
-    const warnings: ChartWarning[] = [];
+    const encodings = applyEncodingOverrides(chartTemplate, normalized.encodings, chartProperties);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (shared with VL — completely target-agnostic)
@@ -244,6 +253,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
         resolvedEncodings,
         encodings,
         chartProperties,
+        staticSeries,
         canvasSize,
         semanticTypes,
         chartType,

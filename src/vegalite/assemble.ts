@@ -61,6 +61,7 @@ import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions } from '../core/compute-layout';
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
+import { normalizeStaticSeries } from '../core/static-series';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -103,8 +104,6 @@ const escapeVlFieldName = (name: string): string =>
  */
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
-    const rawEncodings = input.chart_spec.encodings;
-    const data = input.data.values ?? [];
     const semanticTypes = input.semantic_types ?? {};
     const canvasSize = input.chart_spec.canvasSize ?? { width: 400, height: 320 };
     const chartProperties = input.chart_spec.chartProperties;
@@ -113,6 +112,19 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (!chartTemplate) {
         throw new Error(`Unknown chart type: ${chartType}`);
     }
+
+    const warnings: ChartWarning[] = [];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRE-PHASE: Static Series Normalization
+    // ═══════════════════════════════════════════════════════════════════════
+    // Detect array-valued encodings (static series), validate, and fold data.
+    const rawData = input.data.values ?? [];
+    const normalized = normalizeStaticSeries(
+        input.chart_spec.encodings, rawData, semanticTypes,
+    );
+    const data = normalized.data;
+    const staticSeries = normalized.staticSeries;
 
     // Compose Category-B encoding-action overrides (stored by the host in
     // chartProperties, keyed by action key) onto the base encodings before any
@@ -126,12 +138,12 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // the overrides onto the type-enriched encodings, then re-resolve semantics
     // on the result below (so that, e.g., a value-sort correctly suppresses the
     // field's canonical ordinal ordering).
-    const convertedData = convertTemporalData(data, semanticTypes);
+    const prelimConvertedData = convertTemporalData(data, semanticTypes);
     const prelimSemantics = resolveChannelSemantics(
-        rawEncodings, data, semanticTypes, convertedData,
+        normalized.encodings, data, semanticTypes, prelimConvertedData,
     );
     const typedRawEncodings: Record<string, ChartEncoding> = {};
-    for (const [ch, enc] of Object.entries(rawEncodings)) {
+    for (const [ch, enc] of Object.entries(normalized.encodings)) {
         typedRawEncodings[ch] = enc.type
             ? enc
             : { ...enc, type: prelimSemantics[ch]?.type };
@@ -153,14 +165,15 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     }
     const encodings = applyEncodingOverrides(chartTemplate, typedRawEncodings, chartProperties);
 
-    const warnings: ChartWarning[] = [];
-
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (VL-free)
     // ═══════════════════════════════════════════════════════════════════════
 
     const tplMark = chartTemplate.template?.mark;
     const templateMarkType = typeof tplMark === 'string' ? tplMark : tplMark?.type;
+
+    // Convert temporal data on the (possibly folded) dataset for Phase 0+
+    const convertedData = convertTemporalData(data, semanticTypes);
 
     const channelSemantics = resolveChannelSemantics(
         encodings, data, semanticTypes, convertedData,
@@ -359,7 +372,18 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     // --- Build VL encodings (abstract semantics → VL encoding objects) ---
 
-    const fieldDisplayNames = input.field_display_names;
+    // For static series, suppress the synthetic key column's axis title
+    // (show "Series" instead of "__flint_series_key") and map field names to display names
+    let fieldDisplayNames = input.field_display_names;
+    if (staticSeries) {
+        fieldDisplayNames = { ...fieldDisplayNames };
+        // Hide the synthetic key column name from the legend title
+        if (!fieldDisplayNames[staticSeries.keyColumn]) {
+            fieldDisplayNames[staticSeries.keyColumn] = 'Series';
+        }
+        // Map each series field name to its display name (if available) for legend labels
+        // This uses VL's labelExpr or scale domain in the encoding
+    }
 
     const resolvedEncodings = buildVLEncodings(
         encodings, channelSemantics, declaration, data,
@@ -423,6 +447,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         resolvedEncodings,
         encodings,
         chartProperties,
+        staticSeries,
         canvasSize,
         semanticTypes,
         chartType,

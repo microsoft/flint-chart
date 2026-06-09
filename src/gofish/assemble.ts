@@ -47,6 +47,7 @@ import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-se
 import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets } from '../core/compute-layout';
+import { normalizeStaticSeries } from '../core/static-series';
 
 // ---------------------------------------------------------------------------
 // GoFish Spec Type
@@ -335,8 +336,6 @@ function buildSpecDescription(gfDesc: any): string {
  */
 export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
     const chartType = input.chart_spec.chartType;
-    const rawEncodings = input.chart_spec.encodings;
-    const data = input.data.values ?? [];
     const semanticTypes = input.semantic_types ?? {};
     const canvasSize = input.chart_spec.canvasSize ?? { width: 400, height: 320 };
     const chartProperties = input.chart_spec.chartProperties;
@@ -346,13 +345,23 @@ export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
         throw new Error(`Unknown GoFish chart type: ${chartType}. Use gfAllTemplateDefs to see available types.`);
     }
 
+    const warnings: ChartWarning[] = [];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRE-PHASE: Static Series Normalization
+    // ═══════════════════════════════════════════════════════════════════════
+    const rawData = input.data.values ?? [];
+    const normalized = normalizeStaticSeries(
+        input.chart_spec.encodings, rawData, semanticTypes,
+    );
+    const data = normalized.data;
+    const staticSeries = normalized.staticSeries;
+
     // Compose Category-B encoding-action overrides (stored by the host in
     // chartProperties, keyed by action key) onto the base encodings before any
     // pipeline phase runs. Flint owns the transform; the host only stores the
     // override value. See applyEncodingOverrides / EncodingActionDef.
-    const encodings = applyEncodingOverrides(chartTemplate, rawEncodings, chartProperties);
-
-    const warnings: ChartWarning[] = [];
+    const encodings = applyEncodingOverrides(chartTemplate, normalized.encodings, chartProperties);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (shared with all backends)
@@ -454,6 +463,7 @@ export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
         resolvedEncodings,
         encodings,
         chartProperties,
+        staticSeries,
         canvasSize,
         semanticTypes,
         chartType,

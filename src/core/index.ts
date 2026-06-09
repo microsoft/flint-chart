@@ -17,6 +17,8 @@ export {
     channelGroups,
     type ChartAssemblyInput,
     type ChartEncoding,
+    type EncodingValue,
+    type StaticSeriesMetadata,
     type AssembleOptions,
     type ChartTemplateDef,
     type ChartWarning,
@@ -89,6 +91,12 @@ export {
 export { resolveChannelSemantics, convertTemporalData } from './resolve-semantics';
 export { filterOverflow } from './filter-overflow';
 export { computeLayout, computeChannelBudgets } from './compute-layout';
+export {
+    normalizeStaticSeries,
+    STATIC_SERIES_KEY_COLUMN,
+    STATIC_SERIES_VALUE_COLUMN,
+    type NormalizeStaticSeriesResult,
+} from './static-series';
 
 // Recommendation & adaptation engine
 export {

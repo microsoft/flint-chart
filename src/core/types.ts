@@ -48,6 +48,34 @@ export interface ChartEncoding {
     scheme?: string;
 }
 
+/**
+ * An encoding value that allows either a single encoding or an array of
+ * encodings (static series). Array form is only valid on measure channels
+ * (y, x-as-measure) where all fields resolve to quantitative.
+ *
+ * When an array is provided, the assembler folds (unpivots) the specified
+ * fields into a long-form representation with a synthesized key column
+ * (for color/legend) and value column (for the measure axis).
+ */
+export type EncodingValue = ChartEncoding | ChartEncoding[];
+
+/**
+ * Metadata produced by static series normalization.
+ * Captures the original multi-field intent so backends can emit
+ * appropriate legend labels and the pipeline can short-circuit
+ * series counting.
+ */
+export interface StaticSeriesMetadata {
+    /** Which channel had the array encoding ('y' or 'x') */
+    channel: string;
+    /** Original field names from the array entries */
+    fields: string[];
+    /** Synthetic column name for the series discriminator */
+    keyColumn: string;
+    /** Synthetic column name for the measure values */
+    valueColumn: string;
+}
+
 // ============================================================================
 // Phase 0: Semantic Resolution Types
 // ============================================================================
@@ -418,6 +446,9 @@ export interface InstantiateContext {
     /** User-configured chart properties */
     chartProperties?: Record<string, any>;
 
+    /** Static series metadata (present when input used array-valued encoding) */
+    staticSeries?: StaticSeriesMetadata;
+
     /** Target canvas dimensions */
     canvasSize: { width: number; height: number };
 
@@ -783,7 +814,7 @@ export interface ChartAssemblyInput {
         /** Template name, e.g. `"Scatter Plot"`, `"Bar Chart"` */
         chartType: string;
         /** Channel → encoding map (e.g., `{ x: { field: 'weight' }, y: { field: 'mpg' } }`) */
-        encodings: Record<string, ChartEncoding>;
+        encodings: Record<string, EncodingValue>;
         /** Target canvas size in pixels (default: `{ width: 400, height: 320 }`) */
         canvasSize?: { width: number; height: number };
         /** Template-specific configurable properties (e.g., bar corner radius, show labels) */
