@@ -46,6 +46,7 @@ import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-se
 import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets } from '../core/compute-layout';
+import { normalizeStaticSeries } from '../core/static-series';
 
 // ---------------------------------------------------------------------------
 // GoFish Spec Type
@@ -321,8 +322,6 @@ function buildSpecDescription(gfDesc: any): string {
  */
 export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
     const chartType = input.chart_spec.chartType;
-    const encodings = input.chart_spec.encodings;
-    const data = input.data.values ?? [];
     const semanticTypes = input.semantic_types ?? {};
     const canvasSize = input.chart_spec.canvasSize ?? { width: 400, height: 320 };
     const chartProperties = input.chart_spec.chartProperties;
@@ -333,6 +332,17 @@ export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
     }
 
     const warnings: ChartWarning[] = [];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRE-PHASE: Static Series Normalization
+    // ═══════════════════════════════════════════════════════════════════════
+    const rawData = input.data.values ?? [];
+    const normalized = normalizeStaticSeries(
+        input.chart_spec.encodings, rawData, semanticTypes,
+    );
+    const encodings = normalized.encodings;
+    const data = normalized.data;
+    const staticSeries = normalized.staticSeries;
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (shared with all backends)
@@ -433,6 +443,7 @@ export function assembleGoFish(input: ChartAssemblyInput): GoFishSpec {
         resolvedEncodings,
         encodings,
         chartProperties,
+        staticSeries,
         canvasSize,
         semanticTypes,
         chartType,

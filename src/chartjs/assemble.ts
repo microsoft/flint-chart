@@ -38,6 +38,7 @@ import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
 import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
+import { normalizeStaticSeries } from '../core/static-series';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -59,8 +60,6 @@ import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
  */
 export function assembleChartjs(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
-    const encodings = input.chart_spec.encodings;
-    const data = input.data.values ?? [];
     const semanticTypes = input.semantic_types ?? {};
     const canvasSize = input.chart_spec.canvasSize ?? { width: 400, height: 320 };
     const chartProperties = input.chart_spec.chartProperties;
@@ -71,6 +70,17 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     }
 
     const warnings: ChartWarning[] = [];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRE-PHASE: Static Series Normalization
+    // ═══════════════════════════════════════════════════════════════════════
+    const rawData = input.data.values ?? [];
+    const normalized = normalizeStaticSeries(
+        input.chart_spec.encodings, rawData, semanticTypes,
+    );
+    const encodings = normalized.encodings;
+    const data = normalized.data;
+    const staticSeries = normalized.staticSeries;
 
     // ═══════════════════════════════════════════════════════════════════════
     // PHASE 0: Resolve Semantics (shared with VL + EC — completely target-agnostic)
@@ -180,6 +190,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         resolvedEncodings,
         encodings,
         chartProperties,
+        staticSeries,
         canvasSize,
         semanticTypes,
         chartType,
