@@ -36,8 +36,10 @@ Use one of the registered names exactly. Common ones:
 `"Streamgraph"`, `"Sankey"`, `"Sunburst"`, `"Treemap"`,
 `"Funnel"`, `"Gauge"`.
 
-If unsure which name a backend supports, call `vlGetTemplateChannels`
-(or the equivalent for your backend).
+Not every backend supports every chart type. Vega-Lite has the broadest
+coverage; ECharts and Chart.js each support a subset. If unsure, call
+`vlGetTemplateChannels(name)` (or the equivalent for your backend) to
+check availability and see which channels are valid.
 
 ## Step 2 — map fields to channels
 
@@ -55,12 +57,14 @@ Channels: `x`, `y`, `x2`, `y2`, `color`, `size`, `shape`, `opacity`,
 
 You usually don't need `type`, `aggregate`, or `sortOrder` —
 they're inferred from the semantic type. Set them only when you
-have a specific intent.
+have a specific intent (e.g., forcing an aggregation the data doesn't
+naturally suggest).
 
 ## Step 3 — annotate with semantic types
 
-**This is the only step that matters for getting good defaults.** Pick
-the most specific semantic type for each field:
+**This is the most important step.** Semantic types drive all downstream
+decisions — formatting, zero baseline, color scheme, scale direction,
+and more. Pick the most specific type for each field:
 
 | Family | Semantic types |
 |---|---|
@@ -72,23 +76,26 @@ the most specific semantic type for each field:
 | Ratings / ranks | `Rank`, `Rating`, `Score` |
 | Physical | `Temperature`, `Distance`, `Weight`, `Speed`, `Pressure` |
 
-Effects of choosing well:
+What choosing well gets you (automatically):
 
-- `Price` / `Revenue` → currency formatting, zero baseline, sequential color.
-- `Temperature` → diverging color, no zero baseline.
-- `Rank` → reversed axis (1 on top), discrete color.
-- `Date` → temporal axis with auto-granularity.
+- `Price` / `Revenue` → currency formatting (`$,.0f`), zero baseline, sequential color
+- `Temperature` → diverging color scheme, no zero baseline
+- `Rank` → reversed axis (1 on top), discrete color
+- `Date` → temporal axis with auto-granularity formatting
+- `Percentage` → percent formatting (`.0%`), 0–100 domain awareness
 
 If you don't know, use `Quantity` for numbers, `Category` for strings,
 `Date` for date-shaped values.
 
-## Worked example
+## Worked examples
+
+### Scatter plot
 
 User: "Plot car weight vs fuel economy, colored by origin."
 
 ```json
 {
-  "data": { "values": [/* rows from user */] },
+  "data": { "values": [/* rows */] },
   "semantic_types": {
     "weight": "Quantity",
     "mpg": "Quantity",
@@ -106,21 +113,68 @@ User: "Plot car weight vs fuel economy, colored by origin."
 }
 ```
 
+### Revenue bar chart with facets
+
+User: "Show quarterly revenue by product line, one panel per region."
+
+```json
+{
+  "data": { "values": [/* rows */] },
+  "semantic_types": {
+    "quarter": "Quarter",
+    "revenue": "Revenue",
+    "product_line": "Category",
+    "region": "Region"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": { "field": "quarter" },
+      "y": { "field": "revenue" },
+      "color": { "field": "product_line" },
+      "column": { "field": "region" }
+    }
+  }
+}
+```
+
+### Time series
+
+User: "Line chart of daily temperature over the past year."
+
+```json
+{
+  "data": { "values": [/* rows */] },
+  "semantic_types": {
+    "date": "Date",
+    "temperature": "Temperature"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": { "field": "date" },
+      "y": { "field": "temperature" }
+    }
+  }
+}
+```
+
 ## What you should NOT do
 
-- Don't set Vega-Lite / ECharts / Chart.js properties directly — that
-  defeats the deterministic derivation. Edit the **input**, re-assemble.
-- Don't pass `type: "quantitative"` etc. unless the semantic type and
-  data conflict and you need to override.
-- Don't pass colors, font sizes, axis tick counts, etc. in the input —
-  the user can fine-tune the **output** spec for that.
-- Don't invent semantic type names. If none fit, use the family default
-  (`Quantity`, `Category`, `Date`).
+- **Don't write backend specs directly** — write the `ChartAssemblyInput`,
+  then call the assembler. That's the whole point.
+- **Don't set `type: "quantitative"` etc.** unless the semantic type and
+  data genuinely conflict and you need to override.
+- **Don't pass colors, font sizes, axis tick counts** in the input —
+  the compiler derives these. Users can fine-tune the *output* spec.
+- **Don't invent semantic type names.** If none of the ~70 types fit,
+  use the family default (`Quantity`, `Category`, `Date`).
 
-## Validation
+## Validation checklist
 
-Before returning, mentally verify:
+Before returning, verify:
 
-1. Every channel that has a `field` references a column actually in `data.values[0]`.
-2. Every field used in `encodings` is keyed in `semantic_types`.
-3. `chartType` is one of the supported names for the chosen backend.
+1. Every `field` in `encodings` references a column in `data.values[0]`.
+2. Every field used in `encodings` has an entry in `semantic_types`.
+3. `chartType` is a supported name for the chosen backend.
+4. No hand-tuned styling properties leaked into `chart_spec`.

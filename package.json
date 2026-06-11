@@ -4,7 +4,6 @@
   "description": "Flint — semantic chart compiler for AI agents (JS + Python)",
   "workspaces": [
     "packages/flint-js",
-    "agent-skills/*",
     "site"
   ],
   "scripts": {
@@ -19,8 +18,7 @@
     "lint:all": "npm run lint && npm run lint:py",
     "clean": "npm run clean -w packages/flint-js",
     "site": "npm run dev -w site",
-    "site:build": "npm run build -w site",
-    "mcp:build": "npm run build -w agent-skills/mcp-server"
+    "site:build": "npm run build -w site"
   },
   "engines": {
     "node": ">=18"

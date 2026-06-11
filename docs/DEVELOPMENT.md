@@ -54,10 +54,7 @@ flint-chart/
 │   └── test-data/             JSON test fixtures shared across JS + Python
 ├── site/                      unified Vite+React demo (landing / gallery / editor routes)
 ├── agent-skills/
-│   ├── skills/                Copilot/Claude SKILL.md bundles
-│   ├── prompts/               standalone system prompts
-│   ├── instructions/          .instructions.md drop-ins
-│   └── mcp-server/            MCP server (TS, stdio transport)
+│   └── SKILL.md           Agent skill for AI-assisted charting
 ├── docs/                      architecture, planning, how-tos, HANDOFF
 ```
 

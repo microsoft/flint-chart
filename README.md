@@ -16,7 +16,7 @@ Available in **JavaScript/TypeScript** and **Python**.
 - **Demos:** [Site](https://microsoft.github.io/flint-chart/) — landing page, [gallery](https://microsoft.github.io/flint-chart/#/gallery), and [live editor](https://microsoft.github.io/flint-chart/#/editor) in one place.
 - **Architecture:** [docs/design-semantics.md](docs/design-semantics.md) · [docs/design-stretch-model.md](docs/design-stretch-model.md) · [docs/color-decisions-summary.md](docs/color-decisions-summary.md)
 - **For contributors:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) · [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
-- **For AI agents:** [agent-skills/skills/flint-chart-author/SKILL.md](agent-skills/skills/flint-chart-author/SKILL.md) · [agent-skills/mcp-server](agent-skills/mcp-server/)
+- **For AI agents:** [agent-skills/SKILL.md](agent-skills/SKILL.md)
 
 ```bash
 # JavaScript / TypeScript
@@ -36,7 +36,7 @@ pip install flint
 │       └── flint/         Vega-Lite backend
 ├── shared/
 │   └── test-data/     JSON test cases shared across both languages
-├── agent-skills/                MCP server + agent skills
+├── agent-skills/              Agent skill (SKILL.md) for AI-assisted charting
 ├── site/                  Documentation website
 └── docs/                  Design documents
 ```
@@ -166,10 +166,7 @@ shared/test-data/         ← JSON fixtures shared across JS + Python
 site/                     ← unified Vite+React demo (landing / gallery / editor routes)
 
 agent-skills/
-  skills/                 ← Copilot/Claude SKILL.md bundles
-  prompts/                ← standalone system prompts
-  instructions/           ← .instructions.md drop-ins
-  mcp-server/             ← MCP server exposing flint-chart as agent tools
+  SKILL.md              ← agent skill for authoring ChartAssemblyInput
 ```
 
 ### Type resolution pipeline
