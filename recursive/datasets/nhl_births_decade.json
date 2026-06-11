@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "name": "nhl_births_decade",
+    "description": "NHL player births by decade for top 5 countries",
+    "source": "tidytuesday/2024-01-09/nhl_player_births.csv",
+    "transformation": "Derive decade from birth year, count by decade+country for top 5 countries. 1960+.",
+    "num_rows": 25,
+    "columns": {
+      "decade": "int32",
+      "birth_country": "str",
+      "count": "int64"
+    }
+  },
+  "data": [
+    {
+      "decade": 1960,
+      "birth_country": "CAN",
+      "count": 903
+    },
+    {
+      "decade": 1960,
+      "birth_country": "CZE",
+      "count": 25
+    },
+    {
+      "decade": 1960,
+      "birth_country": "RUS",
+      "count": 39
+    },
+    {
+      "decade": 1960,
+      "birth_country": "SWE",
+      "count": 42
+    },
+    {
+      "decade": 1960,
+      "birth_country": "USA",
+      "count": 214
+    },
+    {
+      "decade": 1970,
+      "birth_country": "CAN",
+      "count": 694
+    },
+    {
+      "decade": 1970,
+      "birth_country": "CZE",
+      "count": 88
+    },
+    {
+      "decade": 1970,
+      "birth_country": "RUS",
+      "count": 82
+    },
+    {
+      "decade": 1970,
+      "birth_country": "SWE",
+      "count": 70
+    },
+    {
+      "decade": 1970,
+      "birth_country": "USA",
+      "count": 213
+    },
+    {
+      "decade": 1980,
+      "birth_country": "CAN",
+      "count": 682
+    },
+    {
+      "decade": 1980,
+      "birth_country": "CZE",
+      "count": 66
+    },
+    {
+      "decade": 1980,
+      "birth_country": "RUS",
+      "count": 50
+    },
+    {
+      "decade": 1980,
+      "birth_country": "SWE",
+      "count": 69
+    },
+    {
+      "decade": 1980,
+      "birth_country": "USA",
+      "count": 314
+    },
+    {
+      "decade": 1990,
+      "birth_country": "CAN",
+      "count": 581
+    },
+    {
+      "decade": 1990,
+      "birth_country": "CZE",
+      "count": 58
+    },
+    {
+      "decade": 1990,
+      "birth_country": "RUS",
+      "count": 89
+    },
+    {
+      "decade": 1990,
+      "birth_country": "SWE",
+      "count": 149
+    },
+    {
+      "decade": 1990,
+      "birth_country": "USA",
+      "count": 381
+    },
+    {
+      "decade": 2000,
+      "birth_country": "CAN",
+      "count": 83
+    },
+    {
+      "decade": 2000,
+      "birth_country": "CZE",
+      "count": 8
+    },
+    {
+      "decade": 2000,
+      "birth_country": "RUS",
+      "count": 19
+    },
+    {
+      "decade": 2000,
+      "birth_country": "SWE",
+      "count": 26
+    },
+    {
+      "decade": 2000,
+      "birth_country": "USA",
+      "count": 51
+    }
+  ]
+}

@@ -1,0 +1,1089 @@
+{
+  "meta": {
+    "name": "drwho_episodes",
+    "description": "Doctor Who episode viewership and ratings",
+    "source": "tidytuesday/2023-11-28/drwho_episodes.csv",
+    "transformation": "Select viewership columns, drop NaN.",
+    "num_rows": 153,
+    "columns": {
+      "era": "str",
+      "season_number": "float64",
+      "episode_number": "float64",
+      "episode_title": "str",
+      "uk_viewers": "float64"
+    }
+  },
+  "data": [
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 1.0,
+      "episode_title": "Rose",
+      "uk_viewers": 10.81
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 2.0,
+      "episode_title": "The End of the World",
+      "uk_viewers": 7.97
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 3.0,
+      "episode_title": "The Unquiet Dead",
+      "uk_viewers": 8.86
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 4.0,
+      "episode_title": "Aliens of London",
+      "uk_viewers": 7.63
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 5.0,
+      "episode_title": "World War Three",
+      "uk_viewers": 7.98
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 6.0,
+      "episode_title": "Dalek",
+      "uk_viewers": 8.63
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 7.0,
+      "episode_title": "The Long Game",
+      "uk_viewers": 8.01
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 8.0,
+      "episode_title": "Father's Day",
+      "uk_viewers": 8.06
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 9.0,
+      "episode_title": "The Empty Child",
+      "uk_viewers": 7.11
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 10.0,
+      "episode_title": "The Doctor Dances",
+      "uk_viewers": 6.86
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 11.0,
+      "episode_title": "Boom Town",
+      "uk_viewers": 7.68
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 12.0,
+      "episode_title": "Bad Wolf",
+      "uk_viewers": 6.81
+    },
+    {
+      "era": "revived",
+      "season_number": 1.0,
+      "episode_number": 13.0,
+      "episode_title": "The Parting of the Ways",
+      "uk_viewers": 6.91
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 1.0,
+      "episode_title": "New Earth",
+      "uk_viewers": 8.62
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 2.0,
+      "episode_title": "Tooth and Claw",
+      "uk_viewers": 9.24
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 3.0,
+      "episode_title": "School Reunion",
+      "uk_viewers": 8.31
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 4.0,
+      "episode_title": "The Girl in the Fireplace",
+      "uk_viewers": 7.9
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 5.0,
+      "episode_title": "Rise of the Cybermen",
+      "uk_viewers": 9.22
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 6.0,
+      "episode_title": "The Age of Steel",
+      "uk_viewers": 7.63
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 7.0,
+      "episode_title": "The Idiot's Lantern",
+      "uk_viewers": 6.76
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 8.0,
+      "episode_title": "The Impossible Planet",
+      "uk_viewers": 6.32
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 9.0,
+      "episode_title": "The Satan Pit",
+      "uk_viewers": 6.08
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 10.0,
+      "episode_title": "Love & Monsters",
+      "uk_viewers": 6.66
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 11.0,
+      "episode_title": "Fear Her",
+      "uk_viewers": 7.14
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 12.0,
+      "episode_title": "Army of Ghosts",
+      "uk_viewers": 8.19
+    },
+    {
+      "era": "revived",
+      "season_number": 2.0,
+      "episode_number": 13.0,
+      "episode_title": "Doomsday",
+      "uk_viewers": 8.22
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 1.0,
+      "episode_title": "Smith and Jones",
+      "uk_viewers": 8.71
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 2.0,
+      "episode_title": "The Shakespeare Code",
+      "uk_viewers": 7.23
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 3.0,
+      "episode_title": "Gridlock",
+      "uk_viewers": 8.41
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 4.0,
+      "episode_title": "Daleks in Manhattan",
+      "uk_viewers": 6.69
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 5.0,
+      "episode_title": "Evolution of the Daleks",
+      "uk_viewers": 6.97
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 6.0,
+      "episode_title": "The Lazarus Experiment",
+      "uk_viewers": 7.19
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 7.0,
+      "episode_title": "42",
+      "uk_viewers": 7.41
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 8.0,
+      "episode_title": "Human Nature",
+      "uk_viewers": 7.74
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 9.0,
+      "episode_title": "The Family of Blood",
+      "uk_viewers": 7.21
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 10.0,
+      "episode_title": "Blink",
+      "uk_viewers": 6.62
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 11.0,
+      "episode_title": "Utopia",
+      "uk_viewers": 7.84
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 12.0,
+      "episode_title": "The Sound of Drums",
+      "uk_viewers": 7.51
+    },
+    {
+      "era": "revived",
+      "season_number": 3.0,
+      "episode_number": 13.0,
+      "episode_title": "Last of the Time Lords",
+      "uk_viewers": 8.61
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 1.0,
+      "episode_title": "Partners in Crime",
+      "uk_viewers": 9.14
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 2.0,
+      "episode_title": "The Fires of Pompeii",
+      "uk_viewers": 9.04
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 3.0,
+      "episode_title": "Planet of the Ood",
+      "uk_viewers": 7.5
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 4.0,
+      "episode_title": "The Sontaran Stratagem",
+      "uk_viewers": 7.06
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 5.0,
+      "episode_title": "The Poison Sky",
+      "uk_viewers": 6.53
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 6.0,
+      "episode_title": "The Doctor's Daughter",
+      "uk_viewers": 7.33
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 7.0,
+      "episode_title": "The Unicorn and the Wasp",
+      "uk_viewers": 8.41
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 8.0,
+      "episode_title": "Silence in the Library",
+      "uk_viewers": 6.27
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 9.0,
+      "episode_title": "Forest of the Dead",
+      "uk_viewers": 7.84
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 10.0,
+      "episode_title": "Midnight",
+      "uk_viewers": 8.05
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 11.0,
+      "episode_title": "Turn Left",
+      "uk_viewers": 8.09
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 12.0,
+      "episode_title": "The Stolen Earth",
+      "uk_viewers": 8.78
+    },
+    {
+      "era": "revived",
+      "season_number": 4.0,
+      "episode_number": 13.0,
+      "episode_title": "Journey's End",
+      "uk_viewers": 10.57
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 1.0,
+      "episode_title": "The Eleventh Hour",
+      "uk_viewers": 10.09
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 2.0,
+      "episode_title": "The Beast Below",
+      "uk_viewers": 8.42
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 3.0,
+      "episode_title": "Victory of the Daleks",
+      "uk_viewers": 8.21
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 4.0,
+      "episode_title": "The Time of Angels",
+      "uk_viewers": 8.59
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 5.0,
+      "episode_title": "Flesh and Stone",
+      "uk_viewers": 8.5
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 6.0,
+      "episode_title": "The Vampires of Venice",
+      "uk_viewers": 7.68
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 7.0,
+      "episode_title": "Amy's Choice",
+      "uk_viewers": 7.55
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 8.0,
+      "episode_title": "The Hungry Earth",
+      "uk_viewers": 6.49
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 9.0,
+      "episode_title": "Cold Blood",
+      "uk_viewers": 7.49
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 10.0,
+      "episode_title": "Vincent and the Doctor",
+      "uk_viewers": 6.76
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 11.0,
+      "episode_title": "The Lodger",
+      "uk_viewers": 6.44
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 12.0,
+      "episode_title": "The Pandorica Opens",
+      "uk_viewers": 7.57
+    },
+    {
+      "era": "revived",
+      "season_number": 5.0,
+      "episode_number": 13.0,
+      "episode_title": "The Big Bang",
+      "uk_viewers": 6.7
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 1.0,
+      "episode_title": "The Impossible Astronaut",
+      "uk_viewers": 8.86
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 2.0,
+      "episode_title": "Day of the Moon",
+      "uk_viewers": 7.3
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 3.0,
+      "episode_title": "The Curse of the Black Spot",
+      "uk_viewers": 7.85
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 4.0,
+      "episode_title": "The Doctor's Wife",
+      "uk_viewers": 7.97
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 5.0,
+      "episode_title": "The Rebel Flesh",
+      "uk_viewers": 7.35
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 6.0,
+      "episode_title": "The Almost People",
+      "uk_viewers": 6.72
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 7.0,
+      "episode_title": "A Good Man Goes to War",
+      "uk_viewers": 7.51
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 8.0,
+      "episode_title": "Let's Kill Hitler",
+      "uk_viewers": 8.1
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 9.0,
+      "episode_title": "Night Terrors",
+      "uk_viewers": 7.07
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 10.0,
+      "episode_title": "The Girl Who Waited",
+      "uk_viewers": 7.6
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 11.0,
+      "episode_title": "The God Complex",
+      "uk_viewers": 6.77
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 12.0,
+      "episode_title": "Closing Time",
+      "uk_viewers": 6.93
+    },
+    {
+      "era": "revived",
+      "season_number": 6.0,
+      "episode_number": 13.0,
+      "episode_title": "The Wedding of River Song",
+      "uk_viewers": 7.67
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 1.0,
+      "episode_title": "Asylum of the Daleks",
+      "uk_viewers": 8.33
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 2.0,
+      "episode_title": "Dinosaurs on a Spaceship",
+      "uk_viewers": 7.57
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 3.0,
+      "episode_title": "A Town Called Mercy",
+      "uk_viewers": 8.42
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 4.0,
+      "episode_title": "The Power of Three",
+      "uk_viewers": 7.67
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 5.0,
+      "episode_title": "The Angels Take Manhattan",
+      "uk_viewers": 7.82
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 6.0,
+      "episode_title": "The Bells of Saint John",
+      "uk_viewers": 8.44
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 7.0,
+      "episode_title": "The Rings of Akhaten",
+      "uk_viewers": 7.45
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 8.0,
+      "episode_title": "Cold War",
+      "uk_viewers": 7.37
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 9.0,
+      "episode_title": "Hide",
+      "uk_viewers": 6.61
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 10.0,
+      "episode_title": "Journey to the Centre of the TARDIS",
+      "uk_viewers": 6.5
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 11.0,
+      "episode_title": "The Crimson Horror",
+      "uk_viewers": 6.47
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 12.0,
+      "episode_title": "Nightmare in Silver",
+      "uk_viewers": 6.64
+    },
+    {
+      "era": "revived",
+      "season_number": 7.0,
+      "episode_number": 13.0,
+      "episode_title": "The Name of the Doctor",
+      "uk_viewers": 7.45
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 1.0,
+      "episode_title": "Deep Breath",
+      "uk_viewers": 9.17
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 2.0,
+      "episode_title": "Into the Dalek",
+      "uk_viewers": 7.29
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 3.0,
+      "episode_title": "Robot of Sherwood",
+      "uk_viewers": 7.28
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 4.0,
+      "episode_title": "Listen",
+      "uk_viewers": 7.01
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 5.0,
+      "episode_title": "Time Heist",
+      "uk_viewers": 6.99
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 6.0,
+      "episode_title": "The Caretaker",
+      "uk_viewers": 6.82
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 7.0,
+      "episode_title": "Kill the Moon",
+      "uk_viewers": 6.91
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 8.0,
+      "episode_title": "Mummy on the Orient Express",
+      "uk_viewers": 7.11
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 9.0,
+      "episode_title": "Flatline",
+      "uk_viewers": 6.71
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 10.0,
+      "episode_title": "In the Forest of the Night",
+      "uk_viewers": 6.92
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 11.0,
+      "episode_title": "Dark Water",
+      "uk_viewers": 7.34
+    },
+    {
+      "era": "revived",
+      "season_number": 8.0,
+      "episode_number": 12.0,
+      "episode_title": "Death in Heaven",
+      "uk_viewers": 7.6
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 1.0,
+      "episode_title": "The Magician's Apprentice",
+      "uk_viewers": 6.54
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 2.0,
+      "episode_title": "The Witch's Familiar",
+      "uk_viewers": 5.71
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 3.0,
+      "episode_title": "Under the Lake",
+      "uk_viewers": 5.63
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 4.0,
+      "episode_title": "Before the Flood",
+      "uk_viewers": 6.05
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 5.0,
+      "episode_title": "The Girl Who Died",
+      "uk_viewers": 6.56
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 6.0,
+      "episode_title": "The Woman Who Lived",
+      "uk_viewers": 6.11
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 7.0,
+      "episode_title": "The Zygon Invasion",
+      "uk_viewers": 5.76
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 8.0,
+      "episode_title": "The Zygon Inversion",
+      "uk_viewers": 6.03
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 9.0,
+      "episode_title": "Sleep No More",
+      "uk_viewers": 5.61
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 10.0,
+      "episode_title": "Face the Raven",
+      "uk_viewers": 6.05
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 11.0,
+      "episode_title": "Heaven Sent",
+      "uk_viewers": 6.19
+    },
+    {
+      "era": "revived",
+      "season_number": 9.0,
+      "episode_number": 12.0,
+      "episode_title": "Hell Bent",
+      "uk_viewers": 6.17
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 1.0,
+      "episode_title": "The Pilot",
+      "uk_viewers": 6.68
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 2.0,
+      "episode_title": "Smile",
+      "uk_viewers": 5.98
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 3.0,
+      "episode_title": "Thin Ice",
+      "uk_viewers": 5.61
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 4.0,
+      "episode_title": "Knock Knock",
+      "uk_viewers": 5.73
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 5.0,
+      "episode_title": "Oxygen",
+      "uk_viewers": 5.27
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 6.0,
+      "episode_title": "Extremis",
+      "uk_viewers": 5.53
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 7.0,
+      "episode_title": "The Pyramid at the End of the World",
+      "uk_viewers": 5.79
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 8.0,
+      "episode_title": "The Lie of the Land",
+      "uk_viewers": 4.82
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 9.0,
+      "episode_title": "Empress of Mars",
+      "uk_viewers": 5.02
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 10.0,
+      "episode_title": "The Eaters of Light",
+      "uk_viewers": 4.73
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 11.0,
+      "episode_title": "World Enough and Time",
+      "uk_viewers": 5.0
+    },
+    {
+      "era": "revived",
+      "season_number": 10.0,
+      "episode_number": 12.0,
+      "episode_title": "The Doctor Falls",
+      "uk_viewers": 5.3
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 1.0,
+      "episode_title": "The Woman Who Fell to Earth",
+      "uk_viewers": 10.96
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 2.0,
+      "episode_title": "The Ghost Monument",
+      "uk_viewers": 9.0
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 3.0,
+      "episode_title": "Rosa",
+      "uk_viewers": 8.41
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 4.0,
+      "episode_title": "Arachnids in the UK",
+      "uk_viewers": 8.22
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 5.0,
+      "episode_title": "The Tsuranga Conundrum",
+      "uk_viewers": 7.76
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 6.0,
+      "episode_title": "Demons of the Punjab",
+      "uk_viewers": 7.48
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 7.0,
+      "episode_title": "Kerblam!",
+      "uk_viewers": 7.46
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 8.0,
+      "episode_title": "The Witchfinders",
+      "uk_viewers": 7.21
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 9.0,
+      "episode_title": "It Takes You Away",
+      "uk_viewers": 6.42
+    },
+    {
+      "era": "revived",
+      "season_number": 11.0,
+      "episode_number": 10.0,
+      "episode_title": "The Battle of Ranskoor Av Kolos",
+      "uk_viewers": 6.65
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 1.0,
+      "episode_title": "Spyfall, Part 1",
+      "uk_viewers": 6.89
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 2.0,
+      "episode_title": "Spyfall, Part 2",
+      "uk_viewers": 6.07
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 3.0,
+      "episode_title": "Orphan 55",
+      "uk_viewers": 5.38
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 4.0,
+      "episode_title": "Nikola Tesla's Night of Terror",
+      "uk_viewers": 5.2
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 5.0,
+      "episode_title": "Fugitive of the Judoon",
+      "uk_viewers": 5.57
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 6.0,
+      "episode_title": "Praxeus",
+      "uk_viewers": 5.22
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 7.0,
+      "episode_title": "Can You Hear Me?",
+      "uk_viewers": 4.9
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 8.0,
+      "episode_title": "The Haunting of Villa Diodati",
+      "uk_viewers": 5.07
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 9.0,
+      "episode_title": "Ascension of the Cybermen",
+      "uk_viewers": 4.99
+    },
+    {
+      "era": "revived",
+      "season_number": 12.0,
+      "episode_number": 10.0,
+      "episode_title": "The Timeless Children",
+      "uk_viewers": 4.69
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 1.0,
+      "episode_title": "The Halloween Apocalypse",
+      "uk_viewers": 5.81
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 2.0,
+      "episode_title": "War of the Sontarans",
+      "uk_viewers": 5.13
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 3.0,
+      "episode_title": "Once, Upon Time",
+      "uk_viewers": 4.7
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 4.0,
+      "episode_title": "Village of the Angels",
+      "uk_viewers": 4.57
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 5.0,
+      "episode_title": "Survivors of the Flux",
+      "uk_viewers": 4.83
+    },
+    {
+      "era": "revived",
+      "season_number": 13.0,
+      "episode_number": 6.0,
+      "episode_title": "The Vanquishers",
+      "uk_viewers": 4.64
+    }
+  ]
+}

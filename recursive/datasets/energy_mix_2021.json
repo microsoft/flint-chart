@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "name": "energy_mix_2021",
+    "description": "Energy mix (renewable/fossil/nuclear share) for large countries in 2021",
+    "source": "tidytuesday/2023-06-06/owid-energy.csv",
+    "transformation": "Filter to 2021, select energy share columns, top 30 countries by population>10M.",
+    "num_rows": 30,
+    "columns": {
+      "country": "str",
+      "year": "int64",
+      "renewables_share_energy": "float64",
+      "fossil_share_energy": "float64",
+      "nuclear_share_energy": "float64",
+      "population": "float64"
+    }
+  },
+  "data": [
+    {
+      "country": "Sweden",
+      "year": 2021,
+      "renewables_share_energy": 50.924,
+      "fossil_share_energy": 28.066,
+      "nuclear_share_energy": 21.01,
+      "population": 10467095.0
+    },
+    {
+      "country": "Brazil",
+      "year": 2021,
+      "renewables_share_energy": 46.22,
+      "fossil_share_energy": 52.722,
+      "nuclear_share_energy": 1.058,
+      "population": 214326224.0
+    },
+    {
+      "country": "South America",
+      "year": 2021,
+      "renewables_share_energy": 32.357,
+      "fossil_share_energy": 62.585,
+      "nuclear_share_energy": 0.932,
+      "population": 434254167.0
+    },
+    {
+      "country": "Canada",
+      "year": 2021,
+      "renewables_share_energy": 29.888,
+      "fossil_share_energy": 64.147,
+      "nuclear_share_energy": 5.965,
+      "population": 38155012.0
+    },
+    {
+      "country": "Vietnam",
+      "year": 2021,
+      "renewables_share_energy": 22.734,
+      "fossil_share_energy": 77.266,
+      "nuclear_share_energy": 0.0,
+      "population": 97468024.0
+    },
+    {
+      "country": "Spain",
+      "year": 2021,
+      "renewables_share_energy": 22.342,
+      "fossil_share_energy": 68.524,
+      "nuclear_share_energy": 9.134,
+      "population": 47486932.0
+    },
+    {
+      "country": "Germany",
+      "year": 2021,
+      "renewables_share_energy": 19.453,
+      "fossil_share_energy": 75.613,
+      "nuclear_share_energy": 4.934,
+      "population": 83408560.0
+    },
+    {
+      "country": "Greece",
+      "year": 2021,
+      "renewables_share_energy": 19.392,
+      "fossil_share_energy": 79.836,
+      "nuclear_share_energy": 0.0,
+      "population": 10445368.0
+    },
+    {
+      "country": "European Union (27)",
+      "year": 2021,
+      "renewables_share_energy": 18.568,
+      "fossil_share_energy": 70.422,
+      "nuclear_share_energy": 11.01,
+      "population": 445051201.0
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2021,
+      "renewables_share_energy": 17.947,
+      "fossil_share_energy": 76.278,
+      "nuclear_share_energy": 5.775,
+      "population": 67281040.0
+    },
+    {
+      "country": "Romania",
+      "year": 2021,
+      "renewables_share_energy": 17.481,
+      "fossil_share_energy": 74.139,
+      "nuclear_share_energy": 7.269,
+      "population": 19328558.0
+    },
+    {
+      "country": "Europe",
+      "year": 2021,
+      "renewables_share_energy": 15.236,
+      "fossil_share_energy": 74.744,
+      "nuclear_share_energy": 9.302,
+      "population": 746418539.0
+    },
+    {
+      "country": "China",
+      "year": 2021,
+      "renewables_share_energy": 14.946,
+      "fossil_share_energy": 82.717,
+      "nuclear_share_energy": 2.337,
+      "population": 1425893504.0
+    },
+    {
+      "country": "Upper-middle-income countries",
+      "year": 2021,
+      "renewables_share_energy": 14.183,
+      "fossil_share_energy": 82.696,
+      "nuclear_share_energy": 2.599,
+      "population": 2548718303.0
+    },
+    {
+      "country": "France",
+      "year": 2021,
+      "renewables_share_energy": 13.671,
+      "fossil_share_energy": 49.871,
+      "nuclear_share_energy": 36.457,
+      "population": 64531448.0
+    },
+    {
+      "country": "World",
+      "year": 2021,
+      "renewables_share_energy": 13.471,
+      "fossil_share_energy": 82.276,
+      "nuclear_share_energy": 4.253,
+      "population": 7909295104.0
+    },
+    {
+      "country": "Netherlands",
+      "year": 2021,
+      "renewables_share_energy": 12.374,
+      "fossil_share_energy": 86.631,
+      "nuclear_share_energy": 0.995,
+      "population": 17501696.0
+    },
+    {
+      "country": "High-income countries",
+      "year": 2021,
+      "renewables_share_energy": 12.305,
+      "fossil_share_energy": 79.591,
+      "nuclear_share_energy": 7.141,
+      "population": 1219584303.0
+    },
+    {
+      "country": "North America",
+      "year": 2021,
+      "renewables_share_energy": 11.456,
+      "fossil_share_energy": 79.979,
+      "nuclear_share_energy": 7.195,
+      "population": 597123384.0
+    },
+    {
+      "country": "Japan",
+      "year": 2021,
+      "renewables_share_energy": 11.429,
+      "fossil_share_energy": 85.344,
+      "nuclear_share_energy": 3.12,
+      "population": 124612528.0
+    },
+    {
+      "country": "Argentina",
+      "year": 2021,
+      "renewables_share_energy": 11.329,
+      "fossil_share_energy": 85.818,
+      "nuclear_share_energy": 2.853,
+      "population": 45276788.0
+    },
+    {
+      "country": "Asia",
+      "year": 2021,
+      "renewables_share_energy": 10.955,
+      "fossil_share_energy": 86.75,
+      "nuclear_share_energy": 2.073,
+      "population": 4693332132.0
+    },
+    {
+      "country": "United States",
+      "year": 2021,
+      "renewables_share_energy": 10.656,
+      "fossil_share_energy": 81.38,
+      "nuclear_share_energy": 7.964,
+      "population": 336997632.0
+    },
+    {
+      "country": "Pakistan",
+      "year": 2021,
+      "renewables_share_energy": 10.623,
+      "fossil_share_energy": 85.661,
+      "nuclear_share_energy": 3.716,
+      "population": 231402112.0
+    },
+    {
+      "country": "Mexico",
+      "year": 2021,
+      "renewables_share_energy": 10.515,
+      "fossil_share_energy": 87.898,
+      "nuclear_share_energy": 1.588,
+      "population": 126705136.0
+    },
+    {
+      "country": "Africa",
+      "year": 2021,
+      "renewables_share_energy": 9.556,
+      "fossil_share_energy": 89.954,
+      "nuclear_share_energy": 0.471,
+      "population": 1393676724.0
+    },
+    {
+      "country": "Belgium",
+      "year": 2021,
+      "renewables_share_energy": 9.336,
+      "fossil_share_energy": 73.893,
+      "nuclear_share_energy": 16.771,
+      "population": 11611416.0
+    },
+    {
+      "country": "India",
+      "year": 2021,
+      "renewables_share_energy": 9.311,
+      "fossil_share_energy": 89.569,
+      "nuclear_share_energy": 1.121,
+      "population": 1407563904.0
+    },
+    {
+      "country": "Poland",
+      "year": 2021,
+      "renewables_share_energy": 7.762,
+      "fossil_share_energy": 92.238,
+      "nuclear_share_energy": 0.0,
+      "population": 38307724.0
+    },
+    {
+      "country": "Lower-middle-income countries",
+      "year": 2021,
+      "renewables_share_energy": 7.671,
+      "fossil_share_energy": 90.122,
+      "nuclear_share_energy": 1.676,
+      "population": 3411037255.0
+    }
+  ]
+}

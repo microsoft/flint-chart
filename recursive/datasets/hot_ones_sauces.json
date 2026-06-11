@@ -1,0 +1,1217 @@
+{
+  "meta": {
+    "name": "hot_ones_sauces",
+    "description": "Hot Ones sauce Scoville ratings by season and position",
+    "source": "tidytuesday/2023-08-08/sauces.csv",
+    "transformation": "Used as-is (already clean and small).",
+    "num_rows": 200,
+    "columns": {
+      "season": "int64",
+      "sauce_number": "int64",
+      "sauce_name": "str",
+      "scoville": "int64"
+    }
+  },
+  "data": [
+    {
+      "season": 1,
+      "sauce_number": 1,
+      "sauce_name": "Texas Pete Original Hot Sauce",
+      "scoville": 747
+    },
+    {
+      "season": 1,
+      "sauce_number": 2,
+      "sauce_name": "Cholula Original Hot Sauce",
+      "scoville": 3600
+    },
+    {
+      "season": 1,
+      "sauce_number": 3,
+      "sauce_name": "El Yucateco Caribbean Hot Sauce \u2013 Chile Habanero",
+      "scoville": 5790
+    },
+    {
+      "season": 1,
+      "sauce_number": 4,
+      "sauce_name": "Lottie's Traditional Barbados Yellow Hot Pepper Sauce",
+      "scoville": 12000
+    },
+    {
+      "season": 1,
+      "sauce_number": 5,
+      "sauce_name": "Pain is Good \u2013 Louisiana Style",
+      "scoville": 13000
+    },
+    {
+      "season": 1,
+      "sauce_number": 6,
+      "sauce_name": "Pain 100%",
+      "scoville": 20600
+    },
+    {
+      "season": 1,
+      "sauce_number": 7,
+      "sauce_name": "Blair's Original Death Sauce with Chipotle",
+      "scoville": 30000
+    },
+    {
+      "season": 1,
+      "sauce_number": 8,
+      "sauce_name": "Dave's Gourmet Temporary Insanity",
+      "scoville": 57000
+    },
+    {
+      "season": 1,
+      "sauce_number": 9,
+      "sauce_name": "Dave's Gourmet Insanity Hot Sauce",
+      "scoville": 180000
+    },
+    {
+      "season": 1,
+      "sauce_number": 10,
+      "sauce_name": "Mad Dog 357",
+      "scoville": 357000
+    },
+    {
+      "season": 2,
+      "sauce_number": 1,
+      "sauce_name": "Sriracha",
+      "scoville": 2200
+    },
+    {
+      "season": 2,
+      "sauce_number": 2,
+      "sauce_name": "Tapat\u00edo",
+      "scoville": 3000
+    },
+    {
+      "season": 2,
+      "sauce_number": 3,
+      "sauce_name": "El Yucateco \u2013 Chile Habanero",
+      "scoville": 5790
+    },
+    {
+      "season": 2,
+      "sauce_number": 4,
+      "sauce_name": "Pain is Good \u2013 Louisiana Style",
+      "scoville": 13000
+    },
+    {
+      "season": 2,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Fiery Chipotle",
+      "scoville": 15600
+    },
+    {
+      "season": 2,
+      "sauce_number": 6,
+      "sauce_name": "High River \u2013 Rogue",
+      "scoville": 34000
+    },
+    {
+      "season": 2,
+      "sauce_number": 7,
+      "sauce_name": "Pain 100%",
+      "scoville": 40600
+    },
+    {
+      "season": 2,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 2,
+      "sauce_number": 9,
+      "sauce_name": "Mad Dog 357",
+      "scoville": 357000
+    },
+    {
+      "season": 2,
+      "sauce_number": 10,
+      "sauce_name": "Blair's Mega Death Sauce",
+      "scoville": 550000
+    },
+    {
+      "season": 3,
+      "sauce_number": 1,
+      "sauce_name": "Huy Fong Sriracha",
+      "scoville": 2200
+    },
+    {
+      "season": 3,
+      "sauce_number": 2,
+      "sauce_name": "Tabasco",
+      "scoville": 4000
+    },
+    {
+      "season": 3,
+      "sauce_number": 3,
+      "sauce_name": "El Yucateco Chile Habanero",
+      "scoville": 5790
+    },
+    {
+      "season": 3,
+      "sauce_number": 4,
+      "sauce_name": "Queen Majesty \u2013 Red Habanero and Black Coffee",
+      "scoville": 14000
+    },
+    {
+      "season": 3,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Fiery Chipotle",
+      "scoville": 15600
+    },
+    {
+      "season": 3,
+      "sauce_number": 6,
+      "sauce_name": "Bravado Spice Company \u2013 Ghost Pepper and Blueberry",
+      "scoville": 28000
+    },
+    {
+      "season": 3,
+      "sauce_number": 7,
+      "sauce_name": "Torchbearer Sauces \u2013 Zombie Apocalypse Sauce",
+      "scoville": 100000
+    },
+    {
+      "season": 3,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 3,
+      "sauce_number": 9,
+      "sauce_name": "Mad Dog 357",
+      "scoville": 357000
+    },
+    {
+      "season": 3,
+      "sauce_number": 10,
+      "sauce_name": "Blair's Mega Death Sauce",
+      "scoville": 550000
+    },
+    {
+      "season": 4,
+      "sauce_number": 1,
+      "sauce_name": "Valentina Black Label",
+      "scoville": 2100
+    },
+    {
+      "season": 4,
+      "sauce_number": 2,
+      "sauce_name": "Crystal",
+      "scoville": 3000
+    },
+    {
+      "season": 4,
+      "sauce_number": 3,
+      "sauce_name": "Secret Aardvark",
+      "scoville": 5000
+    },
+    {
+      "season": 4,
+      "sauce_number": 4,
+      "sauce_name": "Queen Majesty \u2013 Scotch Bonnet and Ginger",
+      "scoville": 9000
+    },
+    {
+      "season": 4,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Fiery Chipotle",
+      "scoville": 15600
+    },
+    {
+      "season": 4,
+      "sauce_number": 6,
+      "sauce_name": "Dirty Dicks",
+      "scoville": 21000
+    },
+    {
+      "season": 4,
+      "sauce_number": 7,
+      "sauce_name": "Zombie Apocalypse Ghost Chili Sauce",
+      "scoville": 100000
+    },
+    {
+      "season": 4,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 4,
+      "sauce_number": 9,
+      "sauce_name": "Blair's Mega Death Sauce",
+      "scoville": 550000
+    },
+    {
+      "season": 4,
+      "sauce_number": 10,
+      "sauce_name": "The Last Dab",
+      "scoville": 2000000
+    },
+    {
+      "season": 5,
+      "sauce_number": 1,
+      "sauce_name": "Humble House Ancho & Morita",
+      "scoville": 450
+    },
+    {
+      "season": 5,
+      "sauce_number": 2,
+      "sauce_name": "Original Louisiana Hot Sauce",
+      "scoville": 550
+    },
+    {
+      "season": 5,
+      "sauce_number": 3,
+      "sauce_name": "Small Axe Peppers \u2013 The Bronx Greenmarket Hot Sauce",
+      "scoville": 5500
+    },
+    {
+      "season": 5,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Fiery Chipotle",
+      "scoville": 15600
+    },
+    {
+      "season": 5,
+      "sauce_number": 5,
+      "sauce_name": "Adoboloco Hawaiian Hot Sauce Hamajang Kiawe Smoked Ghost Pepper",
+      "scoville": 32000
+    },
+    {
+      "season": 5,
+      "sauce_number": 6,
+      "sauce_name": "Karma Sauce Extreme Karma",
+      "scoville": 56000
+    },
+    {
+      "season": 5,
+      "sauce_number": 7,
+      "sauce_name": "Dawson's Original Hot Sauce",
+      "scoville": 82000
+    },
+    {
+      "season": 5,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 5,
+      "sauce_number": 9,
+      "sauce_name": "Mad Dog 357 \u2013 25th Anniversary Edition",
+      "scoville": 1000000
+    },
+    {
+      "season": 5,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab (Reaper Edition)",
+      "scoville": 2000000
+    },
+    {
+      "season": 6,
+      "sauce_number": 1,
+      "sauce_name": "Howler Monkey \u2013 Original",
+      "scoville": 600
+    },
+    {
+      "season": 6,
+      "sauce_number": 2,
+      "sauce_name": "Heartbeat Hot Sauce \u2013 Red Habanero",
+      "scoville": 4000
+    },
+    {
+      "season": 6,
+      "sauce_number": 3,
+      "sauce_name": "Pirate's Lantern \u2013 Pepper Sauce",
+      "scoville": 7500
+    },
+    {
+      "season": 6,
+      "sauce_number": 4,
+      "sauce_name": "Son of Zombie \u2013 Torchbearer",
+      "scoville": 24000
+    },
+    {
+      "season": 6,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 6,
+      "sauce_number": 6,
+      "sauce_name": "Bravado Spice Company \u2013 Black Garlic Carolina Reaper Sauce",
+      "scoville": 71000
+    },
+    {
+      "season": 6,
+      "sauce_number": 7,
+      "sauce_name": "Bunsters \u2013 Black Label",
+      "scoville": 99000
+    },
+    {
+      "season": 6,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 6,
+      "sauce_number": 9,
+      "sauce_name": "Hell Fire Hot Sauce \u2013 Fiery Fool",
+      "scoville": 550000
+    },
+    {
+      "season": 6,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab Reduxx",
+      "scoville": 2000000
+    },
+    {
+      "season": 7,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 7,
+      "sauce_number": 2,
+      "sauce_name": "Humble House Guajillo & Red Jalape\u00f1o",
+      "scoville": 2100
+    },
+    {
+      "season": 7,
+      "sauce_number": 3,
+      "sauce_name": "Butterfly Bakery of Vermont \u2013 Maple Wood Smoked Onion",
+      "scoville": 7900
+    },
+    {
+      "season": 7,
+      "sauce_number": 4,
+      "sauce_name": "Small Axe Peppers \u2013 Habanero Mango",
+      "scoville": 22500
+    },
+    {
+      "season": 7,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 7,
+      "sauce_number": 6,
+      "sauce_name": "Clark and Hopkins \u2013 Assam",
+      "scoville": 55000
+    },
+    {
+      "season": 7,
+      "sauce_number": 7,
+      "sauce_name": "Culley's \u2013 Fire Water",
+      "scoville": 112000
+    },
+    {
+      "season": 7,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 7,
+      "sauce_number": 9,
+      "sauce_name": "Burns & McCoy \u2013 Exhorresco",
+      "scoville": 625000
+    },
+    {
+      "season": 7,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab Reduxx",
+      "scoville": 2000000
+    },
+    {
+      "season": 8,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 8,
+      "sauce_number": 2,
+      "sauce_name": "Angry Goat \u2013 Hippy Dippy Green",
+      "scoville": 2300
+    },
+    {
+      "season": 8,
+      "sauce_number": 3,
+      "sauce_name": "Paddy O's Potion",
+      "scoville": 8800
+    },
+    {
+      "season": 8,
+      "sauce_number": 4,
+      "sauce_name": "High River Sauces Cheeba Gold",
+      "scoville": 25300
+    },
+    {
+      "season": 8,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 8,
+      "sauce_number": 6,
+      "sauce_name": "Adoboloco Kolohe Kid",
+      "scoville": 61000
+    },
+    {
+      "season": 8,
+      "sauce_number": 7,
+      "sauce_name": "Torchbearer \u2013 Garlic Reaper",
+      "scoville": 116000
+    },
+    {
+      "season": 8,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 8,
+      "sauce_number": 9,
+      "sauce_name": "Hellfire \u2013 Fear This",
+      "scoville": 679000
+    },
+    {
+      "season": 8,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Reduxx",
+      "scoville": 2000000
+    },
+    {
+      "season": 9,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 9,
+      "sauce_number": 2,
+      "sauce_name": "Sauce Bae Skinny Habanero",
+      "scoville": 2500
+    },
+    {
+      "season": 9,
+      "sauce_number": 3,
+      "sauce_name": "Shaquanda's Hot Pepper",
+      "scoville": 10100
+    },
+    {
+      "season": 9,
+      "sauce_number": 4,
+      "sauce_name": "Lucky Dog Year of The Dog Thai Chile Pineapple",
+      "scoville": 29800
+    },
+    {
+      "season": 9,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 9,
+      "sauce_number": 6,
+      "sauce_name": "Hell Fire Detroit Habanero",
+      "scoville": 66000
+    },
+    {
+      "season": 9,
+      "sauce_number": 7,
+      "sauce_name": "Wiltshire Chilli Farm Trinidad Scorpion",
+      "scoville": 104000
+    },
+    {
+      "season": 9,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 9,
+      "sauce_number": 9,
+      "sauce_name": "Puckerbutt Chocolate Plague",
+      "scoville": 690000
+    },
+    {
+      "season": 9,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab Reduxx",
+      "scoville": 2000000
+    },
+    {
+      "season": 10,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 10,
+      "sauce_number": 2,
+      "sauce_name": "Small Axe Peppers \u2013 The Chicago Red Hot Jalape\u00f1o Hot Sauce",
+      "scoville": 2800
+    },
+    {
+      "season": 10,
+      "sauce_number": 3,
+      "sauce_name": "Heartbeat Hot Sauce \u2013 Pineapple Habanero",
+      "scoville": 12200
+    },
+    {
+      "season": 10,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 10,
+      "sauce_number": 5,
+      "sauce_name": "Torchbearer Headless Horseradish",
+      "scoville": 52000
+    },
+    {
+      "season": 10,
+      "sauce_number": 6,
+      "sauce_name": "Adoboloco Fiya!Fiya!",
+      "scoville": 77000
+    },
+    {
+      "season": 10,
+      "sauce_number": 7,
+      "sauce_name": "Bravado Spice Company \u2013 Aka Miso Ghost Reaper",
+      "scoville": 116000
+    },
+    {
+      "season": 10,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 10,
+      "sauce_number": 9,
+      "sauce_name": "Karma Sauce \u2013 Burn After Eating",
+      "scoville": 669000
+    },
+    {
+      "season": 10,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab XXX",
+      "scoville": 2000000
+    },
+    {
+      "season": 11,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 11,
+      "sauce_number": 2,
+      "sauce_name": "Cantina Royal \u2013 Tamaulipeka",
+      "scoville": 4200
+    },
+    {
+      "season": 11,
+      "sauce_number": 3,
+      "sauce_name": "Fiji Fire \u2013 Native Bongo Chilli Hot Sauce",
+      "scoville": 14300
+    },
+    {
+      "season": 11,
+      "sauce_number": 4,
+      "sauce_name": "Double Take Salsa Co. \u2013 Scotch Bonnet Mustard",
+      "scoville": 37000
+    },
+    {
+      "season": 11,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Rojo",
+      "scoville": 49000
+    },
+    {
+      "season": 11,
+      "sauce_number": 6,
+      "sauce_name": "Seed Ranch \u2013 Hot Thai Green",
+      "scoville": 74000
+    },
+    {
+      "season": 11,
+      "sauce_number": 7,
+      "sauce_name": "Pepper North \u2013 Stargazer",
+      "scoville": 118000
+    },
+    {
+      "season": 11,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 11,
+      "sauce_number": 9,
+      "sauce_name": "Dingo Sauce Co. \u2013 Widow Maker",
+      "scoville": 682000
+    },
+    {
+      "season": 11,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab XXX",
+      "scoville": 2000000
+    },
+    {
+      "season": 12,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic (Garlic Fresno Edition)",
+      "scoville": 1700
+    },
+    {
+      "season": 12,
+      "sauce_number": 2,
+      "sauce_name": "Steel City Sauce Co \u2013 Jade Jaguar",
+      "scoville": 3600
+    },
+    {
+      "season": 12,
+      "sauce_number": 3,
+      "sauce_name": "Fresco Sauce Co \u2013 Chipotle & Habanero",
+      "scoville": 12400
+    },
+    {
+      "season": 12,
+      "sauce_number": 4,
+      "sauce_name": "Hotter Than El \u2013 Ghost Sauce",
+      "scoville": 39000
+    },
+    {
+      "season": 12,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Rojo",
+      "scoville": 49000
+    },
+    {
+      "season": 12,
+      "sauce_number": 6,
+      "sauce_name": "Seafire Gourmet \u2013 Reaper",
+      "scoville": 72000
+    },
+    {
+      "season": 12,
+      "sauce_number": 7,
+      "sauce_name": "Volcanic Pepper's \u2013 Thor's Hammer",
+      "scoville": 121000
+    },
+    {
+      "season": 12,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 12,
+      "sauce_number": 9,
+      "sauce_name": "Monoloco \u2013 Pierde Almas",
+      "scoville": 665000
+    },
+    {
+      "season": 12,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab XXX",
+      "scoville": 2000000
+    },
+    {
+      "season": 13,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic (Garlic Fresno Edition)",
+      "scoville": 1700
+    },
+    {
+      "season": 13,
+      "sauce_number": 2,
+      "sauce_name": "Dawson's \u2013 Shawarma Sauce",
+      "scoville": 4200
+    },
+    {
+      "season": 13,
+      "sauce_number": 3,
+      "sauce_name": "Shaquanda's \u2013 West Indian Curry",
+      "scoville": 14000
+    },
+    {
+      "season": 13,
+      "sauce_number": 4,
+      "sauce_name": "Angry Goat Pepper Company \u2013 Goat Rider",
+      "scoville": 43500
+    },
+    {
+      "season": 13,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Rojo",
+      "scoville": 49000
+    },
+    {
+      "season": 13,
+      "sauce_number": 6,
+      "sauce_name": "Heartbeat Hot Sauce Company \u2013 Scorpion",
+      "scoville": 66000
+    },
+    {
+      "season": 13,
+      "sauce_number": 7,
+      "sauce_name": "Hell Fire Detroit \u2013 Bourbon Habanero Ghost",
+      "scoville": 89000
+    },
+    {
+      "season": 13,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 13,
+      "sauce_number": 9,
+      "sauce_name": "PuckerButt Pepper Company \u2013 Chipotle eXpress",
+      "scoville": 669000
+    },
+    {
+      "season": 13,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 14,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 14,
+      "sauce_number": 2,
+      "sauce_name": "Hot N Saucy \u2013 Garlic N Peperoncini",
+      "scoville": 3900
+    },
+    {
+      "season": 14,
+      "sauce_number": 3,
+      "sauce_name": "Mark's \u2013 Barbados Style",
+      "scoville": 15500
+    },
+    {
+      "season": 14,
+      "sauce_number": 4,
+      "sauce_name": "Hellfire \u2013 Devil's Blend",
+      "scoville": 42000
+    },
+    {
+      "season": 14,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Rojo",
+      "scoville": 49000
+    },
+    {
+      "season": 14,
+      "sauce_number": 6,
+      "sauce_name": "High River Sauces \u2013 Tears of the Sun Private Reserve",
+      "scoville": 69000
+    },
+    {
+      "season": 14,
+      "sauce_number": 7,
+      "sauce_name": "Torchbearer Sauces \u2013 Honey Badger",
+      "scoville": 99000
+    },
+    {
+      "season": 14,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 14,
+      "sauce_number": 9,
+      "sauce_name": "Hot Ones \u2013 Eye of the Scorpion",
+      "scoville": 676000
+    },
+    {
+      "season": 14,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 15,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 15,
+      "sauce_number": 2,
+      "sauce_name": "Savir Foods \u2013 Jala Pepa",
+      "scoville": 4000
+    },
+    {
+      "season": 15,
+      "sauce_number": 3,
+      "sauce_name": "Cantina Royal \u2013 Tomasa",
+      "scoville": 18000
+    },
+    {
+      "season": 15,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Barbacoa Hot Sauce",
+      "scoville": 33000
+    },
+    {
+      "season": 15,
+      "sauce_number": 5,
+      "sauce_name": "The Original Goat \u2013 Ginger Goat",
+      "scoville": 55000
+    },
+    {
+      "season": 15,
+      "sauce_number": 6,
+      "sauce_name": "High Desert Sauce Co. \u2013 Tikk-Hot Masala",
+      "scoville": 72000
+    },
+    {
+      "season": 15,
+      "sauce_number": 7,
+      "sauce_name": "Hotter Than El \u2013 Love Burns",
+      "scoville": 101000
+    },
+    {
+      "season": 15,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 15,
+      "sauce_number": 9,
+      "sauce_name": "Karma Sauce \u2013 Scorpion Disco",
+      "scoville": 649000
+    },
+    {
+      "season": 15,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 16,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic (Garlic Fresno Edition)",
+      "scoville": 1700
+    },
+    {
+      "season": 16,
+      "sauce_number": 2,
+      "sauce_name": "Yellowbird Foods \u2013 Bliss & Vinegar",
+      "scoville": 6200
+    },
+    {
+      "season": 16,
+      "sauce_number": 3,
+      "sauce_name": "Hoff & Pepper \u2013 Hoff's Haus Sauce",
+      "scoville": 14500
+    },
+    {
+      "season": 16,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes",
+      "scoville": 36000
+    },
+    {
+      "season": 16,
+      "sauce_number": 5,
+      "sauce_name": "Hot Heads Official \u2013 Revolutionary Hot Sauce",
+      "scoville": 57000
+    },
+    {
+      "season": 16,
+      "sauce_number": 6,
+      "sauce_name": "Se\u00f1or Lechuga \u2013 .718 Hot Sauce",
+      "scoville": 67000
+    },
+    {
+      "season": 16,
+      "sauce_number": 7,
+      "sauce_name": "Chile Lengua de Fuego \u2013 Bhutila Fire Hot Sauce",
+      "scoville": 118000
+    },
+    {
+      "season": 16,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 16,
+      "sauce_number": 9,
+      "sauce_name": "Hellfire \u2013 Kranked Hot Sauce",
+      "scoville": 699000
+    },
+    {
+      "season": 16,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 17,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic",
+      "scoville": 1800
+    },
+    {
+      "season": 17,
+      "sauce_number": 2,
+      "sauce_name": "Dawson's Hot Sauce \u2013 Cedar Smoked Garlic",
+      "scoville": 7000
+    },
+    {
+      "season": 17,
+      "sauce_number": 3,
+      "sauce_name": "Clark + Hopkins \u2013 Calabria Hot Sauce",
+      "scoville": 15700
+    },
+    {
+      "season": 17,
+      "sauce_number": 4,
+      "sauce_name": "Angry Goat Pepper Co. \u2013 The Phoenix",
+      "scoville": 39000
+    },
+    {
+      "season": 17,
+      "sauce_number": 5,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Rojo",
+      "scoville": 49000
+    },
+    {
+      "season": 17,
+      "sauce_number": 6,
+      "sauce_name": "Queen Majesty \u2013 Cocoa Ghost Hot Sauce",
+      "scoville": 71000
+    },
+    {
+      "season": 17,
+      "sauce_number": 7,
+      "sauce_name": "13 Angry Scorpions \u2013 Jekyll & Hyde",
+      "scoville": 109000
+    },
+    {
+      "season": 17,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 17,
+      "sauce_number": 9,
+      "sauce_name": "Puckerbutt Pepper Company \u2013 Extra Mean Green Hot Sauce",
+      "scoville": 702000
+    },
+    {
+      "season": 17,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 18,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones -The Classic (Garlic Fresno Edition)",
+      "scoville": 1800
+    },
+    {
+      "season": 18,
+      "sauce_number": 2,
+      "sauce_name": "Adoboloco \u2013 Island Wings",
+      "scoville": 5500
+    },
+    {
+      "season": 18,
+      "sauce_number": 3,
+      "sauce_name": "Burns & McCoy \u2013 Mezcaline Oaxacan Hot Sauce",
+      "scoville": 16600
+    },
+    {
+      "season": 18,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Verde",
+      "scoville": 36000
+    },
+    {
+      "season": 18,
+      "sauce_number": 5,
+      "sauce_name": "Sauce Leopard \u2013 The Seventh Reaper",
+      "scoville": 59000
+    },
+    {
+      "season": 18,
+      "sauce_number": 6,
+      "sauce_name": "Hot N Saucy \u2013 Collards N Ghost",
+      "scoville": 70000
+    },
+    {
+      "season": 18,
+      "sauce_number": 7,
+      "sauce_name": "Halogi Hot Sauce \u2013 Tyrfing's Curse",
+      "scoville": 99000
+    },
+    {
+      "season": 18,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 18,
+      "sauce_number": 9,
+      "sauce_name": "Dingo Sauce Co. \u2013 Psycho Hot Sauce",
+      "scoville": 666000
+    },
+    {
+      "season": 18,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 19,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic (Chili Maple Edition)",
+      "scoville": 1600
+    },
+    {
+      "season": 19,
+      "sauce_number": 2,
+      "sauce_name": "Sinai Gourmet \u2013 Tropiquant\u00e9",
+      "scoville": 4000
+    },
+    {
+      "season": 19,
+      "sauce_number": 3,
+      "sauce_name": "Microsaucerie Piko Peppers \u2013 Piko Riko",
+      "scoville": 15500
+    },
+    {
+      "season": 19,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Barbacoa Hot Sauce",
+      "scoville": 33000
+    },
+    {
+      "season": 19,
+      "sauce_number": 5,
+      "sauce_name": "Fly By Jing \u2013 Sichuan Gold",
+      "scoville": 46000
+    },
+    {
+      "season": 19,
+      "sauce_number": 6,
+      "sauce_name": "Chili Lengua de Fuego \u2013 Turmeric Bomb",
+      "scoville": 69000
+    },
+    {
+      "season": 19,
+      "sauce_number": 7,
+      "sauce_name": "Karma Sauce \u2013 Cosmic Disco",
+      "scoville": 103000
+    },
+    {
+      "season": 19,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 19,
+      "sauce_number": 9,
+      "sauce_name": "Puckerbutt Pepper Co. \u2013 Unique Garlique",
+      "scoville": 642000
+    },
+    {
+      "season": 19,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    },
+    {
+      "season": 20,
+      "sauce_number": 1,
+      "sauce_name": "Hot Ones \u2013 The Classic (Chili Maple Edition)",
+      "scoville": 1600
+    },
+    {
+      "season": 20,
+      "sauce_number": 2,
+      "sauce_name": "Shaquanda's \u2013 Banjee Ranch",
+      "scoville": 6200
+    },
+    {
+      "season": 20,
+      "sauce_number": 3,
+      "sauce_name": "Donis \u2013 Cadejo",
+      "scoville": 15000
+    },
+    {
+      "season": 20,
+      "sauce_number": 4,
+      "sauce_name": "Hot Ones \u2013 Los Calientes Verde Hot Sauce",
+      "scoville": 36000
+    },
+    {
+      "season": 20,
+      "sauce_number": 5,
+      "sauce_name": "Brooklyn Delhi \u2013 Bhut Jolokia Ghost Pepper",
+      "scoville": 39000
+    },
+    {
+      "season": 20,
+      "sauce_number": 6,
+      "sauce_name": "Torchbearer Sauces \u2013 Mushroom Mayhem",
+      "scoville": 68000
+    },
+    {
+      "season": 20,
+      "sauce_number": 7,
+      "sauce_name": "Angry Goat Pepper \u2013 Dream of Calypso Private Reserve",
+      "scoville": 101000
+    },
+    {
+      "season": 20,
+      "sauce_number": 8,
+      "sauce_name": "Da' Bomb \u2013 Beyond Insanity",
+      "scoville": 135600
+    },
+    {
+      "season": 20,
+      "sauce_number": 9,
+      "sauce_name": "Butterfly Bakery \u2013 Taco Vibes Only",
+      "scoville": 638000
+    },
+    {
+      "season": 20,
+      "sauce_number": 10,
+      "sauce_name": "Hot Ones \u2013 The Last Dab: Apollo",
+      "scoville": 2000000
+    }
+  ]
+}

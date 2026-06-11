@@ -41,6 +41,11 @@ coverage; ECharts and Chart.js each support a subset. If unsure, call
 `vlGetTemplateChannels(name)` (or the equivalent for your backend) to
 check availability and see which channels are valid.
 
+**Pie chart note:** Pie charts need long-format data — one row per slice,
+with a category field on `color` and a value field on `angle`. If the
+data has separate value columns (wide format), fold them first via
+`chartProperties.transforms` (see worked example below).
+
 ## Step 2 — map fields to channels
 
 Channels: `x`, `y`, `x2`, `y2`, `color`, `size`, `shape`, `opacity`,
@@ -154,6 +159,36 @@ User: "Line chart of daily temperature over the past year."
     "encodings": {
       "x": { "field": "date" },
       "y": { "field": "temperature" }
+    }
+  }
+}
+```
+
+### Pie chart from wide-format data (fold transform)
+
+User: "Show the energy mix (renewable, fossil, nuclear) as a pie chart."
+
+The data has separate columns for each energy type (wide format).
+Fold them into long format so the pie chart can map one field to `angle`:
+
+```json
+{
+  "data": { "values": [/* rows with renewables_pct, fossil_pct, nuclear_pct */] },
+  "semantic_types": {
+    "source": "Category",
+    "share": "Percentage"
+  },
+  "chart_spec": {
+    "chartType": "Pie Chart",
+    "encodings": {
+      "angle": { "field": "share" },
+      "color": { "field": "source" }
+    },
+    "chartProperties": {
+      "transforms": [
+        { "fold": ["renewables_pct", "fossil_pct", "nuclear_pct"],
+          "as": ["source", "share"] }
+      ]
     }
   }
 }

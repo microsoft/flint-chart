@@ -1,0 +1,1217 @@
+{
+  "meta": {
+    "name": "horror_articles",
+    "description": "Snopes horror article ratings",
+    "source": "tidytuesday/2023-10-31/horror_articles.csv",
+    "transformation": "Select key columns, drop NaN.",
+    "num_rows": 200,
+    "columns": {
+      "title": "str",
+      "rating": "str",
+      "author": "str",
+      "claim": "str"
+    }
+  },
+  "data": [
+    {
+      "title": "Did American TV Viewers Hear the Devil's Voice on Aug. 29, 1968?",
+      "rating": "false",
+      "author": "David Emery",
+      "claim": "\"On August 29th, 1968, all the televisions in America were shut down. There was a murmuring on the TV that some believe was the devil's voice. The televisions were off for about 25 seconds. No one knows what the issue was and no one knows what the sound was from the TVs.\""
+    },
+    {
+      "title": "Does This Video Show a 'Jersey Devil' Perched in a Tree?",
+      "rating": "false",
+      "author": "Bethania Palma",
+      "claim": "A video shows a real \"Jersey Devil\" cryptid perched in a tree."
+    },
+    {
+      "title": "Did a Power Surge in a Plugged-In Air Fryer Cause a Fire, as Claimed in Viral Facebook Post?",
+      "rating": "true",
+      "author": "Jordan Liles",
+      "claim": "A plugged-in air fryer underwent a power surge and caused a kitchen fire, despite the fact that it was plugged in to a special outlet for protection."
+    },
+    {
+      "title": "No, This Is Not a 'Human Skin Jacket' from Balenciaga",
+      "rating": "false",
+      "author": "David Emery",
+      "claim": "A viral photo emblazoned with fashion house Balenciaga's logo shows a \"human skin jacket\" made and sold by the company."
+    },
+    {
+      "title": "Are Kids 'Snorting' Smarties and Putting Themselves at Risk of Nasal Maggots?",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "Schoolkids are \u201csnorting\u201d and \u201csmoking\u201d Smarties and putting themselves at risk of contracting nasal maggots."
+    },
+    {
+      "title": "Is McDonald's the World's Largest Purchaser of Cow Eyeballs?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "The McDonald\u2019s restaurant chain is the world\u2019s largest purchaser of cow eyeballs."
+    },
+    {
+      "title": "A True Story About the Death of a Girl Playing With Leaves?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A father drove his truck over a leaf pile containing his daughter, killing her."
+    },
+    {
+      "title": "The ManBeef Hoax",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A website called ManBeef.com authentically advertised real human meat for purchase."
+    },
+    {
+      "title": "Are Teens Throwing Lit Gas-Soaked Rags Into Cars?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Teens across the U.S.A. are amusing themselves by throwing lit gasoline-soaked rags into cars halted at stop lights."
+    },
+    {
+      "title": "Was a Car Fire Caused by Overheated GPS Battery?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Photographs show the aftermath of a car fire caused by an overheated GPS device."
+    },
+    {
+      "title": "Does Using a Recharging Cell Phone Pose a Serious Threat of Electrocution?",
+      "rating": "mostly false",
+      "author": "Barbara Mikkelson",
+      "claim": "Using a cell phone while it is being recharged poses a serious threat of electrocution."
+    },
+    {
+      "title": "Does Chocolate Milk Contain Cow's Blood?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Chocolate milk is made from \"regular\" milk rejected for containing too much cow's blood."
+    },
+    {
+      "title": "Can Cellular Calls Cause Brain Hemorrhages?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Cell phone calls from particular phone numbers cause brain hemorrhage and death."
+    },
+    {
+      "title": "Was a Finger Found in Wendy's Chili?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A Wendy's customer found a human finger in her bowl of chili."
+    },
+    {
+      "title": "Man Burns to Death Rescuing Dog from Hot Springs",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "A man was burned to death attempting to rescue his friend's dog from a boiling hot spring."
+    },
+    {
+      "title": "Snuff Films",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Films are routinely made for entertainment purposes in which participants are murdered on camera."
+    },
+    {
+      "title": "Did the Annabelle Doll Escape from the Warren Museum?",
+      "rating": "false",
+      "author": "Dan Evon",
+      "claim": "The Annabelle doll escaped from the Warren's Occult Museum in Connecticut."
+    },
+    {
+      "title": "Is the Florida High School Shooter a 'Dreamer'?",
+      "rating": "false",
+      "author": "Bethania Palma",
+      "claim": "The accused school shooter in Florida is a Dreamer, a DACA recipient, or undocumented."
+    },
+    {
+      "title": "Mass Grave of Dozens of Tortured Black Men Found in Deceased KKK Leader's Estate?",
+      "rating": "false",
+      "author": "Brooke Binkowski",
+      "claim": "The bodies of dozens of black men were found on the estate of a former Ku Klux Klan member."
+    },
+    {
+      "title": "Are Motorists Finding HIV-Infected Needles on Gas Pump Handles?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Service station customers are getting stuck by HIV-loaded syringes affixed to gas pump handles."
+    },
+    {
+      "title": "Tapeworm Diet Pills",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Women used to maintain slender figures by ingesting diet pills made from tapeworms."
+    },
+    {
+      "title": "Motorcycle Helmet Self-Sacrifice",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A motorcyclist on bike that has lost its brakes gives his helmet to his girlfriend, saving her life at the cost of his own."
+    },
+    {
+      "title": "The Microwaved Baby",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "Stoned babysitter cooks an infant in the oven."
+    },
+    {
+      "title": "Oleander Poisoning",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A troop of Boy Scouts dies after roasting hot dogs on oleander sticks."
+    },
+    {
+      "title": "Did a Beer Flood Kill 9 People?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Nine people died in a beer flood in 1814."
+    },
+    {
+      "title": "Texas Lawyer Arrested for Michael Myers 'Halloween' Prank",
+      "rating": "true",
+      "author": "Bethania Palma",
+      "claim": "A lawyer in Texas was arrested for a prank in which he dressed up like the killer in the movie \"Halloween,\" Michael Myers, and roamed the beach in Galveston, Texas, ahead of a storm."
+    },
+    {
+      "title": "Did Lightning Shock a Teacher's Laptop During Online Class?",
+      "rating": "true",
+      "author": "Bethania Palma",
+      "claim": "A woman in Guthrie, Oklahoma, was shocked while using a laptop to teach an online course during a lightning storm."
+    },
+    {
+      "title": "Did Woman Die After Trapping Her Head in Car Door at Garage Kiosk?",
+      "rating": "true",
+      "author": "Madison Dapcevich",
+      "claim": "A 23-year-old Ohio woman died after her head became trapped between her vehicle door and its frame after colliding with the payment machine in a parking garage."
+    },
+    {
+      "title": "Does 'Helltown' Film Document Weird Happenings in Abandoned Ohio Town?",
+      "rating": "false",
+      "author": "Dan Evon",
+      "claim": "The film \"Helltown\" is a genuine documentary about a teenager's mysterious disappearance, a cult, and a military mission gone wrong."
+    },
+    {
+      "title": "Did an English Woman Lie Dead at Home Undiscovered for Years?",
+      "rating": "true",
+      "author": "Dan MacGuill",
+      "claim": "In 2006, the skeletal remains of Joyce Carol Vincent were found in her home, with the television on, years after her death."
+    },
+    {
+      "title": "Was Essie Dunbar Discovered Alive in the Coffin During Her Funeral?",
+      "rating": "unproven",
+      "author": "Alex Kasprak",
+      "claim": "A 30-year-old woman was partially buried during a funeral service in 1915, only to be found alive inside the coffin by her grieving sister."
+    },
+    {
+      "title": "Did Police in Delaware Shoot and Kill a Man in a Wheelchair?",
+      "rating": "true",
+      "author": "Arturo Garcia",
+      "claim": "Police in Wilmington, Delaware shot and killed a man who was in a wheelchair at the time of the encounter."
+    },
+    {
+      "title": "Was a Young Girl Decapitated by a Seat Belt in a Car Crash?",
+      "rating": "true",
+      "author": "Dan MacGuill",
+      "claim": "Katie Flynn was decapitated while wearing a seat belt, in a 2005 car crash on Long Island, New York."
+    },
+    {
+      "title": "Spanish Woman Cut in Half in Fatal Elevator Accident?",
+      "rating": "mixture",
+      "author": "Arturo Garcia",
+      "claim": "A woman in Sevilla, Spain, was \"cut in half\" in a fatal elevator accident in a hospital that occurred shortly after she gave birth."
+    },
+    {
+      "title": "The Truth About Slenderman",
+      "rating": "false",
+      "author": "David Emery",
+      "claim": "There is a faceless, semi-human monster called Slenderman who stands eight feet tall, has tentacles for arms, stalks and eats small children, and communicates telepathically with his human servants, called \"proxies.\""
+    },
+    {
+      "title": "Was the Raggedy Ann Doll Modeled After a Child Killed by a Vaccine?",
+      "rating": "mostly false",
+      "author": "Kim LaCapria",
+      "claim": "Raggedy Ann dolls were created by a grief-stricken father who lost his daughter to a vaccine-related illness, and who wished to broadcast the risks of vaccination."
+    },
+    {
+      "title": "Spider Bursts Out of Overripe Banana?",
+      "rating": "false",
+      "author": "Bethania Palma",
+      "claim": "A video captures a large spider that survived inside a banana until it burst out of the peel by its own power."
+    },
+    {
+      "title": "Ohio Police Post Graphic Photograph of Adults Passed Out from Heroin with Child in Car",
+      "rating": "true",
+      "author": "Bethania Palma",
+      "claim": "A photograph taken by a responding police officer shows a couple passed out in their vehicle from a suspected heroin overdose, with their child in the back seat."
+    },
+    {
+      "title": "The Strange Death of Elisa Lam",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "A young woman named Elisa Lam disappeared under mysterious circumstances in Los Angeles, her body later found in a hotel's water tank."
+    },
+    {
+      "title": "Rat Found in Dr Pepper Bottle",
+      "rating": "unproven",
+      "author": "Kim LaCapria",
+      "claim": "A Texas man found a dead rat in a partially consumed bottle of Dr Pepper."
+    },
+    {
+      "title": "Seven People 'Dead by ISIS' in Local Attack",
+      "rating": "false",
+      "author": "Kim LaCapria",
+      "claim": "An ISIS attack claimed seven lives in a U.S. town."
+    },
+    {
+      "title": "Ecstasy in Halloween Candy?",
+      "rating": "mostly false",
+      "author": "Kim LaCapria",
+      "claim": "Parents should keep any eye out for drug-laced Gummy bears and ecstasy (MDMA) disguised as Halloween candy being distributed to trick-or-treaters."
+    },
+    {
+      "title": "Nigeria: Restaurant Served Roasted Human Heads",
+      "rating": "mixture",
+      "author": "David Mikkelson",
+      "claim": "A hotel restaurant in Nigeria was found to be selling human meat."
+    },
+    {
+      "title": "The Disappearance of Ashley, Kansas",
+      "rating": "false",
+      "author": "Kim LaCapria",
+      "claim": "The town of Ashley, Kansas, and its entire population disappeared after an earthquake in 1952."
+    },
+    {
+      "title": "Dallas Copper Bandits",
+      "rating": "undetermined",
+      "author": "David Mikkelson",
+      "claim": "A graphic image set illustrates the gruesome fates of two copper thieves in Dallas."
+    },
+    {
+      "title": "Baby Killed by Electric Shock from Cord",
+      "rating": "mostly false",
+      "author": "David Mikkelson",
+      "claim": "Image depicts a toddler who was electrocuted after playing with an electrical cord."
+    },
+    {
+      "title": "Is This Photo of an 'Inhuman' Handprint Left on a Window Real?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Photograph shows an unnaturally large handprint left on the window of a missing college student's dorm room."
+    },
+    {
+      "title": "Kids Using Burt's Bees on Eyelids to Get High?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Kids are rubbing Burt's Bees lip balm on their eyelids to get high."
+    },
+    {
+      "title": "Can 9-Volt Batteries Cause House Fires?",
+      "rating": "mixture",
+      "author": "David Mikkelson",
+      "claim": "Improperly stored or discarded 9-volt batteries can touch off house fires."
+    },
+    {
+      "title": "1962 Halloween Massacre",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Photograph shows a masked partygoer who killed seven people on Halloween 1962."
+    },
+    {
+      "title": "Spider Lives in Man's Scar?",
+      "rating": "probably false",
+      "author": "David Mikkelson",
+      "claim": "A vacationing man discovered that increasing pain he was experiencing was due to a tropical spider's living under his skin."
+    },
+    {
+      "title": "Is This a Photograph of a Venomous 'Asp' Caterpillar?",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "Photographs show a venomous caterpillar known as an asp."
+    },
+    {
+      "title": "Did a Teenager Die Attempting the Ice Bucket Challenge?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A teenager died attempting the ALS 'ice bucket challenge.'"
+    },
+    {
+      "title": "Smoking Bedbugs to Get High",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Schoolkids are smoking and injecting crushed bedbugs to get high from a hallucinogenic substance they contain."
+    },
+    {
+      "title": "Razor Blades Found in Playground Equipment",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "Razor blades were discovered glued to playground equipment in a public park."
+    },
+    {
+      "title": "Did a Family Die After Drinking From a Tea Kettle Poisoned By a Deadly Spider?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A family perished after drinking tea from a kettle in which a deadly spider had died."
+    },
+    {
+      "title": "Husband Convicted of Manslaughter After Dutch Oven Goes 'Horribly Wrong'",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A man was convicted of manslaughter for accidentally killing his wife with a \"Dutch oven.\""
+    },
+    {
+      "title": "Was the Russian Sleep Experiment Real?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Account describes the horrific results of a \"Russian Sleep Experiment\" from the late 1940s."
+    },
+    {
+      "title": "Burglar Discovers Suicide",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A burglar discovered a suicide in the home he'd broken into."
+    },
+    {
+      "title": "Killer's Reflection",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Wet footprints behind the sofa prove that a teen babysitter barely escaped from a knife-wielding intruder."
+    },
+    {
+      "title": "Black-Eyed Children",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "Mysterious black-eyed children show up at the homes of unsuspecting residents."
+    },
+    {
+      "title": "The Expressionless Ghost",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "An \"expressionless\" apparition in a blood-covered gown appeared at Cedars-Sinai hospital in 1972."
+    },
+    {
+      "title": "LQP-79 Zombie Virus",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A virus known as LQP-79 produces \"zombie-like\" cannibalistic behavior in humans."
+    },
+    {
+      "title": "Razor Blade Found in Footies",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A razor blade discovered in a child's \"footies\" (footed pajamas) injured a baby."
+    },
+    {
+      "title": "Hair Weave Worms",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Weave made from dead person's hair causes worms to grow in recipient's scalp."
+    },
+    {
+      "title": "Silly Bandz Danger",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "A child injured his arm through extended wearing of Silly Bandz."
+    },
+    {
+      "title": "Did a Soldier Return From Deployment to Find Their Family Dead?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A soldier returning from deployment discovered his wife had died during his absence, and their children had starved to death."
+    },
+    {
+      "title": "Cannibal Restaurant Hoax",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A Berlin restaurant plans to offer meals made from human body parts."
+    },
+    {
+      "title": "Fatal Laptop Fire",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "An overheated laptop used in a bed caused a fatal house fire."
+    },
+    {
+      "title": "Cockroach Eggs in Drinking Straws",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Cockroach eggs in drinking straws pose a general danger to restaurant patrons."
+    },
+    {
+      "title": "Are These Photos of an Alligator Attack on a Golfer?",
+      "rating": "miscaptioned",
+      "author": "David Mikkelson",
+      "claim": "Photographs show a golfer whose arm was torn off by an alligator."
+    },
+    {
+      "title": "Prophetic Vanishing Hitchhiker",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Hitchhiker utters prophecy about Judgment Day being upon us, then vanishes."
+    },
+    {
+      "title": "Acid in Hand Soap",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Acid was placed into in hand soap dispensers in the restrooms of rest stops in Alabama and Florida."
+    },
+    {
+      "title": "Razor Blades in Merchandise",
+      "rating": "partly true",
+      "author": "Barbara Mikkelson",
+      "claim": "Razor blades have been found amidst merchandise sold at a Wal-Mart store in Lewistown, Pennsylvania."
+    },
+    {
+      "title": "Is Dracula Killed with a Wooden Stake?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Bram Stoker's novel 'Dracula' features a titular vampire who cannot expose himself to sunlight and is killed with a wooden stake."
+    },
+    {
+      "title": "Cell Phone Calls After Death",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A man's cell phone placed calls to his loved ones after his demise."
+    },
+    {
+      "title": "Korean Fan Death",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Electric fans left running overnight kill persons sleeping in the breeze they generate."
+    },
+    {
+      "title": "Golf Club Death",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A golfer angered by a bad shot was killed by the club he threw in frustration."
+    },
+    {
+      "title": "Was a Man Killed by an Exploding Lava Lamp?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A man was killed by an exploding lava lamp."
+    },
+    {
+      "title": "Ghostly Moth Saves Train",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A ghostly figure produced by a moth saved a train from traversing a washed-out bridge."
+    },
+    {
+      "title": "Webkinz Murderer",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Children's Webkinz are being murdered online."
+    },
+    {
+      "title": "The True Story of the Flying Lawnmower Death",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "A spectator at a football game was killed by a flying model lawnmower."
+    },
+    {
+      "title": "Lightning and iPods and Cell Phones",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "The presence of electronic devices (such as iPods and cell phones) on one's body can make lightning strike injuries more severe."
+    },
+    {
+      "title": "Bulimic Students Destroy Plumbing?",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Sorority house plumbing was destroyed by the stomach acids of bulimic students."
+    },
+    {
+      "title": "Fire Hydrant Death",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A pedestrian was killed by a flying fire hydrant."
+    },
+    {
+      "title": "Henna Tattoo Scarring",
+      "rating": "partly true",
+      "author": "Barbara Mikkelson",
+      "claim": "Temporary black henna tattoos can cause permanent scarring."
+    },
+    {
+      "title": "Grieving Parents Accidentally Kill Other Child",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Parents of a murdered Virginia Tech co-ed unthinkingly back over another of their children on the way to the airport."
+    },
+    {
+      "title": "2006 Darwin Awards",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "Internet-circulated list titled \"2006 Darwin Awards\" details actual deaths."
+    },
+    {
+      "title": "Baby Smothered Under Pile of Coats?",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A baby left on a bed is smothered under coats dropped by Christmas visitors."
+    },
+    {
+      "title": "Foiled Child Abduction in Tupelo Rumor",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "E-mail claims a Mexican woman attempted to abduct a tot from a store in Tupelo, Mississippi."
+    },
+    {
+      "title": "Foiled Child Abduction Rumor",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Father foils attempted abduction at a Blockbuster store of North Texas child."
+    },
+    {
+      "title": "Carmen Winstead",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "The ghost of a teen named Carmen Winstead strikes down those who don't repost her story on Facebook."
+    },
+    {
+      "title": "Died Onstage",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Several actors have kicked the bucket in front of an audience."
+    },
+    {
+      "title": "Boy Infected with HIV from Tainted Pineapple",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A child contracted AIDS through eating a pineapple that a vendor had bled upon."
+    },
+    {
+      "title": "Hippo Eats Dwarf",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A circus dwarf bounced sideways off a trampoline and was swallowed by a hippopotamus."
+    },
+    {
+      "title": "Last Dance",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Kid dies doing the latest dance step in a video."
+    },
+    {
+      "title": "2003 Darwin Awards",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "Internet-circulated list entitled \"2003 Darwin Awards\" details actual deaths."
+    },
+    {
+      "title": "Chubby Bunny Marshmallows Choking Death",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A child suffocated while playing a \"Chubby Bunny\" marshmallow-stuffing game."
+    },
+    {
+      "title": "Was a Suicide Mistaken for Halloween Decoration?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Bodies of suicide victims have been mistaken for Halloween decorations."
+    },
+    {
+      "title": "Did the Ghosts of Two Teens Return to Kill and Skin Their Parents?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Ghosts of two murdered teen girls return to kill and skin parents who failed to tell their subsequent son of the girls' existence."
+    },
+    {
+      "title": "2005 Darwin Awards",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "An Internet-circulated list entitled \"2005 Darwin Awards\" details actual mishaps and demises."
+    },
+    {
+      "title": "2004 Darwin Awards",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "Internet-circulated list titled \"2004 Darwin Awards\" details actual demises."
+    },
+    {
+      "title": "Was 'Amityville Horror' Based on a True Story?",
+      "rating": "false",
+      "author": "Snopes Staff",
+      "claim": "'The Amityville Horror' is based on a true story."
+    },
+    {
+      "title": "Trombone Death",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A band musician received a fatal head injury from a trombone slide."
+    },
+    {
+      "title": "Are Drug-Laced Suckers Being Handed Out to Children?",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "Drug-laced suckers are being handed out to children in Arkansas."
+    },
+    {
+      "title": "Home Intruder Poses as Clown Statue",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A clown statue that spooked a babysitter turns out to be a knife-wielding intruder hiding in the house."
+    },
+    {
+      "title": "Fake Execution Heart Attack Death",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Man fooled into thinking he has been executed dies of a heart attack."
+    },
+    {
+      "title": "Lightning Telephone Deaths",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Lightning strikes have killed people who were talking on the telephone."
+    },
+    {
+      "title": "Have People Died Laughing?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "People have died laughing."
+    },
+    {
+      "title": "College Scurvy",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "College student who restricts himself to only one foodstuff contracts scurvy."
+    },
+    {
+      "title": "Was 'The Texas Chainsaw Massacre' Based on a True Story?",
+      "rating": "mostly false",
+      "author": "David Mikkelson",
+      "claim": "The film The Texas Chainsaw Massacre was based on a true story."
+    },
+    {
+      "title": "Was a Houston Doctor Decapitated by a Malfunctioning Elevator?",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A Houston doctor was decapitated by a malfunctioning elevator."
+    },
+    {
+      "title": "Walking Stick",
+      "rating": "undetermined",
+      "author": "David Mikkelson",
+      "claim": "Texas dog has unfortunate encounter with a walkingstick from Belize."
+    },
+    {
+      "title": "Drill Bit Accident",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "A construction worker survived an accident that poked an 18-inch-long drill bit through one eye and out the side of his skull."
+    },
+    {
+      "title": "Las Vegas Tourist Electrocution",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A tourist was electrocuted while crossing a street in Las Vegas."
+    },
+    {
+      "title": "Death of John Howard Griffin",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "John Howard Griffin, the author of Black Like Me, died from skin cancer caused by the treatment he underwent to darken his skin."
+    },
+    {
+      "title": "Fly Boy",
+      "rating": "undetermined",
+      "author": "David Mikkelson",
+      "claim": "An Indian boy experienced a rare condition in which beetles bred in his body and emerged from his groin as full-grown flies."
+    },
+    {
+      "title": "Hospital Cell Phone Death",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A child died during a routine operation because someone used a cell phone in a hospital."
+    },
+    {
+      "title": "Origin of 'Baby on Board' Signs",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "The death of an infant in an automobile accident led to the invention of 'Baby on Board' signs."
+    },
+    {
+      "title": "Broom Death",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A coed fatally skewers herself while masturbating with a broom handle."
+    },
+    {
+      "title": "Evian and Cow's Blood",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Evian brand drinking water is filtered with cow's blood."
+    },
+    {
+      "title": "Child Falls on Knife in Dishwasher",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Child falls on knife in open dishwasher and dies."
+    },
+    {
+      "title": "Smashed Fingers",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Enraged father punishes 3-year-old by smashing his fingers, then commits suicide out of remorse."
+    },
+    {
+      "title": "SpongeBob SquarePants Death",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A child drowned after jumping into the ocean to see SpongeBob SquarePants."
+    },
+    {
+      "title": "Worm in the Eye",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "The larva of a human botfly was removed from a child's eye."
+    },
+    {
+      "title": "Siblings Die in Traffic Accident",
+      "rating": "true",
+      "author": "David Mikkelson",
+      "claim": "Siblings are coincidentally killed in related automobile accidents."
+    },
+    {
+      "title": "Man Dies of Hypothermia in an Unplugged Freezer",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A man locked in an unplugged freezer imagined himself freezing to death and died as a result."
+    },
+    {
+      "title": "Ghostly Rescue",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "The ghost of a woman killed in a car crash directs rescuers to the wreck to save her still-living baby, who is trapped within."
+    },
+    {
+      "title": "Lollipop Death",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A man eating a lollipop choked to death when his car's airbag deployed, forcing the candy down his throat."
+    },
+    {
+      "title": "Have Women Been Killed by Poisoned Perfume Samples?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Glen Eagles hospital issued an urgent warning because seven women have died after sniffing perfume samples received in the mail."
+    },
+    {
+      "title": "Cats Sacrificed at Halloween?",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "Black cats are routinely sacrificed by \"satanic cults\" at Halloween."
+    },
+    {
+      "title": "Child Abduction from Theme Park Thwarted by Shoes",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "An attempted abduction of a child from a mall or amusement park was thwarted because the kidnappers forgot to change the child's shoes."
+    },
+    {
+      "title": "Penis in Fruit Punch",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A human penis was found in a jar of fruit punch."
+    },
+    {
+      "title": "Highway Deception",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Woman fabricates story about being detained by a man pretending to be a police officer."
+    },
+    {
+      "title": "Urine in Outback Steak",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Customer becomes sick after eating a steak at a chain restaurant; analysis of her meal reveals the presence of human urine in the meat."
+    },
+    {
+      "title": "Kidney Theft",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Drugged travelers awaken in ice-filled bathtubs only to discover one of their kidneys has been harvested by organ thieves."
+    },
+    {
+      "title": "Exploding Lighters",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Spark from a welding arc reaches disposable lighter in worker's pocket, causing it to explode and kill him."
+    },
+    {
+      "title": "Amusement Park Scalping",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A girl on an amusement park ride was scalped when her hair got caught in the attraction's machinery."
+    },
+    {
+      "title": "Contact Lenses Fused to Eyes",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A man was blinded for life when his contact lenses fused to his eyes while he was barbecuing."
+    },
+    {
+      "title": "Cremains Mistaken for Cocaine",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Thieves steal what they believe to be cocaine but what is in reality the cremated remains of the householder's relative."
+    },
+    {
+      "title": "Did Houdini Die from a Punch to the Stomach?",
+      "rating": "unproven",
+      "author": "David Mikkelson",
+      "claim": "Escape artist Harry Houdini died from a ruptured appendix caused by his being punched in the stomach."
+    },
+    {
+      "title": "Is the Bloody Mary Story True?",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Chanting \"Bloody Mary!\" thirteen times in front of a candlelit mirror will summon a vengeful spirit."
+    },
+    {
+      "title": "Do People Swallow Eight Spiders Per Year?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "The average person swallows eight spiders per year."
+    },
+    {
+      "title": "Deaths of Children Left in Cars",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "Baby left in car by forgetful parent dies."
+    },
+    {
+      "title": "Spiders Eggs in Bubble Yum",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Bubble Yum chewing gum contains spider eggs."
+    },
+    {
+      "title": "The Replaced Rabbit",
+      "rating": "legend",
+      "author": "Snopes Staff",
+      "claim": "A family replaced their neighbor's dead rabbit after mistakenly believing their own dog killed it."
+    },
+    {
+      "title": "Quieting Children with Gas",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A babysitter quiets her charges by gassing them."
+    },
+    {
+      "title": "Baby High Chair Death",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Baby left in a high chair to await the coming of the sitter is discovered dead by the vacationing parents when they return weeks later."
+    },
+    {
+      "title": "Man Dies at His Desk",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A man who died at his office desk went unnoticed by his co-workers for five days."
+    },
+    {
+      "title": "Student AIDS",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "When the Red Cross conducted a volunteer blood drive at a local high school recently, they uncovered a shocking truth: 20% of the student donors were HIV-positive."
+    },
+    {
+      "title": "Dead Body on Car",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "The morning after an all-night drinking binge, a man discovers the body of a little girl embedded in his car's grille."
+    },
+    {
+      "title": "Cockroach Eggs",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "The cause of swelling in a girl's jaw was determined to be cockroach eggs she ingested from eating a Taco Bell taco or licking envelopes."
+    },
+    {
+      "title": "Are These the Final Words of the Challenger Crew?",
+      "rating": "false",
+      "author": "Brooke Binkowski",
+      "claim": "A secret tape recorded aboard the doomed space shuttle Challenger captured the final panic-stricken moments of the crew."
+    },
+    {
+      "title": "Self-Mutilation While on Drugs",
+      "rating": "undetermined",
+      "author": "David Mikkelson",
+      "claim": "Man high on drugs slices off pieces of his face and feeds them to his dogs."
+    },
+    {
+      "title": "Needle in Pepsi",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A 1993 instance of product tampering resulted in syringes being found in cans of Pepsi."
+    },
+    {
+      "title": "MagiCan Death",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A child died from drinking the contents of a prize-bearing Coca-Cola 'MagiCan.'"
+    },
+    {
+      "title": "Cycle Lops",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Motorcyclist is decapitated by a sheet of metal which falls from a passing truck."
+    },
+    {
+      "title": "Bear Mauls Honey-Smeared Child",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A photo opportunity involving a bear and a honey-smeared child resulted in a terrible mauling."
+    },
+    {
+      "title": "The Boyfriend's Death",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Hours after sending her boyfriend in search of gasoline, a girl is rescued from her stranded car by police. Though cautioned not to turn around, she does...and sees her boyfriend's lifeless body hanging from a tree branch above the car."
+    },
+    {
+      "title": "The Microwaved Workman",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A worker who stood too close to microwave radiation was cooked by its rays."
+    },
+    {
+      "title": "Floor Polisher Hospital Deaths",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "An inattentive janitor caused several deaths in a hospital when he disconnected patients' life support systems to plug in a floor polisher."
+    },
+    {
+      "title": "Menudo Finger",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A human finger was found in a can of menudo."
+    },
+    {
+      "title": "Death of Diane Linkletter",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Thinking she could fly, Diane Linkletter accidentally jumped to her death while high on LSD."
+    },
+    {
+      "title": "Granny on the Roof Rack",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "An old woman traveling in a car filled with relatives dies during a long journey. The surviving family members place her corpse on the car's roof rack, cover it with a tarp, and continue on. Upon reaching the nearest town, the family stops for a coffee and something to eat, leaving Granny's remains tied to the roof rack. They return to the parking lot to find their vehicle \u2014 and their dead relative \u2014 gone."
+    },
+    {
+      "title": "HIV Needles in Coin Returns",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Drug users are disposing of their used needles by putting them into the coin return slots of public telephones, thereby infecting unsuspecting victims with hepatitis and HIV."
+    },
+    {
+      "title": "Did a Statue Called Black Agnes Kill a Teenage Girl?",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A teenage girl who bets her friends she can spend the night in a cemetery is found dead in the arms of a graveyard statue."
+    },
+    {
+      "title": "Getting the Strap",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Women who wear their purses strapped across their bodies running the risk of being beheaded by purse snatchers."
+    },
+    {
+      "title": "Did a Man Die Demonstrating a Window's Strength?",
+      "rating": "true",
+      "author": "Snopes Staff",
+      "claim": "A Toronto lawyer demonstrating the safety of window panes in a skyscraper plunged through a window to his death."
+    },
+    {
+      "title": "Poisoned Halloween Candy",
+      "rating": "false",
+      "author": "Snopes Staff",
+      "claim": "Police have documented cases of people randomly distributing poisoned goodies to children on Halloween."
+    },
+    {
+      "title": "Pins and Needles in Halloween Candy",
+      "rating": "true",
+      "author": "Snopes Staff",
+      "claim": "Pins, needles, and razor blades have been found in trick-or-treaters' loot."
+    },
+    {
+      "title": "LSD Tattoos",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Rub-on \"tattoos\" of cartoon characters laced with LSD are handed out to children by unscrupulous drug dealers."
+    },
+    {
+      "title": "Beheaded Child on Schoolbus",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A little girl whose habit it was to hang her head out the school bus window was decapitated by a road sign."
+    },
+    {
+      "title": "Toilets Boobytrapped by Zero Population Growth Terrorists?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Zero Population Growth terrorists are boobytrapping men's toilers with razors."
+    },
+    {
+      "title": "Death by Playing Cards",
+      "rating": "legend",
+      "author": "Snopes Staff",
+      "claim": "A prisoner killed himself using a deck of playing cards."
+    },
+    {
+      "title": "AIDS Mary",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "The morning after a one-night fling, a man walks into his bathroom and finds the words \u201cWELCOME TO THE WORLD OF AIDS\u201d scrawled on the mirror in lipstick."
+    },
+    {
+      "title": "The Killer in the Backseat",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "A good Samaritan warns a female driver about the armed and dangerous man hiding in the back seat of her car."
+    },
+    {
+      "title": "Slavemaster",
+      "rating": "was true; now outdated",
+      "author": "David Mikkelson",
+      "claim": "A man using the screen name 'Slavemaster' is luring women to their deaths over the Internet."
+    },
+    {
+      "title": "DreamWeaverGrey Warning",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A man using the screen name 'DreamWeaverGrey' is luring women to their deaths over the Internet."
+    },
+    {
+      "title": "Aren't You Glad You Didn't Turn on the Light?",
+      "rating": "legend",
+      "author": "David Mikkelson",
+      "claim": "A female college student returns to her dorm room late one evening and discovers her roommate has been murdered."
+    },
+    {
+      "title": "Mutilated Boy",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A gang lures a little boy into a washroom and chops off his penis."
+    },
+    {
+      "title": "Severed Fingers",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A motorist who has a run-in with ruffians afterwards finds the severed fingers of his assailants caught on his car."
+    },
+    {
+      "title": "Did Pop Rocks and Soda Kill 'Little Mikey'?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Little Mikey of LIFE cereal fame died from the explosive effects of mixing Pop Rocks candy with soda pop."
+    },
+    {
+      "title": "Death by Saguaro",
+      "rating": "true",
+      "author": "Barbara Mikkelson",
+      "claim": "A damaged saguaro cactus fell onto the man who had harmed it and killed him."
+    },
+    {
+      "title": "Heroin Needle in the Ballpit",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A little boy dies after being pricked by a heroin-filled syringe in a playground ball pit."
+    },
+    {
+      "title": "Did Cher Have Ribs Removed To Make Her Waist Smaller?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Cher had her lowest pair of ribs surgically removed to achieve an ultra-small waist."
+    },
+    {
+      "title": "Are Robbers Subduing Victims with Perfume?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "Robbers in shopping mall parking lots are using ether-filled perfume bottles to render their victims unconscious."
+    },
+    {
+      "title": "Car Thief Dies in Earthquake",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "After the 1989 Loma Prieta earthquake, a car thief was found crushed to death under a collapsed freeway overpass in the vehicle he'd stolen."
+    },
+    {
+      "title": "Was Calvin Coolidge's Son Killed by His Socks?",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "President Calvin Coolidge's son was killed by a poisonous dye in his black socks."
+    },
+    {
+      "title": "The Microwaved Pet",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "An elderly pet owner accidentally kills her animal companion by attempting to dry it in a microwave oven."
+    },
+    {
+      "title": "Devil in the Dancehall",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "Horrified onlookers notice that the enthralling stranger dancing with a pretty girl from the village has cloven hooves."
+    },
+    {
+      "title": "Do Dealers Smuggle Drugs in Dead Babies?",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Drug dealers use hollowed-out bodies of dead children to smuggle cocaine into the U.S."
+    },
+    {
+      "title": "Urine in Corona Beer",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Workers at the Corona brewery urinate into the beer."
+    },
+    {
+      "title": "Mall Abductions",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Women are being lured out of malls and into dangerous situations with the promise of appearing in television commericals."
+    },
+    {
+      "title": "Snakes in the Ball Pit",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "Venomous snakes lurk in the ball pits of fast food restaurants."
+    },
+    {
+      "title": "Faked Hanging",
+      "rating": "legend",
+      "author": "Barbara Mikkelson",
+      "claim": "A miscreant who attempted to rip off the home of a dead man paid for the crime with his life when the shock of being kicked by the \"corpse\" was enough to bring on a fatal heart attack."
+    },
+    {
+      "title": "Bicycle Pump Death",
+      "rating": "mixture",
+      "author": "Barbara Mikkelson",
+      "claim": "A 13-year-old boy in Thailand died from pumping air up his rectum to get high."
+    },
+    {
+      "title": "Laundry Machine Death",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A Virginia man was washing machined to death."
+    },
+    {
+      "title": "Crocodile Eats Golfer",
+      "rating": "false",
+      "author": "David Mikkelson",
+      "claim": "A Palm Beach golfer was devoured by a large crocodile right on the links."
+    },
+    {
+      "title": "Menu Shouldn't Trust",
+      "rating": "undetermined",
+      "author": "Barbara Mikkelson",
+      "claim": "A woman traveling on business almost becomes a crime statistic because she filled out a room service menu."
+    },
+    {
+      "title": "Leper in Chesterfield Cigarette Factory",
+      "rating": "false",
+      "author": "Barbara Mikkelson",
+      "claim": "A leper was found working in a Chesterfield cigarette factory."
+    }
+  ]
+}

@@ -1,0 +1,1011 @@
+{
+  "meta": {
+    "name": "sleep_by_country",
+    "description": "Average daily sleep hours by country and region",
+    "source": "tidytuesday/2023-09-12/all_countries.csv + country_regions.csv",
+    "transformation": "Join with regions, filter to 'Sleep & bedrest' subcategory.",
+    "num_rows": 199,
+    "columns": {
+      "country": "str",
+      "region": "str",
+      "sleep_hours": "float64"
+    }
+  },
+  "data": [
+    {
+      "country": "Iraq",
+      "region": "Western Asia",
+      "sleep_hours": 10.21
+    },
+    {
+      "country": "Benin",
+      "region": "Western Africa",
+      "sleep_hours": 10.01
+    },
+    {
+      "country": "Algeria",
+      "region": "Northern Africa",
+      "sleep_hours": 9.94
+    },
+    {
+      "country": "Oman",
+      "region": "Western Asia",
+      "sleep_hours": 9.85
+    },
+    {
+      "country": "Congo",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Democratic Republic of the Congo",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Angola",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Gabon",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Central African Republic",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Equatorial Guinea",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Cameroon",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Chad",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Sao Tome and Principe",
+      "region": "Middle Africa",
+      "sleep_hours": 9.79
+    },
+    {
+      "country": "Botswana",
+      "region": "Southern Africa",
+      "sleep_hours": 9.73
+    },
+    {
+      "country": "Eswatini",
+      "region": "Southern Africa",
+      "sleep_hours": 9.73
+    },
+    {
+      "country": "South Africa",
+      "region": "Southern Africa",
+      "sleep_hours": 9.73
+    },
+    {
+      "country": "Namibia",
+      "region": "Southern Africa",
+      "sleep_hours": 9.73
+    },
+    {
+      "country": "Lesotho",
+      "region": "Southern Africa",
+      "sleep_hours": 9.73
+    },
+    {
+      "country": "India",
+      "region": "Southern Asia",
+      "sleep_hours": 9.57
+    },
+    {
+      "country": "Bangladesh",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Afghanistan",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Sri Lanka",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Bhutan",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Maldives",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Nepal",
+      "region": "Southern Asia",
+      "sleep_hours": 9.49
+    },
+    {
+      "country": "Lebanon",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Kuwait",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Israel",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Jordan",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "United Arab Emirates",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Armenia",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Cyprus",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Azerbaijan",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Georgia",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Bahrain",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Syrian Arab Republic",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Qatar",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Saudi Arabia",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "State of Palestine",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Yemen",
+      "region": "Western Asia",
+      "sleep_hours": 9.45
+    },
+    {
+      "country": "Albania",
+      "region": "Southern Europe",
+      "sleep_hours": 9.4
+    },
+    {
+      "country": "Libya",
+      "region": "Northern Africa",
+      "sleep_hours": 9.33
+    },
+    {
+      "country": "Egypt",
+      "region": "Northern Africa",
+      "sleep_hours": 9.33
+    },
+    {
+      "country": "Western Sahara",
+      "region": "Northern Africa",
+      "sleep_hours": 9.33
+    },
+    {
+      "country": "China",
+      "region": "Eastern Asia",
+      "sleep_hours": 9.29
+    },
+    {
+      "country": "Bulgaria",
+      "region": "Eastern Europe",
+      "sleep_hours": 9.25
+    },
+    {
+      "country": "New Zealand",
+      "region": "Australia and New Zealand",
+      "sleep_hours": 9.21
+    },
+    {
+      "country": "United States of America",
+      "region": "Northern America",
+      "sleep_hours": 9.17
+    },
+    {
+      "country": "Iran (Islamic Republic of)",
+      "region": "Southern Asia",
+      "sleep_hours": 9.17
+    },
+    {
+      "country": "China, Hong Kong Special Administrative Region",
+      "region": "Eastern Asia",
+      "sleep_hours": 9.15
+    },
+    {
+      "country": "Belarus",
+      "region": "Eastern Europe",
+      "sleep_hours": 9.15
+    },
+    {
+      "country": "Democratic People's Republic of Korea",
+      "region": "Eastern Asia",
+      "sleep_hours": 9.15
+    },
+    {
+      "country": "Taiwan",
+      "region": "Eastern Asia",
+      "sleep_hours": 9.15
+    },
+    {
+      "country": "China, Macao Special Administrative Region",
+      "region": "Eastern Asia",
+      "sleep_hours": 9.15
+    },
+    {
+      "country": "Romania",
+      "region": "Eastern Europe",
+      "sleep_hours": 9.14
+    },
+    {
+      "country": "Turkey",
+      "region": "Western Asia",
+      "sleep_hours": 9.14
+    },
+    {
+      "country": "Estonia",
+      "region": "Northern Europe",
+      "sleep_hours": 9.11
+    },
+    {
+      "country": "Canada",
+      "region": "Northern America",
+      "sleep_hours": 9.04
+    },
+    {
+      "country": "Pakistan",
+      "region": "Southern Asia",
+      "sleep_hours": 8.99
+    },
+    {
+      "country": "Luxembourg",
+      "region": "Western Europe",
+      "sleep_hours": 8.98
+    },
+    {
+      "country": "United Republic of Tanzania",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.97
+    },
+    {
+      "country": "Finland",
+      "region": "Northern Europe",
+      "sleep_hours": 8.95
+    },
+    {
+      "country": "Czechia",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.95
+    },
+    {
+      "country": "Ukraine",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.95
+    },
+    {
+      "country": "Slovakia",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.95
+    },
+    {
+      "country": "Republic of Moldova",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.95
+    },
+    {
+      "country": "Burundi",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Comoros",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Djibouti",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Eritrea",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "United Kingdom of Great Britain and Northern Ireland",
+      "region": "Northern Europe",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Mozambique",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Malawi",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Zimbabwe",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Somalia",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "South Sudan",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Madagascar",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Mayotte",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Kenya",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Uganda",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Zambia",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Rwanda",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "R\u00e9union",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Seychelles",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.93
+    },
+    {
+      "country": "Ethiopia",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.92
+    },
+    {
+      "country": "Russian Federation",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.91
+    },
+    {
+      "country": "Belgium",
+      "region": "Western Europe",
+      "sleep_hours": 8.91
+    },
+    {
+      "country": "Australia",
+      "region": "Australia and New Zealand",
+      "sleep_hours": 8.9
+    },
+    {
+      "country": "Poland",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.89
+    },
+    {
+      "country": "Morocco",
+      "region": "Northern Africa",
+      "sleep_hours": 8.89
+    },
+    {
+      "country": "Greece",
+      "region": "Southern Europe",
+      "sleep_hours": 8.87
+    },
+    {
+      "country": "Brazil",
+      "region": "South America",
+      "sleep_hours": 8.87
+    },
+    {
+      "country": "Latvia",
+      "region": "Northern Europe",
+      "sleep_hours": 8.87
+    },
+    {
+      "country": "Spain",
+      "region": "Southern Europe",
+      "sleep_hours": 8.87
+    },
+    {
+      "country": "France",
+      "region": "Western Europe",
+      "sleep_hours": 8.87
+    },
+    {
+      "country": "Iceland",
+      "region": "Northern Europe",
+      "sleep_hours": 8.84
+    },
+    {
+      "country": "Denmark",
+      "region": "Northern Europe",
+      "sleep_hours": 8.84
+    },
+    {
+      "country": "Lithuania",
+      "region": "Northern Europe",
+      "sleep_hours": 8.84
+    },
+    {
+      "country": "Gambia",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Guinea",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Guinea-Bissau",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Cabo Verde",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "C\u00f4te d\u2019Ivoire",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Portugal",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Senegal",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Togo",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Sierra Leone",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Mali",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Mauritania",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Burkina Faso",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Montenegro",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Malta",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "North Macedonia",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Liberia",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Croatia",
+      "region": "Southern Europe",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Nigeria",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Niger",
+      "region": "Western Africa",
+      "sleep_hours": 8.83
+    },
+    {
+      "country": "Hungary",
+      "region": "Eastern Europe",
+      "sleep_hours": 8.82
+    },
+    {
+      "country": "Mauritius",
+      "region": "Eastern Africa",
+      "sleep_hours": 8.82
+    },
+    {
+      "country": "Netherlands",
+      "region": "Western Europe",
+      "sleep_hours": 8.81
+    },
+    {
+      "country": "Italy",
+      "region": "Southern Europe",
+      "sleep_hours": 8.79
+    },
+    {
+      "country": "Chile",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Argentina",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Bolivia (Plurinational State of)",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Austria",
+      "region": "Western Europe",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Ecuador",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Uruguay",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "French Guiana",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Guyana",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Paraguay",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Peru",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Suriname",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Venezuela (Bolivarian Republic of)",
+      "region": "South America",
+      "sleep_hours": 8.78
+    },
+    {
+      "country": "Switzerland",
+      "region": "Western Europe",
+      "sleep_hours": 8.77
+    },
+    {
+      "country": "Uzbekistan",
+      "region": "Central Asia",
+      "sleep_hours": 8.74
+    },
+    {
+      "country": "Tajikistan",
+      "region": "Central Asia",
+      "sleep_hours": 8.74
+    },
+    {
+      "country": "Turkmenistan",
+      "region": "Central Asia",
+      "sleep_hours": 8.74
+    },
+    {
+      "country": "Kazakhstan",
+      "region": "Central Asia",
+      "sleep_hours": 8.74
+    },
+    {
+      "country": "Kyrgyzstan",
+      "region": "Central Asia",
+      "sleep_hours": 8.74
+    },
+    {
+      "country": "Ireland",
+      "region": "Northern Europe",
+      "sleep_hours": 8.72
+    },
+    {
+      "country": "Serbia",
+      "region": "Southern Europe",
+      "sleep_hours": 8.67
+    },
+    {
+      "country": "Germany",
+      "region": "Western Europe",
+      "sleep_hours": 8.67
+    },
+    {
+      "country": "Costa Rica",
+      "region": "Central America",
+      "sleep_hours": 8.63
+    },
+    {
+      "country": "Slovenia",
+      "region": "Southern Europe",
+      "sleep_hours": 8.63
+    },
+    {
+      "country": "Mongolia",
+      "region": "Eastern Asia",
+      "sleep_hours": 8.6
+    },
+    {
+      "country": "Tunisia",
+      "region": "Northern Africa",
+      "sleep_hours": 8.55
+    },
+    {
+      "country": "Norway",
+      "region": "Northern Europe",
+      "sleep_hours": 8.52
+    },
+    {
+      "country": "Fiji",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Micronesia (Federated States of)",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Brunei Darussalam",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Viet Nam",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Samoa",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Timor-Leste",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Solomon Islands",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "French Polynesia",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Papua New Guinea",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Thailand",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Tonga",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Vanuatu",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Myanmar",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Singapore",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Cambodia",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Guam",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Indonesia",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "New Caledonia",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Kiribati",
+      "region": "Western Pacific Islands",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Malaysia",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Philippines",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Lao People's Democratic Republic",
+      "region": "South-eastern Asia",
+      "sleep_hours": 8.5
+    },
+    {
+      "country": "Colombia",
+      "region": "South America",
+      "sleep_hours": 8.47
+    },
+    {
+      "country": "Sweden",
+      "region": "Northern Europe",
+      "sleep_hours": 8.37
+    },
+    {
+      "country": "Republic of Korea",
+      "region": "Eastern Asia",
+      "sleep_hours": 8.36
+    },
+    {
+      "country": "Ghana",
+      "region": "Western Africa",
+      "sleep_hours": 8.33
+    },
+    {
+      "country": "Guadeloupe",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Aruba",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Cura\u00e7ao",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Cuba",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Dominican Republic",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Belize",
+      "region": "Central America",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Bahamas",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Antigua and Barbuda",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Barbados",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Grenada",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Honduras",
+      "region": "Central America",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Saint Lucia",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Nicaragua",
+      "region": "Central America",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Haiti",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Guatemala",
+      "region": "Central America",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Jamaica",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Martinique",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Saint Vincent and the Grenadines",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Trinidad and Tobago",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Panama",
+      "region": "Central America",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Puerto Rico",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "United States Virgin Islands",
+      "region": "Caribbean",
+      "sleep_hours": 8.21
+    },
+    {
+      "country": "Mexico",
+      "region": "Central America",
+      "sleep_hours": 8.2
+    },
+    {
+      "country": "El Salvador",
+      "region": "Central America",
+      "sleep_hours": 8.19
+    },
+    {
+      "country": "Japan",
+      "region": "Eastern Asia",
+      "sleep_hours": 8.01
+    }
+  ]
+}

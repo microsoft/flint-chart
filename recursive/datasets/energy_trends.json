@@ -1,0 +1,1073 @@
+{
+  "meta": {
+    "name": "energy_trends",
+    "description": "Renewable vs fossil energy share trends for 8 major countries",
+    "source": "tidytuesday/2023-06-06/owid-energy.csv",
+    "transformation": "Filter to 8 major countries, 2000+, select renewable and fossil share.",
+    "num_rows": 176,
+    "columns": {
+      "country": "str",
+      "year": "int64",
+      "renewables_share_energy": "float64",
+      "fossil_share_energy": "float64"
+    }
+  },
+  "data": [
+    {
+      "country": "Brazil",
+      "year": 2000,
+      "renewables_share_energy": 43.288,
+      "fossil_share_energy": 55.964
+    },
+    {
+      "country": "Brazil",
+      "year": 2001,
+      "renewables_share_energy": 39.112,
+      "fossil_share_energy": 59.092
+    },
+    {
+      "country": "Brazil",
+      "year": 2002,
+      "renewables_share_energy": 40.757,
+      "fossil_share_energy": 57.557
+    },
+    {
+      "country": "Brazil",
+      "year": 2003,
+      "renewables_share_energy": 42.284,
+      "fossil_share_energy": 56.127
+    },
+    {
+      "country": "Brazil",
+      "year": 2004,
+      "renewables_share_energy": 42.286,
+      "fossil_share_energy": 56.405
+    },
+    {
+      "country": "Brazil",
+      "year": 2005,
+      "renewables_share_energy": 43.146,
+      "fossil_share_energy": 55.781
+    },
+    {
+      "country": "Brazil",
+      "year": 2006,
+      "renewables_share_energy": 43.046,
+      "fossil_share_energy": 55.503
+    },
+    {
+      "country": "Brazil",
+      "year": 2007,
+      "renewables_share_energy": 44.38,
+      "fossil_share_energy": 54.4
+    },
+    {
+      "country": "Brazil",
+      "year": 2008,
+      "renewables_share_energy": 43.367,
+      "fossil_share_energy": 55.317
+    },
+    {
+      "country": "Brazil",
+      "year": 2009,
+      "renewables_share_energy": 46.309,
+      "fossil_share_energy": 52.471
+    },
+    {
+      "country": "Brazil",
+      "year": 2010,
+      "renewables_share_energy": 44.247,
+      "fossil_share_energy": 54.519
+    },
+    {
+      "country": "Brazil",
+      "year": 2011,
+      "renewables_share_energy": 43.91,
+      "fossil_share_energy": 54.825
+    },
+    {
+      "country": "Brazil",
+      "year": 2012,
+      "renewables_share_energy": 42.066,
+      "fossil_share_energy": 56.67
+    },
+    {
+      "country": "Brazil",
+      "year": 2013,
+      "renewables_share_energy": 39.837,
+      "fossil_share_energy": 58.994
+    },
+    {
+      "country": "Brazil",
+      "year": 2014,
+      "renewables_share_energy": 38.853,
+      "fossil_share_energy": 60.017
+    },
+    {
+      "country": "Brazil",
+      "year": 2015,
+      "renewables_share_energy": 40.604,
+      "fossil_share_energy": 58.291
+    },
+    {
+      "country": "Brazil",
+      "year": 2016,
+      "renewables_share_energy": 43.539,
+      "fossil_share_energy": 55.251
+    },
+    {
+      "country": "Brazil",
+      "year": 2017,
+      "renewables_share_energy": 43.281,
+      "fossil_share_energy": 55.539
+    },
+    {
+      "country": "Brazil",
+      "year": 2018,
+      "renewables_share_energy": 46.08,
+      "fossil_share_energy": 52.755
+    },
+    {
+      "country": "Brazil",
+      "year": 2019,
+      "renewables_share_energy": 47.305,
+      "fossil_share_energy": 51.525
+    },
+    {
+      "country": "Brazil",
+      "year": 2020,
+      "renewables_share_energy": 49.472,
+      "fossil_share_energy": 49.466
+    },
+    {
+      "country": "Brazil",
+      "year": 2021,
+      "renewables_share_energy": 46.22,
+      "fossil_share_energy": 52.722
+    },
+    {
+      "country": "China",
+      "year": 2000,
+      "renewables_share_energy": 5.657,
+      "fossil_share_energy": 93.941
+    },
+    {
+      "country": "China",
+      "year": 2001,
+      "renewables_share_energy": 6.619,
+      "fossil_share_energy": 92.986
+    },
+    {
+      "country": "China",
+      "year": 2002,
+      "renewables_share_energy": 6.28,
+      "fossil_share_energy": 93.201
+    },
+    {
+      "country": "China",
+      "year": 2003,
+      "renewables_share_energy": 5.301,
+      "fossil_share_energy": 93.936
+    },
+    {
+      "country": "China",
+      "year": 2004,
+      "renewables_share_energy": 5.601,
+      "fossil_share_energy": 93.645
+    },
+    {
+      "country": "China",
+      "year": 2005,
+      "renewables_share_energy": 5.554,
+      "fossil_share_energy": 93.752
+    },
+    {
+      "country": "China",
+      "year": 2006,
+      "renewables_share_energy": 5.578,
+      "fossil_share_energy": 93.772
+    },
+    {
+      "country": "China",
+      "year": 2007,
+      "renewables_share_energy": 5.719,
+      "fossil_share_energy": 93.608
+    },
+    {
+      "country": "China",
+      "year": 2008,
+      "renewables_share_energy": 7.269,
+      "fossil_share_energy": 92.023
+    },
+    {
+      "country": "China",
+      "year": 2009,
+      "renewables_share_energy": 6.936,
+      "fossil_share_energy": 92.373
+    },
+    {
+      "country": "China",
+      "year": 2010,
+      "renewables_share_energy": 7.616,
+      "fossil_share_energy": 91.699
+    },
+    {
+      "country": "China",
+      "year": 2011,
+      "renewables_share_energy": 7.084,
+      "fossil_share_energy": 92.179
+    },
+    {
+      "country": "China",
+      "year": 2012,
+      "renewables_share_energy": 8.523,
+      "fossil_share_energy": 90.684
+    },
+    {
+      "country": "China",
+      "year": 2013,
+      "renewables_share_energy": 8.959,
+      "fossil_share_energy": 90.179
+    },
+    {
+      "country": "China",
+      "year": 2014,
+      "renewables_share_energy": 10.197,
+      "fossil_share_energy": 88.809
+    },
+    {
+      "country": "China",
+      "year": 2015,
+      "renewables_share_energy": 10.787,
+      "fossil_share_energy": 87.957
+    },
+    {
+      "country": "China",
+      "year": 2016,
+      "renewables_share_energy": 11.531,
+      "fossil_share_energy": 86.943
+    },
+    {
+      "country": "China",
+      "year": 2017,
+      "renewables_share_energy": 12.139,
+      "fossil_share_energy": 86.154
+    },
+    {
+      "country": "China",
+      "year": 2018,
+      "renewables_share_energy": 12.807,
+      "fossil_share_energy": 85.251
+    },
+    {
+      "country": "China",
+      "year": 2019,
+      "renewables_share_energy": 13.516,
+      "fossil_share_energy": 84.278
+    },
+    {
+      "country": "China",
+      "year": 2020,
+      "renewables_share_energy": 14.243,
+      "fossil_share_energy": 83.506
+    },
+    {
+      "country": "China",
+      "year": 2021,
+      "renewables_share_energy": 14.946,
+      "fossil_share_energy": 82.717
+    },
+    {
+      "country": "France",
+      "year": 2000,
+      "renewables_share_energy": 6.745,
+      "fossil_share_energy": 55.344
+    },
+    {
+      "country": "France",
+      "year": 2001,
+      "renewables_share_energy": 7.405,
+      "fossil_share_energy": 54.856
+    },
+    {
+      "country": "France",
+      "year": 2002,
+      "renewables_share_energy": 6.176,
+      "fossil_share_energy": 54.529
+    },
+    {
+      "country": "France",
+      "year": 2003,
+      "renewables_share_energy": 5.962,
+      "fossil_share_energy": 55.01
+    },
+    {
+      "country": "France",
+      "year": 2004,
+      "renewables_share_energy": 5.97,
+      "fossil_share_energy": 54.941
+    },
+    {
+      "country": "France",
+      "year": 2005,
+      "renewables_share_energy": 5.365,
+      "fossil_share_energy": 55.278
+    },
+    {
+      "country": "France",
+      "year": 2006,
+      "renewables_share_energy": 5.97,
+      "fossil_share_energy": 54.722
+    },
+    {
+      "country": "France",
+      "year": 2007,
+      "renewables_share_energy": 6.639,
+      "fossil_share_energy": 54.526
+    },
+    {
+      "country": "France",
+      "year": 2008,
+      "renewables_share_energy": 7.632,
+      "fossil_share_energy": 53.918
+    },
+    {
+      "country": "France",
+      "year": 2009,
+      "renewables_share_energy": 7.706,
+      "fossil_share_energy": 54.56
+    },
+    {
+      "country": "France",
+      "year": 2010,
+      "renewables_share_energy": 8.22,
+      "fossil_share_energy": 53.706
+    },
+    {
+      "country": "France",
+      "year": 2011,
+      "renewables_share_energy": 7.186,
+      "fossil_share_energy": 52.17
+    },
+    {
+      "country": "France",
+      "year": 2012,
+      "renewables_share_energy": 9.137,
+      "fossil_share_energy": 52.039
+    },
+    {
+      "country": "France",
+      "year": 2013,
+      "renewables_share_energy": 10.459,
+      "fossil_share_energy": 51.514
+    },
+    {
+      "country": "France",
+      "year": 2014,
+      "renewables_share_energy": 10.459,
+      "fossil_share_energy": 48.895
+    },
+    {
+      "country": "France",
+      "year": 2015,
+      "renewables_share_energy": 10.147,
+      "fossil_share_energy": 49.599
+    },
+    {
+      "country": "France",
+      "year": 2016,
+      "renewables_share_energy": 10.975,
+      "fossil_share_energy": 51.51
+    },
+    {
+      "country": "France",
+      "year": 2017,
+      "renewables_share_energy": 10.437,
+      "fossil_share_energy": 52.442
+    },
+    {
+      "country": "France",
+      "year": 2018,
+      "renewables_share_energy": 12.132,
+      "fossil_share_energy": 50.306
+    },
+    {
+      "country": "France",
+      "year": 2019,
+      "renewables_share_energy": 12.385,
+      "fossil_share_energy": 50.674
+    },
+    {
+      "country": "France",
+      "year": 2020,
+      "renewables_share_energy": 14.789,
+      "fossil_share_energy": 48.967
+    },
+    {
+      "country": "France",
+      "year": 2021,
+      "renewables_share_energy": 13.671,
+      "fossil_share_energy": 49.871
+    },
+    {
+      "country": "Germany",
+      "year": 2000,
+      "renewables_share_energy": 2.887,
+      "fossil_share_energy": 85.046
+    },
+    {
+      "country": "Germany",
+      "year": 2001,
+      "renewables_share_energy": 2.941,
+      "fossil_share_energy": 85.172
+    },
+    {
+      "country": "Germany",
+      "year": 2002,
+      "renewables_share_energy": 3.539,
+      "fossil_share_energy": 84.952
+    },
+    {
+      "country": "Germany",
+      "year": 2003,
+      "renewables_share_energy": 3.642,
+      "fossil_share_energy": 84.904
+    },
+    {
+      "country": "Germany",
+      "year": 2004,
+      "renewables_share_energy": 4.517,
+      "fossil_share_energy": 83.963
+    },
+    {
+      "country": "Germany",
+      "year": 2005,
+      "renewables_share_energy": 5.208,
+      "fossil_share_energy": 83.486
+    },
+    {
+      "country": "Germany",
+      "year": 2006,
+      "renewables_share_energy": 6.026,
+      "fossil_share_energy": 82.725
+    },
+    {
+      "country": "Germany",
+      "year": 2007,
+      "renewables_share_energy": 7.654,
+      "fossil_share_energy": 82.552
+    },
+    {
+      "country": "Germany",
+      "year": 2008,
+      "renewables_share_energy": 7.818,
+      "fossil_share_energy": 81.986
+    },
+    {
+      "country": "Germany",
+      "year": 2009,
+      "renewables_share_energy": 8.454,
+      "fossil_share_energy": 81.752
+    },
+    {
+      "country": "Germany",
+      "year": 2010,
+      "renewables_share_energy": 8.792,
+      "fossil_share_energy": 81.477
+    },
+    {
+      "country": "Germany",
+      "year": 2011,
+      "renewables_share_energy": 10.567,
+      "fossil_share_energy": 81.73
+    },
+    {
+      "country": "Germany",
+      "year": 2012,
+      "renewables_share_energy": 11.9,
+      "fossil_share_energy": 81.144
+    },
+    {
+      "country": "Germany",
+      "year": 2013,
+      "renewables_share_energy": 12.063,
+      "fossil_share_energy": 81.359
+    },
+    {
+      "country": "Germany",
+      "year": 2014,
+      "renewables_share_energy": 13.279,
+      "fossil_share_energy": 79.912
+    },
+    {
+      "country": "Germany",
+      "year": 2015,
+      "renewables_share_energy": 14.824,
+      "fossil_share_energy": 78.899
+    },
+    {
+      "country": "Germany",
+      "year": 2016,
+      "renewables_share_energy": 14.607,
+      "fossil_share_energy": 79.732
+    },
+    {
+      "country": "Germany",
+      "year": 2017,
+      "renewables_share_energy": 16.196,
+      "fossil_share_energy": 78.794
+    },
+    {
+      "country": "Germany",
+      "year": 2018,
+      "renewables_share_energy": 17.085,
+      "fossil_share_energy": 77.827
+    },
+    {
+      "country": "Germany",
+      "year": 2019,
+      "renewables_share_energy": 18.768,
+      "fossil_share_energy": 76.093
+    },
+    {
+      "country": "Germany",
+      "year": 2020,
+      "renewables_share_energy": 21.123,
+      "fossil_share_energy": 74.15
+    },
+    {
+      "country": "Germany",
+      "year": 2021,
+      "renewables_share_energy": 19.453,
+      "fossil_share_energy": 75.613
+    },
+    {
+      "country": "India",
+      "year": 2000,
+      "renewables_share_energy": 6.376,
+      "fossil_share_energy": 92.424
+    },
+    {
+      "country": "India",
+      "year": 2001,
+      "renewables_share_energy": 5.993,
+      "fossil_share_energy": 92.585
+    },
+    {
+      "country": "India",
+      "year": 2002,
+      "renewables_share_energy": 5.732,
+      "fossil_share_energy": 92.866
+    },
+    {
+      "country": "India",
+      "year": 2003,
+      "renewables_share_energy": 5.624,
+      "fossil_share_energy": 93.115
+    },
+    {
+      "country": "India",
+      "year": 2004,
+      "renewables_share_energy": 7.461,
+      "fossil_share_energy": 91.187
+    },
+    {
+      "country": "India",
+      "year": 2005,
+      "renewables_share_energy": 6.894,
+      "fossil_share_energy": 92.048
+    },
+    {
+      "country": "India",
+      "year": 2006,
+      "renewables_share_energy": 7.706,
+      "fossil_share_energy": 91.301
+    },
+    {
+      "country": "India",
+      "year": 2007,
+      "renewables_share_energy": 7.856,
+      "fossil_share_energy": 91.225
+    },
+    {
+      "country": "India",
+      "year": 2008,
+      "renewables_share_energy": 7.257,
+      "fossil_share_energy": 92.006
+    },
+    {
+      "country": "India",
+      "year": 2009,
+      "renewables_share_energy": 6.474,
+      "fossil_share_energy": 92.776
+    },
+    {
+      "country": "India",
+      "year": 2010,
+      "renewables_share_energy": 6.584,
+      "fossil_share_energy": 92.436
+    },
+    {
+      "country": "India",
+      "year": 2011,
+      "renewables_share_energy": 7.501,
+      "fossil_share_energy": 91.216
+    },
+    {
+      "country": "India",
+      "year": 2012,
+      "renewables_share_energy": 6.727,
+      "fossil_share_energy": 92.036
+    },
+    {
+      "country": "India",
+      "year": 2013,
+      "renewables_share_energy": 7.33,
+      "fossil_share_energy": 91.476
+    },
+    {
+      "country": "India",
+      "year": 2014,
+      "renewables_share_energy": 7.344,
+      "fossil_share_energy": 91.5
+    },
+    {
+      "country": "India",
+      "year": 2015,
+      "renewables_share_energy": 7.185,
+      "fossil_share_energy": 91.583
+    },
+    {
+      "country": "India",
+      "year": 2016,
+      "renewables_share_energy": 7.011,
+      "fossil_share_energy": 91.827
+    },
+    {
+      "country": "India",
+      "year": 2017,
+      "renewables_share_energy": 7.512,
+      "fossil_share_energy": 91.39
+    },
+    {
+      "country": "India",
+      "year": 2018,
+      "renewables_share_energy": 7.913,
+      "fossil_share_energy": 91.017
+    },
+    {
+      "country": "India",
+      "year": 2019,
+      "renewables_share_energy": 8.85,
+      "fossil_share_energy": 89.946
+    },
+    {
+      "country": "India",
+      "year": 2020,
+      "renewables_share_energy": 9.73,
+      "fossil_share_energy": 89.013
+    },
+    {
+      "country": "India",
+      "year": 2021,
+      "renewables_share_energy": 9.311,
+      "fossil_share_energy": 89.569
+    },
+    {
+      "country": "Japan",
+      "year": 2000,
+      "renewables_share_energy": 4.827,
+      "fossil_share_energy": 80.667
+    },
+    {
+      "country": "Japan",
+      "year": 2001,
+      "renewables_share_energy": 4.716,
+      "fossil_share_energy": 80.67
+    },
+    {
+      "country": "Japan",
+      "year": 2002,
+      "renewables_share_energy": 4.703,
+      "fossil_share_energy": 81.083
+    },
+    {
+      "country": "Japan",
+      "year": 2003,
+      "renewables_share_energy": 5.332,
+      "fossil_share_energy": 84.291
+    },
+    {
+      "country": "Japan",
+      "year": 2004,
+      "renewables_share_energy": 5.258,
+      "fossil_share_energy": 82.077
+    },
+    {
+      "country": "Japan",
+      "year": 2005,
+      "renewables_share_energy": 4.79,
+      "fossil_share_energy": 82.354
+    },
+    {
+      "country": "Japan",
+      "year": 2006,
+      "renewables_share_energy": 5.309,
+      "fossil_share_energy": 81.394
+    },
+    {
+      "country": "Japan",
+      "year": 2007,
+      "renewables_share_energy": 4.762,
+      "fossil_share_energy": 82.99
+    },
+    {
+      "country": "Japan",
+      "year": 2008,
+      "renewables_share_energy": 4.831,
+      "fossil_share_energy": 83.99
+    },
+    {
+      "country": "Japan",
+      "year": 2009,
+      "renewables_share_energy": 5.021,
+      "fossil_share_energy": 81.695
+    },
+    {
+      "country": "Japan",
+      "year": 2010,
+      "renewables_share_energy": 5.685,
+      "fossil_share_energy": 81.095
+    },
+    {
+      "country": "Japan",
+      "year": 2011,
+      "renewables_share_energy": 5.733,
+      "fossil_share_energy": 86.515
+    },
+    {
+      "country": "Japan",
+      "year": 2012,
+      "renewables_share_energy": 5.65,
+      "fossil_share_energy": 93.454
+    },
+    {
+      "country": "Japan",
+      "year": 2013,
+      "renewables_share_energy": 6.13,
+      "fossil_share_energy": 93.129
+    },
+    {
+      "country": "Japan",
+      "year": 2014,
+      "renewables_share_energy": 6.936,
+      "fossil_share_energy": 93.001
+    },
+    {
+      "country": "Japan",
+      "year": 2015,
+      "renewables_share_energy": 8.069,
+      "fossil_share_energy": 91.636
+    },
+    {
+      "country": "Japan",
+      "year": 2016,
+      "renewables_share_energy": 7.976,
+      "fossil_share_energy": 91.062
+    },
+    {
+      "country": "Japan",
+      "year": 2017,
+      "renewables_share_energy": 8.634,
+      "fossil_share_energy": 89.858
+    },
+    {
+      "country": "Japan",
+      "year": 2018,
+      "renewables_share_energy": 9.322,
+      "fossil_share_energy": 88.208
+    },
+    {
+      "country": "Japan",
+      "year": 2019,
+      "renewables_share_energy": 9.566,
+      "fossil_share_energy": 87.101
+    },
+    {
+      "country": "Japan",
+      "year": 2020,
+      "renewables_share_energy": 11.155,
+      "fossil_share_energy": 86.448
+    },
+    {
+      "country": "Japan",
+      "year": 2021,
+      "renewables_share_energy": 11.429,
+      "fossil_share_energy": 85.344
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2000,
+      "renewables_share_energy": 1.135,
+      "fossil_share_energy": 89.807
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2001,
+      "renewables_share_energy": 1.086,
+      "fossil_share_energy": 89.471
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2002,
+      "renewables_share_energy": 1.288,
+      "fossil_share_energy": 89.364
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2003,
+      "renewables_share_energy": 1.234,
+      "fossil_share_energy": 89.536
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2004,
+      "renewables_share_energy": 1.608,
+      "fossil_share_energy": 90.163
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2005,
+      "renewables_share_energy": 1.925,
+      "fossil_share_energy": 89.826
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2006,
+      "renewables_share_energy": 2.116,
+      "fossil_share_energy": 90.212
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2007,
+      "renewables_share_energy": 2.422,
+      "fossil_share_energy": 91.013
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2008,
+      "renewables_share_energy": 2.912,
+      "fossil_share_energy": 91.554
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2009,
+      "renewables_share_energy": 3.545,
+      "fossil_share_energy": 88.841
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2010,
+      "renewables_share_energy": 3.659,
+      "fossil_share_energy": 89.692
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2011,
+      "renewables_share_energy": 4.891,
+      "fossil_share_energy": 87.358
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2012,
+      "renewables_share_energy": 5.454,
+      "fossil_share_energy": 86.781
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2013,
+      "renewables_share_energy": 6.955,
+      "fossil_share_energy": 85.277
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2014,
+      "renewables_share_energy": 8.877,
+      "fossil_share_energy": 83.74
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2015,
+      "renewables_share_energy": 10.977,
+      "fossil_share_energy": 81.039
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2016,
+      "renewables_share_energy": 11.038,
+      "fossil_share_energy": 80.783
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2017,
+      "renewables_share_energy": 12.948,
+      "fossil_share_energy": 79.058
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2018,
+      "renewables_share_energy": 14.526,
+      "fossil_share_energy": 78.091
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2019,
+      "renewables_share_energy": 16.242,
+      "fossil_share_energy": 77.255
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2020,
+      "renewables_share_energy": 20.079,
+      "fossil_share_energy": 73.46
+    },
+    {
+      "country": "United Kingdom",
+      "year": 2021,
+      "renewables_share_energy": 17.947,
+      "fossil_share_energy": 76.278
+    },
+    {
+      "country": "United States",
+      "year": 2000,
+      "renewables_share_energy": 4.027,
+      "fossil_share_energy": 87.49
+    },
+    {
+      "country": "United States",
+      "year": 2001,
+      "renewables_share_energy": 3.421,
+      "fossil_share_energy": 87.774
+    },
+    {
+      "country": "United States",
+      "year": 2002,
+      "renewables_share_energy": 4.016,
+      "fossil_share_energy": 87.239
+    },
+    {
+      "country": "United States",
+      "year": 2003,
+      "renewables_share_energy": 4.18,
+      "fossil_share_energy": 87.339
+    },
+    {
+      "country": "United States",
+      "year": 2004,
+      "renewables_share_energy": 4.102,
+      "fossil_share_energy": 87.365
+    },
+    {
+      "country": "United States",
+      "year": 2005,
+      "renewables_share_energy": 4.219,
+      "fossil_share_energy": 87.376
+    },
+    {
+      "country": "United States",
+      "year": 2006,
+      "renewables_share_energy": 4.679,
+      "fossil_share_energy": 86.846
+    },
+    {
+      "country": "United States",
+      "year": 2007,
+      "renewables_share_energy": 4.373,
+      "fossil_share_energy": 87.116
+    },
+    {
+      "country": "United States",
+      "year": 2008,
+      "renewables_share_energy": 5.005,
+      "fossil_share_energy": 86.329
+    },
+    {
+      "country": "United States",
+      "year": 2009,
+      "renewables_share_energy": 5.8,
+      "fossil_share_energy": 85.224
+    },
+    {
+      "country": "United States",
+      "year": 2010,
+      "renewables_share_energy": 5.841,
+      "fossil_share_energy": 85.442
+    },
+    {
+      "country": "United States",
+      "year": 2011,
+      "renewables_share_energy": 6.897,
+      "fossil_share_energy": 84.544
+    },
+    {
+      "country": "United States",
+      "year": 2012,
+      "renewables_share_energy": 6.886,
+      "fossil_share_energy": 84.607
+    },
+    {
+      "country": "United States",
+      "year": 2013,
+      "renewables_share_energy": 7.135,
+      "fossil_share_energy": 84.423
+    },
+    {
+      "country": "United States",
+      "year": 2014,
+      "renewables_share_energy": 7.263,
+      "fossil_share_energy": 84.346
+    },
+    {
+      "country": "United States",
+      "year": 2015,
+      "renewables_share_energy": 7.469,
+      "fossil_share_energy": 84.109
+    },
+    {
+      "country": "United States",
+      "year": 2016,
+      "renewables_share_energy": 8.285,
+      "fossil_share_energy": 83.245
+    },
+    {
+      "country": "United States",
+      "year": 2017,
+      "renewables_share_energy": 9.082,
+      "fossil_share_energy": 82.537
+    },
+    {
+      "country": "United States",
+      "year": 2018,
+      "renewables_share_energy": 8.965,
+      "fossil_share_energy": 82.976
+    },
+    {
+      "country": "United States",
+      "year": 2019,
+      "renewables_share_energy": 9.315,
+      "fossil_share_energy": 82.574
+    },
+    {
+      "country": "United States",
+      "year": 2020,
+      "renewables_share_energy": 10.532,
+      "fossil_share_energy": 80.948
+    },
+    {
+      "country": "United States",
+      "year": 2021,
+      "renewables_share_energy": 10.656,
+      "fossil_share_energy": 81.38
+    }
+  ]
+}

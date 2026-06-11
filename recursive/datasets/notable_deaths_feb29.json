@@ -1,0 +1,452 @@
+{
+  "meta": {
+    "name": "notable_deaths_feb29",
+    "description": "Notable people who died on February 29",
+    "source": "tidytuesday/2024-02-27/deaths.csv",
+    "transformation": "Compute age at death.",
+    "num_rows": 62,
+    "columns": {
+      "year_death": "int64",
+      "person": "str",
+      "description": "str",
+      "year_birth": "float64",
+      "age_at_death": "float64"
+    }
+  },
+  "data": [
+    {
+      "year_death": 468,
+      "person": "Pope Hilarius",
+      "description": null,
+      "year_birth": null,
+      "age_at_death": null
+    },
+    {
+      "year_death": 992,
+      "person": "Oswald of Worcester",
+      "description": "Anglo-Saxon archbishop and saint ",
+      "year_birth": 925.0,
+      "age_at_death": 67.0
+    },
+    {
+      "year_death": 1460,
+      "person": "Albert III",
+      "description": "Duke of Bavaria-Munich ",
+      "year_birth": 1401.0,
+      "age_at_death": 59.0
+    },
+    {
+      "year_death": 1528,
+      "person": "Patrick Hamilton",
+      "description": "Scottish Protestant reformer and martyr ",
+      "year_birth": 1504.0,
+      "age_at_death": 24.0
+    },
+    {
+      "year_death": 1592,
+      "person": "Alessandro Striggio",
+      "description": "Italian composer and diplomat ",
+      "year_birth": 1536.0,
+      "age_at_death": 56.0
+    },
+    {
+      "year_death": 1600,
+      "person": "Caspar Hennenberger",
+      "description": "German pastor, historian and cartographer ",
+      "year_birth": 1529.0,
+      "age_at_death": 71.0
+    },
+    {
+      "year_death": 1604,
+      "person": "John Whitgift",
+      "description": "English archbishop and academic ",
+      "year_birth": 1530.0,
+      "age_at_death": 74.0
+    },
+    {
+      "year_death": 1712,
+      "person": "Johann Conrad Peyer",
+      "description": "Swiss anatomist ",
+      "year_birth": 1653.0,
+      "age_at_death": 59.0
+    },
+    {
+      "year_death": 1744,
+      "person": "John Theophilus Desaguliers",
+      "description": "French-English physicist and philosopher ",
+      "year_birth": 1683.0,
+      "age_at_death": 61.0
+    },
+    {
+      "year_death": 1792,
+      "person": "Johann Andreas Stein",
+      "description": "German piano builder ",
+      "year_birth": 1728.0,
+      "age_at_death": 64.0
+    },
+    {
+      "year_death": 1820,
+      "person": "Johann Joachim Eschenburg",
+      "description": "German historian and critic ",
+      "year_birth": 1743.0,
+      "age_at_death": 77.0
+    },
+    {
+      "year_death": 1848,
+      "person": "Louis-Fran\u00e7ois Lejeune",
+      "description": "French general, painter and lithographer ",
+      "year_birth": 1775.0,
+      "age_at_death": 73.0
+    },
+    {
+      "year_death": 1856,
+      "person": "Auguste Chapdelaine",
+      "description": "French Christian missionary ",
+      "year_birth": 1814.0,
+      "age_at_death": 42.0
+    },
+    {
+      "year_death": 1868,
+      "person": "Ludwig I of Bavaria ",
+      "description": null,
+      "year_birth": 1786.0,
+      "age_at_death": 82.0
+    },
+    {
+      "year_death": 1880,
+      "person": "James Milne Wilson",
+      "description": "Scottish-Australian soldier and politician, 8th Premier of Tasmania ",
+      "year_birth": 1812.0,
+      "age_at_death": 68.0
+    },
+    {
+      "year_death": 1904,
+      "person": "Patrick O'Sullivan",
+      "description": "Irish-Australian politician ",
+      "year_birth": 1818.0,
+      "age_at_death": 86.0
+    },
+    {
+      "year_death": 1904,
+      "person": "Henri Joseph Anastase Perrotin",
+      "description": "French astronomer ",
+      "year_birth": 1845.0,
+      "age_at_death": 59.0
+    },
+    {
+      "year_death": 1908,
+      "person": "Pat Garrett",
+      "description": "American sheriff ",
+      "year_birth": 1850.0,
+      "age_at_death": 58.0
+    },
+    {
+      "year_death": 1908,
+      "person": "John Hope",
+      "description": "1st Marquess of Linlithgow, Scottish-Australian politician, 1st Governor-General of Australia ",
+      "year_birth": 1860.0,
+      "age_at_death": 48.0
+    },
+    {
+      "year_death": 1916,
+      "person": "John Nanson",
+      "description": "English-Australian journalist and politician ",
+      "year_birth": 1863.0,
+      "age_at_death": 53.0
+    },
+    {
+      "year_death": 1920,
+      "person": "Ernie Courtney",
+      "description": "American baseball player ",
+      "year_birth": 1875.0,
+      "age_at_death": 45.0
+    },
+    {
+      "year_death": 1924,
+      "person": "Frederic Chapple",
+      "description": "Australian educator ",
+      "year_birth": 1845.0,
+      "age_at_death": 79.0
+    },
+    {
+      "year_death": 1928,
+      "person": "Adolphe Appia",
+      "description": "Swiss architect and theorist ",
+      "year_birth": 1862.0,
+      "age_at_death": 66.0
+    },
+    {
+      "year_death": 1928,
+      "person": "Ina Coolbrith",
+      "description": "American poet and librarian ",
+      "year_birth": 1841.0,
+      "age_at_death": 87.0
+    },
+    {
+      "year_death": 1932,
+      "person": "Arthur Mills Lea",
+      "description": "Australian entomologist ",
+      "year_birth": 1868.0,
+      "age_at_death": 64.0
+    },
+    {
+      "year_death": 1932,
+      "person": "Giuseppe Vitali",
+      "description": "Italian mathematician ",
+      "year_birth": 1875.0,
+      "age_at_death": 57.0
+    },
+    {
+      "year_death": 1940,
+      "person": "E. F. Benson",
+      "description": "English archaeologist and author ",
+      "year_birth": 1867.0,
+      "age_at_death": 73.0
+    },
+    {
+      "year_death": 1944,
+      "person": "Pehr Evind Svinhufvud",
+      "description": "Finnish lawyer, judge and politician, 3rd President of Finland ",
+      "year_birth": 1861.0,
+      "age_at_death": 83.0
+    },
+    {
+      "year_death": 1948,
+      "person": "Robert Barrington-Ward",
+      "description": "English lawyer and journalist ",
+      "year_birth": 1891.0,
+      "age_at_death": 57.0
+    },
+    {
+      "year_death": 1952,
+      "person": "Sarah Ann Jenyns",
+      "description": "Australian entrepreneur ",
+      "year_birth": 1865.0,
+      "age_at_death": 87.0
+    },
+    {
+      "year_death": 1956,
+      "person": "Elpidio Quirino",
+      "description": "Filipino lawyer and politician, 6th President of the Philippines ",
+      "year_birth": 1890.0,
+      "age_at_death": 66.0
+    },
+    {
+      "year_death": 1960,
+      "person": "Melvin Purvis",
+      "description": "American police officer and FBI agent ",
+      "year_birth": 1903.0,
+      "age_at_death": 57.0
+    },
+    {
+      "year_death": 1960,
+      "person": "Walter Yust",
+      "description": "American journalist and author ",
+      "year_birth": 1894.0,
+      "age_at_death": 66.0
+    },
+    {
+      "year_death": 1964,
+      "person": "Frank Albertson",
+      "description": "American actor and singer ",
+      "year_birth": 1909.0,
+      "age_at_death": 55.0
+    },
+    {
+      "year_death": 1968,
+      "person": "Tore \u00d8rjas\u00e6ter",
+      "description": "Norwegian poet and educator ",
+      "year_birth": 1886.0,
+      "age_at_death": 82.0
+    },
+    {
+      "year_death": 1972,
+      "person": "Tom Davies",
+      "description": "American football player and coach ",
+      "year_birth": 1896.0,
+      "age_at_death": 76.0
+    },
+    {
+      "year_death": 1976,
+      "person": "Florence P. Dwyer",
+      "description": "American politician ",
+      "year_birth": 1902.0,
+      "age_at_death": 74.0
+    },
+    {
+      "year_death": 1980,
+      "person": "Yigal Allon",
+      "description": "Israeli general and politician, Prime Minister of Israel ",
+      "year_birth": 1918.0,
+      "age_at_death": 62.0
+    },
+    {
+      "year_death": 1980,
+      "person": "Gil Elvgren",
+      "description": "American painter and illustrator ",
+      "year_birth": 1914.0,
+      "age_at_death": 66.0
+    },
+    {
+      "year_death": 1984,
+      "person": "Ludwik Starski",
+      "description": "Polish screenwriter and songwriter ",
+      "year_birth": 1903.0,
+      "age_at_death": 81.0
+    },
+    {
+      "year_death": 1992,
+      "person": "Ruth Pitter",
+      "description": "English poet and author ",
+      "year_birth": 1897.0,
+      "age_at_death": 95.0
+    },
+    {
+      "year_death": 1996,
+      "person": "Frank Daniel",
+      "description": "Czech-American director, producer and screenwriter ",
+      "year_birth": 1926.0,
+      "age_at_death": 70.0
+    },
+    {
+      "year_death": 1996,
+      "person": "Wes Farrell",
+      "description": "American singer-songwriter and producer ",
+      "year_birth": 1939.0,
+      "age_at_death": 57.0
+    },
+    {
+      "year_death": 1996,
+      "person": "Ralph Rowe",
+      "description": "American baseball player, coach and manager ",
+      "year_birth": 1924.0,
+      "age_at_death": 72.0
+    },
+    {
+      "year_death": 2000,
+      "person": "Dennis Danell",
+      "description": "American guitarist ",
+      "year_birth": 1961.0,
+      "age_at_death": 39.0
+    },
+    {
+      "year_death": 2004,
+      "person": "Kagamisato Kiyoji",
+      "description": "Japanese sumo wrestler, the 42nd Yokozuna ",
+      "year_birth": 1923.0,
+      "age_at_death": 81.0
+    },
+    {
+      "year_death": 2004,
+      "person": "Jerome Lawrence",
+      "description": "American playwright and author ",
+      "year_birth": 1915.0,
+      "age_at_death": 89.0
+    },
+    {
+      "year_death": 2004,
+      "person": "Harold Bernard St. John",
+      "description": "Barbadian lawyer and politician, 3rd Prime Minister of Barbados ",
+      "year_birth": 1931.0,
+      "age_at_death": 73.0
+    },
+    {
+      "year_death": 2004,
+      "person": "Lorrie Wilmot",
+      "description": "South African cricketer ",
+      "year_birth": 1943.0,
+      "age_at_death": 61.0
+    },
+    {
+      "year_death": 2008,
+      "person": "Janet Kagan",
+      "description": "American author ",
+      "year_birth": 1946.0,
+      "age_at_death": 62.0
+    },
+    {
+      "year_death": 2008,
+      "person": "Erik Ortvad",
+      "description": "Danish painter and illustrator ",
+      "year_birth": 1917.0,
+      "age_at_death": 91.0
+    },
+    {
+      "year_death": 2008,
+      "person": "Akira Yamada",
+      "description": "Japanese scholar and philosopher ",
+      "year_birth": 1922.0,
+      "age_at_death": 86.0
+    },
+    {
+      "year_death": 2012,
+      "person": "Davy Jones",
+      "description": "English singer, guitarist and actor ",
+      "year_birth": 1945.0,
+      "age_at_death": 67.0
+    },
+    {
+      "year_death": 2012,
+      "person": "Sheldon Moldoff",
+      "description": "American illustrator ",
+      "year_birth": 1920.0,
+      "age_at_death": 92.0
+    },
+    {
+      "year_death": 2012,
+      "person": "P. K. Narayana Panicker",
+      "description": "Indian social leader ",
+      "year_birth": 1930.0,
+      "age_at_death": 82.0
+    },
+    {
+      "year_death": 2016,
+      "person": "Wenn V. Deramas",
+      "description": "Filipino director and screenwriter ",
+      "year_birth": 1966.0,
+      "age_at_death": 50.0
+    },
+    {
+      "year_death": 2016,
+      "person": "Gil Hill",
+      "description": "American police officer, actor and politician ",
+      "year_birth": 1931.0,
+      "age_at_death": 85.0
+    },
+    {
+      "year_death": 2016,
+      "person": "Josefin Nilsson",
+      "description": "Swedish singer ",
+      "year_birth": 1969.0,
+      "age_at_death": 47.0
+    },
+    {
+      "year_death": 2016,
+      "person": "Mumtaz Qadri",
+      "description": "Pakistani assassin, executed ",
+      "year_birth": 1985.0,
+      "age_at_death": 31.0
+    },
+    {
+      "year_death": 2016,
+      "person": "Louise Rennison",
+      "description": "English author ",
+      "year_birth": 1951.0,
+      "age_at_death": 65.0
+    },
+    {
+      "year_death": 2020,
+      "person": "Dieter Laser",
+      "description": "German actor ",
+      "year_birth": 1942.0,
+      "age_at_death": 78.0
+    },
+    {
+      "year_death": 2020,
+      "person": "\u00c9va Sz\u00e9kely",
+      "description": "Hungarian Hall of Fame swimmer and 1952 Olympic champion ",
+      "year_birth": 1927.0,
+      "age_at_death": 93.0
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "meta": {
+    "name": "haunted_places_by_state",
+    "description": "Number of reported haunted places by US state",
+    "source": "tidytuesday/2023-10-10/haunted_places.csv",
+    "transformation": "Count haunted places by US state.",
+    "num_rows": 51,
+    "columns": {
+      "state": "str",
+      "haunted_place_count": "int64"
+    }
+  },
+  "data": [
+    {
+      "state": "California",
+      "haunted_place_count": 1070
+    },
+    {
+      "state": "Texas",
+      "haunted_place_count": 696
+    },
+    {
+      "state": "Pennsylvania",
+      "haunted_place_count": 649
+    },
+    {
+      "state": "Michigan",
+      "haunted_place_count": 529
+    },
+    {
+      "state": "Ohio",
+      "haunted_place_count": 477
+    },
+    {
+      "state": "New York",
+      "haunted_place_count": 459
+    },
+    {
+      "state": "Illinois",
+      "haunted_place_count": 395
+    },
+    {
+      "state": "Kentucky",
+      "haunted_place_count": 370
+    },
+    {
+      "state": "Indiana",
+      "haunted_place_count": 351
+    },
+    {
+      "state": "Massachusetts",
+      "haunted_place_count": 342
+    },
+    {
+      "state": "Florida",
+      "haunted_place_count": 328
+    },
+    {
+      "state": "Missouri",
+      "haunted_place_count": 314
+    },
+    {
+      "state": "Georgia",
+      "haunted_place_count": 289
+    },
+    {
+      "state": "Wisconsin",
+      "haunted_place_count": 274
+    },
+    {
+      "state": "Alabama",
+      "haunted_place_count": 224
+    },
+    {
+      "state": "Tennessee",
+      "haunted_place_count": 221
+    },
+    {
+      "state": "Washington",
+      "haunted_place_count": 218
+    },
+    {
+      "state": "North Carolina",
+      "haunted_place_count": 211
+    },
+    {
+      "state": "Oklahoma",
+      "haunted_place_count": 211
+    },
+    {
+      "state": "New Jersey",
+      "haunted_place_count": 194
+    },
+    {
+      "state": "Virginia",
+      "haunted_place_count": 192
+    },
+    {
+      "state": "Connecticut",
+      "haunted_place_count": 185
+    },
+    {
+      "state": "Maryland",
+      "haunted_place_count": 170
+    },
+    {
+      "state": "Iowa",
+      "haunted_place_count": 169
+    },
+    {
+      "state": "South Carolina",
+      "haunted_place_count": 168
+    },
+    {
+      "state": "Colorado",
+      "haunted_place_count": 166
+    },
+    {
+      "state": "Minnesota",
+      "haunted_place_count": 162
+    },
+    {
+      "state": "Arizona",
+      "haunted_place_count": 156
+    },
+    {
+      "state": "Oregon",
+      "haunted_place_count": 155
+    },
+    {
+      "state": "Utah",
+      "haunted_place_count": 134
+    },
+    {
+      "state": "Kansas",
+      "haunted_place_count": 123
+    },
+    {
+      "state": "Arkansas",
+      "haunted_place_count": 119
+    },
+    {
+      "state": "Nebraska",
+      "haunted_place_count": 111
+    },
+    {
+      "state": "West Virginia",
+      "haunted_place_count": 106
+    },
+    {
+      "state": "Louisiana",
+      "haunted_place_count": 99
+    },
+    {
+      "state": "Hawaii",
+      "haunted_place_count": 96
+    },
+    {
+      "state": "New Mexico",
+      "haunted_place_count": 78
+    },
+    {
+      "state": "Wyoming",
+      "haunted_place_count": 76
+    },
+    {
+      "state": "South Dakota",
+      "haunted_place_count": 75
+    },
+    {
+      "state": "New Hampshire",
+      "haunted_place_count": 72
+    },
+    {
+      "state": "Rhode Island",
+      "haunted_place_count": 68
+    },
+    {
+      "state": "Idaho",
+      "haunted_place_count": 66
+    },
+    {
+      "state": "Vermont",
+      "haunted_place_count": 63
+    },
+    {
+      "state": "Mississippi",
+      "haunted_place_count": 63
+    },
+    {
+      "state": "North Dakota",
+      "haunted_place_count": 58
+    },
+    {
+      "state": "Maine",
+      "haunted_place_count": 57
+    },
+    {
+      "state": "Nevada",
+      "haunted_place_count": 56
+    },
+    {
+      "state": "Montana",
+      "haunted_place_count": 42
+    },
+    {
+      "state": "Delaware",
+      "haunted_place_count": 37
+    },
+    {
+      "state": "Alaska",
+      "haunted_place_count": 32
+    },
+    {
+      "state": "Washington DC",
+      "haunted_place_count": 16
+    }
+  ]
+}

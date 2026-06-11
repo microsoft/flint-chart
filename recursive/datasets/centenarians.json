@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "centenarians",
+    "description": "World's oldest verified people",
+    "source": "tidytuesday/2023-05-30/centenarians.csv",
+    "transformation": "Select key demographic columns.",
+    "num_rows": 200,
+    "columns": {
+      "rank": "int64",
+      "name": "str",
+      "age": "float64",
+      "gender": "str",
+      "place_of_death_or_residence": "str",
+      "still_alive": "str"
+    }
+  },
+  "data": [
+    {
+      "rank": 1,
+      "name": "Jeanne Calment",
+      "age": 122.4476386037,
+      "gender": "female",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 2,
+      "name": "Kane Tanaka",
+      "age": 119.2936344969,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 3,
+      "name": "Sarah Knauss",
+      "age": 119.2607802875,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 4,
+      "name": "Lucile Randon",
+      "age": 118.932238193,
+      "gender": "female",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 5,
+      "name": "Nabi Tajima",
+      "age": 117.711156742,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 6,
+      "name": "Marie-Louise Meilleur",
+      "age": 117.6262833676,
+      "gender": "female",
+      "place_of_death_or_residence": "Canada",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 7,
+      "name": "Violet Brown",
+      "age": 117.5167693361,
+      "gender": "female",
+      "place_of_death_or_residence": "Jamaica",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 8,
+      "name": "Emma Morano",
+      "age": 117.3744010951,
+      "gender": "female",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 9,
+      "name": "Chiyo Miyako",
+      "age": 117.2210814511,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 10,
+      "name": "Delphia Welford",
+      "age": 117.1800136893,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 11,
+      "name": "Misao Okawa",
+      "age": 117.0704996578,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 12,
+      "name": "Francisca Celsa dos Santos",
+      "age": 116.9555099247,
+      "gender": "female",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 13,
+      "name": "Mar\u00eda Capovilla",
+      "age": 116.9472963723,
+      "gender": "female",
+      "place_of_death_or_residence": "Ecuador",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 14,
+      "name": "Susannah Mushatt Jones",
+      "age": 116.848733744,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 15,
+      "name": "Gertrude Weaver",
+      "age": 116.7529089665,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 16,
+      "name": "Antonia da Santa Cruz",
+      "age": 116.6132785763,
+      "gender": "female",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 17,
+      "name": "Tane Ikai",
+      "age": 116.476386037,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 18,
+      "name": "Jeanne Bot",
+      "age": 116.3504449008,
+      "gender": "female",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 19,
+      "name": "Elizabeth Bolden",
+      "age": 116.3203285421,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 20,
+      "name": "Besse Cooper",
+      "age": 116.2710472279,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 21,
+      "name": "Maria Giuseppa Robucci",
+      "age": 116.2464065708,
+      "gender": "female",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 22,
+      "name": "Maria Branyas",
+      "age": 116.2245037645,
+      "gender": "female",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 23,
+      "name": "Tekla Juniewicz",
+      "age": 116.1916495551,
+      "gender": "female",
+      "place_of_death_or_residence": "Poland",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 24,
+      "name": "Ana Mar\u00eda Vela Rubio",
+      "age": 116.128678987,
+      "gender": "female",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 25,
+      "name": "Giuseppina Projetto",
+      "age": 116.1013004791,
+      "gender": "female",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 26,
+      "name": "Fusa Tatsumi",
+      "age": 116.0821355236,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 27,
+      "name": "Jeralean Talley",
+      "age": 116.0657084189,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 28,
+      "name": "Shigeyo Nakachi",
+      "age": 115.9425051335,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 29,
+      "name": "Maggie Barnes",
+      "age": 115.871321013,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 30,
+      "name": "Dina Manfredini",
+      "age": 115.7015742642,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 31,
+      "name": "Shimoe Akiyama",
+      "age": 115.6988364134,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 32,
+      "name": "Hester Ford",
+      "age": 115.6714579055,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 33,
+      "name": "Charlotte Hughes",
+      "age": 115.6221765914,
+      "gender": "female",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 34,
+      "name": "Edna Parker",
+      "age": 115.6002737851,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 35,
+      "name": "Mary Ann Rhodes",
+      "age": 115.5537303217,
+      "gender": "female",
+      "place_of_death_or_residence": "Canada",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 36,
+      "name": "Anonymous of Tokyo",
+      "age": 115.5345653662,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 37,
+      "name": "Margaret Skeete",
+      "age": 115.523613963,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 38,
+      "name": "Bernice Madigan",
+      "age": 115.4442162902,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 39,
+      "name": "Gertrude Baines",
+      "age": 115.4305270363,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 40,
+      "name": "Bettie Wilson",
+      "age": 115.4168377823,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 41,
+      "name": "Shin Matsushita",
+      "age": 115.40862423,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 42,
+      "name": "Iris Westman",
+      "age": 115.3511293634,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 43,
+      "name": "Julie Winnefred Bertrand",
+      "age": 115.3374401095,
+      "gender": "female",
+      "place_of_death_or_residence": "Canada",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 44,
+      "name": "Maria de Jesus",
+      "age": 115.3100616016,
+      "gender": "female",
+      "place_of_death_or_residence": "Portugal",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 45,
+      "name": "Marie-Josephine Gaudette",
+      "age": 115.3018480493,
+      "gender": "female",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 45,
+      "name": "Edie Ceccarelli",
+      "age": 115.2991101985,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 47,
+      "name": "Susie Gibson",
+      "age": 115.2936344969,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 47,
+      "name": "Thelma Sutcliffe",
+      "age": 115.2963723477,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 49,
+      "name": "Casilda Benegas Gallego",
+      "age": 115.2224503765,
+      "gender": "female",
+      "place_of_death_or_residence": "Argentina",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 50,
+      "name": "Augusta Holtz",
+      "age": 115.2142368241,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 51,
+      "name": "Valentine Ligny",
+      "age": 115.2032854209,
+      "gender": "female",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 52,
+      "name": "Hendrikje van Andel-Schipper",
+      "age": 115.1676933607,
+      "gender": "female",
+      "place_of_death_or_residence": "Netherlands",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 53,
+      "name": "Bessie Hendricks",
+      "age": 115.1567419576,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 54,
+      "name": "Maude Farris-Luse",
+      "age": 115.151266256,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 55,
+      "name": "Mina Kitagawa",
+      "age": 115.1266255989,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 56,
+      "name": "Marie Br\u00e9mont",
+      "age": 115.112936345,
+      "gender": "female",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 57,
+      "name": "Yoshi Otsunari",
+      "age": 115.1101984942,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 58,
+      "name": "Koto Okubo",
+      "age": 115.0499657769,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 59,
+      "name": "Antonia Gerena Rivera",
+      "age": 115.0362765229,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 60,
+      "name": "Chiyono Hasegawa",
+      "age": 115.0280629706,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 61,
+      "name": "Annie Jennings",
+      "age": 115.0171115674,
+      "gender": "female",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 62,
+      "name": "Tomiko Itooka",
+      "age": 115.0034223135,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 63,
+      "name": "Anonymous of Hy\u014dgo",
+      "age": 115.0034223135,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 64,
+      "name": "Eva Morris",
+      "age": 114.9815195072,
+      "gender": "female",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 65,
+      "name": "Kama Chinen",
+      "age": 114.9760438056,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 66,
+      "name": "Mary Bidwell",
+      "age": 114.9596167009,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 66,
+      "name": "Inah Canabarro Lucas",
+      "age": 114.9596167009,
+      "gender": "female",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 68,
+      "name": "Sofia Rojas",
+      "age": 114.9623545517,
+      "gender": "female",
+      "place_of_death_or_residence": "Colombia",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 69,
+      "name": "Maria Gomes Valentim",
+      "age": 114.945927447,
+      "gender": "female",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 70,
+      "name": "Hazel Plummer",
+      "age": 114.9295003422,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 71,
+      "name": "Ophelia Burks",
+      "age": 114.9240246407,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 72,
+      "name": "Kahoru Furuya",
+      "age": 114.8501026694,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 73,
+      "name": "Mary Josephine Ray",
+      "age": 114.803559206,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 74,
+      "name": "Goldie Steinberg",
+      "age": 114.7926078029,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 75,
+      "name": "Kiyoko Ishiguro",
+      "age": 114.7542778919,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 76,
+      "name": "Maria do Couto Maia-Lopes",
+      "age": 114.7488021903,
+      "gender": "female",
+      "place_of_death_or_residence": "Portugal",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 76,
+      "name": "Eudoxie Baboul",
+      "age": 114.7488021903,
+      "gender": "female",
+      "place_of_death_or_residence": "France (French Guiana)",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 78,
+      "name": "Ramona Trinidad Iglesias-Jordan",
+      "age": 114.7405886379,
+      "gender": "female",
+      "place_of_death_or_residence": "Puerto Rico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 79,
+      "name": "Yukie Hino",
+      "age": 114.7433264887,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 80,
+      "name": "Delphine Gibson",
+      "age": 114.726899384,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 81,
+      "name": "Eug\u00e9nie Blanchard",
+      "age": 114.71321013,
+      "gender": "female",
+      "place_of_death_or_residence": "France (Saint Barth\u00e9lemy)",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 82,
+      "name": "Venere Pizzinato",
+      "age": 114.6858316222,
+      "gender": "female",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 83,
+      "name": "Neva Morris",
+      "age": 114.6721423682,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 84,
+      "name": "Hide Ohira",
+      "age": 114.6420260096,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 85,
+      "name": "Blanche Cobb",
+      "age": 114.6420260096,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 86,
+      "name": "Ethel Lang",
+      "age": 114.636550308,
+      "gender": "female",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 87,
+      "name": "Mila Mangold",
+      "age": 114.6310746064,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 88,
+      "name": "Yone Minagawa",
+      "age": 114.6009582478,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 89,
+      "name": "Mar\u00eda Antonia Castro",
+      "age": 114.598220397,
+      "gender": "female",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 90,
+      "name": "Carrie Lazenby",
+      "age": 114.5927446954,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 90,
+      "name": "Ura Koyama",
+      "age": 114.5954825462,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 92,
+      "name": "Myrtle Dorsey",
+      "age": 114.5872689938,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 93,
+      "name": "Yoshi Baba",
+      "age": 114.5900068446,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 94,
+      "name": "Iso Nakamura",
+      "age": 114.5872689938,
+      "gender": "female",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 95,
+      "name": "Faustina Sarmiento-Pupo",
+      "age": 114.5817932923,
+      "gender": "female",
+      "place_of_death_or_residence": "Cuba",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 96,
+      "name": "Cecile Klein",
+      "age": 114.5817932923,
+      "gender": "female",
+      "place_of_death_or_residence": "Canada",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 97,
+      "name": "Anna Eliza Williams",
+      "age": 114.5653661875,
+      "gender": "female",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 98,
+      "name": "Eleonora Camargo Veiga",
+      "age": 114.5626283368,
+      "gender": "female",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 99,
+      "name": "Eunice Sanborn",
+      "age": 114.5297741273,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 100,
+      "name": "Grace Clawson",
+      "age": 114.5297741273,
+      "gender": "female",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 1,
+      "name": "Jiroemon Kimura",
+      "age": 116.1451060917,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 2,
+      "name": "Christian Mortensen",
+      "age": 115.6878850103,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 3,
+      "name": "Emiliano Mercado del Toro",
+      "age": 115.4250513347,
+      "gender": "male",
+      "place_of_death_or_residence": "Puerto Rico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 4,
+      "name": "Horacio Celi Mendoza",
+      "age": 114.7214236824,
+      "gender": "male",
+      "place_of_death_or_residence": "Peru",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 5,
+      "name": "Walter Breuning",
+      "age": 114.5571526352,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 6,
+      "name": "Yukichi Chuganji",
+      "age": 114.5133470226,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 7,
+      "name": "Tom\u00e1s Pinales Figuereo",
+      "age": 114.4859685147,
+      "gender": "male",
+      "place_of_death_or_residence": "Dominican Republic",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 8,
+      "name": "Joan Riudavets-Moll",
+      "age": 114.2176591376,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 9,
+      "name": "Gustav Gerneth",
+      "age": 114.0150581793,
+      "gender": "male",
+      "place_of_death_or_residence": "Germany",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 10,
+      "name": "Juan Vicente P\u00e9rez",
+      "age": 113.993155373,
+      "gender": "male",
+      "place_of_death_or_residence": "Venezuela",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 11,
+      "name": "Fred Harold Hale, Sr.",
+      "age": 113.9657768652,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 12,
+      "name": "Yisrael Kristal",
+      "age": 113.9055441478,
+      "gender": "male",
+      "place_of_death_or_residence": "Israel",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 13,
+      "name": "Johnson Parks",
+      "age": 113.749486653,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 14,
+      "name": "Tomoji Tanabe",
+      "age": 113.749486653,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 15,
+      "name": "John Ingram McMorran",
+      "age": 113.6810403833,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 16,
+      "name": "Masaz\u014d Nonaka",
+      "age": 113.4893908282,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 17,
+      "name": "Frederick Frazier",
+      "age": 113.3771389459,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 18,
+      "name": "James Sisnett",
+      "age": 113.2457221081,
+      "gender": "male",
+      "place_of_death_or_residence": "Barbados",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 18,
+      "name": "Wenceslao Leyva Gonz\u00e1lez",
+      "age": 113.2484599589,
+      "gender": "male",
+      "place_of_death_or_residence": "Mexico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 20,
+      "name": "Eusebio Quintero L\u00f3pez",
+      "age": 113.2183436003,
+      "gender": "male",
+      "place_of_death_or_residence": "Colombia",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 21,
+      "name": "Domingo Villa Avisencio",
+      "age": 113.1882272416,
+      "gender": "male",
+      "place_of_death_or_residence": "Mexico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 22,
+      "name": "Efra\u00edn Antonio R\u00edos Garc\u00eda",
+      "age": 113.1389459274,
+      "gender": "male",
+      "place_of_death_or_residence": "Colombia",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 23,
+      "name": "Walter Richardson",
+      "age": 113.1279945243,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 24,
+      "name": "Francisco N\u00fa\u00f1ez Olivera",
+      "age": 113.1279945243,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 25,
+      "name": "Henry Allingham",
+      "age": 113.1115674196,
+      "gender": "male",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 26,
+      "name": "Emilio Flores M\u00e1rquez",
+      "age": 113.0102669405,
+      "gender": "male",
+      "place_of_death_or_residence": "Puerto Rico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 27,
+      "name": "Chitetsu Watanabe",
+      "age": 112.9719370294,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 28,
+      "name": "Antonio Todde",
+      "age": 112.9445585216,
+      "gender": "male",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 29,
+      "name": "Saturnino de la Fuente Garc\u00eda",
+      "age": 112.9336071184,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 30,
+      "name": "Moses Hardy",
+      "age": 112.9144421629,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 31,
+      "name": "Yasutaro Koide",
+      "age": 112.8542094456,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 32,
+      "name": "John Evans",
+      "age": 112.8049281314,
+      "gender": "male",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 33,
+      "name": "Richard Arvin Overton",
+      "age": 112.629705681,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 34,
+      "name": "Delio Venturotti",
+      "age": 112.5995893224,
+      "gender": "male",
+      "place_of_death_or_residence": "Brazil",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 35,
+      "name": "George Francis",
+      "age": 112.5557837098,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 36,
+      "name": "Denzo Ishizaki",
+      "age": 112.5201916496,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 37,
+      "name": "Josep Armengol",
+      "age": 112.4928131417,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 38,
+      "name": "Giovanni Frau",
+      "age": 112.4681724846,
+      "gender": "male",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 39,
+      "name": "Jules Th\u00e9obald",
+      "age": 112.4681724846,
+      "gender": "male",
+      "place_of_death_or_residence": "France (Martinique)",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 40,
+      "name": "Yang Longsheng",
+      "age": 112.4462696783,
+      "gender": "male",
+      "place_of_death_or_residence": "China",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 41,
+      "name": "John Painter",
+      "age": 112.4407939767,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 42,
+      "name": "Marcel Meys",
+      "age": 112.4271047228,
+      "gender": "male",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 43,
+      "name": "Masamitsu Yoshida",
+      "age": 112.4161533196,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 44,
+      "name": "Sakari Momoi",
+      "age": 112.4106776181,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 45,
+      "name": "Alphaeus Philemon Cole",
+      "age": 112.3696098563,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 46,
+      "name": "Augusto Moreira",
+      "age": 112.3531827515,
+      "gender": "male",
+      "place_of_death_or_residence": "Portugal",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 47,
+      "name": "George Johnson",
+      "age": 112.3285420945,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 47,
+      "name": "Mikiz\u014d Ueda",
+      "age": 112.3312799452,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 49,
+      "name": "Lawrence Brooks",
+      "age": 112.3148528405,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 50,
+      "name": "Salustiano Sanchez",
+      "age": 112.2655715264,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 51,
+      "name": "CP Crawford",
+      "age": 112.2464065708,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 52,
+      "name": "Jorge Duran Coral",
+      "age": 112.2436687201,
+      "gender": "male",
+      "place_of_death_or_residence": "Mexico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 53,
+      "name": "Yoshikazu Yamashita",
+      "age": 112.2409308693,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 54,
+      "name": "Gengan Tonaki",
+      "age": 112.2327173169,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 55,
+      "name": "Robert Weighton",
+      "age": 112.1642710472,
+      "gender": "male",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 56,
+      "name": "Tadanosuke Hashimoto",
+      "age": 112.090349076,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 57,
+      "name": "Kumekichi Tani",
+      "age": 112.0574948665,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 58,
+      "name": "James Wiggins",
+      "age": 112.0,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 59,
+      "name": "George Feldman",
+      "age": 112.0,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 60,
+      "name": "Tsunahei Ogawa",
+      "age": 111.9863107461,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 61,
+      "name": "Arturo Licata",
+      "age": 111.9780971937,
+      "gender": "male",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 62,
+      "name": "Stanis\u0142aw Kowalski",
+      "age": 111.9753593429,
+      "gender": "male",
+      "place_of_death_or_residence": "Poland",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 63,
+      "name": "Walter H. Seward",
+      "age": 111.9178644764,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 64,
+      "name": "Maurice Floquet",
+      "age": 111.8740588638,
+      "gender": "male",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 65,
+      "name": "Valerio Piroddi",
+      "age": 111.8466803559,
+      "gender": "male",
+      "place_of_death_or_residence": "Italy",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 66,
+      "name": "Shigeru Nakamura",
+      "age": 111.8439425051,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 67,
+      "name": "James McCoubrey",
+      "age": 111.8083504449,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 67,
+      "name": "Shivakumara Swami",
+      "age": 111.8083504449,
+      "gender": "male",
+      "place_of_death_or_residence": "India",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 69,
+      "name": "Ezra Hill",
+      "age": 111.7919233402,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 70,
+      "name": "Melvin Campbell",
+      "age": 111.7782340862,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 71,
+      "name": "John Mosley Turner",
+      "age": 111.7618069815,
+      "gender": "male",
+      "place_of_death_or_residence": "United Kingdom",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 72,
+      "name": "Hermann D\u00f6rnemann",
+      "age": 111.7618069815,
+      "gender": "male",
+      "place_of_death_or_residence": "Germany",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 73,
+      "name": "Antonio Urrea",
+      "age": 111.7371663244,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 74,
+      "name": "Choki Miyagi",
+      "age": 111.7262149213,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 75,
+      "name": "Arthur Carter",
+      "age": 111.6796714579,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 76,
+      "name": "Santos Hildebrando Rivas Garc\u00eda",
+      "age": 111.665982204,
+      "gender": "male",
+      "place_of_death_or_residence": "El Salvador",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 77,
+      "name": "Jan Machiel Reyskens",
+      "age": 111.6577686516,
+      "gender": "male",
+      "place_of_death_or_residence": "Netherlands",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 78,
+      "name": "Jes\u00fas Mosteo",
+      "age": 111.6550308008,
+      "gender": "male",
+      "place_of_death_or_residence": "Spain",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 79,
+      "name": "Dumitru Com\u0103nescu",
+      "age": 111.6331279945,
+      "gender": "male",
+      "place_of_death_or_residence": "Romania",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 80,
+      "name": "Henry Tseng",
+      "age": 111.6303901437,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 81,
+      "name": "Joe Thomas",
+      "age": 111.6194387406,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 82,
+      "name": "Andr\u00e9 Boite",
+      "age": 111.6057494867,
+      "gender": "male",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 83,
+      "name": "James Zackry",
+      "age": 111.575633128,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 84,
+      "name": "Tanekichi Onishi",
+      "age": 111.5674195756,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 85,
+      "name": "Roger Auvin",
+      "age": 111.5646817248,
+      "gender": "male",
+      "place_of_death_or_residence": "France",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 86,
+      "name": "Kiyoshi Igarashi",
+      "age": 111.5592060233,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 86,
+      "name": "Lester Townsend",
+      "age": 111.5592060233,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 88,
+      "name": "Herman Smith-Johannsen",
+      "age": 111.5564681725,
+      "gender": "male",
+      "place_of_death_or_residence": "Norway",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 89,
+      "name": "Gisaburo Sonobe",
+      "age": 111.5482546201,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 90,
+      "name": "Ernest Pusey",
+      "age": 111.5400410678,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 91,
+      "name": "Albano Andrade",
+      "age": 111.5400410678,
+      "gender": "male",
+      "place_of_death_or_residence": "Portugal",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 92,
+      "name": "Dexter Kruger",
+      "age": 111.5154004107,
+      "gender": "male",
+      "place_of_death_or_residence": "Australia",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 93,
+      "name": "Thomas Nelson, Sr.",
+      "age": 111.5044490075,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 94,
+      "name": "Jokichi Ikarashi",
+      "age": 111.4880219028,
+      "gender": "male",
+      "place_of_death_or_residence": "Japan",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 95,
+      "name": "Earl Brush",
+      "age": 111.4825462012,
+      "gender": "male",
+      "place_of_death_or_residence": "United States",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 95,
+      "name": "Qin Hanzhang",
+      "age": 111.485284052,
+      "gender": "male",
+      "place_of_death_or_residence": "China",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 95,
+      "name": "Manuel Benavente Sanhueza",
+      "age": 111.485284052,
+      "gender": "male",
+      "place_of_death_or_residence": "Chile",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 98,
+      "name": "Reuben Sinclair",
+      "age": 111.4688569473,
+      "gender": "male",
+      "place_of_death_or_residence": "Canada",
+      "still_alive": "alive"
+    },
+    {
+      "rank": 99,
+      "name": "Francisco Ju\u00e1rez Iglesias",
+      "age": 111.4661190965,
+      "gender": "male",
+      "place_of_death_or_residence": "Mexico",
+      "still_alive": "deceased"
+    },
+    {
+      "rank": 100,
+      "name": "Antonio de Castro",
+      "age": 111.4551676934,
+      "gender": "male",
+      "place_of_death_or_residence": "Portugal",
+      "still_alive": "deceased"
+    }
+  ]
+}

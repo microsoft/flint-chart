@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "egg_production",
+    "description": "US egg production by type over time",
+    "source": "tidytuesday/2023-04-11/egg-production.csv",
+    "transformation": "Filter to main production processes, parse dates.",
+    "num_rows": 200,
+    "columns": {
+      "observed_month": "datetime64[us]",
+      "prod_type": "str",
+      "prod_process": "str",
+      "n_hens": "int64",
+      "n_eggs": "float64",
+      "source": "str"
+    }
+  },
+  "data": [
+    {
+      "observed_month": "2016-07-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57975000,
+      "n_eggs": 1147000000.0,
+      "source": "ChicEggs-09-23-2016.pdf"
+    },
+    {
+      "observed_month": "2016-08-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57595000,
+      "n_eggs": 1142700000.0,
+      "source": "ChicEggs-10-21-2016.pdf"
+    },
+    {
+      "observed_month": "2016-09-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57161000,
+      "n_eggs": 1093300000.0,
+      "source": "ChicEggs-11-22-2016.pdf"
+    },
+    {
+      "observed_month": "2016-10-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 56857000,
+      "n_eggs": 1126700000.0,
+      "source": "ChicEggs-12-23-2016.pdf"
+    },
+    {
+      "observed_month": "2016-11-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57116000,
+      "n_eggs": 1096600000.0,
+      "source": "ChicEggs-01-24-2017.pdf"
+    },
+    {
+      "observed_month": "2016-12-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57750000,
+      "n_eggs": 1132900000.0,
+      "source": "ChicEggs-02-28-2017.pdf"
+    },
+    {
+      "observed_month": "2017-01-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 57991000,
+      "n_eggs": 1123400000.0,
+      "source": "ChicEggs-03-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-02-28T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 58286000,
+      "n_eggs": 1014500000.0,
+      "source": "ChicEggs-04-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-03-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 58735000,
+      "n_eggs": 1128500000.0,
+      "source": "ChicEggs-05-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-04-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 59072000,
+      "n_eggs": 1097200000.0,
+      "source": "ChicEggs-06-23-2017.pdf"
+    },
+    {
+      "observed_month": "2017-05-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 59411000,
+      "n_eggs": 1138500000.0,
+      "source": "ChicEggs-07-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-06-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 59952000,
+      "n_eggs": 1115900000.0,
+      "source": "ChicEggs-08-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-07-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60220000,
+      "n_eggs": 1170800000.0,
+      "source": "ChicEggs-09-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-08-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60060000,
+      "n_eggs": 1167100000.0,
+      "source": "ChicEggs-10-23-2017.pdf"
+    },
+    {
+      "observed_month": "2017-09-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60202000,
+      "n_eggs": 1120900000.0,
+      "source": "ChicEggs-11-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-10-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60164000,
+      "n_eggs": 1155000000.0,
+      "source": "ChicEggs-12-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-11-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 59927000,
+      "n_eggs": 1112700000.0,
+      "source": "ChicEggs-01-23-2018.pdf"
+    },
+    {
+      "observed_month": "2017-12-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60242000,
+      "n_eggs": 1140200000.0,
+      "source": "ChicEggs-02-27-2018.pdf"
+    },
+    {
+      "observed_month": "2018-01-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60845000,
+      "n_eggs": 1143100000.0,
+      "source": "ChicEggs-03-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-02-28T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61396000,
+      "n_eggs": 1045600000.0,
+      "source": "ChicEggs-04-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-03-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61967000,
+      "n_eggs": 1166900000.0,
+      "source": "ChicEggs-05-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-04-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62656000,
+      "n_eggs": 1141300000.0,
+      "source": "ChicEggs-06-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-05-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62789000,
+      "n_eggs": 1189900000.0,
+      "source": "ChicEggs-07-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-06-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62428000,
+      "n_eggs": 1161400000.0,
+      "source": "ChicEggs-08-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-07-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61783000,
+      "n_eggs": 1199700000.0,
+      "source": "ChicEggs-09-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-08-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61242000,
+      "n_eggs": 1197600000.0,
+      "source": "ChicEggs-10-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-09-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60921000,
+      "n_eggs": 1153700000.0,
+      "source": "ChicEggs-11-20-2018.pdf"
+    },
+    {
+      "observed_month": "2018-10-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60889000,
+      "n_eggs": 1184200000.0,
+      "source": "ChicEggs-12-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-11-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 60878000,
+      "n_eggs": 1146000000.0,
+      "source": "ChicEggs-12-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-12-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61300000,
+      "n_eggs": 1176500000.0,
+      "source": "ChicEggs-02-26-2019.pdf"
+    },
+    {
+      "observed_month": "2019-01-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62176000,
+      "n_eggs": 1181200000.0,
+      "source": "ChicEggs-03-27-2019.pdf"
+    },
+    {
+      "observed_month": "2019-02-28T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62757000,
+      "n_eggs": 1083100000.0,
+      "source": "ChicEggs-04-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-03-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62825000,
+      "n_eggs": 1202400000.0,
+      "source": "ChicEggs-05-21-2019.pdf"
+    },
+    {
+      "observed_month": "2019-04-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62900000,
+      "n_eggs": 1165600000.0,
+      "source": "ChicEggs-06-21-2019.pdf"
+    },
+    {
+      "observed_month": "2019-05-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 63211000,
+      "n_eggs": 1213100000.0,
+      "source": "ChicEggs-07-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-06-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62987000,
+      "n_eggs": 1173700000.0,
+      "source": "ChicEggs-08-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-07-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62412000,
+      "n_eggs": 1208100000.0,
+      "source": "ChicEggs-09-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-08-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61893000,
+      "n_eggs": 1199700000.0,
+      "source": "ChicEggs-10-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-09-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 61683000,
+      "n_eggs": 1155400000.0,
+      "source": "ChicEggs-11-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-10-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62135000,
+      "n_eggs": 1204400000.0,
+      "source": "ChicEggs-12-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-11-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 62469000,
+      "n_eggs": 1169900000.0,
+      "source": "ChicEggs-01-21-2020.pdf"
+    },
+    {
+      "observed_month": "2019-12-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 63024000,
+      "n_eggs": 1208000000.0,
+      "source": "ChicEggs-02-28-2020.pdf"
+    },
+    {
+      "observed_month": "2020-01-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64019000,
+      "n_eggs": 1221400000.0,
+      "source": "ChicEggs-03-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-02-29T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64384000,
+      "n_eggs": 1154100000.0,
+      "source": "ChicEggs-04-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-03-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64730000,
+      "n_eggs": 1239900000.0,
+      "source": "ChicEggs-05-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-04-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 65044000,
+      "n_eggs": 1203500000.0,
+      "source": "ChicEggs-06-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-05-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64481000,
+      "n_eggs": 1239100000.0,
+      "source": "ChicEggs-07-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-06-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64251000,
+      "n_eggs": 1207400000.0,
+      "source": "ChicEggs-08-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-07-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64353000,
+      "n_eggs": 1255200000.0,
+      "source": "ChicEggs-09-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-08-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64223000,
+      "n_eggs": 1257100000.0,
+      "source": "ChicEggs-10-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-09-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 63975000,
+      "n_eggs": 1219800000.0,
+      "source": "ChicEggs-11-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-10-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 63728000,
+      "n_eggs": 1254800000.0,
+      "source": "ChicEggs-12-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-11-30T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64171000,
+      "n_eggs": 1212900000.0,
+      "source": "ChicEggs-01-21-2021.pdf"
+    },
+    {
+      "observed_month": "2020-12-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 64883000,
+      "n_eggs": 1253900000.0,
+      "source": "ChicEggs-02-26-2021.pdf"
+    },
+    {
+      "observed_month": "2021-01-31T00:00:00.000",
+      "prod_type": "hatching eggs",
+      "prod_process": "all",
+      "n_hens": 66112000,
+      "n_eggs": 1267600000.0,
+      "source": "ChicEggs-02-26-2021.pdf"
+    },
+    {
+      "observed_month": "2016-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 299669000,
+      "n_eggs": 7350500000.0,
+      "source": "ChicEggs-09-23-2016.pdf"
+    },
+    {
+      "observed_month": "2016-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 300917000,
+      "n_eggs": 7409000000.0,
+      "source": "ChicEggs-10-21-2016.pdf"
+    },
+    {
+      "observed_month": "2016-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 303270000,
+      "n_eggs": 7204200000.0,
+      "source": "ChicEggs-11-22-2016.pdf"
+    },
+    {
+      "observed_month": "2016-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 305852000,
+      "n_eggs": 7534700000.0,
+      "source": "ChicEggs-12-23-2016.pdf"
+    },
+    {
+      "observed_month": "2016-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 310728000,
+      "n_eggs": 7468500000.0,
+      "source": "ChicEggs-01-24-2017.pdf"
+    },
+    {
+      "observed_month": "2016-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 318820000,
+      "n_eggs": 7950400000.0,
+      "source": "ChicEggs-02-28-2017.pdf"
+    },
+    {
+      "observed_month": "2017-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 318109000,
+      "n_eggs": 7903500000.0,
+      "source": "ChicEggs-03-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 316807000,
+      "n_eggs": 7079800000.0,
+      "source": "ChicEggs-04-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 316147000,
+      "n_eggs": 7842000000.0,
+      "source": "ChicEggs-05-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 314918000,
+      "n_eggs": 7545900000.0,
+      "source": "ChicEggs-06-23-2017.pdf"
+    },
+    {
+      "observed_month": "2017-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 312321000,
+      "n_eggs": 7730900000.0,
+      "source": "ChicEggs-07-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 310798000,
+      "n_eggs": 7475700000.0,
+      "source": "ChicEggs-08-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 310552000,
+      "n_eggs": 7730100000.0,
+      "source": "ChicEggs-09-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 311301000,
+      "n_eggs": 7686200000.0,
+      "source": "ChicEggs-10-23-2017.pdf"
+    },
+    {
+      "observed_month": "2017-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 312364000,
+      "n_eggs": 7376500000.0,
+      "source": "ChicEggs-11-21-2017.pdf"
+    },
+    {
+      "observed_month": "2017-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 314692000,
+      "n_eggs": 7683700000.0,
+      "source": "ChicEggs-12-22-2017.pdf"
+    },
+    {
+      "observed_month": "2017-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 319506000,
+      "n_eggs": 7635400000.0,
+      "source": "ChicEggs-01-23-2018.pdf"
+    },
+    {
+      "observed_month": "2017-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 322059000,
+      "n_eggs": 7963900000.0,
+      "source": "ChicEggs-02-27-2018.pdf"
+    },
+    {
+      "observed_month": "2018-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 321410000,
+      "n_eggs": 7841800000.0,
+      "source": "ChicEggs-03-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 322690000,
+      "n_eggs": 7099800000.0,
+      "source": "ChicEggs-04-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 324545000,
+      "n_eggs": 7932000000.0,
+      "source": "ChicEggs-05-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 324098000,
+      "n_eggs": 7665000000.0,
+      "source": "ChicEggs-06-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 323536000,
+      "n_eggs": 7932600000.0,
+      "source": "ChicEggs-07-23-2018.pdf"
+    },
+    {
+      "observed_month": "2018-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 323472000,
+      "n_eggs": 7670400000.0,
+      "source": "ChicEggs-08-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 323170000,
+      "n_eggs": 7900700000.0,
+      "source": "ChicEggs-09-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 323806000,
+      "n_eggs": 7967900000.0,
+      "source": "ChicEggs-10-22-2018.pdf"
+    },
+    {
+      "observed_month": "2018-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 324913000,
+      "n_eggs": 7759800000.0,
+      "source": "ChicEggs-11-20-2018.pdf"
+    },
+    {
+      "observed_month": "2018-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 326632000,
+      "n_eggs": 8066500000.0,
+      "source": "ChicEggs-12-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 329614000,
+      "n_eggs": 7922600000.0,
+      "source": "ChicEggs-12-21-2018.pdf"
+    },
+    {
+      "observed_month": "2018-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 331277000,
+      "n_eggs": 8259100000.0,
+      "source": "ChicEggs-02-26-2019.pdf"
+    },
+    {
+      "observed_month": "2019-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 332613000,
+      "n_eggs": 8275400000.0,
+      "source": "ChicEggs-03-27-2019.pdf"
+    },
+    {
+      "observed_month": "2019-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 336802000,
+      "n_eggs": 7516500000.0,
+      "source": "ChicEggs-04-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 340855000,
+      "n_eggs": 8424299999.999999,
+      "source": "ChicEggs-05-21-2019.pdf"
+    },
+    {
+      "observed_month": "2019-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 339589000,
+      "n_eggs": 8160000000.0,
+      "source": "ChicEggs-06-21-2019.pdf"
+    },
+    {
+      "observed_month": "2019-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 334526000,
+      "n_eggs": 8346299999.999999,
+      "source": "ChicEggs-07-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 329705000,
+      "n_eggs": 7990800000.0,
+      "source": "ChicEggs-08-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 328072000,
+      "n_eggs": 8200400000.0,
+      "source": "ChicEggs-09-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 329933000,
+      "n_eggs": 8253900000.0,
+      "source": "ChicEggs-10-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 332574000,
+      "n_eggs": 8034700000.0,
+      "source": "ChicEggs-11-22-2019.pdf"
+    },
+    {
+      "observed_month": "2019-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 335707000,
+      "n_eggs": 8446600000.0,
+      "source": "ChicEggs-12-23-2019.pdf"
+    },
+    {
+      "observed_month": "2019-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 339123000,
+      "n_eggs": 8328200000.000001,
+      "source": "ChicEggs-01-21-2020.pdf"
+    },
+    {
+      "observed_month": "2019-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 341166000,
+      "n_eggs": 8601000000.0,
+      "source": "ChicEggs-02-28-2020.pdf"
+    },
+    {
+      "observed_month": "2020-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 338062000,
+      "n_eggs": 8486600000.0,
+      "source": "ChicEggs-03-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-02-29T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 332433000,
+      "n_eggs": 7790900000.0,
+      "source": "ChicEggs-04-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 330713000,
+      "n_eggs": 8294299999.999999,
+      "source": "ChicEggs-05-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 327264000,
+      "n_eggs": 7881800000.0,
+      "source": "ChicEggs-06-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 321698000,
+      "n_eggs": 7860200000.0,
+      "source": "ChicEggs-07-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 317846000,
+      "n_eggs": 7597800000.0,
+      "source": "ChicEggs-08-21-2020.pdf"
+    },
+    {
+      "observed_month": "2020-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 314852000,
+      "n_eggs": 8014500000.0,
+      "source": "ChicEggs-09-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 315875000,
+      "n_eggs": 8040500000.0,
+      "source": "ChicEggs-10-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 319593000,
+      "n_eggs": 7810800000.0,
+      "source": "ChicEggs-11-23-2020.pdf"
+    },
+    {
+      "observed_month": "2020-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 322758000,
+      "n_eggs": 8246900000.0,
+      "source": "ChicEggs-12-22-2020.pdf"
+    },
+    {
+      "observed_month": "2020-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 325239000,
+      "n_eggs": 8114100000.0,
+      "source": "ChicEggs-01-21-2021.pdf"
+    },
+    {
+      "observed_month": "2020-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 326897000,
+      "n_eggs": 8356400000.0,
+      "source": "ChicEggs-02-26-2021.pdf"
+    },
+    {
+      "observed_month": "2021-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "all",
+      "n_hens": 327138000,
+      "n_eggs": 8262900000.0,
+      "source": "ChicEggs-02-26-2021.pdf"
+    },
+    {
+      "observed_month": "2016-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 17000000,
+      "n_eggs": 397884291.42857146,
+      "source": "PY20160919MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 17000000,
+      "n_eggs": 383774914.2857143,
+      "source": "PY20161004MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 23500000,
+      "n_eggs": 546374468.5714287,
+      "source": "PY20161102MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 23500000,
+      "n_eggs": 530864742.85714287,
+      "source": "PY20161205MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 23500000,
+      "n_eggs": 542733120.0,
+      "source": "PY20170109MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 23500000,
+      "n_eggs": 550017411.4285715,
+      "source": "PY20170206MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 24400000,
+      "n_eggs": 515816640.0,
+      "source": "PY20170306MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 26100000,
+      "n_eggs": 600757148.5714287,
+      "source": "PY20170403MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 26600000,
+      "n_eggs": 602490342.8571428,
+      "source": "PY20170503MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 27300000,
+      "n_eggs": 636840617.1428572,
+      "source": "PY20170605MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 27300000,
+      "n_eggs": 618344742.8571428,
+      "source": "PY20170630MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 27500000,
+      "n_eggs": 643637057.1428572,
+      "source": "PY20170808MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 31700000,
+      "n_eggs": 744395914.2857144,
+      "source": "PY20170905MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 33500000,
+      "n_eggs": 753750514.2857143,
+      "source": "PY20171002MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 34700000,
+      "n_eggs": 804085971.4285715,
+      "source": "PY20171107MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 34700000,
+      "n_eggs": 780750514.2857143,
+      "source": "PY20171204MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 35000000,
+      "n_eggs": 813750531.4285715,
+      "source": "PY20180103MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 35680000,
+      "n_eggs": 826794977.1428572,
+      "source": "PY20180206MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 36861000,
+      "n_eggs": 771500160.0,
+      "source": "PY20180305MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 36861000,
+      "n_eggs": 857017851.4285715,
+      "source": "PY20180402MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 38896000,
+      "n_eggs": 875159485.7142857,
+      "source": "PY20180507MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 38896000,
+      "n_eggs": 904331468.5714288,
+      "source": "PY20180604MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 39083000,
+      "n_eggs": 882298285.7142857,
+      "source": "PY20180629MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 39083000,
+      "n_eggs": 908679085.7142856,
+      "source": "PY20180731MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 39083000,
+      "n_eggs": 908679085.7142856,
+      "source": "PY20180904MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41437000,
+      "n_eggs": 935440457.1428572,
+      "source": "PY20181001MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41470000,
+      "n_eggs": 967391845.7142856,
+      "source": "PY20181102MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41470000,
+      "n_eggs": 939296057.1428572,
+      "source": "PY20181203MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41470000,
+      "n_eggs": 973820005.7142856,
+      "source": "PY20190107MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41470000,
+      "n_eggs": 973820005.7142856,
+      "source": "PY20190205MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 41613000,
+      "n_eggs": 879698880.0,
+      "source": "PY20190304MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 46849000,
+      "n_eggs": 1092870102.857143,
+      "source": "PY20190401MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 50669000,
+      "n_eggs": 1147652742.857143,
+      "source": "PY20190506MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 50897000,
+      "n_eggs": 1191243908.5714283,
+      "source": "PY20190603MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 51337000,
+      "n_eggs": 1170483942.857143,
+      "source": "PY20190628MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 51337000,
+      "n_eggs": 1209500074.2857144,
+      "source": "PY20190805MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 51337000,
+      "n_eggs": 1209500074.2857144,
+      "source": "PY20190903MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 52734000,
+      "n_eggs": 1198380342.857143,
+      "source": "PY20191001MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 54208000,
+      "n_eggs": 1272939891.4285717,
+      "source": "PY20191105MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 54593000,
+      "n_eggs": 1248814800.0,
+      "source": "PY20191202MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 54593000,
+      "n_eggs": 1290441960.0,
+      "source": "PY20200106MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 53966000,
+      "n_eggs": 1271439668.5714283,
+      "source": "PY20200203MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-02-29T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 53966000,
+      "n_eggs": 1189411302.857143,
+      "source": "PY20200302MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 61204000,
+      "n_eggs": 1437223062.857143,
+      "source": "PY20200406MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 60896000,
+      "n_eggs": 1388429485.7142856,
+      "source": "PY20200504MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 61061000,
+      "n_eggs": 1466989971.4285717,
+      "source": "PY20200601MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 62590000,
+      "n_eggs": 1473994800.0,
+      "source": "PY20200706MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 63030000,
+      "n_eggs": 1533835182.857143,
+      "source": "PY20200803MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 63030000,
+      "n_eggs": 1577799205.714286,
+      "source": "PY20200908MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 62832000,
+      "n_eggs": 1479694114.285714,
+      "source": "PY20201005MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 62909000,
+      "n_eggs": 1550391840.0,
+      "source": "PY20201102MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 62909000,
+      "n_eggs": 1519252971.4285717,
+      "source": "PY20201207MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2020-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 62634000,
+      "n_eggs": 1567885937.1428573,
+      "source": "PY20210104MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2021-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 64955000,
+      "n_eggs": 1590747994.2857144,
+      "source": "PY20210201MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2021-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (non-organic)",
+      "n_hens": 67496000,
+      "n_eggs": 1493012160.0,
+      "source": "PY20210301MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 13500000,
+      "n_eggs": 315968297.14285713,
+      "source": "PY20160919MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 13500000,
+      "n_eggs": 304762114.28571427,
+      "source": "PY20161004MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 327825000.0,
+      "source": "PY20161102MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 318519771.4285714,
+      "source": "PY20161205MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2016-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 325639234.2857143,
+      "source": "PY20170109MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 330010765.71428573,
+      "source": "PY20170206MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 298074240.0,
+      "source": "PY20170306MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14500000,
+      "n_eggs": 333754148.5714286,
+      "source": "PY20170403MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14600000,
+      "n_eggs": 330689828.57142854,
+      "source": "PY20170503MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14600000,
+      "n_eggs": 340580880.0,
+      "source": "PY20170605MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14600000,
+      "n_eggs": 330689828.57142854,
+      "source": "PY20170630MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14600000,
+      "n_eggs": 341712822.85714287,
+      "source": "PY20170808MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14100000,
+      "n_eggs": 331102851.42857146,
+      "source": "PY20170905MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14300000,
+      "n_eggs": 321750514.28571427,
+      "source": "PY20171002MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14700000,
+      "n_eggs": 340635085.71428573,
+      "source": "PY20171107MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14700000,
+      "n_eggs": 330750000.0,
+      "source": "PY20171204MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2017-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14700000,
+      "n_eggs": 341775000.0,
+      "source": "PY20180103MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14550000,
+      "n_eggs": 337159542.85714287,
+      "source": "PY20180206MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14996000,
+      "n_eggs": 313866720.0,
+      "source": "PY20180305MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 14996000,
+      "n_eggs": 348657531.42857146,
+      "source": "PY20180402MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15559000,
+      "n_eggs": 350077371.4285714,
+      "source": "PY20180507MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15559000,
+      "n_eggs": 361746617.14285713,
+      "source": "PY20180604MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15617000,
+      "n_eggs": 352553657.14285713,
+      "source": "PY20180629MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-07-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15617000,
+      "n_eggs": 363095382.85714287,
+      "source": "PY20180731MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-08-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15617000,
+      "n_eggs": 363095382.85714287,
+      "source": "PY20180904MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-09-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15675000,
+      "n_eggs": 353863542.85714287,
+      "source": "PY20181001MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-10-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 365915674.2857143,
+      "source": "PY20181102MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-11-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 355287600.0,
+      "source": "PY20181203MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2018-12-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 368346960.0,
+      "source": "PY20190107MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-01-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 368346960.0,
+      "source": "PY20190205MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-02-28T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 331601760.0,
+      "source": "PY20190304MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-03-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15007500,
+      "n_eggs": 350087605.71428573,
+      "source": "PY20190401MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-04-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15686000,
+      "n_eggs": 355287600.0,
+      "source": "PY20190506MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-05-31T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15778000,
+      "n_eggs": 369284400.0,
+      "source": "PY20190603MCAGEFREE.PDF"
+    },
+    {
+      "observed_month": "2019-06-30T00:00:00.000",
+      "prod_type": "table eggs",
+      "prod_process": "cage-free (organic)",
+      "n_hens": 15778000,
+      "n_eggs": 359738742.85714287,
+      "source": "PY20190628MCAGEFREE.PDF"
+    }
+  ]
+}

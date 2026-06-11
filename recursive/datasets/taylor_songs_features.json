@@ -1,0 +1,1739 @@
+{
+  "meta": {
+    "name": "taylor_songs_features",
+    "description": "Audio features of Taylor Swift album tracks",
+    "source": "tidytuesday/2023-10-17/taylor_album_songs.csv",
+    "transformation": "Select audio feature columns, drop NaN.",
+    "num_rows": 191,
+    "columns": {
+      "album_name": "str",
+      "track_name": "str",
+      "danceability": "float64",
+      "energy": "float64",
+      "valence": "float64",
+      "tempo": "float64",
+      "duration_ms": "float64"
+    }
+  },
+  "data": [
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Tim McGraw",
+      "danceability": 0.58,
+      "energy": 0.491,
+      "valence": 0.425,
+      "tempo": 76.009,
+      "duration_ms": 232107.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Picture To Burn",
+      "danceability": 0.658,
+      "energy": 0.877,
+      "valence": 0.821,
+      "tempo": 105.586,
+      "duration_ms": 173067.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Teardrops On My Guitar",
+      "danceability": 0.621,
+      "energy": 0.417,
+      "valence": 0.289,
+      "tempo": 99.953,
+      "duration_ms": 203040.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "A Place In This World",
+      "danceability": 0.576,
+      "energy": 0.777,
+      "valence": 0.428,
+      "tempo": 115.028,
+      "duration_ms": 199200.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Cold As You",
+      "danceability": 0.418,
+      "energy": 0.482,
+      "valence": 0.261,
+      "tempo": 175.558,
+      "duration_ms": 239013.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "The Outside",
+      "danceability": 0.589,
+      "energy": 0.805,
+      "valence": 0.591,
+      "tempo": 112.982,
+      "duration_ms": 207107.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Tied Together With A Smile",
+      "danceability": 0.479,
+      "energy": 0.578,
+      "valence": 0.192,
+      "tempo": 146.165,
+      "duration_ms": 248107.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Stay Beautiful",
+      "danceability": 0.594,
+      "energy": 0.629,
+      "valence": 0.504,
+      "tempo": 131.597,
+      "duration_ms": 236053.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Should've Said No",
+      "danceability": 0.476,
+      "energy": 0.777,
+      "valence": 0.472,
+      "tempo": 167.964,
+      "duration_ms": 242200.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Mary's Song (Oh My My My)",
+      "danceability": 0.403,
+      "energy": 0.627,
+      "valence": 0.374,
+      "tempo": 74.9,
+      "duration_ms": 213080.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Our Song",
+      "danceability": 0.668,
+      "energy": 0.672,
+      "valence": 0.539,
+      "tempo": 89.011,
+      "duration_ms": 201107.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "I'm Only Me When I'm With You",
+      "danceability": 0.563,
+      "energy": 0.934,
+      "valence": 0.518,
+      "tempo": 143.964,
+      "duration_ms": 213053.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Invisible",
+      "danceability": 0.612,
+      "energy": 0.394,
+      "valence": 0.233,
+      "tempo": 96.001,
+      "duration_ms": 203227.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "A Perfectly Good Heart",
+      "danceability": 0.483,
+      "energy": 0.751,
+      "valence": 0.268,
+      "tempo": 156.092,
+      "duration_ms": 220147.0
+    },
+    {
+      "album_name": "Taylor Swift",
+      "track_name": "Teardrops On My Guitar (Pop Version)",
+      "danceability": 0.459,
+      "energy": 0.753,
+      "valence": 0.483,
+      "tempo": 199.997,
+      "duration_ms": 179067.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Fearless (Taylor's Version)",
+      "danceability": 0.569,
+      "energy": 0.741,
+      "valence": 0.43,
+      "tempo": 100.118,
+      "duration_ms": 241592.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Fifteen (Taylor's Version)",
+      "danceability": 0.559,
+      "energy": 0.646,
+      "valence": 0.289,
+      "tempo": 95.466,
+      "duration_ms": 294419.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Love Story (Taylor's Version)",
+      "danceability": 0.627,
+      "energy": 0.792,
+      "valence": 0.415,
+      "tempo": 119.054,
+      "duration_ms": 235767.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Hey Stephen (Taylor's Version)",
+      "danceability": 0.788,
+      "energy": 0.571,
+      "valence": 0.797,
+      "tempo": 115.99,
+      "duration_ms": 254255.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "White Horse (Taylor's Version)",
+      "danceability": 0.423,
+      "energy": 0.517,
+      "valence": 0.366,
+      "tempo": 185.262,
+      "duration_ms": 234516.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "You Belong With Me (Taylor's Version)",
+      "danceability": 0.632,
+      "energy": 0.773,
+      "valence": 0.474,
+      "tempo": 130.033,
+      "duration_ms": 231124.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Breathe (Taylor's Version)",
+      "danceability": 0.506,
+      "energy": 0.626,
+      "valence": 0.321,
+      "tempo": 148.035,
+      "duration_ms": 263377.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Tell Me Why (Taylor's Version)",
+      "danceability": 0.578,
+      "energy": 0.909,
+      "valence": 0.541,
+      "tempo": 100.023,
+      "duration_ms": 200576.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "You're Not Sorry (Taylor's Version)",
+      "danceability": 0.506,
+      "energy": 0.444,
+      "valence": 0.241,
+      "tempo": 133.873,
+      "duration_ms": 261843.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "The Way I Loved You (Taylor's Version)",
+      "danceability": 0.402,
+      "energy": 0.732,
+      "valence": 0.472,
+      "tempo": 161.032,
+      "duration_ms": 243137.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Forever & Always (Taylor's Version)",
+      "danceability": 0.598,
+      "energy": 0.821,
+      "valence": 0.673,
+      "tempo": 128.03,
+      "duration_ms": 225328.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "The Best Day (Taylor's Version)",
+      "danceability": 0.642,
+      "energy": 0.576,
+      "valence": 0.469,
+      "tempo": 125.0,
+      "duration_ms": 245290.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Change (Taylor's Version)",
+      "danceability": 0.499,
+      "energy": 0.815,
+      "valence": 0.344,
+      "tempo": 95.999,
+      "duration_ms": 279360.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Jump Then Fall (Taylor's Version)",
+      "danceability": 0.572,
+      "energy": 0.69,
+      "valence": 0.624,
+      "tempo": 160.111,
+      "duration_ms": 237580.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Untouchable (Taylor's Version)",
+      "danceability": 0.393,
+      "energy": 0.531,
+      "valence": 0.224,
+      "tempo": 200.391,
+      "duration_ms": 312107.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Forever & Always (Piano Version) [Taylor's Version]",
+      "danceability": 0.546,
+      "energy": 0.273,
+      "valence": 0.271,
+      "tempo": 118.753,
+      "duration_ms": 267833.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Come In With The Rain (Taylor's Version)",
+      "danceability": 0.476,
+      "energy": 0.564,
+      "valence": 0.167,
+      "tempo": 143.929,
+      "duration_ms": 237339.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "SuperStar (Taylor's Version)",
+      "danceability": 0.454,
+      "energy": 0.555,
+      "valence": 0.171,
+      "tempo": 171.862,
+      "duration_ms": 263865.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "The Other Side Of The Door (Taylor's Version)",
+      "danceability": 0.432,
+      "energy": 0.873,
+      "valence": 0.629,
+      "tempo": 163.936,
+      "duration_ms": 238444.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Today Was A Fairytale (Taylor's Version)",
+      "danceability": 0.482,
+      "energy": 0.779,
+      "valence": 0.328,
+      "tempo": 158.162,
+      "duration_ms": 241822.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "You All Over Me (Taylor's Version) [From The Vault]",
+      "danceability": 0.599,
+      "energy": 0.494,
+      "valence": 0.44,
+      "tempo": 142.893,
+      "duration_ms": 220839.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Mr. Perfectly Fine (Taylor's Version) [From The Vault]",
+      "danceability": 0.66,
+      "energy": 0.817,
+      "valence": 0.714,
+      "tempo": 135.942,
+      "duration_ms": 277592.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "We Were Happy (Taylor's Version) [From The Vault]",
+      "danceability": 0.609,
+      "energy": 0.373,
+      "valence": 0.13,
+      "tempo": 106.007,
+      "duration_ms": 244237.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "That's When (Taylor's Version) [From The Vault]",
+      "danceability": 0.588,
+      "energy": 0.608,
+      "valence": 0.508,
+      "tempo": 90.201,
+      "duration_ms": 189496.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Don't You (Taylor's Version) [From The Vault]",
+      "danceability": 0.563,
+      "energy": 0.473,
+      "valence": 0.405,
+      "tempo": 101.934,
+      "duration_ms": 208609.0
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "track_name": "Bye Bye Baby (Taylor's Version) [From The Vault]",
+      "danceability": 0.624,
+      "energy": 0.624,
+      "valence": 0.527,
+      "tempo": 80.132,
+      "duration_ms": 242158.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Mine",
+      "danceability": 0.624,
+      "energy": 0.757,
+      "valence": 0.658,
+      "tempo": 121.07,
+      "duration_ms": 230707.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Sparks Fly",
+      "danceability": 0.605,
+      "energy": 0.787,
+      "valence": 0.374,
+      "tempo": 114.987,
+      "duration_ms": 260933.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Back To December",
+      "danceability": 0.529,
+      "energy": 0.67,
+      "valence": 0.286,
+      "tempo": 141.893,
+      "duration_ms": 293027.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Speak Now",
+      "danceability": 0.709,
+      "energy": 0.599,
+      "valence": 0.735,
+      "tempo": 118.975,
+      "duration_ms": 240760.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Dear John",
+      "danceability": 0.589,
+      "energy": 0.47,
+      "valence": 0.102,
+      "tempo": 119.386,
+      "duration_ms": 403920.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Mean",
+      "danceability": 0.568,
+      "energy": 0.761,
+      "valence": 0.789,
+      "tempo": 163.974,
+      "duration_ms": 237733.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "The Story Of Us",
+      "danceability": 0.543,
+      "energy": 0.818,
+      "valence": 0.683,
+      "tempo": 139.898,
+      "duration_ms": 265667.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Never Grow Up",
+      "danceability": 0.714,
+      "energy": 0.305,
+      "valence": 0.554,
+      "tempo": 124.91,
+      "duration_ms": 290467.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Enchanted",
+      "danceability": 0.455,
+      "energy": 0.623,
+      "valence": 0.208,
+      "tempo": 163.893,
+      "duration_ms": 352187.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Better Than Revenge",
+      "danceability": 0.516,
+      "energy": 0.917,
+      "valence": 0.635,
+      "tempo": 145.821,
+      "duration_ms": 217160.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Innocent",
+      "danceability": 0.552,
+      "energy": 0.608,
+      "valence": 0.17,
+      "tempo": 134.05,
+      "duration_ms": 302253.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Haunted",
+      "danceability": 0.436,
+      "energy": 0.95,
+      "valence": 0.352,
+      "tempo": 162.088,
+      "duration_ms": 242080.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Last Kiss",
+      "danceability": 0.371,
+      "energy": 0.341,
+      "valence": 0.196,
+      "tempo": 89.038,
+      "duration_ms": 367133.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Long Live",
+      "danceability": 0.418,
+      "energy": 0.68,
+      "valence": 0.142,
+      "tempo": 204.12,
+      "duration_ms": 317453.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Ours",
+      "danceability": 0.608,
+      "energy": 0.569,
+      "valence": 0.238,
+      "tempo": 159.845,
+      "duration_ms": 237920.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "If This Was A Movie",
+      "danceability": 0.511,
+      "energy": 0.719,
+      "valence": 0.289,
+      "tempo": 147.852,
+      "duration_ms": 234547.0
+    },
+    {
+      "album_name": "Speak Now",
+      "track_name": "Superman",
+      "danceability": 0.582,
+      "energy": 0.765,
+      "valence": 0.559,
+      "tempo": 131.982,
+      "duration_ms": 275960.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "State Of Grace (Taylor's Version)",
+      "danceability": 0.594,
+      "energy": 0.713,
+      "valence": 0.328,
+      "tempo": 129.958,
+      "duration_ms": 295413.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Red (Taylor's Version)",
+      "danceability": 0.516,
+      "energy": 0.777,
+      "valence": 0.408,
+      "tempo": 125.047,
+      "duration_ms": 223093.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Treacherous (Taylor's Version)",
+      "danceability": 0.645,
+      "energy": 0.593,
+      "valence": 0.299,
+      "tempo": 109.984,
+      "duration_ms": 242720.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "I Knew You Were Trouble (Taylor's Version)",
+      "danceability": 0.584,
+      "energy": 0.557,
+      "valence": 0.767,
+      "tempo": 154.008,
+      "duration_ms": 219760.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "All Too Well (Taylor's Version)",
+      "danceability": 0.44,
+      "energy": 0.528,
+      "valence": 0.132,
+      "tempo": 185.972,
+      "duration_ms": 329160.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "22 (Taylor's Version)",
+      "danceability": 0.642,
+      "energy": 0.695,
+      "valence": 0.642,
+      "tempo": 103.984,
+      "duration_ms": 230960.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "I Almost Do (Taylor's Version)",
+      "danceability": 0.511,
+      "energy": 0.559,
+      "valence": 0.248,
+      "tempo": 145.88,
+      "duration_ms": 244587.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "We Are Never Ever Getting Back Together (Taylor's Version)",
+      "danceability": 0.567,
+      "energy": 0.686,
+      "valence": 0.716,
+      "tempo": 172.014,
+      "duration_ms": 193147.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Stay Stay Stay (Taylor's Version)",
+      "danceability": 0.693,
+      "energy": 0.681,
+      "valence": 0.663,
+      "tempo": 100.02,
+      "duration_ms": 205787.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "The Last Time (Taylor's Version)",
+      "danceability": 0.502,
+      "energy": 0.534,
+      "valence": 0.155,
+      "tempo": 94.05,
+      "duration_ms": 299080.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Holy Ground (Taylor's Version)",
+      "danceability": 0.622,
+      "energy": 0.809,
+      "valence": 0.511,
+      "tempo": 156.894,
+      "duration_ms": 202960.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Sad Beautiful Tragic (Taylor's Version)",
+      "danceability": 0.601,
+      "energy": 0.406,
+      "valence": 0.232,
+      "tempo": 130.059,
+      "duration_ms": 284773.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "The Lucky One (Taylor's Version)",
+      "danceability": 0.686,
+      "energy": 0.571,
+      "valence": 0.538,
+      "tempo": 117.889,
+      "duration_ms": 240467.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Everything Has Changed (Taylor's Version)",
+      "danceability": 0.498,
+      "energy": 0.61,
+      "valence": 0.474,
+      "tempo": 79.918,
+      "duration_ms": 245427.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Starlight (Taylor's Version)",
+      "danceability": 0.628,
+      "energy": 0.685,
+      "valence": 0.605,
+      "tempo": 126.014,
+      "duration_ms": 220413.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Begin Again (Taylor's Version)",
+      "danceability": 0.519,
+      "energy": 0.527,
+      "valence": 0.267,
+      "tempo": 78.915,
+      "duration_ms": 238867.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "The Moment I Knew (Taylor's Version)",
+      "danceability": 0.636,
+      "energy": 0.402,
+      "valence": 0.208,
+      "tempo": 125.952,
+      "duration_ms": 285280.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Come Back...Be Here (Taylor's Version)",
+      "danceability": 0.46,
+      "energy": 0.632,
+      "valence": 0.399,
+      "tempo": 79.846,
+      "duration_ms": 223333.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Girl At Home (Taylor's Version)",
+      "danceability": 0.691,
+      "energy": 0.736,
+      "valence": 0.612,
+      "tempo": 125.089,
+      "duration_ms": 220520.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "State Of Grace (Acoustic Version) [Taylor's Version]",
+      "danceability": 0.445,
+      "energy": 0.131,
+      "valence": 0.101,
+      "tempo": 208.918,
+      "duration_ms": 321640.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Ronan (Taylor's Version)",
+      "danceability": 0.623,
+      "energy": 0.279,
+      "valence": 0.38,
+      "tempo": 116.04,
+      "duration_ms": 264253.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Better Man (Taylor's Version) [From The Vault]",
+      "danceability": 0.473,
+      "energy": 0.579,
+      "valence": 0.255,
+      "tempo": 73.942,
+      "duration_ms": 297013.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Nothing New (Taylor's Version) [From The Vault]",
+      "danceability": 0.606,
+      "energy": 0.377,
+      "valence": 0.446,
+      "tempo": 101.96,
+      "duration_ms": 258813.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Babe (Taylor's Version) [From The Vault]",
+      "danceability": 0.584,
+      "energy": 0.743,
+      "valence": 0.746,
+      "tempo": 167.844,
+      "duration_ms": 224240.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Message In A Bottle (Taylor's Version) [From The Vault]",
+      "danceability": 0.622,
+      "energy": 0.791,
+      "valence": 0.494,
+      "tempo": 115.915,
+      "duration_ms": 225960.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "I Bet You Think About Me (Taylor's Version) [From The Vault]",
+      "danceability": 0.391,
+      "energy": 0.715,
+      "valence": 0.473,
+      "tempo": 149.654,
+      "duration_ms": 285107.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Forever Winter (Taylor's Version) [From The Vault]",
+      "danceability": 0.611,
+      "energy": 0.552,
+      "valence": 0.41,
+      "tempo": 116.012,
+      "duration_ms": 263533.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "Run (Taylor's Version) [From The Vault]",
+      "danceability": 0.61,
+      "energy": 0.488,
+      "valence": 0.443,
+      "tempo": 125.039,
+      "duration_ms": 240227.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "The Very First Night (Taylor's Version) [From The Vault]",
+      "danceability": 0.678,
+      "energy": 0.733,
+      "valence": 0.581,
+      "tempo": 121.009,
+      "duration_ms": 200280.0
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "track_name": "All Too Well (10 Minute Version) [Taylor's Version] [From The Vault]",
+      "danceability": 0.631,
+      "energy": 0.518,
+      "valence": 0.205,
+      "tempo": 93.023,
+      "duration_ms": 613027.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Welcome To New York",
+      "danceability": 0.789,
+      "energy": 0.634,
+      "valence": 0.658,
+      "tempo": 116.992,
+      "duration_ms": 212600.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Blank Space",
+      "danceability": 0.76,
+      "energy": 0.703,
+      "valence": 0.57,
+      "tempo": 95.997,
+      "duration_ms": 231827.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Style",
+      "danceability": 0.588,
+      "energy": 0.791,
+      "valence": 0.487,
+      "tempo": 94.933,
+      "duration_ms": 231000.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Out Of The Woods",
+      "danceability": 0.553,
+      "energy": 0.841,
+      "valence": 0.338,
+      "tempo": 92.008,
+      "duration_ms": 235800.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "All You Had To Do Was Stay",
+      "danceability": 0.605,
+      "energy": 0.725,
+      "valence": 0.539,
+      "tempo": 96.97,
+      "duration_ms": 193293.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Shake It Off",
+      "danceability": 0.647,
+      "energy": 0.8,
+      "valence": 0.942,
+      "tempo": 160.078,
+      "duration_ms": 219200.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "I Wish You Would",
+      "danceability": 0.653,
+      "energy": 0.893,
+      "valence": 0.513,
+      "tempo": 118.035,
+      "duration_ms": 207440.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Bad Blood",
+      "danceability": 0.646,
+      "energy": 0.794,
+      "valence": 0.287,
+      "tempo": 170.216,
+      "duration_ms": 211933.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Wildest Dreams",
+      "danceability": 0.55,
+      "energy": 0.688,
+      "valence": 0.465,
+      "tempo": 139.997,
+      "duration_ms": 220440.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "How You Get The Girl",
+      "danceability": 0.765,
+      "energy": 0.656,
+      "valence": 0.545,
+      "tempo": 119.997,
+      "duration_ms": 247533.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "This Love",
+      "danceability": 0.481,
+      "energy": 0.435,
+      "valence": 0.107,
+      "tempo": 143.95,
+      "duration_ms": 250093.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "I Know Places",
+      "danceability": 0.602,
+      "energy": 0.755,
+      "valence": 0.495,
+      "tempo": 159.965,
+      "duration_ms": 195707.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Clean",
+      "danceability": 0.815,
+      "energy": 0.377,
+      "valence": 0.211,
+      "tempo": 103.97,
+      "duration_ms": 271000.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "Wonderland",
+      "danceability": 0.422,
+      "energy": 0.692,
+      "valence": 0.197,
+      "tempo": 184.014,
+      "duration_ms": 245560.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "You Are In Love",
+      "danceability": 0.474,
+      "energy": 0.48,
+      "valence": 0.319,
+      "tempo": 170.109,
+      "duration_ms": 267107.0
+    },
+    {
+      "album_name": "1989",
+      "track_name": "New Romantics",
+      "danceability": 0.633,
+      "energy": 0.889,
+      "valence": 0.584,
+      "tempo": 121.956,
+      "duration_ms": 230467.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "...Ready For It?",
+      "danceability": 0.613,
+      "energy": 0.764,
+      "valence": 0.417,
+      "tempo": 160.015,
+      "duration_ms": 208187.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "End Game",
+      "danceability": 0.649,
+      "energy": 0.589,
+      "valence": 0.151,
+      "tempo": 159.073,
+      "duration_ms": 244827.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "I Did Something Bad",
+      "danceability": 0.696,
+      "energy": 0.602,
+      "valence": 0.305,
+      "tempo": 82.989,
+      "duration_ms": 238253.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Don't Blame Me",
+      "danceability": 0.615,
+      "energy": 0.534,
+      "valence": 0.193,
+      "tempo": 135.917,
+      "duration_ms": 236413.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Delicate",
+      "danceability": 0.75,
+      "energy": 0.404,
+      "valence": 0.0499,
+      "tempo": 95.045,
+      "duration_ms": 232253.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Look What You Made Me Do",
+      "danceability": 0.766,
+      "energy": 0.709,
+      "valence": 0.506,
+      "tempo": 128.07,
+      "duration_ms": 211853.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "So It Goes...",
+      "danceability": 0.574,
+      "energy": 0.61,
+      "valence": 0.374,
+      "tempo": 74.957,
+      "duration_ms": 227907.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Gorgeous",
+      "danceability": 0.8,
+      "energy": 0.535,
+      "valence": 0.451,
+      "tempo": 92.027,
+      "duration_ms": 209680.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Getaway Car",
+      "danceability": 0.562,
+      "energy": 0.689,
+      "valence": 0.351,
+      "tempo": 172.054,
+      "duration_ms": 233627.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "King Of My Heart",
+      "danceability": 0.675,
+      "energy": 0.703,
+      "valence": 0.314,
+      "tempo": 110.01,
+      "duration_ms": 214320.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Dancing With Our Hands Tied",
+      "danceability": 0.624,
+      "energy": 0.691,
+      "valence": 0.284,
+      "tempo": 160.024,
+      "duration_ms": 211507.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Dress",
+      "danceability": 0.719,
+      "energy": 0.469,
+      "valence": 0.0851,
+      "tempo": 120.085,
+      "duration_ms": 230373.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "This Is Why We Can't Have Nice Things",
+      "danceability": 0.567,
+      "energy": 0.789,
+      "valence": 0.438,
+      "tempo": 163.96,
+      "duration_ms": 207133.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "Call It What You Want",
+      "danceability": 0.598,
+      "energy": 0.504,
+      "valence": 0.252,
+      "tempo": 163.954,
+      "duration_ms": 203507.0
+    },
+    {
+      "album_name": "reputation",
+      "track_name": "New Year's Day",
+      "danceability": 0.661,
+      "energy": 0.151,
+      "valence": 0.23,
+      "tempo": 94.922,
+      "duration_ms": 235467.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "I Forgot That You Existed",
+      "danceability": 0.664,
+      "energy": 0.316,
+      "valence": 0.541,
+      "tempo": 92.875,
+      "duration_ms": 170640.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Cruel Summer",
+      "danceability": 0.552,
+      "energy": 0.702,
+      "valence": 0.564,
+      "tempo": 169.994,
+      "duration_ms": 178427.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Lover",
+      "danceability": 0.359,
+      "energy": 0.543,
+      "valence": 0.453,
+      "tempo": 68.534,
+      "duration_ms": 221307.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "The Man",
+      "danceability": 0.777,
+      "energy": 0.658,
+      "valence": 0.633,
+      "tempo": 110.048,
+      "duration_ms": 190360.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "The Archer",
+      "danceability": 0.292,
+      "energy": 0.574,
+      "valence": 0.166,
+      "tempo": 124.344,
+      "duration_ms": 211240.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "I Think He Knows",
+      "danceability": 0.897,
+      "energy": 0.366,
+      "valence": 0.416,
+      "tempo": 100.003,
+      "duration_ms": 173387.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Miss Americana & The Heartbreak Prince",
+      "danceability": 0.662,
+      "energy": 0.747,
+      "valence": 0.487,
+      "tempo": 150.088,
+      "duration_ms": 234147.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Paper Rings",
+      "danceability": 0.811,
+      "energy": 0.719,
+      "valence": 0.865,
+      "tempo": 103.979,
+      "duration_ms": 222400.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Cornelia Street",
+      "danceability": 0.824,
+      "energy": 0.624,
+      "valence": 0.248,
+      "tempo": 102.012,
+      "duration_ms": 287267.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Death By A Thousand Cuts",
+      "danceability": 0.712,
+      "energy": 0.732,
+      "valence": 0.313,
+      "tempo": 94.071,
+      "duration_ms": 198533.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "London Boy",
+      "danceability": 0.695,
+      "energy": 0.71,
+      "valence": 0.557,
+      "tempo": 157.925,
+      "duration_ms": 190240.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Soon You'll Get Better",
+      "danceability": 0.433,
+      "energy": 0.182,
+      "valence": 0.421,
+      "tempo": 207.476,
+      "duration_ms": 201587.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "False God",
+      "danceability": 0.739,
+      "energy": 0.32,
+      "valence": 0.351,
+      "tempo": 79.97,
+      "duration_ms": 200307.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "You Need To Calm Down",
+      "danceability": 0.771,
+      "energy": 0.671,
+      "valence": 0.714,
+      "tempo": 85.026,
+      "duration_ms": 171360.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Afterglow",
+      "danceability": 0.756,
+      "energy": 0.449,
+      "valence": 0.399,
+      "tempo": 111.011,
+      "duration_ms": 223293.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "ME!",
+      "danceability": 0.61,
+      "energy": 0.83,
+      "valence": 0.728,
+      "tempo": 182.162,
+      "duration_ms": 193000.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "It's Nice To Have A Friend",
+      "danceability": 0.737,
+      "energy": 0.175,
+      "valence": 0.545,
+      "tempo": 70.008,
+      "duration_ms": 150440.0
+    },
+    {
+      "album_name": "Lover",
+      "track_name": "Daylight",
+      "danceability": 0.557,
+      "energy": 0.496,
+      "valence": 0.265,
+      "tempo": 149.983,
+      "duration_ms": 293453.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "the 1",
+      "danceability": 0.78,
+      "energy": 0.361,
+      "valence": 0.163,
+      "tempo": 139.902,
+      "duration_ms": 210240.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "cardigan",
+      "danceability": 0.612,
+      "energy": 0.58,
+      "valence": 0.534,
+      "tempo": 130.045,
+      "duration_ms": 239560.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "the last great american dynasty",
+      "danceability": 0.688,
+      "energy": 0.653,
+      "valence": 0.701,
+      "tempo": 147.991,
+      "duration_ms": 231000.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "exile",
+      "danceability": 0.31,
+      "energy": 0.374,
+      "valence": 0.16,
+      "tempo": 75.938,
+      "duration_ms": 285640.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "my tears ricochet",
+      "danceability": 0.456,
+      "energy": 0.265,
+      "valence": 0.112,
+      "tempo": 129.947,
+      "duration_ms": 255893.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "mirrorball",
+      "danceability": 0.549,
+      "energy": 0.417,
+      "valence": 0.347,
+      "tempo": 110.137,
+      "duration_ms": 208973.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "seven",
+      "danceability": 0.602,
+      "energy": 0.494,
+      "valence": 0.374,
+      "tempo": 94.955,
+      "duration_ms": 208907.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "august",
+      "danceability": 0.387,
+      "energy": 0.634,
+      "valence": 0.42,
+      "tempo": 89.567,
+      "duration_ms": 261920.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "this is me trying",
+      "danceability": 0.511,
+      "energy": 0.478,
+      "valence": 0.408,
+      "tempo": 135.882,
+      "duration_ms": 195107.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "illicit affairs",
+      "danceability": 0.529,
+      "energy": 0.304,
+      "valence": 0.44,
+      "tempo": 119.58,
+      "duration_ms": 190893.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "invisible string",
+      "danceability": 0.651,
+      "energy": 0.459,
+      "valence": 0.454,
+      "tempo": 83.455,
+      "duration_ms": 252880.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "mad woman",
+      "danceability": 0.593,
+      "energy": 0.7,
+      "valence": 0.451,
+      "tempo": 141.898,
+      "duration_ms": 237267.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "epiphany",
+      "danceability": 0.317,
+      "energy": 0.254,
+      "valence": 0.103,
+      "tempo": 93.933,
+      "duration_ms": 289747.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "betty",
+      "danceability": 0.595,
+      "energy": 0.376,
+      "valence": 0.476,
+      "tempo": 95.946,
+      "duration_ms": 294520.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "peace",
+      "danceability": 0.644,
+      "energy": 0.284,
+      "valence": 0.328,
+      "tempo": 150.072,
+      "duration_ms": 234000.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "hoax",
+      "danceability": 0.676,
+      "energy": 0.178,
+      "valence": 0.404,
+      "tempo": 118.84,
+      "duration_ms": 220040.0
+    },
+    {
+      "album_name": "folklore",
+      "track_name": "the lakes",
+      "danceability": 0.313,
+      "energy": 0.258,
+      "valence": 0.268,
+      "tempo": 179.947,
+      "duration_ms": 211813.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "willow",
+      "danceability": 0.392,
+      "energy": 0.574,
+      "valence": 0.529,
+      "tempo": 81.112,
+      "duration_ms": 214707.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "champagne problems",
+      "danceability": 0.462,
+      "energy": 0.24,
+      "valence": 0.32,
+      "tempo": 171.319,
+      "duration_ms": 244000.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "gold rush",
+      "danceability": 0.512,
+      "energy": 0.462,
+      "valence": 0.353,
+      "tempo": 112.05,
+      "duration_ms": 185320.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "'tis the damn season",
+      "danceability": 0.575,
+      "energy": 0.434,
+      "valence": 0.348,
+      "tempo": 145.916,
+      "duration_ms": 229840.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "tolerate it",
+      "danceability": 0.316,
+      "energy": 0.361,
+      "valence": 0.221,
+      "tempo": 74.952,
+      "duration_ms": 245440.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "no body, no crime",
+      "danceability": 0.546,
+      "energy": 0.613,
+      "valence": 0.535,
+      "tempo": 79.015,
+      "duration_ms": 215627.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "happiness",
+      "danceability": 0.559,
+      "energy": 0.334,
+      "valence": 0.211,
+      "tempo": 122.079,
+      "duration_ms": 315147.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "dorothea",
+      "danceability": 0.605,
+      "energy": 0.488,
+      "valence": 0.354,
+      "tempo": 119.966,
+      "duration_ms": 225880.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "coney island",
+      "danceability": 0.537,
+      "energy": 0.537,
+      "valence": 0.292,
+      "tempo": 107.895,
+      "duration_ms": 275320.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "ivy",
+      "danceability": 0.515,
+      "energy": 0.545,
+      "valence": 0.535,
+      "tempo": 88.856,
+      "duration_ms": 260440.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "cowboy like me",
+      "danceability": 0.604,
+      "energy": 0.517,
+      "valence": 0.511,
+      "tempo": 127.967,
+      "duration_ms": 275040.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "long story short",
+      "danceability": 0.546,
+      "energy": 0.73,
+      "valence": 0.573,
+      "tempo": 157.895,
+      "duration_ms": 215920.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "marjorie",
+      "danceability": 0.535,
+      "energy": 0.561,
+      "valence": 0.287,
+      "tempo": 96.103,
+      "duration_ms": 257773.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "closure",
+      "danceability": 0.689,
+      "energy": 0.704,
+      "valence": 0.92,
+      "tempo": 151.884,
+      "duration_ms": 180653.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "evermore",
+      "danceability": 0.39,
+      "energy": 0.27,
+      "valence": 0.32,
+      "tempo": 125.177,
+      "duration_ms": 304107.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "right where you left me",
+      "danceability": 0.581,
+      "energy": 0.619,
+      "valence": 0.645,
+      "tempo": 137.915,
+      "duration_ms": 245027.0
+    },
+    {
+      "album_name": "evermore",
+      "track_name": "it's time to go",
+      "danceability": 0.592,
+      "energy": 0.41,
+      "valence": 0.416,
+      "tempo": 151.923,
+      "duration_ms": 254640.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Lavender Haze",
+      "danceability": 0.735,
+      "energy": 0.444,
+      "valence": 0.0984,
+      "tempo": 97.038,
+      "duration_ms": 202396.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Maroon",
+      "danceability": 0.658,
+      "energy": 0.378,
+      "valence": 0.0382,
+      "tempo": 108.034,
+      "duration_ms": 218271.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Anti-Hero",
+      "danceability": 0.638,
+      "energy": 0.634,
+      "valence": 0.519,
+      "tempo": 96.953,
+      "duration_ms": 200690.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Snow On The Beach",
+      "danceability": 0.659,
+      "energy": 0.323,
+      "valence": 0.154,
+      "tempo": 110.007,
+      "duration_ms": 256124.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "You're On Your Own, Kid",
+      "danceability": 0.694,
+      "energy": 0.38,
+      "valence": 0.376,
+      "tempo": 120.044,
+      "duration_ms": 194207.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Midnight Rain",
+      "danceability": 0.636,
+      "energy": 0.377,
+      "valence": 0.23,
+      "tempo": 139.966,
+      "duration_ms": 174783.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Question...?",
+      "danceability": 0.751,
+      "energy": 0.502,
+      "valence": 0.112,
+      "tempo": 108.989,
+      "duration_ms": 210557.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Vigilante Shit",
+      "danceability": 0.87,
+      "energy": 0.279,
+      "valence": 0.16,
+      "tempo": 79.996,
+      "duration_ms": 164801.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Bejeweled",
+      "danceability": 0.7,
+      "energy": 0.55,
+      "valence": 0.412,
+      "tempo": 164.003,
+      "duration_ms": 194166.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Labyrinth",
+      "danceability": 0.487,
+      "energy": 0.313,
+      "valence": 0.141,
+      "tempo": 110.039,
+      "duration_ms": 247962.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Karma",
+      "danceability": 0.649,
+      "energy": 0.622,
+      "valence": 0.106,
+      "tempo": 90.024,
+      "duration_ms": 204852.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Sweet Nothing",
+      "danceability": 0.334,
+      "energy": 0.161,
+      "valence": 0.396,
+      "tempo": 176.747,
+      "duration_ms": 188497.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Mastermind",
+      "danceability": 0.661,
+      "energy": 0.352,
+      "valence": 0.13,
+      "tempo": 125.934,
+      "duration_ms": 191039.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "The Great War",
+      "danceability": 0.573,
+      "energy": 0.741,
+      "valence": 0.554,
+      "tempo": 96.016,
+      "duration_ms": 240356.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Bigger Than The Whole Sky",
+      "danceability": 0.422,
+      "energy": 0.235,
+      "valence": 0.068,
+      "tempo": 165.71,
+      "duration_ms": 218503.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Paris",
+      "danceability": 0.7,
+      "energy": 0.509,
+      "valence": 0.345,
+      "tempo": 110.947,
+      "duration_ms": 196259.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "High Infidelity",
+      "danceability": 0.646,
+      "energy": 0.529,
+      "valence": 0.755,
+      "tempo": 87.862,
+      "duration_ms": 231475.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Glitch",
+      "danceability": 0.675,
+      "energy": 0.466,
+      "valence": 0.347,
+      "tempo": 140.864,
+      "duration_ms": 148781.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Would've, Could've, Should've",
+      "danceability": 0.483,
+      "energy": 0.84,
+      "valence": 0.55,
+      "tempo": 157.979,
+      "duration_ms": 260362.0
+    },
+    {
+      "album_name": "Midnights",
+      "track_name": "Dear Reader",
+      "danceability": 0.562,
+      "energy": 0.388,
+      "valence": 0.159,
+      "tempo": 107.747,
+      "duration_ms": 225194.0
+    }
+  ]
+}

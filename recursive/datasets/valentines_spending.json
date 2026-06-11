@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "name": "valentines_spending",
+    "description": "Valentine's Day spending trends in the US",
+    "source": "tidytuesday/2024-02-13/historical_spending.csv",
+    "transformation": "Used as-is (already clean and small).",
+    "num_rows": 13,
+    "columns": {
+      "Year": "int64",
+      "PercentCelebrating": "int64",
+      "PerPerson": "float64",
+      "Candy": "float64",
+      "Flowers": "float64",
+      "Jewelry": "float64",
+      "GreetingCards": "float64",
+      "EveningOut": "float64",
+      "Clothing": "float64",
+      "GiftCards": "float64"
+    }
+  },
+  "data": [
+    {
+      "Year": 2010,
+      "PercentCelebrating": 60,
+      "PerPerson": 103.0,
+      "Candy": 8.6,
+      "Flowers": 12.33,
+      "Jewelry": 21.52,
+      "GreetingCards": 5.91,
+      "EveningOut": 23.76,
+      "Clothing": 10.93,
+      "GiftCards": 8.42
+    },
+    {
+      "Year": 2011,
+      "PercentCelebrating": 58,
+      "PerPerson": 116.21,
+      "Candy": 10.75,
+      "Flowers": 12.62,
+      "Jewelry": 26.18,
+      "GreetingCards": 8.09,
+      "EveningOut": 24.86,
+      "Clothing": 12.0,
+      "GiftCards": 11.21
+    },
+    {
+      "Year": 2012,
+      "PercentCelebrating": 59,
+      "PerPerson": 126.03,
+      "Candy": 10.85,
+      "Flowers": 13.49,
+      "Jewelry": 29.6,
+      "GreetingCards": 6.93,
+      "EveningOut": 25.66,
+      "Clothing": 10.42,
+      "GiftCards": 8.43
+    },
+    {
+      "Year": 2013,
+      "PercentCelebrating": 60,
+      "PerPerson": 130.97,
+      "Candy": 11.64,
+      "Flowers": 13.48,
+      "Jewelry": 30.94,
+      "GreetingCards": 8.32,
+      "EveningOut": 27.93,
+      "Clothing": 11.46,
+      "GiftCards": 10.23
+    },
+    {
+      "Year": 2014,
+      "PercentCelebrating": 54,
+      "PerPerson": 133.91,
+      "Candy": 10.8,
+      "Flowers": 15.0,
+      "Jewelry": 30.58,
+      "GreetingCards": 7.97,
+      "EveningOut": 27.48,
+      "Clothing": 13.37,
+      "GiftCards": 9.0
+    },
+    {
+      "Year": 2015,
+      "PercentCelebrating": 55,
+      "PerPerson": 142.31,
+      "Candy": 12.7,
+      "Flowers": 15.72,
+      "Jewelry": 36.3,
+      "GreetingCards": 7.87,
+      "EveningOut": 27.27,
+      "Clothing": 14.72,
+      "GiftCards": 11.05
+    },
+    {
+      "Year": 2016,
+      "PercentCelebrating": 55,
+      "PerPerson": 146.84,
+      "Candy": 13.11,
+      "Flowers": 14.78,
+      "Jewelry": 33.11,
+      "GreetingCards": 8.52,
+      "EveningOut": 33.46,
+      "Clothing": 15.05,
+      "GiftCards": 12.52
+    },
+    {
+      "Year": 2017,
+      "PercentCelebrating": 54,
+      "PerPerson": 136.57,
+      "Candy": 12.68,
+      "Flowers": 14.63,
+      "Jewelry": 32.32,
+      "GreetingCards": 7.36,
+      "EveningOut": 28.46,
+      "Clothing": 13.91,
+      "GiftCards": 10.23
+    },
+    {
+      "Year": 2018,
+      "PercentCelebrating": 55,
+      "PerPerson": 143.56,
+      "Candy": 13.12,
+      "Flowers": 14.75,
+      "Jewelry": 34.1,
+      "GreetingCards": 6.55,
+      "EveningOut": 26.96,
+      "Clothing": 14.04,
+      "GiftCards": 11.04
+    },
+    {
+      "Year": 2019,
+      "PercentCelebrating": 51,
+      "PerPerson": 161.96,
+      "Candy": 14.12,
+      "Flowers": 15.07,
+      "Jewelry": 30.34,
+      "GreetingCards": 7.31,
+      "EveningOut": 27.72,
+      "Clothing": 16.08,
+      "GiftCards": 10.31
+    },
+    {
+      "Year": 2020,
+      "PercentCelebrating": 55,
+      "PerPerson": 196.31,
+      "Candy": 17.3,
+      "Flowers": 16.49,
+      "Jewelry": 41.65,
+      "GreetingCards": 9.01,
+      "EveningOut": 30.78,
+      "Clothing": 20.67,
+      "GiftCards": 14.21
+    },
+    {
+      "Year": 2021,
+      "PercentCelebrating": 52,
+      "PerPerson": 164.76,
+      "Candy": 15.32,
+      "Flowers": 15.42,
+      "Jewelry": 30.71,
+      "GreetingCards": 8.48,
+      "EveningOut": 21.39,
+      "Clothing": 20.05,
+      "GiftCards": 15.67
+    },
+    {
+      "Year": 2022,
+      "PercentCelebrating": 53,
+      "PerPerson": 175.41,
+      "Candy": 15.9,
+      "Flowers": 16.71,
+      "Jewelry": 45.75,
+      "GreetingCards": 7.47,
+      "EveningOut": 31.35,
+      "Clothing": 21.46,
+      "GiftCards": 17.22
+    }
+  ]
+}

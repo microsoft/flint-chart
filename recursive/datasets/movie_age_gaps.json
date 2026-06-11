@@ -1,0 +1,1418 @@
+{
+  "meta": {
+    "name": "movie_age_gaps",
+    "description": "Age differences between movie love interests over time",
+    "source": "tidytuesday/2023-02-14/age_gaps.csv",
+    "transformation": "Select relevant columns (movie, year, age gap, genders).",
+    "num_rows": 200,
+    "columns": {
+      "movie_name": "str",
+      "release_year": "int64",
+      "age_difference": "int64",
+      "character_1_gender": "str",
+      "character_2_gender": "str"
+    }
+  },
+  "data": [
+    {
+      "movie_name": "Harold and Maude",
+      "release_year": 1971,
+      "age_difference": 52,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Venus",
+      "release_year": 2006,
+      "age_difference": 50,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Quiet American",
+      "release_year": 2002,
+      "age_difference": 49,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Big Lebowski",
+      "release_year": 1998,
+      "age_difference": 45,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Beginners",
+      "release_year": 2010,
+      "age_difference": 43,
+      "character_1_gender": "man",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Poison Ivy",
+      "release_year": 1992,
+      "age_difference": 42,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Whatever Works",
+      "release_year": 2009,
+      "age_difference": 40,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Entrapment",
+      "release_year": 1999,
+      "age_difference": 39,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Husbands and Wives",
+      "release_year": 1992,
+      "age_difference": 38,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Magnolia",
+      "release_year": 1999,
+      "age_difference": 38,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Indiana Jones and the Last Crusade",
+      "release_year": 1989,
+      "age_difference": 36,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mr. Peabody and the Mermaid",
+      "release_year": 1948,
+      "age_difference": 36,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "First Knight",
+      "release_year": 1995,
+      "age_difference": 35,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Something's Gotta Give",
+      "release_year": 2003,
+      "age_difference": 35,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Eternal Sunshine of the Spotless Mind",
+      "release_year": 2004,
+      "age_difference": 34,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Lost in Translation",
+      "release_year": 2003,
+      "age_difference": 34,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Shopgirl",
+      "release_year": 2005,
+      "age_difference": 34,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Wild Target",
+      "release_year": 2010,
+      "age_difference": 34,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Fort Apache, The Bronx",
+      "release_year": 1981,
+      "age_difference": 33,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Hollywood Ending",
+      "release_year": 2002,
+      "age_difference": 33,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Mother",
+      "release_year": 2003,
+      "age_difference": 33,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Daddy Long Legs",
+      "release_year": 1955,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Lolita",
+      "release_year": 1997,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mighty Aphrodite",
+      "release_year": 1995,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Stone",
+      "release_year": 2010,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Private Lives of Pippa Lee",
+      "release_year": 2009,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Third Person",
+      "release_year": 2013,
+      "age_difference": 32,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Elegy",
+      "release_year": 2008,
+      "age_difference": 31,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mighty Aphrodite",
+      "release_year": 1995,
+      "age_difference": 31,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A View to a Kill",
+      "release_year": 1985,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Enemy of the State",
+      "release_year": 1998,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "For Your Eyes Only",
+      "release_year": 1981,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Funny Face",
+      "release_year": 1957,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Houseboat",
+      "release_year": 1958,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Kindergarten Cop 2",
+      "release_year": 2016,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Sabrina",
+      "release_year": 1954,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Quiet American",
+      "release_year": 1958,
+      "age_difference": 30,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A Single Man",
+      "release_year": 2009,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "A View to a Kill",
+      "release_year": 1985,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Arbitrage",
+      "release_year": 2012,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Bulworth",
+      "release_year": 1998,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mank",
+      "release_year": 2020,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Sense and Sensibility",
+      "release_year": 1995,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Departed",
+      "release_year": 2006,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Man Who Wasn't There",
+      "release_year": 2001,
+      "age_difference": 29,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A Perfect Murder",
+      "release_year": 1998,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A View to a Kill",
+      "release_year": 1985,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Beat the Devil",
+      "release_year": 1953,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Caf\u00e9 Society",
+      "release_year": 2016,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Crazy Heart",
+      "release_year": 2009,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Gangster Squad",
+      "release_year": 2013,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "High Noon",
+      "release_year": 1952,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Last Tango in Paris",
+      "release_year": 1972,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Love in the Afternoon",
+      "release_year": 1957,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Magic in the Moonlight",
+      "release_year": 2014,
+      "age_difference": 28,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Freeheld",
+      "release_year": 2015,
+      "age_difference": 27,
+      "character_1_gender": "woman",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Six Days, Seven Nights",
+      "release_year": 1998,
+      "age_difference": 27,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Tadpole",
+      "release_year": 2002,
+      "age_difference": 27,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "The Oranges",
+      "release_year": 2012,
+      "age_difference": 27,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Squid and the Whale",
+      "release_year": 2005,
+      "age_difference": 27,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "You Should Have Left",
+      "release_year": 2020,
+      "age_difference": 27,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "As Good as It Gets",
+      "release_year": 1997,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Behind the Candelabra",
+      "release_year": 2013,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Black Mass",
+      "release_year": 2015,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Die Another Day",
+      "release_year": 2002,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "High Society",
+      "release_year": 1956,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "I Love Trouble",
+      "release_year": 1994,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Indecent Proposal",
+      "release_year": 1993,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Manhattan",
+      "release_year": 1979,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Phantom Thread",
+      "release_year": 2017,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Color of Money",
+      "release_year": 1986,
+      "age_difference": 26,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Amelia",
+      "release_year": 2009,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Charade",
+      "release_year": 1963,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Chloe",
+      "release_year": 2009,
+      "age_difference": 25,
+      "character_1_gender": "woman",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Dark Passage",
+      "release_year": 1947,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "I Married a Witch",
+      "release_year": 1942,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Key Largo",
+      "release_year": 1948,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Knock Knock",
+      "release_year": 2015,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Love Actually",
+      "release_year": 2003,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Rumor Has It...",
+      "release_year": 2005,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Seabiscuit",
+      "release_year": 2003,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Spun",
+      "release_year": 2002,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "State of the Union",
+      "release_year": 1948,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Big Sleep",
+      "release_year": 1946,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Misfits",
+      "release_year": 1961,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "To Catch a Thief",
+      "release_year": 1955,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "To Have and Have Not",
+      "release_year": 1944,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Vertigo",
+      "release_year": 1958,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "World's Greatest Dad",
+      "release_year": 2009,
+      "age_difference": 25,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "15 Minutes",
+      "release_year": 2001,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "American Gangster",
+      "release_year": 2007,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Beyond the Sea",
+      "release_year": 2004,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Cleaner",
+      "release_year": 2007,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Dark Shadows",
+      "release_year": 2012,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Halloween III: Season of the Witch",
+      "release_year": 1982,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "In a Lonely Place",
+      "release_year": 1950,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Indiana Jones and the Last Crusade",
+      "release_year": 1989,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Knock Knock",
+      "release_year": 2015,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Live and Let Die",
+      "release_year": 1973,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Moonraker",
+      "release_year": 1979,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Rio Bravo",
+      "release_year": 1959,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Surrogates",
+      "release_year": 2009,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Horse Whisperer",
+      "release_year": 1998,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Wrong Man",
+      "release_year": 1956,
+      "age_difference": 24,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A Walk in the Woods",
+      "release_year": 2015,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "En kongelig affaere",
+      "release_year": 2012,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Flight",
+      "release_year": 2012,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Hobbs & Shaw",
+      "release_year": 2019,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Moonraker",
+      "release_year": 1979,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Octopussy",
+      "release_year": 1983,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Sabrina",
+      "release_year": 1995,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Seeking a Friend for the End of the World",
+      "release_year": 2012,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Details",
+      "release_year": 2011,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Duchess",
+      "release_year": 2008,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The First Wives Club",
+      "release_year": 1996,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Man with the Golden Gun",
+      "release_year": 1974,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Rum Diary",
+      "release_year": 2011,
+      "age_difference": 23,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Autumn in New York",
+      "release_year": 2000,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Dial M for Murder",
+      "release_year": 1954,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Focus",
+      "release_year": 2015,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Live and Let Die",
+      "release_year": 1973,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Live and Let Die",
+      "release_year": 1973,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Luci del variet\u00e0",
+      "release_year": 1951,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Mummy",
+      "release_year": 2017,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Other Woman",
+      "release_year": 2014,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Prom",
+      "release_year": 2020,
+      "age_difference": 22,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "The Royal Tenenbaums",
+      "release_year": 2001,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Up Close & Personal",
+      "release_year": 1996,
+      "age_difference": 22,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A View to a Kill",
+      "release_year": 1985,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Blame",
+      "release_year": 2017,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Bugsy",
+      "release_year": 1991,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Deja Vu",
+      "release_year": 2006,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Don Jon",
+      "release_year": 2013,
+      "age_difference": 21,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Edge of Tomorrow",
+      "release_year": 2014,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "For Your Eyes Only",
+      "release_year": 1981,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Heat",
+      "release_year": 1995,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Husbands and Wives",
+      "release_year": 1992,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "It's Complicated",
+      "release_year": 2009,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Just Go with It",
+      "release_year": 2011,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "King Arthur",
+      "release_year": 2004,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Licence to Kill",
+      "release_year": 1989,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Modern Times",
+      "release_year": 1936,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "My Cousin Vinny",
+      "release_year": 1992,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "My Fair Lady",
+      "release_year": 1964,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Rear Window",
+      "release_year": 1954,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Richard III",
+      "release_year": 1995,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Teacher's Pet",
+      "release_year": 1958,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Bubble",
+      "release_year": 2022,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Great Dictator",
+      "release_year": 1940,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Royal Tenenbaums",
+      "release_year": 2001,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Verdict",
+      "release_year": 1982,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Tomorrow Never Dies",
+      "release_year": 1997,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "V for Vendetta",
+      "release_year": 2005,
+      "age_difference": 21,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "American Beauty",
+      "release_year": 1999,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Get Smart",
+      "release_year": 2008,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Jurassic Park",
+      "release_year": 1993,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Killer Joe",
+      "release_year": 2011,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "L.A. Story",
+      "release_year": 1991,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Moonraker",
+      "release_year": 1979,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "North by Northwest",
+      "release_year": 1959,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Notes on a Scandal",
+      "release_year": 2006,
+      "age_difference": 20,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "Patch Adams",
+      "release_year": 1998,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Pushing Tin",
+      "release_year": 1999,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Regarding Henry",
+      "release_year": 1991,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Singin' in the Rain",
+      "release_year": 1952,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Duchess",
+      "release_year": 2008,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Fifth Element",
+      "release_year": 1997,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Northman",
+      "release_year": 2022,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Only Living Boy in New York",
+      "release_year": 2017,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Spy Who Loved Me",
+      "release_year": 1977,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Training Day",
+      "release_year": 2001,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Virginia",
+      "release_year": 2010,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Water for Elephants",
+      "release_year": 2011,
+      "age_difference": 20,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "American Pie",
+      "release_year": 1999,
+      "age_difference": 19,
+      "character_1_gender": "woman",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "An American in Paris",
+      "release_year": 1951,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Baby Driver",
+      "release_year": 2017,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Birdman",
+      "release_year": 2014,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Buffalo '66",
+      "release_year": 1998,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Firewall",
+      "release_year": 2006,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Gone Girl",
+      "release_year": 2014,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mighty Aphrodite",
+      "release_year": 1995,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Mother's Day",
+      "release_year": 2016,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "M\u00e4n som hatar kvinnor",
+      "release_year": 2009,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Skyfall",
+      "release_year": 2012,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Star of Midnight",
+      "release_year": 1935,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Street Kings",
+      "release_year": 2008,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Suburban Girl",
+      "release_year": 2007,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Suicide Squad",
+      "release_year": 2016,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Bridges of Madison County",
+      "release_year": 1995,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Lord of the Rings",
+      "release_year": 2001,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Mothman Prophecies",
+      "release_year": 2002,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "The Naked Gun",
+      "release_year": 1988,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Thunderball",
+      "release_year": 1965,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Transcendence",
+      "release_year": 2014,
+      "age_difference": 19,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "A Single Man",
+      "release_year": 2009,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "man"
+    },
+    {
+      "movie_name": "All I See Is You",
+      "release_year": 2017,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Always Be My Maybe",
+      "release_year": 2019,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Austin Powers in Goldmember",
+      "release_year": 2002,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Avengers: Infinity War",
+      "release_year": 2018,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    },
+    {
+      "movie_name": "Big Eyes",
+      "release_year": 2014,
+      "age_difference": 18,
+      "character_1_gender": "man",
+      "character_2_gender": "woman"
+    }
+  ]
+}

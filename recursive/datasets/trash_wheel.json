@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "name": "trash_wheel",
+    "description": "Baltimore trash wheel collections by type and year",
+    "source": "tidytuesday/2024-03-05/trashwheel.csv",
+    "transformation": "Select trash type columns, aggregate by name and year.",
+    "num_rows": 10,
+    "columns": {
+      "Name": "str",
+      "Year": "int64",
+      "PlasticBottles": "float64",
+      "Polystyrene": "float64",
+      "CigaretteButts": "float64",
+      "SportsBalls": "float64",
+      "PlasticBags": "float64"
+    }
+  },
+  "data": [
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2014,
+      "PlasticBottles": 82590.0,
+      "Polystyrene": 102909.0,
+      "CigaretteButts": 4162000.0,
+      "SportsBalls": 266.0,
+      "PlasticBags": 38730.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2015,
+      "PlasticBottles": 136130.0,
+      "Polystyrene": 177710.0,
+      "CigaretteButts": 2856000.0,
+      "SportsBalls": 1238.0,
+      "PlasticBags": 98840.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2016,
+      "PlasticBottles": 151670.0,
+      "Polystyrene": 181548.0,
+      "CigaretteButts": 1919600.0,
+      "SportsBalls": 1309.0,
+      "PlasticBags": 116897.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2017,
+      "PlasticBottles": 109880.0,
+      "Polystyrene": 109410.0,
+      "CigaretteButts": 699000.0,
+      "SportsBalls": 530.0,
+      "PlasticBags": 106640.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2018,
+      "PlasticBottles": 123800.0,
+      "Polystyrene": 118550.0,
+      "CigaretteButts": 803300.0,
+      "SportsBalls": 448.0,
+      "PlasticBags": 69950.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2019,
+      "PlasticBottles": 115985.0,
+      "Polystyrene": 90400.0,
+      "CigaretteButts": 329120.0,
+      "SportsBalls": 662.0,
+      "PlasticBags": 35221.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2020,
+      "PlasticBottles": 138560.0,
+      "Polystyrene": 88810.0,
+      "CigaretteButts": 335900.0,
+      "SportsBalls": 856.0,
+      "PlasticBags": 33434.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2021,
+      "PlasticBottles": 128150.0,
+      "Polystyrene": 25690.0,
+      "CigaretteButts": 213100.0,
+      "SportsBalls": 919.0,
+      "PlasticBags": 21625.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2022,
+      "PlasticBottles": 126280.0,
+      "Polystyrene": 10527.0,
+      "CigaretteButts": 205000.0,
+      "SportsBalls": 1081.0,
+      "PlasticBags": 9819.0
+    },
+    {
+      "Name": "Mister Trash Wheel",
+      "Year": 2023,
+      "PlasticBottles": 133110.0,
+      "Polystyrene": 14457.0,
+      "CigaretteButts": 212080.0,
+      "SportsBalls": 1242.0,
+      "PlasticBags": 14398.0
+    }
+  ]
+}

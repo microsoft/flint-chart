@@ -1,0 +1,419 @@
+{
+  "meta": {
+    "name": "us_states",
+    "description": "US state population, area, and density",
+    "source": "tidytuesday/2023-08-01/states.csv",
+    "transformation": "Select and rename demographic columns.",
+    "num_rows": 50,
+    "columns": {
+      "state": "str",
+      "abbrev": "str",
+      "capital": "str",
+      "population": "int64",
+      "area_sq_mi": "int64",
+      "pop_density": "float64"
+    }
+  },
+  "data": [
+    {
+      "state": "Alabama",
+      "abbrev": "AL",
+      "capital": "Montgomery",
+      "population": 5024279,
+      "area_sq_mi": 52420,
+      "pop_density": 95.8466043495
+    },
+    {
+      "state": "Alaska",
+      "abbrev": "AK",
+      "capital": "Juneau",
+      "population": 733391,
+      "area_sq_mi": 665384,
+      "pop_density": 1.1022071465
+    },
+    {
+      "state": "Arizona",
+      "abbrev": "AZ",
+      "capital": "Phoenix",
+      "population": 7151502,
+      "area_sq_mi": 113990,
+      "pop_density": 62.7379770155
+    },
+    {
+      "state": "Arkansas",
+      "abbrev": "AR",
+      "capital": "Little Rock",
+      "population": 3011524,
+      "area_sq_mi": 53179,
+      "pop_density": 56.6299479118
+    },
+    {
+      "state": "California",
+      "abbrev": "CA",
+      "capital": "Sacramento",
+      "population": 39538223,
+      "area_sq_mi": 163695,
+      "pop_density": 241.5359235163
+    },
+    {
+      "state": "Colorado",
+      "abbrev": "CO",
+      "capital": "Denver",
+      "population": 5773714,
+      "area_sq_mi": 104094,
+      "pop_density": 55.4663477242
+    },
+    {
+      "state": "Connecticut",
+      "abbrev": "CT",
+      "capital": "Hartford",
+      "population": 3605944,
+      "area_sq_mi": 5543,
+      "pop_density": 650.540140718
+    },
+    {
+      "state": "Delaware",
+      "abbrev": "DE",
+      "capital": "Dover",
+      "population": 989948,
+      "area_sq_mi": 2489,
+      "pop_density": 397.7292085175
+    },
+    {
+      "state": "Florida",
+      "abbrev": "FL",
+      "capital": "Tallahassee",
+      "population": 21538187,
+      "area_sq_mi": 65758,
+      "pop_density": 327.5371361659
+    },
+    {
+      "state": "Georgia",
+      "abbrev": "GA",
+      "capital": "Atlanta",
+      "population": 10711908,
+      "area_sq_mi": 59425,
+      "pop_density": 180.2592848128
+    },
+    {
+      "state": "Hawaii",
+      "abbrev": "HI",
+      "capital": "Honolulu",
+      "population": 1455271,
+      "area_sq_mi": 10932,
+      "pop_density": 133.1202890596
+    },
+    {
+      "state": "Idaho",
+      "abbrev": "ID",
+      "capital": "Boise",
+      "population": 1839106,
+      "area_sq_mi": 83569,
+      "pop_density": 22.0070361019
+    },
+    {
+      "state": "Illinois",
+      "abbrev": "IL",
+      "capital": "Springfield",
+      "population": 12812508,
+      "area_sq_mi": 57914,
+      "pop_density": 221.2333459958
+    },
+    {
+      "state": "Indiana",
+      "abbrev": "IN",
+      "capital": "Indianapolis",
+      "population": 6785528,
+      "area_sq_mi": 36420,
+      "pop_density": 186.3132344865
+    },
+    {
+      "state": "Iowa",
+      "abbrev": "IA",
+      "capital": "Des Moines",
+      "population": 3190369,
+      "area_sq_mi": 56273,
+      "pop_density": 56.6944893643
+    },
+    {
+      "state": "Kansas",
+      "abbrev": "KS",
+      "capital": "Topeka",
+      "population": 2937880,
+      "area_sq_mi": 82278,
+      "pop_density": 35.7067502856
+    },
+    {
+      "state": "Kentucky",
+      "abbrev": "KY",
+      "capital": "Frankfort",
+      "population": 4505836,
+      "area_sq_mi": 40408,
+      "pop_density": 111.5085131657
+    },
+    {
+      "state": "Louisiana",
+      "abbrev": "LA",
+      "capital": "Baton Rouge",
+      "population": 4657757,
+      "area_sq_mi": 52378,
+      "pop_density": 88.9258276376
+    },
+    {
+      "state": "Maine",
+      "abbrev": "ME",
+      "capital": "Augusta",
+      "population": 1362359,
+      "area_sq_mi": 35380,
+      "pop_density": 38.5064725834
+    },
+    {
+      "state": "Maryland",
+      "abbrev": "MD",
+      "capital": "Annapolis",
+      "population": 6177224,
+      "area_sq_mi": 12406,
+      "pop_density": 497.9222956634
+    },
+    {
+      "state": "Massachusetts",
+      "abbrev": "MA",
+      "capital": "Boston",
+      "population": 7029917,
+      "area_sq_mi": 10554,
+      "pop_density": 666.0902975175
+    },
+    {
+      "state": "Michigan",
+      "abbrev": "MI",
+      "capital": "Lansing",
+      "population": 10077331,
+      "area_sq_mi": 96714,
+      "pop_density": 104.197231011
+    },
+    {
+      "state": "Minnesota",
+      "abbrev": "MN",
+      "capital": "Saint Paul",
+      "population": 5706494,
+      "area_sq_mi": 86936,
+      "pop_density": 65.6401720806
+    },
+    {
+      "state": "Mississippi",
+      "abbrev": "MS",
+      "capital": "Jackson",
+      "population": 2961279,
+      "area_sq_mi": 48432,
+      "pop_density": 61.1430252725
+    },
+    {
+      "state": "Missouri",
+      "abbrev": "MO",
+      "capital": "Jefferson City",
+      "population": 6154913,
+      "area_sq_mi": 69707,
+      "pop_density": 88.2969142267
+    },
+    {
+      "state": "Montana",
+      "abbrev": "MT",
+      "capital": "Helena",
+      "population": 1084225,
+      "area_sq_mi": 147040,
+      "pop_density": 7.3736738303
+    },
+    {
+      "state": "Nebraska",
+      "abbrev": "NE",
+      "capital": "Lincoln",
+      "population": 1961504,
+      "area_sq_mi": 77348,
+      "pop_density": 25.3594663081
+    },
+    {
+      "state": "Nevada",
+      "abbrev": "NV",
+      "capital": "Carson City",
+      "population": 3104614,
+      "area_sq_mi": 110572,
+      "pop_density": 28.0777592881
+    },
+    {
+      "state": "New Hampshire",
+      "abbrev": "NH",
+      "capital": "Concord",
+      "population": 1377529,
+      "area_sq_mi": 9349,
+      "pop_density": 147.3450636432
+    },
+    {
+      "state": "New Jersey",
+      "abbrev": "NJ",
+      "capital": "Trenton",
+      "population": 9288994,
+      "area_sq_mi": 8723,
+      "pop_density": 1064.8852459016
+    },
+    {
+      "state": "New Mexico",
+      "abbrev": "NM",
+      "capital": "Santa Fe",
+      "population": 2117522,
+      "area_sq_mi": 121590,
+      "pop_density": 17.4152644132
+    },
+    {
+      "state": "New York",
+      "abbrev": "NY",
+      "capital": "Albany",
+      "population": 20201249,
+      "area_sq_mi": 54555,
+      "pop_density": 370.2914306663
+    },
+    {
+      "state": "North Carolina",
+      "abbrev": "NC",
+      "capital": "Raleigh",
+      "population": 10439388,
+      "area_sq_mi": 53819,
+      "pop_density": 193.9721659637
+    },
+    {
+      "state": "North Dakota",
+      "abbrev": "ND",
+      "capital": "Bismarck",
+      "population": 779094,
+      "area_sq_mi": 70698,
+      "pop_density": 11.0200288551
+    },
+    {
+      "state": "Ohio",
+      "abbrev": "OH",
+      "capital": "Columbus",
+      "population": 11799448,
+      "area_sq_mi": 44826,
+      "pop_density": 263.227769598
+    },
+    {
+      "state": "Oklahoma",
+      "abbrev": "OK",
+      "capital": "Oklahoma City",
+      "population": 3959353,
+      "area_sq_mi": 69899,
+      "pop_density": 56.6439147913
+    },
+    {
+      "state": "Oregon",
+      "abbrev": "OR",
+      "capital": "Salem",
+      "population": 4237256,
+      "area_sq_mi": 98379,
+      "pop_density": 43.0707366409
+    },
+    {
+      "state": "Pennsylvania",
+      "abbrev": "PA",
+      "capital": "Harrisburg",
+      "population": 13002700,
+      "area_sq_mi": 46054,
+      "pop_density": 282.335953446
+    },
+    {
+      "state": "Rhode Island",
+      "abbrev": "RI",
+      "capital": "Providence",
+      "population": 1097379,
+      "area_sq_mi": 1545,
+      "pop_density": 710.2776699029
+    },
+    {
+      "state": "South Carolina",
+      "abbrev": "SC",
+      "capital": "Columbia",
+      "population": 5118425,
+      "area_sq_mi": 32020,
+      "pop_density": 159.8508744535
+    },
+    {
+      "state": "South Dakota",
+      "abbrev": "SD",
+      "capital": "Pierre",
+      "population": 886667,
+      "area_sq_mi": 77116,
+      "pop_density": 11.4978344312
+    },
+    {
+      "state": "Tennessee",
+      "abbrev": "TN",
+      "capital": "Nashville",
+      "population": 6910840,
+      "area_sq_mi": 42144,
+      "pop_density": 163.98158694
+    },
+    {
+      "state": "Texas",
+      "abbrev": "TX",
+      "capital": "Austin",
+      "population": 29145505,
+      "area_sq_mi": 268596,
+      "pop_density": 108.5105697777
+    },
+    {
+      "state": "Utah",
+      "abbrev": "UT",
+      "capital": "Salt Lake City",
+      "population": 3271616,
+      "area_sq_mi": 84897,
+      "pop_density": 38.5362969245
+    },
+    {
+      "state": "Vermont",
+      "abbrev": "VT",
+      "capital": "Montpelier",
+      "population": 643077,
+      "area_sq_mi": 9616,
+      "pop_density": 66.8757279534
+    },
+    {
+      "state": "Virginia",
+      "abbrev": "VA",
+      "capital": "Richmond",
+      "population": 8631393,
+      "area_sq_mi": 42775,
+      "pop_density": 201.7859263589
+    },
+    {
+      "state": "Washington",
+      "abbrev": "WA",
+      "capital": "Olympia",
+      "population": 7705281,
+      "area_sq_mi": 71298,
+      "pop_density": 108.0714886813
+    },
+    {
+      "state": "West Virginia",
+      "abbrev": "WV",
+      "capital": "Charleston",
+      "population": 1793716,
+      "area_sq_mi": 24230,
+      "pop_density": 74.0287247214
+    },
+    {
+      "state": "Wisconsin",
+      "abbrev": "WI",
+      "capital": "Madison",
+      "population": 5893718,
+      "area_sq_mi": 65496,
+      "pop_density": 89.9859228044
+    },
+    {
+      "state": "Wyoming",
+      "abbrev": "WY",
+      "capital": "Cheyenne",
+      "population": 576851,
+      "area_sq_mi": 97813,
+      "pop_density": 5.897488064
+    }
+  ]
+}

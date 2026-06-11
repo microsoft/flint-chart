@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "name": "us_airports_by_state",
+    "description": "Number of airports per US state",
+    "source": "vega-datasets/airports.csv",
+    "transformation": "Filter US airports, count by state.",
+    "num_rows": 56,
+    "columns": {
+      "state": "str",
+      "airport_count": "int64"
+    }
+  },
+  "data": [
+    {
+      "state": "AK",
+      "airport_count": 263
+    },
+    {
+      "state": "TX",
+      "airport_count": 209
+    },
+    {
+      "state": "CA",
+      "airport_count": 205
+    },
+    {
+      "state": "OK",
+      "airport_count": 102
+    },
+    {
+      "state": "FL",
+      "airport_count": 100
+    },
+    {
+      "state": "OH",
+      "airport_count": 100
+    },
+    {
+      "state": "NY",
+      "airport_count": 97
+    },
+    {
+      "state": "GA",
+      "airport_count": 97
+    },
+    {
+      "state": "MI",
+      "airport_count": 94
+    },
+    {
+      "state": "MN",
+      "airport_count": 89
+    },
+    {
+      "state": "IL",
+      "airport_count": 88
+    },
+    {
+      "state": "WI",
+      "airport_count": 84
+    },
+    {
+      "state": "KS",
+      "airport_count": 78
+    },
+    {
+      "state": "IA",
+      "airport_count": 78
+    },
+    {
+      "state": "MO",
+      "airport_count": 74
+    },
+    {
+      "state": "AR",
+      "airport_count": 74
+    },
+    {
+      "state": "AL",
+      "airport_count": 73
+    },
+    {
+      "state": "NE",
+      "airport_count": 73
+    },
+    {
+      "state": "MS",
+      "airport_count": 72
+    },
+    {
+      "state": "NC",
+      "airport_count": 72
+    },
+    {
+      "state": "MT",
+      "airport_count": 71
+    },
+    {
+      "state": "PA",
+      "airport_count": 71
+    },
+    {
+      "state": "TN",
+      "airport_count": 70
+    },
+    {
+      "state": "IN",
+      "airport_count": 65
+    },
+    {
+      "state": "WA",
+      "airport_count": 65
+    },
+    {
+      "state": "AZ",
+      "airport_count": 59
+    },
+    {
+      "state": "SD",
+      "airport_count": 57
+    },
+    {
+      "state": "OR",
+      "airport_count": 57
+    },
+    {
+      "state": "LA",
+      "airport_count": 55
+    },
+    {
+      "state": "ND",
+      "airport_count": 52
+    },
+    {
+      "state": "SC",
+      "airport_count": 52
+    },
+    {
+      "state": "NM",
+      "airport_count": 51
+    },
+    {
+      "state": "KY",
+      "airport_count": 50
+    },
+    {
+      "state": "CO",
+      "airport_count": 49
+    },
+    {
+      "state": "VA",
+      "airport_count": 47
+    },
+    {
+      "state": "ID",
+      "airport_count": 37
+    },
+    {
+      "state": "NJ",
+      "airport_count": 35
+    },
+    {
+      "state": "UT",
+      "airport_count": 35
+    },
+    {
+      "state": "ME",
+      "airport_count": 34
+    },
+    {
+      "state": "WY",
+      "airport_count": 32
+    },
+    {
+      "state": "NV",
+      "airport_count": 32
+    },
+    {
+      "state": "MA",
+      "airport_count": 30
+    },
+    {
+      "state": "WV",
+      "airport_count": 24
+    },
+    {
+      "state": "MD",
+      "airport_count": 18
+    },
+    {
+      "state": "HI",
+      "airport_count": 16
+    },
+    {
+      "state": "CT",
+      "airport_count": 15
+    },
+    {
+      "state": "NH",
+      "airport_count": 14
+    },
+    {
+      "state": "VT",
+      "airport_count": 13
+    },
+    {
+      "state": "PR",
+      "airport_count": 11
+    },
+    {
+      "state": "RI",
+      "airport_count": 6
+    },
+    {
+      "state": "DE",
+      "airport_count": 5
+    },
+    {
+      "state": "VI",
+      "airport_count": 5
+    },
+    {
+      "state": "CQ",
+      "airport_count": 4
+    },
+    {
+      "state": "AS",
+      "airport_count": 3
+    },
+    {
+      "state": "DC",
+      "airport_count": 1
+    },
+    {
+      "state": "GU",
+      "airport_count": 1
+    }
+  ]
+}

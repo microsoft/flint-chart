@@ -1,0 +1,1033 @@
+{
+  "meta": {
+    "name": "groundhog_predictions",
+    "description": "Groundhog Day shadow predictions by groundhog",
+    "source": "tidytuesday/2024-01-30 predictions + groundhogs",
+    "transformation": "Count shadow/no-shadow predictions per groundhog, join with names.",
+    "num_rows": 145,
+    "columns": {
+      "id": "int64",
+      "shadow": "bool",
+      "count": "int64",
+      "shortname": "str",
+      "region": "str"
+    }
+  },
+  "data": [
+    {
+      "id": 1,
+      "shadow": false,
+      "count": 20,
+      "shortname": "Phil",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 1,
+      "shadow": true,
+      "count": 108,
+      "shortname": "Phil",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 2,
+      "shadow": false,
+      "count": 19,
+      "shortname": "Orphie",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 2,
+      "shadow": true,
+      "count": 72,
+      "shortname": "Orphie",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 3,
+      "shadow": false,
+      "count": 35,
+      "shortname": "Willie",
+      "region": "Ontario"
+    },
+    {
+      "id": 3,
+      "shadow": true,
+      "count": 25,
+      "shortname": "Willie",
+      "region": "Ontario"
+    },
+    {
+      "id": 4,
+      "shadow": false,
+      "count": 32,
+      "shortname": "Jimmy",
+      "region": "Wisconsin"
+    },
+    {
+      "id": 4,
+      "shadow": true,
+      "count": 23,
+      "shortname": "Jimmy",
+      "region": "Wisconsin"
+    },
+    {
+      "id": 5,
+      "shadow": false,
+      "count": 27,
+      "shortname": "Charlie",
+      "region": "West Virginia"
+    },
+    {
+      "id": 5,
+      "shadow": true,
+      "count": 18,
+      "shortname": "Charlie",
+      "region": "West Virginia"
+    },
+    {
+      "id": 6,
+      "shadow": false,
+      "count": 28,
+      "shortname": "Chuck",
+      "region": "Ohio"
+    },
+    {
+      "id": 6,
+      "shadow": true,
+      "count": 12,
+      "shortname": "Chuck",
+      "region": "Ohio"
+    },
+    {
+      "id": 7,
+      "shadow": false,
+      "count": 36,
+      "shortname": "Beau",
+      "region": "Georgia"
+    },
+    {
+      "id": 7,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Beau",
+      "region": "Georgia"
+    },
+    {
+      "id": 8,
+      "shadow": false,
+      "count": 23,
+      "shortname": "Freddie",
+      "region": "West Virginia"
+    },
+    {
+      "id": 8,
+      "shadow": true,
+      "count": 12,
+      "shortname": "Freddie",
+      "region": "West Virginia"
+    },
+    {
+      "id": 9,
+      "shadow": false,
+      "count": 20,
+      "shortname": "Gertie",
+      "region": "Illinois"
+    },
+    {
+      "id": 9,
+      "shadow": true,
+      "count": 10,
+      "shortname": "Gertie",
+      "region": "Illinois"
+    },
+    {
+      "id": 10,
+      "shadow": false,
+      "count": 19,
+      "shortname": "Dave",
+      "region": "New York"
+    },
+    {
+      "id": 10,
+      "shadow": true,
+      "count": 9,
+      "shortname": "Dave",
+      "region": "New York"
+    },
+    {
+      "id": 11,
+      "shadow": false,
+      "count": 14,
+      "shortname": "Malverne Mel",
+      "region": "New York"
+    },
+    {
+      "id": 11,
+      "shadow": true,
+      "count": 14,
+      "shortname": "Malverne Mel",
+      "region": "New York"
+    },
+    {
+      "id": 12,
+      "shadow": false,
+      "count": 23,
+      "shortname": "Chuck",
+      "region": "New York"
+    },
+    {
+      "id": 12,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Chuck",
+      "region": "New York"
+    },
+    {
+      "id": 13,
+      "shadow": false,
+      "count": 15,
+      "shortname": "Lil",
+      "region": "Wyoming"
+    },
+    {
+      "id": 13,
+      "shadow": true,
+      "count": 11,
+      "shortname": "Lil",
+      "region": "Wyoming"
+    },
+    {
+      "id": 14,
+      "shadow": false,
+      "count": 15,
+      "shortname": "Merv",
+      "region": "Manitoba"
+    },
+    {
+      "id": 14,
+      "shadow": true,
+      "count": 11,
+      "shortname": "Merv",
+      "region": "Manitoba"
+    },
+    {
+      "id": 15,
+      "shadow": false,
+      "count": 12,
+      "shortname": "Hal",
+      "region": "New York"
+    },
+    {
+      "id": 15,
+      "shadow": true,
+      "count": 13,
+      "shortname": "Hal",
+      "region": "New York"
+    },
+    {
+      "id": 16,
+      "shadow": false,
+      "count": 14,
+      "shortname": "Sam",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 16,
+      "shadow": true,
+      "count": 11,
+      "shortname": "Sam",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 17,
+      "shadow": false,
+      "count": 11,
+      "shortname": "Woody",
+      "region": "Michigan"
+    },
+    {
+      "id": 17,
+      "shadow": true,
+      "count": 14,
+      "shortname": "Woody",
+      "region": "Michigan"
+    },
+    {
+      "id": 18,
+      "shadow": false,
+      "count": 14,
+      "shortname": "Willie",
+      "region": "Illinois"
+    },
+    {
+      "id": 18,
+      "shadow": true,
+      "count": 10,
+      "shortname": "Willie",
+      "region": "Illinois"
+    },
+    {
+      "id": 19,
+      "shadow": false,
+      "count": 7,
+      "shortname": "Wally",
+      "region": "North Carolina"
+    },
+    {
+      "id": 19,
+      "shadow": true,
+      "count": 16,
+      "shortname": "Wally",
+      "region": "North Carolina"
+    },
+    {
+      "id": 20,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Sammi",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 20,
+      "shadow": true,
+      "count": 17,
+      "shortname": "Sammi",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 21,
+      "shadow": false,
+      "count": 7,
+      "shortname": "Richard",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 21,
+      "shadow": true,
+      "count": 14,
+      "shortname": "Richard",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 22,
+      "shadow": false,
+      "count": 12,
+      "shortname": "Billy",
+      "region": "Alberta"
+    },
+    {
+      "id": 22,
+      "shadow": true,
+      "count": 7,
+      "shortname": "Billy",
+      "region": "Alberta"
+    },
+    {
+      "id": 23,
+      "shadow": false,
+      "count": 4,
+      "shortname": "Uni",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 23,
+      "shadow": true,
+      "count": 15,
+      "shortname": "Uni",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 24,
+      "shadow": false,
+      "count": 9,
+      "shortname": "Grover and Sue",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 24,
+      "shadow": true,
+      "count": 8,
+      "shortname": "Grover and Sue",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 25,
+      "shadow": false,
+      "count": 8,
+      "shortname": "Ms. G",
+      "region": "Massachusetts"
+    },
+    {
+      "id": 25,
+      "shadow": true,
+      "count": 8,
+      "shortname": "Ms. G",
+      "region": "Massachusetts"
+    },
+    {
+      "id": 26,
+      "shadow": false,
+      "count": 7,
+      "shortname": "Stormy",
+      "region": "Colorado"
+    },
+    {
+      "id": 26,
+      "shadow": true,
+      "count": 9,
+      "shortname": "Stormy",
+      "region": "Colorado"
+    },
+    {
+      "id": 27,
+      "shadow": false,
+      "count": 9,
+      "shortname": "Chuckles",
+      "region": "Connecticut"
+    },
+    {
+      "id": 27,
+      "shadow": true,
+      "count": 6,
+      "shortname": "Chuckles",
+      "region": "Connecticut"
+    },
+    {
+      "id": 28,
+      "shadow": false,
+      "count": 11,
+      "shortname": "Stonewall",
+      "region": "New Jersey"
+    },
+    {
+      "id": 28,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Stonewall",
+      "region": "New Jersey"
+    },
+    {
+      "id": 29,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Freddy",
+      "region": "Colorado"
+    },
+    {
+      "id": 29,
+      "shadow": true,
+      "count": 9,
+      "shortname": "Freddy",
+      "region": "Colorado"
+    },
+    {
+      "id": 30,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Slew",
+      "region": "Washington"
+    },
+    {
+      "id": 30,
+      "shadow": true,
+      "count": 8,
+      "shortname": "Slew",
+      "region": "Washington"
+    },
+    {
+      "id": 31,
+      "shadow": false,
+      "count": 8,
+      "shortname": "Tunnel",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 31,
+      "shadow": true,
+      "count": 6,
+      "shortname": "Tunnel",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 32,
+      "shadow": false,
+      "count": 10,
+      "shortname": "Bob",
+      "region": "Texas"
+    },
+    {
+      "id": 32,
+      "shadow": true,
+      "count": 3,
+      "shortname": "Bob",
+      "region": "Texas"
+    },
+    {
+      "id": 33,
+      "shadow": false,
+      "count": 9,
+      "shortname": "Charlie",
+      "region": "Ontario"
+    },
+    {
+      "id": 33,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Charlie",
+      "region": "Ontario"
+    },
+    {
+      "id": 34,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Fred",
+      "region": "Quebec"
+    },
+    {
+      "id": 34,
+      "shadow": true,
+      "count": 8,
+      "shortname": "Fred",
+      "region": "Quebec"
+    },
+    {
+      "id": 35,
+      "shadow": false,
+      "count": 12,
+      "shortname": "Mike",
+      "region": "Ontario"
+    },
+    {
+      "id": 35,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Mike",
+      "region": "Ontario"
+    },
+    {
+      "id": 36,
+      "shadow": false,
+      "count": 11,
+      "shortname": "Bart",
+      "region": "Connecticut"
+    },
+    {
+      "id": 36,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Bart",
+      "region": "Connecticut"
+    },
+    {
+      "id": 37,
+      "shadow": false,
+      "count": 10,
+      "shortname": "Sam",
+      "region": "Alabama"
+    },
+    {
+      "id": 37,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Sam",
+      "region": "Alabama"
+    },
+    {
+      "id": 38,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Bill",
+      "region": "Virginia"
+    },
+    {
+      "id": 38,
+      "shadow": true,
+      "count": 10,
+      "shortname": "Bill",
+      "region": "Virginia"
+    },
+    {
+      "id": 39,
+      "shadow": true,
+      "count": 11,
+      "shortname": "Bert",
+      "region": "New York"
+    },
+    {
+      "id": 40,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Doug",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 40,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Doug",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 41,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Flossie",
+      "region": "Ontario"
+    },
+    {
+      "id": 41,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Flossie",
+      "region": "Ontario"
+    },
+    {
+      "id": 42,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Lucy",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 42,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Lucy",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 43,
+      "shadow": false,
+      "count": 4,
+      "shortname": "Minnie",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 43,
+      "shadow": true,
+      "count": 7,
+      "shortname": "Minnie",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 44,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Bill",
+      "region": "Idaho"
+    },
+    {
+      "id": 44,
+      "shadow": true,
+      "count": 7,
+      "shortname": "Bill",
+      "region": "Idaho"
+    },
+    {
+      "id": 45,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Patty",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 45,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Patty",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 46,
+      "shadow": false,
+      "count": 7,
+      "shortname": "Paula",
+      "region": "Iowa"
+    },
+    {
+      "id": 46,
+      "shadow": true,
+      "count": 3,
+      "shortname": "Paula",
+      "region": "Iowa"
+    },
+    {
+      "id": 47,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Chuck",
+      "region": "Virginia"
+    },
+    {
+      "id": 47,
+      "shadow": true,
+      "count": 3,
+      "shortname": "Chuck",
+      "region": "Virginia"
+    },
+    {
+      "id": 48,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Scramble",
+      "region": "Connecticut"
+    },
+    {
+      "id": 48,
+      "shadow": true,
+      "count": 8,
+      "shortname": "Scramble",
+      "region": "Connecticut"
+    },
+    {
+      "id": 49,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Snerd",
+      "region": "North Carolina"
+    },
+    {
+      "id": 49,
+      "shadow": true,
+      "count": 6,
+      "shortname": "Snerd",
+      "region": "North Carolina"
+    },
+    {
+      "id": 50,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Snowy",
+      "region": "Washington"
+    },
+    {
+      "id": 50,
+      "shadow": true,
+      "count": 3,
+      "shortname": "Snowy",
+      "region": "Washington"
+    },
+    {
+      "id": 51,
+      "shadow": false,
+      "count": 4,
+      "shortname": "Tim",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 51,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Tim",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 52,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Willie",
+      "region": "Ohio"
+    },
+    {
+      "id": 52,
+      "shadow": true,
+      "count": 6,
+      "shortname": "Willie",
+      "region": "Ohio"
+    },
+    {
+      "id": 53,
+      "shadow": false,
+      "count": 4,
+      "shortname": "Benny",
+      "region": "Ohio"
+    },
+    {
+      "id": 53,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Benny",
+      "region": "Ohio"
+    },
+    {
+      "id": 54,
+      "shadow": false,
+      "count": 6,
+      "shortname": "Hank",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 54,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Hank",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 55,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Ollie",
+      "region": "Ontario"
+    },
+    {
+      "id": 55,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Ollie",
+      "region": "Ontario"
+    },
+    {
+      "id": 56,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Phil",
+      "region": "District of Columbia"
+    },
+    {
+      "id": 56,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Phil",
+      "region": "District of Columbia"
+    },
+    {
+      "id": 57,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Jake",
+      "region": "Alabama"
+    },
+    {
+      "id": 57,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Jake",
+      "region": "Alabama"
+    },
+    {
+      "id": 58,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Violet",
+      "region": "British Columbia"
+    },
+    {
+      "id": 58,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Violet",
+      "region": "British Columbia"
+    },
+    {
+      "id": 59,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Chuck",
+      "region": "California"
+    },
+    {
+      "id": 59,
+      "shadow": true,
+      "count": 5,
+      "shortname": "Chuck",
+      "region": "California"
+    },
+    {
+      "id": 60,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Casimir",
+      "region": "Ohio"
+    },
+    {
+      "id": 60,
+      "shadow": true,
+      "count": 3,
+      "shortname": "Casimir",
+      "region": "Ohio"
+    },
+    {
+      "id": 61,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Henrietta",
+      "region": "New York"
+    },
+    {
+      "id": 62,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Gordy",
+      "region": "Wisconsin"
+    },
+    {
+      "id": 62,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Gordy",
+      "region": "Wisconsin"
+    },
+    {
+      "id": 63,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Lucy",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 63,
+      "shadow": true,
+      "count": 4,
+      "shortname": "Lucy",
+      "region": "Nova Scotia"
+    },
+    {
+      "id": 64,
+      "shadow": false,
+      "count": 5,
+      "shortname": "Grady",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 65,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Poppy",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 65,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Poppy",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 66,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Filbert",
+      "region": "Oregon"
+    },
+    {
+      "id": 66,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Filbert",
+      "region": "Oregon"
+    },
+    {
+      "id": 67,
+      "shadow": false,
+      "count": 3,
+      "shortname": "Yonah",
+      "region": "Georgia"
+    },
+    {
+      "id": 67,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Yonah",
+      "region": "Georgia"
+    },
+    {
+      "id": 68,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Hope",
+      "region": "Indiana"
+    },
+    {
+      "id": 68,
+      "shadow": true,
+      "count": 2,
+      "shortname": "Hope",
+      "region": "Indiana"
+    },
+    {
+      "id": 69,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Parker",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 69,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Parker",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": 70,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Harvey",
+      "region": "Ontario"
+    },
+    {
+      "id": 70,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Harvey",
+      "region": "Ontario"
+    },
+    {
+      "id": 71,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Lady Edwina",
+      "region": "New Jersey"
+    },
+    {
+      "id": 71,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Lady Edwina",
+      "region": "New Jersey"
+    },
+    {
+      "id": 72,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Okie",
+      "region": "British Columbia"
+    },
+    {
+      "id": 73,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Penny",
+      "region": "North Carolina"
+    },
+    {
+      "id": 73,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Penny",
+      "region": "North Carolina"
+    },
+    {
+      "id": 74,
+      "shadow": false,
+      "count": 2,
+      "shortname": "Charlie",
+      "region": "Maryland"
+    },
+    {
+      "id": 75,
+      "shadow": false,
+      "count": 1,
+      "shortname": "Billie",
+      "region": "Nebraska"
+    },
+    {
+      "id": 75,
+      "shadow": true,
+      "count": 1,
+      "shortname": "Billie",
+      "region": "Nebraska"
+    }
+  ]
+}

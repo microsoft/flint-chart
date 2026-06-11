@@ -1,0 +1,920 @@
+{
+  "meta": {
+    "name": "cats_uk",
+    "description": "UK pet cats \u2014 demographics and indoor hours",
+    "source": "tidytuesday/2023-01-31/cats_uk_reference.csv",
+    "transformation": "Select demographic and behavior columns, drop NaN.",
+    "num_rows": 100,
+    "columns": {
+      "animal_id": "str",
+      "animal_sex": "str",
+      "hrs_indoors": "float64",
+      "n_cats": "int64",
+      "food_dry": "bool",
+      "food_wet": "bool",
+      "age_years": "float64"
+    }
+  },
+  "data": [
+    {
+      "animal_id": "Tommy",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 11.0
+    },
+    {
+      "animal_id": "Athena",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Ares",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Lola",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 10.0
+    },
+    {
+      "animal_id": "Maverick",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Coco",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Charlie",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Jago",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Morpheus",
+      "animal_sex": "m",
+      "hrs_indoors": 2.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Nettle",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Meg",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Friday",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Carbonel",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Fonzie",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 10.0
+    },
+    {
+      "animal_id": "Jessy",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 11.0
+    },
+    {
+      "animal_id": "Barney",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 11.0
+    },
+    {
+      "animal_id": "Sparky",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Indie",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Whiskey",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Rusty",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Mifty",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Wilfred",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Poppet",
+      "animal_sex": "f",
+      "hrs_indoors": 22.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 10.0
+    },
+    {
+      "animal_id": "Pussy",
+      "animal_sex": "m",
+      "hrs_indoors": 2.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Henry",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Winnie",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 12.0
+    },
+    {
+      "animal_id": "Tom",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Lady T",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Bella",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Ladyboyhawke",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Charlie2",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 9.0
+    },
+    {
+      "animal_id": "Max",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Ebby",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": false,
+      "food_wet": true,
+      "age_years": 10.0
+    },
+    {
+      "animal_id": "Bear",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Bumbles",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": false,
+      "food_wet": true,
+      "age_years": 12.0
+    },
+    {
+      "animal_id": "Chloe",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Merlin",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Felix",
+      "animal_sex": "m",
+      "hrs_indoors": 22.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Beanie",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Sid",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Binky",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Amber",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Ernie",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Bits",
+      "animal_sex": "f",
+      "hrs_indoors": 2.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 13.0
+    },
+    {
+      "animal_id": "Maxwell",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Lightening Bugg",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 0.0
+    },
+    {
+      "animal_id": "Bobs",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 13.0
+    },
+    {
+      "animal_id": "Carrots",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Smudge",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Magic",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Spike",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 0.0
+    },
+    {
+      "animal_id": "Dory",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Tigger",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Jago2",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Frank",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Skye",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Jezebel",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 14.0
+    },
+    {
+      "animal_id": "Boots",
+      "animal_sex": "f",
+      "hrs_indoors": 22.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 16.0
+    },
+    {
+      "animal_id": "Smudge_2",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Frank_2",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Freya",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Spot",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Tipsy",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 0.0
+    },
+    {
+      "animal_id": "Flash",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Gracie",
+      "animal_sex": "f",
+      "hrs_indoors": 22.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Teddy",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 9.0
+    },
+    {
+      "animal_id": "Marley",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Guinness",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Reggie",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Jessie",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Roger",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Gracie_2",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Dexter",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Tilly",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Balu",
+      "animal_sex": "f",
+      "hrs_indoors": 2.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Missy",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Dexter2",
+      "animal_sex": "m",
+      "hrs_indoors": 2.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Fairclough",
+      "animal_sex": "m",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Keegan",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Maggie",
+      "animal_sex": "f",
+      "hrs_indoors": 22.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Lily",
+      "animal_sex": "f",
+      "hrs_indoors": 22.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 9.0
+    },
+    {
+      "animal_id": "Abba",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Worf",
+      "animal_sex": "f",
+      "hrs_indoors": 2.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Pants",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Jim",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 3,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Lucy",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Macaulay Mccat",
+      "animal_sex": "f",
+      "hrs_indoors": 2.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Neil",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 7.0
+    },
+    {
+      "animal_id": "Siberia",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 8.0
+    },
+    {
+      "animal_id": "Moscow",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 1.0
+    },
+    {
+      "animal_id": "Neva",
+      "animal_sex": "f",
+      "hrs_indoors": 17.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 4.0
+    },
+    {
+      "animal_id": "Alfie",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Casper",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 4,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 6.0
+    },
+    {
+      "animal_id": "Ginge",
+      "animal_sex": "m",
+      "hrs_indoors": 2.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "Jasper",
+      "animal_sex": "m",
+      "hrs_indoors": 7.5,
+      "n_cats": 1,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 2.0
+    },
+    {
+      "animal_id": "Charlie3",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": false,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Millie",
+      "animal_sex": "f",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": false,
+      "food_wet": true,
+      "age_years": 3.0
+    },
+    {
+      "animal_id": "SmokeyLongnose",
+      "animal_sex": "f",
+      "hrs_indoors": 7.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 9.0
+    },
+    {
+      "animal_id": "CJ",
+      "animal_sex": "m",
+      "hrs_indoors": 22.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": true,
+      "age_years": 5.0
+    },
+    {
+      "animal_id": "Seb",
+      "animal_sex": "m",
+      "hrs_indoors": 12.5,
+      "n_cats": 2,
+      "food_dry": true,
+      "food_wet": false,
+      "age_years": 3.0
+    }
+  ]
+}

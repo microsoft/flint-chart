@@ -1,0 +1,1307 @@
+{
+  "meta": {
+    "name": "global_temps",
+    "description": "NASA GISS global temperature anomalies by year and season",
+    "source": "tidytuesday/2023-07-11/global_temps.csv",
+    "transformation": "Select annual and seasonal anomaly columns, rename for clarity.",
+    "num_rows": 143,
+    "columns": {
+      "year": "int64",
+      "annual": "float64",
+      "dec_nov": "float64",
+      "winter": "float64",
+      "spring": "float64",
+      "summer": "float64",
+      "fall": "float64"
+    }
+  },
+  "data": [
+    {
+      "year": 1880,
+      "annual": -0.17,
+      "dec_nov": null,
+      "winter": null,
+      "spring": -0.12,
+      "summer": -0.17,
+      "fall": -0.2
+    },
+    {
+      "year": 1881,
+      "annual": -0.09,
+      "dec_nov": -0.1,
+      "winter": -0.18,
+      "spring": 0.04,
+      "summer": -0.08,
+      "fall": -0.19
+    },
+    {
+      "year": 1882,
+      "annual": -0.11,
+      "dec_nov": -0.09,
+      "winter": 0.07,
+      "spring": -0.09,
+      "summer": -0.16,
+      "fall": -0.19
+    },
+    {
+      "year": 1883,
+      "annual": -0.18,
+      "dec_nov": -0.2,
+      "winter": -0.34,
+      "spring": -0.17,
+      "summer": -0.1,
+      "fall": -0.2
+    },
+    {
+      "year": 1884,
+      "annual": -0.29,
+      "dec_nov": -0.27,
+      "winter": -0.11,
+      "spring": -0.37,
+      "summer": -0.32,
+      "fall": -0.29
+    },
+    {
+      "year": 1885,
+      "annual": -0.34,
+      "dec_nov": -0.35,
+      "winter": -0.41,
+      "spring": -0.38,
+      "summer": -0.36,
+      "fall": -0.25
+    },
+    {
+      "year": 1886,
+      "annual": -0.32,
+      "dec_nov": -0.3,
+      "winter": -0.35,
+      "spring": -0.32,
+      "summer": -0.28,
+      "fall": -0.27
+    },
+    {
+      "year": 1887,
+      "annual": -0.37,
+      "dec_nov": -0.36,
+      "winter": -0.52,
+      "spring": -0.34,
+      "summer": -0.29,
+      "fall": -0.29
+    },
+    {
+      "year": 1888,
+      "annual": -0.17,
+      "dec_nov": -0.2,
+      "winter": -0.34,
+      "spring": -0.28,
+      "summer": -0.14,
+      "fall": -0.03
+    },
+    {
+      "year": 1889,
+      "annual": -0.11,
+      "dec_nov": -0.09,
+      "winter": 0.01,
+      "spring": 0.05,
+      "summer": -0.13,
+      "fall": -0.28
+    },
+    {
+      "year": 1890,
+      "annual": -0.35,
+      "dec_nov": -0.35,
+      "winter": -0.39,
+      "spring": -0.36,
+      "summer": -0.3,
+      "fall": -0.35
+    },
+    {
+      "year": 1891,
+      "annual": -0.22,
+      "dec_nov": -0.25,
+      "winter": -0.37,
+      "spring": -0.2,
+      "summer": -0.18,
+      "fall": -0.23
+    },
+    {
+      "year": 1892,
+      "annual": -0.27,
+      "dec_nov": -0.25,
+      "winter": -0.15,
+      "spring": -0.32,
+      "summer": -0.27,
+      "fall": -0.24
+    },
+    {
+      "year": 1893,
+      "annual": -0.32,
+      "dec_nov": -0.32,
+      "winter": -0.59,
+      "spring": -0.27,
+      "summer": -0.21,
+      "fall": -0.2
+    },
+    {
+      "year": 1894,
+      "annual": -0.31,
+      "dec_nov": -0.32,
+      "winter": -0.39,
+      "spring": -0.34,
+      "summer": -0.3,
+      "fall": -0.26
+    },
+    {
+      "year": 1895,
+      "annual": -0.23,
+      "dec_nov": -0.24,
+      "winter": -0.36,
+      "spring": -0.28,
+      "summer": -0.19,
+      "fall": -0.13
+    },
+    {
+      "year": 1896,
+      "annual": -0.11,
+      "dec_nov": -0.12,
+      "winter": -0.16,
+      "spring": -0.24,
+      "summer": -0.06,
+      "fall": -0.02
+    },
+    {
+      "year": 1897,
+      "annual": -0.11,
+      "dec_nov": -0.09,
+      "winter": -0.12,
+      "spring": -0.06,
+      "summer": -0.08,
+      "fall": -0.13
+    },
+    {
+      "year": 1898,
+      "annual": -0.27,
+      "dec_nov": -0.27,
+      "winter": -0.17,
+      "spring": -0.37,
+      "summer": -0.23,
+      "fall": -0.31
+    },
+    {
+      "year": 1899,
+      "annual": -0.18,
+      "dec_nov": -0.18,
+      "winter": -0.26,
+      "spring": -0.27,
+      "summer": -0.19,
+      "fall": 0.01
+    },
+    {
+      "year": 1900,
+      "annual": -0.08,
+      "dec_nov": -0.1,
+      "winter": -0.22,
+      "spring": -0.06,
+      "summer": -0.1,
+      "fall": -0.01
+    },
+    {
+      "year": 1901,
+      "annual": -0.16,
+      "dec_nov": -0.14,
+      "winter": -0.13,
+      "spring": -0.04,
+      "summer": -0.15,
+      "fall": -0.23
+    },
+    {
+      "year": 1902,
+      "annual": -0.28,
+      "dec_nov": -0.27,
+      "winter": -0.17,
+      "spring": -0.29,
+      "summer": -0.29,
+      "fall": -0.31
+    },
+    {
+      "year": 1903,
+      "annual": -0.37,
+      "dec_nov": -0.36,
+      "winter": -0.23,
+      "spring": -0.34,
+      "summer": -0.41,
+      "fall": -0.47
+    },
+    {
+      "year": 1904,
+      "annual": -0.47,
+      "dec_nov": -0.49,
+      "winter": -0.57,
+      "spring": -0.5,
+      "summer": -0.5,
+      "fall": -0.37
+    },
+    {
+      "year": 1905,
+      "annual": -0.26,
+      "dec_nov": -0.28,
+      "winter": -0.42,
+      "spring": -0.28,
+      "summer": -0.25,
+      "fall": -0.17
+    },
+    {
+      "year": 1906,
+      "annual": -0.22,
+      "dec_nov": -0.22,
+      "winter": -0.23,
+      "spring": -0.16,
+      "summer": -0.21,
+      "fall": -0.29
+    },
+    {
+      "year": 1907,
+      "annual": -0.39,
+      "dec_nov": -0.36,
+      "winter": -0.36,
+      "spring": -0.37,
+      "summer": -0.37,
+      "fall": -0.34
+    },
+    {
+      "year": 1908,
+      "annual": -0.42,
+      "dec_nov": -0.42,
+      "winter": -0.41,
+      "spring": -0.45,
+      "summer": -0.39,
+      "fall": -0.44
+    },
+    {
+      "year": 1909,
+      "annual": -0.48,
+      "dec_nov": -0.48,
+      "winter": -0.55,
+      "spring": -0.55,
+      "summer": -0.43,
+      "fall": -0.37
+    },
+    {
+      "year": 1910,
+      "annual": -0.43,
+      "dec_nov": -0.42,
+      "winter": -0.46,
+      "spring": -0.42,
+      "summer": -0.36,
+      "fall": -0.45
+    },
+    {
+      "year": 1911,
+      "annual": -0.45,
+      "dec_nov": -0.48,
+      "winter": -0.63,
+      "spring": -0.56,
+      "summer": -0.45,
+      "fall": -0.3
+    },
+    {
+      "year": 1912,
+      "annual": -0.37,
+      "dec_nov": -0.35,
+      "winter": -0.21,
+      "spring": -0.26,
+      "summer": -0.41,
+      "fall": -0.52
+    },
+    {
+      "year": 1913,
+      "annual": -0.34,
+      "dec_nov": -0.38,
+      "winter": -0.42,
+      "spring": -0.42,
+      "summer": -0.38,
+      "fall": -0.29
+    },
+    {
+      "year": 1914,
+      "annual": -0.15,
+      "dec_nov": -0.15,
+      "winter": -0.02,
+      "spring": -0.25,
+      "summer": -0.21,
+      "fall": -0.11
+    },
+    {
+      "year": 1915,
+      "annual": -0.14,
+      "dec_nov": -0.13,
+      "winter": -0.09,
+      "spring": -0.03,
+      "summer": -0.19,
+      "fall": -0.19
+    },
+    {
+      "year": 1916,
+      "annual": -0.36,
+      "dec_nov": -0.31,
+      "winter": -0.16,
+      "spring": -0.31,
+      "summer": -0.38,
+      "fall": -0.39
+    },
+    {
+      "year": 1917,
+      "annual": -0.46,
+      "dec_nov": -0.47,
+      "winter": -0.67,
+      "spring": -0.58,
+      "summer": -0.3,
+      "fall": -0.34
+    },
+    {
+      "year": 1918,
+      "annual": -0.3,
+      "dec_nov": -0.33,
+      "winter": -0.5,
+      "spring": -0.37,
+      "summer": -0.33,
+      "fall": -0.12
+    },
+    {
+      "year": 1919,
+      "annual": -0.28,
+      "dec_nov": -0.27,
+      "winter": -0.24,
+      "spring": -0.2,
+      "summer": -0.33,
+      "fall": -0.29
+    },
+    {
+      "year": 1920,
+      "annual": -0.27,
+      "dec_nov": -0.27,
+      "winter": -0.31,
+      "spring": -0.21,
+      "summer": -0.31,
+      "fall": -0.25
+    },
+    {
+      "year": 1921,
+      "annual": -0.19,
+      "dec_nov": -0.21,
+      "winter": -0.23,
+      "spring": -0.28,
+      "summer": -0.23,
+      "fall": -0.12
+    },
+    {
+      "year": 1922,
+      "annual": -0.28,
+      "dec_nov": -0.28,
+      "winter": -0.31,
+      "spring": -0.23,
+      "summer": -0.3,
+      "fall": -0.28
+    },
+    {
+      "year": 1923,
+      "annual": -0.26,
+      "dec_nov": -0.28,
+      "winter": -0.28,
+      "spring": -0.36,
+      "summer": -0.31,
+      "fall": -0.16
+    },
+    {
+      "year": 1924,
+      "annual": -0.27,
+      "dec_nov": -0.24,
+      "winter": -0.17,
+      "spring": -0.19,
+      "summer": -0.3,
+      "fall": -0.29
+    },
+    {
+      "year": 1925,
+      "annual": -0.22,
+      "dec_nov": -0.26,
+      "winter": -0.4,
+      "spring": -0.27,
+      "summer": -0.26,
+      "fall": -0.1
+    },
+    {
+      "year": 1926,
+      "annual": -0.11,
+      "dec_nov": -0.08,
+      "winter": 0.1,
+      "spring": -0.08,
+      "summer": -0.22,
+      "fall": -0.11
+    },
+    {
+      "year": 1927,
+      "annual": -0.22,
+      "dec_nov": -0.21,
+      "winter": -0.25,
+      "spring": -0.31,
+      "summer": -0.23,
+      "fall": -0.06
+    },
+    {
+      "year": 1928,
+      "annual": -0.2,
+      "dec_nov": -0.21,
+      "winter": -0.15,
+      "spring": -0.27,
+      "summer": -0.27,
+      "fall": -0.16
+    },
+    {
+      "year": 1929,
+      "annual": -0.36,
+      "dec_nov": -0.33,
+      "winter": -0.4,
+      "spring": -0.37,
+      "summer": -0.38,
+      "fall": -0.17
+    },
+    {
+      "year": 1930,
+      "annual": -0.16,
+      "dec_nov": -0.2,
+      "winter": -0.37,
+      "spring": -0.2,
+      "summer": -0.19,
+      "fall": -0.03
+    },
+    {
+      "year": 1931,
+      "annual": -0.09,
+      "dec_nov": -0.09,
+      "winter": -0.12,
+      "spring": -0.17,
+      "summer": -0.05,
+      "fall": -0.03
+    },
+    {
+      "year": 1932,
+      "annual": -0.16,
+      "dec_nov": -0.14,
+      "winter": -0.02,
+      "spring": -0.13,
+      "summer": -0.25,
+      "fall": -0.15
+    },
+    {
+      "year": 1933,
+      "annual": -0.28,
+      "dec_nov": -0.27,
+      "winter": -0.26,
+      "spring": -0.27,
+      "summer": -0.26,
+      "fall": -0.28
+    },
+    {
+      "year": 1934,
+      "annual": -0.12,
+      "dec_nov": -0.16,
+      "winter": -0.22,
+      "spring": -0.23,
+      "summer": -0.12,
+      "fall": -0.06
+    },
+    {
+      "year": 1935,
+      "annual": -0.2,
+      "dec_nov": -0.18,
+      "winter": -0.07,
+      "spring": -0.26,
+      "summer": -0.23,
+      "fall": -0.17
+    },
+    {
+      "year": 1936,
+      "annual": -0.14,
+      "dec_nov": -0.16,
+      "winter": -0.27,
+      "spring": -0.19,
+      "summer": -0.14,
+      "fall": -0.03
+    },
+    {
+      "year": 1937,
+      "annual": -0.03,
+      "dec_nov": -0.02,
+      "winter": -0.01,
+      "spring": -0.14,
+      "summer": -0.02,
+      "fall": 0.09
+    },
+    {
+      "year": 1938,
+      "annual": 0.0,
+      "dec_nov": 0.0,
+      "winter": 0.02,
+      "spring": 0.02,
+      "summer": -0.1,
+      "fall": 0.08
+    },
+    {
+      "year": 1939,
+      "annual": -0.02,
+      "dec_nov": -0.06,
+      "winter": -0.08,
+      "spring": -0.1,
+      "summer": -0.06,
+      "fall": -0.01
+    },
+    {
+      "year": 1940,
+      "annual": 0.13,
+      "dec_nov": 0.14,
+      "winter": 0.17,
+      "spring": 0.13,
+      "summer": 0.1,
+      "fall": 0.14
+    },
+    {
+      "year": 1941,
+      "annual": 0.19,
+      "dec_nov": 0.19,
+      "winter": 0.27,
+      "spring": 0.15,
+      "summer": 0.17,
+      "fall": 0.2
+    },
+    {
+      "year": 1942,
+      "annual": 0.07,
+      "dec_nov": 0.07,
+      "winter": 0.18,
+      "spring": 0.09,
+      "summer": 0.01,
+      "fall": 0.03
+    },
+    {
+      "year": 1943,
+      "annual": 0.09,
+      "dec_nov": 0.08,
+      "winter": 0.1,
+      "spring": 0.05,
+      "summer": 0.02,
+      "fall": 0.16
+    },
+    {
+      "year": 1944,
+      "annual": 0.21,
+      "dec_nov": 0.22,
+      "winter": 0.28,
+      "spring": 0.22,
+      "summer": 0.17,
+      "fall": 0.22
+    },
+    {
+      "year": 1945,
+      "annual": 0.09,
+      "dec_nov": 0.1,
+      "winter": 0.05,
+      "spring": 0.1,
+      "summer": 0.1,
+      "fall": 0.15
+    },
+    {
+      "year": 1946,
+      "annual": -0.07,
+      "dec_nov": -0.05,
+      "winter": 0.04,
+      "spring": 0.0,
+      "summer": -0.18,
+      "fall": -0.07
+    },
+    {
+      "year": 1947,
+      "annual": -0.02,
+      "dec_nov": -0.04,
+      "winter": -0.15,
+      "spring": 0.04,
+      "summer": -0.04,
+      "fall": -0.01
+    },
+    {
+      "year": 1948,
+      "annual": -0.11,
+      "dec_nov": -0.1,
+      "winter": -0.07,
+      "spring": -0.12,
+      "summer": -0.09,
+      "fall": -0.1
+    },
+    {
+      "year": 1949,
+      "annual": -0.11,
+      "dec_nov": -0.11,
+      "winter": -0.1,
+      "spring": -0.08,
+      "summer": -0.18,
+      "fall": -0.1
+    },
+    {
+      "year": 1950,
+      "annual": -0.17,
+      "dec_nov": -0.17,
+      "winter": -0.24,
+      "spring": -0.13,
+      "summer": -0.1,
+      "fall": -0.22
+    },
+    {
+      "year": 1951,
+      "annual": -0.07,
+      "dec_nov": -0.1,
+      "winter": -0.32,
+      "spring": -0.11,
+      "summer": 0.0,
+      "fall": 0.04
+    },
+    {
+      "year": 1952,
+      "annual": 0.01,
+      "dec_nov": 0.03,
+      "winter": 0.13,
+      "spring": -0.02,
+      "summer": 0.02,
+      "fall": -0.02
+    },
+    {
+      "year": 1953,
+      "annual": 0.08,
+      "dec_nov": 0.07,
+      "winter": 0.07,
+      "spring": 0.14,
+      "summer": 0.06,
+      "fall": 0.03
+    },
+    {
+      "year": 1954,
+      "annual": -0.13,
+      "dec_nov": -0.11,
+      "winter": -0.1,
+      "spring": -0.16,
+      "summer": -0.18,
+      "fall": -0.01
+    },
+    {
+      "year": 1955,
+      "annual": -0.14,
+      "dec_nov": -0.13,
+      "winter": -0.07,
+      "spring": -0.25,
+      "summer": -0.08,
+      "fall": -0.14
+    },
+    {
+      "year": 1956,
+      "annual": -0.19,
+      "dec_nov": -0.21,
+      "winter": -0.22,
+      "spring": -0.26,
+      "summer": -0.17,
+      "fall": -0.19
+    },
+    {
+      "year": 1957,
+      "annual": 0.05,
+      "dec_nov": 0.03,
+      "winter": -0.06,
+      "spring": 0.01,
+      "summer": 0.11,
+      "fall": 0.06
+    },
+    {
+      "year": 1958,
+      "annual": 0.06,
+      "dec_nov": 0.07,
+      "winter": 0.25,
+      "spring": 0.05,
+      "summer": -0.03,
+      "fall": 0.01
+    },
+    {
+      "year": 1959,
+      "annual": 0.03,
+      "dec_nov": 0.03,
+      "winter": 0.05,
+      "spring": 0.13,
+      "summer": 0.02,
+      "fall": -0.07
+    },
+    {
+      "year": 1960,
+      "annual": -0.03,
+      "dec_nov": -0.04,
+      "winter": 0.04,
+      "spring": -0.19,
+      "summer": -0.02,
+      "fall": 0.0
+    },
+    {
+      "year": 1961,
+      "annual": 0.06,
+      "dec_nov": 0.09,
+      "winter": 0.15,
+      "spring": 0.11,
+      "summer": 0.04,
+      "fall": 0.04
+    },
+    {
+      "year": 1962,
+      "annual": 0.03,
+      "dec_nov": 0.02,
+      "winter": 0.01,
+      "spring": 0.03,
+      "summer": 0.01,
+      "fall": 0.02
+    },
+    {
+      "year": 1963,
+      "annual": 0.05,
+      "dec_nov": 0.05,
+      "winter": 0.04,
+      "spring": -0.09,
+      "summer": 0.11,
+      "fall": 0.16
+    },
+    {
+      "year": 1964,
+      "annual": -0.2,
+      "dec_nov": -0.18,
+      "winter": -0.07,
+      "spring": -0.26,
+      "summer": -0.1,
+      "fall": -0.27
+    },
+    {
+      "year": 1965,
+      "annual": -0.11,
+      "dec_nov": -0.12,
+      "winter": -0.18,
+      "spring": -0.15,
+      "summer": -0.08,
+      "fall": -0.09
+    },
+    {
+      "year": 1966,
+      "annual": -0.06,
+      "dec_nov": -0.06,
+      "winter": -0.1,
+      "spring": -0.07,
+      "summer": 0.0,
+      "fall": -0.07
+    },
+    {
+      "year": 1967,
+      "annual": -0.02,
+      "dec_nov": -0.02,
+      "winter": -0.1,
+      "spring": 0.04,
+      "summer": -0.02,
+      "fall": -0.01
+    },
+    {
+      "year": 1968,
+      "annual": -0.08,
+      "dec_nov": -0.08,
+      "winter": -0.15,
+      "spring": 0.0,
+      "summer": -0.1,
+      "fall": -0.05
+    },
+    {
+      "year": 1969,
+      "annual": 0.05,
+      "dec_nov": 0.02,
+      "winter": -0.14,
+      "spring": 0.12,
+      "summer": 0.01,
+      "fall": 0.1
+    },
+    {
+      "year": 1970,
+      "annual": 0.03,
+      "dec_nov": 0.06,
+      "winter": 0.18,
+      "spring": 0.03,
+      "summer": -0.04,
+      "fall": 0.06
+    },
+    {
+      "year": 1971,
+      "annual": -0.08,
+      "dec_nov": -0.09,
+      "winter": -0.1,
+      "spring": -0.1,
+      "summer": -0.08,
+      "fall": -0.06
+    },
+    {
+      "year": 1972,
+      "annual": 0.01,
+      "dec_nov": -0.01,
+      "winter": -0.16,
+      "spring": 0.0,
+      "summer": 0.07,
+      "fall": 0.04
+    },
+    {
+      "year": 1973,
+      "annual": 0.16,
+      "dec_nov": 0.18,
+      "winter": 0.26,
+      "spring": 0.26,
+      "summer": 0.12,
+      "fall": 0.08
+    },
+    {
+      "year": 1974,
+      "annual": -0.07,
+      "dec_nov": -0.07,
+      "winter": -0.14,
+      "spring": -0.07,
+      "summer": 0.01,
+      "fall": -0.07
+    },
+    {
+      "year": 1975,
+      "annual": -0.01,
+      "dec_nov": -0.01,
+      "winter": 0.03,
+      "spring": 0.11,
+      "summer": -0.06,
+      "fall": -0.1
+    },
+    {
+      "year": 1976,
+      "annual": -0.1,
+      "dec_nov": -0.12,
+      "winter": -0.09,
+      "spring": -0.16,
+      "summer": -0.11,
+      "fall": -0.12
+    },
+    {
+      "year": 1977,
+      "annual": 0.18,
+      "dec_nov": 0.19,
+      "winter": 0.17,
+      "spring": 0.28,
+      "summer": 0.22,
+      "fall": 0.07
+    },
+    {
+      "year": 1978,
+      "annual": 0.07,
+      "dec_nov": 0.06,
+      "winter": 0.06,
+      "spring": 0.15,
+      "summer": -0.04,
+      "fall": 0.08
+    },
+    {
+      "year": 1979,
+      "annual": 0.16,
+      "dec_nov": 0.13,
+      "winter": 0.02,
+      "spring": 0.13,
+      "summer": 0.11,
+      "fall": 0.26
+    },
+    {
+      "year": 1980,
+      "annual": 0.26,
+      "dec_nov": 0.28,
+      "winter": 0.39,
+      "spring": 0.31,
+      "summer": 0.2,
+      "fall": 0.21
+    },
+    {
+      "year": 1981,
+      "annual": 0.32,
+      "dec_nov": 0.31,
+      "winter": 0.39,
+      "spring": 0.35,
+      "summer": 0.32,
+      "fall": 0.17
+    },
+    {
+      "year": 1982,
+      "annual": 0.14,
+      "dec_nov": 0.14,
+      "winter": 0.21,
+      "spring": 0.12,
+      "summer": 0.08,
+      "fall": 0.15
+    },
+    {
+      "year": 1983,
+      "annual": 0.31,
+      "dec_nov": 0.34,
+      "winter": 0.46,
+      "spring": 0.34,
+      "summer": 0.25,
+      "fall": 0.28
+    },
+    {
+      "year": 1984,
+      "annual": 0.16,
+      "dec_nov": 0.17,
+      "winter": 0.21,
+      "spring": 0.22,
+      "summer": 0.14,
+      "fall": 0.14
+    },
+    {
+      "year": 1985,
+      "annual": 0.12,
+      "dec_nov": 0.1,
+      "winter": 0.05,
+      "spring": 0.15,
+      "summer": 0.12,
+      "fall": 0.1
+    },
+    {
+      "year": 1986,
+      "annual": 0.18,
+      "dec_nov": 0.18,
+      "winter": 0.26,
+      "spring": 0.25,
+      "summer": 0.13,
+      "fall": 0.1
+    },
+    {
+      "year": 1987,
+      "annual": 0.32,
+      "dec_nov": 0.29,
+      "winter": 0.29,
+      "spring": 0.23,
+      "summer": 0.33,
+      "fall": 0.32
+    },
+    {
+      "year": 1988,
+      "annual": 0.39,
+      "dec_nov": 0.4,
+      "winter": 0.49,
+      "spring": 0.46,
+      "summer": 0.37,
+      "fall": 0.29
+    },
+    {
+      "year": 1989,
+      "annual": 0.27,
+      "dec_nov": 0.27,
+      "winter": 0.24,
+      "spring": 0.28,
+      "summer": 0.28,
+      "fall": 0.28
+    },
+    {
+      "year": 1990,
+      "annual": 0.45,
+      "dec_nov": 0.45,
+      "winter": 0.41,
+      "spring": 0.61,
+      "summer": 0.39,
+      "fall": 0.38
+    },
+    {
+      "year": 1991,
+      "annual": 0.4,
+      "dec_nov": 0.41,
+      "winter": 0.44,
+      "spring": 0.4,
+      "summer": 0.46,
+      "fall": 0.34
+    },
+    {
+      "year": 1992,
+      "annual": 0.22,
+      "dec_nov": 0.23,
+      "winter": 0.4,
+      "spring": 0.35,
+      "summer": 0.14,
+      "fall": 0.03
+    },
+    {
+      "year": 1993,
+      "annual": 0.23,
+      "dec_nov": 0.23,
+      "winter": 0.31,
+      "spring": 0.31,
+      "summer": 0.2,
+      "fall": 0.13
+    },
+    {
+      "year": 1994,
+      "annual": 0.32,
+      "dec_nov": 0.3,
+      "winter": 0.16,
+      "spring": 0.33,
+      "summer": 0.32,
+      "fall": 0.39
+    },
+    {
+      "year": 1995,
+      "annual": 0.45,
+      "dec_nov": 0.46,
+      "winter": 0.56,
+      "spring": 0.4,
+      "summer": 0.44,
+      "fall": 0.42
+    },
+    {
+      "year": 1996,
+      "annual": 0.33,
+      "dec_nov": 0.32,
+      "winter": 0.32,
+      "spring": 0.31,
+      "summer": 0.37,
+      "fall": 0.28
+    },
+    {
+      "year": 1997,
+      "annual": 0.46,
+      "dec_nov": 0.44,
+      "winter": 0.36,
+      "spring": 0.4,
+      "summer": 0.43,
+      "fall": 0.59
+    },
+    {
+      "year": 1998,
+      "annual": 0.61,
+      "dec_nov": 0.61,
+      "winter": 0.68,
+      "spring": 0.65,
+      "summer": 0.69,
+      "fall": 0.42
+    },
+    {
+      "year": 1999,
+      "annual": 0.38,
+      "dec_nov": 0.39,
+      "winter": 0.56,
+      "spring": 0.3,
+      "summer": 0.35,
+      "fall": 0.36
+    },
+    {
+      "year": 2000,
+      "annual": 0.39,
+      "dec_nov": 0.4,
+      "winter": 0.41,
+      "spring": 0.49,
+      "summer": 0.4,
+      "fall": 0.32
+    },
+    {
+      "year": 2001,
+      "annual": 0.54,
+      "dec_nov": 0.51,
+      "winter": 0.39,
+      "spring": 0.55,
+      "summer": 0.53,
+      "fall": 0.58
+    },
+    {
+      "year": 2002,
+      "annual": 0.63,
+      "dec_nov": 0.64,
+      "winter": 0.71,
+      "spring": 0.7,
+      "summer": 0.56,
+      "fall": 0.59
+    },
+    {
+      "year": 2003,
+      "annual": 0.62,
+      "dec_nov": 0.59,
+      "winter": 0.59,
+      "spring": 0.59,
+      "summer": 0.57,
+      "fall": 0.63
+    },
+    {
+      "year": 2004,
+      "annual": 0.53,
+      "dec_nov": 0.56,
+      "winter": 0.69,
+      "spring": 0.54,
+      "summer": 0.39,
+      "fall": 0.61
+    },
+    {
+      "year": 2005,
+      "annual": 0.68,
+      "dec_nov": 0.66,
+      "winter": 0.62,
+      "spring": 0.68,
+      "summer": 0.62,
+      "fall": 0.73
+    },
+    {
+      "year": 2006,
+      "annual": 0.64,
+      "dec_nov": 0.63,
+      "winter": 0.66,
+      "spring": 0.53,
+      "summer": 0.64,
+      "fall": 0.69
+    },
+    {
+      "year": 2007,
+      "annual": 0.67,
+      "dec_nov": 0.69,
+      "winter": 0.84,
+      "spring": 0.73,
+      "summer": 0.6,
+      "fall": 0.59
+    },
+    {
+      "year": 2008,
+      "annual": 0.54,
+      "dec_nov": 0.54,
+      "winter": 0.39,
+      "spring": 0.59,
+      "summer": 0.52,
+      "fall": 0.66
+    },
+    {
+      "year": 2009,
+      "annual": 0.66,
+      "dec_nov": 0.65,
+      "winter": 0.57,
+      "spring": 0.6,
+      "summer": 0.69,
+      "fall": 0.72
+    },
+    {
+      "year": 2010,
+      "annual": 0.73,
+      "dec_nov": 0.74,
+      "winter": 0.75,
+      "spring": 0.84,
+      "summer": 0.66,
+      "fall": 0.72
+    },
+    {
+      "year": 2011,
+      "annual": 0.61,
+      "dec_nov": 0.6,
+      "winter": 0.49,
+      "spring": 0.61,
+      "summer": 0.69,
+      "fall": 0.6
+    },
+    {
+      "year": 2012,
+      "annual": 0.65,
+      "dec_nov": 0.66,
+      "winter": 0.53,
+      "spring": 0.7,
+      "summer": 0.63,
+      "fall": 0.77
+    },
+    {
+      "year": 2013,
+      "annual": 0.68,
+      "dec_nov": 0.66,
+      "winter": 0.62,
+      "spring": 0.61,
+      "summer": 0.66,
+      "fall": 0.77
+    },
+    {
+      "year": 2014,
+      "annual": 0.75,
+      "dec_nov": 0.74,
+      "winter": 0.67,
+      "spring": 0.81,
+      "summer": 0.69,
+      "fall": 0.78
+    },
+    {
+      "year": 2015,
+      "annual": 0.9,
+      "dec_nov": 0.87,
+      "winter": 0.85,
+      "spring": 0.84,
+      "summer": 0.78,
+      "fall": 1.0
+    },
+    {
+      "year": 2016,
+      "annual": 1.02,
+      "dec_nov": 1.04,
+      "winter": 1.24,
+      "spring": 1.14,
+      "summer": 0.89,
+      "fall": 0.91
+    },
+    {
+      "year": 2017,
+      "annual": 0.92,
+      "dec_nov": 0.92,
+      "winter": 1.01,
+      "spring": 1.01,
+      "summer": 0.8,
+      "fall": 0.85
+    },
+    {
+      "year": 2018,
+      "annual": 0.85,
+      "dec_nov": 0.85,
+      "winter": 0.87,
+      "spring": 0.87,
+      "summer": 0.79,
+      "fall": 0.88
+    },
+    {
+      "year": 2019,
+      "annual": 0.98,
+      "dec_nov": 0.97,
+      "winter": 0.93,
+      "spring": 1.01,
+      "summer": 0.93,
+      "fall": 0.98
+    },
+    {
+      "year": 2020,
+      "annual": 1.02,
+      "dec_nov": 1.04,
+      "winter": 1.17,
+      "spring": 1.11,
+      "summer": 0.9,
+      "fall": 0.99
+    },
+    {
+      "year": 2021,
+      "annual": 0.85,
+      "dec_nov": 0.85,
+      "winter": 0.76,
+      "spring": 0.81,
+      "summer": 0.86,
+      "fall": 0.96
+    },
+    {
+      "year": 2022,
+      "annual": 0.9,
+      "dec_nov": 0.9,
+      "winter": 0.89,
+      "spring": 0.91,
+      "summer": 0.94,
+      "fall": 0.87
+    }
+  ]
+}

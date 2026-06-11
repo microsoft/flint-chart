@@ -1,0 +1,291 @@
+{
+  "meta": {
+    "name": "richmond_fwords",
+    "description": "Ted Lasso Roy Kent F-word counts by episode",
+    "source": "tidytuesday/2023-09-26/richmondway.csv",
+    "transformation": "Select relevant columns.",
+    "num_rows": 34,
+    "columns": {
+      "Season": "int64",
+      "Episode": "int64",
+      "F_count_RK": "int64",
+      "F_count_total": "int64",
+      "Dating_flag": "str",
+      "Coaching_flag": "str"
+    }
+  },
+  "data": [
+    {
+      "Season": 1,
+      "Episode": 1,
+      "F_count_RK": 2,
+      "F_count_total": 13,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 2,
+      "F_count_RK": 2,
+      "F_count_total": 8,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 3,
+      "F_count_RK": 7,
+      "F_count_total": 13,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 4,
+      "F_count_RK": 8,
+      "F_count_total": 17,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 5,
+      "F_count_RK": 4,
+      "F_count_total": 13,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 6,
+      "F_count_RK": 2,
+      "F_count_total": 9,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 7,
+      "F_count_RK": 5,
+      "F_count_total": 15,
+      "Dating_flag": "No",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 8,
+      "F_count_RK": 7,
+      "F_count_total": 18,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 9,
+      "F_count_RK": 14,
+      "F_count_total": 22,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 1,
+      "Episode": 10,
+      "F_count_RK": 5,
+      "F_count_total": 22,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 2,
+      "Episode": 1,
+      "F_count_RK": 11,
+      "F_count_total": 16,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 2,
+      "Episode": 2,
+      "F_count_RK": 10,
+      "F_count_total": 22,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 2,
+      "Episode": 3,
+      "F_count_RK": 2,
+      "F_count_total": 8,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 2,
+      "Episode": 4,
+      "F_count_RK": 2,
+      "F_count_total": 6,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "No"
+    },
+    {
+      "Season": 2,
+      "Episode": 5,
+      "F_count_RK": 23,
+      "F_count_total": 32,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 6,
+      "F_count_RK": 12,
+      "F_count_total": 18,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 7,
+      "F_count_RK": 6,
+      "F_count_total": 15,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 8,
+      "F_count_RK": 5,
+      "F_count_total": 17,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 9,
+      "F_count_RK": 3,
+      "F_count_total": 12,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 10,
+      "F_count_RK": 4,
+      "F_count_total": 13,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 11,
+      "F_count_RK": 5,
+      "F_count_total": 12,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 2,
+      "Episode": 12,
+      "F_count_RK": 23,
+      "F_count_total": 44,
+      "Dating_flag": "Yes",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 1,
+      "F_count_RK": 6,
+      "F_count_total": 17,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 2,
+      "F_count_RK": 16,
+      "F_count_total": 31,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 3,
+      "F_count_RK": 10,
+      "F_count_total": 25,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 4,
+      "F_count_RK": 17,
+      "F_count_total": 42,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 5,
+      "F_count_RK": 13,
+      "F_count_total": 36,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 6,
+      "F_count_RK": 13,
+      "F_count_total": 21,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 7,
+      "F_count_RK": 10,
+      "F_count_total": 30,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 8,
+      "F_count_RK": 6,
+      "F_count_total": 26,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 9,
+      "F_count_RK": 13,
+      "F_count_total": 46,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 10,
+      "F_count_RK": 10,
+      "F_count_total": 18,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 11,
+      "F_count_RK": 13,
+      "F_count_total": 46,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    },
+    {
+      "Season": 3,
+      "Episode": 12,
+      "F_count_RK": 11,
+      "F_count_total": 39,
+      "Dating_flag": "No",
+      "Coaching_flag": "Yes"
+    }
+  ]
+}

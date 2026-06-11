@@ -1,0 +1,1201 @@
+{
+  "meta": {
+    "name": "tech_stocks_monthly",
+    "description": "Monthly average closing prices for major tech companies",
+    "source": "tidytuesday/2023-02-07/big_tech_stock_prices.csv",
+    "transformation": "Group by company+month, compute avg close price. Filter to 2022+.",
+    "num_rows": 169,
+    "columns": {
+      "stock_symbol": "str",
+      "month": "datetime64[us]",
+      "avg_close": "float64",
+      "avg_volume": "float64",
+      "company": "str"
+    }
+  },
+  "data": [
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 169.8614998,
+      "avg_volume": 105422300.0,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 169.8300009474,
+      "avg_volume": 85658752.63157895,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 165.3104353913,
+      "avg_volume": 94817395.6521739,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 166.8209991,
+      "avg_volume": 84389780.0,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 148.430476619,
+      "avg_volume": 114335252.38095239,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 139.7985731905,
+      "avg_volume": 83290466.66666667,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 149.67049935,
+      "avg_volume": 72356270.0,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 166.885218087,
+      "avg_volume": 65662591.30434783,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 153.0028556667,
+      "avg_volume": 99272514.28571428,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 145.0133331905,
+      "avg_volume": 88959033.33333333,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 145.8433314762,
+      "avg_volume": 82135604.76190476,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "AAPL",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 138.2740003,
+      "avg_volume": 79934850.0,
+      "company": "Apple Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 519.62949985,
+      "avg_volume": 4205545.0,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 484.1557890526,
+      "avg_volume": 3701436.8421052634,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 445.073911,
+      "avg_volume": 4290326.0869565215,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 428.74349965,
+      "avg_volume": 2748130.0,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 401.7990490952,
+      "avg_volume": 3452366.6666666665,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 391.4466683333,
+      "avg_volume": 3420723.8095238097,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 387.27849885,
+      "avg_volume": 2320065.0,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 418.5260872174,
+      "avg_volume": 2253321.7391304346,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 325.9247611905,
+      "avg_volume": 5922933.333333333,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 301.0728556667,
+      "avg_volume": 3924361.904761905,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 322.7219020476,
+      "avg_volume": 3371595.238095238,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "ADBE",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 335.64549865,
+      "avg_volume": 3168125.0,
+      "company": "Adobe Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 155.48084875,
+      "avg_volume": 76232700.0,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 153.7838151053,
+      "avg_volume": 88926526.31578948,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 154.2804798696,
+      "avg_volume": 70803739.13043478,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 151.3087002,
+      "avg_volume": 73250400.0,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 112.4730478095,
+      "avg_volume": 107546476.1904762,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 112.8630952381,
+      "avg_volume": 84171480.95238096,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 117.03749965,
+      "avg_volume": 66892630.0,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 137.4395655652,
+      "avg_volume": 50889086.95652174,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 123.213810619,
+      "avg_volume": 57642266.666666664,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 114.4604761905,
+      "avg_volume": 69491023.8095238,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 93.9480953333,
+      "avg_volume": 96911104.76190476,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "AMZN",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 88.1339996,
+      "avg_volume": 74339605.0,
+      "company": "Amazon.com, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 228.09000095,
+      "avg_volume": 8124535.0,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 210.9989446842,
+      "avg_volume": 7453657.894736842,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 207.4991302609,
+      "avg_volume": 7046391.304347826,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 190.4540001,
+      "avg_volume": 6988395.0,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 165.1376197619,
+      "avg_volume": 7976371.428571428,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 175.1409520476,
+      "avg_volume": 9912814.285714285,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 174.1599998,
+      "avg_volume": 4667865.0,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 181.0226076087,
+      "avg_volume": 6247734.782608695,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 152.640952,
+      "avg_volume": 7333142.857142857,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 153.6671418095,
+      "avg_volume": 6657819.047619048,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 151.5523819048,
+      "avg_volume": 7565780.952380952,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CRM",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 132.5364998,
+      "avg_volume": 12497015.0,
+      "company": "Salesforce, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 59.1770002,
+      "avg_volume": 24047040.0,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 55.2326314737,
+      "avg_volume": 22084273.684210528,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 55.4456516087,
+      "avg_volume": 21740678.260869566,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 52.48050015,
+      "avg_volume": 19192450.0,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 47.367143,
+      "avg_volume": 30726390.476190478,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 43.9804761429,
+      "avg_volume": 23382209.523809522,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 43.5834999,
+      "avg_volume": 18420105.0,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 46.255652,
+      "avg_volume": 18693500.0,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 43.0409527619,
+      "avg_volume": 19465814.285714287,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 42.0804764286,
+      "avg_volume": 19748219.04761905,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 46.1609526667,
+      "avg_volume": 20191547.61904762,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "CSCO",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 48.33750025,
+      "avg_volume": 18147470.0,
+      "company": "Cisco Systems, Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 135.9619492,
+      "avg_volume": 38360300.0,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 136.7128953158,
+      "avg_volume": 48848736.84210526,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 134.9779573043,
+      "avg_volume": 31702695.652173914,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 128.07125005,
+      "avg_volume": 38057600.0,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 113.1941191429,
+      "avg_volume": 40497619.047619045,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 112.429524,
+      "avg_volume": 36702571.428571425,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 112.6507244,
+      "avg_volume": 39476485.0,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 116.2586954348,
+      "avg_volume": 22428378.260869566,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 103.3299997143,
+      "avg_volume": 29203757.14285714,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 98.8785708571,
+      "avg_volume": 32451823.80952381,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 93.9090480952,
+      "avg_volume": 34120128.571428575,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "GOOGL",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 92.5195003,
+      "avg_volume": 28957075.0,
+      "company": "Alphabet Inc."
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 133.8685012,
+      "avg_volume": 7348840.0,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 130.4847362632,
+      "avg_volume": 5186005.263157895,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 127.347827,
+      "avg_volume": 4198769.565217392,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 131.5035014,
+      "avg_volume": 5384200.0,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 134.1052375714,
+      "avg_volume": 5391723.80952381,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 139.1414294286,
+      "avg_volume": 5038633.333333333,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 134.6899983,
+      "avg_volume": 6489590.0,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 133.1904330435,
+      "avg_volume": 3366078.2608695654,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 125.801429,
+      "avg_volume": 4155480.9523809524,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 126.0057137143,
+      "avg_volume": 5403723.80952381,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 143.2328555714,
+      "avg_volume": 4460061.904761905,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "IBM",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 144.7660012,
+      "avg_volume": 4178305.0,
+      "company": "International Business Machines Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 52.84299955,
+      "avg_volume": 44527140.0,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 47.7089475263,
+      "avg_volume": 39832363.15789474,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 48.246521913,
+      "avg_volume": 36925595.652173914,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 46.9130002,
+      "avg_volume": 31973625.0,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 43.505714,
+      "avg_volume": 36820800.0,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 39.5490477619,
+      "avg_volume": 37302523.809523806,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 38.38600005,
+      "avg_volume": 39645905.0,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 34.9747824348,
+      "avg_volume": 39118134.782608695,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 29.0433330476,
+      "avg_volume": 42336919.047619045,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 26.667619,
+      "avg_volume": 46716361.9047619,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 29.13,
+      "avg_volume": 37567442.85714286,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "INTC",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 27.5790002,
+      "avg_volume": 36375980.0,
+      "company": "Intel Corporation"
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 319.40700225,
+      "avg_volume": 21361865.0,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 228.4373683684,
+      "avg_volume": 59370505.2631579,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 207.2600017826,
+      "avg_volume": 31881500.0,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 208.23500055,
+      "avg_volume": 33612750.0,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 197.7404762857,
+      "avg_volume": 32407085.714285713,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 173.500476619,
+      "avg_volume": 32665504.76190476,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 167.3595008,
+      "avg_volume": 29324120.0,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 168.5556528261,
+      "avg_volume": 23996647.826086957,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 149.9595235238,
+      "avg_volume": 30238800.0,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 127.915713,
+      "avg_volume": 52745819.047619045,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 106.3957149048,
+      "avg_volume": 50656723.809523806,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 117.9647623333,
+      "avg_volume": 31091814.285714287,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "META",
+      "month": "2023-01-01T00:00:00.000",
+      "avg_close": 133.8946674667,
+      "avg_volume": 26853466.666666668,
+      "company": "Meta Platforms, Inc."
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 308.74199985,
+      "avg_volume": 47376570.0,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 298.7294745263,
+      "avg_volume": 36686873.684210524,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 295.749566087,
+      "avg_volume": 31927573.913043477,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 288.81049805,
+      "avg_volume": 31367170.0,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 266.7290460476,
+      "avg_volume": 35376285.71428572,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 259.4990489048,
+      "avg_volume": 29589157.14285714,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 262.2134964,
+      "avg_volume": 26744590.0,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 280.5643495652,
+      "avg_volume": 20745982.608695652,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 247.7099986667,
+      "avg_volume": 27408885.714285713,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 237.0390479524,
+      "avg_volume": 31963100.0,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 237.2752373333,
+      "avg_volume": 29299809.523809522,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "MSFT",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 245.93349915,
+      "avg_volume": 28471010.0,
+      "company": "Microsoft Corporation"
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 487.85350035,
+      "avg_volume": 12083100.0,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 400.9863168947,
+      "avg_volume": 7947931.578947368,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 366.7917413478,
+      "avg_volume": 5195300.0,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 297.41449885,
+      "avg_volume": 20166270.0,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 186.4495239048,
+      "avg_volume": 11981704.761904761,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 184.8476199048,
+      "avg_volume": 9169176.19047619,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 199.089,
+      "avg_volume": 13504185.0,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 233.0265218261,
+      "avg_volume": 6619926.0869565215,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 232.1138116667,
+      "avg_volume": 11139080.952380951,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 256.2680954286,
+      "avg_volume": 15964942.857142856,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 283.1719055238,
+      "avg_volume": 8842047.61904762,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NFLX",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 302.39999995,
+      "avg_volume": 9275700.0,
+      "company": "Netflix, Inc."
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 257.7025008,
+      "avg_volume": 53410820.0,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 246.2894727895,
+      "avg_volume": 56022473.684210524,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 248.5165212174,
+      "avg_volume": 50628691.30434783,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 219.6070007,
+      "avg_volume": 55571950.0,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 177.9057144286,
+      "avg_volume": 65871528.571428575,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 170.1590474762,
+      "avg_volume": 50260909.52380952,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 163.30400075,
+      "avg_volume": 52822380.0,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 177.6226076957,
+      "avg_volume": 52476730.43478261,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 131.7442841905,
+      "avg_volume": 62526561.9047619,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 124.6980950476,
+      "avg_volume": 59758461.9047619,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 153.1357145714,
+      "avg_volume": 50479061.9047619,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "NVDA",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 162.92350085,
+      "avg_volume": 43178310.0,
+      "company": "NVIDIA Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 84.8485,
+      "avg_volume": 10028740.0,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 78.7315786316,
+      "avg_volume": 7615878.947368421,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 79.4895652609,
+      "avg_volume": 10605939.130434783,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 79.07300105,
+      "avg_volume": 6563585.0,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 71.2195238571,
+      "avg_volume": 7735185.714285715,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 69.5923809524,
+      "avg_volume": 10466680.952380951,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 72.7270002,
+      "avg_volume": 6312055.0,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 77.0400006522,
+      "avg_volume": 5093921.739130435,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 69.4804770952,
+      "avg_volume": 11092633.333333334,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 68.3823808095,
+      "avg_volume": 9531742.857142856,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 78.820476,
+      "avg_volume": 6824414.285714285,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "ORCL",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 80.74050035,
+      "avg_volume": 8354245.0,
+      "company": "Oracle Corporation"
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-01-01T00:00:00.000",
+      "avg_close": 336.7228301,
+      "avg_volume": 95800320.0,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-02-01T00:00:00.000",
+      "avg_close": 292.9615767368,
+      "avg_volume": 73217194.73684211,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-03-01T00:00:00.000",
+      "avg_close": 304.7931863478,
+      "avg_volume": 75185778.26086956,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-04-01T00:00:00.000",
+      "avg_close": 332.4625031,
+      "avg_volume": 76047990.0,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-05-01T00:00:00.000",
+      "avg_close": 255.223333619,
+      "avg_volume": 92772457.14285715,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-06-01T00:00:00.000",
+      "avg_close": 234.0258731429,
+      "avg_volume": 95772757.14285715,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-07-01T00:00:00.000",
+      "avg_close": 251.3946662,
+      "avg_volume": 87244200.0,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-08-01T00:00:00.000",
+      "avg_close": 294.8698570435,
+      "avg_volume": 73707095.6521739,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-09-01T00:00:00.000",
+      "avg_close": 288.7347629524,
+      "avg_volume": 61870047.61904762,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-10-01T00:00:00.000",
+      "avg_close": 223.8104769524,
+      "avg_volume": 82631576.1904762,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-11-01T00:00:00.000",
+      "avg_close": 191.2466662857,
+      "avg_volume": 89775014.28571428,
+      "company": "Tesla, Inc."
+    },
+    {
+      "stock_symbol": "TSLA",
+      "month": "2022-12-01T00:00:00.000",
+      "avg_close": 154.46000015,
+      "avg_volume": 139323520.0,
+      "company": "Tesla, Inc."
+    }
+  ]
+}

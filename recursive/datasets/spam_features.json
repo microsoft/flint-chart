@@ -1,0 +1,1820 @@
+{
+  "meta": {
+    "name": "spam_features",
+    "description": "Email spam classification features",
+    "source": "tidytuesday/2023-08-15/spam.csv",
+    "transformation": "Take first 200 rows.",
+    "num_rows": 200,
+    "columns": {
+      "crl.tot": "int64",
+      "dollar": "float64",
+      "bang": "float64",
+      "money": "float64",
+      "n000": "float64",
+      "make": "float64",
+      "yesno": "str"
+    }
+  },
+  "data": [
+    {
+      "crl.tot": 278,
+      "dollar": 0.0,
+      "bang": 0.778,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 1028,
+      "dollar": 0.18,
+      "bang": 0.372,
+      "money": 0.43,
+      "n000": 0.43,
+      "make": 0.21,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2259,
+      "dollar": 0.184,
+      "bang": 0.276,
+      "money": 0.06,
+      "n000": 1.16,
+      "make": 0.06,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 191,
+      "dollar": 0.0,
+      "bang": 0.137,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 191,
+      "dollar": 0.0,
+      "bang": 0.135,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 54,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 112,
+      "dollar": 0.054,
+      "bang": 0.164,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 49,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 1257,
+      "dollar": 0.203,
+      "bang": 0.181,
+      "money": 0.15,
+      "n000": 0.0,
+      "make": 0.15,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 749,
+      "dollar": 0.081,
+      "bang": 0.244,
+      "money": 0.0,
+      "n000": 0.19,
+      "make": 0.06,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 21,
+      "dollar": 0.0,
+      "bang": 0.462,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 184,
+      "dollar": 0.0,
+      "bang": 0.663,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 261,
+      "dollar": 0.0,
+      "bang": 0.786,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 25,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 205,
+      "dollar": 0.0,
+      "bang": 0.357,
+      "money": 0.0,
+      "n000": 0.35,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 249,
+      "dollar": 0.063,
+      "bang": 0.572,
+      "money": 0.42,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 107,
+      "dollar": 0.0,
+      "bang": 0.428,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 461,
+      "dollar": 0.37,
+      "bang": 1.975,
+      "money": 0.0,
+      "n000": 0.7,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 70,
+      "dollar": 0.0,
+      "bang": 0.455,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 186,
+      "dollar": 0.496,
+      "bang": 0.055,
+      "money": 0.63,
+      "n000": 0.31,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 23,
+      "dollar": 0.0,
+      "bang": 0.729,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2259,
+      "dollar": 0.046,
+      "bang": 0.25,
+      "money": 0.0,
+      "n000": 0.05,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 34,
+      "dollar": 0.0,
+      "bang": 0.809,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 69,
+      "dollar": 0.0,
+      "bang": 0.667,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 82,
+      "dollar": 0.196,
+      "bang": 0.392,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2258,
+      "dollar": 0.046,
+      "bang": 0.25,
+      "money": 0.0,
+      "n000": 0.05,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 82,
+      "dollar": 0.196,
+      "bang": 0.392,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 47,
+      "dollar": 0.0,
+      "bang": 0.368,
+      "money": 3.33,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 36,
+      "dollar": 0.0,
+      "bang": 0.352,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 129,
+      "dollar": 0.0,
+      "bang": 0.091,
+      "money": 0.65,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 59,
+      "dollar": 0.0,
+      "bang": 0.886,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 1.17,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 43,
+      "dollar": 0.0,
+      "bang": 2.112,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 89,
+      "dollar": 0.091,
+      "bang": 0.0,
+      "money": 0.27,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 17,
+      "dollar": 0.302,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 264,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 25,
+      "dollar": 0.0,
+      "bang": 1.543,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 29,
+      "dollar": 0.0,
+      "bang": 0.873,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 239,
+      "dollar": 0.244,
+      "bang": 0.488,
+      "money": 0.0,
+      "n000": 0.48,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 186,
+      "dollar": 0.0,
+      "bang": 0.963,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 285,
+      "dollar": 0.0,
+      "bang": 0.75,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 226,
+      "dollar": 0.207,
+      "bang": 0.207,
+      "money": 0.61,
+      "n000": 0.3,
+      "make": 0.3,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 28,
+      "dollar": 0.0,
+      "bang": 0.671,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 28,
+      "dollar": 0.0,
+      "bang": 0.711,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 68,
+      "dollar": 0.0,
+      "bang": 0.426,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 339,
+      "dollar": 0.036,
+      "bang": 0.813,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 774,
+      "dollar": 0.068,
+      "bang": 1.318,
+      "money": 0.3,
+      "n000": 0.0,
+      "make": 0.15,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 442,
+      "dollar": 0.167,
+      "bang": 0.01,
+      "money": 0.06,
+      "n000": 0.84,
+      "make": 0.18,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 94,
+      "dollar": 0.0,
+      "bang": 0.17,
+      "money": 0.0,
+      "n000": 0.49,
+      "make": 0.49,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 3040,
+      "dollar": 0.756,
+      "bang": 0.325,
+      "money": 0.36,
+      "n000": 1.05,
+      "make": 0.46,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 898,
+      "dollar": 0.23,
+      "bang": 0.278,
+      "money": 0.26,
+      "n000": 0.19,
+      "make": 0.46,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 33,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 179,
+      "dollar": 0.332,
+      "bang": 0.498,
+      "money": 0.0,
+      "n000": 1.83,
+      "make": 0.73,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 750,
+      "dollar": 0.071,
+      "bang": 0.244,
+      "money": 0.0,
+      "n000": 0.19,
+      "make": 0.06,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 69,
+      "dollar": 0.596,
+      "bang": 0.198,
+      "money": 1.26,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 176,
+      "dollar": 0.333,
+      "bang": 0.5,
+      "money": 0.0,
+      "n000": 1.83,
+      "make": 0.73,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 106,
+      "dollar": 0.0,
+      "bang": 1.478,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 146,
+      "dollar": 0.061,
+      "bang": 0.615,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 51,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 200,
+      "dollar": 0.0,
+      "bang": 1.501,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 284,
+      "dollar": 0.0,
+      "bang": 0.669,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 249,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 0.175,
+      "money": 0.23,
+      "n000": 0.0,
+      "make": 0.23,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 75,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 96,
+      "dollar": 0.048,
+      "bang": 0.048,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 180,
+      "dollar": 0.019,
+      "bang": 0.019,
+      "money": 0.0,
+      "n000": 0.12,
+      "make": 0.12,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 121,
+      "dollar": 0.0,
+      "bang": 2.205,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.66,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 194,
+      "dollar": 0.294,
+      "bang": 0.589,
+      "money": 0.48,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 17,
+      "dollar": 0.0,
+      "bang": 0.5,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 303,
+      "dollar": 0.351,
+      "bang": 1.053,
+      "money": 0.3,
+      "n000": 0.0,
+      "make": 0.3,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 141,
+      "dollar": 0.1,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 1.96,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 290,
+      "dollar": 0.0,
+      "bang": 0.537,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 187,
+      "dollar": 0.0,
+      "bang": 0.877,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 281,
+      "dollar": 0.0,
+      "bang": 0.807,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 110,
+      "dollar": 0.223,
+      "bang": 0.298,
+      "money": 0.0,
+      "n000": 0.46,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 236,
+      "dollar": 0.243,
+      "bang": 0.486,
+      "money": 0.0,
+      "n000": 0.48,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 318,
+      "dollar": 0.0,
+      "bang": 1.366,
+      "money": 0.0,
+      "n000": 1.88,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 100,
+      "dollar": 0.082,
+      "bang": 0.165,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 1066,
+      "dollar": 0.234,
+      "bang": 0.437,
+      "money": 0.75,
+      "n000": 0.44,
+      "make": 0.75,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 175,
+      "dollar": 0.0,
+      "bang": 0.132,
+      "money": 0.0,
+      "n000": 0.62,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 10,
+      "dollar": 0.338,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 114,
+      "dollar": 0.0,
+      "bang": 1.431,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 519,
+      "dollar": 0.0,
+      "bang": 0.197,
+      "money": 0.47,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 61,
+      "dollar": 0.0,
+      "bang": 0.495,
+      "money": 0.0,
+      "n000": 0.72,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 43,
+      "dollar": 0.0,
+      "bang": 0.724,
+      "money": 0.0,
+      "n000": 1.28,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 118,
+      "dollar": 0.0,
+      "bang": 0.834,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 213,
+      "dollar": 0.214,
+      "bang": 0.571,
+      "money": 0.46,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 158,
+      "dollar": 0.061,
+      "bang": 0.061,
+      "money": 0.38,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 107,
+      "dollar": 0.0,
+      "bang": 0.268,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 845,
+      "dollar": 0.085,
+      "bang": 0.096,
+      "money": 0.06,
+      "n000": 0.0,
+      "make": 0.06,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 38,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 194,
+      "dollar": 0.333,
+      "bang": 1.083,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 3038,
+      "dollar": 0.764,
+      "bang": 0.322,
+      "money": 0.34,
+      "n000": 1.05,
+      "make": 0.47,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2453,
+      "dollar": 0.532,
+      "bang": 0.613,
+      "money": 0.63,
+      "n000": 0.59,
+      "make": 0.59,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2453,
+      "dollar": 0.531,
+      "bang": 0.612,
+      "money": 0.63,
+      "n000": 0.59,
+      "make": 0.59,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 102,
+      "dollar": 0.823,
+      "bang": 0.082,
+      "money": 0.0,
+      "n000": 1.38,
+      "make": 0.46,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 91,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.46,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 313,
+      "dollar": 0.0,
+      "bang": 1.284,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 222,
+      "dollar": 0.0,
+      "bang": 0.736,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 191,
+      "dollar": 0.0,
+      "bang": 0.31,
+      "money": 0.0,
+      "n000": 0.6,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 114,
+      "dollar": 0.527,
+      "bang": 0.461,
+      "money": 0.41,
+      "n000": 0.0,
+      "make": 1.24,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 30,
+      "dollar": 0.0,
+      "bang": 0.38,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 292,
+      "dollar": 0.0,
+      "bang": 0.662,
+      "money": 0.0,
+      "n000": 0.64,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 1.529,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 292,
+      "dollar": 0.0,
+      "bang": 0.662,
+      "money": 0.0,
+      "n000": 0.64,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 1.529,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 292,
+      "dollar": 0.0,
+      "bang": 0.662,
+      "money": 0.0,
+      "n000": 0.64,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 1.529,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 168,
+      "dollar": 0.0,
+      "bang": 0.462,
+      "money": 0.0,
+      "n000": 0.79,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 1.529,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 74,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 36,
+      "dollar": 0.0,
+      "bang": 1.907,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 67,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 211,
+      "dollar": 0.177,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 78,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 507,
+      "dollar": 0.119,
+      "bang": 0.0,
+      "money": 0.12,
+      "n000": 1.13,
+      "make": 0.12,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 146,
+      "dollar": 0.0,
+      "bang": 0.542,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 588,
+      "dollar": 0.118,
+      "bang": 0.054,
+      "money": 0.2,
+      "n000": 0.15,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 583,
+      "dollar": 0.118,
+      "bang": 0.054,
+      "money": 0.2,
+      "n000": 0.15,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 308,
+      "dollar": 0.0,
+      "bang": 0.542,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 195,
+      "dollar": 0.331,
+      "bang": 1.158,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 588,
+      "dollar": 0.118,
+      "bang": 0.054,
+      "money": 0.2,
+      "n000": 0.15,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 583,
+      "dollar": 0.118,
+      "bang": 0.054,
+      "money": 0.2,
+      "n000": 0.15,
+      "make": 0.05,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2413,
+      "dollar": 1.281,
+      "bang": 0.335,
+      "money": 0.5,
+      "n000": 0.5,
+      "make": 0.5,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 982,
+      "dollar": 0.024,
+      "bang": 0.271,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 278,
+      "dollar": 0.322,
+      "bang": 0.092,
+      "money": 0.0,
+      "n000": 0.61,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 657,
+      "dollar": 0.054,
+      "bang": 1.194,
+      "money": 0.33,
+      "n000": 0.0,
+      "make": 0.16,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 164,
+      "dollar": 0.178,
+      "bang": 0.089,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.5,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 170,
+      "dollar": 0.0,
+      "bang": 0.427,
+      "money": 0.59,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 114,
+      "dollar": 0.212,
+      "bang": 0.706,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 450,
+      "dollar": 0.149,
+      "bang": 0.97,
+      "money": 0.41,
+      "n000": 0.82,
+      "make": 0.41,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 285,
+      "dollar": 0.179,
+      "bang": 0.598,
+      "money": 0.0,
+      "n000": 0.38,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 95,
+      "dollar": 0.0,
+      "bang": 0.121,
+      "money": 0.4,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 144,
+      "dollar": 0.0,
+      "bang": 0.606,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 174,
+      "dollar": 0.174,
+      "bang": 0.299,
+      "money": 0.0,
+      "n000": 0.64,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 76,
+      "dollar": 0.431,
+      "bang": 0.215,
+      "money": 0.0,
+      "n000": 2.53,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 730,
+      "dollar": 0.16,
+      "bang": 0.16,
+      "money": 0.0,
+      "n000": 0.19,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 730,
+      "dollar": 0.16,
+      "bang": 0.16,
+      "money": 0.0,
+      "n000": 0.19,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 304,
+      "dollar": 0.541,
+      "bang": 0.12,
+      "money": 0.33,
+      "n000": 1.66,
+      "make": 1.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 11,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 69,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 304,
+      "dollar": 0.541,
+      "bang": 0.12,
+      "money": 0.33,
+      "n000": 1.66,
+      "make": 1.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 36,
+      "dollar": 0.279,
+      "bang": 0.558,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 2413,
+      "dollar": 1.281,
+      "bang": 0.335,
+      "money": 0.5,
+      "n000": 0.5,
+      "make": 0.5,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 36,
+      "dollar": 0.279,
+      "bang": 0.558,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 13,
+      "dollar": 0.0,
+      "bang": 0.715,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 77,
+      "dollar": 0.431,
+      "bang": 0.215,
+      "money": 0.0,
+      "n000": 2.53,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 304,
+      "dollar": 0.541,
+      "bang": 0.12,
+      "money": 0.33,
+      "n000": 1.66,
+      "make": 1.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 1001,
+      "dollar": 0.023,
+      "bang": 0.865,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 123,
+      "dollar": 0.126,
+      "bang": 0.063,
+      "money": 0.72,
+      "n000": 0.0,
+      "make": 0.36,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 131,
+      "dollar": 0.121,
+      "bang": 0.565,
+      "money": 0.27,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 114,
+      "dollar": 0.0,
+      "bang": 0.261,
+      "money": 1.56,
+      "n000": 0.0,
+      "make": 0.39,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 190,
+      "dollar": 0.33,
+      "bang": 1.32,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 33,
+      "dollar": 0.0,
+      "bang": 0.2,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.67,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 120,
+      "dollar": 0.0,
+      "bang": 1.055,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 203,
+      "dollar": 0.0,
+      "bang": 0.484,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 38,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 291,
+      "dollar": 0.117,
+      "bang": 0.117,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 117,
+      "dollar": 0.0,
+      "bang": 0.135,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 200,
+      "dollar": 0.0,
+      "bang": 1.088,
+      "money": 0.42,
+      "n000": 0.0,
+      "make": 0.42,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 607,
+      "dollar": 0.185,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 642,
+      "dollar": 0.146,
+      "bang": 0.146,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 102,
+      "dollar": 0.816,
+      "bang": 0.081,
+      "money": 0.0,
+      "n000": 1.38,
+      "make": 0.46,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 437,
+      "dollar": 0.0,
+      "bang": 0.265,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.14,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 119,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 102,
+      "dollar": 0.816,
+      "bang": 0.081,
+      "money": 0.0,
+      "n000": 1.38,
+      "make": 0.46,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 111,
+      "dollar": 0.0,
+      "bang": 0.517,
+      "money": 0.62,
+      "n000": 0.0,
+      "make": 0.62,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 108,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 260,
+      "dollar": 0.0,
+      "bang": 0.7,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 944,
+      "dollar": 0.024,
+      "bang": 0.567,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 172,
+      "dollar": 0.0,
+      "bang": 0.518,
+      "money": 0.57,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 566,
+      "dollar": 0.0,
+      "bang": 0.31,
+      "money": 0.52,
+      "n000": 0.0,
+      "make": 0.52,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 574,
+      "dollar": 0.013,
+      "bang": 0.095,
+      "money": 0.08,
+      "n000": 0.34,
+      "make": 0.17,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 172,
+      "dollar": 0.0,
+      "bang": 0.892,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 130,
+      "dollar": 0.0,
+      "bang": 1.443,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 49,
+      "dollar": 0.0,
+      "bang": 0.889,
+      "money": 0.0,
+      "n000": 0.78,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 85,
+      "dollar": 0.0,
+      "bang": 0.968,
+      "money": 0.0,
+      "n000": 1.02,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 11,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 152,
+      "dollar": 0.145,
+      "bang": 0.944,
+      "money": 0.44,
+      "n000": 0.0,
+      "make": 0.44,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 326,
+      "dollar": 0.0,
+      "bang": 0.583,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 85,
+      "dollar": 0.0,
+      "bang": 0.969,
+      "money": 0.0,
+      "n000": 1.02,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 694,
+      "dollar": 0.258,
+      "bang": 0.258,
+      "money": 0.34,
+      "n000": 0.34,
+      "make": 0.34,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 537,
+      "dollar": 0.259,
+      "bang": 0.259,
+      "money": 0.34,
+      "n000": 0.34,
+      "make": 0.34,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 179,
+      "dollar": 0.0,
+      "bang": 0.835,
+      "money": 0.43,
+      "n000": 0.0,
+      "make": 0.43,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 153,
+      "dollar": 0.144,
+      "bang": 1.083,
+      "money": 0.44,
+      "n000": 0.0,
+      "make": 0.44,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 68,
+      "dollar": 0.0,
+      "bang": 0.118,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 7,
+      "dollar": 0.0,
+      "bang": 1.754,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 303,
+      "dollar": 0.14,
+      "bang": 0.032,
+      "money": 0.23,
+      "n000": 0.23,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 66,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 240,
+      "dollar": 0.186,
+      "bang": 0.28,
+      "money": 0.53,
+      "n000": 0.53,
+      "make": 2.12,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 96,
+      "dollar": 0.0,
+      "bang": 0.135,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 51,
+      "dollar": 0.0,
+      "bang": 0.0,
+      "money": 0.0,
+      "n000": 0.56,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 164,
+      "dollar": 0.069,
+      "bang": 0.83,
+      "money": 1.32,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 101,
+      "dollar": 0.0,
+      "bang": 1.192,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 979,
+      "dollar": 0.046,
+      "bang": 0.585,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 574,
+      "dollar": 0.013,
+      "bang": 0.095,
+      "money": 0.08,
+      "n000": 0.34,
+      "make": 0.17,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 63,
+      "dollar": 0.147,
+      "bang": 0.294,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.0,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 181,
+      "dollar": 0.252,
+      "bang": 1.18,
+      "money": 0.0,
+      "n000": 1.62,
+      "make": 0.54,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 574,
+      "dollar": 0.013,
+      "bang": 0.108,
+      "money": 0.08,
+      "n000": 0.34,
+      "make": 0.17,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 180,
+      "dollar": 0.253,
+      "bang": 1.183,
+      "money": 0.0,
+      "n000": 1.61,
+      "make": 0.53,
+      "yesno": "y"
+    },
+    {
+      "crl.tot": 91,
+      "dollar": 0.0,
+      "bang": 0.067,
+      "money": 0.0,
+      "n000": 0.0,
+      "make": 0.51,
+      "yesno": "y"
+    }
+  ]
+}

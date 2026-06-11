@@ -1,0 +1,387 @@
+[
+  {
+    "id": "q000",
+    "dataset": "bob_ross_elements",
+    "question": "Show the most common painting elements in Bob Ross episodes as a bar chart.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q001",
+    "dataset": "nhl_birth_countries",
+    "question": "Create a bar chart showing how many NHL players were born in each country.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q002",
+    "dataset": "eu_drugs_by_area",
+    "question": "Visualize the number of EU-authorised drugs by therapeutic area.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q003",
+    "dataset": "haunted_places_by_state",
+    "question": "Which US states have the most reported haunted places? Show as a bar chart.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q004",
+    "dataset": "us_airports_by_state",
+    "question": "Compare the number of airports across US states.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q005",
+    "dataset": "refugees_2022",
+    "question": "Show the top refugee-producing countries in 2022.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q006",
+    "dataset": "rladies_events",
+    "question": "Show the number of R-Ladies events per year.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q007",
+    "dataset": "nhl_births_decade",
+    "question": "Show NHL player birth counts by decade, with bars colored by country.",
+    "expected_chart_type": "Stacked Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q008",
+    "dataset": "squirrel_activity",
+    "question": "Compare squirrel activity rates (running, eating, foraging) by fur color using grouped bars.",
+    "expected_chart_type": "Grouped Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q009",
+    "dataset": "trash_wheel",
+    "question": "Show total plastic bottles collected by each trash wheel per year as stacked bars.",
+    "expected_chart_type": "Stacked Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q010",
+    "dataset": "iowa_electricity",
+    "question": "Show Iowa electricity generation by source over time as a stacked bar chart.",
+    "expected_chart_type": "Stacked Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q011",
+    "dataset": "tech_stocks_monthly",
+    "question": "Plot the monthly average closing price for each tech company over time.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q012",
+    "dataset": "life_expectancy",
+    "question": "Show how life expectancy has changed since 1950 for different countries.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q013",
+    "dataset": "energy_trends",
+    "question": "Plot the trend of renewable energy share over time for major countries.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q014",
+    "dataset": "global_temps",
+    "question": "Show the annual global temperature anomaly trend over time.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q015",
+    "dataset": "union_wages",
+    "question": "Plot union vs non-union wages over time as two lines.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q016",
+    "dataset": "london_marathon",
+    "question": "Show how the number of marathon finishers has changed over the years.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q017",
+    "dataset": "stocks",
+    "question": "Plot stock prices over time for different companies.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q018",
+    "dataset": "drwho_episodes",
+    "question": "Show Doctor Who UK viewership trends across episodes.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q019",
+    "dataset": "egg_production",
+    "question": "Show egg production trends over time by production type as a stacked area chart.",
+    "expected_chart_type": "Area Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q020",
+    "dataset": "canada_births",
+    "question": "Show monthly birth trends in Canada over time as an area chart.",
+    "expected_chart_type": "Area Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q021",
+    "dataset": "taylor_songs_features",
+    "question": "Create a scatter plot of danceability vs energy for Taylor Swift songs, colored by album.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q022",
+    "dataset": "movie_age_gaps",
+    "question": "Plot age difference vs release year for movie couples.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q023",
+    "dataset": "holiday_movies",
+    "question": "Create a scatter plot of movie rating vs number of votes for holiday movies.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q024",
+    "dataset": "cats_uk",
+    "question": "Plot hours spent indoors vs age for UK cats, colored by sex.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q025",
+    "dataset": "us_states",
+    "question": "Create a scatter plot of state population vs area.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q026",
+    "dataset": "spam_features",
+    "question": "Plot the 'dollar' feature vs 'bang' feature for spam classification, colored by spam label.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q027",
+    "dataset": "survivalists",
+    "question": "Plot age vs days lasted for Alone survivalists, colored by gender.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q028",
+    "dataset": "top_prog_languages",
+    "question": "Scatter plot of year appeared vs number of users for top programming languages.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q029",
+    "dataset": "seattle_temps_monthly",
+    "question": "Create a heatmap of average temperature by month and year for Seattle.",
+    "expected_chart_type": "Heatmap",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q030",
+    "dataset": "tornado_counts",
+    "question": "Show tornado counts as a heatmap with year on one axis and magnitude on the other.",
+    "expected_chart_type": "Heatmap",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q031",
+    "dataset": "richmond_fwords",
+    "question": "Create a heatmap of F-word counts by season and episode.",
+    "expected_chart_type": "Heatmap",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q032",
+    "dataset": "global_human_day",
+    "question": "Show how humanity spends an average day as a pie chart.",
+    "expected_chart_type": "Pie Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q033",
+    "dataset": "energy_mix_2021",
+    "question": "Show the energy mix (renewable, fossil, nuclear) for a single country as a pie chart.",
+    "expected_chart_type": "Pie Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q034",
+    "dataset": "movie_age_gaps",
+    "question": "Show the distribution of age differences in movie couples as a histogram.",
+    "expected_chart_type": "Histogram",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q035",
+    "dataset": "survivalists",
+    "question": "Show the distribution of days lasted by Alone contestants.",
+    "expected_chart_type": "Histogram",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q036",
+    "dataset": "taylor_songs_features",
+    "question": "Show the distribution of song tempos across Taylor Swift's catalog.",
+    "expected_chart_type": "Histogram",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q037",
+    "dataset": "hot_ones_sauces",
+    "question": "Show the distribution of Scoville ratings by sauce position (1-10) as box plots.",
+    "expected_chart_type": "Boxplot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q038",
+    "dataset": "taylor_songs_features",
+    "question": "Compare the distribution of valence scores across Taylor Swift albums using box plots.",
+    "expected_chart_type": "Boxplot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q039",
+    "dataset": "energy_mix_2021",
+    "question": "Create a bar chart of renewable energy share by country, faceted by whether fossil share is above or below 50%.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "advanced"
+  },
+  {
+    "id": "q040",
+    "dataset": "soccer_results",
+    "question": "Show the distribution of home goals, faceted by match result (H/D/A).",
+    "expected_chart_type": "Histogram",
+    "difficulty": "advanced"
+  },
+  {
+    "id": "q041",
+    "dataset": "seattle_weather_2015",
+    "question": "Show daily temperature range by weather type, one panel per weather category.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "advanced"
+  },
+  {
+    "id": "q042",
+    "dataset": "artists_nationality",
+    "question": "Show artist count by nationality as a lollipop chart.",
+    "expected_chart_type": "Lollipop Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q043",
+    "dataset": "prog_languages_decade",
+    "question": "Show new programming languages per decade as a lollipop chart.",
+    "expected_chart_type": "Lollipop Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q044",
+    "dataset": "valentines_spending",
+    "question": "Show how Valentine's Day per-person spending changed year over year as a waterfall chart.",
+    "expected_chart_type": "Waterfall Chart",
+    "difficulty": "advanced"
+  },
+  {
+    "id": "q045",
+    "dataset": "tech_stocks_monthly",
+    "question": "What's the best way to compare tech stock performance in 2022?",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q046",
+    "dataset": "global_temps",
+    "question": "Visualize the relationship between seasonal and annual temperature anomalies.",
+    "expected_chart_type": "Scatter Plot",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q047",
+    "dataset": "seattle_weather_2015",
+    "question": "What weather patterns can you show from this Seattle weather data?",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q048",
+    "dataset": "sleep_by_country",
+    "question": "Visualize which regions of the world sleep the most.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q049",
+    "dataset": "groundhog_predictions",
+    "question": "Show whether groundhogs tend to predict more shadow or no-shadow.",
+    "expected_chart_type": "Stacked Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q050",
+    "dataset": "notable_deaths_feb29",
+    "question": "Visualize the ages at death of notable people who died on February 29.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  },
+  {
+    "id": "q051",
+    "dataset": "r_grants",
+    "question": "Show R Consortium ISC grant funding amounts over time.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q052",
+    "dataset": "fair_use_cases",
+    "question": "Visualize the outcomes of US fair use cases over time.",
+    "expected_chart_type": "Stacked Bar Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q053",
+    "dataset": "us_employment",
+    "question": "Show employment trends across major sectors over time.",
+    "expected_chart_type": "Line Chart",
+    "difficulty": "moderate"
+  },
+  {
+    "id": "q054",
+    "dataset": "taylor_albums",
+    "question": "Compare Taylor Swift album ratings visually.",
+    "expected_chart_type": "Bar Chart",
+    "difficulty": "basic"
+  }
+]

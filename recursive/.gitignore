@@ -1,0 +1,6 @@
+# Evaluation results (large, generated data)
+results/
+rendered/
+
+# Python cache
+__pycache__/

@@ -1,0 +1,527 @@
+{
+  "meta": {
+    "name": "r_grants",
+    "description": "R Consortium ISC grant funding",
+    "source": "tidytuesday/2024-02-20/isc_grants.csv",
+    "transformation": "Select key columns.",
+    "num_rows": 85,
+    "columns": {
+      "year": "int64",
+      "group": "int64",
+      "title": "str",
+      "funded": "int64"
+    }
+  },
+  "data": [
+    {
+      "year": 2023,
+      "group": 1,
+      "title": "The future of DBI (extension 1)",
+      "funded": 10000
+    },
+    {
+      "year": 2023,
+      "group": 1,
+      "title": "Secure TLS Communications for R",
+      "funded": 10000
+    },
+    {
+      "year": 2023,
+      "group": 1,
+      "title": "volcalc: Calculate predicted volatility of chemical compounds",
+      "funded": 12265
+    },
+    {
+      "year": 2023,
+      "group": 1,
+      "title": "autotest: Automated testing of R packages",
+      "funded": 3000
+    },
+    {
+      "year": 2023,
+      "group": 1,
+      "title": "api2r: An R Package for Auto-Generating R API Clients",
+      "funded": 15750
+    },
+    {
+      "year": 2022,
+      "group": 2,
+      "title": "D3po: R Package for Easy Interactive D3 Visualization With Shiny",
+      "funded": 8000
+    },
+    {
+      "year": 2022,
+      "group": 2,
+      "title": "Tooling and Guidance for Translations of Markdown-Based R Content (Quarto, R Markdown)",
+      "funded": 8000
+    },
+    {
+      "year": 2022,
+      "group": 2,
+      "title": "Online Submission and Review Infrastructure for the R Journal",
+      "funded": 22000
+    },
+    {
+      "year": 2022,
+      "group": 2,
+      "title": "Upgrading SatRdays Website Template",
+      "funded": 6000
+    },
+    {
+      "year": 2022,
+      "group": 2,
+      "title": "Building the \u201cSpatial Data Science With R\u201d Educational Materials and Pedagogical Infrastructure",
+      "funded": 25000
+    },
+    {
+      "year": 2022,
+      "group": 1,
+      "title": "Iterdatasampler: Expanding the lterdatasampler package",
+      "funded": 15000
+    },
+    {
+      "year": 2022,
+      "group": 1,
+      "title": "Femr: Finite Element Method for Solving PDEs in R",
+      "funded": 20000
+    },
+    {
+      "year": 2022,
+      "group": 1,
+      "title": "Continuing to Improve R\u2019s Ability to Visualise and Explore Missing Values",
+      "funded": 5000
+    },
+    {
+      "year": 2022,
+      "group": 1,
+      "title": "Dengue Data Hub",
+      "funded": 2000
+    },
+    {
+      "year": 2021,
+      "group": 2,
+      "title": "Preparing CRAN for the Retirement of rgdal, rgeos and maptools",
+      "funded": 17000
+    },
+    {
+      "year": 2021,
+      "group": 2,
+      "title": "R Package for the ICESat-2 Altimeter Data",
+      "funded": 4840
+    },
+    {
+      "year": 2021,
+      "group": 2,
+      "title": "The Future of DBI",
+      "funded": 17000
+    },
+    {
+      "year": 2021,
+      "group": 2,
+      "title": "Data Science and Machine Learning Training Workshop Using R Programming Language",
+      "funded": 5200
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Accounting/Auditing Gap-Analysis",
+      "funded": 7000
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Extendr - Rust extensions for R.",
+      "funded": 15000
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Google Earth Engine with R",
+      "funded": 5500
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Improving Translations in R",
+      "funded": 0
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Minimizing wastage of blood products",
+      "funded": 11200
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "R for Engineering Applications",
+      "funded": 3000
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "Setting up an R-Girls-Schools Network",
+      "funded": 5000
+    },
+    {
+      "year": 2021,
+      "group": 1,
+      "title": "deposits: Deposit Research Data Anywhere",
+      "funded": 16000
+    },
+    {
+      "year": 2020,
+      "group": 2,
+      "title": "Development and maintenance of the Windows build infrastructure (Top level project proposal)",
+      "funded": 46800
+    },
+    {
+      "year": 2020,
+      "group": 2,
+      "title": "Interactive visualisations in R via R-to-JavaScript-transpilation",
+      "funded": 9688
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "Consolidating R-Ladies Global organisational guidance and wisdom",
+      "funded": 4000
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "Database interoperability for spatial objects in R",
+      "funded": 6000
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "HTTP testing in R Book",
+      "funded": 16000
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "MATTER 2.0: larger-than-memory data for R",
+      "funded": 35000
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "Spatiotemporal Data and Analytics",
+      "funded": 10000
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "The RECON COVID-19 challenge: leveraging the R community to improve COVID-19 analytics resources",
+      "funded": 23300
+    },
+    {
+      "year": 2020,
+      "group": 1,
+      "title": "sftrack v1.0: Stable API for a broad adoption",
+      "funded": 5000
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "An External R Sampling Profiler",
+      "funded": 8500
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "CVXR",
+      "funded": 9500
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "Flipbooks",
+      "funded": 6699
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "R Package Risk Assessment Application",
+      "funded": 16800
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "RcppDeepState, a simple way to fuzz test compiled code in R packages",
+      "funded": 34000
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "Symbolic mathematics in R with SymPy",
+      "funded": 10000
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "Tidy spatial networks in R",
+      "funded": 9000
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "d3po: R package for easy interactive D3 visualization with Shiny",
+      "funded": 4000
+    },
+    {
+      "year": 2019,
+      "group": 2,
+      "title": "webchem: accessing chemical information from the web",
+      "funded": 6000
+    },
+    {
+      "year": 2019,
+      "group": 1,
+      "title": "Enhancing usability of sample size calculations and power analyses in R with a Task View page and accompanying tutorials",
+      "funded": 13912
+    },
+    {
+      "year": 2019,
+      "group": 1,
+      "title": "Expanding the \u2018metaverse'; an R ecosystem for meta-research",
+      "funded": 20171
+    },
+    {
+      "year": 2019,
+      "group": 1,
+      "title": "R-global: analysing spatial data globally",
+      "funded": 10000
+    },
+    {
+      "year": 2019,
+      "group": 1,
+      "title": "sftraj: A central class for tracking and movement data",
+      "funded": 10000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Catalyzing R-hub adoption through R package developer advocacy",
+      "funded": 46050
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Data-Driven Discovery and Tracking of R Consortium Activities",
+      "funded": 5250
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Editorial assistance for the R Journal",
+      "funded": 50000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Licensing R - Guidelines and tools",
+      "funded": 6000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Next-generation text layout in grid and ggplot2",
+      "funded": 25000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Strengthening of R in support of spatial data infrastructures management : geometa and ows4R R packages",
+      "funded": 20000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "Symbolic Formulae for Linear Mixed Models",
+      "funded": 6000
+    },
+    {
+      "year": 2018,
+      "group": 2,
+      "title": "serveRless",
+      "funded": 10000
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "A unified platform for missing values methods and workflows",
+      "funded": 14000
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "Developing Tools and Templates for Teaching Materials",
+      "funded": 10000
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "Maintaining DBI",
+      "funded": 26500
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "Ongoing infrastructural development for R on Windows and MacOS",
+      "funded": 62400
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "PSI application for collaboration to create online R package validation repository",
+      "funded": 4000
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "Proposal to Create an R Consortium Working Group Focused on US Census Data",
+      "funded": 4000
+    },
+    {
+      "year": 2018,
+      "group": 1,
+      "title": "histoRicalg -- Preserving and Transfering Algorithmic Knowledge",
+      "funded": 772
+    },
+    {
+      "year": 2017,
+      "group": 2,
+      "title": "An Earth data processing backend for testing and evaluating stars",
+      "funded": 5000
+    },
+    {
+      "year": 2017,
+      "group": 2,
+      "title": "Future Minimal API: Specification with Backend Conformance Test Suite",
+      "funded": 10000
+    },
+    {
+      "year": 2017,
+      "group": 2,
+      "title": "Quantities for R",
+      "funded": 10000
+    },
+    {
+      "year": 2017,
+      "group": 2,
+      "title": "Refactoring and updating the SWIG R module",
+      "funded": 10000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Adding Linux Binary Builders to CRAN",
+      "funded": 15000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "An infrastructure for building R packages on MacOS Abstract with homebrew",
+      "funded": 12000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Conference Management System for R Consortium Supported Conferences",
+      "funded": 32000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Continued Development of the R API for Distributed Computing",
+      "funded": 15000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Establishing DBI",
+      "funded": 26500
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Forwards Workshops for Women and Girls",
+      "funded": 25000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "Joint profiling of native and R code",
+      "funded": 11000
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "School of Data Material Development",
+      "funded": 11200
+    },
+    {
+      "year": 2017,
+      "group": 1,
+      "title": "stars: Scalable, spatiotemporal tidy arrays for R",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 2,
+      "title": "Interactive data manipulation in mapview",
+      "funded": 9100
+    },
+    {
+      "year": 2016,
+      "group": 2,
+      "title": "R Documentation Task Force",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "A unified framework for Distributed Computing in R",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "Improving DBI",
+      "funded": 26500
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "R Implimentation Optimization Tooling (RIOT) Workshops",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "RL10N: R Localization Proposal",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "SatRDays",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "Simple Features for R",
+      "funded": 10000
+    },
+    {
+      "year": 2016,
+      "group": 1,
+      "title": "Software Carpentry R Instructor Training",
+      "funded": 10000
+    }
+  ]
+}

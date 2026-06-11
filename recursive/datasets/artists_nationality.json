@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "name": "artists_nationality",
+    "description": "Artists in art history textbooks by nationality",
+    "source": "tidytuesday/2023-01-17/artists.csv",
+    "transformation": "Group by nationality, count artists and avg space ratio. Top 15.",
+    "num_rows": 15,
+    "columns": {
+      "artist_nationality": "str",
+      "count": "int64",
+      "avg_space": "float64"
+    }
+  },
+  "data": [
+    {
+      "artist_nationality": "American",
+      "count": 908,
+      "avg_space": 0.4093716818
+    },
+    {
+      "artist_nationality": "French",
+      "count": 870,
+      "avg_space": 0.7095192401
+    },
+    {
+      "artist_nationality": "British",
+      "count": 317,
+      "avg_space": 0.4501979119
+    },
+    {
+      "artist_nationality": "German",
+      "count": 256,
+      "avg_space": 0.4178545247
+    },
+    {
+      "artist_nationality": "Spanish",
+      "count": 94,
+      "avg_space": 1.2514680082
+    },
+    {
+      "artist_nationality": "Italian",
+      "count": 74,
+      "avg_space": 0.3390864923
+    },
+    {
+      "artist_nationality": "Russian",
+      "count": 62,
+      "avg_space": 0.5279159609
+    },
+    {
+      "artist_nationality": "Japanese",
+      "count": 56,
+      "avg_space": 0.3952744977
+    },
+    {
+      "artist_nationality": "Mexican",
+      "count": 52,
+      "avg_space": 0.4507067241
+    },
+    {
+      "artist_nationality": "Dutch",
+      "count": 50,
+      "avg_space": 0.8904808096
+    },
+    {
+      "artist_nationality": "Swiss",
+      "count": 44,
+      "avg_space": 0.4255641554
+    },
+    {
+      "artist_nationality": "Austrian",
+      "count": 36,
+      "avg_space": 0.4205094517
+    },
+    {
+      "artist_nationality": "Belgian",
+      "count": 30,
+      "avg_space": 0.3203013987
+    },
+    {
+      "artist_nationality": "Swiss-German",
+      "count": 22,
+      "avg_space": 0.7641915359
+    },
+    {
+      "artist_nationality": "Norwegian",
+      "count": 21,
+      "avg_space": 0.3333313712
+    }
+  ]
+}

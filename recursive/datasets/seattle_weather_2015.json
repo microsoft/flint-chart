@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "seattle_weather_2015",
+    "description": "Seattle daily weather in 2015",
+    "source": "vega-datasets/seattle-weather.csv",
+    "transformation": "Filter to 2015, select key columns.",
+    "num_rows": 200,
+    "columns": {
+      "date": "datetime64[us]",
+      "precipitation": "float64",
+      "temp_max": "float64",
+      "temp_min": "float64",
+      "wind": "float64",
+      "weather": "str"
+    }
+  },
+  "data": [
+    {
+      "date": "2015-01-01T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 5.6,
+      "temp_min": -3.2,
+      "wind": 1.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-01-02T00:00:00.000",
+      "precipitation": 1.5,
+      "temp_max": 5.6,
+      "temp_min": 0.0,
+      "wind": 2.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-03T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 5.0,
+      "temp_min": 1.7,
+      "wind": 1.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-04T00:00:00.000",
+      "precipitation": 10.2,
+      "temp_max": 10.6,
+      "temp_min": 3.3,
+      "wind": 4.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-05T00:00:00.000",
+      "precipitation": 8.1,
+      "temp_max": 12.2,
+      "temp_min": 9.4,
+      "wind": 6.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-06T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 6.1,
+      "wind": 1.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-07T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 7.8,
+      "temp_min": 5.6,
+      "wind": 1.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 7.8,
+      "temp_min": 1.7,
+      "wind": 2.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-09T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 10.0,
+      "temp_min": 3.3,
+      "wind": 0.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-10T00:00:00.000",
+      "precipitation": 5.8,
+      "temp_max": 7.8,
+      "temp_min": 6.1,
+      "wind": 0.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-11T00:00:00.000",
+      "precipitation": 1.5,
+      "temp_max": 9.4,
+      "temp_min": 7.2,
+      "wind": 1.1,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-12T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.1,
+      "temp_min": 4.4,
+      "wind": 1.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-13T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 9.4,
+      "temp_min": 2.8,
+      "wind": 2.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-14T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 6.1,
+      "temp_min": 0.6,
+      "wind": 2.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-15T00:00:00.000",
+      "precipitation": 9.7,
+      "temp_max": 7.8,
+      "temp_min": 1.1,
+      "wind": 3.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.7,
+      "temp_min": 5.6,
+      "wind": 4.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-17T00:00:00.000",
+      "precipitation": 26.2,
+      "temp_max": 13.3,
+      "temp_min": 3.3,
+      "wind": 2.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-18T00:00:00.000",
+      "precipitation": 21.3,
+      "temp_max": 13.9,
+      "temp_min": 7.2,
+      "wind": 6.6,
+      "weather": "rain"
+    },
+    {
+      "date": "2015-01-19T00:00:00.000",
+      "precipitation": 0.5,
+      "temp_max": 10.0,
+      "temp_min": 6.1,
+      "wind": 2.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-01-20T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 10.0,
+      "temp_min": 3.3,
+      "wind": 3.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-21T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 7.2,
+      "temp_min": -0.5,
+      "wind": 1.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-22T00:00:00.000",
+      "precipitation": 0.8,
+      "temp_max": 9.4,
+      "temp_min": 6.1,
+      "wind": 1.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-23T00:00:00.000",
+      "precipitation": 5.8,
+      "temp_max": 12.2,
+      "temp_min": 8.3,
+      "wind": 2.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-24T00:00:00.000",
+      "precipitation": 0.5,
+      "temp_max": 14.4,
+      "temp_min": 11.1,
+      "wind": 3.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-25T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 7.2,
+      "wind": 1.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-26T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.1,
+      "temp_min": 6.1,
+      "wind": 2.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-27T00:00:00.000",
+      "precipitation": 0.8,
+      "temp_max": 11.1,
+      "temp_min": 8.3,
+      "wind": 2.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-28T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 5.0,
+      "wind": 1.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-29T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 3.3,
+      "wind": 2.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-01-30T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 8.3,
+      "temp_min": 1.1,
+      "wind": 0.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-01-31T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 7.2,
+      "temp_min": 3.3,
+      "wind": 1.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-01T00:00:00.000",
+      "precipitation": 1.5,
+      "temp_max": 9.4,
+      "temp_min": 4.4,
+      "wind": 2.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-02T00:00:00.000",
+      "precipitation": 7.4,
+      "temp_max": 11.1,
+      "temp_min": 5.0,
+      "wind": 4.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-03T00:00:00.000",
+      "precipitation": 1.3,
+      "temp_max": 10.0,
+      "temp_min": 5.6,
+      "wind": 1.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-04T00:00:00.000",
+      "precipitation": 8.4,
+      "temp_max": 10.6,
+      "temp_min": 4.4,
+      "wind": 1.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-05T00:00:00.000",
+      "precipitation": 26.2,
+      "temp_max": 13.3,
+      "temp_min": 8.3,
+      "wind": 4.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-06T00:00:00.000",
+      "precipitation": 17.3,
+      "temp_max": 14.4,
+      "temp_min": 10.0,
+      "wind": 4.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-07T00:00:00.000",
+      "precipitation": 23.6,
+      "temp_max": 12.2,
+      "temp_min": 9.4,
+      "wind": 4.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-08T00:00:00.000",
+      "precipitation": 3.6,
+      "temp_max": 15.0,
+      "temp_min": 8.3,
+      "wind": 3.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-09T00:00:00.000",
+      "precipitation": 6.1,
+      "temp_max": 13.3,
+      "temp_min": 8.3,
+      "wind": 2.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-10T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 12.8,
+      "temp_min": 8.3,
+      "wind": 4.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-11T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.8,
+      "temp_min": 5.6,
+      "wind": 1.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-12T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 16.7,
+      "temp_min": 9.4,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-13T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 6.7,
+      "wind": 1.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-14T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 14.4,
+      "temp_min": 6.7,
+      "wind": 2.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-15T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 3.9,
+      "wind": 4.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.0,
+      "temp_min": 5.6,
+      "wind": 6.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-17T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.1,
+      "temp_min": 4.4,
+      "wind": 4.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 4.4,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-19T00:00:00.000",
+      "precipitation": 4.6,
+      "temp_max": 10.6,
+      "temp_min": 8.3,
+      "wind": 2.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-20T00:00:00.000",
+      "precipitation": 0.8,
+      "temp_max": 11.1,
+      "temp_min": 7.2,
+      "wind": 0.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-21T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 5.6,
+      "wind": 4.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-22T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.7,
+      "temp_min": 3.3,
+      "wind": 4.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-23T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.8,
+      "temp_min": 0.6,
+      "wind": 1.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-24T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.1,
+      "temp_min": 2.2,
+      "wind": 1.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-02-25T00:00:00.000",
+      "precipitation": 4.1,
+      "temp_max": 10.0,
+      "temp_min": 6.7,
+      "wind": 1.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-26T00:00:00.000",
+      "precipitation": 9.4,
+      "temp_max": 11.7,
+      "temp_min": 7.8,
+      "wind": 1.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-27T00:00:00.000",
+      "precipitation": 18.3,
+      "temp_max": 10.0,
+      "temp_min": 6.7,
+      "wind": 4.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-02-28T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.2,
+      "temp_min": 3.3,
+      "wind": 5.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-01T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.1,
+      "temp_min": 1.1,
+      "wind": 2.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-02T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.1,
+      "temp_min": 4.4,
+      "wind": 4.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-03T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 10.6,
+      "temp_min": 0.0,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-04T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.8,
+      "temp_min": -0.5,
+      "wind": 1.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-05T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 13.3,
+      "temp_min": 2.8,
+      "wind": 1.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-06T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.0,
+      "temp_min": 3.3,
+      "wind": 1.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-07T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.7,
+      "temp_min": 3.9,
+      "wind": 2.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 3.9,
+      "wind": 1.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-09T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 14.4,
+      "temp_min": 4.4,
+      "wind": 1.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-10T00:00:00.000",
+      "precipitation": 0.8,
+      "temp_max": 13.3,
+      "temp_min": 5.0,
+      "wind": 2.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-11T00:00:00.000",
+      "precipitation": 2.5,
+      "temp_max": 14.4,
+      "temp_min": 8.9,
+      "wind": 3.1,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-12T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.8,
+      "temp_min": 9.4,
+      "wind": 3.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-13T00:00:00.000",
+      "precipitation": 2.0,
+      "temp_max": 17.2,
+      "temp_min": 7.8,
+      "wind": 2.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-14T00:00:00.000",
+      "precipitation": 17.0,
+      "temp_max": 13.9,
+      "temp_min": 9.4,
+      "wind": 3.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-15T00:00:00.000",
+      "precipitation": 55.9,
+      "temp_max": 10.6,
+      "temp_min": 6.1,
+      "wind": 4.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-16T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 13.9,
+      "temp_min": 6.1,
+      "wind": 3.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-17T00:00:00.000",
+      "precipitation": 0.8,
+      "temp_max": 13.3,
+      "temp_min": 4.4,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 7.2,
+      "wind": 2.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-19T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 8.3,
+      "wind": 1.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-20T00:00:00.000",
+      "precipitation": 4.1,
+      "temp_max": 13.9,
+      "temp_min": 8.9,
+      "wind": 1.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-21T00:00:00.000",
+      "precipitation": 3.8,
+      "temp_max": 13.3,
+      "temp_min": 8.3,
+      "wind": 4.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-22T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 11.7,
+      "temp_min": 6.1,
+      "wind": 2.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-23T00:00:00.000",
+      "precipitation": 8.1,
+      "temp_max": 11.1,
+      "temp_min": 5.6,
+      "wind": 2.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-24T00:00:00.000",
+      "precipitation": 7.6,
+      "temp_max": 12.8,
+      "temp_min": 6.1,
+      "wind": 3.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-25T00:00:00.000",
+      "precipitation": 5.1,
+      "temp_max": 14.4,
+      "temp_min": 7.2,
+      "wind": 4.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-26T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.6,
+      "temp_min": 10.0,
+      "wind": 2.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-27T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 18.3,
+      "temp_min": 8.9,
+      "wind": 4.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-28T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 9.4,
+      "wind": 5.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-29T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 8.9,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-03-30T00:00:00.000",
+      "precipitation": 1.8,
+      "temp_max": 17.8,
+      "temp_min": 10.6,
+      "wind": 2.9,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-03-31T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 12.8,
+      "temp_min": 6.1,
+      "wind": 4.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-01T00:00:00.000",
+      "precipitation": 5.1,
+      "temp_max": 12.8,
+      "temp_min": 5.6,
+      "wind": 3.2,
+      "weather": "rain"
+    },
+    {
+      "date": "2015-04-02T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 13.3,
+      "temp_min": 5.6,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-03T00:00:00.000",
+      "precipitation": 1.5,
+      "temp_max": 11.1,
+      "temp_min": 5.0,
+      "wind": 3.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-04T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 12.8,
+      "temp_min": 3.9,
+      "wind": 1.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-05T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.7,
+      "temp_min": 2.8,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-06T00:00:00.000",
+      "precipitation": 1.0,
+      "temp_max": 13.9,
+      "temp_min": 6.7,
+      "wind": 3.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-07T00:00:00.000",
+      "precipitation": 0.5,
+      "temp_max": 14.4,
+      "temp_min": 6.7,
+      "wind": 3.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 6.1,
+      "wind": 1.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-09T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 6.1,
+      "wind": 2.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-10T00:00:00.000",
+      "precipitation": 10.9,
+      "temp_max": 13.9,
+      "temp_min": 7.8,
+      "wind": 4.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-11T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 11.7,
+      "temp_min": 5.6,
+      "wind": 6.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-12T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 13.3,
+      "temp_min": 5.6,
+      "wind": 3.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-13T00:00:00.000",
+      "precipitation": 14.0,
+      "temp_max": 11.7,
+      "temp_min": 3.9,
+      "wind": 3.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-14T00:00:00.000",
+      "precipitation": 3.3,
+      "temp_max": 11.7,
+      "temp_min": 2.8,
+      "wind": 3.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-15T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 13.9,
+      "temp_min": 3.3,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.8,
+      "temp_min": 3.9,
+      "wind": 3.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-17T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 18.9,
+      "temp_min": 6.1,
+      "wind": 3.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 18.9,
+      "temp_min": 8.3,
+      "wind": 3.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-19T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 21.1,
+      "temp_min": 8.3,
+      "wind": 3.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-20T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 22.8,
+      "temp_min": 7.8,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-21T00:00:00.000",
+      "precipitation": 5.6,
+      "temp_max": 17.2,
+      "temp_min": 6.7,
+      "wind": 3.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-22T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 5.0,
+      "wind": 2.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-23T00:00:00.000",
+      "precipitation": 3.0,
+      "temp_max": 12.2,
+      "temp_min": 6.7,
+      "wind": 4.1,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-24T00:00:00.000",
+      "precipitation": 3.3,
+      "temp_max": 12.2,
+      "temp_min": 6.1,
+      "wind": 5.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-25T00:00:00.000",
+      "precipitation": 1.3,
+      "temp_max": 13.3,
+      "temp_min": 5.6,
+      "wind": 3.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-26T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 4.4,
+      "wind": 2.7,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-27T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 25.0,
+      "temp_min": 10.6,
+      "wind": 2.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-28T00:00:00.000",
+      "precipitation": 1.8,
+      "temp_max": 15.6,
+      "temp_min": 8.9,
+      "wind": 4.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-04-29T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.1,
+      "temp_min": 7.2,
+      "wind": 4.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-04-30T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 7.8,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-01T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 18.3,
+      "temp_min": 8.9,
+      "wind": 3.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-02T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 18.3,
+      "temp_min": 7.8,
+      "wind": 3.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-03T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.6,
+      "temp_min": 7.8,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-04T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.2,
+      "temp_min": 7.2,
+      "wind": 5.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-05T00:00:00.000",
+      "precipitation": 6.1,
+      "temp_max": 14.4,
+      "temp_min": 7.2,
+      "wind": 5.1,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-06T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.7,
+      "temp_min": 7.2,
+      "wind": 2.6,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-07T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.6,
+      "temp_min": 6.1,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 23.9,
+      "temp_min": 8.3,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-09T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.7,
+      "temp_min": 9.4,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-10T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 19.4,
+      "temp_min": 11.1,
+      "wind": 2.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-11T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 13.9,
+      "temp_min": 10.0,
+      "wind": 2.5,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-12T00:00:00.000",
+      "precipitation": 4.3,
+      "temp_max": 15.6,
+      "temp_min": 10.6,
+      "wind": 3.3,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-13T00:00:00.000",
+      "precipitation": 4.1,
+      "temp_max": 12.2,
+      "temp_min": 10.0,
+      "wind": 2.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-14T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 17.8,
+      "temp_min": 9.4,
+      "wind": 2.0,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-15T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.0,
+      "temp_min": 9.4,
+      "wind": 2.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 11.1,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-17T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 19.4,
+      "temp_min": 10.6,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 12.2,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-19T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 21.7,
+      "temp_min": 11.7,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-20T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 23.3,
+      "temp_min": 10.6,
+      "wind": 1.8,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-05-21T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 11.7,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-22T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.7,
+      "temp_min": 11.7,
+      "wind": 3.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-23T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 16.1,
+      "temp_min": 11.7,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-24T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 17.8,
+      "temp_min": 11.1,
+      "wind": 2.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-25T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 15.6,
+      "temp_min": 11.1,
+      "wind": 2.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-26T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 21.7,
+      "temp_min": 11.7,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-27T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 24.4,
+      "temp_min": 11.7,
+      "wind": 1.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-28T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 27.8,
+      "temp_min": 12.2,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-29T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.1,
+      "temp_min": 12.8,
+      "wind": 2.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-30T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 22.8,
+      "temp_min": 10.0,
+      "wind": 2.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-05-31T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.0,
+      "temp_min": 11.7,
+      "wind": 2.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-01T00:00:00.000",
+      "precipitation": 4.6,
+      "temp_max": 16.1,
+      "temp_min": 11.7,
+      "wind": 3.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-06-02T00:00:00.000",
+      "precipitation": 0.5,
+      "temp_max": 17.8,
+      "temp_min": 12.8,
+      "wind": 5.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-03T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.0,
+      "temp_min": 11.7,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-04T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 22.8,
+      "temp_min": 11.7,
+      "wind": 3.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-05T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.7,
+      "temp_min": 12.8,
+      "wind": 4.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-06T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 29.4,
+      "temp_min": 13.3,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-07T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 31.1,
+      "temp_min": 15.6,
+      "wind": 3.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 30.6,
+      "temp_min": 14.4,
+      "wind": 3.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-09T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 28.9,
+      "temp_min": 14.4,
+      "wind": 2.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-10T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 11.1,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-11T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 24.4,
+      "temp_min": 11.1,
+      "wind": 3.5,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-12T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 20.0,
+      "temp_min": 11.7,
+      "wind": 2.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-13T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 23.9,
+      "temp_min": 9.4,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-14T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 27.8,
+      "temp_min": 11.7,
+      "wind": 3.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-15T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 30.0,
+      "temp_min": 16.1,
+      "wind": 3.5,
+      "weather": "drizzle"
+    },
+    {
+      "date": "2015-06-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 22.8,
+      "temp_min": 11.1,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-17T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.0,
+      "temp_min": 11.1,
+      "wind": 3.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 24.4,
+      "temp_min": 13.9,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-19T00:00:00.000",
+      "precipitation": 0.5,
+      "temp_max": 23.9,
+      "temp_min": 13.3,
+      "wind": 3.2,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-06-20T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.0,
+      "temp_min": 12.8,
+      "wind": 4.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-21T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 13.9,
+      "wind": 3.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-22T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.0,
+      "temp_min": 12.8,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-23T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.1,
+      "temp_min": 11.7,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-24T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 16.1,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-25T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 30.6,
+      "temp_min": 15.6,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-26T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 31.7,
+      "temp_min": 17.8,
+      "wind": 4.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-27T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 33.3,
+      "temp_min": 17.2,
+      "wind": 3.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-28T00:00:00.000",
+      "precipitation": 0.3,
+      "temp_max": 28.3,
+      "temp_min": 18.3,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-29T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 28.9,
+      "temp_min": 17.2,
+      "wind": 2.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-06-30T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 30.6,
+      "temp_min": 15.0,
+      "wind": 3.4,
+      "weather": "fog"
+    },
+    {
+      "date": "2015-07-01T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 32.2,
+      "temp_min": 17.2,
+      "wind": 4.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-02T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 33.9,
+      "temp_min": 17.8,
+      "wind": 3.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-03T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 33.3,
+      "temp_min": 17.8,
+      "wind": 2.6,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-04T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 33.3,
+      "temp_min": 15.0,
+      "wind": 2.9,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-05T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 32.8,
+      "temp_min": 16.7,
+      "wind": 2.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-06T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 29.4,
+      "temp_min": 15.6,
+      "wind": 3.2,
+      "weather": "drizzle"
+    },
+    {
+      "date": "2015-07-07T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 27.2,
+      "temp_min": 13.9,
+      "wind": 2.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-08T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 30.0,
+      "temp_min": 14.4,
+      "wind": 1.9,
+      "weather": "drizzle"
+    },
+    {
+      "date": "2015-07-09T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 28.9,
+      "temp_min": 14.4,
+      "wind": 3.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-10T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 21.1,
+      "temp_min": 16.7,
+      "wind": 3.7,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-11T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 22.2,
+      "temp_min": 16.7,
+      "wind": 3.0,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-12T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.1,
+      "temp_min": 16.7,
+      "wind": 2.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-13T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 25.6,
+      "temp_min": 16.1,
+      "wind": 3.1,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-14T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 27.8,
+      "temp_min": 16.1,
+      "wind": 3.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-15T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.1,
+      "temp_min": 14.4,
+      "wind": 3.2,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-16T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 26.1,
+      "temp_min": 15.0,
+      "wind": 2.8,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-17T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 27.8,
+      "temp_min": 13.9,
+      "wind": 3.3,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-18T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 33.3,
+      "temp_min": 17.8,
+      "wind": 3.4,
+      "weather": "sun"
+    },
+    {
+      "date": "2015-07-19T00:00:00.000",
+      "precipitation": 0.0,
+      "temp_max": 35.0,
+      "temp_min": 17.2,
+      "wind": 3.3,
+      "weather": "sun"
+    }
+  ]
+}

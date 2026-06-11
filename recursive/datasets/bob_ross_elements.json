@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "name": "bob_ross_elements",
+    "description": "Frequency of painting elements in Bob Ross episodes",
+    "source": "tidytuesday/2023-02-21/bob_ross.csv",
+    "transformation": "Melt element columns, count frequency of each element across paintings. Top 20.",
+    "num_rows": 18,
+    "columns": {
+      "element": "str",
+      "count": "int64"
+    }
+  },
+  "data": [
+    {
+      "element": "Titanium_White",
+      "count": 400
+    },
+    {
+      "element": "Alizarin_Crimson",
+      "count": 380
+    },
+    {
+      "element": "Van_Dyke_Brown",
+      "count": 371
+    },
+    {
+      "element": "Cadmium_Yellow",
+      "count": 346
+    },
+    {
+      "element": "Yellow_Ochre",
+      "count": 327
+    },
+    {
+      "element": "Phthalo_Blue",
+      "count": 323
+    },
+    {
+      "element": "Bright_Red",
+      "count": 321
+    },
+    {
+      "element": "Midnight_Black",
+      "count": 317
+    },
+    {
+      "element": "Sap_Green",
+      "count": 306
+    },
+    {
+      "element": "Indian_Yellow",
+      "count": 292
+    },
+    {
+      "element": "Dark_Sienna",
+      "count": 290
+    },
+    {
+      "element": "Prussian_Blue",
+      "count": 263
+    },
+    {
+      "element": "Phthalo_Green",
+      "count": 116
+    },
+    {
+      "element": "Black_Gesso",
+      "count": 101
+    },
+    {
+      "element": "Burnt_Umber",
+      "count": 55
+    },
+    {
+      "element": "Liquid_Clear",
+      "count": 51
+    },
+    {
+      "element": "Liquid_Black",
+      "count": 14
+    },
+    {
+      "element": "Indian_Red",
+      "count": 1
+    }
+  ]
+}

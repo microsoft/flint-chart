@@ -1,0 +1,1217 @@
+{
+  "meta": {
+    "name": "life_expectancy",
+    "description": "Life expectancy trends for select countries since 1950",
+    "source": "tidytuesday/2023-12-05/life_expectancy.csv",
+    "transformation": "Filter to 8 countries, 1950+.",
+    "num_rows": 200,
+    "columns": {
+      "country": "str",
+      "code": "str",
+      "year": "int64",
+      "life_expectancy": "float64"
+    }
+  },
+  "data": [
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1950,
+      "life_expectancy": 48.1155
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1951,
+      "life_expectancy": 48.4262
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1952,
+      "life_expectancy": 48.8731
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1953,
+      "life_expectancy": 49.2014
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1954,
+      "life_expectancy": 49.7462
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1955,
+      "life_expectancy": 50.2219
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1956,
+      "life_expectancy": 50.7065
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1957,
+      "life_expectancy": 51.1743
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1958,
+      "life_expectancy": 51.6436
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1959,
+      "life_expectancy": 52.1854
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1960,
+      "life_expectancy": 52.6602
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1961,
+      "life_expectancy": 53.1828
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1962,
+      "life_expectancy": 53.7096
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1963,
+      "life_expectancy": 54.2088
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1964,
+      "life_expectancy": 54.6479
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1965,
+      "life_expectancy": 55.0844
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1966,
+      "life_expectancy": 55.4733
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1967,
+      "life_expectancy": 55.8684
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1968,
+      "life_expectancy": 56.3105
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1969,
+      "life_expectancy": 56.7483
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1970,
+      "life_expectancy": 57.1714
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1971,
+      "life_expectancy": 57.5858
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1972,
+      "life_expectancy": 58.0321
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1973,
+      "life_expectancy": 58.4718
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1974,
+      "life_expectancy": 58.8807
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1975,
+      "life_expectancy": 59.353
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1976,
+      "life_expectancy": 59.7918
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1977,
+      "life_expectancy": 60.2403
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1978,
+      "life_expectancy": 60.7203
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1979,
+      "life_expectancy": 61.2533
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1980,
+      "life_expectancy": 61.781
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1981,
+      "life_expectancy": 62.333
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1982,
+      "life_expectancy": 62.8563
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1983,
+      "life_expectancy": 63.3306
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1984,
+      "life_expectancy": 63.7726
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1985,
+      "life_expectancy": 64.1979
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1986,
+      "life_expectancy": 64.6404
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1987,
+      "life_expectancy": 65.0797
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1988,
+      "life_expectancy": 65.454
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1989,
+      "life_expectancy": 65.8676
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1990,
+      "life_expectancy": 65.9848
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1991,
+      "life_expectancy": 66.3096
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1992,
+      "life_expectancy": 66.7082
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1993,
+      "life_expectancy": 67.1092
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1994,
+      "life_expectancy": 67.5684
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1995,
+      "life_expectancy": 67.9191
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1996,
+      "life_expectancy": 68.409
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1997,
+      "life_expectancy": 68.8128
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1998,
+      "life_expectancy": 69.1885
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 1999,
+      "life_expectancy": 69.5237
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2000,
+      "life_expectancy": 69.7367
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2001,
+      "life_expectancy": 70.1949
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2002,
+      "life_expectancy": 70.4103
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2003,
+      "life_expectancy": 70.7204
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2004,
+      "life_expectancy": 71.1307
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2005,
+      "life_expectancy": 71.7533
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2006,
+      "life_expectancy": 72.0373
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2007,
+      "life_expectancy": 72.3653
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2008,
+      "life_expectancy": 72.7153
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2009,
+      "life_expectancy": 72.9484
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2010,
+      "life_expectancy": 73.1821
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2011,
+      "life_expectancy": 73.3432
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2012,
+      "life_expectancy": 73.5517
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2013,
+      "life_expectancy": 73.9185
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2014,
+      "life_expectancy": 74.3058
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2015,
+      "life_expectancy": 74.3325
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2016,
+      "life_expectancy": 74.4415
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2017,
+      "life_expectancy": 74.8266
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2018,
+      "life_expectancy": 75.1095
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2019,
+      "life_expectancy": 75.3379
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2020,
+      "life_expectancy": 74.0089
+    },
+    {
+      "country": "Brazil",
+      "code": "BRA",
+      "year": 2021,
+      "life_expectancy": 72.7504
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1950,
+      "life_expectancy": 43.7383
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1951,
+      "life_expectancy": 44.5742
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1952,
+      "life_expectancy": 45.4143
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1953,
+      "life_expectancy": 46.03
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1954,
+      "life_expectancy": 46.7536
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1955,
+      "life_expectancy": 47.165
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1956,
+      "life_expectancy": 47.7271
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1957,
+      "life_expectancy": 48.2609
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1958,
+      "life_expectancy": 48.7683
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1959,
+      "life_expectancy": 39.696
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1960,
+      "life_expectancy": 33.2749
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1961,
+      "life_expectancy": 40.4683
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1962,
+      "life_expectancy": 50.8184
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1963,
+      "life_expectancy": 51.4082
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1964,
+      "life_expectancy": 52.1561
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1965,
+      "life_expectancy": 52.9118
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1966,
+      "life_expectancy": 53.6368
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1967,
+      "life_expectancy": 54.3512
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1968,
+      "life_expectancy": 55.0569
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1969,
+      "life_expectancy": 55.7382
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1970,
+      "life_expectancy": 56.607
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1971,
+      "life_expectancy": 57.5653
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1972,
+      "life_expectancy": 58.4184
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1973,
+      "life_expectancy": 59.3891
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1974,
+      "life_expectancy": 60.1683
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1975,
+      "life_expectancy": 60.917
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1976,
+      "life_expectancy": 61.7956
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1977,
+      "life_expectancy": 62.5379
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1978,
+      "life_expectancy": 63.2177
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1979,
+      "life_expectancy": 63.8649
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1980,
+      "life_expectancy": 64.4198
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1981,
+      "life_expectancy": 64.9755
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1982,
+      "life_expectancy": 65.4627
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1983,
+      "life_expectancy": 65.9045
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1984,
+      "life_expectancy": 66.3004
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1985,
+      "life_expectancy": 66.6434
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1986,
+      "life_expectancy": 66.9697
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1987,
+      "life_expectancy": 67.2876
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1988,
+      "life_expectancy": 67.5808
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1989,
+      "life_expectancy": 67.8378
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1990,
+      "life_expectancy": 68.0052
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1991,
+      "life_expectancy": 68.1688
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1992,
+      "life_expectancy": 68.7345
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1993,
+      "life_expectancy": 69.2164
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1994,
+      "life_expectancy": 69.5201
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1995,
+      "life_expectancy": 70.008
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1996,
+      "life_expectancy": 70.2659
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1997,
+      "life_expectancy": 70.672
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1998,
+      "life_expectancy": 71.1721
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 1999,
+      "life_expectancy": 71.4188
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2000,
+      "life_expectancy": 71.8807
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2001,
+      "life_expectancy": 72.6061
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2002,
+      "life_expectancy": 72.985
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2003,
+      "life_expectancy": 73.3714
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2004,
+      "life_expectancy": 73.7477
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2005,
+      "life_expectancy": 74.1111
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2006,
+      "life_expectancy": 74.5037
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2007,
+      "life_expectancy": 74.7619
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2008,
+      "life_expectancy": 74.8719
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2009,
+      "life_expectancy": 75.3434
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2010,
+      "life_expectancy": 75.5991
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2011,
+      "life_expectancy": 75.9032
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2012,
+      "life_expectancy": 76.1923
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2013,
+      "life_expectancy": 76.4523
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2014,
+      "life_expectancy": 76.7173
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2015,
+      "life_expectancy": 76.9771
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2016,
+      "life_expectancy": 77.2177
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2017,
+      "life_expectancy": 77.2476
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2018,
+      "life_expectancy": 77.7444
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2019,
+      "life_expectancy": 77.968
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2020,
+      "life_expectancy": 78.0766
+    },
+    {
+      "country": "China",
+      "code": "CHN",
+      "year": 2021,
+      "life_expectancy": 78.2107
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1950,
+      "life_expectancy": 66.7975
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1951,
+      "life_expectancy": 67.1284
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1952,
+      "life_expectancy": 67.446
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1953,
+      "life_expectancy": 67.7519
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1954,
+      "life_expectancy": 68.046
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1955,
+      "life_expectancy": 68.3289
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1956,
+      "life_expectancy": 68.573
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1957,
+      "life_expectancy": 68.4864
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1958,
+      "life_expectancy": 69.2249
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1959,
+      "life_expectancy": 69.3264
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1960,
+      "life_expectancy": 69.2428
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1961,
+      "life_expectancy": 69.831
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1962,
+      "life_expectancy": 69.9918
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1963,
+      "life_expectancy": 70.1116
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1964,
+      "life_expectancy": 70.6446
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1965,
+      "life_expectancy": 70.6235
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1966,
+      "life_expectancy": 70.7416
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1967,
+      "life_expectancy": 70.9571
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1968,
+      "life_expectancy": 70.6045
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1969,
+      "life_expectancy": 70.456
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1970,
+      "life_expectancy": 70.6798
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1971,
+      "life_expectancy": 70.9158
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1972,
+      "life_expectancy": 71.1537
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1973,
+      "life_expectancy": 71.3674
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1974,
+      "life_expectancy": 71.6839
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1975,
+      "life_expectancy": 71.5205
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1976,
+      "life_expectancy": 71.9816
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1977,
+      "life_expectancy": 72.592
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1978,
+      "life_expectancy": 72.5723
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1979,
+      "life_expectancy": 72.9206
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1980,
+      "life_expectancy": 73.0924
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1981,
+      "life_expectancy": 73.3368
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1982,
+      "life_expectancy": 73.6334
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1983,
+      "life_expectancy": 73.9233
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1984,
+      "life_expectancy": 74.3854
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1985,
+      "life_expectancy": 74.4972
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1986,
+      "life_expectancy": 74.7001
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1987,
+      "life_expectancy": 75.1121
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1988,
+      "life_expectancy": 75.2991
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1989,
+      "life_expectancy": 75.4848
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1990,
+      "life_expectancy": 75.3588
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1991,
+      "life_expectancy": 75.5759
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1992,
+      "life_expectancy": 76.0187
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1993,
+      "life_expectancy": 76.0959
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1994,
+      "life_expectancy": 76.3931
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1995,
+      "life_expectancy": 76.5619
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1996,
+      "life_expectancy": 76.7922
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1997,
+      "life_expectancy": 77.2259
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1998,
+      "life_expectancy": 77.5768
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 1999,
+      "life_expectancy": 77.8056
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2000,
+      "life_expectancy": 78.0637
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2001,
+      "life_expectancy": 78.4095
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2002,
+      "life_expectancy": 78.4827
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2003,
+      "life_expectancy": 78.5443
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2004,
+      "life_expectancy": 79.1263
+    },
+    {
+      "country": "Germany",
+      "code": "DEU",
+      "year": 2005,
+      "life_expectancy": 79.2618
+    }
+  ]
+}

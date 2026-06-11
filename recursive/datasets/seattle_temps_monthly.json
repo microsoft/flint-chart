@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "name": "seattle_temps_monthly",
+    "description": "Seattle monthly temperature statistics",
+    "source": "vega-datasets/seattle-temps.csv",
+    "transformation": "Group by year+month, compute avg/min/max temp.",
+    "num_rows": 12,
+    "columns": {
+      "year": "int32",
+      "month": "int32",
+      "avg_temp": "float64",
+      "min_temp": "float64",
+      "max_temp": "float64"
+    }
+  },
+  "data": [
+    {
+      "year": 2010,
+      "month": 1,
+      "avg_temp": 41.7040322581,
+      "min_temp": 38.6,
+      "max_temp": 46.2
+    },
+    {
+      "year": 2010,
+      "month": 2,
+      "avg_temp": 42.9959821429,
+      "min_temp": 38.9,
+      "max_temp": 49.6
+    },
+    {
+      "year": 2010,
+      "month": 3,
+      "avg_temp": 45.9331090175,
+      "min_temp": 40.1,
+      "max_temp": 53.0
+    },
+    {
+      "year": 2010,
+      "month": 4,
+      "avg_temp": 49.6559722222,
+      "min_temp": 41.9,
+      "max_temp": 58.7
+    },
+    {
+      "year": 2010,
+      "month": 5,
+      "avg_temp": 55.2063172043,
+      "min_temp": 46.0,
+      "max_temp": 65.5
+    },
+    {
+      "year": 2010,
+      "month": 6,
+      "avg_temp": 60.0118055556,
+      "min_temp": 51.7,
+      "max_temp": 70.7
+    },
+    {
+      "year": 2010,
+      "month": 7,
+      "avg_temp": 64.8876344086,
+      "min_temp": 55.0,
+      "max_temp": 75.9
+    },
+    {
+      "year": 2010,
+      "month": 8,
+      "avg_temp": 65.1311827957,
+      "min_temp": 56.1,
+      "max_temp": 75.6
+    },
+    {
+      "year": 2010,
+      "month": 9,
+      "avg_temp": 60.21125,
+      "min_temp": 51.4,
+      "max_temp": 71.8
+    },
+    {
+      "year": 2010,
+      "month": 10,
+      "avg_temp": 52.2315860215,
+      "min_temp": 45.3,
+      "max_temp": 63.6
+    },
+    {
+      "year": 2010,
+      "month": 11,
+      "avg_temp": 45.1773611111,
+      "min_temp": 39.8,
+      "max_temp": 52.4
+    },
+    {
+      "year": 2010,
+      "month": 12,
+      "avg_temp": 40.5318548387,
+      "min_temp": 37.5,
+      "max_temp": 45.2
+    }
+  ]
+}

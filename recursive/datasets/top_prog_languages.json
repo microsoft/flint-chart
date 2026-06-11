@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "name": "top_prog_languages",
+    "description": "Top 25 programming languages by number of users",
+    "source": "tidytuesday/2023-03-21/languages.csv",
+    "transformation": "Filter to PLs, sort by users, top 25.",
+    "num_rows": 25,
+    "columns": {
+      "title": "str",
+      "appeared": "int64",
+      "number_of_users": "int64",
+      "github_language_repos": "float64"
+    }
+  },
+  "data": [
+    {
+      "title": "JavaScript",
+      "appeared": 1995,
+      "number_of_users": 5962666,
+      "github_language_repos": 16046489.0
+    },
+    {
+      "title": "Java",
+      "appeared": 1995,
+      "number_of_users": 5550123,
+      "github_language_repos": 11529980.0
+    },
+    {
+      "title": "C++",
+      "appeared": 1985,
+      "number_of_users": 4128238,
+      "github_language_repos": 2161625.0
+    },
+    {
+      "title": "C",
+      "appeared": 1972,
+      "number_of_users": 3793768,
+      "github_language_repos": 2160271.0
+    },
+    {
+      "title": "Python",
+      "appeared": 1991,
+      "number_of_users": 2818037,
+      "github_language_repos": 9300725.0
+    },
+    {
+      "title": "MATLAB",
+      "appeared": 1984,
+      "number_of_users": 2661579,
+      "github_language_repos": 311901.0
+    },
+    {
+      "title": "PHP",
+      "appeared": 1995,
+      "number_of_users": 2356101,
+      "github_language_repos": 3479326.0
+    },
+    {
+      "title": "R",
+      "appeared": 1993,
+      "number_of_users": 1075613,
+      "github_language_repos": 689533.0
+    },
+    {
+      "title": "Go",
+      "appeared": 2009,
+      "number_of_users": 525179,
+      "github_language_repos": 1083789.0
+    },
+    {
+      "title": "Perl",
+      "appeared": 1987,
+      "number_of_users": 491984,
+      "github_language_repos": 169830.0
+    },
+    {
+      "title": "Swift",
+      "appeared": 2014,
+      "number_of_users": 362590,
+      "github_language_repos": 1044892.0
+    },
+    {
+      "title": "SAS",
+      "appeared": 1976,
+      "number_of_users": 361103,
+      "github_language_repos": 8407.0
+    },
+    {
+      "title": "Ruby",
+      "appeared": 1995,
+      "number_of_users": 357730,
+      "github_language_repos": 2659551.0
+    },
+    {
+      "title": "Rust",
+      "appeared": 2010,
+      "number_of_users": 302193,
+      "github_language_repos": 356891.0
+    },
+    {
+      "title": "C#",
+      "appeared": 2000,
+      "number_of_users": 217261,
+      "github_language_repos": 2161625.0
+    },
+    {
+      "title": "TypeScript",
+      "appeared": 2012,
+      "number_of_users": 216959,
+      "github_language_repos": 3281749.0
+    },
+    {
+      "title": "PowerShell",
+      "appeared": 2006,
+      "number_of_users": 208708,
+      "github_language_repos": 161144.0
+    },
+    {
+      "title": "COBOL",
+      "appeared": 1959,
+      "number_of_users": 187188,
+      "github_language_repos": 3411.0
+    },
+    {
+      "title": "Fortran",
+      "appeared": 1957,
+      "number_of_users": 165151,
+      "github_language_repos": 29127.0
+    },
+    {
+      "title": "Mathematica",
+      "appeared": 1988,
+      "number_of_users": 148741,
+      "github_language_repos": 22012.0
+    },
+    {
+      "title": "Scala",
+      "appeared": 2004,
+      "number_of_users": 139471,
+      "github_language_repos": 219084.0
+    },
+    {
+      "title": "Kotlin",
+      "appeared": 2011,
+      "number_of_users": 130094,
+      "github_language_repos": 901474.0
+    },
+    {
+      "title": "Julia",
+      "appeared": 2012,
+      "number_of_users": 81911,
+      "github_language_repos": 53507.0
+    },
+    {
+      "title": "Bash",
+      "appeared": 1989,
+      "number_of_users": 61747,
+      "github_language_repos": 1579442.0
+    },
+    {
+      "title": "Lua",
+      "appeared": 1993,
+      "number_of_users": 58860,
+      "github_language_repos": 243541.0
+    }
+  ]
+}

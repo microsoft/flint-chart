@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "soccer_results",
+    "description": "English Premier League 2021-22 match results",
+    "source": "tidytuesday/2023-04-04/soccer21-22.csv",
+    "transformation": "Select and rename key columns (teams, goals, result).",
+    "num_rows": 200,
+    "columns": {
+      "date": "str",
+      "home_team": "str",
+      "away_team": "str",
+      "home_goals": "int64",
+      "away_goals": "int64",
+      "result": "str"
+    }
+  },
+  "data": [
+    {
+      "date": "13/08/2021",
+      "home_team": "Brentford",
+      "away_team": "Arsenal",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Man United",
+      "away_team": "Leeds",
+      "home_goals": 5,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Burnley",
+      "away_team": "Brighton",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Chelsea",
+      "away_team": "Crystal Palace",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Everton",
+      "away_team": "Southampton",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Leicester",
+      "away_team": "Wolves",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Watford",
+      "away_team": "Aston Villa",
+      "home_goals": 3,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "14/08/2021",
+      "home_team": "Norwich",
+      "away_team": "Liverpool",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "15/08/2021",
+      "home_team": "Newcastle",
+      "away_team": "West Ham",
+      "home_goals": 2,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "15/08/2021",
+      "home_team": "Tottenham",
+      "away_team": "Man City",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Liverpool",
+      "away_team": "Burnley",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Newcastle",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Brentford",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Leeds",
+      "away_team": "Everton",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Man City",
+      "away_team": "Norwich",
+      "home_goals": 5,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/08/2021",
+      "home_team": "Brighton",
+      "away_team": "Watford",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "22/08/2021",
+      "home_team": "Southampton",
+      "away_team": "Man United",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "22/08/2021",
+      "home_team": "Wolves",
+      "away_team": "Tottenham",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "22/08/2021",
+      "home_team": "Arsenal",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "23/08/2021",
+      "home_team": "West Ham",
+      "away_team": "Leicester",
+      "home_goals": 4,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Man City",
+      "away_team": "Arsenal",
+      "home_goals": 5,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Brentford",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Brighton",
+      "away_team": "Everton",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Newcastle",
+      "away_team": "Southampton",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Norwich",
+      "away_team": "Leicester",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "West Ham",
+      "away_team": "Crystal Palace",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "28/08/2021",
+      "home_team": "Liverpool",
+      "away_team": "Chelsea",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "29/08/2021",
+      "home_team": "Burnley",
+      "away_team": "Leeds",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "29/08/2021",
+      "home_team": "Tottenham",
+      "away_team": "Watford",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "29/08/2021",
+      "home_team": "Wolves",
+      "away_team": "Man United",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Tottenham",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Arsenal",
+      "away_team": "Norwich",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Brentford",
+      "away_team": "Brighton",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Leicester",
+      "away_team": "Man City",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Man United",
+      "away_team": "Newcastle",
+      "home_goals": 4,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Southampton",
+      "away_team": "West Ham",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Watford",
+      "away_team": "Wolves",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "11/09/2021",
+      "home_team": "Chelsea",
+      "away_team": "Aston Villa",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "12/09/2021",
+      "home_team": "Leeds",
+      "away_team": "Liverpool",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "13/09/2021",
+      "home_team": "Everton",
+      "away_team": "Burnley",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "17/09/2021",
+      "home_team": "Newcastle",
+      "away_team": "Leeds",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Wolves",
+      "away_team": "Brentford",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Burnley",
+      "away_team": "Arsenal",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Liverpool",
+      "away_team": "Crystal Palace",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Man City",
+      "away_team": "Southampton",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Norwich",
+      "away_team": "Watford",
+      "home_goals": 1,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "18/09/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Everton",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "19/09/2021",
+      "home_team": "Brighton",
+      "away_team": "Leicester",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "19/09/2021",
+      "home_team": "West Ham",
+      "away_team": "Man United",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "19/09/2021",
+      "home_team": "Tottenham",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Chelsea",
+      "away_team": "Man City",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Man United",
+      "away_team": "Aston Villa",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Everton",
+      "away_team": "Norwich",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Leeds",
+      "away_team": "West Ham",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Leicester",
+      "away_team": "Burnley",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Watford",
+      "away_team": "Newcastle",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "25/09/2021",
+      "home_team": "Brentford",
+      "away_team": "Liverpool",
+      "home_goals": 3,
+      "away_goals": 3,
+      "result": "D"
+    },
+    {
+      "date": "26/09/2021",
+      "home_team": "Southampton",
+      "away_team": "Wolves",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "26/09/2021",
+      "home_team": "Arsenal",
+      "away_team": "Tottenham",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "27/09/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Brighton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Man United",
+      "away_team": "Everton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Burnley",
+      "away_team": "Norwich",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Chelsea",
+      "away_team": "Southampton",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Leeds",
+      "away_team": "Watford",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Wolves",
+      "away_team": "Newcastle",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "02/10/2021",
+      "home_team": "Brighton",
+      "away_team": "Arsenal",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "03/10/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Leicester",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "03/10/2021",
+      "home_team": "Tottenham",
+      "away_team": "Aston Villa",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "03/10/2021",
+      "home_team": "West Ham",
+      "away_team": "Brentford",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "03/10/2021",
+      "home_team": "Liverpool",
+      "away_team": "Man City",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Watford",
+      "away_team": "Liverpool",
+      "home_goals": 0,
+      "away_goals": 5,
+      "result": "A"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Wolves",
+      "home_goals": 2,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Leicester",
+      "away_team": "Man United",
+      "home_goals": 4,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Man City",
+      "away_team": "Burnley",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Norwich",
+      "away_team": "Brighton",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Southampton",
+      "away_team": "Leeds",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "16/10/2021",
+      "home_team": "Brentford",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "17/10/2021",
+      "home_team": "Everton",
+      "away_team": "West Ham",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "17/10/2021",
+      "home_team": "Newcastle",
+      "away_team": "Tottenham",
+      "home_goals": 2,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "18/10/2021",
+      "home_team": "Arsenal",
+      "away_team": "Crystal Palace",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "22/10/2021",
+      "home_team": "Arsenal",
+      "away_team": "Aston Villa",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Chelsea",
+      "away_team": "Norwich",
+      "home_goals": 7,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Newcastle",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Everton",
+      "away_team": "Watford",
+      "home_goals": 2,
+      "away_goals": 5,
+      "result": "A"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Leeds",
+      "away_team": "Wolves",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Southampton",
+      "away_team": "Burnley",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "23/10/2021",
+      "home_team": "Brighton",
+      "away_team": "Man City",
+      "home_goals": 1,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "24/10/2021",
+      "home_team": "Brentford",
+      "away_team": "Leicester",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "24/10/2021",
+      "home_team": "West Ham",
+      "away_team": "Tottenham",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "24/10/2021",
+      "home_team": "Man United",
+      "away_team": "Liverpool",
+      "home_goals": 0,
+      "away_goals": 5,
+      "result": "A"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Leicester",
+      "away_team": "Arsenal",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Burnley",
+      "away_team": "Brentford",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Liverpool",
+      "away_team": "Brighton",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Man City",
+      "away_team": "Crystal Palace",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Newcastle",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Watford",
+      "away_team": "Southampton",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "30/10/2021",
+      "home_team": "Tottenham",
+      "away_team": "Man United",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "31/10/2021",
+      "home_team": "Norwich",
+      "away_team": "Leeds",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "31/10/2021",
+      "home_team": "Aston Villa",
+      "away_team": "West Ham",
+      "home_goals": 1,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "01/11/2021",
+      "home_team": "Wolves",
+      "away_team": "Everton",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "05/11/2021",
+      "home_team": "Southampton",
+      "away_team": "Aston Villa",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "06/11/2021",
+      "home_team": "Man United",
+      "away_team": "Man City",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "06/11/2021",
+      "home_team": "Brentford",
+      "away_team": "Norwich",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "06/11/2021",
+      "home_team": "Chelsea",
+      "away_team": "Burnley",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "06/11/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Wolves",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "06/11/2021",
+      "home_team": "Brighton",
+      "away_team": "Newcastle",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "07/11/2021",
+      "home_team": "Arsenal",
+      "away_team": "Watford",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "07/11/2021",
+      "home_team": "Everton",
+      "away_team": "Tottenham",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "07/11/2021",
+      "home_team": "Leeds",
+      "away_team": "Leicester",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "07/11/2021",
+      "home_team": "West Ham",
+      "away_team": "Liverpool",
+      "home_goals": 3,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Leicester",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Brighton",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Burnley",
+      "away_team": "Crystal Palace",
+      "home_goals": 3,
+      "away_goals": 3,
+      "result": "D"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Newcastle",
+      "away_team": "Brentford",
+      "home_goals": 3,
+      "away_goals": 3,
+      "result": "D"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Norwich",
+      "away_team": "Southampton",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Watford",
+      "away_team": "Man United",
+      "home_goals": 4,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Wolves",
+      "away_team": "West Ham",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "20/11/2021",
+      "home_team": "Liverpool",
+      "away_team": "Arsenal",
+      "home_goals": 4,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/11/2021",
+      "home_team": "Man City",
+      "away_team": "Everton",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "21/11/2021",
+      "home_team": "Tottenham",
+      "away_team": "Leeds",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "27/11/2021",
+      "home_team": "Arsenal",
+      "away_team": "Newcastle",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "27/11/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Aston Villa",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "27/11/2021",
+      "home_team": "Liverpool",
+      "away_team": "Southampton",
+      "home_goals": 4,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "27/11/2021",
+      "home_team": "Norwich",
+      "away_team": "Wolves",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "27/11/2021",
+      "home_team": "Brighton",
+      "away_team": "Leeds",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "28/11/2021",
+      "home_team": "Brentford",
+      "away_team": "Everton",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "28/11/2021",
+      "home_team": "Leicester",
+      "away_team": "Watford",
+      "home_goals": 4,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "28/11/2021",
+      "home_team": "Man City",
+      "away_team": "West Ham",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "28/11/2021",
+      "home_team": "Chelsea",
+      "away_team": "Man United",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "30/11/2021",
+      "home_team": "Newcastle",
+      "away_team": "Norwich",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "30/11/2021",
+      "home_team": "Leeds",
+      "away_team": "Crystal Palace",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "Southampton",
+      "away_team": "Leicester",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "Watford",
+      "away_team": "Chelsea",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "West Ham",
+      "away_team": "Brighton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "Wolves",
+      "away_team": "Burnley",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Man City",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "01/12/2021",
+      "home_team": "Everton",
+      "away_team": "Liverpool",
+      "home_goals": 1,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "02/12/2021",
+      "home_team": "Tottenham",
+      "away_team": "Brentford",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "02/12/2021",
+      "home_team": "Man United",
+      "away_team": "Arsenal",
+      "home_goals": 3,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "04/12/2021",
+      "home_team": "West Ham",
+      "away_team": "Chelsea",
+      "home_goals": 3,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "04/12/2021",
+      "home_team": "Newcastle",
+      "away_team": "Burnley",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "04/12/2021",
+      "home_team": "Southampton",
+      "away_team": "Brighton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "04/12/2021",
+      "home_team": "Wolves",
+      "away_team": "Liverpool",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "04/12/2021",
+      "home_team": "Watford",
+      "away_team": "Man City",
+      "home_goals": 1,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "05/12/2021",
+      "home_team": "Leeds",
+      "away_team": "Brentford",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "05/12/2021",
+      "home_team": "Man United",
+      "away_team": "Crystal Palace",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "05/12/2021",
+      "home_team": "Tottenham",
+      "away_team": "Norwich",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "05/12/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Leicester",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "06/12/2021",
+      "home_team": "Everton",
+      "away_team": "Arsenal",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "10/12/2021",
+      "home_team": "Brentford",
+      "away_team": "Watford",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "11/12/2021",
+      "home_team": "Man City",
+      "away_team": "Wolves",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "11/12/2021",
+      "home_team": "Arsenal",
+      "away_team": "Southampton",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "11/12/2021",
+      "home_team": "Chelsea",
+      "away_team": "Leeds",
+      "home_goals": 3,
+      "away_goals": 2,
+      "result": "H"
+    },
+    {
+      "date": "11/12/2021",
+      "home_team": "Liverpool",
+      "away_team": "Aston Villa",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "11/12/2021",
+      "home_team": "Norwich",
+      "away_team": "Man United",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "12/12/2021",
+      "home_team": "Burnley",
+      "away_team": "West Ham",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "12/12/2021",
+      "home_team": "Leicester",
+      "away_team": "Newcastle",
+      "home_goals": 4,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "12/12/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Everton",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "14/12/2021",
+      "home_team": "Norwich",
+      "away_team": "Aston Villa",
+      "home_goals": 0,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "14/12/2021",
+      "home_team": "Man City",
+      "away_team": "Leeds",
+      "home_goals": 7,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "15/12/2021",
+      "home_team": "Brighton",
+      "away_team": "Wolves",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "15/12/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Southampton",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "15/12/2021",
+      "home_team": "Arsenal",
+      "away_team": "West Ham",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "16/12/2021",
+      "home_team": "Chelsea",
+      "away_team": "Everton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "16/12/2021",
+      "home_team": "Liverpool",
+      "away_team": "Newcastle",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "18/12/2021",
+      "home_team": "Leeds",
+      "away_team": "Arsenal",
+      "home_goals": 1,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "19/12/2021",
+      "home_team": "Newcastle",
+      "away_team": "Man City",
+      "home_goals": 0,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "19/12/2021",
+      "home_team": "Wolves",
+      "away_team": "Chelsea",
+      "home_goals": 0,
+      "away_goals": 0,
+      "result": "D"
+    },
+    {
+      "date": "19/12/2021",
+      "home_team": "Tottenham",
+      "away_team": "Liverpool",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "Man City",
+      "away_team": "Leicester",
+      "home_goals": 6,
+      "away_goals": 3,
+      "result": "H"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "Norwich",
+      "away_team": "Arsenal",
+      "home_goals": 0,
+      "away_goals": 5,
+      "result": "A"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "Tottenham",
+      "away_team": "Crystal Palace",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "West Ham",
+      "away_team": "Southampton",
+      "home_goals": 2,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "Aston Villa",
+      "away_team": "Chelsea",
+      "home_goals": 1,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "26/12/2021",
+      "home_team": "Brighton",
+      "away_team": "Brentford",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "27/12/2021",
+      "home_team": "Newcastle",
+      "away_team": "Man United",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "28/12/2021",
+      "home_team": "Crystal Palace",
+      "away_team": "Norwich",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "28/12/2021",
+      "home_team": "Southampton",
+      "away_team": "Tottenham",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "28/12/2021",
+      "home_team": "Watford",
+      "away_team": "West Ham",
+      "home_goals": 1,
+      "away_goals": 4,
+      "result": "A"
+    },
+    {
+      "date": "28/12/2021",
+      "home_team": "Leicester",
+      "away_team": "Liverpool",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "29/12/2021",
+      "home_team": "Chelsea",
+      "away_team": "Brighton",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "29/12/2021",
+      "home_team": "Brentford",
+      "away_team": "Man City",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "30/12/2021",
+      "home_team": "Man United",
+      "away_team": "Burnley",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "01/01/2022",
+      "home_team": "Arsenal",
+      "away_team": "Man City",
+      "home_goals": 1,
+      "away_goals": 2,
+      "result": "A"
+    },
+    {
+      "date": "01/01/2022",
+      "home_team": "Watford",
+      "away_team": "Tottenham",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "01/01/2022",
+      "home_team": "Crystal Palace",
+      "away_team": "West Ham",
+      "home_goals": 2,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "02/01/2022",
+      "home_team": "Brentford",
+      "away_team": "Aston Villa",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "02/01/2022",
+      "home_team": "Everton",
+      "away_team": "Brighton",
+      "home_goals": 2,
+      "away_goals": 3,
+      "result": "A"
+    },
+    {
+      "date": "02/01/2022",
+      "home_team": "Leeds",
+      "away_team": "Burnley",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "02/01/2022",
+      "home_team": "Chelsea",
+      "away_team": "Liverpool",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "03/01/2022",
+      "home_team": "Man United",
+      "away_team": "Wolves",
+      "home_goals": 0,
+      "away_goals": 1,
+      "result": "A"
+    },
+    {
+      "date": "11/01/2022",
+      "home_team": "Southampton",
+      "away_team": "Brentford",
+      "home_goals": 4,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "12/01/2022",
+      "home_team": "West Ham",
+      "away_team": "Norwich",
+      "home_goals": 2,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "14/01/2022",
+      "home_team": "Brighton",
+      "away_team": "Crystal Palace",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "15/01/2022",
+      "home_team": "Man City",
+      "away_team": "Chelsea",
+      "home_goals": 1,
+      "away_goals": 0,
+      "result": "H"
+    },
+    {
+      "date": "15/01/2022",
+      "home_team": "Newcastle",
+      "away_team": "Watford",
+      "home_goals": 1,
+      "away_goals": 1,
+      "result": "D"
+    },
+    {
+      "date": "15/01/2022",
+      "home_team": "Norwich",
+      "away_team": "Everton",
+      "home_goals": 2,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "15/01/2022",
+      "home_team": "Wolves",
+      "away_team": "Southampton",
+      "home_goals": 3,
+      "away_goals": 1,
+      "result": "H"
+    },
+    {
+      "date": "15/01/2022",
+      "home_team": "Aston Villa",
+      "away_team": "Man United",
+      "home_goals": 2,
+      "away_goals": 2,
+      "result": "D"
+    },
+    {
+      "date": "16/01/2022",
+      "home_team": "Liverpool",
+      "away_team": "Brentford",
+      "home_goals": 3,
+      "away_goals": 0,
+      "result": "H"
+    }
+  ]
+}

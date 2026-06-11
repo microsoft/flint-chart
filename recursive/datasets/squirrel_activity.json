@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "name": "squirrel_activity",
+    "description": "NYC Central Park squirrel activity rates by fur color and time of day",
+    "source": "tidytuesday/2023-05-23/squirrel_data.csv",
+    "transformation": "Group by fur color and shift, compute activity rates.",
+    "num_rows": 6,
+    "columns": {
+      "fur_color": "str",
+      "shift": "str",
+      "count": "int64",
+      "pct_running": "float64",
+      "pct_eating": "float64",
+      "pct_foraging": "float64"
+    }
+  },
+  "data": [
+    {
+      "fur_color": "Black",
+      "shift": "AM",
+      "count": 51,
+      "pct_running": 0.2352941176,
+      "pct_eating": 0.1568627451,
+      "pct_foraging": 0.431372549
+    },
+    {
+      "fur_color": "Black",
+      "shift": "PM",
+      "count": 52,
+      "pct_running": 0.2692307692,
+      "pct_eating": 0.3076923077,
+      "pct_foraging": 0.4038461538
+    },
+    {
+      "fur_color": "Cinnamon",
+      "shift": "AM",
+      "count": 180,
+      "pct_running": 0.2833333333,
+      "pct_eating": 0.2833333333,
+      "pct_foraging": 0.45
+    },
+    {
+      "fur_color": "Cinnamon",
+      "shift": "PM",
+      "count": 212,
+      "pct_running": 0.2452830189,
+      "pct_eating": 0.2830188679,
+      "pct_foraging": 0.5754716981
+    },
+    {
+      "fur_color": "Gray",
+      "shift": "AM",
+      "count": 1087,
+      "pct_running": 0.2401103956,
+      "pct_eating": 0.2161913523,
+      "pct_foraging": 0.4535418583
+    },
+    {
+      "fur_color": "Gray",
+      "shift": "PM",
+      "count": 1386,
+      "pct_running": 0.2424242424,
+      "pct_eating": 0.2770562771,
+      "pct_foraging": 0.4978354978
+    }
+  ]
+}

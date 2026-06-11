@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "name": "global_human_day",
+    "description": "How humanity spends an average day (hours per activity)",
+    "source": "tidytuesday/2023-09-12/global_human_day.csv",
+    "transformation": "Used as-is.",
+    "num_rows": 24,
+    "columns": {
+      "Subcategory": "str",
+      "hoursPerDay": "float64",
+      "uncertainty": "float64"
+    }
+  },
+  "data": [
+    {
+      "Subcategory": "Active recreation",
+      "hoursPerDay": 0.42,
+      "uncertainty": 0.05
+    },
+    {
+      "Subcategory": "Allocation",
+      "hoursPerDay": 0.91,
+      "uncertainty": 0.06
+    },
+    {
+      "Subcategory": "Artifacts",
+      "hoursPerDay": 0.42,
+      "uncertainty": 0.02
+    },
+    {
+      "Subcategory": "Buildings",
+      "hoursPerDay": 0.22,
+      "uncertainty": 0.08
+    },
+    {
+      "Subcategory": "Energy",
+      "hoursPerDay": 0.04,
+      "uncertainty": 0.01
+    },
+    {
+      "Subcategory": "Food growth & collection",
+      "hoursPerDay": 0.81,
+      "uncertainty": 0.05
+    },
+    {
+      "Subcategory": "Food preparation",
+      "hoursPerDay": 0.92,
+      "uncertainty": 0.07
+    },
+    {
+      "Subcategory": "Food processing",
+      "hoursPerDay": 0.07,
+      "uncertainty": 0.01
+    },
+    {
+      "Subcategory": "Health care",
+      "hoursPerDay": 0.2,
+      "uncertainty": 0.2
+    },
+    {
+      "Subcategory": "Human transportation",
+      "hoursPerDay": 0.9,
+      "uncertainty": 0.22
+    },
+    {
+      "Subcategory": "Hygiene & grooming",
+      "hoursPerDay": 1.05,
+      "uncertainty": 0.2
+    },
+    {
+      "Subcategory": "Infrastructure",
+      "hoursPerDay": 0.05,
+      "uncertainty": 0.0
+    },
+    {
+      "Subcategory": "Inhabited environment",
+      "hoursPerDay": 0.75,
+      "uncertainty": 0.06
+    },
+    {
+      "Subcategory": "Interactive",
+      "hoursPerDay": 0.88,
+      "uncertainty": 0.12
+    },
+    {
+      "Subcategory": "Material transportation",
+      "hoursPerDay": 0.31,
+      "uncertainty": 0.05
+    },
+    {
+      "Subcategory": "Materials",
+      "hoursPerDay": 0.07,
+      "uncertainty": 0.01
+    },
+    {
+      "Subcategory": "Meals",
+      "hoursPerDay": 1.6,
+      "uncertainty": 0.22
+    },
+    {
+      "Subcategory": "Passive",
+      "hoursPerDay": 2.59,
+      "uncertainty": 0.24
+    },
+    {
+      "Subcategory": "Physical child care",
+      "hoursPerDay": 0.29,
+      "uncertainty": 0.03
+    },
+    {
+      "Subcategory": "Religious practice",
+      "hoursPerDay": 0.2,
+      "uncertainty": 0.05
+    },
+    {
+      "Subcategory": "Schooling & research",
+      "hoursPerDay": 1.07,
+      "uncertainty": 0.07
+    },
+    {
+      "Subcategory": "Sleep & bedrest",
+      "hoursPerDay": 9.1,
+      "uncertainty": 0.39
+    },
+    {
+      "Subcategory": "Social",
+      "hoursPerDay": 1.12,
+      "uncertainty": 0.1
+    },
+    {
+      "Subcategory": "Waste management",
+      "hoursPerDay": 0.01,
+      "uncertainty": 0.0
+    }
+  ]
+}

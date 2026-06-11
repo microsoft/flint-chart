@@ -1,0 +1,270 @@
+{
+  "meta": {
+    "name": "seattle_weather_monthly",
+    "description": "Seattle monthly weather averages",
+    "source": "vega-datasets/seattle-weather.csv",
+    "transformation": "Group by year+month, compute avg temps and total precip. 2013+.",
+    "num_rows": 36,
+    "columns": {
+      "year": "int32",
+      "month": "int32",
+      "avg_temp_max": "float64",
+      "avg_temp_min": "float64",
+      "total_precip": "float64"
+    }
+  },
+  "data": [
+    {
+      "year": 2013,
+      "month": 1,
+      "avg_temp_max": 6.1064516129,
+      "avg_temp_min": 0.7967741935,
+      "total_precip": 105.7
+    },
+    {
+      "year": 2013,
+      "month": 2,
+      "avg_temp_max": 9.4678571429,
+      "avg_temp_min": 4.325,
+      "total_precip": 40.3
+    },
+    {
+      "year": 2013,
+      "month": 3,
+      "avg_temp_max": 12.7096774194,
+      "avg_temp_min": 4.9774193548,
+      "total_precip": 69.7
+    },
+    {
+      "year": 2013,
+      "month": 4,
+      "avg_temp_max": 14.2433333333,
+      "avg_temp_min": 6.6966666667,
+      "total_precip": 149.6
+    },
+    {
+      "year": 2013,
+      "month": 5,
+      "avg_temp_max": 19.6258064516,
+      "avg_temp_min": 9.9225806452,
+      "total_precip": 60.5
+    },
+    {
+      "year": 2013,
+      "month": 6,
+      "avg_temp_max": 23.2533333333,
+      "avg_temp_min": 13.1633333333,
+      "total_precip": 33.1
+    },
+    {
+      "year": 2013,
+      "month": 7,
+      "avg_temp_max": 26.0935483871,
+      "avg_temp_min": 13.9322580645,
+      "total_precip": 0.0
+    },
+    {
+      "year": 2013,
+      "month": 8,
+      "avg_temp_max": 26.1193548387,
+      "avg_temp_min": 15.4806451613,
+      "total_precip": 34.4
+    },
+    {
+      "year": 2013,
+      "month": 9,
+      "avg_temp_max": 21.36,
+      "avg_temp_min": 13.59,
+      "total_precip": 156.8
+    },
+    {
+      "year": 2013,
+      "month": 10,
+      "avg_temp_max": 14.2290322581,
+      "avg_temp_min": 7.6387096774,
+      "total_precip": 39.2
+    },
+    {
+      "year": 2013,
+      "month": 11,
+      "avg_temp_max": 12.0533333333,
+      "avg_temp_min": 5.59,
+      "total_precip": 96.3
+    },
+    {
+      "year": 2013,
+      "month": 12,
+      "avg_temp_max": 7.0225806452,
+      "avg_temp_min": 1.5709677419,
+      "total_precip": 42.4
+    },
+    {
+      "year": 2014,
+      "month": 1,
+      "avg_temp_max": 9.6,
+      "avg_temp_min": 4.0967741935,
+      "total_precip": 94.0
+    },
+    {
+      "year": 2014,
+      "month": 2,
+      "avg_temp_max": 8.2,
+      "avg_temp_min": 2.6357142857,
+      "total_precip": 155.2
+    },
+    {
+      "year": 2014,
+      "month": 3,
+      "avg_temp_max": 12.9064516129,
+      "avg_temp_min": 5.4258064516,
+      "total_precip": 240.0
+    },
+    {
+      "year": 2014,
+      "month": 4,
+      "avg_temp_max": 15.46,
+      "avg_temp_min": 6.73,
+      "total_precip": 106.1
+    },
+    {
+      "year": 2014,
+      "month": 5,
+      "avg_temp_max": 19.8709677419,
+      "avg_temp_min": 10.2161290323,
+      "total_precip": 80.0
+    },
+    {
+      "year": 2014,
+      "month": 6,
+      "avg_temp_max": 21.59,
+      "avg_temp_min": 11.7566666667,
+      "total_precip": 18.8
+    },
+    {
+      "year": 2014,
+      "month": 7,
+      "avg_temp_max": 26.9,
+      "avg_temp_min": 14.4258064516,
+      "total_precip": 19.6
+    },
+    {
+      "year": 2014,
+      "month": 8,
+      "avg_temp_max": 26.3838709677,
+      "avg_temp_min": 14.8935483871,
+      "total_precip": 46.0
+    },
+    {
+      "year": 2014,
+      "month": 9,
+      "avg_temp_max": 23.1633333333,
+      "avg_temp_min": 13.2333333333,
+      "total_precip": 56.7
+    },
+    {
+      "year": 2014,
+      "month": 10,
+      "avg_temp_max": 17.9612903226,
+      "avg_temp_min": 10.8838709677,
+      "total_precip": 171.5
+    },
+    {
+      "year": 2014,
+      "month": 11,
+      "avg_temp_max": 11.03,
+      "avg_temp_min": 4.51,
+      "total_precip": 123.1
+    },
+    {
+      "year": 2014,
+      "month": 12,
+      "avg_temp_max": 10.1387096774,
+      "avg_temp_min": 4.6096774194,
+      "total_precip": 121.8
+    },
+    {
+      "year": 2015,
+      "month": 1,
+      "avg_temp_max": 10.1548387097,
+      "avg_temp_min": 4.3516129032,
+      "total_precip": 93.0
+    },
+    {
+      "year": 2015,
+      "month": 2,
+      "avg_temp_max": 12.5178571429,
+      "avg_temp_min": 6.0857142857,
+      "total_precip": 134.2
+    },
+    {
+      "year": 2015,
+      "month": 3,
+      "avg_temp_max": 14.3774193548,
+      "avg_temp_min": 6.1935483871,
+      "total_precip": 113.5
+    },
+    {
+      "year": 2015,
+      "month": 4,
+      "avg_temp_max": 15.5033333333,
+      "avg_temp_min": 6.03,
+      "total_precip": 51.6
+    },
+    {
+      "year": 2015,
+      "month": 5,
+      "avg_temp_max": 20.0258064516,
+      "avg_temp_min": 10.1290322581,
+      "total_precip": 14.8
+    },
+    {
+      "year": 2015,
+      "month": 6,
+      "avg_temp_max": 26.0633333333,
+      "avg_temp_min": 13.5766666667,
+      "total_precip": 5.9
+    },
+    {
+      "year": 2015,
+      "month": 7,
+      "avg_temp_max": 28.0935483871,
+      "avg_temp_min": 15.5,
+      "total_precip": 2.3
+    },
+    {
+      "year": 2015,
+      "month": 8,
+      "avg_temp_max": 26.0870967742,
+      "avg_temp_min": 14.6935483871,
+      "total_precip": 83.3
+    },
+    {
+      "year": 2015,
+      "month": 9,
+      "avg_temp_max": 20.2933333333,
+      "avg_temp_min": 11.3666666667,
+      "total_precip": 21.1
+    },
+    {
+      "year": 2015,
+      "month": 10,
+      "avg_temp_max": 17.5387096774,
+      "avg_temp_min": 10.5,
+      "total_precip": 122.4
+    },
+    {
+      "year": 2015,
+      "month": 11,
+      "avg_temp_max": 9.6833333333,
+      "avg_temp_min": 3.48,
+      "total_precip": 212.6
+    },
+    {
+      "year": 2015,
+      "month": 12,
+      "avg_temp_max": 8.3806451613,
+      "avg_temp_min": 3.8258064516,
+      "total_precip": 284.5
+    }
+  ]
+}

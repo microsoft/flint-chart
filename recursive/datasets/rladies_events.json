@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "name": "rladies_events",
+    "description": "R-Ladies chapter events per year",
+    "source": "tidytuesday/2023-11-21/rladies_chapters.csv",
+    "transformation": "Count events per year.",
+    "num_rows": 12,
+    "columns": {
+      "year": "int32",
+      "events": "int64"
+    }
+  },
+  "data": [
+    {
+      "year": 2012,
+      "events": 1
+    },
+    {
+      "year": 2013,
+      "events": 11
+    },
+    {
+      "year": 2014,
+      "events": 14
+    },
+    {
+      "year": 2015,
+      "events": 16
+    },
+    {
+      "year": 2016,
+      "events": 61
+    },
+    {
+      "year": 2017,
+      "events": 374
+    },
+    {
+      "year": 2018,
+      "events": 641
+    },
+    {
+      "year": 2019,
+      "events": 902
+    },
+    {
+      "year": 2020,
+      "events": 920
+    },
+    {
+      "year": 2021,
+      "events": 763
+    },
+    {
+      "year": 2022,
+      "events": 444
+    },
+    {
+      "year": 2023,
+      "events": 121
+    }
+  ]
+}

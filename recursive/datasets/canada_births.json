@@ -1,0 +1,1016 @@
+{
+  "meta": {
+    "name": "canada_births",
+    "description": "Monthly births in Canada from 1991 to 2022",
+    "source": "tidytuesday/2024-01-09/canada_births_1991_2022.csv",
+    "transformation": "Used as-is (already clean).",
+    "num_rows": 200,
+    "columns": {
+      "year": "int64",
+      "month": "int64",
+      "births": "int64"
+    }
+  },
+  "data": [
+    {
+      "year": 1991,
+      "month": 1,
+      "births": 32213
+    },
+    {
+      "year": 1991,
+      "month": 2,
+      "births": 30345
+    },
+    {
+      "year": 1991,
+      "month": 3,
+      "births": 34869
+    },
+    {
+      "year": 1991,
+      "month": 4,
+      "births": 35398
+    },
+    {
+      "year": 1991,
+      "month": 5,
+      "births": 36371
+    },
+    {
+      "year": 1991,
+      "month": 6,
+      "births": 34378
+    },
+    {
+      "year": 1991,
+      "month": 7,
+      "births": 35436
+    },
+    {
+      "year": 1991,
+      "month": 8,
+      "births": 34421
+    },
+    {
+      "year": 1991,
+      "month": 9,
+      "births": 34410
+    },
+    {
+      "year": 1991,
+      "month": 10,
+      "births": 33092
+    },
+    {
+      "year": 1991,
+      "month": 11,
+      "births": 30766
+    },
+    {
+      "year": 1991,
+      "month": 12,
+      "births": 32117
+    },
+    {
+      "year": 1992,
+      "month": 1,
+      "births": 31982
+    },
+    {
+      "year": 1992,
+      "month": 2,
+      "births": 31572
+    },
+    {
+      "year": 1992,
+      "month": 3,
+      "births": 34972
+    },
+    {
+      "year": 1992,
+      "month": 4,
+      "births": 35265
+    },
+    {
+      "year": 1992,
+      "month": 5,
+      "births": 36096
+    },
+    {
+      "year": 1992,
+      "month": 6,
+      "births": 33832
+    },
+    {
+      "year": 1992,
+      "month": 7,
+      "births": 35260
+    },
+    {
+      "year": 1992,
+      "month": 8,
+      "births": 32970
+    },
+    {
+      "year": 1992,
+      "month": 9,
+      "births": 33709
+    },
+    {
+      "year": 1992,
+      "month": 10,
+      "births": 32188
+    },
+    {
+      "year": 1992,
+      "month": 11,
+      "births": 30165
+    },
+    {
+      "year": 1992,
+      "month": 12,
+      "births": 31098
+    },
+    {
+      "year": 1993,
+      "month": 1,
+      "births": 31031
+    },
+    {
+      "year": 1993,
+      "month": 2,
+      "births": 29601
+    },
+    {
+      "year": 1993,
+      "month": 3,
+      "births": 34339
+    },
+    {
+      "year": 1993,
+      "month": 4,
+      "births": 34196
+    },
+    {
+      "year": 1993,
+      "month": 5,
+      "births": 34857
+    },
+    {
+      "year": 1993,
+      "month": 6,
+      "births": 33497
+    },
+    {
+      "year": 1993,
+      "month": 7,
+      "births": 34008
+    },
+    {
+      "year": 1993,
+      "month": 8,
+      "births": 32768
+    },
+    {
+      "year": 1993,
+      "month": 9,
+      "births": 33224
+    },
+    {
+      "year": 1993,
+      "month": 10,
+      "births": 31336
+    },
+    {
+      "year": 1993,
+      "month": 11,
+      "births": 29582
+    },
+    {
+      "year": 1993,
+      "month": 12,
+      "births": 30598
+    },
+    {
+      "year": 1994,
+      "month": 1,
+      "births": 30310
+    },
+    {
+      "year": 1994,
+      "month": 2,
+      "births": 29242
+    },
+    {
+      "year": 1994,
+      "month": 3,
+      "births": 34155
+    },
+    {
+      "year": 1994,
+      "month": 4,
+      "births": 33228
+    },
+    {
+      "year": 1994,
+      "month": 5,
+      "births": 34576
+    },
+    {
+      "year": 1994,
+      "month": 6,
+      "births": 33707
+    },
+    {
+      "year": 1994,
+      "month": 7,
+      "births": 33758
+    },
+    {
+      "year": 1994,
+      "month": 8,
+      "births": 33019
+    },
+    {
+      "year": 1994,
+      "month": 9,
+      "births": 32711
+    },
+    {
+      "year": 1994,
+      "month": 10,
+      "births": 31037
+    },
+    {
+      "year": 1994,
+      "month": 11,
+      "births": 29982
+    },
+    {
+      "year": 1994,
+      "month": 12,
+      "births": 30518
+    },
+    {
+      "year": 1995,
+      "month": 1,
+      "births": 30006
+    },
+    {
+      "year": 1995,
+      "month": 2,
+      "births": 29076
+    },
+    {
+      "year": 1995,
+      "month": 3,
+      "births": 33448
+    },
+    {
+      "year": 1995,
+      "month": 4,
+      "births": 31765
+    },
+    {
+      "year": 1995,
+      "month": 5,
+      "births": 34593
+    },
+    {
+      "year": 1995,
+      "month": 6,
+      "births": 33055
+    },
+    {
+      "year": 1995,
+      "month": 7,
+      "births": 33339
+    },
+    {
+      "year": 1995,
+      "month": 8,
+      "births": 32814
+    },
+    {
+      "year": 1995,
+      "month": 9,
+      "births": 32608
+    },
+    {
+      "year": 1995,
+      "month": 10,
+      "births": 30807
+    },
+    {
+      "year": 1995,
+      "month": 11,
+      "births": 28770
+    },
+    {
+      "year": 1995,
+      "month": 12,
+      "births": 28404
+    },
+    {
+      "year": 1996,
+      "month": 1,
+      "births": 29435
+    },
+    {
+      "year": 1996,
+      "month": 2,
+      "births": 28843
+    },
+    {
+      "year": 1996,
+      "month": 3,
+      "births": 31816
+    },
+    {
+      "year": 1996,
+      "month": 4,
+      "births": 31834
+    },
+    {
+      "year": 1996,
+      "month": 5,
+      "births": 33150
+    },
+    {
+      "year": 1996,
+      "month": 6,
+      "births": 31368
+    },
+    {
+      "year": 1996,
+      "month": 7,
+      "births": 32493
+    },
+    {
+      "year": 1996,
+      "month": 8,
+      "births": 31334
+    },
+    {
+      "year": 1996,
+      "month": 9,
+      "births": 30928
+    },
+    {
+      "year": 1996,
+      "month": 10,
+      "births": 29944
+    },
+    {
+      "year": 1996,
+      "month": 11,
+      "births": 27384
+    },
+    {
+      "year": 1996,
+      "month": 12,
+      "births": 28304
+    },
+    {
+      "year": 1997,
+      "month": 1,
+      "births": 28473
+    },
+    {
+      "year": 1997,
+      "month": 2,
+      "births": 26621
+    },
+    {
+      "year": 1997,
+      "month": 3,
+      "births": 30096
+    },
+    {
+      "year": 1997,
+      "month": 4,
+      "births": 30737
+    },
+    {
+      "year": 1997,
+      "month": 5,
+      "births": 31834
+    },
+    {
+      "year": 1997,
+      "month": 6,
+      "births": 30077
+    },
+    {
+      "year": 1997,
+      "month": 7,
+      "births": 31114
+    },
+    {
+      "year": 1997,
+      "month": 8,
+      "births": 29321
+    },
+    {
+      "year": 1997,
+      "month": 9,
+      "births": 29322
+    },
+    {
+      "year": 1997,
+      "month": 10,
+      "births": 28336
+    },
+    {
+      "year": 1997,
+      "month": 11,
+      "births": 26334
+    },
+    {
+      "year": 1997,
+      "month": 12,
+      "births": 27278
+    },
+    {
+      "year": 1998,
+      "month": 1,
+      "births": 27246
+    },
+    {
+      "year": 1998,
+      "month": 2,
+      "births": 26484
+    },
+    {
+      "year": 1998,
+      "month": 3,
+      "births": 29821
+    },
+    {
+      "year": 1998,
+      "month": 4,
+      "births": 30314
+    },
+    {
+      "year": 1998,
+      "month": 5,
+      "births": 30877
+    },
+    {
+      "year": 1998,
+      "month": 6,
+      "births": 29399
+    },
+    {
+      "year": 1998,
+      "month": 7,
+      "births": 30329
+    },
+    {
+      "year": 1998,
+      "month": 8,
+      "births": 28998
+    },
+    {
+      "year": 1998,
+      "month": 9,
+      "births": 29703
+    },
+    {
+      "year": 1998,
+      "month": 10,
+      "births": 27940
+    },
+    {
+      "year": 1998,
+      "month": 11,
+      "births": 25461
+    },
+    {
+      "year": 1998,
+      "month": 12,
+      "births": 26394
+    },
+    {
+      "year": 1999,
+      "month": 1,
+      "births": 26996
+    },
+    {
+      "year": 1999,
+      "month": 2,
+      "births": 25691
+    },
+    {
+      "year": 1999,
+      "month": 3,
+      "births": 29330
+    },
+    {
+      "year": 1999,
+      "month": 4,
+      "births": 28592
+    },
+    {
+      "year": 1999,
+      "month": 5,
+      "births": 30051
+    },
+    {
+      "year": 1999,
+      "month": 6,
+      "births": 29387
+    },
+    {
+      "year": 1999,
+      "month": 7,
+      "births": 30227
+    },
+    {
+      "year": 1999,
+      "month": 8,
+      "births": 28444
+    },
+    {
+      "year": 1999,
+      "month": 9,
+      "births": 29254
+    },
+    {
+      "year": 1999,
+      "month": 10,
+      "births": 27257
+    },
+    {
+      "year": 1999,
+      "month": 11,
+      "births": 25708
+    },
+    {
+      "year": 1999,
+      "month": 12,
+      "births": 26884
+    },
+    {
+      "year": 2000,
+      "month": 1,
+      "births": 27288
+    },
+    {
+      "year": 2000,
+      "month": 2,
+      "births": 26245
+    },
+    {
+      "year": 2000,
+      "month": 3,
+      "births": 29277
+    },
+    {
+      "year": 2000,
+      "month": 4,
+      "births": 28257
+    },
+    {
+      "year": 2000,
+      "month": 5,
+      "births": 29881
+    },
+    {
+      "year": 2000,
+      "month": 6,
+      "births": 28820
+    },
+    {
+      "year": 2000,
+      "month": 7,
+      "births": 28606
+    },
+    {
+      "year": 2000,
+      "month": 8,
+      "births": 27802
+    },
+    {
+      "year": 2000,
+      "month": 9,
+      "births": 26954
+    },
+    {
+      "year": 2000,
+      "month": 10,
+      "births": 25899
+    },
+    {
+      "year": 2000,
+      "month": 11,
+      "births": 24968
+    },
+    {
+      "year": 2000,
+      "month": 12,
+      "births": 24599
+    },
+    {
+      "year": 2001,
+      "month": 1,
+      "births": 26823
+    },
+    {
+      "year": 2001,
+      "month": 2,
+      "births": 25447
+    },
+    {
+      "year": 2001,
+      "month": 3,
+      "births": 29261
+    },
+    {
+      "year": 2001,
+      "month": 4,
+      "births": 28894
+    },
+    {
+      "year": 2001,
+      "month": 5,
+      "births": 29970
+    },
+    {
+      "year": 2001,
+      "month": 6,
+      "births": 28638
+    },
+    {
+      "year": 2001,
+      "month": 7,
+      "births": 29169
+    },
+    {
+      "year": 2001,
+      "month": 8,
+      "births": 28874
+    },
+    {
+      "year": 2001,
+      "month": 9,
+      "births": 28327
+    },
+    {
+      "year": 2001,
+      "month": 10,
+      "births": 27713
+    },
+    {
+      "year": 2001,
+      "month": 11,
+      "births": 25892
+    },
+    {
+      "year": 2001,
+      "month": 12,
+      "births": 25607
+    },
+    {
+      "year": 2002,
+      "month": 1,
+      "births": 26853
+    },
+    {
+      "year": 2002,
+      "month": 2,
+      "births": 24814
+    },
+    {
+      "year": 2002,
+      "month": 3,
+      "births": 27901
+    },
+    {
+      "year": 2002,
+      "month": 4,
+      "births": 27739
+    },
+    {
+      "year": 2002,
+      "month": 5,
+      "births": 28892
+    },
+    {
+      "year": 2002,
+      "month": 6,
+      "births": 27350
+    },
+    {
+      "year": 2002,
+      "month": 7,
+      "births": 29099
+    },
+    {
+      "year": 2002,
+      "month": 8,
+      "births": 28798
+    },
+    {
+      "year": 2002,
+      "month": 9,
+      "births": 28997
+    },
+    {
+      "year": 2002,
+      "month": 10,
+      "births": 27968
+    },
+    {
+      "year": 2002,
+      "month": 11,
+      "births": 25921
+    },
+    {
+      "year": 2002,
+      "month": 12,
+      "births": 25562
+    },
+    {
+      "year": 2003,
+      "month": 1,
+      "births": 26360
+    },
+    {
+      "year": 2003,
+      "month": 2,
+      "births": 24980
+    },
+    {
+      "year": 2003,
+      "month": 3,
+      "births": 28198
+    },
+    {
+      "year": 2003,
+      "month": 4,
+      "births": 27932
+    },
+    {
+      "year": 2003,
+      "month": 5,
+      "births": 29505
+    },
+    {
+      "year": 2003,
+      "month": 6,
+      "births": 28320
+    },
+    {
+      "year": 2003,
+      "month": 7,
+      "births": 30400
+    },
+    {
+      "year": 2003,
+      "month": 8,
+      "births": 29093
+    },
+    {
+      "year": 2003,
+      "month": 9,
+      "births": 29662
+    },
+    {
+      "year": 2003,
+      "month": 10,
+      "births": 28947
+    },
+    {
+      "year": 2003,
+      "month": 11,
+      "births": 26206
+    },
+    {
+      "year": 2003,
+      "month": 12,
+      "births": 26749
+    },
+    {
+      "year": 2004,
+      "month": 1,
+      "births": 27145
+    },
+    {
+      "year": 2004,
+      "month": 2,
+      "births": 25815
+    },
+    {
+      "year": 2004,
+      "month": 3,
+      "births": 29041
+    },
+    {
+      "year": 2004,
+      "month": 4,
+      "births": 28538
+    },
+    {
+      "year": 2004,
+      "month": 5,
+      "births": 28870
+    },
+    {
+      "year": 2004,
+      "month": 6,
+      "births": 28885
+    },
+    {
+      "year": 2004,
+      "month": 7,
+      "births": 29655
+    },
+    {
+      "year": 2004,
+      "month": 8,
+      "births": 29257
+    },
+    {
+      "year": 2004,
+      "month": 9,
+      "births": 29588
+    },
+    {
+      "year": 2004,
+      "month": 10,
+      "births": 28283
+    },
+    {
+      "year": 2004,
+      "month": 11,
+      "births": 26871
+    },
+    {
+      "year": 2004,
+      "month": 12,
+      "births": 27064
+    },
+    {
+      "year": 2005,
+      "month": 1,
+      "births": 27338
+    },
+    {
+      "year": 2005,
+      "month": 2,
+      "births": 25123
+    },
+    {
+      "year": 2005,
+      "month": 3,
+      "births": 29503
+    },
+    {
+      "year": 2005,
+      "month": 4,
+      "births": 29139
+    },
+    {
+      "year": 2005,
+      "month": 5,
+      "births": 30032
+    },
+    {
+      "year": 2005,
+      "month": 6,
+      "births": 29980
+    },
+    {
+      "year": 2005,
+      "month": 7,
+      "births": 30464
+    },
+    {
+      "year": 2005,
+      "month": 8,
+      "births": 30353
+    },
+    {
+      "year": 2005,
+      "month": 9,
+      "births": 30398
+    },
+    {
+      "year": 2005,
+      "month": 10,
+      "births": 28956
+    },
+    {
+      "year": 2005,
+      "month": 11,
+      "births": 27163
+    },
+    {
+      "year": 2005,
+      "month": 12,
+      "births": 26916
+    },
+    {
+      "year": 2006,
+      "month": 1,
+      "births": 28247
+    },
+    {
+      "year": 2006,
+      "month": 2,
+      "births": 26253
+    },
+    {
+      "year": 2006,
+      "month": 3,
+      "births": 29800
+    },
+    {
+      "year": 2006,
+      "month": 4,
+      "births": 28917
+    },
+    {
+      "year": 2006,
+      "month": 5,
+      "births": 31264
+    },
+    {
+      "year": 2006,
+      "month": 6,
+      "births": 30431
+    },
+    {
+      "year": 2006,
+      "month": 7,
+      "births": 31155
+    },
+    {
+      "year": 2006,
+      "month": 8,
+      "births": 32134
+    },
+    {
+      "year": 2006,
+      "month": 9,
+      "births": 31903
+    },
+    {
+      "year": 2006,
+      "month": 10,
+      "births": 30695
+    },
+    {
+      "year": 2006,
+      "month": 11,
+      "births": 28742
+    },
+    {
+      "year": 2006,
+      "month": 12,
+      "births": 28380
+    },
+    {
+      "year": 2007,
+      "month": 1,
+      "births": 29272
+    },
+    {
+      "year": 2007,
+      "month": 2,
+      "births": 27121
+    },
+    {
+      "year": 2007,
+      "month": 3,
+      "births": 30555
+    },
+    {
+      "year": 2007,
+      "month": 4,
+      "births": 30187
+    },
+    {
+      "year": 2007,
+      "month": 5,
+      "births": 31986
+    },
+    {
+      "year": 2007,
+      "month": 6,
+      "births": 31805
+    },
+    {
+      "year": 2007,
+      "month": 7,
+      "births": 32613
+    },
+    {
+      "year": 2007,
+      "month": 8,
+      "births": 33191
+    }
+  ]
+}

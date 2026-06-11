@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "refugees_2022",
+    "description": "Top 20 refugee-producing countries in 2022",
+    "source": "tidytuesday/2023-08-22/population.csv",
+    "transformation": "Filter to 2022, sum refugees by country of origin, top 20.",
+    "num_rows": 20,
+    "columns": {
+      "country_of_origin": "str",
+      "total_refugees": "int64"
+    }
+  },
+  "data": [
+    {
+      "country_of_origin": "Syrian Arab Rep.",
+      "total_refugees": 6547818
+    },
+    {
+      "country_of_origin": "Ukraine",
+      "total_refugees": 5679880
+    },
+    {
+      "country_of_origin": "Afghanistan",
+      "total_refugees": 5661675
+    },
+    {
+      "country_of_origin": "South Sudan",
+      "total_refugees": 2294983
+    },
+    {
+      "country_of_origin": "Myanmar",
+      "total_refugees": 1253111
+    },
+    {
+      "country_of_origin": "Dem. Rep. of the Congo",
+      "total_refugees": 931903
+    },
+    {
+      "country_of_origin": "Sudan",
+      "total_refugees": 836756
+    },
+    {
+      "country_of_origin": "Somalia",
+      "total_refugees": 790513
+    },
+    {
+      "country_of_origin": "Central African Rep.",
+      "total_refugees": 748327
+    },
+    {
+      "country_of_origin": "Eritrea",
+      "total_refugees": 508291
+    },
+    {
+      "country_of_origin": "Nigeria",
+      "total_refugees": 391074
+    },
+    {
+      "country_of_origin": "Burundi",
+      "total_refugees": 320536
+    },
+    {
+      "country_of_origin": "Iraq",
+      "total_refugees": 288261
+    },
+    {
+      "country_of_origin": "Rwanda",
+      "total_refugees": 249685
+    },
+    {
+      "country_of_origin": "Venezuela (Bolivarian Republic of)",
+      "total_refugees": 234376
+    },
+    {
+      "country_of_origin": "Mali",
+      "total_refugees": 226720
+    },
+    {
+      "country_of_origin": "China",
+      "total_refugees": 161234
+    },
+    {
+      "country_of_origin": "Ethiopia",
+      "total_refugees": 149245
+    },
+    {
+      "country_of_origin": "Sri Lanka",
+      "total_refugees": 148082
+    },
+    {
+      "country_of_origin": "Cameroon",
+      "total_refugees": 147359
+    }
+  ]
+}

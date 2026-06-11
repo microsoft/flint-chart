@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "nhl_birth_countries",
+    "description": "NHL players by birth country",
+    "source": "tidytuesday/2024-01-09/nhl_player_births.csv",
+    "transformation": "Count players by birth country, top 20.",
+    "num_rows": 20,
+    "columns": {
+      "birth_country": "str",
+      "player_count": "int64"
+    }
+  },
+  "data": [
+    {
+      "birth_country": "CAN",
+      "player_count": 5468
+    },
+    {
+      "birth_country": "USA",
+      "player_count": 1403
+    },
+    {
+      "birth_country": "SWE",
+      "player_count": 403
+    },
+    {
+      "birth_country": "RUS",
+      "player_count": 287
+    },
+    {
+      "birth_country": "CZE",
+      "player_count": 258
+    },
+    {
+      "birth_country": "FIN",
+      "player_count": 257
+    },
+    {
+      "birth_country": "SVK",
+      "player_count": 93
+    },
+    {
+      "birth_country": "GBR",
+      "player_count": 52
+    },
+    {
+      "birth_country": "CHE",
+      "player_count": 42
+    },
+    {
+      "birth_country": "DEU",
+      "player_count": 42
+    },
+    {
+      "birth_country": "LVA",
+      "player_count": 26
+    },
+    {
+      "birth_country": "DNK",
+      "player_count": 18
+    },
+    {
+      "birth_country": "UKR",
+      "player_count": 17
+    },
+    {
+      "birth_country": "FRA",
+      "player_count": 14
+    },
+    {
+      "birth_country": "AUT",
+      "player_count": 11
+    },
+    {
+      "birth_country": "BLR",
+      "player_count": 11
+    },
+    {
+      "birth_country": "KAZ",
+      "player_count": 10
+    },
+    {
+      "birth_country": "NOR",
+      "player_count": 9
+    },
+    {
+      "birth_country": "POL",
+      "player_count": 8
+    },
+    {
+      "birth_country": "ITA",
+      "player_count": 4
+    }
+  ]
+}

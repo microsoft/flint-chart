@@ -1,0 +1,298 @@
+{
+  "meta": {
+    "name": "london_marathon",
+    "description": "London Marathon participation stats over the years",
+    "source": "tidytuesday/2023-04-25/london_marathon.csv",
+    "transformation": "Select participation columns, clean numeric values.",
+    "num_rows": 40,
+    "columns": {
+      "Year": "int64",
+      "Applicants": "float64",
+      "Accepted": "float64",
+      "Starters": "float64",
+      "Finishers": "float64"
+    }
+  },
+  "data": [
+    {
+      "Year": 1981,
+      "Applicants": 20000.0,
+      "Accepted": 7747.0,
+      "Starters": 7055.0,
+      "Finishers": 6255.0
+    },
+    {
+      "Year": 1982,
+      "Applicants": 90000.0,
+      "Accepted": 18059.0,
+      "Starters": 16350.0,
+      "Finishers": 15116.0
+    },
+    {
+      "Year": 1983,
+      "Applicants": 60000.0,
+      "Accepted": 19735.0,
+      "Starters": 16500.0,
+      "Finishers": 15793.0
+    },
+    {
+      "Year": 1984,
+      "Applicants": 70000.0,
+      "Accepted": 21142.0,
+      "Starters": 16992.0,
+      "Finishers": 15675.0
+    },
+    {
+      "Year": 1985,
+      "Applicants": 83000.0,
+      "Accepted": 22274.0,
+      "Starters": 17500.0,
+      "Finishers": 15873.0
+    },
+    {
+      "Year": 1986,
+      "Applicants": 80000.0,
+      "Accepted": 25566.0,
+      "Starters": 19261.0,
+      "Finishers": 18067.0
+    },
+    {
+      "Year": 1987,
+      "Applicants": 80000.0,
+      "Accepted": 28364.0,
+      "Starters": 21485.0,
+      "Finishers": 19586.0
+    },
+    {
+      "Year": 1988,
+      "Applicants": 73000.0,
+      "Accepted": 29979.0,
+      "Starters": 22469.0,
+      "Finishers": 20932.0
+    },
+    {
+      "Year": 1989,
+      "Applicants": 72000.0,
+      "Accepted": 31772.0,
+      "Starters": 24452.0,
+      "Finishers": 22701.0
+    },
+    {
+      "Year": 1990,
+      "Applicants": 73000.0,
+      "Accepted": 34882.0,
+      "Starters": 26500.0,
+      "Finishers": 25013.0
+    },
+    {
+      "Year": 1991,
+      "Applicants": 79000.0,
+      "Accepted": 33485.0,
+      "Starters": 24500.0,
+      "Finishers": 23435.0
+    },
+    {
+      "Year": 1992,
+      "Applicants": 83000.0,
+      "Accepted": 34250.0,
+      "Starters": 24500.0,
+      "Finishers": 23833.0
+    },
+    {
+      "Year": 1993,
+      "Applicants": 68000.0,
+      "Accepted": 35820.0,
+      "Starters": 25000.0,
+      "Finishers": 24495.0
+    },
+    {
+      "Year": 1994,
+      "Applicants": 72000.0,
+      "Accepted": 37379.0,
+      "Starters": 26000.0,
+      "Finishers": 25242.0
+    },
+    {
+      "Year": 1995,
+      "Applicants": 79000.0,
+      "Accepted": 39097.0,
+      "Starters": 27000.0,
+      "Finishers": 25377.0
+    },
+    {
+      "Year": 1996,
+      "Applicants": 68000.0,
+      "Accepted": 39173.0,
+      "Starters": 27134.0,
+      "Finishers": 26806.0
+    },
+    {
+      "Year": 1997,
+      "Applicants": 78000.0,
+      "Accepted": 39813.0,
+      "Starters": 29500.0,
+      "Finishers": 29189.0
+    },
+    {
+      "Year": 1998,
+      "Applicants": 96000.0,
+      "Accepted": 42228.0,
+      "Starters": 30663.0,
+      "Finishers": 29972.0
+    },
+    {
+      "Year": 1999,
+      "Applicants": 87000.0,
+      "Accepted": 43774.0,
+      "Starters": 31582.0,
+      "Finishers": 30849.0
+    },
+    {
+      "Year": 2000,
+      "Applicants": 93000.0,
+      "Accepted": 42596.0,
+      "Starters": 32620.0,
+      "Finishers": 31698.0
+    },
+    {
+      "Year": 2001,
+      "Applicants": 92000.0,
+      "Accepted": 43517.0,
+      "Starters": 31156.0,
+      "Finishers": 30318.0
+    },
+    {
+      "Year": 2002,
+      "Applicants": 99000.0,
+      "Accepted": 46083.0,
+      "Starters": 33297.0,
+      "Finishers": 32950.0
+    },
+    {
+      "Year": 2003,
+      "Applicants": 111000.0,
+      "Accepted": 45629.0,
+      "Starters": 32746.0,
+      "Finishers": 32324.0
+    },
+    {
+      "Year": 2004,
+      "Applicants": 108000.0,
+      "Accepted": 45219.0,
+      "Starters": 32746.0,
+      "Finishers": 32012.0
+    },
+    {
+      "Year": 2005,
+      "Applicants": 132000.0,
+      "Accepted": 47969.0,
+      "Starters": 35600.0,
+      "Finishers": 35300.0
+    },
+    {
+      "Year": 2006,
+      "Applicants": 119000.0,
+      "Accepted": 47020.0,
+      "Starters": 33578.0,
+      "Finishers": 33250.0
+    },
+    {
+      "Year": 2007,
+      "Applicants": 128000.0,
+      "Accepted": 50039.0,
+      "Starters": 36396.0,
+      "Finishers": 35729.0
+    },
+    {
+      "Year": 2008,
+      "Applicants": 120000.0,
+      "Accepted": 48630.0,
+      "Starters": 35037.0,
+      "Finishers": 34637.0
+    },
+    {
+      "Year": 2009,
+      "Applicants": 155000.0,
+      "Accepted": 49995.0,
+      "Starters": 35884.0,
+      "Finishers": 35404.0
+    },
+    {
+      "Year": 2010,
+      "Applicants": 163000.0,
+      "Accepted": 51378.0,
+      "Starters": 36956.0,
+      "Finishers": 36666.0
+    },
+    {
+      "Year": 2011,
+      "Applicants": 163926.0,
+      "Accepted": 50532.0,
+      "Starters": 35303.0,
+      "Finishers": 34872.0
+    },
+    {
+      "Year": 2012,
+      "Applicants": 170150.0,
+      "Accepted": 50200.0,
+      "Starters": 37227.0,
+      "Finishers": 36812.0
+    },
+    {
+      "Year": 2013,
+      "Applicants": 167449.0,
+      "Accepted": 48323.0,
+      "Starters": 34631.0,
+      "Finishers": 34381.0
+    },
+    {
+      "Year": 2014,
+      "Applicants": 169682.0,
+      "Accepted": 49872.0,
+      "Starters": 36337.0,
+      "Finishers": 35977.0
+    },
+    {
+      "Year": 2015,
+      "Applicants": 172888.0,
+      "Accepted": 51696.0,
+      "Starters": 38020.0,
+      "Finishers": 37793.0
+    },
+    {
+      "Year": 2016,
+      "Applicants": 247069.0,
+      "Accepted": 53152.0,
+      "Starters": 39523.0,
+      "Finishers": 39140.0
+    },
+    {
+      "Year": 2017,
+      "Applicants": 253930.0,
+      "Accepted": 53229.0,
+      "Starters": 40048.0,
+      "Finishers": 39487.0
+    },
+    {
+      "Year": 2018,
+      "Applicants": 386050.0,
+      "Accepted": 54685.0,
+      "Starters": 40926.0,
+      "Finishers": 40220.0
+    },
+    {
+      "Year": 2019,
+      "Applicants": 414168.0,
+      "Accepted": 56398.0,
+      "Starters": 42906.0,
+      "Finishers": 42549.0
+    },
+    {
+      "Year": 2020,
+      "Applicants": 457861.0,
+      "Accepted": 77.0,
+      "Starters": 77.0,
+      "Finishers": 61.0
+    }
+  ]
+}

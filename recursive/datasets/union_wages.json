@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "union_wages",
+    "description": "US union vs non-union wages over time",
+    "source": "tidytuesday/2023-09-05/wages.csv",
+    "transformation": "Select wage columns, drop NaN.",
+    "num_rows": 200,
+    "columns": {
+      "year": "int64",
+      "wage": "float64",
+      "at_cap": "float64",
+      "union_wage": "float64",
+      "nonunion_wage": "float64",
+      "union_wage_premium_raw": "float64"
+    }
+  },
+  "data": [
+    {
+      "year": 1973,
+      "wage": 3.9633433819,
+      "at_cap": 0.0011102976,
+      "union_wage": 4.6130080223,
+      "nonunion_wage": 3.7545280457,
+      "union_wage_premium_raw": 0.2286518961
+    },
+    {
+      "year": 1974,
+      "wage": 4.2589883804,
+      "at_cap": 0.001568906,
+      "union_wage": 5.0213637352,
+      "nonunion_wage": 4.019071579,
+      "union_wage_premium_raw": 0.2493840009
+    },
+    {
+      "year": 1975,
+      "wage": 4.6221523285,
+      "at_cap": 0.0022673374,
+      "union_wage": 5.4289298058,
+      "nonunion_wage": 4.3866724968,
+      "union_wage_premium_raw": 0.237596333
+    },
+    {
+      "year": 1976,
+      "wage": 4.9141016006,
+      "at_cap": 0.0029009832,
+      "union_wage": 5.8358368874,
+      "nonunion_wage": 4.646127224,
+      "union_wage_premium_raw": 0.2560648024
+    },
+    {
+      "year": 1977,
+      "wage": 5.2357525826,
+      "at_cap": 0.0035580324,
+      "union_wage": 6.3753943443,
+      "nonunion_wage": 4.8748140335,
+      "union_wage_premium_raw": 0.3078230917
+    },
+    {
+      "year": 1978,
+      "wage": 5.578953743,
+      "at_cap": 0.0038851819,
+      "union_wage": 6.7736473083,
+      "nonunion_wage": 5.2125511169,
+      "union_wage_premium_raw": 0.2994879484
+    },
+    {
+      "year": 1979,
+      "wage": 6.3574690819,
+      "at_cap": 0.0051955413,
+      "union_wage": 7.313542366,
+      "nonunion_wage": 6.0298418999,
+      "union_wage_premium_raw": 0.2128912359
+    },
+    {
+      "year": 1980,
+      "wage": 6.8896255493,
+      "at_cap": 0.0069791535,
+      "union_wage": 7.8833341599,
+      "nonunion_wage": 6.573331356,
+      "union_wage_premium_raw": 0.1992905438
+    },
+    {
+      "year": 1981,
+      "wage": 6.9651932716,
+      "at_cap": 0.0076753548,
+      "union_wage": 8.5686159134,
+      "nonunion_wage": 6.5143737793,
+      "union_wage_premium_raw": 0.3153399229
+    },
+    {
+      "year": 1983,
+      "wage": 8.0554800034,
+      "at_cap": 0.0172453765,
+      "union_wage": 9.8859157562,
+      "nonunion_wage": 7.5938448906,
+      "union_wage_premium_raw": 0.3018327355
+    },
+    {
+      "year": 1984,
+      "wage": 8.3721895218,
+      "at_cap": 0.0215145107,
+      "union_wage": 10.26304245,
+      "nonunion_wage": 7.9299273491,
+      "union_wage_premium_raw": 0.294216454
+    },
+    {
+      "year": 1985,
+      "wage": 8.7762832642,
+      "at_cap": 0.0255639534,
+      "union_wage": 10.7610960007,
+      "nonunion_wage": 8.3383779526,
+      "union_wage_premium_raw": 0.2905502915
+    },
+    {
+      "year": 1986,
+      "wage": 9.1583919525,
+      "at_cap": 0.0304271989,
+      "union_wage": 11.1756267548,
+      "nonunion_wage": 8.723567009,
+      "union_wage_premium_raw": 0.2810845375
+    },
+    {
+      "year": 1987,
+      "wage": 9.4760580063,
+      "at_cap": 0.0354012474,
+      "union_wage": 11.6239337921,
+      "nonunion_wage": 9.0272397995,
+      "union_wage_premium_raw": 0.2876509428
+    },
+    {
+      "year": 1988,
+      "wage": 9.9277496338,
+      "at_cap": 0.0424375124,
+      "union_wage": 12.2438745499,
+      "nonunion_wage": 9.4548273087,
+      "union_wage_premium_raw": 0.2949865758
+    },
+    {
+      "year": 1989,
+      "wage": 10.3885498047,
+      "at_cap": 0.005477211,
+      "union_wage": 12.8505973816,
+      "nonunion_wage": 9.8984603882,
+      "union_wage_premium_raw": 0.2982420325
+    },
+    {
+      "year": 1990,
+      "wage": 10.8464841843,
+      "at_cap": 0.0067628347,
+      "union_wage": 13.3883228302,
+      "nonunion_wage": 10.3627548218,
+      "union_wage_premium_raw": 0.2919656038
+    },
+    {
+      "year": 1991,
+      "wage": 11.2881355286,
+      "at_cap": 0.0080470433,
+      "union_wage": 13.789689064,
+      "nonunion_wage": 10.8143291473,
+      "union_wage_premium_raw": 0.2751312554
+    },
+    {
+      "year": 1992,
+      "wage": 11.5929098129,
+      "at_cap": 0.0086610606,
+      "union_wage": 14.2288293839,
+      "nonunion_wage": 11.0985031128,
+      "union_wage_premium_raw": 0.2820494175
+    },
+    {
+      "year": 1993,
+      "wage": 11.9614448547,
+      "at_cap": 0.009873447,
+      "union_wage": 14.7673711777,
+      "nonunion_wage": 11.4353981018,
+      "union_wage_premium_raw": 0.2913736105
+    },
+    {
+      "year": 1994,
+      "wage": 12.495595932,
+      "at_cap": 0.012466182,
+      "union_wage": 15.2236394882,
+      "nonunion_wage": 11.9929800034,
+      "union_wage_premium_raw": 0.2693791986
+    },
+    {
+      "year": 1995,
+      "wage": 12.7977180481,
+      "at_cap": 0.0132515552,
+      "union_wage": 15.5292673111,
+      "nonunion_wage": 12.3180179596,
+      "union_wage_premium_raw": 0.2606953084
+    },
+    {
+      "year": 1996,
+      "wage": 13.1061429977,
+      "at_cap": 0.0141085098,
+      "union_wage": 16.3249187469,
+      "nonunion_wage": 12.5539340973,
+      "union_wage_premium_raw": 0.3003827035
+    },
+    {
+      "year": 1997,
+      "wage": 13.6061582565,
+      "at_cap": 0.0166668296,
+      "union_wage": 16.9571456909,
+      "nonunion_wage": 13.0433769226,
+      "union_wage_premium_raw": 0.3000579476
+    },
+    {
+      "year": 1998,
+      "wage": 14.2175035477,
+      "at_cap": 0.006338174,
+      "union_wage": 17.4347648621,
+      "nonunion_wage": 13.6895999908,
+      "union_wage_premium_raw": 0.2735773921
+    },
+    {
+      "year": 1999,
+      "wage": 14.9748859406,
+      "at_cap": 0.0074463664,
+      "union_wage": 18.2386054993,
+      "nonunion_wage": 14.4386863708,
+      "union_wage_premium_raw": 0.2631762326
+    },
+    {
+      "year": 2000,
+      "wage": 15.6463937759,
+      "at_cap": 0.0085239178,
+      "union_wage": 18.6267852783,
+      "nonunion_wage": 15.1681756973,
+      "union_wage_premium_raw": 0.228017509
+    },
+    {
+      "year": 2001,
+      "wage": 16.5532341003,
+      "at_cap": 0.0099678105,
+      "union_wage": 19.4564418793,
+      "nonunion_wage": 16.0888385773,
+      "union_wage_premium_raw": 0.2093130201
+    },
+    {
+      "year": 2002,
+      "wage": 17.0623397827,
+      "at_cap": 0.0112488447,
+      "union_wage": 20.1365528107,
+      "nonunion_wage": 16.580121994,
+      "union_wage_premium_raw": 0.2144996822
+    },
+    {
+      "year": 2003,
+      "wage": 17.5107383728,
+      "at_cap": 0.0119978227,
+      "union_wage": 20.7709922791,
+      "nonunion_wage": 17.0056343079,
+      "union_wage_premium_raw": 0.2214182615
+    },
+    {
+      "year": 2004,
+      "wage": 17.9809265137,
+      "at_cap": 0.013197612,
+      "union_wage": 21.633190155,
+      "nonunion_wage": 17.4331588745,
+      "union_wage_premium_raw": 0.2409219891
+    },
+    {
+      "year": 2005,
+      "wage": 18.5422382355,
+      "at_cap": 0.0145510882,
+      "union_wage": 22.0474357605,
+      "nonunion_wage": 18.0231151581,
+      "union_wage_premium_raw": 0.2232866287
+    },
+    {
+      "year": 2006,
+      "wage": 19.1460533142,
+      "at_cap": 0.0163324531,
+      "union_wage": 22.5787220001,
+      "nonunion_wage": 18.6524963379,
+      "union_wage_premium_raw": 0.2104933113
+    },
+    {
+      "year": 2007,
+      "wage": 19.7845001221,
+      "at_cap": 0.0180365723,
+      "union_wage": 23.3809871674,
+      "nonunion_wage": 19.2615909576,
+      "union_wage_premium_raw": 0.2138658315
+    },
+    {
+      "year": 2008,
+      "wage": 20.7527179718,
+      "at_cap": 0.0209442135,
+      "union_wage": 24.1956748962,
+      "nonunion_wage": 20.2379131317,
+      "union_wage_premium_raw": 0.1955617517
+    },
+    {
+      "year": 2009,
+      "wage": 21.0881462097,
+      "at_cap": 0.0222726576,
+      "union_wage": 24.719909668,
+      "nonunion_wage": 20.5416355133,
+      "union_wage_premium_raw": 0.2034051418
+    },
+    {
+      "year": 2010,
+      "wage": 21.3316898346,
+      "at_cap": 0.0238791034,
+      "union_wage": 25.4734592438,
+      "nonunion_wage": 20.7322807312,
+      "union_wage_premium_raw": 0.2286858112
+    },
+    {
+      "year": 2011,
+      "wage": 21.7104701996,
+      "at_cap": 0.025034599,
+      "union_wage": 25.8713493347,
+      "nonunion_wage": 21.1224040985,
+      "union_wage_premium_raw": 0.2248297632
+    },
+    {
+      "year": 2012,
+      "wage": 22.209312439,
+      "at_cap": 0.0275021419,
+      "union_wage": 26.2309646606,
+      "nonunion_wage": 21.666469574,
+      "union_wage_premium_raw": 0.2106709182
+    },
+    {
+      "year": 2013,
+      "wage": 22.6650009155,
+      "at_cap": 0.0300081074,
+      "union_wage": 26.8073749542,
+      "nonunion_wage": 22.1115894318,
+      "union_wage_premium_raw": 0.2123676091
+    },
+    {
+      "year": 2014,
+      "wage": 23.1494579315,
+      "at_cap": 0.0313314833,
+      "union_wage": 27.1149520874,
+      "nonunion_wage": 22.6209392548,
+      "union_wage_premium_raw": 0.198666051
+    },
+    {
+      "year": 2015,
+      "wage": 24.148557663,
+      "at_cap": 0.0357784592,
+      "union_wage": 28.0410995483,
+      "nonunion_wage": 23.6279563904,
+      "union_wage_premium_raw": 0.18677634
+    },
+    {
+      "year": 2016,
+      "wage": 24.9896240234,
+      "at_cap": 0.0386998542,
+      "union_wage": 28.7380123138,
+      "nonunion_wage": 24.5015010834,
+      "union_wage_premium_raw": 0.1729082316
+    },
+    {
+      "year": 2017,
+      "wage": 25.7263774872,
+      "at_cap": 0.0410387367,
+      "union_wage": 29.7040023804,
+      "nonunion_wage": 25.2119693756,
+      "union_wage_premium_raw": 0.1781706512
+    },
+    {
+      "year": 2018,
+      "wage": 26.9554367065,
+      "at_cap": 0.0465359911,
+      "union_wage": 30.5004482269,
+      "nonunion_wage": 26.5031776428,
+      "union_wage_premium_raw": 0.1508223116
+    },
+    {
+      "year": 2019,
+      "wage": 28.0958690643,
+      "at_cap": 0.0507127903,
+      "union_wage": 31.7022228241,
+      "nonunion_wage": 27.6480484009,
+      "union_wage_premium_raw": 0.1466351002
+    },
+    {
+      "year": 2020,
+      "wage": 30.5760250092,
+      "at_cap": 0.0600542128,
+      "union_wage": 33.2780990601,
+      "nonunion_wage": 30.222864151,
+      "union_wage_premium_raw": 0.1010901853
+    },
+    {
+      "year": 2021,
+      "wage": 31.973903656,
+      "at_cap": 0.0658158362,
+      "union_wage": 34.4965362549,
+      "nonunion_wage": 31.6604709625,
+      "union_wage_premium_raw": 0.0895774812
+    },
+    {
+      "year": 2022,
+      "wage": 34.1197433472,
+      "at_cap": 0.0749026537,
+      "union_wage": 36.0918655396,
+      "nonunion_wage": 33.88539505,
+      "union_wage_premium_raw": 0.0651156753
+    },
+    {
+      "year": 1973,
+      "wage": 5.1243929863,
+      "at_cap": 0.0011686845,
+      "union_wage": 6.6068358421,
+      "nonunion_wage": 4.2083120346,
+      "union_wage_premium_raw": 0.5699491501
+    },
+    {
+      "year": 1974,
+      "wage": 5.3937811852,
+      "at_cap": 0.0017147211,
+      "union_wage": 6.9597387314,
+      "nonunion_wage": 4.4869585037,
+      "union_wage_premium_raw": 0.5511038899
+    },
+    {
+      "year": 1975,
+      "wage": 5.6611084938,
+      "at_cap": 0.0037402064,
+      "union_wage": 7.4084339142,
+      "nonunion_wage": 4.7017145157,
+      "union_wage_premium_raw": 0.5756877661
+    },
+    {
+      "year": 1976,
+      "wage": 6.1889166832,
+      "at_cap": 0.0036756117,
+      "union_wage": 8.1462574005,
+      "nonunion_wage": 5.1496682167,
+      "union_wage_premium_raw": 0.5818994641
+    },
+    {
+      "year": 1977,
+      "wage": 6.5259308815,
+      "at_cap": 0.003834927,
+      "union_wage": 8.6943178177,
+      "nonunion_wage": 5.361219883,
+      "union_wage_premium_raw": 0.6217051148
+    },
+    {
+      "year": 1978,
+      "wage": 6.7469782829,
+      "at_cap": 0.0033033814,
+      "union_wage": 9.0687856674,
+      "nonunion_wage": 5.6190838814,
+      "union_wage_premium_raw": 0.6139259934
+    },
+    {
+      "year": 1979,
+      "wage": 7.6565589905,
+      "at_cap": 0.0039869277,
+      "union_wage": 9.85060215,
+      "nonunion_wage": 6.4597630501,
+      "union_wage_premium_raw": 0.5249169469
+    },
+    {
+      "year": 1980,
+      "wage": 8.2217407227,
+      "at_cap": 0.0051343171,
+      "union_wage": 10.2362766266,
+      "nonunion_wage": 7.197634697,
+      "union_wage_premium_raw": 0.4221722782
+    },
+    {
+      "year": 1981,
+      "wage": 8.6323041916,
+      "at_cap": 0.0077203154,
+      "union_wage": 11.1286077499,
+      "nonunion_wage": 7.3162059784,
+      "union_wage_premium_raw": 0.5210899711
+    },
+    {
+      "year": 1983,
+      "wage": 9.3134384155,
+      "at_cap": 0.0130477259,
+      "union_wage": 13.1670732498,
+      "nonunion_wage": 7.8391880989,
+      "union_wage_premium_raw": 0.6796475649
+    },
+    {
+      "year": 1984,
+      "wage": 9.4840726852,
+      "at_cap": 0.0171348508,
+      "union_wage": 13.7253513336,
+      "nonunion_wage": 8.1590414047,
+      "union_wage_premium_raw": 0.6822259426
+    },
+    {
+      "year": 1985,
+      "wage": 9.8329534531,
+      "at_cap": 0.0194320939,
+      "union_wage": 14.1999378204,
+      "nonunion_wage": 8.5269956589,
+      "union_wage_premium_raw": 0.6652920246
+    },
+    {
+      "year": 1986,
+      "wage": 10.1560316086,
+      "at_cap": 0.0189153682,
+      "union_wage": 14.4922199249,
+      "nonunion_wage": 8.8139057159,
+      "union_wage_premium_raw": 0.6442449689
+    },
+    {
+      "year": 1987,
+      "wage": 10.4989748001,
+      "at_cap": 0.0245786738,
+      "union_wage": 14.9824848175,
+      "nonunion_wage": 9.2312345505,
+      "union_wage_premium_raw": 0.6230207086
+    },
+    {
+      "year": 1988,
+      "wage": 10.9852104187,
+      "at_cap": 0.0321591198,
+      "union_wage": 15.4404840469,
+      "nonunion_wage": 9.750213623,
+      "union_wage_premium_raw": 0.5836046934
+    },
+    {
+      "year": 1989,
+      "wage": 11.4940929413,
+      "at_cap": 0.0034175946,
+      "union_wage": 15.9718551636,
+      "nonunion_wage": 10.1802005768,
+      "union_wage_premium_raw": 0.568913579
+    },
+    {
+      "year": 1990,
+      "wage": 11.9188308716,
+      "at_cap": 0.0044878693,
+      "union_wage": 16.3611564636,
+      "nonunion_wage": 10.6812820435,
+      "union_wage_premium_raw": 0.5317596197
+    },
+    {
+      "year": 1991,
+      "wage": 12.0893602371,
+      "at_cap": 0.0035460989,
+      "union_wage": 16.7022800446,
+      "nonunion_wage": 10.7897958755,
+      "union_wage_premium_raw": 0.5479699969
+    },
+    {
+      "year": 1992,
+      "wage": 12.3574209213,
+      "at_cap": 0.0034175306,
+      "union_wage": 17.2089157104,
+      "nonunion_wage": 11.030090332,
+      "union_wage_premium_raw": 0.5601790547
+    },
+    {
+      "year": 1993,
+      "wage": 12.6130361557,
+      "at_cap": 0.0036308616,
+      "union_wage": 17.2918205261,
+      "nonunion_wage": 11.3656358719,
+      "union_wage_premium_raw": 0.5214124918
+    },
+    {
+      "year": 1994,
+      "wage": 12.8526134491,
+      "at_cap": 0.0051125512,
+      "union_wage": 16.9832134247,
+      "nonunion_wage": 11.7813768387,
+      "union_wage_premium_raw": 0.4415304363
+    },
+    {
+      "year": 1995,
+      "wage": 13.2077198029,
+      "at_cap": 0.0052318093,
+      "union_wage": 17.8421497345,
+      "nonunion_wage": 12.1168575287,
+      "union_wage_premium_raw": 0.4725063443
+    },
+    {
+      "year": 1996,
+      "wage": 13.7851066589,
+      "at_cap": 0.0055823275,
+      "union_wage": 19.1366233826,
+      "nonunion_wage": 12.4729328156,
+      "union_wage_premium_raw": 0.5342521071
+    },
+    {
+      "year": 1997,
+      "wage": 14.1038694382,
+      "at_cap": 0.0043035802,
+      "union_wage": 19.7616653442,
+      "nonunion_wage": 12.7028512955,
+      "union_wage_premium_raw": 0.5556873679
+    },
+    {
+      "year": 1998,
+      "wage": 14.7641324997,
+      "at_cap": 0.0019641786,
+      "union_wage": 20.4500217438,
+      "nonunion_wage": 13.3903636932,
+      "union_wage_premium_raw": 0.5272192955
+    },
+    {
+      "year": 1999,
+      "wage": 15.3537797928,
+      "at_cap": 0.0018950726,
+      "union_wage": 20.9412479401,
+      "nonunion_wage": 13.9454460144,
+      "union_wage_premium_raw": 0.501654923
+    },
+    {
+      "year": 2000,
+      "wage": 15.8911428452,
+      "at_cap": 0.0030687959,
+      "union_wage": 21.7380504608,
+      "nonunion_wage": 14.4305782318,
+      "union_wage_premium_raw": 0.5063880682
+    },
+    {
+      "year": 2001,
+      "wage": 16.84141922,
+      "at_cap": 0.0041213296,
+      "union_wage": 22.9338207245,
+      "nonunion_wage": 15.3748655319,
+      "union_wage_premium_raw": 0.4916436672
+    },
+    {
+      "year": 2002,
+      "wage": 17.0962696075,
+      "at_cap": 0.0058826981,
+      "union_wage": 22.9537372589,
+      "nonunion_wage": 15.7546319962,
+      "union_wage_premium_raw": 0.456951648
+    },
+    {
+      "year": 2003,
+      "wage": 17.4208106995,
+      "at_cap": 0.0056262696,
+      "union_wage": 23.4441547394,
+      "nonunion_wage": 16.0932159424,
+      "union_wage_premium_raw": 0.4567725062
+    },
+    {
+      "year": 2004,
+      "wage": 17.4107971191,
+      "at_cap": 0.0052734148,
+      "union_wage": 24.6029891968,
+      "nonunion_wage": 16.0637779236,
+      "union_wage_premium_raw": 0.5315817595
+    },
+    {
+      "year": 2005,
+      "wage": 17.6363315582,
+      "at_cap": 0.0074594631,
+      "union_wage": 24.7954406738,
+      "nonunion_wage": 16.4350605011,
+      "union_wage_premium_raw": 0.5086917877
+    },
+    {
+      "year": 2006,
+      "wage": 18.4473590851,
+      "at_cap": 0.0081315823,
+      "union_wage": 26.3074893951,
+      "nonunion_wage": 17.1629810333,
+      "union_wage_premium_raw": 0.5328041911
+    },
+    {
+      "year": 2007,
+      "wage": 19.0010757446,
+      "at_cap": 0.0094290897,
+      "union_wage": 26.6985454559,
+      "nonunion_wage": 17.5959453583,
+      "union_wage_premium_raw": 0.5173123479
+    },
+    {
+      "year": 2008,
+      "wage": 20.5345573425,
+      "at_cap": 0.0116912788,
+      "union_wage": 27.8325099945,
+      "nonunion_wage": 19.045042038,
+      "union_wage_premium_raw": 0.4614045024
+    },
+    {
+      "year": 2009,
+      "wage": 21.0628833771,
+      "at_cap": 0.0104184039,
+      "union_wage": 28.983291626,
+      "nonunion_wage": 19.5056037903,
+      "union_wage_premium_raw": 0.4858956337
+    },
+    {
+      "year": 2010,
+      "wage": 21.0887718201,
+      "at_cap": 0.013131232,
+      "union_wage": 29.557592392,
+      "nonunion_wage": 19.6016254425,
+      "union_wage_premium_raw": 0.5079153776
+    },
+    {
+      "year": 2011,
+      "wage": 21.4387989044,
+      "at_cap": 0.0145486966,
+      "union_wage": 29.8214607239,
+      "nonunion_wage": 19.9265441895,
+      "union_wage_premium_raw": 0.4965696335
+    },
+    {
+      "year": 2012,
+      "wage": 21.8270378113,
+      "at_cap": 0.0140477344,
+      "union_wage": 29.5449390411,
+      "nonunion_wage": 20.4803199768,
+      "union_wage_premium_raw": 0.4426014423
+    },
+    {
+      "year": 2013,
+      "wage": 21.9203681946,
+      "at_cap": 0.0158301443,
+      "union_wage": 30.0796852112,
+      "nonunion_wage": 20.37109375,
+      "union_wage_premium_raw": 0.4765866697
+    },
+    {
+      "year": 2014,
+      "wage": 22.3780574799,
+      "at_cap": 0.0177063402,
+      "union_wage": 31.4146823883,
+      "nonunion_wage": 20.7326812744,
+      "union_wage_premium_raw": 0.5152252316
+    },
+    {
+      "year": 2015,
+      "wage": 23.1419773102,
+      "at_cap": 0.0191309787,
+      "union_wage": 30.65675354,
+      "nonunion_wage": 21.8669128418,
+      "union_wage_premium_raw": 0.4019699097
+    },
+    {
+      "year": 2016,
+      "wage": 23.9946117401,
+      "at_cap": 0.021974124,
+      "union_wage": 33.4280281067,
+      "nonunion_wage": 22.2538318634,
+      "union_wage_premium_raw": 0.5021246076
+    },
+    {
+      "year": 2017,
+      "wage": 24.8239154816,
+      "at_cap": 0.0233459342,
+      "union_wage": 33.0711975098,
+      "nonunion_wage": 23.226316452,
+      "union_wage_premium_raw": 0.4238675237
+    },
+    {
+      "year": 2018,
+      "wage": 26.1043014526,
+      "at_cap": 0.030558195,
+      "union_wage": 35.7426567078,
+      "nonunion_wage": 24.418504715,
+      "union_wage_premium_raw": 0.4637528956
+    },
+    {
+      "year": 2019,
+      "wage": 26.9992713928,
+      "at_cap": 0.0335254408,
+      "union_wage": 37.5082778931,
+      "nonunion_wage": 25.1315574646,
+      "union_wage_premium_raw": 0.492477268
+    },
+    {
+      "year": 2020,
+      "wage": 28.9112911224,
+      "at_cap": 0.0369562656,
+      "union_wage": 36.3513336182,
+      "nonunion_wage": 27.6950836182,
+      "union_wage_premium_raw": 0.3125554621
+    },
+    {
+      "year": 2021,
+      "wage": 29.657283783,
+      "at_cap": 0.0392736681,
+      "union_wage": 38.8849372864,
+      "nonunion_wage": 28.0804462433,
+      "union_wage_premium_raw": 0.3847692013
+    },
+    {
+      "year": 2022,
+      "wage": 31.0570602417,
+      "at_cap": 0.0439352915,
+      "union_wage": 39.6514434814,
+      "nonunion_wage": 29.7096366882,
+      "union_wage_premium_raw": 0.3346323967
+    },
+    {
+      "year": 1973,
+      "wage": 3.9633433819,
+      "at_cap": 0.0011102976,
+      "union_wage": 4.6130080223,
+      "nonunion_wage": 3.7545280457,
+      "union_wage_premium_raw": 0.2286518961
+    },
+    {
+      "year": 1974,
+      "wage": 4.2589883804,
+      "at_cap": 0.001568906,
+      "union_wage": 5.0213637352,
+      "nonunion_wage": 4.019071579,
+      "union_wage_premium_raw": 0.2493840009
+    },
+    {
+      "year": 1975,
+      "wage": 4.6221523285,
+      "at_cap": 0.0022673374,
+      "union_wage": 5.4289298058,
+      "nonunion_wage": 4.3866724968,
+      "union_wage_premium_raw": 0.237596333
+    },
+    {
+      "year": 1976,
+      "wage": 4.9141016006,
+      "at_cap": 0.0029009832,
+      "union_wage": 5.8358368874,
+      "nonunion_wage": 4.646127224,
+      "union_wage_premium_raw": 0.2560648024
+    },
+    {
+      "year": 1977,
+      "wage": 5.2357525826,
+      "at_cap": 0.0035580324,
+      "union_wage": 6.3753943443,
+      "nonunion_wage": 4.8748140335,
+      "union_wage_premium_raw": 0.3078230917
+    },
+    {
+      "year": 1978,
+      "wage": 5.578953743,
+      "at_cap": 0.0038851819,
+      "union_wage": 6.7736473083,
+      "nonunion_wage": 5.2125511169,
+      "union_wage_premium_raw": 0.2994879484
+    },
+    {
+      "year": 1979,
+      "wage": 6.3574690819,
+      "at_cap": 0.0051955413,
+      "union_wage": 7.313542366,
+      "nonunion_wage": 6.0298418999,
+      "union_wage_premium_raw": 0.2128912359
+    },
+    {
+      "year": 1980,
+      "wage": 6.8896255493,
+      "at_cap": 0.0069791535,
+      "union_wage": 7.8833341599,
+      "nonunion_wage": 6.573331356,
+      "union_wage_premium_raw": 0.1992905438
+    },
+    {
+      "year": 1981,
+      "wage": 6.9651932716,
+      "at_cap": 0.0076753548,
+      "union_wage": 8.5686159134,
+      "nonunion_wage": 6.5143737793,
+      "union_wage_premium_raw": 0.3153399229
+    },
+    {
+      "year": 1983,
+      "wage": 8.0554800034,
+      "at_cap": 0.0172453765,
+      "union_wage": 9.8859157562,
+      "nonunion_wage": 7.5938448906,
+      "union_wage_premium_raw": 0.3018327355
+    },
+    {
+      "year": 1984,
+      "wage": 8.3721895218,
+      "at_cap": 0.0215145107,
+      "union_wage": 10.26304245,
+      "nonunion_wage": 7.9299273491,
+      "union_wage_premium_raw": 0.294216454
+    },
+    {
+      "year": 1985,
+      "wage": 8.7762832642,
+      "at_cap": 0.0255639534,
+      "union_wage": 10.7610960007,
+      "nonunion_wage": 8.3383779526,
+      "union_wage_premium_raw": 0.2905502915
+    },
+    {
+      "year": 1986,
+      "wage": 9.1583919525,
+      "at_cap": 0.0304271989,
+      "union_wage": 11.1756267548,
+      "nonunion_wage": 8.723567009,
+      "union_wage_premium_raw": 0.2810845375
+    },
+    {
+      "year": 1987,
+      "wage": 9.4760580063,
+      "at_cap": 0.0354012474,
+      "union_wage": 11.6239337921,
+      "nonunion_wage": 9.0272397995,
+      "union_wage_premium_raw": 0.2876509428
+    },
+    {
+      "year": 1988,
+      "wage": 9.9277496338,
+      "at_cap": 0.0424375124,
+      "union_wage": 12.2438745499,
+      "nonunion_wage": 9.4548273087,
+      "union_wage_premium_raw": 0.2949865758
+    },
+    {
+      "year": 1989,
+      "wage": 10.3885498047,
+      "at_cap": 0.005477211,
+      "union_wage": 12.8505973816,
+      "nonunion_wage": 9.8984603882,
+      "union_wage_premium_raw": 0.2982420325
+    },
+    {
+      "year": 1990,
+      "wage": 10.8464841843,
+      "at_cap": 0.0067628347,
+      "union_wage": 13.3883228302,
+      "nonunion_wage": 10.3627548218,
+      "union_wage_premium_raw": 0.2919656038
+    },
+    {
+      "year": 1991,
+      "wage": 11.2881355286,
+      "at_cap": 0.0080470433,
+      "union_wage": 13.789689064,
+      "nonunion_wage": 10.8143291473,
+      "union_wage_premium_raw": 0.2751312554
+    },
+    {
+      "year": 1992,
+      "wage": 11.5929098129,
+      "at_cap": 0.0086610606,
+      "union_wage": 14.2288293839,
+      "nonunion_wage": 11.0985031128,
+      "union_wage_premium_raw": 0.2820494175
+    },
+    {
+      "year": 1993,
+      "wage": 11.9614448547,
+      "at_cap": 0.009873447,
+      "union_wage": 14.7673711777,
+      "nonunion_wage": 11.4353981018,
+      "union_wage_premium_raw": 0.2913736105
+    },
+    {
+      "year": 1994,
+      "wage": 12.495595932,
+      "at_cap": 0.012466182,
+      "union_wage": 15.2236394882,
+      "nonunion_wage": 11.9929800034,
+      "union_wage_premium_raw": 0.2693791986
+    },
+    {
+      "year": 1995,
+      "wage": 12.7977180481,
+      "at_cap": 0.0132515552,
+      "union_wage": 15.5292673111,
+      "nonunion_wage": 12.3180179596,
+      "union_wage_premium_raw": 0.2606953084
+    },
+    {
+      "year": 1996,
+      "wage": 13.1061429977,
+      "at_cap": 0.0141085098,
+      "union_wage": 16.3249187469,
+      "nonunion_wage": 12.5539340973,
+      "union_wage_premium_raw": 0.3003827035
+    },
+    {
+      "year": 1997,
+      "wage": 13.6061582565,
+      "at_cap": 0.0166668296,
+      "union_wage": 16.9571456909,
+      "nonunion_wage": 13.0433769226,
+      "union_wage_premium_raw": 0.3000579476
+    },
+    {
+      "year": 1998,
+      "wage": 14.2175035477,
+      "at_cap": 0.006338174,
+      "union_wage": 17.4347648621,
+      "nonunion_wage": 13.6895999908,
+      "union_wage_premium_raw": 0.2735773921
+    },
+    {
+      "year": 1999,
+      "wage": 14.9748859406,
+      "at_cap": 0.0074463664,
+      "union_wage": 18.2386054993,
+      "nonunion_wage": 14.4386863708,
+      "union_wage_premium_raw": 0.2631762326
+    },
+    {
+      "year": 2000,
+      "wage": 15.6463937759,
+      "at_cap": 0.0085239178,
+      "union_wage": 18.6267852783,
+      "nonunion_wage": 15.1681756973,
+      "union_wage_premium_raw": 0.228017509
+    },
+    {
+      "year": 2001,
+      "wage": 16.5532341003,
+      "at_cap": 0.0099678105,
+      "union_wage": 19.4564418793,
+      "nonunion_wage": 16.0888385773,
+      "union_wage_premium_raw": 0.2093130201
+    },
+    {
+      "year": 2002,
+      "wage": 17.0623397827,
+      "at_cap": 0.0112488447,
+      "union_wage": 20.1365528107,
+      "nonunion_wage": 16.580121994,
+      "union_wage_premium_raw": 0.2144996822
+    },
+    {
+      "year": 2003,
+      "wage": 17.5107383728,
+      "at_cap": 0.0119978227,
+      "union_wage": 20.7709922791,
+      "nonunion_wage": 17.0056343079,
+      "union_wage_premium_raw": 0.2214182615
+    },
+    {
+      "year": 2004,
+      "wage": 17.9809265137,
+      "at_cap": 0.013197612,
+      "union_wage": 21.633190155,
+      "nonunion_wage": 17.4331588745,
+      "union_wage_premium_raw": 0.2409219891
+    },
+    {
+      "year": 2005,
+      "wage": 18.5422382355,
+      "at_cap": 0.0145510882,
+      "union_wage": 22.0474357605,
+      "nonunion_wage": 18.0231151581,
+      "union_wage_premium_raw": 0.2232866287
+    },
+    {
+      "year": 2006,
+      "wage": 19.1460533142,
+      "at_cap": 0.0163324531,
+      "union_wage": 22.5787220001,
+      "nonunion_wage": 18.6524963379,
+      "union_wage_premium_raw": 0.2104933113
+    },
+    {
+      "year": 2007,
+      "wage": 19.7845001221,
+      "at_cap": 0.0180365723,
+      "union_wage": 23.3809871674,
+      "nonunion_wage": 19.2615909576,
+      "union_wage_premium_raw": 0.2138658315
+    },
+    {
+      "year": 2008,
+      "wage": 20.7527179718,
+      "at_cap": 0.0209442135,
+      "union_wage": 24.1956748962,
+      "nonunion_wage": 20.2379131317,
+      "union_wage_premium_raw": 0.1955617517
+    },
+    {
+      "year": 2009,
+      "wage": 21.0881462097,
+      "at_cap": 0.0222726576,
+      "union_wage": 24.719909668,
+      "nonunion_wage": 20.5416355133,
+      "union_wage_premium_raw": 0.2034051418
+    },
+    {
+      "year": 2010,
+      "wage": 21.3316898346,
+      "at_cap": 0.0238791034,
+      "union_wage": 25.4734592438,
+      "nonunion_wage": 20.7322807312,
+      "union_wage_premium_raw": 0.2286858112
+    },
+    {
+      "year": 2011,
+      "wage": 21.7104701996,
+      "at_cap": 0.025034599,
+      "union_wage": 25.8713493347,
+      "nonunion_wage": 21.1224040985,
+      "union_wage_premium_raw": 0.2248297632
+    },
+    {
+      "year": 2012,
+      "wage": 22.209312439,
+      "at_cap": 0.0275021419,
+      "union_wage": 26.2309646606,
+      "nonunion_wage": 21.666469574,
+      "union_wage_premium_raw": 0.2106709182
+    },
+    {
+      "year": 2013,
+      "wage": 22.6650009155,
+      "at_cap": 0.0300081074,
+      "union_wage": 26.8073749542,
+      "nonunion_wage": 22.1115894318,
+      "union_wage_premium_raw": 0.2123676091
+    },
+    {
+      "year": 2014,
+      "wage": 23.1494579315,
+      "at_cap": 0.0313314833,
+      "union_wage": 27.1149520874,
+      "nonunion_wage": 22.6209392548,
+      "union_wage_premium_raw": 0.198666051
+    },
+    {
+      "year": 2015,
+      "wage": 24.148557663,
+      "at_cap": 0.0357784592,
+      "union_wage": 28.0410995483,
+      "nonunion_wage": 23.6279563904,
+      "union_wage_premium_raw": 0.18677634
+    },
+    {
+      "year": 2016,
+      "wage": 24.9896240234,
+      "at_cap": 0.0386998542,
+      "union_wage": 28.7380123138,
+      "nonunion_wage": 24.5015010834,
+      "union_wage_premium_raw": 0.1729082316
+    },
+    {
+      "year": 2017,
+      "wage": 25.7263774872,
+      "at_cap": 0.0410387367,
+      "union_wage": 29.7040023804,
+      "nonunion_wage": 25.2119693756,
+      "union_wage_premium_raw": 0.1781706512
+    },
+    {
+      "year": 2018,
+      "wage": 26.9554367065,
+      "at_cap": 0.0465359911,
+      "union_wage": 30.5004482269,
+      "nonunion_wage": 26.5031776428,
+      "union_wage_premium_raw": 0.1508223116
+    },
+    {
+      "year": 2019,
+      "wage": 28.0958690643,
+      "at_cap": 0.0507127903,
+      "union_wage": 31.7022228241,
+      "nonunion_wage": 27.6480484009,
+      "union_wage_premium_raw": 0.1466351002
+    },
+    {
+      "year": 2020,
+      "wage": 30.5760250092,
+      "at_cap": 0.0600542128,
+      "union_wage": 33.2780990601,
+      "nonunion_wage": 30.222864151,
+      "union_wage_premium_raw": 0.1010901853
+    },
+    {
+      "year": 2021,
+      "wage": 31.973903656,
+      "at_cap": 0.0658158362,
+      "union_wage": 34.4965362549,
+      "nonunion_wage": 31.6604709625,
+      "union_wage_premium_raw": 0.0895774812
+    },
+    {
+      "year": 2022,
+      "wage": 34.1197433472,
+      "at_cap": 0.0749026537,
+      "union_wage": 36.0918655396,
+      "nonunion_wage": 33.88539505,
+      "union_wage_premium_raw": 0.0651156753
+    },
+    {
+      "year": 1973,
+      "wage": 3.1428186893,
+      "at_cap": 0.000615626,
+      "union_wage": 3.7683296204,
+      "nonunion_wage": 3.0565564632,
+      "union_wage_premium_raw": 0.2328676581
+    },
+    {
+      "year": 1974,
+      "wage": 3.3877153397,
+      "at_cap": 0.0010309182,
+      "union_wage": 4.2020082474,
+      "nonunion_wage": 3.2846512794,
+      "union_wage_premium_raw": 0.2792859674
+    },
+    {
+      "year": 1975,
+      "wage": 3.6144213676,
+      "at_cap": 0.0013248378,
+      "union_wage": 4.5515313148,
+      "nonunion_wage": 3.5000171661,
+      "union_wage_premium_raw": 0.3004311323
+    },
+    {
+      "year": 1976,
+      "wage": 3.9306311607,
+      "at_cap": 0.0023475338,
+      "union_wage": 4.9386062622,
+      "nonunion_wage": 3.8051176071,
+      "union_wage_premium_raw": 0.2978853285
+    },
+    {
+      "year": 1977,
+      "wage": 4.1570940018,
+      "at_cap": 0.0024428854,
+      "union_wage": 5.4009017944,
+      "nonunion_wage": 4.0048122406,
+      "union_wage_premium_raw": 0.3486030102
+    },
+    {
+      "year": 1978,
+      "wage": 4.4315099716,
+      "at_cap": 0.003171134,
+      "union_wage": 5.7298240662,
+      "nonunion_wage": 4.2961249352,
+      "union_wage_premium_raw": 0.3337191343
+    },
+    {
+      "year": 1979,
+      "wage": 5.1546525955,
+      "at_cap": 0.0031486666,
+      "union_wage": 6.2708134651,
+      "nonunion_wage": 5.0166859627,
+      "union_wage_premium_raw": 0.2499912381
+    },
+    {
+      "year": 1980,
+      "wage": 5.539059639,
+      "at_cap": 0.005265451,
+      "union_wage": 6.7657885551,
+      "nonunion_wage": 5.3902311325,
+      "union_wage_premium_raw": 0.255194515
+    },
+    {
+      "year": 1981,
+      "wage": 5.3980631828,
+      "at_cap": 0.0030809983,
+      "union_wage": 7.4466114044,
+      "nonunion_wage": 5.1832447052,
+      "union_wage_premium_raw": 0.4366698563
+    },
+    {
+      "year": 1983,
+      "wage": 6.0350475311,
+      "at_cap": 0.0097438544,
+      "union_wage": 8.1036396027,
+      "nonunion_wage": 5.8375015259,
+      "union_wage_premium_raw": 0.3882034123
+    },
+    {
+      "year": 1984,
+      "wage": 6.1159901619,
+      "at_cap": 0.0118991779,
+      "union_wage": 8.1456985474,
+      "nonunion_wage": 5.9402561188,
+      "union_wage_premium_raw": 0.371270597
+    },
+    {
+      "year": 1985,
+      "wage": 6.362651825,
+      "at_cap": 0.0132919839,
+      "union_wage": 8.3376169205,
+      "nonunion_wage": 6.2066116333,
+      "union_wage_premium_raw": 0.3433443904
+    },
+    {
+      "year": 1986,
+      "wage": 6.580789566,
+      "at_cap": 0.0155945066,
+      "union_wage": 8.4012832642,
+      "nonunion_wage": 6.4384417534,
+      "union_wage_premium_raw": 0.3048628271
+    },
+    {
+      "year": 1987,
+      "wage": 6.8398962021,
+      "at_cap": 0.0184326526,
+      "union_wage": 8.7560329437,
+      "nonunion_wage": 6.6910128593,
+      "union_wage_premium_raw": 0.3086259365
+    },
+    {
+      "year": 1988,
+      "wage": 7.045899868,
+      "at_cap": 0.0201704558,
+      "union_wage": 9.0052223206,
+      "nonunion_wage": 6.9035611153,
+      "union_wage_premium_raw": 0.3044314682
+    },
+    {
+      "year": 1989,
+      "wage": 7.5150094032,
+      "at_cap": 0.0026634764,
+      "union_wage": 9.4369888306,
+      "nonunion_wage": 7.3830919266,
+      "union_wage_premium_raw": 0.2781892717
+    },
+    {
+      "year": 1990,
+      "wage": 7.9355487823,
+      "at_cap": 0.003763448,
+      "union_wage": 9.6966791153,
+      "nonunion_wage": 7.8172898293,
+      "union_wage_premium_raw": 0.2404144257
+    },
+    {
+      "year": 1991,
+      "wage": 8.2118654251,
+      "at_cap": 0.0038732125,
+      "union_wage": 9.8335847855,
+      "nonunion_wage": 8.0956792831,
+      "union_wage_premium_raw": 0.2146707475
+    },
+    {
+      "year": 1992,
+      "wage": 8.3956451416,
+      "at_cap": 0.0036852662,
+      "union_wage": 10.1019992828,
+      "nonunion_wage": 8.2727384567,
+      "union_wage_premium_raw": 0.2211191356
+    },
+    {
+      "year": 1993,
+      "wage": 8.6367359161,
+      "at_cap": 0.0046043154,
+      "union_wage": 10.5983896255,
+      "nonunion_wage": 8.5026845932,
+      "union_wage_premium_raw": 0.2464756817
+    },
+    {
+      "year": 1994,
+      "wage": 9.2688312531,
+      "at_cap": 0.0065504615,
+      "union_wage": 10.6293182373,
+      "nonunion_wage": 9.1783828735,
+      "union_wage_premium_raw": 0.1580818146
+    },
+    {
+      "year": 1995,
+      "wage": 9.5615348816,
+      "at_cap": 0.0066254498,
+      "union_wage": 10.9794683456,
+      "nonunion_wage": 9.4690132141,
+      "union_wage_premium_raw": 0.1595155746
+    },
+    {
+      "year": 1996,
+      "wage": 9.4442300797,
+      "at_cap": 0.0064489916,
+      "union_wage": 10.8378744125,
+      "nonunion_wage": 9.3598432541,
+      "union_wage_premium_raw": 0.1579119563
+    },
+    {
+      "year": 1997,
+      "wage": 9.8788843155,
+      "at_cap": 0.0079611847,
+      "union_wage": 11.1014947891,
+      "nonunion_wage": 9.8036241531,
+      "union_wage_premium_raw": 0.1323868185
+    },
+    {
+      "year": 1998,
+      "wage": 10.336517334,
+      "at_cap": 0.0028382111,
+      "union_wage": 11.8221254349,
+      "nonunion_wage": 10.251458168,
+      "union_wage_premium_raw": 0.1532140374
+    },
+    {
+      "year": 1999,
+      "wage": 10.9743261337,
+      "at_cap": 0.0036346887,
+      "union_wage": 12.1763744354,
+      "nonunion_wage": 10.9072437286,
+      "union_wage_premium_raw": 0.1163566858
+    },
+    {
+      "year": 2000,
+      "wage": 11.4621715546,
+      "at_cap": 0.0041400348,
+      "union_wage": 12.4429922104,
+      "nonunion_wage": 11.4096021652,
+      "union_wage_premium_raw": 0.0905719623
+    },
+    {
+      "year": 2001,
+      "wage": 12.0976552963,
+      "at_cap": 0.0055177524,
+      "union_wage": 13.4367570877,
+      "nonunion_wage": 12.0288925171,
+      "union_wage_premium_raw": 0.1170402467
+    },
+    {
+      "year": 2002,
+      "wage": 12.5209388733,
+      "at_cap": 0.0058961161,
+      "union_wage": 13.5891885757,
+      "nonunion_wage": 12.4677438736,
+      "union_wage_premium_raw": 0.0899476856
+    },
+    {
+      "year": 2003,
+      "wage": 13.9688501358,
+      "at_cap": 0.0066613914,
+      "union_wage": 13.7884702682,
+      "nonunion_wage": 13.9813127518,
+      "union_wage_premium_raw": -0.0137928743
+    },
+    {
+      "year": 2004,
+      "wage": 14.4254522324,
+      "at_cap": 0.0077228281,
+      "union_wage": 14.6579179764,
+      "nonunion_wage": 14.4111166,
+      "union_wage_premium_raw": 0.017125763
+    },
+    {
+      "year": 2005,
+      "wage": 15.0081472397,
+      "at_cap": 0.0108523974,
+      "union_wage": 14.9506559372,
+      "nonunion_wage": 15.0115194321,
+      "union_wage_premium_raw": -0.0040544528
+    },
+    {
+      "year": 2006,
+      "wage": 15.1399478912,
+      "at_cap": 0.0104205105,
+      "union_wage": 14.9568471909,
+      "nonunion_wage": 15.1499795914,
+      "union_wage_premium_raw": -0.01274803
+    },
+    {
+      "year": 2007,
+      "wage": 15.6814918518,
+      "at_cap": 0.0127106346,
+      "union_wage": 16.1013946533,
+      "nonunion_wage": 15.6564311981,
+      "union_wage_premium_raw": 0.0284204911
+    },
+    {
+      "year": 2008,
+      "wage": 16.1473922729,
+      "at_cap": 0.0130693903,
+      "union_wage": 15.6314134598,
+      "nonunion_wage": 16.1766719818,
+      "union_wage_premium_raw": -0.0337064713
+    },
+    {
+      "year": 2009,
+      "wage": 16.1931324005,
+      "at_cap": 0.0127995126,
+      "union_wage": 15.7776260376,
+      "nonunion_wage": 16.2183208466,
+      "union_wage_premium_raw": -0.027172653
+    },
+    {
+      "year": 2010,
+      "wage": 16.0372867584,
+      "at_cap": 0.0113321356,
+      "union_wage": 16.3793945312,
+      "nonunion_wage": 16.0181999207,
+      "union_wage_premium_raw": 0.0225490145
+    },
+    {
+      "year": 2011,
+      "wage": 16.4343318939,
+      "at_cap": 0.0142362965,
+      "union_wage": 15.3881587982,
+      "nonunion_wage": 16.4928703308,
+      "union_wage_premium_raw": -0.0669811592
+    },
+    {
+      "year": 2012,
+      "wage": 17.0290699005,
+      "at_cap": 0.0164094437,
+      "union_wage": 16.165605545,
+      "nonunion_wage": 17.0767631531,
+      "union_wage_premium_raw": -0.0533565767
+    },
+    {
+      "year": 2013,
+      "wage": 17.0237617493,
+      "at_cap": 0.0167029556,
+      "union_wage": 17.1705265045,
+      "nonunion_wage": 17.0161819458,
+      "union_wage_premium_raw": 0.0090704579
+    },
+    {
+      "year": 2014,
+      "wage": 17.3765411377,
+      "at_cap": 0.0172397755,
+      "union_wage": 15.7063789368,
+      "nonunion_wage": 17.4588031769,
+      "union_wage_premium_raw": -0.1003748178
+    },
+    {
+      "year": 2015,
+      "wage": 17.8746242523,
+      "at_cap": 0.0183729902,
+      "union_wage": 17.2393379211,
+      "nonunion_wage": 17.9083862305,
+      "union_wage_premium_raw": -0.0373594984
+    },
+    {
+      "year": 2016,
+      "wage": 19.0494880676,
+      "at_cap": 0.0236911196,
+      "union_wage": 17.1859703064,
+      "nonunion_wage": 19.1419391632,
+      "union_wage_premium_raw": -0.1021823809
+    },
+    {
+      "year": 2017,
+      "wage": 19.5213832855,
+      "at_cap": 0.0240346771,
+      "union_wage": 17.8829078674,
+      "nonunion_wage": 19.6029891968,
+      "union_wage_premium_raw": -0.0877458677
+    },
+    {
+      "year": 2018,
+      "wage": 20.4418029785,
+      "at_cap": 0.0256375074,
+      "union_wage": 19.9463233948,
+      "nonunion_wage": 20.465719223,
+      "union_wage_premium_raw": -0.0253788214
+    },
+    {
+      "year": 2019,
+      "wage": 21.4487934113,
+      "at_cap": 0.0304620545,
+      "union_wage": 19.706533432,
+      "nonunion_wage": 21.5306301117,
+      "union_wage_premium_raw": -0.0847210065
+    },
+    {
+      "year": 2020,
+      "wage": 22.643901825,
+      "at_cap": 0.0332412906,
+      "union_wage": 20.1112957001,
+      "nonunion_wage": 22.7708282471,
+      "union_wage_premium_raw": -0.1167955995
+    },
+    {
+      "year": 2021,
+      "wage": 24.1598854065,
+      "at_cap": 0.0387264676,
+      "union_wage": 20.0404434204,
+      "nonunion_wage": 24.3651180267,
+      "union_wage_premium_raw": -0.177494511
+    },
+    {
+      "year": 2022,
+      "wage": 25.8861122131,
+      "at_cap": 0.0435793288,
+      "union_wage": 21.2083148956,
+      "nonunion_wage": 26.1121349335,
+      "union_wage_premium_raw": -0.187798515
+    },
+    {
+      "year": 1973,
+      "wage": 3.9633433819,
+      "at_cap": 0.0011102976,
+      "union_wage": 4.6130080223,
+      "nonunion_wage": 3.7545280457,
+      "union_wage_premium_raw": 0.2286518961
+    },
+    {
+      "year": 1974,
+      "wage": 4.2589883804,
+      "at_cap": 0.001568906,
+      "union_wage": 5.0213637352,
+      "nonunion_wage": 4.019071579,
+      "union_wage_premium_raw": 0.2493840009
+    },
+    {
+      "year": 1975,
+      "wage": 4.6221523285,
+      "at_cap": 0.0022673374,
+      "union_wage": 5.4289298058,
+      "nonunion_wage": 4.3866724968,
+      "union_wage_premium_raw": 0.237596333
+    },
+    {
+      "year": 1976,
+      "wage": 4.9141016006,
+      "at_cap": 0.0029009832,
+      "union_wage": 5.8358368874,
+      "nonunion_wage": 4.646127224,
+      "union_wage_premium_raw": 0.2560648024
+    }
+  ]
+}

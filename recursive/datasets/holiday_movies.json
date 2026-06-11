@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "name": "holiday_movies",
+    "description": "Holiday movie ratings and runtime",
+    "source": "tidytuesday/2023-12-12/holiday_movies.csv",
+    "transformation": "Select key columns, filter to movies with 100+ votes.",
+    "num_rows": 200,
+    "columns": {
+      "primary_title": "str",
+      "year": "int64",
+      "runtime_minutes": "float64",
+      "average_rating": "float64",
+      "num_votes": "int64",
+      "title_type": "str"
+    }
+  },
+  "data": [
+    {
+      "primary_title": "The Devil's Holiday",
+      "year": 1930,
+      "runtime_minutes": 80.0,
+      "average_rating": 6.0,
+      "num_votes": 242,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday",
+      "year": 1930,
+      "runtime_minutes": 91.0,
+      "average_rating": 6.3,
+      "num_votes": 638,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday of St. Jorgen",
+      "year": 1930,
+      "runtime_minutes": 83.0,
+      "average_rating": 7.4,
+      "num_votes": 256,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Sin Takes a Holiday",
+      "year": 1930,
+      "runtime_minutes": 81.0,
+      "average_rating": 6.1,
+      "num_votes": 740,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Sinners' Holiday",
+      "year": 1930,
+      "runtime_minutes": 60.0,
+      "average_rating": 6.3,
+      "num_votes": 688,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Death Takes a Holiday",
+      "year": 1934,
+      "runtime_minutes": 79.0,
+      "average_rating": 6.9,
+      "num_votes": 2361,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "College Holiday",
+      "year": 1936,
+      "runtime_minutes": 86.0,
+      "average_rating": 5.7,
+      "num_votes": 190,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Mad Holiday",
+      "year": 1936,
+      "runtime_minutes": 71.0,
+      "average_rating": 6.0,
+      "num_votes": 212,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Stolen Holiday",
+      "year": 1937,
+      "runtime_minutes": 80.0,
+      "average_rating": 6.3,
+      "num_votes": 615,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Every Day's a Holiday",
+      "year": 1937,
+      "runtime_minutes": 79.0,
+      "average_rating": 6.2,
+      "num_votes": 466,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Bank Holiday",
+      "year": 1938,
+      "runtime_minutes": 86.0,
+      "average_rating": 6.4,
+      "num_votes": 530,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1938,
+      "runtime_minutes": 69.0,
+      "average_rating": 7.5,
+      "num_votes": 8312,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday",
+      "year": 1938,
+      "runtime_minutes": 95.0,
+      "average_rating": 7.7,
+      "num_votes": 17619,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Tropic Holiday",
+      "year": 1938,
+      "runtime_minutes": 78.0,
+      "average_rating": 5.5,
+      "num_votes": 106,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Inspector Hornleigh on Holiday",
+      "year": 1939,
+      "runtime_minutes": 90.0,
+      "average_rating": 6.8,
+      "num_votes": 232,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas in July",
+      "year": 1940,
+      "runtime_minutes": 67.0,
+      "average_rating": 7.4,
+      "num_votes": 4172,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday Inn",
+      "year": 1942,
+      "runtime_minutes": 100.0,
+      "average_rating": 7.3,
+      "num_votes": 16722,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Holiday",
+      "year": 1944,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.5,
+      "num_votes": 1583,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Knickerbocker Holiday",
+      "year": 1944,
+      "runtime_minutes": 85.0,
+      "average_rating": 5.3,
+      "num_votes": 196,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas in Connecticut",
+      "year": 1945,
+      "runtime_minutes": 101.0,
+      "average_rating": 7.3,
+      "num_votes": 11196,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Strange Holiday",
+      "year": 1945,
+      "runtime_minutes": 61.0,
+      "average_rating": 5.4,
+      "num_votes": 239,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday in Mexico",
+      "year": 1946,
+      "runtime_minutes": 128.0,
+      "average_rating": 6.1,
+      "num_votes": 490,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Blondie's Holiday",
+      "year": 1947,
+      "runtime_minutes": 67.0,
+      "average_rating": 6.5,
+      "num_votes": 195,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Bush Christmas",
+      "year": 1947,
+      "runtime_minutes": 80.0,
+      "average_rating": 6.2,
+      "num_votes": 515,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Eve",
+      "year": 1947,
+      "runtime_minutes": 90.0,
+      "average_rating": 5.7,
+      "num_votes": 805,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Hoppy's Holiday",
+      "year": 1947,
+      "runtime_minutes": 60.0,
+      "average_rating": 6.5,
+      "num_votes": 148,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday Camp",
+      "year": 1947,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.6,
+      "num_votes": 537,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Summer Holiday",
+      "year": 1948,
+      "runtime_minutes": 93.0,
+      "average_rating": 5.8,
+      "num_votes": 638,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday Affair",
+      "year": 1949,
+      "runtime_minutes": 87.0,
+      "average_rating": 7.1,
+      "num_votes": 6591,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday in Havana",
+      "year": 1949,
+      "runtime_minutes": 73.0,
+      "average_rating": 5.9,
+      "num_votes": 125,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Johnny Holiday",
+      "year": 1949,
+      "runtime_minutes": 92.0,
+      "average_rating": 7.3,
+      "num_votes": 104,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Last Holiday",
+      "year": 1950,
+      "runtime_minutes": 88.0,
+      "average_rating": 7.3,
+      "num_votes": 2067,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1951,
+      "runtime_minutes": 86.0,
+      "average_rating": 8.1,
+      "num_votes": 24671,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday Week",
+      "year": 1952,
+      "runtime_minutes": 82.0,
+      "average_rating": 6.1,
+      "num_votes": 206,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday for Sinners",
+      "year": 1952,
+      "runtime_minutes": 72.0,
+      "average_rating": 5.9,
+      "num_votes": 184,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Roman Holiday",
+      "year": 1953,
+      "runtime_minutes": 118.0,
+      "average_rating": 8.0,
+      "num_votes": 145289,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Monsieur Hulot's Holiday",
+      "year": 1953,
+      "runtime_minutes": 114.0,
+      "average_rating": 7.3,
+      "num_votes": 19875,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "White Christmas",
+      "year": 1954,
+      "runtime_minutes": 120.0,
+      "average_rating": 7.6,
+      "num_votes": 47688,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Cinerama Holiday",
+      "year": 1955,
+      "runtime_minutes": 119.0,
+      "average_rating": 7.3,
+      "num_votes": 142,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday for Henrietta",
+      "year": 1952,
+      "runtime_minutes": 118.0,
+      "average_rating": 7.4,
+      "num_votes": 391,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Paris Holiday",
+      "year": 1958,
+      "runtime_minutes": 103.0,
+      "average_rating": 5.7,
+      "num_votes": 513,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday for Lovers",
+      "year": 1959,
+      "runtime_minutes": 103.0,
+      "average_rating": 5.6,
+      "num_votes": 426,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday in Spain",
+      "year": 1960,
+      "runtime_minutes": 125.0,
+      "average_rating": 5.5,
+      "num_votes": 399,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Summer Holiday",
+      "year": 1963,
+      "runtime_minutes": 107.0,
+      "average_rating": 6.1,
+      "num_votes": 1816,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Night Before Christmas",
+      "year": 1961,
+      "runtime_minutes": 68.0,
+      "average_rating": 7.5,
+      "num_votes": 1934,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Carol for Another Christmas",
+      "year": 1964,
+      "runtime_minutes": 84.0,
+      "average_rating": 6.5,
+      "num_votes": 1246,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Charlie Brown Christmas",
+      "year": 1965,
+      "runtime_minutes": 25.0,
+      "average_rating": 8.3,
+      "num_votes": 42101,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas That Almost Wasn't",
+      "year": 1966,
+      "runtime_minutes": 94.0,
+      "average_rating": 3.5,
+      "num_votes": 917,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Tree",
+      "year": 1966,
+      "runtime_minutes": 59.0,
+      "average_rating": 6.4,
+      "num_votes": 168,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "How the Grinch Stole Christmas!",
+      "year": 1966,
+      "runtime_minutes": 26.0,
+      "average_rating": 8.3,
+      "num_votes": 56692,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Tree",
+      "year": 1969,
+      "runtime_minutes": 110.0,
+      "average_rating": 6.3,
+      "num_votes": 719,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Death Takes a Holiday",
+      "year": 1971,
+      "runtime_minutes": 73.0,
+      "average_rating": 7.2,
+      "num_votes": 291,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Homecoming: A Christmas Story",
+      "year": 1971,
+      "runtime_minutes": 100.0,
+      "average_rating": 8.3,
+      "num_votes": 2039,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Martian",
+      "year": 1971,
+      "runtime_minutes": 65.0,
+      "average_rating": 4.8,
+      "num_votes": 186,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Home for the Holidays",
+      "year": 1972,
+      "runtime_minutes": 73.0,
+      "average_rating": 6.2,
+      "num_votes": 1265,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The House Without a Christmas Tree",
+      "year": 1972,
+      "runtime_minutes": 75.0,
+      "average_rating": 8.0,
+      "num_votes": 874,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Dream for Christmas",
+      "year": 1973,
+      "runtime_minutes": 100.0,
+      "average_rating": 6.7,
+      "num_votes": 112,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Black Christmas",
+      "year": 1974,
+      "runtime_minutes": 98.0,
+      "average_rating": 7.1,
+      "num_votes": 46105,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday on the Buses",
+      "year": 1973,
+      "runtime_minutes": 87.0,
+      "average_rating": 5.8,
+      "num_votes": 2020,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The First Christmas: The Story of the First Christmas Snow",
+      "year": 1975,
+      "runtime_minutes": 22.0,
+      "average_rating": 6.8,
+      "num_votes": 579,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Olympian Holiday",
+      "year": 1976,
+      "runtime_minutes": 113.0,
+      "average_rating": 6.5,
+      "num_votes": 413,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Journey to the Christmas Star",
+      "year": 1976,
+      "runtime_minutes": 92.0,
+      "average_rating": 6.5,
+      "num_votes": 1355,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Miracle in Caufield, U.S.A.",
+      "year": 1977,
+      "runtime_minutes": 97.0,
+      "average_rating": 5.8,
+      "num_votes": 171,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Confessions from a Holiday Camp",
+      "year": 1977,
+      "runtime_minutes": 88.0,
+      "average_rating": 4.2,
+      "num_votes": 1030,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Emmet Otter's Jug-Band Christmas",
+      "year": 1977,
+      "runtime_minutes": 48.0,
+      "average_rating": 8.2,
+      "num_votes": 4460,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "It Happened One Christmas",
+      "year": 1977,
+      "runtime_minutes": 109.0,
+      "average_rating": 6.0,
+      "num_votes": 969,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Nestor, the Long-Eared Christmas Donkey",
+      "year": 1977,
+      "runtime_minutes": 24.0,
+      "average_rating": 6.9,
+      "num_votes": 2335,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Blue Christmas",
+      "year": 1978,
+      "runtime_minutes": 133.0,
+      "average_rating": 6.2,
+      "num_votes": 124,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas to Remember",
+      "year": 1978,
+      "runtime_minutes": 100.0,
+      "average_rating": 6.4,
+      "num_votes": 171,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Where Are You Going on Holiday?",
+      "year": 1978,
+      "runtime_minutes": 127.0,
+      "average_rating": 6.3,
+      "num_votes": 563,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday Hotel",
+      "year": 1978,
+      "runtime_minutes": 110.0,
+      "average_rating": 6.0,
+      "num_votes": 347,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "An American Christmas Carol",
+      "year": 1979,
+      "runtime_minutes": 98.0,
+      "average_rating": 6.8,
+      "num_votes": 1616,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas Lilies of the Field",
+      "year": 1979,
+      "runtime_minutes": 120.0,
+      "average_rating": 6.5,
+      "num_votes": 107,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Rudolph and Frosty's Christmas in July",
+      "year": 1979,
+      "runtime_minutes": 97.0,
+      "average_rating": 6.3,
+      "num_votes": 2547,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas Mountain",
+      "year": 1981,
+      "runtime_minutes": 90.0,
+      "average_rating": 6.5,
+      "num_votes": 148,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Without Snow",
+      "year": 1980,
+      "runtime_minutes": 120.0,
+      "average_rating": 5.7,
+      "num_votes": 401,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Mr. Krueger's Christmas",
+      "year": 1980,
+      "runtime_minutes": 26.0,
+      "average_rating": 7.9,
+      "num_votes": 1092,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Pinocchio's Christmas",
+      "year": 1980,
+      "runtime_minutes": 49.0,
+      "average_rating": 6.4,
+      "num_votes": 752,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas Evil",
+      "year": 1980,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.5,
+      "num_votes": 8110,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Best Christmas Pageant Ever",
+      "year": 1983,
+      "runtime_minutes": 48.0,
+      "average_rating": 7.2,
+      "num_votes": 789,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Bush Christmas",
+      "year": 1983,
+      "runtime_minutes": 91.0,
+      "average_rating": 5.2,
+      "num_votes": 384,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Story",
+      "year": 1983,
+      "runtime_minutes": 93.0,
+      "average_rating": 7.9,
+      "num_votes": 163273,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Gift of Love: A Christmas Story",
+      "year": 1983,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.7,
+      "num_votes": 357,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Merry Christmas Mr. Lawrence",
+      "year": 1983,
+      "runtime_minutes": 123.0,
+      "average_rating": 7.2,
+      "num_votes": 19475,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1984,
+      "runtime_minutes": 100.0,
+      "average_rating": 7.8,
+      "num_votes": 17146,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Kenny & Dolly: A Christmas to Remember",
+      "year": 1984,
+      "runtime_minutes": 60.0,
+      "average_rating": 8.3,
+      "num_votes": 139,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Night They Saved Christmas",
+      "year": 1984,
+      "runtime_minutes": 92.0,
+      "average_rating": 6.5,
+      "num_votes": 1605,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Merry Christmas",
+      "year": 1984,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.6,
+      "num_votes": 170,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Don't Open Till Christmas",
+      "year": 1984,
+      "runtime_minutes": 86.0,
+      "average_rating": 4.7,
+      "num_votes": 2804,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "One Magic Christmas",
+      "year": 1985,
+      "runtime_minutes": 89.0,
+      "average_rating": 6.4,
+      "num_votes": 4233,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Eve",
+      "year": 1986,
+      "runtime_minutes": 93.0,
+      "average_rating": 7.3,
+      "num_votes": 427,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Gift",
+      "year": 1986,
+      "runtime_minutes": 120.0,
+      "average_rating": 6.5,
+      "num_votes": 768,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Star",
+      "year": 1986,
+      "runtime_minutes": 94.0,
+      "average_rating": 6.1,
+      "num_votes": 770,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Smoky Mountain Christmas",
+      "year": 1986,
+      "runtime_minutes": 94.0,
+      "average_rating": 6.9,
+      "num_votes": 1290,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Merry Christmas Octopus",
+      "year": 1987,
+      "runtime_minutes": 92.0,
+      "average_rating": 6.8,
+      "num_votes": 191,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Comes to Willow Creek",
+      "year": 1987,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.4,
+      "num_votes": 619,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Hobo's Christmas",
+      "year": 1987,
+      "runtime_minutes": 100.0,
+      "average_rating": 6.4,
+      "num_votes": 427,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Roman Holiday",
+      "year": 1987,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.0,
+      "num_votes": 156,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Blackadder's Christmas Carol",
+      "year": 1988,
+      "runtime_minutes": 43.0,
+      "average_rating": 7.9,
+      "num_votes": 13712,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Wife",
+      "year": 1988,
+      "runtime_minutes": 73.0,
+      "average_rating": 6.2,
+      "num_votes": 408,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Ernest Saves Christmas",
+      "year": 1988,
+      "runtime_minutes": 95.0,
+      "average_rating": 5.7,
+      "num_votes": 12392,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "I'll Be Home for Christmas",
+      "year": 1988,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.5,
+      "num_votes": 292,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Julie Andrews: The Sound of Christmas",
+      "year": 1987,
+      "runtime_minutes": 48.0,
+      "average_rating": 8.9,
+      "num_votes": 125,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Very Brady Christmas",
+      "year": 1988,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.9,
+      "num_votes": 2120,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Dark Holiday",
+      "year": 1989,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.4,
+      "num_votes": 183,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "It Nearly Wasn't Christmas",
+      "year": 1989,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.7,
+      "num_votes": 246,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "National Lampoon's Christmas Vacation",
+      "year": 1989,
+      "runtime_minutes": 97.0,
+      "average_rating": 7.5,
+      "num_votes": 209533,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Toy",
+      "year": 1986,
+      "runtime_minutes": 50.0,
+      "average_rating": 7.8,
+      "num_votes": 1404,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Guess Who's Coming for Christmas?",
+      "year": 1990,
+      "runtime_minutes": 95.0,
+      "average_rating": 5.1,
+      "num_votes": 105,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Home for Christmas",
+      "year": 1990,
+      "runtime_minutes": 95.0,
+      "average_rating": 5.7,
+      "num_votes": 223,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Kid Who Loved Christmas",
+      "year": 1990,
+      "runtime_minutes": 118.0,
+      "average_rating": 6.3,
+      "num_votes": 304,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Mom for Christmas",
+      "year": 1990,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.5,
+      "num_votes": 1209,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "All I Want for Christmas",
+      "year": 1991,
+      "runtime_minutes": 92.0,
+      "average_rating": 5.9,
+      "num_votes": 5420,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas on Division Street",
+      "year": 1991,
+      "runtime_minutes": 120.0,
+      "average_rating": 6.7,
+      "num_votes": 567,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Lena's Holiday",
+      "year": 1991,
+      "runtime_minutes": 100.0,
+      "average_rating": 5.5,
+      "num_votes": 314,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Russian Holiday",
+      "year": 1993,
+      "runtime_minutes": 89.0,
+      "average_rating": 3.5,
+      "num_votes": 267,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Stallion",
+      "year": 1992,
+      "runtime_minutes": 95.0,
+      "average_rating": 5.7,
+      "num_votes": 118,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas in Connecticut",
+      "year": 1992,
+      "runtime_minutes": 93.0,
+      "average_rating": 4.8,
+      "num_votes": 1565,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Muppet Christmas Carol",
+      "year": 1992,
+      "runtime_minutes": 85.0,
+      "average_rating": 7.7,
+      "num_votes": 66015,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Nightmare Before Christmas",
+      "year": 1993,
+      "runtime_minutes": 76.0,
+      "average_rating": 7.9,
+      "num_votes": 367288,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Christmas Romance",
+      "year": 1994,
+      "runtime_minutes": 94.0,
+      "average_rating": 6.1,
+      "num_votes": 867,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "One Christmas",
+      "year": 1994,
+      "runtime_minutes": 90.0,
+      "average_rating": 6.0,
+      "num_votes": 751,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Billy's Holiday",
+      "year": 1995,
+      "runtime_minutes": 92.0,
+      "average_rating": 5.1,
+      "num_votes": 164,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Box",
+      "year": 1995,
+      "runtime_minutes": 100.0,
+      "average_rating": 7.0,
+      "num_votes": 1270,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1997,
+      "runtime_minutes": 72.0,
+      "average_rating": 5.9,
+      "num_votes": 886,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Home for the Holidays",
+      "year": 1995,
+      "runtime_minutes": 103.0,
+      "average_rating": 6.6,
+      "num_votes": 14315,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas Every Day",
+      "year": 1996,
+      "runtime_minutes": 95.0,
+      "average_rating": 6.2,
+      "num_votes": 1128,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Tree",
+      "year": 1996,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.9,
+      "num_votes": 437,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Sesame Street: Elmo Saves Christmas",
+      "year": 1996,
+      "runtime_minutes": 60.0,
+      "average_rating": 6.5,
+      "num_votes": 416,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "The Flintstones Christmas in Bedrock",
+      "year": 1996,
+      "runtime_minutes": 30.0,
+      "average_rating": 7.0,
+      "num_votes": 197,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Holiday Affair",
+      "year": 1996,
+      "runtime_minutes": 87.0,
+      "average_rating": 6.3,
+      "num_votes": 420,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Party",
+      "year": 1996,
+      "runtime_minutes": 84.0,
+      "average_rating": 7.0,
+      "num_votes": 451,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Munsters' Scary Little Christmas",
+      "year": 1996,
+      "runtime_minutes": 91.0,
+      "average_rating": 4.9,
+      "num_votes": 654,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Will It Snow for Christmas?",
+      "year": 1996,
+      "runtime_minutes": 90.0,
+      "average_rating": 7.0,
+      "num_votes": 881,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Beauty and the Beast: The Enchanted Christmas",
+      "year": 1997,
+      "runtime_minutes": 72.0,
+      "average_rating": 5.9,
+      "num_votes": 11705,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Stubby Pringle's Christmas",
+      "year": 1978,
+      "runtime_minutes": 55.0,
+      "average_rating": 7.5,
+      "num_votes": 118,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "How the Toys Saved Christmas",
+      "year": 1996,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.5,
+      "num_votes": 585,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Mister Magoo's Christmas Carol",
+      "year": 1962,
+      "runtime_minutes": 53.0,
+      "average_rating": 7.6,
+      "num_votes": 3103,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Mr. Willowby's Christmas Tree",
+      "year": 1995,
+      "runtime_minutes": 30.0,
+      "average_rating": 6.1,
+      "num_votes": 270,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Holiday in Your Heart",
+      "year": 1997,
+      "runtime_minutes": 96.0,
+      "average_rating": 5.6,
+      "num_votes": 318,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Boy Who Saved Christmas",
+      "year": 1998,
+      "runtime_minutes": 94.0,
+      "average_rating": 3.1,
+      "num_votes": 198,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Raccoons",
+      "year": 1980,
+      "runtime_minutes": 30.0,
+      "average_rating": 7.0,
+      "num_votes": 156,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "On the 2nd Day of Christmas",
+      "year": 1997,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.1,
+      "num_votes": 894,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Christmas Memory",
+      "year": 1997,
+      "runtime_minutes": 96.0,
+      "average_rating": 7.0,
+      "num_votes": 792,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Apollo Goes on Holiday",
+      "year": 1968,
+      "runtime_minutes": 88.0,
+      "average_rating": 6.0,
+      "num_votes": 223,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "I'll Be Home for Christmas",
+      "year": 1997,
+      "runtime_minutes": 94.0,
+      "average_rating": 6.3,
+      "num_votes": 321,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christopher's Christmas Mission",
+      "year": 1975,
+      "runtime_minutes": 23.0,
+      "average_rating": 8.0,
+      "num_votes": 2726,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Merry Christmas, George Bailey",
+      "year": 1997,
+      "runtime_minutes": 60.0,
+      "average_rating": 7.3,
+      "num_votes": 151,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas List",
+      "year": 1997,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.7,
+      "num_votes": 1449,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Holiday for Love",
+      "year": 1996,
+      "runtime_minutes": 105.0,
+      "average_rating": 6.4,
+      "num_votes": 737,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Home for Christmas",
+      "year": 1975,
+      "runtime_minutes": 89.0,
+      "average_rating": 6.5,
+      "num_votes": 102,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Teddy Bears' Christmas",
+      "year": 1992,
+      "runtime_minutes": 30.0,
+      "average_rating": 8.1,
+      "num_votes": 142,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas in August",
+      "year": 1998,
+      "runtime_minutes": 97.0,
+      "average_rating": 7.6,
+      "num_votes": 3855,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Richie Rich's Christmas Wish",
+      "year": 1998,
+      "runtime_minutes": 84.0,
+      "average_rating": 4.0,
+      "num_votes": 2475,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Bugs Bunny's Holiday Diet",
+      "year": 1979,
+      "runtime_minutes": 30.0,
+      "average_rating": 6.4,
+      "num_votes": 118,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "I'll Be Home for Christmas",
+      "year": 1998,
+      "runtime_minutes": 86.0,
+      "average_rating": 5.5,
+      "num_votes": 11463,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Christmas Wish",
+      "year": 1998,
+      "runtime_minutes": 93.0,
+      "average_rating": 6.9,
+      "num_votes": 768,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Merry Christmas... Happy New Year",
+      "year": 1989,
+      "runtime_minutes": 100.0,
+      "average_rating": 6.2,
+      "num_votes": 130,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Holiday to Remember",
+      "year": 1995,
+      "runtime_minutes": 90.0,
+      "average_rating": 6.1,
+      "num_votes": 669,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "An All Dogs Christmas Carol",
+      "year": 1998,
+      "runtime_minutes": 73.0,
+      "average_rating": 4.9,
+      "num_votes": 1554,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "How the Grinch Stole Christmas",
+      "year": 2000,
+      "runtime_minutes": 104.0,
+      "average_rating": 6.3,
+      "num_votes": 276568,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Santa's Christmas Circus",
+      "year": 1966,
+      "runtime_minutes": 60.0,
+      "average_rating": 2.0,
+      "num_votes": 187,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "A Child's Christmas in Wales",
+      "year": 1987,
+      "runtime_minutes": 55.0,
+      "average_rating": 7.7,
+      "num_votes": 629,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "You're Invited to Mary-Kate & Ashley's Christmas Party",
+      "year": 1997,
+      "runtime_minutes": 26.0,
+      "average_rating": 4.9,
+      "num_votes": 126,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Naked City: A Killer Christmas",
+      "year": 1998,
+      "runtime_minutes": 95.0,
+      "average_rating": 5.1,
+      "num_votes": 214,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Happy Christmas, Miss King",
+      "year": 1998,
+      "runtime_minutes": 120.0,
+      "average_rating": 7.5,
+      "num_votes": 625,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Cosmic Christmas",
+      "year": 1977,
+      "runtime_minutes": 26.0,
+      "average_rating": 6.7,
+      "num_votes": 235,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Inheritance Up Christmas",
+      "year": 1995,
+      "runtime_minutes": 90.0,
+      "average_rating": 5.4,
+      "num_votes": 442,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Carry on Christmas",
+      "year": 1973,
+      "runtime_minutes": 50.0,
+      "average_rating": 5.9,
+      "num_votes": 257,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Carry on Christmas: Carry on Stuffing",
+      "year": 1972,
+      "runtime_minutes": 50.0,
+      "average_rating": 5.5,
+      "num_votes": 205,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1977,
+      "runtime_minutes": 58.0,
+      "average_rating": 6.5,
+      "num_votes": 555,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Flintstone Christmas",
+      "year": 1977,
+      "runtime_minutes": 60.0,
+      "average_rating": 6.8,
+      "num_votes": 925,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Flintstones Christmas Carol",
+      "year": 1994,
+      "runtime_minutes": 69.0,
+      "average_rating": 6.8,
+      "num_votes": 1558,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Holiday in Sarajevo",
+      "year": 1991,
+      "runtime_minutes": 87.0,
+      "average_rating": 7.2,
+      "num_votes": 185,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Star Wars Holiday Special",
+      "year": 1978,
+      "runtime_minutes": 97.0,
+      "average_rating": 2.1,
+      "num_votes": 16397,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Magic Christmas Tree",
+      "year": 1964,
+      "runtime_minutes": 60.0,
+      "average_rating": 2.4,
+      "num_votes": 308,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Yogi's First Christmas",
+      "year": 1980,
+      "runtime_minutes": 98.0,
+      "average_rating": 7.1,
+      "num_votes": 996,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas Vacation 2000",
+      "year": 1999,
+      "runtime_minutes": 110.0,
+      "average_rating": 4.3,
+      "num_votes": 1182,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "'Twas the Night Before Christmas",
+      "year": 1974,
+      "runtime_minutes": 25.0,
+      "average_rating": 7.3,
+      "num_votes": 3608,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Holiday Romance",
+      "year": 1999,
+      "runtime_minutes": 91.0,
+      "average_rating": 6.5,
+      "num_votes": 489,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Christmas Carol",
+      "year": 1999,
+      "runtime_minutes": 95.0,
+      "average_rating": 7.4,
+      "num_votes": 10364,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "'R Xmas",
+      "year": 2001,
+      "runtime_minutes": 85.0,
+      "average_rating": 5.7,
+      "num_votes": 1588,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Winnie the Pooh & Christmas Too",
+      "year": 1991,
+      "runtime_minutes": 26.0,
+      "average_rating": 7.3,
+      "num_votes": 1616,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "A Little Christmas Story",
+      "year": 1999,
+      "runtime_minutes": 58.0,
+      "average_rating": 6.3,
+      "num_votes": 176,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Christmas in the Clouds",
+      "year": 2001,
+      "runtime_minutes": 96.0,
+      "average_rating": 6.4,
+      "num_votes": 863,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "The Leprechauns' Christmas Gold",
+      "year": 1981,
+      "runtime_minutes": 25.0,
+      "average_rating": 6.2,
+      "num_votes": 719,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Christmas Carol",
+      "year": 1949,
+      "runtime_minutes": 25.0,
+      "average_rating": 6.0,
+      "num_votes": 409,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Trans-Siberian Orchestra: The Ghosts of Christmas Eve",
+      "year": 1999,
+      "runtime_minutes": 46.0,
+      "average_rating": 8.2,
+      "num_votes": 533,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "The Long Holiday",
+      "year": 2000,
+      "runtime_minutes": 145.0,
+      "average_rating": 7.9,
+      "num_votes": 116,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Holiday for a Dog",
+      "year": 1981,
+      "runtime_minutes": 78.0,
+      "average_rating": 6.5,
+      "num_votes": 100,
+      "title_type": "movie"
+    },
+    {
+      "primary_title": "Barney's Night Before Christmas",
+      "year": 1999,
+      "runtime_minutes": 57.0,
+      "average_rating": 5.5,
+      "num_votes": 264,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Mickey's Once Upon a Christmas",
+      "year": 1999,
+      "runtime_minutes": 66.0,
+      "average_rating": 7.0,
+      "num_votes": 9890,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "A Snow White Christmas",
+      "year": 1980,
+      "runtime_minutes": 60.0,
+      "average_rating": 5.8,
+      "num_votes": 186,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "We Wish You a Merry Christmas",
+      "year": 1999,
+      "runtime_minutes": 48.0,
+      "average_rating": 6.3,
+      "num_votes": 108,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "Once Upon a Christmas",
+      "year": 2000,
+      "runtime_minutes": 90.0,
+      "average_rating": 5.3,
+      "num_votes": 931,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Holiday Heart",
+      "year": 2000,
+      "runtime_minutes": 96.0,
+      "average_rating": 7.4,
+      "num_votes": 1379,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas Unwrapped: The History of Christmas",
+      "year": 1997,
+      "runtime_minutes": 50.0,
+      "average_rating": 7.4,
+      "num_votes": 135,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "How the Grinch Stole Christmas!",
+      "year": 1992,
+      "runtime_minutes": 30.0,
+      "average_rating": 7.8,
+      "num_votes": 750,
+      "title_type": "video"
+    },
+    {
+      "primary_title": "A Muppet Family Christmas",
+      "year": 1987,
+      "runtime_minutes": 47.0,
+      "average_rating": 8.1,
+      "num_votes": 4471,
+      "title_type": "tvMovie"
+    },
+    {
+      "primary_title": "Christmas at Pee-wee's Playhouse",
+      "year": 1988,
+      "runtime_minutes": 49.0,
+      "average_rating": 7.7,
+      "num_votes": 1552,
+      "title_type": "tvMovie"
+    }
+  ]
+}

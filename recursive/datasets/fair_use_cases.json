@@ -1,0 +1,1418 @@
+{
+  "meta": {
+    "name": "fair_use_cases",
+    "description": "US fair use copyright cases and outcomes",
+    "source": "tidytuesday/2023-08-29/fair_use_cases.csv",
+    "transformation": "Select key columns, drop NaN.",
+    "num_rows": 200,
+    "columns": {
+      "case": "str",
+      "year": "int64",
+      "court": "str",
+      "outcome": "str",
+      "categories": "str"
+    }
+  },
+  "data": [
+    {
+      "case": "De Fontbrune v. Wofsy, 39 F.4th 1214 (9th Cir. 2022)",
+      "year": 2022,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Photograph"
+    },
+    {
+      "case": "Sedlik v. Von Drachenberg, No. CV 21-1102 (C.D. Cal. May 31, 2022)",
+      "year": 2022,
+      "court": "C.D. Cal.",
+      "outcome": "Preliminary finding; Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Sketchworks Indus. Strength Comedy, Inc. v. Jacobs, No. 19-CV-7470-LTS-VF (S.D.N.Y. May 12, 2022)",
+      "year": 2022,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Music; Parody/Satire; Review/Commentary"
+    },
+    {
+      "case": "Am. Soc'y for Testing & Materials v. Public.Resource.Org, Inc., No. 13-cv-1215 (D.D.C. Mar. 31, 2022)",
+      "year": 2022,
+      "court": "D.D.C.",
+      "outcome": "Mixed Result",
+      "categories": "Education/Scholarship/Research; Textual Work; Used in government proceeding"
+    },
+    {
+      "case": "Yang v. Mic Network Inc., Nos. 20-4097-cv, 20-4201-cv (2d Cir. Mar. 29, 2022)",
+      "year": 2022,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "News reporting; Photography"
+    },
+    {
+      "case": "Viacom Int\u2019l v. Pixi Universal, Civ. Action No H-21-2612 (S.D. Tex. Mar. 25, 2022)",
+      "year": 2022,
+      "court": "S.D. Tex.",
+      "outcome": "Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Parody/Satire"
+    },
+    {
+      "case": "McGucken v. Newsweek LLC, 19 Civ. 9617 (KPF) (S.D.N.Y. Mar. 21, 2020)",
+      "year": 2022,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling; Fair use not found",
+      "categories": "Internet/Digitization; News Reporting; Photograph"
+    },
+    {
+      "case": "Monsarrat v. Newman, 28 F.4th 314 (1st Cir. 2022)",
+      "year": 2022,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; Textual Work"
+    },
+    {
+      "case": "Bell v. Eagle Mt. Saginaw Indep. Sch. Distr., 27 F.4th 313 (5th Cir. 2022)",
+      "year": 2022,
+      "court": "5th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Educational/Scholarship/Research; Internet/Digitization; Textual Work"
+    },
+    {
+      "case": "O\u2019Neil v. Ratajkowski, No. 19 CIV. 9769 (AT) (S.D.N.Y. Sept. 28, 2021)",
+      "year": 2021,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary finding; fair use not found",
+      "categories": "Internet/Digitization; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Easter Unlimited, Inc. v. Rozier, No. 18-cv-06637 (E.D.N.Y. Sep. 17, 2021)",
+      "year": 2021,
+      "court": "E.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Parody/Satire; Review/Commentary; Sculpture; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Andy Warhol Found. for the Visual Arts, Inc. v. Goldsmith, 19-2420-cv (2d Cir. Aug. 24, 2021)",
+      "year": 2021,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Photograph; Unpublished"
+    },
+    {
+      "case": "Nat'l Acad. of TV Arts & Scis., Inc., v. Multimedia Sys. Design, Inc. No. 20-CV-7269 (VEC) (S.D.N.Y. July 30, 2021)",
+      "year": 2021,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Internet/Digitization; Parody/Satire; Photograph; Sculpture"
+    },
+    {
+      "case": "McGucken v. Pub Ocean Ltd., 2:20-cv-01923-RGK-AS (C.D. Cal. July 27, 2021)",
+      "year": 2021,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; News Reporting; Photograph"
+    },
+    {
+      "case": "Mattel, Inc. v. Entities Doing Bus. as Unicorn Element, 21 Civ. 2333 (VM) (S.D.N.Y. June 4, 2021)",
+      "year": 2021,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Brown v. Netflix, Inc., 855 F. App\u2019x 61 (2d Cir. 2021)",
+      "year": 2021,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Music; Film/Audiovisual"
+    },
+    {
+      "case": "Google LLC v. Oracle Am., Inc., 141 S. Ct. 1183 (2021)",
+      "year": 2021,
+      "court": "U.S. Supreme Court",
+      "outcome": "Fair use found",
+      "categories": "Computer Program"
+    },
+    {
+      "case": "Marano v. Metro. Museum of Art, 844 F. App\u2019x 436 (2d Cir. 2021)",
+      "year": 2021,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Internet/Digitization; Photograph"
+    },
+    {
+      "case": "Golden v. Michael Grecco Prods., No. 19-CV-3156 (NGG) (RER) (E.D.N.Y. Mar. 9, 2021)",
+      "year": 2021,
+      "court": "E.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; News reporting; Photograph"
+    },
+    {
+      "case": "MidlevelU, Inc. v. ACI Info. Grp., 989 F.3d 1205 (11th Cir. 2021)",
+      "year": 2021,
+      "court": "11th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Internet/Digitization"
+    },
+    {
+      "case": "Apple Inc. v. Corellium, LLC, Case No. 9:19-cv-81160-RS (S.D. Fla. Dec. 29, 2020)",
+      "year": 2020,
+      "court": "S.D. Fla.",
+      "outcome": "Fair use not found",
+      "categories": "Computer Program; Education/Scholarship/Research; Internet/Digitization"
+    },
+    {
+      "case": "Boesen v. United Sports Publs., Ltd., No. 20-CV-1552 (ARR) (SIL) (E.D.N.Y. Nov. 2, 2020), reconsideration denied (Dec. 22, 2020)",
+      "year": 2020,
+      "court": "E.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; News reporting; Photograph"
+    },
+    {
+      "case": "Dr. Seuss Enters., L.P. v. ComicMix LLC, 983 F.3d 443 (9th Cir. 2020)",
+      "year": 2020,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Parody/Satire; Textual work"
+    },
+    {
+      "case": "Castle v. Kingsport Publ\u2019g Corp. 2:19-CV-00092-DCLC (E.D. Tenn. Dec. 14, 2020)",
+      "year": 2020,
+      "court": "E.D. Tenn.",
+      "outcome": "Fair use found",
+      "categories": "News Reporting Photograph;"
+    },
+    {
+      "case": "Chapman v. Maraj, No. 2:18-cv 09088-VAP-SS (C.D. Cal. Sept. 16, 2020)",
+      "year": 2020,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Music"
+    },
+    {
+      "case": "Rimini St. v. Oracle Int\u2019l Corp., 473 F. Supp. 3d 1158 (D. Nev. 2020)",
+      "year": 2020,
+      "court": "D. Nev.",
+      "outcome": "Fair use not found",
+      "categories": "Computer Program"
+    },
+    {
+      "case": "Schwartzwald v. Oath Inc. No. 19-CV-9938 (RA) (S.D.N.Y. Sept. 10, 2020)",
+      "year": 2020,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "News Reporting; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Bain v. Film Indep., Inc. No. CV 18-4126 PA (JEMx) (C.D. Cal. Aug. 6, 2020)",
+      "year": 2020,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual"
+    },
+    {
+      "case": "Bell v. Worthington City Sch. Dist., No. 2:18-cv-961 (S.D. Ohio June 2, 2020)",
+      "year": 2020,
+      "court": "S.D. Ohio",
+      "outcome": "Fair use found",
+      "categories": "Textual Work; Educational/Scholarship/Research; Internet/Digitization"
+    },
+    {
+      "case": "Noland v. Janssen, No. 17-CV-5452 (S.D.N.Y. June 1, 2020)",
+      "year": 2020,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Photograph; Sculpture"
+    },
+    {
+      "case": "Walsh v. Townsquare Media, Inc., No. 19-CV-4958 (VSB) (S.D.N.Y. June 1, 2020)",
+      "year": 2020,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; News reporting; Photograph"
+    },
+    {
+      "case": "Int\u2019l Code Council, Inc. v. UpCodes, Inc., 17 Civ. 6261 (VM) (S.D.N.Y. May 27, 2020)",
+      "year": 2020,
+      "court": "S.D.N.Y.",
+      "outcome": "Mixed Result",
+      "categories": "Education/Scholarship/Research; Textual Work; Used in government proceeding"
+    },
+    {
+      "case": "Solid Oak Sketches, LLC v. 2K Games, Inc., No. 16-cv-724-LTS-SDA (S.D.N.Y. Mar. 26, 2020)",
+      "year": 2020,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Computer program; Film/Audiovisual; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Tres\u00f3na Multimedia v. Burbank High School Vocal Music Ass\u2019n, Nos. 17-56006, 17-56417, 17-56419 (9th Cir. Mar. 24, 2020)",
+      "year": 2020,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Music"
+    },
+    {
+      "case": "In re DMCA Subpoena to Reddit, Inc., No. 19-mc-80005-SK (JD) (N.D. Cal. Mar. 2, 2020)",
+      "year": 2020,
+      "court": "N.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Review/Commentary"
+    },
+    {
+      "case": "Cambridge Univ. Press v. Becker, No. No. 1:08-cv-1425-ODE (N.D. Ga. Mar. 2, 2020)",
+      "year": 2020,
+      "court": "N.D. Ga.",
+      "outcome": "Mixed Result",
+      "categories": "Education/Scholarship/Research; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "Comerica Bank & Trust, N.A. v. Habib, No. 17-12418-LTS (D. Mass. Jan. 6, 2020)",
+      "year": 2020,
+      "court": "D. Mass.",
+      "outcome": "Fair use not found",
+      "categories": "First Circuit; Film/Audiovisual; Music"
+    },
+    {
+      "case": "Dlugolecki v. Poppel, CV 18 3905 GW (GJSx) (C.D. Cal. Aug. 22, 2019)",
+      "year": 2019,
+      "court": "C.D. Cal.",
+      "outcome": "Preliminary finding; fair use not found",
+      "categories": "Ninth Circuit; Photograph; News Reporting; Film/Audiovisual"
+    },
+    {
+      "case": "Red Label Music Publ\u2019g v. Chila Prods., 18 C 7252 (N.D. Ill. May 30, 2019)",
+      "year": 2019,
+      "court": "N.D. Ill.",
+      "outcome": "Fair use found",
+      "categories": "Seventh Circuit; Film/Audiovisual; Music; Review/Commentary"
+    },
+    {
+      "case": "Shirman v. WHEC-TV, LLC, 18-CV-6508-FPG, 2019 U.S. Dist. LEXIS 83767 (W.D.N.Y. May 17, 2019)",
+      "year": 2019,
+      "court": "W.D.N.Y.",
+      "outcome": "Preliminary finding; fair use not found",
+      "categories": "Second Circuit; Film/Audiovisual; News reporting; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Furie v. Infowars, LLC, Case No. 18-1830-MWF (JPRx) (C.D. Cal. May 16, 2019)",
+      "year": 2019,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found; preliminary ruling",
+      "categories": "Ninth Circuit; Internet/Digitization; Review/Commentary; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Brammer v. Violent Hues Productions, LLC, No. 18-1763 (4th Cir. Apr. 26, 2019)",
+      "year": 2019,
+      "court": "4th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Fourth Circuit, Photograph, Internet/Digitization"
+    },
+    {
+      "case": "Philpot v. WOS, Inc., No. 1:18-CV-339-RP (W.D. Tex. Apr. 22, 2019)",
+      "year": 2019,
+      "court": "W.D. Tex.",
+      "outcome": "Preliminary ruling; Fair use not found",
+      "categories": "Photograph; Internet/Digitization"
+    },
+    {
+      "case": "Clark v. Transportation Alternatives, Inc., 18 Civ. 9985 (VM) (S.D.N.Y. Mar. 18, 2019)",
+      "year": 2019,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Second Circuit; Photograph; News reporting; Parody/Satire; Review/Commentary"
+    },
+    {
+      "case": "VHT, Inc. v. Zillow Group, Nos. 17-35587, 17-35588 (9th Cir. Mar. 15, 2019)",
+      "year": 2019,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Ninth Circuit; Photograph"
+    },
+    {
+      "case": "Peterman v. Republican National Committee, No. CV 17-66-M-DLC (D. Mont. Feb. 22, 2019)",
+      "year": 2019,
+      "court": "D. Mont.",
+      "outcome": "Fair use found",
+      "categories": "Ninth Circuit, Photograph, Review/Commentary"
+    },
+    {
+      "case": "Capitol Records, LLC v. ReDigi Inc.",
+      "year": 2018,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Second Circuit, Internet/Digitization, Music"
+    },
+    {
+      "case": "Otto v. Hearst Communications, Inc.",
+      "year": 2018,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Second Circuit, Internet/Digitization, News reporting, Photograph"
+    },
+    {
+      "case": "Cambridge University Press v. Albert",
+      "year": 2018,
+      "court": "11th Circuit",
+      "outcome": "Preliminary ruling, remand",
+      "categories": "Eleventh Circuit, Internet/Digitization, Textual work"
+    },
+    {
+      "case": "Ferdman v. CBS Interactive Inc.",
+      "year": 2018,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling, fair use not found, mixed result",
+      "categories": "Second Circuit, Photograph, Review/Commentary, Internet/Digitization, News reporting"
+    },
+    {
+      "case": "Davidson v. United States, No. 13-942C (Fed. Cl. June 29, 2018)",
+      "year": 2018,
+      "court": "Fed. Cl.",
+      "outcome": "Fair use not found",
+      "categories": "Federal Circuit, Sculpture, Photograph"
+    },
+    {
+      "case": "Lucasfilm Ltd. LLC, et al. v. Ren Ventures Ltd., et al.",
+      "year": 2018,
+      "court": "N.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual, Internet/Digitization, Review/Commentary"
+    },
+    {
+      "case": "Russell Brammer v. Violent Hues Productions, LLC, No. 1-17-cv-01009 (E.D. Va. June 11, 2018)",
+      "year": 2018,
+      "court": "E.D. Va.",
+      "outcome": "Fair use found",
+      "categories": "Fourth Circuit, Photograph, Internet/Digitization"
+    },
+    {
+      "case": "Erika Peterman v. Republican National Committee, No. 17-66-M-DLC (D. Mont. March 19, 2018)",
+      "year": 2018,
+      "court": "D. Mont.",
+      "outcome": "Preliminary ruling, Fair use not found",
+      "categories": "Photograph, Review/Commentary"
+    },
+    {
+      "case": "Oyewole v. Ora, 291 F. Supp. 3d 422 (S.D.N.Y. Mar. 8, 2018)",
+      "year": 2018,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found; Second Circuit affirmed on appeal",
+      "categories": "Second Circuit; Music"
+    },
+    {
+      "case": "Fox News Network, LLC v. TVEyes, Inc., Nos. 15-3885, 15-3886 (2d Cir. Feb. 27, 2018)",
+      "year": 2018,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization, Film/Audiovisual"
+    },
+    {
+      "case": "Philpot v. Media Research Center Inc. No. 1:17-cv-822 (E.D. Va. Jan. 8, 2018)",
+      "year": 2018,
+      "court": "E.D. Va.",
+      "outcome": "Fair use found",
+      "categories": "Fourth Circuit; Photograph; Review/Commentary; Internet/Digitization"
+    },
+    {
+      "case": "Barcroft Media, Ltd. v. Coed Media Group, LLC, No. 16-CV-7634 (JMF) (S.D.N.Y. Nov. 2, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Photograph; Review/Commentary"
+    },
+    {
+      "case": "James Castle Collection and Archive, LP v. Scholastic, Inc. and Allen Say",
+      "year": 2017,
+      "court": "D. Idaho",
+      "outcome": "Fair use found",
+      "categories": "Ninth Circuit; Painting/Drawing/Graphic; Textual work"
+    },
+    {
+      "case": "Matthew Lombardo and Who\u2019s Holiday LLC v. Dr. Seuss Enterprises, L.P., No. 1:16-cv-09974-AKH (S.D.N.Y. Sept. 15, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Second Circuit; Parody/Satire; Textual work"
+    },
+    {
+      "case": "Penguin Random House v. Colting, No. 17-cv-386 (S.D.N.Y. Sept. 8, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Textual Work; Education/Scholarship/Research"
+    },
+    {
+      "case": "Peteski Productions, Inc. v. Rothman, No. 5:17-CV-00122 (E.D. Tex. Aug. 30, 2017)",
+      "year": 2017,
+      "court": "E.D. Tex.",
+      "outcome": "Fair use not found, Preliminary ruling",
+      "categories": "Film/audiovisual, Used in government proceeding"
+    },
+    {
+      "case": "Disney Enterprises, Inc. v. VidAngel, Inc., No. 2:16-CV-04109 (9th Cir. Aug. 24, 2017)",
+      "year": 2017,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found, preliminary ruling",
+      "categories": "Film/Audiovisual, Format shifting/Space shifting, Internet/Digitization"
+    },
+    {
+      "case": "Hosseinzadeh v. Klein, No. 16-CV-3081 (S.D.N.Y. Aug. 23, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Review/Commentary, Internet/Digitization"
+    },
+    {
+      "case": "Estate of Anthony Barr\u00e9 and Angel Barr\u00e9 v. Carter, et al. No. 17-1057 (E.D. Lou. July 25, 2017)",
+      "year": 2017,
+      "court": "E.D. Lou.",
+      "outcome": "Fair use not found; Preliminary ruling",
+      "categories": "Film/Audiovisual, Music"
+    },
+    {
+      "case": "Donald Graham v. Richard Prince, et al., No. 15-CV-10160 (S.D.N.Y. July 18, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found; Preliminary ruling",
+      "categories": "Photograph"
+    },
+    {
+      "case": "Corbello v. DeVito, No. 2:08-cv-00867-RCJ-PAL (D. Nev. June 14, 2017)",
+      "year": 2017,
+      "court": "D. Nev.",
+      "outcome": "Fair use found",
+      "categories": "Unpublished; Textual work"
+    },
+    {
+      "case": "Estate of James Oscar Smith v. Cash Money Records, Inc., et al., No. 1:14-cv-02703 (S.D.N.Y. May 30, 2017)",
+      "year": 2017,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Second Circuit; Music"
+    },
+    {
+      "case": "Reiner v. Nishimori, No. 3:15-cv-00241 (M.D. Tenn. Apr. 28, 2017)",
+      "year": 2017,
+      "court": "M.D. Tenn.",
+      "outcome": "Fair use found",
+      "categories": "Photograph; Education/Scholarship/Research"
+    },
+    {
+      "case": "Code Revision Comm. v. Public.Resource.Org, Inc., No. 1:15-cv-02594-RWS (N.D. Ga. Mar. 23, 2017)",
+      "year": 2017,
+      "court": "N.D. Ga.",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual Work; Used in government proceeding"
+    },
+    {
+      "case": "Paramount Pictures, Corp. v. Axanar Prods., Inc., No. 2:15-cv-09938-RGK-E (C.D. Cal. Jan. 3, 2017)",
+      "year": 2017,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found; Preliminary ruling",
+      "categories": "Film/Audiovisual; Parody/Satire"
+    },
+    {
+      "case": "Disney Enters., Inc. v. VidAngel, Inc., No. 2:16-cv-004109-AB (C.D. Cal. Dec. 12, 2016)",
+      "year": 2016,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found; Preliminary ruling",
+      "categories": "Film/Audiovisual; Format shifting/space shifting"
+    },
+    {
+      "case": "TCA Television Corp. v. McCollum, No. 1:16-cv-0134 (2d Cir. Oct. 11, 2016)",
+      "year": 2016,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual"
+    },
+    {
+      "case": "BWP Media USA, Inc. v. Gossip Cop Media, Inc. No. 13-cv-7574-KPF (S.D.N.Y. Jul. 20, 2016)",
+      "year": 2016,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Second Circuit; Photograph; News reporting; Review/Commentary"
+    },
+    {
+      "case": "Cambridge University Press v. Becker, 1:08-cv-01425-ODE (N.D. Ga. March 31, 2016)",
+      "year": 2016,
+      "court": "N.D.Ga.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "Dominick Ranieri v. Adirondack Dev. Group LLC, No. 1.11-cv-1013-GTS-CFH (N.D.N.Y. Feb. 22, 2016)",
+      "year": 2016,
+      "court": "N.D.N.Y.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Kennedy v. Gish, Sherwood & Friends, Inc., No. 4:13-cv-02236-JAR (E.D. Mo. Nov. 5, 2015)",
+      "year": 2015,
+      "court": "E.D. Mo.",
+      "outcome": "Fair use found; mixed result",
+      "categories": "Photograph; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Katz v. Google Inc., No. 14-14525 (11th Cir. Sept. 17, 2015)",
+      "year": 2015,
+      "court": "11th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Eleventh Circuit; Education/Scholarship/Research; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Galvin v. Ill. Republican Party, No. 1:14-cv-00490 (N.D. Ill. Sept. 9, 2015)",
+      "year": 2015,
+      "court": "N.D. Ill.",
+      "outcome": "Fair use found",
+      "categories": "Seventh Circuit; Parody/Satire; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Authors Guild, Inc. v. Google Inc., No. 13-04829 (2d Cir. Oct. 16, 2015)",
+      "year": 2015,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Format shifting/Space shifting; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "TD Bank, N.A. v. Hill, No. 12-7188 (RDK/JS), 2015 WL 4523570 (D. NJ July 27, 2015)",
+      "year": 2015,
+      "court": "D. N.J.",
+      "outcome": "Fair use not found",
+      "categories": "Textual work; Unpublished"
+    },
+    {
+      "case": "Fox Broad. Co. v. Dish Network, LLC, No. 2:12-cv-04529-DMG-SH (C.D. Cal. Jan. 12, 2015)",
+      "year": 2015,
+      "court": "C.D. Cal.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Film/Audiovisual; Format shifting/Space shifting; Internet/Digitization"
+    },
+    {
+      "case": "Rosen v. eBay, Inc., No. 2:13-cv-06801-MWF-E (C.D. Cal. Jan. 16, 2015)",
+      "year": 2015,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; Photograph"
+    },
+    {
+      "case": "Penguin Grp. (USA), Inc. v. Am. Buddha, No. 4:13-cv-02075-JGZ (D. Ariz. May 11, 2015)",
+      "year": 2015,
+      "court": "D. Ariz",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Textual work"
+    },
+    {
+      "case": "Adjmi v. DLT Entm\u2019t, Ltd., No. 1:14-cv-00568-LAP (S.D.N.Y. Mar. 31, 2015)",
+      "year": 2015,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Parody/Satire; Textual work"
+    },
+    {
+      "case": "N. Jersey Media Grp., Inc. v. Pirro, 74 F. Supp. 3d. 605 (S.D.N.Y. 2015)",
+      "year": 2015,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Internet/Digitization; Photograph"
+    },
+    {
+      "case": "Cambridge Univ. Press v. Patton, 769 F.3d 1232 (11th Cir. 2014)",
+      "year": 2014,
+      "court": "11th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "White v. West Pub. Corp., No. 12-cv-1340-JSR (S.D.N.Y. Jul. 3, 2014)",
+      "year": 2014,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Second Circuit; Textual work; Used in government proceeding; Education/Scholarship/Research"
+    },
+    {
+      "case": "Authors Guild, Inc. v. HathiTrust, 755 F.3d 87 (2d Cir. 2014)",
+      "year": 2014,
+      "court": "2d Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Format shifting/Space shifting; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "Swatch Grp. Mgmt. Servs. Ltd. v. Bloomberg L.P., 742 F.3d 17 (2d Cir. 2014)",
+      "year": 2014,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "News reporting; Unpublished"
+    },
+    {
+      "case": "Kienitz v. Sconnie Nation, LLC, 766 F.3d 756 (7th Cir. 2014)",
+      "year": 2014,
+      "court": "7th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Photograph"
+    },
+    {
+      "case": "Richards v. Merriam Webster, Inc., 55 F. Supp. 205 (D. Mass. 2014)",
+      "year": 2014,
+      "court": "D. Mass.",
+      "outcome": "Fair use not found",
+      "categories": "Textual work"
+    },
+    {
+      "case": "Denison v. Larkin, 64 F. Supp. 3d 1127 (N.D. Ill. 2014)",
+      "year": 2014,
+      "court": "N.D. Ill.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; Textual work; Used in government proceeding"
+    },
+    {
+      "case": "Arrow Prods., Ltd. v. The Weinstein Co., LLC,44 F. Supp. 3d 359 (S.D.N.Y. Aug. 25, 2014)",
+      "year": 2014,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Review/Commentary"
+    },
+    {
+      "case": "Caner v. Autry, 16 F. Supp. 3d 689 (W.D. Va. 2014)",
+      "year": 2014,
+      "court": "W.D. Va.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Review/Commentary"
+    },
+    {
+      "case": "Neri v. Monroe, No. 11-cv-429-slc (W.D. Wis. Feb. 26, 2014)",
+      "year": 2014,
+      "court": "W.D. Wis.",
+      "outcome": "Fair use found",
+      "categories": "Photograph; Sculpture"
+    },
+    {
+      "case": "Diversey v. Schmidly, 738 F.3d 1196 (10th Cir. 2013)",
+      "year": 2013,
+      "court": "10th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work; Unpublished"
+    },
+    {
+      "case": "Cariou v. Prince, 714 F.3d 694 (2d Cir. 2013)",
+      "year": 2013,
+      "court": "2d Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Bouchat v. Balt. Ravens Ltd. P'ship, 737 F.3d 932 (4th Cir. 2013)",
+      "year": 2013,
+      "court": "4th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Fox Broad. Co. v. Dish Network, L.L.C., 723 F.3d 1067 (9th Cir. 2013)",
+      "year": 2013,
+      "court": "9th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Film/Audiovisual; Format shifting/Space shifting; Internet/Digitization"
+    },
+    {
+      "case": "Seltzer v. Green Day, Inc., 725 F.3d 1170 (9th Cir. 2013)",
+      "year": 2013,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "SOFA Entm\u2019t, Inc. v. Dodger Prods., Inc., 709 F.3d 1273 (9th Cir. 2013)",
+      "year": 2013,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual"
+    },
+    {
+      "case": "Morris v. Guetta, No. LA CV12-00684 JAK (RZX) (C.D. Cal. Feb. 4, 2013)",
+      "year": 2013,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Am. Inst. of Physics v. Schwegman, Lundberg & Woessner, P.A., Civ. No. 12-528 (RHK/JJK) (D. Minn. July. 30, 2013)",
+      "year": 2013,
+      "court": "D. Minn.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    },
+    {
+      "case": "Faulkner Literary Rights, L.L.C. v. Sony Pictures Classics, Inc., 953 F. Supp. 2d 701 (N.D. Miss. 2013)",
+      "year": 2013,
+      "court": "N.D. Miss.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Textual work"
+    },
+    {
+      "case": "Associated Press v. Meltwater U.S. Holdings, Inc., 931 F. Supp. 2d 537 (S.D.N.Y. 2013)",
+      "year": 2013,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Format shifting/Space shifting; News reporting"
+    },
+    {
+      "case": "Soc\u2019y of the Holy Transfiguration Monestary, Inc. v. Gregory, 689 F.3d 29 (1st Cir. 2012)",
+      "year": 2012,
+      "court": "1st Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Textual work; Unpublished"
+    },
+    {
+      "case": "Balsley v. LFP, Inc., 691 F.3d 747 (6th Cir. 2012)",
+      "year": 2012,
+      "court": "6th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Photograph"
+    },
+    {
+      "case": "Brownmark Films, L.L.C. v. Comedy Partners, 682 F.3d 687 (7th Cir. 2012)",
+      "year": 2012,
+      "court": "7th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Parody/Satire"
+    },
+    {
+      "case": "Monge v. Maya Magazines, Inc., 688 F.3d 1164 (9th Cir. 2012)",
+      "year": 2012,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "News reporting; Photograph; Unpublished"
+    },
+    {
+      "case": "Nat\u2019l Ctr. for Jewish Film v. Riverside Films, L.L.C., No. 5:12-cv-00044-ODW (DTB) (C.D. Cal. Sept. 14, 2012)",
+      "year": 2012,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual"
+    },
+    {
+      "case": "Northland Family Planning Clinic, Inc. v. Crt. for Bio-Ethical Reform, 868 F. Supp. 2d 962 (C.D. Cal. 2012)",
+      "year": 2012,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual, Parody/Satire"
+    },
+    {
+      "case": "Murphy v. Millennium Radio Grp. L.L.C., 650 F.3d 295 (3d Cir. 2011)",
+      "year": 2011,
+      "court": "3d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "News reporting; Photograph"
+    },
+    {
+      "case": "Friedman v. Guetta, No. CV 10-00014 DDP (JCx) (C.D. Cal. May 27, 2011)",
+      "year": 2011,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Photograph"
+    },
+    {
+      "case": "Righthaven, L.L.C. v. Jama, No. 2:10-CV-1322 JCM (LRL) (D. Nev. Apr. 22, 2011)",
+      "year": 2011,
+      "court": "D. Nev.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Internet/Digitization; News reporting; Textual work"
+    },
+    {
+      "case": "CCA and B, LLC v. F + W Media, Inc., 819 F. Supp. 2d 1310 (\u039d.D. Ga. 2011)",
+      "year": 2011,
+      "court": "\u039d.D. Ga.",
+      "outcome": "Fair use found",
+      "categories": "Parody/Satire; Textual work"
+    },
+    {
+      "case": "Salinger v. Colting, 607 F.3d 68 (2d Cir. 2010)",
+      "year": 2010,
+      "court": "2d Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Parody/Satire; Review/Commentary; Textual work"
+    },
+    {
+      "case": "Bouchat v. Balt. Ravens Ltd. P'ship, 619 F.3d 301 (4th Cir. 2010)",
+      "year": 2010,
+      "court": "4th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Henley v. DeVore, 733 F. Supp. 2d 1144 (C.D. Cal. 2010)",
+      "year": 2010,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Music; Parody/Satire"
+    },
+    {
+      "case": "Righthaven, L.L.C. v. Realty One Grp., Inc., No. 2:10-cv-1036-LRH-PAL. (D. Nev. Oct. 19, 2010)",
+      "year": 2010,
+      "court": "D. Nev.",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; News reporting; Textual work"
+    },
+    {
+      "case": "Gaylord v. United States, 595 F.3d 1364 (Fed. Cir. 2010)",
+      "year": 2010,
+      "court": "Fed. Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Sculpture"
+    },
+    {
+      "case": "A.V. ex rel. Vanderhye v. iParadigms, L.L.C., 562 F.3d 630 (4th Cir. 2009)",
+      "year": 2009,
+      "court": "4th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Computer program; Education/Scholarship/Research; Internet/Digitization; Textual work"
+    },
+    {
+      "case": "Reyes v. Wyeth Pharm., Inc., 603 F. Supp. 2d 289 (D.P.R. 2009)",
+      "year": 2009,
+      "court": "D.P.R.",
+      "outcome": "Fair use not found",
+      "categories": "Photograph; Sculpture"
+    },
+    {
+      "case": "Blackwell Publ\u2019g, Inc. v. Excel Research Grp., LLC, 661 F. Supp. 2d 786 (E.D. Mich. 2009)",
+      "year": 2009,
+      "court": "E.D. Mich.",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    },
+    {
+      "case": "Warren Publ\u2019g Co. v. Spurlock, 645 F. Supp. 2d 402 (E.D. Pa. 2009)",
+      "year": 2009,
+      "court": "E.D. Pa.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Painting/Drawing/Graphic; Textual work"
+    },
+    {
+      "case": "House of Bryant Publ\u2019ns, L.L.C. v. A&E Television Networks, No. 3:09-0502 (M.D. Tenn. Oct. 30, 2009)",
+      "year": 2009,
+      "court": "M.D. Tenn.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Music; Textual work"
+    },
+    {
+      "case": "United States v. Am. Soc\u2019y of Composers, Authors and Publishers, 599 F. Supp. 2d 415 (S.D.N.Y. 2009), vacated, 627 F.3d 64 (2d Cir. 2010)",
+      "year": 2009,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Internet; Music"
+    },
+    {
+      "case": "Peter Letterese & Assocs. v. World Inst. of Scientology Enters., 533 F.3d 1287 (11th Cir. 2008)",
+      "year": 2008,
+      "court": "11th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Review/Commentary; Textual work"
+    },
+    {
+      "case": "Leadsinger, Inc. v. BMG Music Publ\u2019g, 512 F.3d 522 (9th Cir. 2008)",
+      "year": 2008,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Music; Photograph; Textual work"
+    },
+    {
+      "case": "Lennon v. Premise Media Corp., 556 F. Supp. 2d 310 (S.D.N.Y. 2008)",
+      "year": 2008,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Film/Audiovisual; Music; Review/Commentary"
+    },
+    {
+      "case": "Warner Bros. Entm\u2019t, Inc. v. RDR Books, 575 F. Supp. 2d 513 (S.D.N.Y. 2008)",
+      "year": 2008,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Films/Audiovisual; Textual work"
+    },
+    {
+      "case": "Zomba Enters., Inc. v. Panorama Records, Inc., 491 F.3d 574 (6th Cir. 2007)",
+      "year": 2007,
+      "court": "6th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Music"
+    },
+    {
+      "case": "Perfect 10, Inc. v. Amazon.com, Inc., 508 F.3d 1146 (9th Cir. 2007)",
+      "year": 2007,
+      "court": "9th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Internet/Digitization; Photograph"
+    },
+    {
+      "case": "Fitzgerald v. CBS Broad., Inc., 491 F. Supp. 2d 177 (D. Mass. 2007)",
+      "year": 2007,
+      "court": "D. Mass.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; News reporting; Photograph"
+    },
+    {
+      "case": "Tavory v. NTP, Inc., 495 F. Supp. 2d 531 (E.D. Va. 2007)",
+      "year": 2007,
+      "court": "E.D. Va.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    },
+    {
+      "case": "Bill Graham Archives v. Dorling Kindersley Ltd., 448 F.3d 605 (2d Cir. 2006)",
+      "year": 2006,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Blanch v. Koons, 467 F.3d 244 (2d Cir. 2006)",
+      "year": 2006,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Wall Data, Inc. v. L.A. Cnty. Sheriff\u2019s Dep\u2019t, 447 F.3d 769 (9th Cir. 2006)",
+      "year": 2006,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Computer program"
+    },
+    {
+      "case": "Clean Flicks of Colo., LLC v. Soderbergh, 433 F. Supp. 2d 1236 (D. Colo. 2006)",
+      "year": 2006,
+      "court": "D. Colo.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual"
+    },
+    {
+      "case": "BMG Music v. Gonzalez, 430 F.3d 888 (7th Cir. 2005)",
+      "year": 2005,
+      "court": "7th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Music"
+    },
+    {
+      "case": "Wilen v. Alt. Media Net, Inc., No. 03CIV2524 (RMB) (JCF) (S.D.N.Y. Jan. 26, 2005)",
+      "year": 2005,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Parody/Satire; Photograph"
+    },
+    {
+      "case": "Compaq Computer Corp. v. Ergonome, Inc., 387 F.3d 403 (5th Cir. 2004)",
+      "year": 2004,
+      "court": "5th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Painting/Drawing/Graphic; Textual work"
+    },
+    {
+      "case": "Ty, Inc. v. Publ'ns Int'l, Ltd., 333 F. Supp. 2d 705 (N.D. Ill. 2004)",
+      "year": 2004,
+      "court": "N.D. Ill.",
+      "outcome": "Fair use not found",
+      "categories": "Photograph; Review/Commentary; Sculpture"
+    },
+    {
+      "case": "MasterCard Int\u2019l, Inc. v. Nader 2000 Primary Comm., Inc., No. 00 CIV. 3802 (HB) (S.D.N.Y. Mar. 8, 2004)",
+      "year": 2004,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; Parody/Satire"
+    },
+    {
+      "case": "Video Pipeline, Inc. v. Buena Vista Home Entm\u2019t, Inc., 342 F.3d 191 (3d Cir. 2003)",
+      "year": 2003,
+      "court": "3d Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Film/Audiovisual; Internet/Digitization"
+    },
+    {
+      "case": "Bond v. Blum, 317 F.3d 385 (4th Cir. 2003)",
+      "year": 2003,
+      "court": "4th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Textual work; Unpublished; Used in government proceeding"
+    },
+    {
+      "case": "United States v. Slater, 348 F.3d 666 (7th Cir. 2003)",
+      "year": 2003,
+      "court": "7th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Computer program; Internet/digitization"
+    },
+    {
+      "case": "Elvis Presley Enters., Inc. v. Passport Video, 349 F.3d 622 (9th Cir. 2003)",
+      "year": 2003,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Music; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Kelly v. Arriba Soft Corp., 336 F.3d 811 (9th Cir. 2003)",
+      "year": 2003,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Internet/Digitization; Photograph"
+    },
+    {
+      "case": "Mattel Inc. v. Walking Mountain Prods., 353 F.3d 792 (9th Cir. 2003)",
+      "year": 2003,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Parody/Satire; Photograph; Review/Commentary"
+    },
+    {
+      "case": "Chi. Bd. of Educ. v. Substance, Inc., 354 F.3d 624 (7th Cir. 2003)",
+      "year": 2003,
+      "court": "7th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Review/Commentary; Textual work"
+    },
+    {
+      "case": "Merkos L\u2019Inyonei Chinuch, Inc. v. Otsar Sifrei Lubavitch, Inc., 312 F.3d 94 (2d Cir. 2002)",
+      "year": 2002,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Textual Work"
+    },
+    {
+      "case": "L.A. News Serv. v. CBS Broad., Inc., 305 F.3d 924 (9th Cir. 2002)",
+      "year": 2002,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Film/Audiovisual; News reporting"
+    },
+    {
+      "case": "Suntrust Bank v. Houghton Mifflin Co., 268 F.3d 1257 (11th Cir. 2001)",
+      "year": 2001,
+      "court": "11th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Parody/Satire; Textual work"
+    },
+    {
+      "case": "Davis v. Gap, Inc., 246 F.3d 152 (2d Cir. 2001)",
+      "year": 2001,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Other visual arts"
+    },
+    {
+      "case": "Veeck v. S. Bldg. Code Cong. Int\u2019l, 241 F.3d 398 (5th Cir. 2001)",
+      "year": 2001,
+      "court": "5th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    },
+    {
+      "case": "A&M Records, Inc. v. Napster, Inc., 239 F.3d 1004 (9th Cir. 2001)",
+      "year": 2001,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Internet/Digitization; Format shifting/Space shifting; Music"
+    },
+    {
+      "case": "Byrne v. BBC, 132 F. Supp. 2d 229 (S.D.N.Y. 2001)",
+      "year": 2001,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Film/Audiovisual; Music; News reporting"
+    },
+    {
+      "case": "Hofheinz v. Discovery Commc\u2019ns, Inc., No. 00 CIV. 3802 (HB) (S.D.N.Y. Sep. 20, 2001)",
+      "year": 2001,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Review/Commentary"
+    },
+    {
+      "case": "World Wrestling Fed\u2019n Entm\u2019t, Inc. v. Bozell, 142 F. Supp. 2d 514 (S.D.N.Y. 2001)",
+      "year": 2001,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Review/Commentary"
+    },
+    {
+      "case": "Nunez v. Caribbean Int\u2019l News Corp., 235 F.3d 18 (1st Cir. 2000)",
+      "year": 2000,
+      "court": "1st Circuit",
+      "outcome": "Fair use found",
+      "categories": "News reporting; Photograph"
+    },
+    {
+      "case": "Sony Computer Entm't. Inc. v. Connectix Corp., 203 F. 3d 596 (9th Cir. 2000)",
+      "year": 2000,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Computer program"
+    },
+    {
+      "case": "Sony Computer Entm\u2019t Am., Inc. v. Bleem, L.L.C., 214 F.3d 1022 (9th Cir. 2000)",
+      "year": 2000,
+      "court": "9th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Computer program"
+    },
+    {
+      "case": "Worldwide Church of God v. Phila. Church of God, Inc., 227 F.3d 1110 (9th Cir. 2000)",
+      "year": 2000,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Textual Work"
+    },
+    {
+      "case": "Baraban v. Time Warner, Inc., No. 99 Civ. 1569 (JSM) (S.D.N.Y. Apr. 6, 2000)",
+      "year": 2000,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Photograph; Review/Commentary; Textual work"
+    },
+    {
+      "case": "Nihon Keizai Shimbun, Inc. v. Comline Bus. Data, Inc., 166 F.3d 65 (2d Cir. 1999)",
+      "year": 1999,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "News reporting; Textual Work"
+    },
+    {
+      "case": "Tiffany Design, Inc. v. Reno-Tahoe Specialty, Inc., 55 F. Supp. 2d 1113 (D. Nev. 1999)",
+      "year": 1999,
+      "court": "D. Nev.",
+      "outcome": "Fair use not found",
+      "categories": "Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Castle Rock Entm\u2019t, Inc. v. Carol Publ\u2019g Grp., Inc., 150 F.3d 132 (2d Cir. 1998)",
+      "year": 1998,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Textual work"
+    },
+    {
+      "case": "Infinity Broad. Corp. v. Kirkwood, 150 F.3d 104 (2d Cir. 1998)",
+      "year": 1998,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Format shifting/Space shifting; Music"
+    },
+    {
+      "case": "Leibovitz v. Paramount Pictures Corp., 137 F.3d 109 (2d Cir. 1998)",
+      "year": 1998,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Parody/Satire; Photograph"
+    },
+    {
+      "case": "Sundeman v. Seajay Soc\u2019y, Inc., 142 F.3d 194 (4th Cir. 1998)",
+      "year": 1998,
+      "court": "4th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Review/Commentary; Textual work; Unpublished"
+    },
+    {
+      "case": "L.A. News Serv. v. Reuters Television Int'l, Ltd., 149 F.3d 987 (9th Cir. 1998)",
+      "year": 1998,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; News reporting"
+    },
+    {
+      "case": "Columbia Pictures Indus., Inc. v. Miramax Films Corp., 11 F. Supp. 2d 1179 (C.D. Cal. 1998)",
+      "year": 1998,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Painting/Drawing/Graphic; Parody/Satire"
+    },
+    {
+      "case": "Lucent Info. Mgmt. v. Lucent Techs., Inc., 5 F. Supp. 2d 238 (D. Del. 1998)",
+      "year": 1998,
+      "court": "D. Del.",
+      "outcome": "Fair use found",
+      "categories": "Textual work; Used in government proceeding"
+    },
+    {
+      "case": "Duffy v. Penguin Books USA, Inc., 4 F. Supp. 2d 268 (S.D.N.Y. 1998)",
+      "year": 1998,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Format shifting/Space shifting; Textual work; Unpublished"
+    },
+    {
+      "case": "Ringgold v. Black Entm\u2019t Television, Inc., 126 F.3d 70 (2d Cir. 1997)",
+      "year": 1997,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Painting/Drawing/Graphic; Photograph"
+    },
+    {
+      "case": "Dr. Seuss Enters., L.P. v. Penguin Books USA, Inc., 109 F.3d 1394 (9th Cir. 1997)",
+      "year": 1997,
+      "court": "9th Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Parody/Satire; Textual work"
+    },
+    {
+      "case": "L.A. News Serv. v. KCAL-TV Channel 9, 108 F.3d 1119 (9th Cir. 1997)",
+      "year": 1997,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; News reporting"
+    },
+    {
+      "case": "Princeton Univ. Press v. Mich. Document Servs., Inc., 99 F.3d 1381 (6th Cir. 1996)",
+      "year": 1996,
+      "court": "6th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    },
+    {
+      "case": "Sega Enters. Ltd. v. MAPHIA, 948 F. Supp. 923 (N.D. Cal. 1996)",
+      "year": 1996,
+      "court": "N.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Computer program; Internet/Digitization"
+    },
+    {
+      "case": "Monster Commc\u2019ns, Inc. v. Turner Broad. Sys., Inc., 935 F. Supp. 490 (S.D.N.Y. 1996)",
+      "year": 1996,
+      "court": "S.D.N.Y.",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Review/Commentary"
+    },
+    {
+      "case": "Am. Geophysical Union v. Texaco, Inc., 60 F.3d 913 (2d Cir. 1994)",
+      "year": 1994,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work; Used in government proceeding"
+    },
+    {
+      "case": "Metro-Goldwyn-Mayer, Inc. v. Am. Honda Motor Co., 900 F. Supp. 1287 (C.D. Cal. 1995)",
+      "year": 1995,
+      "court": "C.D. Cal.",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; Parody/Satire"
+    },
+    {
+      "case": "Robinson v. Random House, Inc., 877 F. Supp. 830 (S.D.N.Y. 1995)",
+      "year": 1995,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Textual work"
+    },
+    {
+      "case": "Rotbart v. J.R. O\u2019Dwyer Co., No. 94 Civ. 2091 (JSM) (S.D.N.Y. Feb. 7, 1995)",
+      "year": 1995,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use found",
+      "categories": "Format shifting/Space shifting; News reporting; Review/commentary; Textual work; Unpublished"
+    },
+    {
+      "case": "Nat\u2019l Rifle Ass\u2019n of Am. v. Handgun Control Fed\u2019n of Ohio, 15 F.3d 559 (6th Cir. 1994)",
+      "year": 1994,
+      "court": "6th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Textual work"
+    },
+    {
+      "case": "Norse v. Henry Holt & Co., 847 F. Supp. 142 (N.D. Cal. 1994)",
+      "year": 1994,
+      "court": "N.D. Cal.",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Textual work; Unpublished"
+    },
+    {
+      "case": "Campbell v. Acuff-Rose Music, Inc., 510 U.S. 569 (1994)",
+      "year": 1994,
+      "court": "U.S. Supreme Court",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Music; Parody/Satire"
+    },
+    {
+      "case": "Twin Peaks Prods., Inc. v. Publ\u2019ns Int\u2019l, Ltd., 996 F.2d 1366 (2d Cir. 1993)",
+      "year": 1993,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Film/Audiovisual; Review/Commentary; Textual work"
+    },
+    {
+      "case": "McGowan v. Cross, 991 F.2d 790, Nos. 92-1480, 92-1584 (4th Cir. Apr. 22, 1993)",
+      "year": 1993,
+      "court": "4th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Painting/Drawing/Graphic"
+    },
+    {
+      "case": "Television Digest, Inc. v. U.S. Tel. Ass\u2019n, 841 F. Supp. 5 (D.D.C. 1993)",
+      "year": 1993,
+      "court": "D.D.C.",
+      "outcome": "Fair use not found",
+      "categories": "Format shifting/Space shifting; News reporting"
+    },
+    {
+      "case": "Arica Inst., Inc. v. Palmer, 970 F.2d 1067 (2d Cir. 1992)",
+      "year": 1992,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Painting/Drawing/Graphic; Review/Commentary; Textual work"
+    },
+    {
+      "case": "Rogers v. Koons, 960 F.2d 301 (2d Cir. 1992)",
+      "year": 1992,
+      "court": "2d Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Parody; Review/Commentary; Sculpture"
+    },
+    {
+      "case": "L.A. News Serv. v. Tullo, 973 F.2d 791 (9th Cir. 1992)",
+      "year": 1992,
+      "court": "9th Circuit",
+      "outcome": "Fair use not found",
+      "categories": "Film/Audiovisual; News reporting"
+    },
+    {
+      "case": "Sega Enters. Ltd. v. Accolade, Inc., 977 F.2d 1510 (9th Cir. 1992)",
+      "year": 1992,
+      "court": "9th Circuit",
+      "outcome": "Fair use found",
+      "categories": "Computer program; Education/Scholarship/Research"
+    },
+    {
+      "case": "Atari Games Corp. v. Nintendo of Am. Inc., 975 F. 2d 832 (Fed. Cir. 1992)",
+      "year": 1992,
+      "court": "Fed. Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Computer program"
+    },
+    {
+      "case": "Lish v. Harper\u2019s Magazine Found., 807 F. Supp. 1090 (S.D.N.Y. 1992)",
+      "year": 1992,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "News Reporting; Review/Commentary; Textual work; Unpublished"
+    },
+    {
+      "case": "Ass\u2019n of Am. Med. Colls. v. Cuomo, 928 F.2d 519 (2d Cir. 1991)",
+      "year": 1991,
+      "court": "2d Circuit",
+      "outcome": "Preliminary ruling, mixed result, or remand",
+      "categories": "Education/Scholarship/Research; Review/Commentary; Textual work; Unpublished"
+    },
+    {
+      "case": "Wright v. Warner Books, Inc., 953 F.2d 731 (2d Cir. 1991)",
+      "year": 1991,
+      "court": "2d Circuit",
+      "outcome": "Fair use found",
+      "categories": "Education/Scholarship/Research; Textual work; Unpublished"
+    },
+    {
+      "case": "Basic Books, Inc. v. Kinko\u2019s Graphics Corp., 758 F. Supp. 1522 (S.D.N.Y. 1991)",
+      "year": 1991,
+      "court": "S.D.N.Y.",
+      "outcome": "Fair use not found",
+      "categories": "Education/Scholarship/Research; Textual work"
+    }
+  ]
+}

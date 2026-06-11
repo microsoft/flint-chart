@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "name": "prog_languages_decade",
+    "description": "New programming languages created per decade",
+    "source": "tidytuesday/2023-03-21/languages.csv",
+    "transformation": "Filter to programming languages, count new languages by decade. 1950+.",
+    "num_rows": 8,
+    "columns": {
+      "decade": "int64",
+      "new_languages": "int64"
+    }
+  },
+  "data": [
+    {
+      "decade": 1950,
+      "new_languages": 3
+    },
+    {
+      "decade": 1960,
+      "new_languages": 4
+    },
+    {
+      "decade": 1970,
+      "new_languages": 16
+    },
+    {
+      "decade": 1980,
+      "new_languages": 35
+    },
+    {
+      "decade": 1990,
+      "new_languages": 77
+    },
+    {
+      "decade": 2000,
+      "new_languages": 106
+    },
+    {
+      "decade": 2010,
+      "new_languages": 93
+    },
+    {
+      "decade": 2020,
+      "new_languages": 1
+    }
+  ]
+}

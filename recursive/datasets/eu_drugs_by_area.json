@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "eu_drugs_by_area",
+    "description": "EU authorised drugs by therapeutic area",
+    "source": "tidytuesday/2023-03-14/drugs.csv",
+    "transformation": "Filter authorised drugs, count by therapeutic area, top 20.",
+    "num_rows": 20,
+    "columns": {
+      "therapeutic_area": "str",
+      "count": "int64"
+    }
+  },
+  "data": [
+    {
+      "therapeutic_area": "HIV Infections",
+      "count": 61
+    },
+    {
+      "therapeutic_area": "Diabetes Mellitus, Type 2",
+      "count": 57
+    },
+    {
+      "therapeutic_area": "Hypertension",
+      "count": 30
+    },
+    {
+      "therapeutic_area": "Diabetes Mellitus",
+      "count": 29
+    },
+    {
+      "therapeutic_area": "Pulmonary Disease, Chronic Obstructive",
+      "count": 27
+    },
+    {
+      "therapeutic_area": "Multiple Myeloma",
+      "count": 22
+    },
+    {
+      "therapeutic_area": "Carcinoma, Non-Small-Cell Lung",
+      "count": 17
+    },
+    {
+      "therapeutic_area": "Parkinson Disease",
+      "count": 17
+    },
+    {
+      "therapeutic_area": "Epilepsy",
+      "count": 17
+    },
+    {
+      "therapeutic_area": "Schizophrenia;  Bipolar Disorder",
+      "count": 16
+    },
+    {
+      "therapeutic_area": "Breast Neoplasms",
+      "count": 16
+    },
+    {
+      "therapeutic_area": "Multiple Sclerosis",
+      "count": 14
+    },
+    {
+      "therapeutic_area": "Hemophilia A",
+      "count": 13
+    },
+    {
+      "therapeutic_area": "COVID-19 virus infection",
+      "count": 13
+    },
+    {
+      "therapeutic_area": "Prostatic Neoplasms",
+      "count": 12
+    },
+    {
+      "therapeutic_area": "Hypertension, Pulmonary",
+      "count": 12
+    },
+    {
+      "therapeutic_area": "Neutropenia",
+      "count": 11
+    },
+    {
+      "therapeutic_area": "Multiple Sclerosis, Relapsing-Remitting",
+      "count": 11
+    },
+    {
+      "therapeutic_area": "Asthma",
+      "count": 11
+    },
+    {
+      "therapeutic_area": "Erectile Dysfunction",
+      "count": 10
+    }
+  ]
+}

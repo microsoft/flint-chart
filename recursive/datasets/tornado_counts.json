@@ -1,0 +1,1016 @@
+{
+  "meta": {
+    "name": "tornado_counts",
+    "description": "US tornado counts by year and EF-scale magnitude",
+    "source": "tidytuesday/2023-05-16/tornados.csv",
+    "transformation": "Group by year and magnitude, count occurrences. Filter 1980+, valid magnitudes.",
+    "num_rows": 200,
+    "columns": {
+      "year": "int64",
+      "magnitude": "float64",
+      "count": "int64"
+    }
+  },
+  "data": [
+    {
+      "year": 1980,
+      "magnitude": 0.0,
+      "count": 266
+    },
+    {
+      "year": 1980,
+      "magnitude": 1.0,
+      "count": 400
+    },
+    {
+      "year": 1980,
+      "magnitude": 2.0,
+      "count": 162
+    },
+    {
+      "year": 1980,
+      "magnitude": 3.0,
+      "count": 32
+    },
+    {
+      "year": 1980,
+      "magnitude": 4.0,
+      "count": 5
+    },
+    {
+      "year": 1981,
+      "magnitude": 0.0,
+      "count": 283
+    },
+    {
+      "year": 1981,
+      "magnitude": 1.0,
+      "count": 320
+    },
+    {
+      "year": 1981,
+      "magnitude": 2.0,
+      "count": 149
+    },
+    {
+      "year": 1981,
+      "magnitude": 3.0,
+      "count": 23
+    },
+    {
+      "year": 1981,
+      "magnitude": 4.0,
+      "count": 7
+    },
+    {
+      "year": 1982,
+      "magnitude": 0.0,
+      "count": 373
+    },
+    {
+      "year": 1982,
+      "magnitude": 1.0,
+      "count": 421
+    },
+    {
+      "year": 1982,
+      "magnitude": 2.0,
+      "count": 187
+    },
+    {
+      "year": 1982,
+      "magnitude": 3.0,
+      "count": 58
+    },
+    {
+      "year": 1982,
+      "magnitude": 4.0,
+      "count": 6
+    },
+    {
+      "year": 1982,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1983,
+      "magnitude": 0.0,
+      "count": 350
+    },
+    {
+      "year": 1983,
+      "magnitude": 1.0,
+      "count": 372
+    },
+    {
+      "year": 1983,
+      "magnitude": 2.0,
+      "count": 147
+    },
+    {
+      "year": 1983,
+      "magnitude": 3.0,
+      "count": 57
+    },
+    {
+      "year": 1983,
+      "magnitude": 4.0,
+      "count": 4
+    },
+    {
+      "year": 1984,
+      "magnitude": 0.0,
+      "count": 372
+    },
+    {
+      "year": 1984,
+      "magnitude": 1.0,
+      "count": 352
+    },
+    {
+      "year": 1984,
+      "magnitude": 2.0,
+      "count": 126
+    },
+    {
+      "year": 1984,
+      "magnitude": 3.0,
+      "count": 41
+    },
+    {
+      "year": 1984,
+      "magnitude": 4.0,
+      "count": 14
+    },
+    {
+      "year": 1984,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1985,
+      "magnitude": 0.0,
+      "count": 308
+    },
+    {
+      "year": 1985,
+      "magnitude": 1.0,
+      "count": 259
+    },
+    {
+      "year": 1985,
+      "magnitude": 2.0,
+      "count": 79
+    },
+    {
+      "year": 1985,
+      "magnitude": 3.0,
+      "count": 29
+    },
+    {
+      "year": 1985,
+      "magnitude": 4.0,
+      "count": 8
+    },
+    {
+      "year": 1985,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1986,
+      "magnitude": 0.0,
+      "count": 354
+    },
+    {
+      "year": 1986,
+      "magnitude": 1.0,
+      "count": 271
+    },
+    {
+      "year": 1986,
+      "magnitude": 2.0,
+      "count": 116
+    },
+    {
+      "year": 1986,
+      "magnitude": 3.0,
+      "count": 21
+    },
+    {
+      "year": 1986,
+      "magnitude": 4.0,
+      "count": 3
+    },
+    {
+      "year": 1987,
+      "magnitude": 0.0,
+      "count": 340
+    },
+    {
+      "year": 1987,
+      "magnitude": 1.0,
+      "count": 239
+    },
+    {
+      "year": 1987,
+      "magnitude": 2.0,
+      "count": 62
+    },
+    {
+      "year": 1987,
+      "magnitude": 3.0,
+      "count": 12
+    },
+    {
+      "year": 1987,
+      "magnitude": 4.0,
+      "count": 3
+    },
+    {
+      "year": 1988,
+      "magnitude": 0.0,
+      "count": 283
+    },
+    {
+      "year": 1988,
+      "magnitude": 1.0,
+      "count": 311
+    },
+    {
+      "year": 1988,
+      "magnitude": 2.0,
+      "count": 81
+    },
+    {
+      "year": 1988,
+      "magnitude": 3.0,
+      "count": 24
+    },
+    {
+      "year": 1988,
+      "magnitude": 4.0,
+      "count": 3
+    },
+    {
+      "year": 1989,
+      "magnitude": 0.0,
+      "count": 369
+    },
+    {
+      "year": 1989,
+      "magnitude": 1.0,
+      "count": 364
+    },
+    {
+      "year": 1989,
+      "magnitude": 2.0,
+      "count": 102
+    },
+    {
+      "year": 1989,
+      "magnitude": 3.0,
+      "count": 10
+    },
+    {
+      "year": 1989,
+      "magnitude": 4.0,
+      "count": 11
+    },
+    {
+      "year": 1990,
+      "magnitude": 0.0,
+      "count": 537
+    },
+    {
+      "year": 1990,
+      "magnitude": 1.0,
+      "count": 385
+    },
+    {
+      "year": 1990,
+      "magnitude": 2.0,
+      "count": 155
+    },
+    {
+      "year": 1990,
+      "magnitude": 3.0,
+      "count": 41
+    },
+    {
+      "year": 1990,
+      "magnitude": 4.0,
+      "count": 12
+    },
+    {
+      "year": 1990,
+      "magnitude": 5.0,
+      "count": 3
+    },
+    {
+      "year": 1991,
+      "magnitude": 0.0,
+      "count": 688
+    },
+    {
+      "year": 1991,
+      "magnitude": 1.0,
+      "count": 295
+    },
+    {
+      "year": 1991,
+      "magnitude": 2.0,
+      "count": 103
+    },
+    {
+      "year": 1991,
+      "magnitude": 3.0,
+      "count": 39
+    },
+    {
+      "year": 1991,
+      "magnitude": 4.0,
+      "count": 6
+    },
+    {
+      "year": 1991,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1992,
+      "magnitude": 0.0,
+      "count": 698
+    },
+    {
+      "year": 1992,
+      "magnitude": 1.0,
+      "count": 413
+    },
+    {
+      "year": 1992,
+      "magnitude": 2.0,
+      "count": 129
+    },
+    {
+      "year": 1992,
+      "magnitude": 3.0,
+      "count": 43
+    },
+    {
+      "year": 1992,
+      "magnitude": 4.0,
+      "count": 13
+    },
+    {
+      "year": 1992,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1993,
+      "magnitude": 0.0,
+      "count": 733
+    },
+    {
+      "year": 1993,
+      "magnitude": 1.0,
+      "count": 323
+    },
+    {
+      "year": 1993,
+      "magnitude": 2.0,
+      "count": 80
+    },
+    {
+      "year": 1993,
+      "magnitude": 3.0,
+      "count": 30
+    },
+    {
+      "year": 1993,
+      "magnitude": 4.0,
+      "count": 6
+    },
+    {
+      "year": 1994,
+      "magnitude": 0.0,
+      "count": 694
+    },
+    {
+      "year": 1994,
+      "magnitude": 1.0,
+      "count": 272
+    },
+    {
+      "year": 1994,
+      "magnitude": 2.0,
+      "count": 81
+    },
+    {
+      "year": 1994,
+      "magnitude": 3.0,
+      "count": 30
+    },
+    {
+      "year": 1994,
+      "magnitude": 4.0,
+      "count": 5
+    },
+    {
+      "year": 1995,
+      "magnitude": 0.0,
+      "count": 822
+    },
+    {
+      "year": 1995,
+      "magnitude": 1.0,
+      "count": 285
+    },
+    {
+      "year": 1995,
+      "magnitude": 2.0,
+      "count": 98
+    },
+    {
+      "year": 1995,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 1995,
+      "magnitude": 4.0,
+      "count": 12
+    },
+    {
+      "year": 1996,
+      "magnitude": 0.0,
+      "count": 743
+    },
+    {
+      "year": 1996,
+      "magnitude": 1.0,
+      "count": 313
+    },
+    {
+      "year": 1996,
+      "magnitude": 2.0,
+      "count": 94
+    },
+    {
+      "year": 1996,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 1996,
+      "magnitude": 4.0,
+      "count": 2
+    },
+    {
+      "year": 1996,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1997,
+      "magnitude": 0.0,
+      "count": 743
+    },
+    {
+      "year": 1997,
+      "magnitude": 1.0,
+      "count": 281
+    },
+    {
+      "year": 1997,
+      "magnitude": 2.0,
+      "count": 85
+    },
+    {
+      "year": 1997,
+      "magnitude": 3.0,
+      "count": 29
+    },
+    {
+      "year": 1997,
+      "magnitude": 4.0,
+      "count": 9
+    },
+    {
+      "year": 1997,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 1998,
+      "magnitude": 0.0,
+      "count": 883
+    },
+    {
+      "year": 1998,
+      "magnitude": 1.0,
+      "count": 382
+    },
+    {
+      "year": 1998,
+      "magnitude": 2.0,
+      "count": 116
+    },
+    {
+      "year": 1998,
+      "magnitude": 3.0,
+      "count": 35
+    },
+    {
+      "year": 1998,
+      "magnitude": 4.0,
+      "count": 6
+    },
+    {
+      "year": 1998,
+      "magnitude": 5.0,
+      "count": 2
+    },
+    {
+      "year": 1999,
+      "magnitude": 0.0,
+      "count": 830
+    },
+    {
+      "year": 1999,
+      "magnitude": 1.0,
+      "count": 323
+    },
+    {
+      "year": 1999,
+      "magnitude": 2.0,
+      "count": 122
+    },
+    {
+      "year": 1999,
+      "magnitude": 3.0,
+      "count": 51
+    },
+    {
+      "year": 1999,
+      "magnitude": 4.0,
+      "count": 12
+    },
+    {
+      "year": 1999,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 2000,
+      "magnitude": 0.0,
+      "count": 723
+    },
+    {
+      "year": 2000,
+      "magnitude": 1.0,
+      "count": 267
+    },
+    {
+      "year": 2000,
+      "magnitude": 2.0,
+      "count": 62
+    },
+    {
+      "year": 2000,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 2000,
+      "magnitude": 4.0,
+      "count": 3
+    },
+    {
+      "year": 2001,
+      "magnitude": 0.0,
+      "count": 810
+    },
+    {
+      "year": 2001,
+      "magnitude": 1.0,
+      "count": 278
+    },
+    {
+      "year": 2001,
+      "magnitude": 2.0,
+      "count": 98
+    },
+    {
+      "year": 2001,
+      "magnitude": 3.0,
+      "count": 23
+    },
+    {
+      "year": 2001,
+      "magnitude": 4.0,
+      "count": 6
+    },
+    {
+      "year": 2002,
+      "magnitude": 0.0,
+      "count": 623
+    },
+    {
+      "year": 2002,
+      "magnitude": 1.0,
+      "count": 215
+    },
+    {
+      "year": 2002,
+      "magnitude": 2.0,
+      "count": 65
+    },
+    {
+      "year": 2002,
+      "magnitude": 3.0,
+      "count": 26
+    },
+    {
+      "year": 2002,
+      "magnitude": 4.0,
+      "count": 5
+    },
+    {
+      "year": 2003,
+      "magnitude": 0.0,
+      "count": 891
+    },
+    {
+      "year": 2003,
+      "magnitude": 1.0,
+      "count": 355
+    },
+    {
+      "year": 2003,
+      "magnitude": 2.0,
+      "count": 93
+    },
+    {
+      "year": 2003,
+      "magnitude": 3.0,
+      "count": 27
+    },
+    {
+      "year": 2003,
+      "magnitude": 4.0,
+      "count": 8
+    },
+    {
+      "year": 2004,
+      "magnitude": 0.0,
+      "count": 1216
+    },
+    {
+      "year": 2004,
+      "magnitude": 1.0,
+      "count": 470
+    },
+    {
+      "year": 2004,
+      "magnitude": 2.0,
+      "count": 103
+    },
+    {
+      "year": 2004,
+      "magnitude": 3.0,
+      "count": 23
+    },
+    {
+      "year": 2004,
+      "magnitude": 4.0,
+      "count": 5
+    },
+    {
+      "year": 2005,
+      "magnitude": 0.0,
+      "count": 815
+    },
+    {
+      "year": 2005,
+      "magnitude": 1.0,
+      "count": 343
+    },
+    {
+      "year": 2005,
+      "magnitude": 2.0,
+      "count": 84
+    },
+    {
+      "year": 2005,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 2005,
+      "magnitude": 4.0,
+      "count": 1
+    },
+    {
+      "year": 2006,
+      "magnitude": 0.0,
+      "count": 686
+    },
+    {
+      "year": 2006,
+      "magnitude": 1.0,
+      "count": 292
+    },
+    {
+      "year": 2006,
+      "magnitude": 2.0,
+      "count": 93
+    },
+    {
+      "year": 2006,
+      "magnitude": 3.0,
+      "count": 30
+    },
+    {
+      "year": 2006,
+      "magnitude": 4.0,
+      "count": 2
+    },
+    {
+      "year": 2007,
+      "magnitude": 0.0,
+      "count": 673
+    },
+    {
+      "year": 2007,
+      "magnitude": 1.0,
+      "count": 299
+    },
+    {
+      "year": 2007,
+      "magnitude": 2.0,
+      "count": 91
+    },
+    {
+      "year": 2007,
+      "magnitude": 3.0,
+      "count": 27
+    },
+    {
+      "year": 2007,
+      "magnitude": 4.0,
+      "count": 4
+    },
+    {
+      "year": 2007,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 2008,
+      "magnitude": 0.0,
+      "count": 982
+    },
+    {
+      "year": 2008,
+      "magnitude": 1.0,
+      "count": 498
+    },
+    {
+      "year": 2008,
+      "magnitude": 2.0,
+      "count": 150
+    },
+    {
+      "year": 2008,
+      "magnitude": 3.0,
+      "count": 49
+    },
+    {
+      "year": 2008,
+      "magnitude": 4.0,
+      "count": 9
+    },
+    {
+      "year": 2008,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 2009,
+      "magnitude": 0.0,
+      "count": 703
+    },
+    {
+      "year": 2009,
+      "magnitude": 1.0,
+      "count": 347
+    },
+    {
+      "year": 2009,
+      "magnitude": 2.0,
+      "count": 84
+    },
+    {
+      "year": 2009,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 2009,
+      "magnitude": 4.0,
+      "count": 2
+    },
+    {
+      "year": 2010,
+      "magnitude": 0.0,
+      "count": 770
+    },
+    {
+      "year": 2010,
+      "magnitude": 1.0,
+      "count": 341
+    },
+    {
+      "year": 2010,
+      "magnitude": 2.0,
+      "count": 125
+    },
+    {
+      "year": 2010,
+      "magnitude": 3.0,
+      "count": 32
+    },
+    {
+      "year": 2010,
+      "magnitude": 4.0,
+      "count": 13
+    },
+    {
+      "year": 2011,
+      "magnitude": 0.0,
+      "count": 795
+    },
+    {
+      "year": 2011,
+      "magnitude": 1.0,
+      "count": 617
+    },
+    {
+      "year": 2011,
+      "magnitude": 2.0,
+      "count": 195
+    },
+    {
+      "year": 2011,
+      "magnitude": 3.0,
+      "count": 61
+    },
+    {
+      "year": 2011,
+      "magnitude": 4.0,
+      "count": 17
+    },
+    {
+      "year": 2011,
+      "magnitude": 5.0,
+      "count": 6
+    },
+    {
+      "year": 2012,
+      "magnitude": 0.0,
+      "count": 576
+    },
+    {
+      "year": 2012,
+      "magnitude": 1.0,
+      "count": 239
+    },
+    {
+      "year": 2012,
+      "magnitude": 2.0,
+      "count": 95
+    },
+    {
+      "year": 2012,
+      "magnitude": 3.0,
+      "count": 24
+    },
+    {
+      "year": 2012,
+      "magnitude": 4.0,
+      "count": 4
+    },
+    {
+      "year": 2013,
+      "magnitude": 0.0,
+      "count": 501
+    },
+    {
+      "year": 2013,
+      "magnitude": 1.0,
+      "count": 298
+    },
+    {
+      "year": 2013,
+      "magnitude": 2.0,
+      "count": 79
+    },
+    {
+      "year": 2013,
+      "magnitude": 3.0,
+      "count": 19
+    },
+    {
+      "year": 2013,
+      "magnitude": 4.0,
+      "count": 8
+    },
+    {
+      "year": 2013,
+      "magnitude": 5.0,
+      "count": 1
+    },
+    {
+      "year": 2014,
+      "magnitude": 0.0,
+      "count": 476
+    },
+    {
+      "year": 2014,
+      "magnitude": 1.0,
+      "count": 313
+    },
+    {
+      "year": 2014,
+      "magnitude": 2.0,
+      "count": 70
+    },
+    {
+      "year": 2014,
+      "magnitude": 3.0,
+      "count": 20
+    },
+    {
+      "year": 2014,
+      "magnitude": 4.0,
+      "count": 7
+    },
+    {
+      "year": 2015,
+      "magnitude": 0.0,
+      "count": 696
+    },
+    {
+      "year": 2015,
+      "magnitude": 1.0,
+      "count": 396
+    },
+    {
+      "year": 2015,
+      "magnitude": 2.0,
+      "count": 64
+    },
+    {
+      "year": 2015,
+      "magnitude": 3.0,
+      "count": 18
+    },
+    {
+      "year": 2015,
+      "magnitude": 4.0,
+      "count": 3
+    },
+    {
+      "year": 2016,
+      "magnitude": 0.0,
+      "count": 531
+    },
+    {
+      "year": 2016,
+      "magnitude": 1.0,
+      "count": 310
+    },
+    {
+      "year": 2016,
+      "magnitude": 2.0,
+      "count": 77
+    },
+    {
+      "year": 2016,
+      "magnitude": 3.0,
+      "count": 26
+    },
+    {
+      "year": 2016,
+      "magnitude": 4.0,
+      "count": 2
+    },
+    {
+      "year": 2017,
+      "magnitude": 0.0,
+      "count": 630
+    }
+  ]
+}

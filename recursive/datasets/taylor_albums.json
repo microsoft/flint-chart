@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "name": "taylor_albums",
+    "description": "Taylor Swift album ratings",
+    "source": "tidytuesday/2023-10-17/taylor_albums.csv",
+    "transformation": "Drop rows without metacritic scores.",
+    "num_rows": 12,
+    "columns": {
+      "album_name": "str",
+      "ep": "bool",
+      "album_release": "str",
+      "metacritic_score": "float64",
+      "user_score": "float64"
+    }
+  },
+  "data": [
+    {
+      "album_name": "Taylor Swift",
+      "ep": false,
+      "album_release": "2006-10-24",
+      "metacritic_score": 67.0,
+      "user_score": 8.5
+    },
+    {
+      "album_name": "Fearless",
+      "ep": false,
+      "album_release": "2008-11-11",
+      "metacritic_score": 73.0,
+      "user_score": 8.4
+    },
+    {
+      "album_name": "Speak Now",
+      "ep": false,
+      "album_release": "2010-10-25",
+      "metacritic_score": 77.0,
+      "user_score": 8.6
+    },
+    {
+      "album_name": "Red",
+      "ep": false,
+      "album_release": "2012-10-22",
+      "metacritic_score": 77.0,
+      "user_score": 8.5
+    },
+    {
+      "album_name": "1989",
+      "ep": false,
+      "album_release": "2014-10-27",
+      "metacritic_score": 76.0,
+      "user_score": 8.2
+    },
+    {
+      "album_name": "reputation",
+      "ep": false,
+      "album_release": "2017-11-10",
+      "metacritic_score": 71.0,
+      "user_score": 8.3
+    },
+    {
+      "album_name": "Lover",
+      "ep": false,
+      "album_release": "2019-08-23",
+      "metacritic_score": 79.0,
+      "user_score": 8.4
+    },
+    {
+      "album_name": "folklore",
+      "ep": false,
+      "album_release": "2020-07-24",
+      "metacritic_score": 88.0,
+      "user_score": 9.0
+    },
+    {
+      "album_name": "evermore",
+      "ep": false,
+      "album_release": "2020-12-11",
+      "metacritic_score": 85.0,
+      "user_score": 8.9
+    },
+    {
+      "album_name": "Fearless (Taylor's Version)",
+      "ep": false,
+      "album_release": "2021-04-09",
+      "metacritic_score": 82.0,
+      "user_score": 8.9
+    },
+    {
+      "album_name": "Red (Taylor's Version)",
+      "ep": false,
+      "album_release": "2021-11-12",
+      "metacritic_score": 91.0,
+      "user_score": 9.0
+    },
+    {
+      "album_name": "Midnights",
+      "ep": false,
+      "album_release": "2022-10-21",
+      "metacritic_score": 85.0,
+      "user_score": 8.3
+    }
+  ]
+}
