@@ -43,7 +43,9 @@ export function Editor() {
   useEffect(() => {
     const galleryCase = readGalleryCaseParams();
     if (galleryCase) {
-      const gen = TEST_GENERATORS[galleryCase.generator];
+      const generatorName = galleryCase.generator;
+      if (!(generatorName in TEST_GENERATORS)) return;
+      const gen = TEST_GENERATORS[generatorName as keyof typeof TEST_GENERATORS];
       const testCase = gen?.()[galleryCase.index];
       if (testCase) {
         setText(JSON.stringify(testCaseToAssemblyInput(testCase), null, 2));
