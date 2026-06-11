@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart/chartjs
+ * @module flint-chart/chartjs
  *
- * Chart.js backend for agents-chart.
+ * Chart.js backend for flint-chart.
  *
  * Compiles the core semantic layer into Chart.js configuration objects.
  * Contains CJS-specific assembly, spec instantiation, and chart templates.

@@ -36,32 +36,30 @@ rebuild needed during development.
 
 ```
 flint-chart/
-├── src/                     library source — published to npm
-│   ├── index.ts             public barrel
-│   ├── core/                target-agnostic types, decisions, semantics
-│   ├── vegalite/            Vega-Lite backend
-│   ├── echarts/             ECharts backend
-│   ├── chartjs/             Chart.js backend
-│   ├── gofish/              GoFish backend
-│   └── test-data/           fixtures + generators (also drives gallery)
-├── tests/                   repo-level tests
-├── site/                    unified Vite+React demo (landing / gallery / editor routes)
+├── packages/
+│   ├── flint-js/              JS/TS library — published to npm
+│   │   ├── src/
+│   │   │   ├── index.ts       public barrel
+│   │   │   ├── core/          target-agnostic types, decisions, semantics
+│   │   │   ├── vegalite/      Vega-Lite backend
+│   │   │   ├── echarts/       ECharts backend
+│   │   │   ├── chartjs/       Chart.js backend
+│   │   │   ├── gofish/        GoFish backend
+│   │   │   └── test-data/     fixtures + generators (also drives gallery)
+│   │   └── tests/             JS test suites
+│   └── flint-py/              Python port (Vega-Lite backend)
+│       ├── src/flint_chart/   library source
+│       └── tests/             Python test suites
+├── shared/
+│   └── test-data/             JSON test fixtures shared across JS + Python
+├── site/                      unified Vite+React demo (landing / gallery / editor routes)
 ├── agent-skills/
-│   ├── skills/              Copilot/Claude SKILL.md bundles
-│   ├── prompts/             standalone system prompts
-│   ├── instructions/        .instructions.md drop-ins
-│   └── mcp-server/          MCP server (TS, stdio transport)
-├── docs/                    architecture, planning, how-tos, HANDOFF
-└── df-reference/            temporary scaffold from Data Formulator — see notes
+│   ├── skills/                Copilot/Claude SKILL.md bundles
+│   ├── prompts/               standalone system prompts
+│   ├── instructions/          .instructions.md drop-ins
+│   └── mcp-server/            MCP server (TS, stdio transport)
+├── docs/                      architecture, planning, how-tos, HANDOFF
 ```
-
-### About `df-reference/`
-
-This directory is a snapshot from Data Formulator (the project flint-chart
-was extracted from), kept around as reference while we rebuild the
-standalone gallery. **It is excluded from npm packaging, type-checking,
-and lint.** Delete it once the gallery is feature-complete and we no
-longer need the DF components or asset icons as a guide.
 
 ## How a chart actually gets assembled
 

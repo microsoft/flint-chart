@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart
+ * @module flint-chart
  *
  * Semantic-level chart assembly library.
  *
@@ -30,7 +30,7 @@
  *
  * Usage:
  * ```ts
- * import { assembleVegaLite } from './lib/agents-chart';
+ * import { assembleVegaLite } from 'flint-chart';
  *
  * const spec = assembleVegaLite({
  *   data: { values: myData },

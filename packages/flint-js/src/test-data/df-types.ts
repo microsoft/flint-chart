@@ -4,7 +4,7 @@
 /**
  * Vendored types for test-data / gallery fixtures.
  *
- * These come from the Data Formulator repo, where TestCase originally lived.
+ * These come from the original repo, where TestCase originally lived.
  * They're scoped to test-data only — the public library (core/, vegalite/, …)
  * does not depend on these types.
  *

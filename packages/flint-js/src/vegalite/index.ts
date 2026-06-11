@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart/vegalite
+ * @module flint-chart/vegalite
  *
- * Vega-Lite backend for agents-chart.
+ * Vega-Lite backend for flint-chart.
  *
  * Compiles the core semantic layer into Vega-Lite specifications.
  * Contains VL-specific assembly, spec instantiation, and chart templates.

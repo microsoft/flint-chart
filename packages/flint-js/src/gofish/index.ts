@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart/gofish
+ * @module flint-chart/gofish
  *
- * GoFish backend for agents-chart.
+ * GoFish backend for flint-chart.
  *
  * Compiles the core semantic layer into GoFish render calls.
  * GoFish uses a fluent API: chart(data).flow(...).mark(...).render(el, opts).

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart/core
+ * @module flint-chart/core
  *
  * Target-language-agnostic core of the chart engine.
  *

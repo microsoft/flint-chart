@@ -1,6 +1,6 @@
 # Vega-Lite Backend
 
-The primary and most feature-complete backend for agents-chart. Compiles the core semantic layer into declarative [Vega-Lite](https://vega.github.io/vega-lite/) JSON specifications.
+The primary and most feature-complete backend for flint-chart. Compiles the core semantic layer into declarative [Vega-Lite](https://vega.github.io/vega-lite/) JSON specifications.
 
 ## Output Format
 

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 /**
- * @module agents-chart/echarts
+ * @module flint-chart/echarts
  *
- * ECharts backend for agents-chart.
+ * ECharts backend for flint-chart.
  *
  * Compiles the core semantic layer into ECharts option objects.
  * Contains EC-specific assembly, spec instantiation, and chart templates.

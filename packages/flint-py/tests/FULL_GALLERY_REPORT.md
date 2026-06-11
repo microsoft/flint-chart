@@ -15,7 +15,7 @@ The remaining **0** cases (~0%) are *not* compatibility bugs; they are chart-typ
 
 ## Methodology
 
-1. The extractor at `tests/frontend/unit/lib/agents-chart/flint_py_extract.test.ts` walks `GALLERY_TREE` and, for every page whose `library === 'vegalite'` or `render === 'triple'`, calls each registered `TestCase` generator and runs the JS reference `assembleVegaLite(input, { addTooltips: true })` with the gallery's default canvas size (400×300). Each case is written to `flint-py/tests/fixtures/<slug>/` as `input.json` + `expected.json` (+ `meta.json` for provenance).
+1. The extractor at `tests/frontend/unit/lib/flint-chart/flint_py_extract.test.ts` walks `GALLERY_TREE` and, for every page whose `library === 'vegalite'` or `render === 'triple'`, calls each registered `TestCase` generator and runs the JS reference `assembleVegaLite(input, { addTooltips: true })` with the gallery's default canvas size (400×300). Each case is written to `flint-py/tests/fixtures/<slug>/` as `input.json` + `expected.json` (+ `meta.json` for provenance).
 
 2. `flint-py/tools/run_full_eval.py` loads every fixture, runs Python `assemble_vegalite(input)`, then compares with the JS reference using **byte-level JSON equality** after canonicalising key order and rounding floats to 9 decimal places (so dict ordering and last-bit float drift don't trip the assertion). The strictness matches the pytest harness in `flint-py/tests/test_fixtures.py`.
 

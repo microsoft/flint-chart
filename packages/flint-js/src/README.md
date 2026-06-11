@@ -1,4 +1,4 @@
-# agents-chart
+# flint-chart
 
 A semantic-level visualization library that compiles data + semantic annotations
 into chart specifications for multiple rendering backends. The LLM outputs only
@@ -22,11 +22,11 @@ LLM-generated chart specs face a dilemma:
 |----------|:---:|:---:|:---:|:---:|
 | Library defaults | ✗ | ✓ | ✗ | 0 |
 | LLM-tuned spec | ✓ | ✗ | Sometimes | 1 LLM call |
-| **agents-chart** | **✓** | **✓** | **✓** | **0** |
+| **flint-chart** | **✓** | **✓** | **✓** | **0** |
 
 **Simple specs** are editable but look bad (wrong sizing, misleading
 encodings). **Polished specs** look great but are brittle (hard-coded
-values break on every field swap). agents-chart resolves this: when a user
+values break on every field swap). flint-chart resolves this: when a user
 swaps fields, changes chart type, or adds facets for exploration, the
 compiler re-derives all parameters automatically — no LLM call needed.
 
@@ -69,7 +69,7 @@ semantic type. No hard-coded constants go stale. No LLM call needed.
 ### Vega-Lite
 
 ```ts
-import { assembleVegaLite } from './lib/agents-chart';
+import { assembleVegaLite } from 'flint-chart';
 
 const spec = assembleVegaLite({
   data: { values: myData },
@@ -85,7 +85,7 @@ const spec = assembleVegaLite({
 ### ECharts
 
 ```ts
-import { assembleECharts } from './lib/agents-chart';
+import { assembleECharts } from 'flint-chart';
 
 const option = assembleECharts({
   data: { values: myData },
@@ -100,7 +100,7 @@ const option = assembleECharts({
 ### Chart.js
 
 ```ts
-import { assembleChartjs } from './lib/agents-chart';
+import { assembleChartjs } from 'flint-chart';
 
 const config = assembleChartjs({
   data: { values: myData },
@@ -159,9 +159,9 @@ Each backend has its own assembly function. All accept the same
 
 | Function | Output | Import |
 |----------|--------|--------|
-| `assembleVegaLite(input)` | Vega-Lite spec | `import { assembleVegaLite } from './lib/agents-chart'` |
-| `assembleECharts(input)` | ECharts option object | `import { assembleECharts } from './lib/agents-chart'` |
-| `assembleChartjs(input)` | Chart.js config object | `import { assembleChartjs } from './lib/agents-chart'` |
+| `assembleVegaLite(input)` | Vega-Lite spec | `import { assembleVegaLite } from 'flint-chart'` |
+| `assembleECharts(input)` | ECharts option object | `import { assembleECharts } from 'flint-chart'` |
+| `assembleChartjs(input)` | Chart.js config object | `import { assembleChartjs } from 'flint-chart'` |
 
 ### Input types
 
@@ -221,11 +221,11 @@ chart type name.
 
 ```ts
 // Example: list available Vega-Lite chart categories
-import { vlTemplateDefs } from './lib/agents-chart';
+import { vlTemplateDefs } from 'flint-chart';
 Object.keys(vlTemplateDefs); // ["Scatter & Point", "Bar", "Line & Area", ...]
 
 // Example: get channels for a specific chart type
-import { vlGetTemplateChannels } from './lib/agents-chart';
+import { vlGetTemplateChannels } from 'flint-chart';
 vlGetTemplateChannels('Scatter Plot'); // ["x", "y", "color", "size", "shape"]
 ```
 
@@ -261,7 +261,7 @@ import {
   // Layout constants
   channels,
   channelGroups,
-} from './lib/agents-chart';
+} from 'flint-chart';
 ```
 
 ---

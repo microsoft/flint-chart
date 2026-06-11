@@ -143,7 +143,7 @@ const config = assembleChartjs({
 ## Architecture
 
 ```
-src/
+packages/flint-js/src/
   index.ts                ← public API (re-exports core/ + all backends)
   core/                   ← target-language-agnostic
     types.ts              ← shared type definitions (ChartAssemblyInput, ChartTemplateDef, …)
@@ -158,9 +158,14 @@ src/
   gofish/                 ← GoFish backend
   test-data/              ← fixtures + generators (also drives the gallery)
 
+packages/flint-py/src/flint_chart/
+  core/                   ← Python port of core/ (Vega-Lite backend only)
+  vegalite/               ← assemble_vegalite() + templates
+
+shared/test-data/         ← JSON fixtures shared across JS + Python
 site/                     ← unified Vite+React demo (landing / gallery / editor routes)
 
-agents/
+agent-skills/
   skills/                 ← Copilot/Claude SKILL.md bundles
   prompts/                ← standalone system prompts
   instructions/           ← .instructions.md drop-ins

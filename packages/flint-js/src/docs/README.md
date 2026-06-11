@@ -1,9 +1,9 @@
-# Agents-Chart: A Visualization Library for Agent Developers
+# Flint-Chart: A Visualization Library for Agent Developers
 
 > You're building an AI agent that creates charts. Every approach you've
 > tried is brittle — prompt-engineered Vega-Lite that breaks when users
 > edit fields, sizing heuristics that fail on new data shapes, retry
-> loops that burn tokens. **Agents-chart** is a library that eliminates
+> loops that burn tokens. **Flint-chart** is a library that eliminates
 > this brittleness.
 >
 > For the semantic type system, see
@@ -29,11 +29,11 @@ for interactivity, Chart.js for lightweight embedding), **every prompt,
 every example, every post-processing rule must be duplicated per
 backend** — multiplying the brittleness.
 
-**Agents-chart** is a library that moves design knowledge out of your
+**Flint-chart** is a library that moves design knowledge out of your
 prompts and into deterministic code. Instead of generating low-level
 charting code, your agent outputs a minimal semantic description: chart
 type, field assignments, and a **semantic type** per field (e.g.,
-`Revenue`, `Rank`, `CategoryCode`). Agents-chart's compiler
+`Revenue`, `Rank`, `CategoryCode`). Flint-chart's compiler
 deterministically derives all low-level parameters — axis sizing,
 zero-baseline behavior, formatting, color schemes, bespoke mark
 templates — producing charts that look good *and* stay editable without
@@ -262,7 +262,7 @@ requires frontier models.
 
 The core insight: **design knowledge belongs in the library, not in your
 prompts.** Your agent may or may not follow a detailed prompt — and even
-when it does, the result varies across models and runs. Agents-chart
+when it does, the result varies across models and runs. Flint-chart
 eliminates this uncertainty by encoding all visualization design decisions
 in deterministic code. Your agent generates a minimal spec, and the
 library handles everything else — consistently, every time, regardless of
@@ -303,7 +303,7 @@ which model produced the spec.
   to Vega-Lite, ECharts, Chart.js, or GoFish. Your deployment context
   picks the backend; your agent and your prompts don't change.
 
-- **The generated output is still accessible.** Agents-chart compiles to
+- **The generated output is still accessible.** Flint-chart compiles to
   standard Vega-Lite (or ECharts options, or Chart.js configs). If a user
   needs to fine-tune a specific visual detail, they can edit the generated
   output directly. The library handles the 98% of decisions derivable from
@@ -311,7 +311,7 @@ which model produced the spec.
 
 ### At a glance
 
-| Property | Approach 1 (defaults) | Approach 2 (polished VL) | Agents-chart |
+| Property | Approach 1 (defaults) | Approach 2 (polished VL) | Flint-chart |
 |----------|-----------------------|--------------------------|--------------|
 | **Looks good** | ✗ | ✓ | ✓ |
 | **Editable** | ✓ (simple spec) | ✗ (brittle, hard-coded) | ✓ (semantic spec) |
@@ -329,14 +329,14 @@ which model produced the spec.
    └─→ No VL knowledge, no sizing, no formatting.
 
 2. User edits to explore:  swap field / change chart type / add facet
-   └─→ agents-chart re-derives all config from semantic types  (NO agent call!)
+   └─→ flint-chart re-derives all config from semantic types  (NO agent call!)
    └─→ Chart looks good automatically  (98% of edits)
 
 3. (Rare) Fine-tune:  user asks agent to edit underlying VL/ECharts
                        for detailed style customization  (2% of edits)
 ```
 
-The chart spec is intentionally minimal. In Data Formulator, it's a small
+The chart spec is intentionally minimal — a small
 JSON object returned alongside the data transformation code, so that
 precious tokens go where they matter most: data computation and
 transformation, not visualization plumbing.
@@ -463,7 +463,7 @@ when the user edits anything.
 ask it to communicate one thing: **what does this data mean?** — expressed
 through a fine-grained semantic type system (e.g., `Revenue`, `Rank`,
 `Temperature`, `Year`). From the semantic type plus data characteristics
-(cardinality, range, distribution), agents-chart's compiler automatically
+(cardinality, range, distribution), flint-chart's compiler automatically
 derives everything:
 
 ```
@@ -485,14 +485,14 @@ field. This is one of the easiest tasks for any LLM (even small, fast
 models do it reliably).
 
 **Semantic types survive user edits.** When the user swaps Y from
-Revenue to Temperature, agents-chart re-derives all parameters from
+Revenue to Temperature, flint-chart re-derives all parameters from
 `"Temperature"` instead of `"Revenue"` and gets the right answer. No
 hard-coded constant goes stale because there are no hard-coded constants.
 **Your agent is not called.**
 
 **The $F \times C$ problem becomes $F + C$.** Your agent classifies each
 field once ($F$ decisions), the user picks a chart type ($C$ choices),
-and agents-chart handles the cross-product. Instead of 75 configurations
+and flint-chart handles the cross-product. Instead of 75 configurations
 that each need an agent call, the system needs 15 type assignments (done
 once) and handles all 75 deterministically.
 
@@ -515,7 +515,7 @@ every new facet structure, every new mark combination requires new rules.
 You're always guessing thresholds, and the guesses break on data shapes
 you didn't anticipate.
 
-Agents-chart replaces this with a **parametric physics-inspired model**.
+Flint-chart replaces this with a **parametric physics-inspired model**.
 Instead of guessing layout constants, you control the system through a
 small set of physics parameters with intuitive physical meaning:
 
@@ -609,7 +609,7 @@ examples, post-processing, validation, retry logic, sizing heuristics.
 This is the $B \times T \times R$ explosion: $B$ backends × $T$
 templates × $R$ rules.
 
-**Agents-chart collapses this to $T + (B \times I)$.** The $T$ templates
+**Flint-chart collapses this to $T + (B \times I)$.** The $T$ templates
 and $R$ rules live in shared Phases 0–1, and each backend only implements
 $I$ instantiation functions — thin translators that map the
 already-computed layout into the target library's config format. Adding a
@@ -624,14 +624,14 @@ design system.
 
 - **Capability coverage.** Radar and gauge charts are native in ECharts
   but missing from Vega-Lite. Faceted compositions are native in Vega-Lite
-  but painful in Chart.js. Agents-chart routes each chart type to the
+  but painful in Chart.js. Flint-chart routes each chart type to the
   backend that handles it best — your agent doesn't need to know which.
 
 - **Rendering trade-offs handled for you.** Canvas renderers handle 10K+
   points without DOM pressure; SVG renderers produce crisper output for
   publication. The choice depends on dataset size — not on your prompts.
 
-- **Vendor independence.** When agents-chart is the contract — not the
+- **Vendor independence.** When flint-chart is the contract — not the
   backend API — swapping or upgrading a renderer is a localized change,
   not a rewrite of your entire pipeline.
 
@@ -653,21 +653,21 @@ When your agent generates raw VL and the chart fails, failures are either
 **silent** (the chart misrepresents the data). VL gives only low-level
 errors that neither your agent nor your user can act on.
 
-With agents-chart, your agent gets **structured, semantic error messages**
+With flint-chart, your agent gets **structured, semantic error messages**
 that it can parse and repair automatically.
 
-**Semantic validation — agents-chart catches errors before rendering:**
+**Semantic validation — flint-chart catches errors before rendering:**
 
-| Violation | What agents-chart detects | What raw VL does |
+| Violation | What flint-chart detects | What raw VL does |
 |-----------|--------------------------|-----------------|
 | **Chart–data incompatibility** | *"Pyramid chart requires exactly 2 categories; 'Region' has 5"* | Renders a broken layered bar chart. No error. |
 | **Redundant encoding** | *"Revenue is mapped to both Y and color — color adds no information"* | Renders silently with a meaningless gradient legend. |
 | **Field–channel mismatch** | *"Product has 80 values — too many for a color encoding"* or *"Group is a CategoryCode — use nominal, not quantitative"* | Renders 80 indistinguishable colors, or maps numeric categories to a continuous gradient. No warning. |
 | **Missing required encoding** | *"Candlestick chart requires Open, High, Low, Close fields"* | Crashes or renders partial marks. No explanation. |
 
-**Overflow detection — agents-chart explains *why* a chart was clipped:**
+**Overflow detection — flint-chart explains *why* a chart was clipped:**
 
-| Scenario | Agents-chart response | Raw VL result |
+| Scenario | Flint-chart response | Raw VL result |
 |----------|----------------------|---------------|
 | **80 products × 4 facets** | *"X axis clipped: 80 products compressed from 20 px to 8 px per bar; canvas stretched to 800 px (max). Consider filtering to top 20."* | 6400 px wide, or 400 px with 5 px bars. No explanation. |
 | **720 temporal cells** | *"Heatmap X axis: 720 hourly cells compressed to 1.1 px each. Consider aggregating to daily."* | 14,400 px wide, or 0.5 px cells — a solid color band. |
@@ -980,7 +980,7 @@ All four backends share the same input type (`ChartAssemblyInput`)
 and follow the same calling convention:
 
 ```typescript
-import { assembleVegaLite, assembleECharts, assembleChartjs, assembleGoFish } from './lib/agents-chart';
+import { assembleVegaLite, assembleECharts, assembleChartjs, assembleGoFish } from './lib/flint-chart';
 
 const input: ChartAssemblyInput = {
     chartType: 'Scatter Plot',
@@ -1137,21 +1137,21 @@ the instantiation layer — no analysis code changes.
 
 Four examples that progressively demonstrate the gap between your agent
 generating charting code directly versus outputting a minimal semantic spec.
-In every case, the agents-chart spec is the same shape: chart type + field
+In every case, the flint-chart spec is the same shape: chart type + field
 assignments + semantic types (~7–12 lines).
 
 ### Example 1: Simple bar chart — no advantage yet
 
 **Task:** Bar chart of Revenue by 5 Regions.
 
-**With agents-chart:** Chart type, two field encodings, two semantic types.
+**With flint-chart:** Chart type, two field encodings, two semantic types.
 
 **With your agent generating VL directly:** Mark type, two field encodings
 with explicit `type` annotations.
 
 The two are nearly identical. VL's defaults happen to work: 5 bars fit
 comfortably, `zero: true` is correct, alphabetical sort is acceptable.
-**No win here — and that's the point.** Agents-chart isn't designed to help
+**No win here — and that's the point.** Flint-chart isn't designed to help
 with cases your agent already handles well.
 
 ### Example 2: Lollipop chart — templates eliminate prompt complexity
@@ -1159,7 +1159,7 @@ with cases your agent already handles well.
 **Task:** Lollipop chart of Revenue by Product (top 10), colored by Group
 (values: 1, 2, 3, 4, 5 — categorical groups encoded as numbers).
 
-**With agents-chart:** Chart type = "Lollipop Chart", three field encodings
+**With flint-chart:** Chart type = "Lollipop Chart", three field encodings
 (x, y, color), three semantic types (`Revenue`, `Product`,
 `CategoryCode`). Same ~10 lines as any chart.
 
@@ -1181,7 +1181,7 @@ with cases your agent already handles well.
 The color problem is especially insidious: VL sees numbers and defaults to
 `quantitative` with a sequential color scheme. Groups 1 and 2 get nearly
 identical shades of blue — visually indistinguishable. The chart *renders*
-without error but the color encoding is meaningless. With agents-chart,
+without error but the color encoding is meaningless. With flint-chart,
 `CategoryCode` → nominal → categorical palette, and groups get distinct
 hues automatically.
 
@@ -1189,7 +1189,7 @@ hues automatically.
 
 **Task:** Revenue by Product (80 products), faceted by Region (4 regions).
 
-**With agents-chart:** Chart type, three field encodings (x, y, column),
+**With flint-chart:** Chart type, three field encodings (x, y, column),
 three semantic types. Same ~12 lines.
 
 **What your agent must hard-code if generating VL directly:**
@@ -1204,7 +1204,7 @@ three semantic types. Same ~12 lines.
 Your agent's prompt can't express these dependencies — each value must be
 hard-coded, and they all break when the data changes.
 
-With agents-chart, the spring model handles all four automatically:
+With flint-chart, the spring model handles all four automatically:
 - Facet stretch ($\beta_f$) determines overall canvas growth.
 - Each subplot's spring model: 80 products × $\ell_0 = 20$ px overflows →
   items compress to $\ell = 8$ px, subplot stretches to fit.
@@ -1217,13 +1217,13 @@ With agents-chart, the spring model handles all four automatically:
 **Task:** Heatmap of event counts — UTC timestamps (hourly, 30 days) on X,
 Category (15 event types) on Y, count as color.
 
-**With agents-chart:** Chart type = "Heatmap", three encodings (x, y,
+**With flint-chart:** Chart type = "Heatmap", three encodings (x, y,
 color), three semantic types (`DateTime`, `Category`, `Count`). ~12 lines.
 
 **What your agent must get right if generating VL directly** — 11
 decisions, all stemming from needing to know what the data *means*:
 
-| Decision | What VL requires | What agents-chart derives |
+| Decision | What VL requires | What flint-chart derives |
 |----------|-----------------|--------------------------|
 | X encoding type | `"type": "temporal"` — must recognize timestamp is a date, not a number | `DateTime` → temporal |
 | Time formatting | `"format": "%m/%d %H:%M"` — must pick format for hourly granularity | `DateTime` + hourly range → appropriate format |
