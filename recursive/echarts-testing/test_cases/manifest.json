@@ -77,7 +77,7 @@
   },
   {
     "test_id": "grouped_bar_basic",
-    "description": "Grouped bar with 4 cats \u00d7 3 groups"
+    "description": "Grouped bar with 4 cats × 3 groups"
   },
   {
     "test_id": "grouped_bar_legend_stress",
@@ -85,15 +85,15 @@
   },
   {
     "test_id": "grouped_bar_many",
-    "description": "Grouped bar with 6 cats \u00d7 5 groups (crowding test)"
+    "description": "Grouped bar with 6 cats × 5 groups (crowding test)"
   },
   {
     "test_id": "heatmap_basic",
-    "description": "Basic heatmap 6\u00d75"
+    "description": "Basic heatmap 6×5"
   },
   {
     "test_id": "heatmap_large",
-    "description": "Large heatmap 12\u00d710"
+    "description": "Large heatmap 12×10"
   },
   {
     "test_id": "heatmap_sparse",
@@ -197,7 +197,7 @@
   },
   {
     "test_id": "stacked_bar_basic",
-    "description": "Stacked bar with 5 cats \u00d7 3 groups"
+    "description": "Stacked bar with 5 cats × 3 groups"
   },
   {
     "test_id": "stacked_bar_many_groups",
@@ -246,5 +246,29 @@
   {
     "test_id": "par_metrics6",
     "description": "Parallel coords, 6 dims, 120 rows, 4 groups (hairball test)"
+  },
+  {
+    "test_id": "graph_team",
+    "description": "EC: Network Graph — Team Collaboration *"
+  },
+  {
+    "test_id": "graph_hub_spoke",
+    "description": "EC: Network Graph — Hub & Spoke *"
+  },
+  {
+    "test_id": "graph_dense_16",
+    "description": "EC: Network Graph — 16 Nodes (dense) *"
+  },
+  {
+    "test_id": "tree_org",
+    "description": "EC: Tree — Org Hierarchy *"
+  },
+  {
+    "test_id": "tree_regions",
+    "description": "EC: Tree — Regions (single level) *"
+  },
+  {
+    "test_id": "tree_many_leaves",
+    "description": "EC: Tree — Many Leaves *"
   }
 ]

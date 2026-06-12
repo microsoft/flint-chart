@@ -1,0 +1,49 @@
+{
+  "test_id": "doughnut_browser_share",
+  "description": "CJS: Doughnut — Browser Share *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Browser": "Chrome",
+          "Share": 5
+        },
+        {
+          "Browser": "Safari",
+          "Share": 22.7
+        },
+        {
+          "Browser": "Edge",
+          "Share": 49.1
+        },
+        {
+          "Browser": "Firefox",
+          "Share": 41.2
+        },
+        {
+          "Browser": "Other",
+          "Share": 43
+        }
+      ]
+    },
+    "semantic_types": {
+      "Browser": "Category",
+      "Share": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Doughnut Chart",
+      "encodings": {
+        "color": {
+          "field": "Browser"
+        },
+        "size": {
+          "field": "Share"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

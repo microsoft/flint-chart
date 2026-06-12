@@ -2382,3 +2382,171 @@ export function genEChartsParallelTests(): TestCase[] {
 
     return tests;
 }
+
+// ---------------------------------------------------------------------------
+// Network Graph (NEW — flagged with * for inspection)
+// ---------------------------------------------------------------------------
+
+export function genEChartsGraphTests(): TestCase[] {
+    const tests: TestCase[] = [];
+    const meta = {
+        Source: { type: Type.String, semanticType: 'Category', levels: [] as string[] },
+        Target: { type: Type.String, semanticType: 'Category', levels: [] as string[] },
+        Weight: { type: Type.Number, semanticType: 'Quantity', levels: [] as string[] },
+    };
+    const fields = [makeField('Source'), makeField('Target'), makeField('Weight')];
+    const enc = { x: makeEncodingItem('Source'), y: makeEncodingItem('Target'), size: makeEncodingItem('Weight') };
+
+    // 1. Small team collaboration network (weighted edges)
+    {
+        const people = ['Ana', 'Ben', 'Cara', 'Dan', 'Eve', 'Finn', 'Gia'];
+        const rand = seededRandom(71);
+        const data: any[] = [];
+        for (let i = 0; i < people.length; i++) {
+            for (let j = i + 1; j < people.length; j++) {
+                if (rand() < 0.45) {
+                    data.push({ Source: people[i], Target: people[j], Weight: Math.round(1 + rand() * 9) });
+                }
+            }
+        }
+        // Guarantee connectivity for a clean render.
+        if (data.length < 6) {
+            for (let i = 1; i < people.length; i++) data.push({ Source: people[0], Target: people[i], Weight: 3 });
+        }
+        tests.push({
+            title: 'EC: Network Graph — Team Collaboration *',
+            description: '7 nodes, weighted edges; node size encodes degree, circular layout.',
+            tags: ['echarts', 'graph', 'network'],
+            chartType: 'Network Graph',
+            data,
+            fields, metadata: meta, encodingMap: enc,
+        });
+    }
+
+    // 2. Hub-and-spoke (one dominant node)
+    {
+        const data: any[] = [];
+        const spokes = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+        const rand = seededRandom(73);
+        for (const s of spokes) data.push({ Source: 'Hub', Target: s, Weight: Math.round(2 + rand() * 8) });
+        // A few peripheral links between spokes.
+        data.push({ Source: 'S1', Target: 'S2', Weight: 1 });
+        data.push({ Source: 'S3', Target: 'S4', Weight: 1 });
+        tests.push({
+            title: 'EC: Network Graph — Hub & Spoke *',
+            description: 'A dominant hub connected to 8 spokes; the hub should render largest.',
+            tags: ['echarts', 'graph', 'network', 'hub'],
+            chartType: 'Network Graph',
+            data,
+            fields, metadata: meta, encodingMap: enc,
+        });
+    }
+
+    // 3. Larger unweighted graph (tests density + sizing)
+    {
+        const n = 16;
+        const nodes = Array.from({ length: n }, (_, i) => `N${i + 1}`);
+        const rand = seededRandom(79);
+        const data: any[] = [];
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                if (rand() < 0.18) data.push({ Source: nodes[i], Target: nodes[j], Weight: 1 });
+            }
+        }
+        for (let i = 1; i < n; i++) data.push({ Source: nodes[i - 1], Target: nodes[i], Weight: 1 });
+        tests.push({
+            title: 'EC: Network Graph — 16 Nodes (dense) *',
+            description: '16 nodes with many unweighted edges; exercises canvas sizing for larger graphs.',
+            tags: ['echarts', 'graph', 'network', 'dense'],
+            chartType: 'Network Graph',
+            data,
+            fields, metadata: meta, encodingMap: enc,
+        });
+    }
+
+    return tests;
+}
+
+// ---------------------------------------------------------------------------
+// Tree (NEW — flagged with * for inspection)
+// ---------------------------------------------------------------------------
+
+export function genEChartsTreeTests(): TestCase[] {
+    const tests: TestCase[] = [];
+
+    // 1. Two-level org / category tree (color + detail + size)
+    {
+        const rand = seededRandom(83);
+        const groups: Record<string, string[]> = {
+            Engineering: ['Backend', 'Frontend', 'Infra', 'QA'],
+            Sales: ['EMEA', 'AMER', 'APAC'],
+            Marketing: ['Brand', 'Growth'],
+            Support: ['Tier 1', 'Tier 2'],
+        };
+        const data: any[] = [];
+        for (const [dept, teams] of Object.entries(groups)) {
+            for (const team of teams) data.push({ Dept: dept, Team: team, Headcount: Math.round(3 + rand() * 20) });
+        }
+        tests.push({
+            title: 'EC: Tree — Org Hierarchy *',
+            description: 'Three levels (root → department → team); leaf value = headcount, left-to-right.',
+            tags: ['echarts', 'tree', 'hierarchy'],
+            chartType: 'Tree',
+            data,
+            fields: [makeField('Dept'), makeField('Team'), makeField('Headcount')],
+            metadata: {
+                Dept: { type: Type.String, semanticType: 'Category', levels: Object.keys(groups) },
+                Team: { type: Type.String, semanticType: 'Category', levels: [] },
+                Headcount: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { color: makeEncodingItem('Dept'), detail: makeEncodingItem('Team'), size: makeEncodingItem('Headcount') },
+        });
+    }
+
+    // 2. Single-level tree (color only → root → categories)
+    {
+        const rand = seededRandom(89);
+        const cats = ['North', 'South', 'East', 'West', 'Central'];
+        const data = cats.map((c) => ({ Region: c, Sales: Math.round(40 + rand() * 120) }));
+        tests.push({
+            title: 'EC: Tree — Regions (single level) *',
+            description: 'Two levels (root → region); no detail channel.',
+            tags: ['echarts', 'tree', 'hierarchy'],
+            chartType: 'Tree',
+            data,
+            fields: [makeField('Region'), makeField('Sales')],
+            metadata: {
+                Region: { type: Type.String, semanticType: 'Category', levels: cats },
+                Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { color: makeEncodingItem('Region'), size: makeEncodingItem('Sales') },
+        });
+    }
+
+    // 3. Many leaves (tall tree → tests vertical sizing)
+    {
+        const rand = seededRandom(97);
+        const groups = ['A', 'B', 'C', 'D'];
+        const data: any[] = [];
+        for (const g of groups) {
+            const count = 5 + Math.floor(rand() * 4);
+            for (let i = 0; i < count; i++) data.push({ Group: g, Item: `${g}${i + 1}`, Value: Math.round(1 + rand() * 50) });
+        }
+        tests.push({
+            title: 'EC: Tree — Many Leaves *',
+            description: '4 groups with many leaves each; exercises vertical canvas growth.',
+            tags: ['echarts', 'tree', 'hierarchy', 'dense'],
+            chartType: 'Tree',
+            data,
+            fields: [makeField('Group'), makeField('Item'), makeField('Value')],
+            metadata: {
+                Group: { type: Type.String, semanticType: 'Category', levels: groups },
+                Item: { type: Type.String, semanticType: 'Category', levels: [] },
+                Value: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { color: makeEncodingItem('Group'), detail: makeEncodingItem('Item'), size: makeEncodingItem('Value') },
+        });
+    }
+
+    return tests;
+}

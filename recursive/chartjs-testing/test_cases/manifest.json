@@ -10,5 +10,29 @@
   {
     "test_id": "bubble_dense",
     "description": "Bubble, dense 120 points, 4 groups"
+  },
+  {
+    "test_id": "doughnut_browser_share",
+    "description": "CJS: Doughnut — Browser Share *"
+  },
+  {
+    "test_id": "doughnut_many_slices",
+    "description": "CJS: Doughnut — Budget by Department (9 slices) *"
+  },
+  {
+    "test_id": "doughnut_counts",
+    "description": "CJS: Doughnut — Issue Types (counts) *"
+  },
+  {
+    "test_id": "combo_revenue_growth",
+    "description": "CJS: Combo — Revenue (bars) + Growth % (line) *"
+  },
+  {
+    "test_id": "combo_climograph",
+    "description": "CJS: Combo — Rainfall (bars) + Temperature (line) *"
+  },
+  {
+    "test_id": "combo_single_measure",
+    "description": "CJS: Combo — Single Measure (bars only) *"
   }
 ]

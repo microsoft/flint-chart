@@ -1,0 +1,93 @@
+{
+  "test_id": "combo_climograph",
+  "description": "CJS: Combo — Rainfall (bars) + Temperature (line) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Month": "Jan",
+          "Rainfall": 100,
+          "Temperature": 17.3
+        },
+        {
+          "Month": "Feb",
+          "Rainfall": 82,
+          "Temperature": 20.2
+        },
+        {
+          "Month": "Mar",
+          "Rainfall": 57,
+          "Temperature": 26.4
+        },
+        {
+          "Month": "Apr",
+          "Rainfall": 56,
+          "Temperature": 25.2
+        },
+        {
+          "Month": "May",
+          "Rainfall": 50,
+          "Temperature": 24.1
+        },
+        {
+          "Month": "Jun",
+          "Rainfall": 83,
+          "Temperature": 21.9
+        },
+        {
+          "Month": "Jul",
+          "Rainfall": 101,
+          "Temperature": 15.1
+        },
+        {
+          "Month": "Aug",
+          "Rainfall": 133,
+          "Temperature": 10.8
+        },
+        {
+          "Month": "Sep",
+          "Rainfall": 164,
+          "Temperature": 7.7
+        },
+        {
+          "Month": "Oct",
+          "Rainfall": 172,
+          "Temperature": 7.8
+        },
+        {
+          "Month": "Nov",
+          "Rainfall": 165,
+          "Temperature": 7.9
+        },
+        {
+          "Month": "Dec",
+          "Rainfall": 145,
+          "Temperature": 12.7
+        }
+      ]
+    },
+    "semantic_types": {
+      "Month": "Category",
+      "Rainfall": "Quantity",
+      "Temperature": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Combo Chart",
+      "encodings": {
+        "x": {
+          "field": "Month"
+        },
+        "y": {
+          "field": "Rainfall"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      },
+      "chartProperties": {
+        "lineField": "Temperature"
+      }
+    }
+  }
+}

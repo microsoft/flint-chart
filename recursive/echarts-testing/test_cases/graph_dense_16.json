@@ -1,0 +1,188 @@
+{
+  "test_id": "graph_dense_16",
+  "description": "EC: Network Graph — 16 Nodes (dense) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Source": "N1",
+          "Target": "N2",
+          "Weight": 1
+        },
+        {
+          "Source": "N1",
+          "Target": "N6",
+          "Weight": 1
+        },
+        {
+          "Source": "N1",
+          "Target": "N13",
+          "Weight": 1
+        },
+        {
+          "Source": "N2",
+          "Target": "N4",
+          "Weight": 1
+        },
+        {
+          "Source": "N3",
+          "Target": "N9",
+          "Weight": 1
+        },
+        {
+          "Source": "N4",
+          "Target": "N5",
+          "Weight": 1
+        },
+        {
+          "Source": "N5",
+          "Target": "N7",
+          "Weight": 1
+        },
+        {
+          "Source": "N6",
+          "Target": "N7",
+          "Weight": 1
+        },
+        {
+          "Source": "N6",
+          "Target": "N8",
+          "Weight": 1
+        },
+        {
+          "Source": "N6",
+          "Target": "N9",
+          "Weight": 1
+        },
+        {
+          "Source": "N7",
+          "Target": "N11",
+          "Weight": 1
+        },
+        {
+          "Source": "N8",
+          "Target": "N11",
+          "Weight": 1
+        },
+        {
+          "Source": "N10",
+          "Target": "N15",
+          "Weight": 1
+        },
+        {
+          "Source": "N10",
+          "Target": "N16",
+          "Weight": 1
+        },
+        {
+          "Source": "N11",
+          "Target": "N12",
+          "Weight": 1
+        },
+        {
+          "Source": "N12",
+          "Target": "N14",
+          "Weight": 1
+        },
+        {
+          "Source": "N1",
+          "Target": "N2",
+          "Weight": 1
+        },
+        {
+          "Source": "N2",
+          "Target": "N3",
+          "Weight": 1
+        },
+        {
+          "Source": "N3",
+          "Target": "N4",
+          "Weight": 1
+        },
+        {
+          "Source": "N4",
+          "Target": "N5",
+          "Weight": 1
+        },
+        {
+          "Source": "N5",
+          "Target": "N6",
+          "Weight": 1
+        },
+        {
+          "Source": "N6",
+          "Target": "N7",
+          "Weight": 1
+        },
+        {
+          "Source": "N7",
+          "Target": "N8",
+          "Weight": 1
+        },
+        {
+          "Source": "N8",
+          "Target": "N9",
+          "Weight": 1
+        },
+        {
+          "Source": "N9",
+          "Target": "N10",
+          "Weight": 1
+        },
+        {
+          "Source": "N10",
+          "Target": "N11",
+          "Weight": 1
+        },
+        {
+          "Source": "N11",
+          "Target": "N12",
+          "Weight": 1
+        },
+        {
+          "Source": "N12",
+          "Target": "N13",
+          "Weight": 1
+        },
+        {
+          "Source": "N13",
+          "Target": "N14",
+          "Weight": 1
+        },
+        {
+          "Source": "N14",
+          "Target": "N15",
+          "Weight": 1
+        },
+        {
+          "Source": "N15",
+          "Target": "N16",
+          "Weight": 1
+        }
+      ]
+    },
+    "semantic_types": {
+      "Source": "Category",
+      "Target": "Category",
+      "Weight": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Network Graph",
+      "encodings": {
+        "x": {
+          "field": "Source"
+        },
+        "y": {
+          "field": "Target"
+        },
+        "size": {
+          "field": "Weight"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

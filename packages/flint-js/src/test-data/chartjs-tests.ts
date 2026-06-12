@@ -615,8 +615,158 @@ export function genChartJsRoseTests(): TestCase[] {
 }
 
 // ---------------------------------------------------------------------------
-// Bubble Chart (NEW — flagged with * for inspection)
+// Doughnut Chart (NEW — flagged with * for inspection)
 // ---------------------------------------------------------------------------
+
+export function genChartJsDoughnutTests(): TestCase[] {
+    const tests: TestCase[] = [];
+    const rand = seededRandom(41);
+
+    // 1. Market share (few slices)
+    {
+        const browsers = ['Chrome', 'Safari', 'Edge', 'Firefox', 'Other'];
+        const data = browsers.map((b) => ({ Browser: b, Share: Math.round((5 + rand() * 45) * 10) / 10 }));
+        tests.push({
+            title: 'CJS: Doughnut — Browser Share *',
+            description: '5-slice doughnut with a 55% hollow centre; color = category, size = value.',
+            tags: ['chartjs', 'doughnut', 'part-to-whole'],
+            chartType: 'Doughnut Chart',
+            data,
+            fields: [makeField('Browser'), makeField('Share')],
+            metadata: {
+                Browser: { type: Type.String, semanticType: 'Category', levels: browsers },
+                Share: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { color: makeEncodingItem('Browser'), size: makeEncodingItem('Share') },
+        });
+    }
+
+    // 2. Many slices
+    {
+        const cats = genCategories('Dept', 9);
+        const data = cats.map((c) => ({ Dept: c, Budget: Math.round(10 + rand() * 90) }));
+        tests.push({
+            title: 'CJS: Doughnut — Budget by Department (9 slices) *',
+            description: 'Doughnut with 9 categories; legend on the right.',
+            tags: ['chartjs', 'doughnut', 'part-to-whole', 'many-categories'],
+            chartType: 'Doughnut Chart',
+            data,
+            fields: [makeField('Dept'), makeField('Budget')],
+            metadata: {
+                Dept: { type: Type.String, semanticType: 'Category', levels: cats },
+                Budget: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { color: makeEncodingItem('Dept'), size: makeEncodingItem('Budget') },
+        });
+    }
+
+    // 3. Count-only (no size field)
+    {
+        const types = ['Bug', 'Feature', 'Chore', 'Docs'];
+        const data = Array.from({ length: 60 }, () => ({ Type: types[Math.floor(rand() * types.length)] }));
+        tests.push({
+            title: 'CJS: Doughnut — Issue Types (counts) *',
+            description: 'No size channel; slice value is the count of rows per category.',
+            tags: ['chartjs', 'doughnut', 'part-to-whole', 'count'],
+            chartType: 'Doughnut Chart',
+            data,
+            fields: [makeField('Type')],
+            metadata: {
+                Type: { type: Type.String, semanticType: 'Category', levels: types },
+            },
+            encodingMap: { color: makeEncodingItem('Type') },
+        });
+    }
+
+    return tests;
+}
+
+// ---------------------------------------------------------------------------
+// Combo Chart — Bar + Line (NEW — flagged with * for inspection)
+// ---------------------------------------------------------------------------
+
+export function genChartJsComboTests(): TestCase[] {
+    const tests: TestCase[] = [];
+
+    // 1. Monthly revenue (bars) + growth-rate % (line, right axis)
+    {
+        const rand = seededRandom(53);
+        const months = genMonths(12);
+        let prev = 100 + rand() * 40;
+        const data = months.map((m) => {
+            const rev = Math.round(prev);
+            const growth = Math.round((rand() * 20 - 5) * 10) / 10;
+            prev = prev * (1 + growth / 100);
+            return { Month: m, Revenue: rev, Growth: growth };
+        });
+        tests.push({
+            title: 'CJS: Combo — Revenue (bars) + Growth % (line) *',
+            description: 'Dual-axis combo: bars on the left axis, a % line on the right axis.',
+            tags: ['chartjs', 'combo', 'dual-axis', 'bar', 'line'],
+            chartType: 'Combo Chart',
+            data,
+            fields: [makeField('Month'), makeField('Revenue'), makeField('Growth')],
+            metadata: {
+                Month: { type: Type.String, semanticType: 'Category', levels: months },
+                Revenue: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+                Growth: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { x: makeEncodingItem('Month'), y: makeEncodingItem('Revenue') },
+            chartProperties: { lineField: 'Growth' },
+        });
+    }
+
+    // 2. Rainfall (bars) + temperature (line) — classic climograph
+    {
+        const rand = seededRandom(59);
+        const months = genMonths(12);
+        const data = months.map((m, i) => {
+            const seasonal = Math.sin((i / 12) * Math.PI * 2);
+            return {
+                Month: m,
+                Rainfall: Math.round(40 + (1 - seasonal) * 60 + rand() * 20),
+                Temperature: Math.round((15 + seasonal * 10 + rand() * 3) * 10) / 10,
+            };
+        });
+        tests.push({
+            title: 'CJS: Combo — Rainfall (bars) + Temperature (line) *',
+            description: 'Climograph-style combo with very different unit scales on each axis.',
+            tags: ['chartjs', 'combo', 'dual-axis', 'climograph'],
+            chartType: 'Combo Chart',
+            data,
+            fields: [makeField('Month'), makeField('Rainfall'), makeField('Temperature')],
+            metadata: {
+                Month: { type: Type.String, semanticType: 'Category', levels: months },
+                Rainfall: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+                Temperature: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { x: makeEncodingItem('Month'), y: makeEncodingItem('Rainfall') },
+            chartProperties: { lineField: 'Temperature' },
+        });
+    }
+
+    // 3. Single measure → degrades to a plain bar chart (no line)
+    {
+        const rand = seededRandom(61);
+        const cats = genCategories('Region', 7);
+        const data = cats.map((c) => ({ Region: c, Sales: Math.round(20 + rand() * 80) }));
+        tests.push({
+            title: 'CJS: Combo — Single Measure (bars only) *',
+            description: 'No second numeric field; the combo gracefully degrades to bars.',
+            tags: ['chartjs', 'combo', 'fallback'],
+            chartType: 'Combo Chart',
+            data,
+            fields: [makeField('Region'), makeField('Sales')],
+            metadata: {
+                Region: { type: Type.String, semanticType: 'Category', levels: cats },
+                Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { x: makeEncodingItem('Region'), y: makeEncodingItem('Sales') },
+        });
+    }
+
+    return tests;
+}
 
 function genBubbleData(n: number, seed: number, withRegion: boolean) {
     const rand = seededRandom(seed);

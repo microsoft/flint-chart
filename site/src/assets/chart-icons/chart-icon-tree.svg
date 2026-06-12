@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Tree / dendrogram: a root branching left-to-right into leaves -->
+  <!-- Edges (orthogonal connectors) -->
+  <!-- root -> level-1 -->
+  <path d="M 52 128 H 92 V 76 H 124" fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 92 128 V 180 H 124"     fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- level-1 (top) -> leaves -->
+  <path d="M 136 76 H 176 V 52 H 208"  fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 176 76 V 100 H 208"       fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- level-1 (bottom) -> leaves -->
+  <path d="M 136 180 H 176 V 156 H 208" fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 176 180 V 204 H 208"       fill="none" stroke="#363636" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Nodes -->
+  <circle cx="52"  cy="128" r="14" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <circle cx="128" cy="76"  r="12" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <circle cx="128" cy="180" r="12" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <circle cx="212" cy="52"  r="9"  fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <circle cx="212" cy="100" r="9"  fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <circle cx="212" cy="156" r="9"  fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <circle cx="212" cy="204" r="9"  fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+</svg>

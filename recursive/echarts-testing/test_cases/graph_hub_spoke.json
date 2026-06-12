@@ -1,0 +1,83 @@
+{
+  "test_id": "graph_hub_spoke",
+  "description": "EC: Network Graph — Hub & Spoke *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Source": "Hub",
+          "Target": "S1",
+          "Weight": 2
+        },
+        {
+          "Source": "Hub",
+          "Target": "S2",
+          "Weight": 7
+        },
+        {
+          "Source": "Hub",
+          "Target": "S3",
+          "Weight": 3
+        },
+        {
+          "Source": "Hub",
+          "Target": "S4",
+          "Weight": 6
+        },
+        {
+          "Source": "Hub",
+          "Target": "S5",
+          "Weight": 9
+        },
+        {
+          "Source": "Hub",
+          "Target": "S6",
+          "Weight": 10
+        },
+        {
+          "Source": "Hub",
+          "Target": "S7",
+          "Weight": 5
+        },
+        {
+          "Source": "Hub",
+          "Target": "S8",
+          "Weight": 6
+        },
+        {
+          "Source": "S1",
+          "Target": "S2",
+          "Weight": 1
+        },
+        {
+          "Source": "S3",
+          "Target": "S4",
+          "Weight": 1
+        }
+      ]
+    },
+    "semantic_types": {
+      "Source": "Category",
+      "Target": "Category",
+      "Weight": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Network Graph",
+      "encodings": {
+        "x": {
+          "field": "Source"
+        },
+        "y": {
+          "field": "Target"
+        },
+        "size": {
+          "field": "Weight"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

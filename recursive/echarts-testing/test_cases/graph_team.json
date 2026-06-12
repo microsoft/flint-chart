@@ -1,0 +1,73 @@
+{
+  "test_id": "graph_team",
+  "description": "EC: Network Graph — Team Collaboration *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Source": "Ana",
+          "Target": "Ben",
+          "Weight": 4
+        },
+        {
+          "Source": "Ana",
+          "Target": "Gia",
+          "Weight": 3
+        },
+        {
+          "Source": "Ben",
+          "Target": "Cara",
+          "Weight": 4
+        },
+        {
+          "Source": "Ben",
+          "Target": "Dan",
+          "Weight": 9
+        },
+        {
+          "Source": "Cara",
+          "Target": "Gia",
+          "Weight": 8
+        },
+        {
+          "Source": "Eve",
+          "Target": "Finn",
+          "Weight": 2
+        },
+        {
+          "Source": "Eve",
+          "Target": "Gia",
+          "Weight": 6
+        },
+        {
+          "Source": "Finn",
+          "Target": "Gia",
+          "Weight": 6
+        }
+      ]
+    },
+    "semantic_types": {
+      "Source": "Category",
+      "Target": "Category",
+      "Weight": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Network Graph",
+      "encodings": {
+        "x": {
+          "field": "Source"
+        },
+        "y": {
+          "field": "Target"
+        },
+        "size": {
+          "field": "Weight"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

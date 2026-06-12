@@ -1,0 +1,57 @@
+{
+  "test_id": "combo_single_measure",
+  "description": "CJS: Combo — Single Measure (bars only) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Region": "Electronics",
+          "Sales": 20
+        },
+        {
+          "Region": "Clothing",
+          "Sales": 22
+        },
+        {
+          "Region": "Food",
+          "Sales": 27
+        },
+        {
+          "Region": "Books",
+          "Sales": 98
+        },
+        {
+          "Region": "Sports",
+          "Sales": 60
+        },
+        {
+          "Region": "Home",
+          "Sales": 49
+        },
+        {
+          "Region": "Garden",
+          "Sales": 90
+        }
+      ]
+    },
+    "semantic_types": {
+      "Region": "Category",
+      "Sales": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Combo Chart",
+      "encodings": {
+        "x": {
+          "field": "Region"
+        },
+        "y": {
+          "field": "Sales"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "test_id": "doughnut_many_slices",
+  "description": "CJS: Doughnut — Budget by Department (9 slices) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Dept": "Electronics",
+          "Budget": 98
+        },
+        {
+          "Dept": "Clothing",
+          "Budget": 94
+        },
+        {
+          "Dept": "Food",
+          "Budget": 85
+        },
+        {
+          "Dept": "Books",
+          "Budget": 87
+        },
+        {
+          "Dept": "Sports",
+          "Budget": 39
+        },
+        {
+          "Dept": "Home",
+          "Budget": 75
+        },
+        {
+          "Dept": "Garden",
+          "Budget": 37
+        },
+        {
+          "Dept": "Auto",
+          "Budget": 16
+        },
+        {
+          "Dept": "Health",
+          "Budget": 48
+        }
+      ]
+    },
+    "semantic_types": {
+      "Dept": "Category",
+      "Budget": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Doughnut Chart",
+      "encodings": {
+        "color": {
+          "field": "Dept"
+        },
+        "size": {
+          "field": "Budget"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

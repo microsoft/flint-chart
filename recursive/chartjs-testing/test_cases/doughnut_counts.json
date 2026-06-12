@@ -1,0 +1,205 @@
+{
+  "test_id": "doughnut_counts",
+  "description": "CJS: Doughnut — Issue Types (counts) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Docs"
+        },
+        {
+          "Type": "Bug"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Chore"
+        },
+        {
+          "Type": "Feature"
+        },
+        {
+          "Type": "Feature"
+        }
+      ]
+    },
+    "semantic_types": {
+      "Type": "Category"
+    },
+    "chart_spec": {
+      "chartType": "Doughnut Chart",
+      "encodings": {
+        "color": {
+          "field": "Type"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

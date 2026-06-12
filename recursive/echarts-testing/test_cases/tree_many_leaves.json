@@ -1,0 +1,148 @@
+{
+  "test_id": "tree_many_leaves",
+  "description": "EC: Tree — Many Leaves *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Group": "A",
+          "Item": "A1",
+          "Value": 39
+        },
+        {
+          "Group": "A",
+          "Item": "A2",
+          "Value": 16
+        },
+        {
+          "Group": "A",
+          "Item": "A3",
+          "Value": 25
+        },
+        {
+          "Group": "A",
+          "Item": "A4",
+          "Value": 35
+        },
+        {
+          "Group": "A",
+          "Item": "A5",
+          "Value": 13
+        },
+        {
+          "Group": "B",
+          "Item": "B1",
+          "Value": 43
+        },
+        {
+          "Group": "B",
+          "Item": "B2",
+          "Value": 46
+        },
+        {
+          "Group": "B",
+          "Item": "B3",
+          "Value": 34
+        },
+        {
+          "Group": "B",
+          "Item": "B4",
+          "Value": 11
+        },
+        {
+          "Group": "B",
+          "Item": "B5",
+          "Value": 20
+        },
+        {
+          "Group": "B",
+          "Item": "B6",
+          "Value": 31
+        },
+        {
+          "Group": "B",
+          "Item": "B7",
+          "Value": 19
+        },
+        {
+          "Group": "C",
+          "Item": "C1",
+          "Value": 20
+        },
+        {
+          "Group": "C",
+          "Item": "C2",
+          "Value": 6
+        },
+        {
+          "Group": "C",
+          "Item": "C3",
+          "Value": 38
+        },
+        {
+          "Group": "C",
+          "Item": "C4",
+          "Value": 11
+        },
+        {
+          "Group": "C",
+          "Item": "C5",
+          "Value": 25
+        },
+        {
+          "Group": "D",
+          "Item": "D1",
+          "Value": 32
+        },
+        {
+          "Group": "D",
+          "Item": "D2",
+          "Value": 8
+        },
+        {
+          "Group": "D",
+          "Item": "D3",
+          "Value": 14
+        },
+        {
+          "Group": "D",
+          "Item": "D4",
+          "Value": 5
+        },
+        {
+          "Group": "D",
+          "Item": "D5",
+          "Value": 7
+        },
+        {
+          "Group": "D",
+          "Item": "D6",
+          "Value": 47
+        }
+      ]
+    },
+    "semantic_types": {
+      "Group": "Category",
+      "Item": "Category",
+      "Value": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Tree",
+      "encodings": {
+        "color": {
+          "field": "Group"
+        },
+        "detail": {
+          "field": "Item"
+        },
+        "size": {
+          "field": "Value"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

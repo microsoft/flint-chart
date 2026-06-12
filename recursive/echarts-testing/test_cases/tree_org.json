@@ -1,0 +1,88 @@
+{
+  "test_id": "tree_org",
+  "description": "EC: Tree — Org Hierarchy *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Dept": "Engineering",
+          "Team": "Backend",
+          "Headcount": 3
+        },
+        {
+          "Dept": "Engineering",
+          "Team": "Frontend",
+          "Headcount": 21
+        },
+        {
+          "Dept": "Engineering",
+          "Team": "Infra",
+          "Headcount": 17
+        },
+        {
+          "Dept": "Engineering",
+          "Team": "QA",
+          "Headcount": 4
+        },
+        {
+          "Dept": "Sales",
+          "Team": "EMEA",
+          "Headcount": 7
+        },
+        {
+          "Dept": "Sales",
+          "Team": "AMER",
+          "Headcount": 6
+        },
+        {
+          "Dept": "Sales",
+          "Team": "APAC",
+          "Headcount": 21
+        },
+        {
+          "Dept": "Marketing",
+          "Team": "Brand",
+          "Headcount": 10
+        },
+        {
+          "Dept": "Marketing",
+          "Team": "Growth",
+          "Headcount": 11
+        },
+        {
+          "Dept": "Support",
+          "Team": "Tier 1",
+          "Headcount": 15
+        },
+        {
+          "Dept": "Support",
+          "Team": "Tier 2",
+          "Headcount": 20
+        }
+      ]
+    },
+    "semantic_types": {
+      "Dept": "Category",
+      "Team": "Category",
+      "Headcount": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Tree",
+      "encodings": {
+        "color": {
+          "field": "Dept"
+        },
+        "detail": {
+          "field": "Team"
+        },
+        "size": {
+          "field": "Headcount"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

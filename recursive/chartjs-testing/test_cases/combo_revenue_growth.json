@@ -1,0 +1,93 @@
+{
+  "test_id": "combo_revenue_growth",
+  "description": "CJS: Combo — Revenue (bars) + Growth % (line) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Month": "Jan",
+          "Revenue": 100,
+          "Growth": 14.4
+        },
+        {
+          "Month": "Feb",
+          "Revenue": 114,
+          "Growth": -4.1
+        },
+        {
+          "Month": "Mar",
+          "Revenue": 110,
+          "Growth": 1.2
+        },
+        {
+          "Month": "Apr",
+          "Revenue": 111,
+          "Growth": -0.3
+        },
+        {
+          "Month": "May",
+          "Revenue": 111,
+          "Growth": 7.1
+        },
+        {
+          "Month": "Jun",
+          "Revenue": 119,
+          "Growth": 4.9
+        },
+        {
+          "Month": "Jul",
+          "Revenue": 124,
+          "Growth": 14.6
+        },
+        {
+          "Month": "Aug",
+          "Revenue": 143,
+          "Growth": -4.9
+        },
+        {
+          "Month": "Sep",
+          "Revenue": 136,
+          "Growth": 5.8
+        },
+        {
+          "Month": "Oct",
+          "Revenue": 143,
+          "Growth": 1.5
+        },
+        {
+          "Month": "Nov",
+          "Revenue": 146,
+          "Growth": 5.6
+        },
+        {
+          "Month": "Dec",
+          "Revenue": 154,
+          "Growth": -4.2
+        }
+      ]
+    },
+    "semantic_types": {
+      "Month": "Category",
+      "Revenue": "Quantity",
+      "Growth": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Combo Chart",
+      "encodings": {
+        "x": {
+          "field": "Month"
+        },
+        "y": {
+          "field": "Revenue"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      },
+      "chartProperties": {
+        "lineField": "Growth"
+      }
+    }
+  }
+}

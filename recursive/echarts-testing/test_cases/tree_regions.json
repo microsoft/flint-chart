@@ -1,0 +1,49 @@
+{
+  "test_id": "tree_regions",
+  "description": "EC: Tree — Regions (single level) *",
+  "input": {
+    "data": {
+      "values": [
+        {
+          "Region": "North",
+          "Sales": 40
+        },
+        {
+          "Region": "South",
+          "Sales": 125
+        },
+        {
+          "Region": "East",
+          "Sales": 70
+        },
+        {
+          "Region": "West",
+          "Sales": 138
+        },
+        {
+          "Region": "Central",
+          "Sales": 90
+        }
+      ]
+    },
+    "semantic_types": {
+      "Region": "Category",
+      "Sales": "Quantity"
+    },
+    "chart_spec": {
+      "chartType": "Tree",
+      "encodings": {
+        "color": {
+          "field": "Region"
+        },
+        "size": {
+          "field": "Sales"
+        }
+      },
+      "canvasSize": {
+        "width": 480,
+        "height": 320
+      }
+    }
+  }
+}

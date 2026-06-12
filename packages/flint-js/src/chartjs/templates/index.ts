@@ -12,9 +12,11 @@ import { ChartTemplateDef } from '../../core/types';
 import { cjsScatterPlotDef } from './scatter';
 import { cjsBubbleChartDef } from './bubble';
 import { cjsBarChartDef, cjsStackedBarChartDef, cjsGroupedBarChartDef } from './bar';
+import { cjsComboChartDef } from './combo';
 import { cjsLineChartDef } from './line';
 import { cjsAreaChartDef } from './area';
 import { cjsPieChartDef } from './pie';
+import { cjsDoughnutChartDef } from './doughnut';
 import { cjsHistogramDef } from './histogram';
 import { cjsRadarChartDef } from './radar';
 import { cjsRoseChartDef } from './rose';
@@ -24,9 +26,9 @@ import { cjsRoseChartDef } from './rose';
  */
 export const cjsTemplateDefs: { [key: string]: ChartTemplateDef[] } = {
     'Scatter & Point': [cjsScatterPlotDef, cjsBubbleChartDef],
-    'Bar':             [cjsBarChartDef, cjsGroupedBarChartDef, cjsStackedBarChartDef, cjsHistogramDef],
+    'Bar':             [cjsBarChartDef, cjsGroupedBarChartDef, cjsStackedBarChartDef, cjsComboChartDef, cjsHistogramDef],
     'Line & Area':     [cjsLineChartDef, cjsAreaChartDef],
-    'Part-to-Whole':   [cjsPieChartDef],
+    'Part-to-Whole':   [cjsPieChartDef, cjsDoughnutChartDef],
     'Polar':           [cjsRadarChartDef, cjsRoseChartDef],
 };
 
