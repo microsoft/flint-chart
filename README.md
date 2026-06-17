@@ -1,101 +1,79 @@
-# flint-chart
+# Flint: A visualization language for the AI era
 
-[![npm](https://img.shields.io/npm/v/flint-chart.svg)](https://www.npmjs.com/package/flint-chart)
-[![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/"><img src="https://img.shields.io/badge/%F0%9F%9A%80_Live_Demo-flint--chart-0078D4?style=for-the-badge" alt="Live demo"></a>
+  &nbsp;
+  <a href="#install"><img src="https://img.shields.io/badge/%F0%9F%92%BB_Install-npm_%7C_pip-3776AB?style=for-the-badge" alt="Install"></a>
+</p>
 
-A semantic-level visualization library that compiles data + semantic annotations
-into chart specifications for multiple rendering backends. The LLM outputs only
-chart type, field assignments, and a **semantic type** per field (e.g. `Revenue`,
-`Rank`, `CategoryCode`). A deterministic compiler derives all low-level
-parameters — sizing, zero-baseline, formatting, color schemes, and mark
-templates — so charts look good *and* stay editable without calling the LLM again.
+<p align="center">
+  <a href="https://www.npmjs.com/package/flint-chart"><img src="https://img.shields.io/npm/v/flint-chart.svg?label=npm%3A%20flint-chart" alt="npm"></a>&ensp;
+  <a href="https://github.com/microsoft/flint-chart/actions/workflows/ci.yml"><img src="https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg" alt="CI"></a>&ensp;
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>&ensp;
+  <a href="agent-skills/SKILL.md"><img src="https://img.shields.io/badge/AI_agents-SKILL.md-8A2BE2.svg" alt="Agent skill"></a>
+</p>
 
-Available in **JavaScript/TypeScript** and **Python**.
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/">Demo site</a> ·
+  <a href="https://microsoft.github.io/flint-chart/#/gallery">Gallery</a> ·
+  <a href="https://microsoft.github.io/flint-chart/#/editor">Live editor</a> ·
+  <a href="https://microsoft.github.io/flint-chart/#/documentation/overview">Docs</a> ·
+  <a href="agent-skills/SKILL.md">Skill.md</a>
+</p>
 
-- **Demos:** [Site](https://microsoft.github.io/flint-chart/) — landing page, [gallery](https://microsoft.github.io/flint-chart/#/gallery), and [live editor](https://microsoft.github.io/flint-chart/#/editor) in one place.
-- **Architecture:** [docs/design-semantics.md](docs/design-semantics.md) · [docs/design-stretch-model.md](docs/design-stretch-model.md)
-- **For contributors:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) · [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
-- **For AI agents:** [agent-skills/SKILL.md](agent-skills/SKILL.md)
+---
+
+Flint is a visualization intermediate language that allows **AI agents to create
+expressive, good-looking visualizations from simple, human-editable chart specs**.
+Instead of requiring verbose low-level parameters such as scales, axes, spacing,
+and layout, the Flint compiler derives optimized chart settings from the data,
+semantic types, chart type, and encodings. The result is a compact chart
+specification that is easy for agents to create, easy for people to edit, and
+**it can be rendered in different backends (Vega-Lite, ECharts, Chart.js)**.
+
+<p align="center">
+  <img src="docs/figs/chartwall.png" alt="A wall of charts produced by Flint: bar, line, scatter, heatmap, donut, radar, streamgraph, boxplot, grouped bar, rose, Sankey, and treemap, rendered across Vega-Lite, ECharts, and Chart.js." width="100%">
+</p>
+
+## Features
+
+- **Specify with semantic types.** Flint captures what each field *means* using 70+ fine-grained semantic types (e.g., `Rank`, `Temperature`, or `Delta`).
+  They guide parsing, scales, axes, formatting, and color decisions.
+- **Optimize layout automatically.** Flint adapts sizing, spacing, and mark
+  arrangement to the data cardinality, chart design, and canvas constraints
+  using an elastic layout model.
+- **Generate simple editable specs.** Flint specs are short enough for agents
+  to write reliably and clear enough for people to refine by hand. Switch chart
+  types or rebind encodings, and the compiler cascades the change. The [agent skill](agent-skills/SKILL.md) helps agents generate reliable, good-looking
+  charts without last-mile low-level refinement issues.
+- **Render across multiple backends.** Compile the same spec to **30+ chart
+  types** across **Vega-Lite, ECharts, and Chart.js** through one unified
+  interface (an experimental GoFish backend is also included).
+
+<br/>
+
+<p align="center">
+  <img src="docs/figs/workflow.png" alt="One workflow end to end: an agent infers a data spec (semantic types) from a raw table, you write a short chart spec, and Flint compiles it to a faceted line chart — then to a grouped bar, waterfall, heatmap, and sunburst as the spec is edited." width="100%">
+</p>
+<p align="center"><sub>Flint compiles and optimizes high-level data and chart specs into polished visualizations. Because the compiler manages low-level design details, users can move from a faceted line chart to a grouped bar, waterfall, heatmap, or sunburst, or switch rendering engines easily.</sub></p>
+
+
+## Install
 
 ```bash
-# JavaScript / TypeScript
+# JavaScript / TypeScript  (npm package: flint-chart)
 npm install flint-chart
 
-# Python
+# Python  (PyPI package: flint — Vega-Lite backend)
 pip install flint
 ```
 
-## Repository Structure
+## Use
 
-```
-├── packages/
-│   ├── flint-js/          TypeScript package (npm: flint-chart)
-│   │   └── src/           4 backends: Vega-Lite, ECharts, Chart.js, GoFish
-│   └── flint-py/          Python package (PyPI: flint)
-│       └── flint/         Vega-Lite backend
-├── shared/
-│   └── test-data/     JSON test cases shared across both languages
-├── agent-skills/              Agent skill (SKILL.md) for AI-assisted charting
-├── site/                  Documentation website
-└── docs/                  Design documents
-```
+Every backend accepts the **same** `ChartAssemblyInput` and returns that
+library's native spec object.
 
----
-
-## Why
-
-LLM-generated chart specs face a dilemma:
-
-| Approach | Looks good | Editable | Bespoke charts | Cost to re-encode |
-|----------|:---:|:---:|:---:|:---:|
-| Library defaults | ✗ | ✓ | ✗ | 0 |
-| LLM-tuned spec | ✓ | ✗ | Sometimes | 1 LLM call |
-| **flint-chart** | **✓** | **✓** | **✓** | **0** |
-
-**Simple specs** are editable but look bad (wrong sizing, misleading
-encodings). **Polished specs** look great but are brittle (hard-coded
-values break on every field swap). flint-chart resolves this: when a user
-swaps fields, changes chart type, or adds facets for exploration, the
-compiler re-derives all parameters automatically — no LLM call needed.
-
-Because the output is native library code (Vega-Lite, ECharts, or Chart.js),
-users retain full control over aesthetic fine-tuning — fonts, colors, legends,
-annotations — using each library's own API. There is no abstraction tax or
-reduced expressiveness.
-
-### Key insight: semantic types as the contract
-
-Instead of asking the LLM to set dozens of low-level parameters, we ask
-it one thing: **what does this data mean?** — expressed as a semantic type.
-
-```
-Semantic type (e.g. "Revenue")
-    ├── Encoding type:   quantitative
-    ├── Zero baseline:   true
-    ├── Domain padding:  0%
-    ├── Scale direction: normal
-    ├── Axis formatting: "$,.0f"
-    ├── Color scheme:    sequential
-    └── Sizing model:    per-axis stretch
-```
-
-When the user swaps a field, the compiler re-derives everything from the new
-semantic type. No hard-coded constants go stale. No LLM call needed.
-
-### The workflow
-
-```
-1. LLM generates:   chart type + semantic types   (~10-line JSON)
-2. User edits:      swap field / change mark / add facet → compiler handles it (no AI)
-3. Fine-tune (2%):  edit the generated spec directly for bespoke styling
-```
-
----
-
-## Quick start
-
-### Vega-Lite
+### JavaScript / TypeScript
 
 ```ts
 import { assembleVegaLite } from 'flint-chart';
@@ -109,213 +87,160 @@ const spec = assembleVegaLite({
     canvasSize: { width: 400, height: 300 },
   },
 });
+// → a ready-to-render Vega-Lite spec
 ```
 
-### ECharts
+Swap the backend without changing the input shape:
 
 ```ts
-import { assembleECharts } from 'flint-chart';
+import { assembleECharts, assembleChartjs } from 'flint-chart';
 
 const option = assembleECharts({
   data: { values: myData },
   semantic_types: { weight: 'Quantity', mpg: 'Quantity' },
-  chart_spec: {
-    chartType: 'Scatter Plot',
-    encodings: { x: { field: 'weight' }, y: { field: 'mpg' } },
-  },
+  chart_spec: { chartType: 'Scatter Plot', encodings: { x: { field: 'weight' }, y: { field: 'mpg' } } },
 });
-```
-
-### Chart.js
-
-```ts
-import { assembleChartjs } from 'flint-chart';
 
 const config = assembleChartjs({
   data: { values: myData },
-  semantic_types: { weight: 'Quantity' },
+  semantic_types: { category: 'CategoryCode', value: 'Quantity' },
   chart_spec: { chartType: 'Bar Chart', encodings: { x: { field: 'category' }, y: { field: 'value' } } },
 });
 ```
 
----
+### Python
 
-## Architecture
+```python
+from flint.vegalite import assemble_vegalite
 
-```
-packages/flint-js/src/
-  index.ts                ← public API (re-exports core/ + all backends)
-  core/                   ← target-language-agnostic
-    types.ts              ← shared type definitions (ChartAssemblyInput, ChartTemplateDef, …)
-    semantic-types.ts     ← ~70 semantic types + VisCategory helpers
-    decisions.ts          ← pure decision functions (layout, encoding type)
-    resolve-semantics.ts  ← Phase 0: semantic resolution
-    compute-layout.ts     ← Phase 1: layout computation
-    filter-overflow.ts    ← overflow filtering
-  vegalite/               ← Vega-Lite backend
-  echarts/                ← ECharts backend
-  chartjs/                ← Chart.js backend
-  gofish/                 ← GoFish backend
-  test-data/              ← fixtures + generators (also drives the gallery)
-
-packages/flint-py/src/flint_chart/
-  core/                   ← Python port of core/ (Vega-Lite backend only)
-  vegalite/               ← assemble_vegalite() + templates
-
-shared/test-data/         ← JSON fixtures shared across JS + Python
-site/                     ← unified Vite+React demo (landing / gallery / editor routes)
-
-agent-skills/
-  SKILL.md              ← agent skill for authoring ChartAssemblyInput
+spec = assemble_vegalite({
+    "data": {"values": rows},
+    "semantic_types": {"weight": "Quantity", "mpg": "Quantity"},
+    "chart_spec": {
+        "chartType": "Scatter Plot",
+        "encodings": {"x": {"field": "weight"}, "y": {"field": "mpg"}},
+        "canvasSize": {"width": 400, "height": 300},
+    },
+})
 ```
 
-### Type resolution pipeline
-
-```
-  semantic type → getVisCategory() → VisCategory → channel/chart rules → encoding type
-                                      ↑
-            (fallback: inferVisCategory() inspects raw data)
-```
-
----
-
-## Public API
-
-### Assembly functions
-
-Each backend has its own assembly function. All accept the same
-`ChartAssemblyInput` shape:
-
-| Function | Output | Import |
-|----------|--------|--------|
-| `assembleVegaLite(input)` | Vega-Lite spec | `import { assembleVegaLite } from 'flint-chart'` |
-| `assembleECharts(input)` | ECharts option object | `import { assembleECharts } from 'flint-chart'` |
-| `assembleChartjs(input)` | Chart.js config object | `import { assembleChartjs } from 'flint-chart'` |
-
-### Input types
+### The chart spec
 
 ```ts
-interface ChartAssemblyInput {
-  data: { values: any[] } | { url: string };  // inline rows or URL
-  semantic_types?: Record<string, string>;     // field → semantic type
-  chart_spec: {
-    chartType: string;                         // e.g. "Scatter Plot"
-    encodings: Record<string, ChartEncoding>;  // channel → encoding map
-    canvasSize?: { width: number; height: number }; // default 400×320
-    chartProperties?: Record<string, any>;     // template-specific knobs
-  };
-  options?: AssembleOptions;                   // layout tuning
-}
+assembleVegaLite(input: ChartAssemblyInput): TopLevelSpec
+assembleECharts(input: ChartAssemblyInput): EChartsOption
+assembleChartjs(input: ChartAssemblyInput): ChartConfiguration
 ```
 
-| Key | Description |
-|---|---|
-| `data` | Data source — either `{ values: [...] }` (inline row objects) or `{ url: "..." }` (JSON/CSV URL) |
-| `semantic_types` | Per-column semantic annotations (e.g., `{ revenue: "Price", country: "Country" }`) |
-| `chart_spec` | What to draw — chart type, encodings, canvas size, properties |
-| `options` | Layout tuning (elasticity, step sizes, tooltips, etc.) |
+Try the spec interactively in the [live editor](https://microsoft.github.io/flint-chart/#/editor).
 
-```ts
-interface ChartEncoding {
-  field?: string;
-  type?: 'quantitative' | 'nominal' | 'ordinal' | 'temporal';
-  aggregate?: 'count' | 'sum' | 'average';
-  sortOrder?: 'ascending' | 'descending';
-  sortBy?: string;
-  scheme?: string;
-}
+| Key | What it is |
+|-----|------------|
+| `data` | `{ values: [...] }` (inline rows) or `{ url: "..." }` (JSON/CSV URL) |
+| `semantic_types` | Per-field meaning, e.g. `{ revenue: "Price", country: "Country" }` — drives all derived config |
+| `chart_spec` | What to draw: chart type, channel→field encodings, canvas size, properties |
+| `options` | Layout tuning (stretch elasticity, step sizes, tooltips, …) |
 
-interface AssembleOptions {
-  addTooltips?: boolean;       // default false
-  elasticity?: number;         // axis stretch exponent    (default 0.5)
-  maxStretch?: number;         // axis stretch cap         (default 2)
-  facetElasticity?: number;    // facet stretch exponent   (default 0.3)
-  maxStretch?: number;         // unified stretch cap     (default 2)
-  minStep?: number;            // min px per discrete tick (default 6)
-  minSubplotSize?: number;     // min facet subplot px     (default 60)
-}
-```
+Semantic types span temporal (`DateTime`, `Year`, `Month`), measures (`Quantity`,
+`Price`, `Percentage`), discrete numerics (`Rank`, `Score`, `ID`), geographic
+(`Latitude`, `Country`, `City`), categorical (`PersonName`, `Status`, `Boolean`),
+ranges (`AgeGroup`, `Bucket`), and fallbacks (`String`, `Number`, `Unknown`). See
+the [API reference](docs/api-reference.md) for the full list, the template
+registries, and core utilities.
 
-### Template registries
+### Use Flint with AI agents
 
-Each backend has its own set of supported chart types and template
-definitions. Templates are organized by category and can be looked up by
-chart type name.
+Flint is designed to be driven by AI agents. The
+[**agent skill**](agent-skills/SKILL.md) tells a model exactly what to produce:
+the `chart_spec` and `semantic_types` (referencing data columns by name). The host
+then calls `assembleVegaLite` / `assembleECharts` / `assembleChartjs` to get the
+backend spec — the model never hand-tunes sizing, color, or formatting.
 
-| Backend | Template map | Flat list | Lookup | Channels |
-|---------|-------------|-----------|--------|----------|
-| Vega-Lite | `vlTemplateDefs` | `vlAllTemplateDefs` | `vlGetTemplateDef(name)` | `vlGetTemplateChannels(name)` |
-| ECharts | `ecTemplateDefs` | `ecAllTemplateDefs` | `ecGetTemplateDef(name)` | `ecGetTemplateChannels(name)` |
-| Chart.js | `cjsTemplateDefs` | `cjsAllTemplateDefs` | `cjsGetTemplateDef(name)` | `cjsGetTemplateChannels(name)` |
+- **Coding agents (Copilot, Cursor, Claude Code):** the agent writes code that
+  binds data by reference — `data: { values: rows }` — and calls the assembler.
+- **Chat apps with a render/MCP tool:** the agent passes the spec plus a
+  reference to host-side data (file path, uploaded CSV, prior tool result).
+- **Chat apps without tools:** the agent embeds a small table inline.
 
-```ts
-// Example: list available Vega-Lite chart categories
-import { vlTemplateDefs } from 'flint-chart';
-Object.keys(vlTemplateDefs); // ["Scatter & Point", "Bar", "Line & Area", ...]
-
-// Example: get channels for a specific chart type
-import { vlGetTemplateChannels } from 'flint-chart';
-vlGetTemplateChannels('Scatter Plot'); // ["x", "y", "color", "size", "shape"]
-```
-
-### Semantic types (~70 types)
-
-| Group | Examples |
-|-------|---------|
-| Temporal | `DateTime`, `Date`, `Year`, `Month` |
-| Measures | `Quantity`, `Count`, `Price`, `Percentage` |
-| Discrete numerics | `Rank`, `Score`, `ID` |
-| Geographic | `Latitude`, `Longitude`, `Country`, `City` |
-| Categorical | `PersonName`, `Company`, `Status`, `Boolean` |
-| Ranges | `Range`, `AgeGroup`, `Bucket` |
-| Fallbacks | `String`, `Number`, `Unknown` |
-
-### Core utilities (shared across backends)
-
-These are re-exported from `core/` and available at the top level:
-
-```ts
-import {
-  // Semantic type helpers
-  inferVisCategory,     // infer VisCategory from raw data
-  getVisCategory,       // look up VisCategory for a known semantic type
-
-  // Shared types
-  type ChartAssemblyInput,
-  type ChartEncoding,
-  type ChartTemplateDef,
-  type AssembleOptions,
-  type ChartWarning,
-
-  // Layout constants
-  channels,
-  channelGroups,
-} from 'flint-chart';
-```
+Point your agent at [`agent-skills/SKILL.md`](agent-skills/SKILL.md) (chart-type
+catalog, channels, and worked examples) to get started.
 
 ---
 
-## What the compiler handles automatically
+## Repository overview
 
-- **Sizing** — spring model for discrete axes, pressure model for continuous;
-  composable with facets and layers. No more 6400 px charts from 80 × 4 facets.
-- **Zero baseline** — Revenue → include zero; Temperature → don't; Rank → don't.
-- **Scale direction** — Rank → reversed; others → normal.
-- **Formatting** — Revenue → `$,.0f`; Percentage → `.0%`; Year → `%Y`.
-- **Color schemes** — categorical codes → distinct hues; measures → sequential.
-- **Label overflow** — auto-rotation and truncation from count + string lengths.
-- **Bespoke marks** — lollipops, bump charts, candlesticks as single templates.
-- **Semantic validation** — actionable errors before rendering, not after crashing.
+```
+flint-chart/
+├── packages/
+│   ├── flint-js/          npm package `flint-chart` (TypeScript)
+│   │   └── src/
+│   │       ├── core/      semantics, layout, decisions, shared types
+│   │       ├── vegalite/  Vega-Lite backend
+│   │       ├── echarts/   ECharts backend
+│   │       ├── chartjs/   Chart.js backend
+│   │       ├── gofish/    GoFish backend (experimental)
+│   │       └── test-data/ fixtures + generators (drive tests and the gallery)
+│   └── flint-py/          PyPI package `flint` (Python port, Vega-Lite backend)
+├── site/                  Vite + React demo: landing, gallery, editor, docs
+├── agent-skills/          AI agent skill (SKILL.md)
+├── shared/test-data/      JSON fixtures shared across JS + Python
+└── docs/                  architecture and design documents
+```
 
-## Design principles
+### Documentation
 
-1. **No UI dependencies** — pure data-in, spec-out.
-2. **Semantic types drive everything** — the caller annotates fields; the
-   compiler derives all config. Fallback: `inferVisCategory()` inspects raw data.
-3. **Callers own the data** — no aggregation transforms applied.
-4. **Layout is configurable** — elastic stretch, facet sizing, step sizes
-   exposed in `AssembleOptions`.
-5. **Templates are declarative** — each chart type is a `ChartTemplateDef`
-   with a skeleton, channel list, and optional post-processor.
-6. **Backend-agnostic semantics** — the same semantic reasoning targets
-   Vega-Lite, ECharts, and Chart.js through separate assembly functions.
+| Topic | Where |
+|-------|-------|
+| Overview & concepts | [docs/overview.md](docs/overview.md) · [live docs](https://microsoft.github.io/flint-chart/#/documentation/overview) |
+| Architecture | [docs/architecture.md](docs/architecture.md) |
+| Semantic-type design | [docs/design-semantics.md](docs/design-semantics.md) |
+| Layout / stretch model | [docs/design-stretch-model.md](docs/design-stretch-model.md) |
+| Color decisions | [docs/color-decisions.md](docs/color-decisions.md) |
+| API reference | [docs/api-reference.md](docs/api-reference.md) |
+| Extending Flint | [add a chart template](docs/adding-a-chart-template.md) · [add a semantic type](docs/adding-a-semantic-type.md) · [add a backend](docs/adding-a-backend.md) |
+| For AI agents | [agent-skills/SKILL.md](agent-skills/SKILL.md) |
+
+---
+
+## Contributing
+
+Contributions are welcome! See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
+and the [Developer guide](docs/DEVELOPMENT.md).
+
+```bash
+git clone https://github.com/microsoft/flint-chart
+cd flint-chart
+npm install            # root workspaces: packages/flint-js + site
+
+npm run typecheck      # typecheck packages/flint-js
+npm run test           # Vitest (packages/flint-js)
+npm run build          # build packages/flint-js → dist/
+npm run site           # demo site (gallery + editor) at http://localhost:5274/
+npm run test:py        # Python compatibility tests (requires uv)
+```
+
+Node 18+ is required. The demo site aliases `flint-chart` to
+`packages/flint-js/src`, so library edits hot-reload in the gallery and editor
+without rebuilding `dist/`.
+
+Quick recipes: [add a chart template](docs/adding-a-chart-template.md) ·
+[add a semantic type](docs/adding-a-semantic-type.md) ·
+[add a backend](docs/adding-a-backend.md). Please run
+`npm run typecheck && npm run test && npm run lint` before opening a PR.
+
+This project has adopted the
+[Microsoft Open Source Code of Conduct](.github/CODE_OF_CONDUCT.md). See
+[SECURITY.md](.github/SECURITY.md) to report vulnerabilities.
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services.
+Authorized use of Microsoft trademarks or logos is subject to and must follow
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+Use of Microsoft trademarks or logos in modified versions of this project must not
+cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks
+or logos is subject to those third parties' policies.
+
+## License
+
+[MIT](LICENSE) © Microsoft Corporation
