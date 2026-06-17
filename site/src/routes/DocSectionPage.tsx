@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MarkdownView } from '../components/MarkdownView';
 import { SiteShell } from '../components/SiteShell';
 import type { DocSection } from '../shared/docs-catalog';
@@ -15,6 +15,7 @@ import { CONTENT_MAX_WIDTH, siteTheme } from '../shared/theme';
 export function DocSectionPage({ section }: { section: DocSection }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const { slug } = useParams<{ slug?: string }>();
   const groups = getDocGroups(section);
@@ -37,14 +38,16 @@ export function DocSectionPage({ section }: { section: DocSection }) {
   }, [slug, section, firstSlug, navigate]);
 
   useEffect(() => {
-    const pending = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
+    const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
+    const hash = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
+    const pending = stored ?? hash;
     if (!pending || !markdown) return;
-    sessionStorage.removeItem(DOC_SCROLL_TO_KEY);
+    if (stored) sessionStorage.removeItem(DOC_SCROLL_TO_KEY);
     const timer = window.setTimeout(() => {
       scrollToHeading(pending, mainRef.current);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [markdown, activeSlug]);
+  }, [markdown, activeSlug, location.hash]);
 
   // Bring the active doc into view in the sidebar, but only when it has
   // scrolled out of view. Discrete (on active-doc change), so it never forms a

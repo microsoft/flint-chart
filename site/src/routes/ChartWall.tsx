@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type Ref,
 } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { TEST_GENERATORS, type TestCase } from 'flint-chart/test-data';
 import { SiteShell } from '../components/SiteShell';
 import { CodeBlock } from '../components/CodeBlock';
@@ -489,7 +489,14 @@ function BackendIntro({ category, totalTiles }: { category: ChartCategory; total
     return names;
   }, [category]);
 
-  const snippet = category.snippet;
+  const resultNames: Record<PreviewBackend, string> = {
+    vegalite: 'spec',
+    echarts: 'option',
+    chartjs: 'config',
+  };
+  const snippet = `import { ${category.fn} } from 'flint-chart';
+
+const ${resultNames[category.id]} = ${category.fn}(input);`;
 
   return (
     <div style={{ marginTop: 22 }}>
@@ -503,13 +510,31 @@ function BackendIntro({ category, totalTiles }: { category: ChartCategory; total
         }}
       >
         {category.description} Pass a Flint <code style={inlineCodeStyle}>input</code> (data,
-        semantic types, and a chart spec) to <code style={inlineCodeStyle}>{category.fn}()</code>{' '}
-        and render the result directly:
+        semantic types, and a chart spec) to <code style={inlineCodeStyle}>{category.fn}()</code>.
       </p>
 
       <CodeBlock customStyle={{ marginTop: 12, maxWidth: 560, fontSize: 12.5 }}>
         {snippet}
       </CodeBlock>
+
+      <p
+        style={{
+          margin: '10px 0 0',
+          maxWidth: 720,
+          color: siteTheme.textMuted,
+          fontSize: 13,
+          lineHeight: 1.6,
+        }}
+      >
+        See{' '}
+        <Link
+          to="/documentation/getting-started#compile-your-chart"
+          style={{ color: siteTheme.accent, fontWeight: 600 }}
+        >
+          Compile your chart
+        </Link>{' '}
+        for the app integration pattern.
+      </p>
 
       <p
         style={{
