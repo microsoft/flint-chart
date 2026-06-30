@@ -1,0 +1,15 @@
+# Keep the Docker build context tiny: ship only the prebuilt bundle + assets +
+# manifest. Everything else (sources, node_modules, tests, tooling) is excluded.
+node_modules
+dist-deploy
+src
+ui
+tests
+*.map
+*.tsbuildinfo
+tsconfig*.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.*
+.env
+.env.*

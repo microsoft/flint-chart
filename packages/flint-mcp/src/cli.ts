@@ -217,7 +217,11 @@ async function main(): Promise<void> {
     : 'local files readable on request';
 
   if (transport === 'http') {
-    const port = Number(process.env.PORT ?? process.env.FLINT_MCP_PORT ?? args.port ?? 8080);
+    // Some hosts (e.g. Azure App Service custom containers) inject an empty
+    // PORT env var that would override the intended port; treat blank env
+    // values as unset so the flag/default still applies.
+    const portEnv = process.env.PORT?.trim() || process.env.FLINT_MCP_PORT?.trim();
+    const port = Number(portEnv || args.port || 8080);
     if (!Number.isFinite(port) || port <= 0) {
       process.stderr.write(`Invalid http port: ${port}\n`);
       process.exit(2);

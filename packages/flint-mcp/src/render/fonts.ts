@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -72,42 +71,33 @@ export function getFontFiles(): string[] {
   return FONT_FILES.map((f) => join(dir, f)).filter((p) => existsSync(p));
 }
 
-let canvasFontsRegistered = false;
+let vegaTextMetricsInstalled = false;
 
 /**
- * Register the bundled Arial-metric font with `node-canvas` under the generic
- * `sans-serif` / `Arial` / `Helvetica` names. Vega measures text widths through
- * `vega-canvas` (which dynamically imports `canvas`) during layout, so without
- * this the headless render falls back to a font-independent width *estimate*
- * that diverges from the browser — producing different axis label widths and
- * gaps. Registering here makes server-side measurement match the live app.
- * Idempotent and a no-op if `canvas` is unavailable.
+ * Point Vega's text measurement at `@napi-rs/canvas` so axis/legend label
+ * widths match the browser — without depending on `node-canvas` (and its
+ * Cairo/Pango system libraries). Vega exposes `textMetrics.width` as a
+ * documented override hook (the same one vl-convert uses); we measure each run
+ * with the item's exact CSS font, which `vega.font(item)` builds. Registering
+ * the bundled Arial-metric faces first makes those measurements match the live
+ * app. Idempotent, and a no-op if `@napi-rs/canvas` is unavailable (Vega then
+ * keeps its built-in, font-independent width estimate).
  */
-export function registerCanvasFonts(): void {
-  if (canvasFontsRegistered) return;
-  let registerFont:
-    | ((path: string, opts: { family: string; weight?: string }) => void)
-    | undefined;
+export async function installVegaTextMetrics(vega: any): Promise<void> {
+  if (vegaTextMetricsInstalled) return;
+  let napiCanvas: any;
   try {
-    ({ registerFont } = createRequire(import.meta.url)('canvas'));
+    napiCanvas = await import('@napi-rs/canvas');
   } catch {
-    return; // canvas not installed; Vega will fall back to width estimation
+    return; // napi-canvas unavailable; Vega falls back to width estimation
   }
-  if (!registerFont) return;
-
-  const dir = getFontDir();
-  for (const family of SANS_ALIASES) {
-    for (const { file, weight } of SANS_FONTS) {
-      const fp = join(dir, file);
-      if (!existsSync(fp)) continue;
-      try {
-        registerFont(fp, { family, weight });
-      } catch {
-        /* ignore individual font registration failures */
-      }
-    }
-  }
-  canvasFontsRegistered = true;
+  registerNapiFonts(napiCanvas);
+  const ctx = napiCanvas.createCanvas(64, 64).getContext('2d');
+  vega.textMetrics.width = (item: unknown, text: string): number => {
+    ctx.font = vega.font(item);
+    return ctx.measureText(String(text ?? '')).width;
+  };
+  vegaTextMetricsInstalled = true;
 }
 
 let napiRegistered = false;

@@ -5,6 +5,7 @@ node_modules/
 
 # Build output
 dist/
+dist-deploy/
 build/
 *.tsbuildinfo
 .tsup/
