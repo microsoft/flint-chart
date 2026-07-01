@@ -10,7 +10,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { extractCategories, groupBy, getCategoryOrder } from './utils';
+import { extractCategories, groupBy, getCategoryOrder, toEChartsTemporal } from './utils';
 import { toTypeString } from '../../core/field-semantics';
 import { getPaletteForScheme } from '../colormap';
 import { makeCartesianPivot } from '../../core/pivot';
@@ -63,6 +63,10 @@ export const ecLineChartDef: ChartTemplateDef = {
         const xIsTemporal = xCS.type === 'temporal';
         const yIsDiscrete = isDiscrete(yCS.type);
         const isContinuousColor = !!colorField && (colorType === 'quantitative' || colorType === 'temporal');
+
+        // ECharts' `time` axis can't parse non-ISO date strings; pre-convert temporal
+        // x-values to epoch-ms so points on a time axis always render.
+        const xVal = (v: any) => (xIsTemporal ? toEChartsTemporal(v) : v);
 
         // Build x-axis categories for discrete/temporal axes
         const categories = xIsDiscrete ? extractCategories(table, xField, getCategoryOrder(ctx, 'x')) : undefined;
@@ -154,8 +158,8 @@ export const ecLineChartDef: ChartTemplateDef = {
                 return String(ax).localeCompare(String(bx));
             });
 
-            const pointData = sorted.map((r: any) => [r[xField], r[yField], r[colorField]]);
-            const lineData = sorted.map((r: any) => [r[xField], r[yField]]);
+            const pointData = sorted.map((r: any) => [xVal(r[xField]), r[yField], r[colorField]]);
+            const lineData = sorted.map((r: any) => [xVal(r[xField]), r[yField]]);
 
             // VisualMap domain
             const nums = sorted
@@ -232,7 +236,7 @@ export const ecLineChartDef: ChartTemplateDef = {
                         ? buildCategoryAlignedXYData(rows, xField, yField, yCategories)
                         : xIsDiscrete
                             ? buildCategoryAlignedData(rows, xField, yField, categories!)
-                            : rows.map(r => [r[xField], r[yField]]);
+                            : rows.map(r => [xVal(r[xField]), r[yField]]);
 
                 const series: any = {
                     name,
@@ -258,7 +262,7 @@ export const ecLineChartDef: ChartTemplateDef = {
                             const row = table.find(r => String(r[xField]) === cat);
                             return row ? row[yField] : null;
                         })
-                        : table.map(r => [r[xField], r[yField]]);
+                        : table.map(r => [xVal(r[xField]), r[yField]]);
 
             const series: any = {
                 type: 'line',

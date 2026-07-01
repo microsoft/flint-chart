@@ -67,17 +67,24 @@ export const cjsBubbleChartDef: ChartTemplateDef = {
         const palette = getChartJsPalette(ctx, 'color');
 
         // Radius scale spans the whole dataset so groups stay comparable.
+        // Treat null/empty cells as missing (NaN) rather than coercing to 0.
+        const num = (raw: any): number => (raw == null || raw === '' ? NaN : Number(raw));
         const sizeValues = sizeField
-            ? table.map((row) => Number(row[sizeField]))
+            ? table.map((row) => num(row[sizeField]))
             : [];
         // Provisional radius range; postProcess refines rMax to canvas size.
         const radiusScale = makeRadiusScale(sizeValues, 5, 24);
 
         const toPoint = (row: any) => {
-            const v = sizeField ? Number(row[sizeField]) : NaN;
+            const x = num(row[xField]);
+            const y = num(row[yField]);
+            // Drop points with a missing/non-numeric x or y so null values don't
+            // collapse to phantom bubbles at the origin (0, 0).
+            if (!isFinite(x) || !isFinite(y)) return null;
+            const v = sizeField ? num(row[sizeField]) : NaN;
             return {
-                x: Number(row[xField]),
-                y: Number(row[yField]),
+                x,
+                y,
                 r: sizeField ? radiusScale(v) : 8,
                 // Raw size value retained so postProcess can rescale to canvas.
                 _v: v,
@@ -106,9 +113,11 @@ export const cjsBubbleChartDef: ChartTemplateDef = {
         if (colorField) {
             const groups = new Map<string, any[]>();
             for (const row of table) {
+                const point = toPoint(row);
+                if (!point) continue;
                 const key = String(row[colorField] ?? '');
                 if (!groups.has(key)) groups.set(key, []);
-                groups.get(key)!.push(toPoint(row));
+                groups.get(key)!.push(point);
             }
             let colorIdx = 0;
             for (const [name, data] of groups) {
@@ -124,7 +133,7 @@ export const cjsBubbleChartDef: ChartTemplateDef = {
             config.options.plugins.legend = { display: true };
         } else {
             config.data.datasets.push({
-                data: table.map(toPoint),
+                data: table.map(toPoint).filter((p) => p !== null),
                 backgroundColor: getSeriesBackgroundColor(palette, 0, opacity),
                 borderColor: getSeriesBorderColor(palette, 0),
                 borderWidth: 1,

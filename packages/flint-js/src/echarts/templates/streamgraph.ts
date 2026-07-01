@@ -17,7 +17,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { groupBy } from './utils';
+import { groupBy, toEChartsTemporal } from './utils';
 
 export const ecStreamgraphDef: ChartTemplateDef = {
     chart: 'Streamgraph',
@@ -57,7 +57,7 @@ export const ecStreamgraphDef: ChartTemplateDef = {
                 yAxis: { type: 'value', show: false, axisTick: { show: true } },
                 series: [{
                     type: 'line',
-                    data: table.map(r => [r[xField], r[yField]]),
+                    data: table.map(r => [xCS.type === 'temporal' ? toEChartsTemporal(r[xField]) : r[xField], r[yField]]),
                     areaStyle: { opacity: 0.85 },
                     lineStyle: { width: 0.5 },
                     symbol: 'none',
@@ -102,8 +102,8 @@ export const ecStreamgraphDef: ChartTemplateDef = {
                 const key = `${xv}|||${sn}`;
                 const numVal = valMap.get(key);
                 const value = numVal != null && Number.isFinite(numVal) ? numVal : 0;
-                // Use index for category so ThemeRiver renders; use string for temporal (date string)
-                riverData.push([xIsTemporal ? xv : i, value, sn]);
+                // Use index for category so ThemeRiver renders; use epoch-ms for temporal (handles non-ISO dates)
+                riverData.push([xIsTemporal ? (toEChartsTemporal(xv) as string | number) : i, value, sn]);
             }
         }
 
@@ -115,7 +115,11 @@ export const ecStreamgraphDef: ChartTemplateDef = {
                 formatter: (params: any) => {
                     if (!params || params.length === 0) return '';
                     const xVal = params[0].value[0];
-                    const displayX = xIsTemporal ? xVal : (xVals[xVal] ?? xVal);
+                    const displayX = xIsTemporal
+                        ? (typeof xVal === 'number'
+                            ? new Date(xVal).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                            : xVal)
+                        : (xVals[xVal] ?? xVal);
                     let html = `<b>${displayX}</b><br/>`;
                     // Sort by value descending
                     const sortedParams = [...params].sort((a, b) => (b.value[1] || 0) - (a.value[1] || 0));
