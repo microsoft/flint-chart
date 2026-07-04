@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/microsoft-flint-chart-badge.png)](https://mseep.ai/app/microsoft-flint-chart)
+
 # Flint: A Visualization Language for the AI Era
 
 [![npm: flint-chart](https://img.shields.io/npm/v/flint-chart.svg?label=npm%3A%20flint-chart)](https://www.npmjs.com/package/flint-chart)
