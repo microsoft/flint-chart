@@ -42,23 +42,35 @@ jobs:
           js_version=$(node -p "require('./packages/flint-js/package.json').version")
           mcp_version=$(node -p "require('./packages/flint-mcp/package.json').version")
 
+          js_needs_publish=true
+          mcp_needs_publish=true
+
           if npm view "flint-chart@${js_version}" version >/dev/null 2>&1; then
-            echo "::error::flint-chart@${js_version} is already published. Bump the package version before deploying."
-            exit 1
+            echo "::notice::flint-chart@${js_version} is already published — skipping."
+            js_needs_publish=false
           fi
 
           if npm view "flint-chart-mcp@${mcp_version}" version >/dev/null 2>&1; then
-            echo "::error::flint-chart-mcp@${mcp_version} is already published. Bump the package version before deploying."
+            echo "::notice::flint-chart-mcp@${mcp_version} is already published — skipping."
+            mcp_needs_publish=false
+          fi
+
+          if [ "$js_needs_publish" = false ] && [ "$mcp_needs_publish" = false ]; then
+            echo "::error::Both flint-chart@${js_version} and flint-chart-mcp@${mcp_version} are already published. Bump a package version before deploying."
             exit 1
           fi
 
           echo "js_version=${js_version}" >> "$GITHUB_ENV"
           echo "mcp_version=${mcp_version}" >> "$GITHUB_ENV"
+          echo "js_needs_publish=${js_needs_publish}" >> "$GITHUB_ENV"
+          echo "mcp_needs_publish=${mcp_needs_publish}" >> "$GITHUB_ENV"
 
       - name: Publish flint-chart
+        if: env.js_needs_publish == 'true'
         run: npm publish --workspace packages/flint-js --access public
 
       - name: Wait for flint-chart to resolve
+        if: env.js_needs_publish == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -74,9 +86,11 @@ jobs:
           exit 1
 
       - name: Publish flint-chart-mcp
+        if: env.mcp_needs_publish == 'true'
         run: npm publish --workspace packages/flint-mcp --access public
 
       - name: Wait for flint-chart-mcp to resolve
+        if: env.mcp_needs_publish == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -92,8 +106,14 @@ jobs:
           exit 1
 
       - name: Verify published packages
+        shell: bash
         run: |
-          npm dist-tag ls flint-chart
-          npm dist-tag ls flint-chart-mcp
-          npm view "flint-chart@${js_version}" name version license repository.url
-          npm view "flint-chart-mcp@${mcp_version}" name version license repository.url bin
+          set -euo pipefail
+          if [ "${js_needs_publish}" = true ]; then
+            npm dist-tag ls flint-chart
+            npm view "flint-chart@${js_version}" name version license repository.url
+          fi
+          if [ "${mcp_needs_publish}" = true ]; then
+            npm dist-tag ls flint-chart-mcp
+            npm view "flint-chart-mcp@${mcp_version}" name version license repository.url bin
+          fi
