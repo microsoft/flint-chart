@@ -8,20 +8,46 @@ import type { ChartAssemblyInput } from 'flint-chart';
 export const SUPPORTED_BACKENDS = ['vegalite', 'echarts', 'chartjs'] as const;
 export type SupportedBackend = (typeof SUPPORTED_BACKENDS)[number];
 
-export const dataSchema = z
-  .object({
-    values: z
-      .array(z.record(z.string(), z.any()))
-      .optional()
-      .describe('Inline data rows (array of row objects), like Vega-Lite data.values.'),
-    url: z
-      .string()
-      .optional()
-      .describe(
-        'Local JSON/CSV/TSV file reference under a configured MCP data root. Remote URLs are disabled.',
-      ),
-  })
-  .describe('Data source. Provide inline `values`, or local `url` when the MCP server has data roots configured.');
+/**
+ * Build the `data` source schema. When `disableFileReference` is set (e.g. on a
+ * remote/hosted server) the field descriptions tell the agent NOT to use
+ * `data.url` and to pass rows inline via `data.values`, so the guidance lives
+ * right next to where the argument is authored.
+ */
+export function makeDataSchema(disableFileReference = false) {
+  return z
+    .object({
+      values: z
+        .array(z.record(z.string(), z.any()))
+        .optional()
+        .describe(
+          disableFileReference
+            ? 'Inline data rows (array of row objects), like Vega-Lite data.values. ' +
+                'REQUIRED on this server: the only supported way to provide data.'
+            : 'Inline data rows (array of row objects), like Vega-Lite data.values.',
+        ),
+      url: z
+        .string()
+        .optional()
+        .describe(
+          disableFileReference
+            ? 'DISABLED on this server — do NOT set. This server cannot read local ' +
+                'files; provide the rows inline via `values` instead. Remote URLs are ' +
+                'never fetched.'
+            : 'Local JSON/CSV/TSV file path (relative paths resolve against the working ' +
+                'directory; file:// URLs allowed). Remote URLs are not fetched.',
+        ),
+    })
+    .describe(
+      disableFileReference
+        ? 'Data source. Provide rows inline via `values`. Local file `url` references ' +
+            'are disabled on this server.'
+        : 'Data source. Provide inline `values`, or a local file `url`.',
+    );
+}
+
+/** Default data schema (local file references allowed). */
+export const dataSchema = makeDataSchema(false);
 
 export const chartSpecSchema = z
   .object({
@@ -56,22 +82,27 @@ export const chartSpecSchema = z
  * The five fields of a {@link ChartAssemblyInput}, expressed as a flat MCP tool
  * parameter shape so each part is self-documenting in the JSON schema.
  */
-export const assemblyInputShape = {
-  data: dataSchema,
-  semantic_types: z
-    .record(z.string(), z.any())
-    .optional()
-    .describe('Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }.'),
-  chart_spec: chartSpecSchema,
-  options: z
-    .record(z.string(), z.any())
-    .optional()
-    .describe('Assembler options (e.g. { addTooltips: true } and layout tuning).'),
-  field_display_names: z
-    .record(z.string(), z.string())
-    .optional()
-    .describe('Field name → display label, used for axis titles and legend headers.'),
-};
+export function buildAssemblyInputShape(disableFileReference = false) {
+  return {
+    data: makeDataSchema(disableFileReference),
+    semantic_types: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe('Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }.'),
+    chart_spec: chartSpecSchema,
+    options: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe('Assembler options (e.g. { addTooltips: true } and layout tuning).'),
+    field_display_names: z
+      .record(z.string(), z.string())
+      .optional()
+      .describe('Field name → display label, used for axis titles and legend headers.'),
+  };
+}
+
+/** Default flat tool parameter shape (local file references allowed). */
+export const assemblyInputShape = buildAssemblyInputShape(false);
 
 export type AssemblyInputArgs = {
   data: { values?: unknown[]; url?: string };

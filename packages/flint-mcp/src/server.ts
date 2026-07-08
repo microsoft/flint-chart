@@ -16,7 +16,7 @@ import { compileChart } from './tools/compile.js';
 import { validateChart } from './tools/validate.js';
 import { listChartTypes } from './tools/list.js';
 import {
-  assemblyInputShape,
+  buildAssemblyInputShape,
   toAssemblyInput,
   SUPPORTED_BACKENDS,
   type SupportedBackend,
@@ -83,8 +83,9 @@ function errorResult(err: unknown): JsonContent {
 function dataAccessNote(options: CreateServerOptions): string {
   if (options.disableFileReference) {
     return (
-      ' Local data: local data.url file references are disabled on this server. ' +
-      'Pass rows inline via data.values. Remote URLs are not fetched.'
+      ' Local data: this server CANNOT read local files — do NOT set data.url. ' +
+      'Provide every dataset inline via data.values (an array of row objects). ' +
+      'Remote URLs are not fetched.'
     );
   }
   return (
@@ -121,6 +122,9 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
   const dataSourceOptions = {
     disableFileReference: options.disableFileReference,
   };
+  // Build the tool input shape once so data.url is documented as disabled when
+  // local file references are off (e.g. on a remote/hosted server).
+  const assemblyInputShape = buildAssemblyInputShape(options.disableFileReference);
   const backendEnum = z
     .enum(backends as [SupportedBackend, ...SupportedBackend[]])
     .describe(`Rendering backend. One of: ${backends.join(', ')}.`);

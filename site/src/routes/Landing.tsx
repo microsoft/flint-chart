@@ -165,6 +165,29 @@ export function Landing() {
               Browse the gallery
             </Link>
           </div>
+          <p style={{ margin: '32px 0 0', color: siteTheme.text, fontSize: 16, lineHeight: 1.7 }}>
+            Flint is built by{' '}
+            <a
+              className="site-text-link"
+              style={contributorLinkStyle}
+              href="https://www.microsoft.com/en-us/research/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Microsoft Research
+            </a>{' '}
+            in collaboration with the{' '}
+            <a
+              className="site-text-link"
+              style={contributorLinkStyle}
+              href="https://ideas-lab.net/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              IDEAS Lab
+            </a>
+            , Renmin University of China.
+          </p>
         </section>
       </main>
       <MicrosoftDisclosures />
@@ -1169,6 +1192,12 @@ const ctaRowStyle: CSSProperties = {
   marginTop: 28,
   flexWrap: 'wrap',
   justifyContent: 'center',
+};
+
+const contributorLinkStyle: CSSProperties = {
+  color: siteTheme.accent,
+  textDecoration: 'none',
+  fontWeight: 500,
 };
 
 const overviewSectionStyle: CSSProperties = {

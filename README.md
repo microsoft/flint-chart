@@ -173,6 +173,14 @@ This project has adopted the
 [Microsoft Open Source Code of Conduct](.github/CODE_OF_CONDUCT.md). See
 [SECURITY.md](.github/SECURITY.md) to report vulnerabilities.
 
+## Contributor
+
+Flint is built by [Microsoft Research](https://www.microsoft.com/en-us/research/)
+in collaboration with the [IDEAS Lab](https://ideas-lab.net/), Renmin University
+of China. We welcome you to join us — see [Contributing](#contributing) to get involved.
+
+A research paper describing Flint is coming soon.
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services.
