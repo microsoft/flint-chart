@@ -68,7 +68,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "chart.js": "^4.4.0",
     "echarts": "^6.0.0",
-    "flint-chart": "^0.1.2",
+    "flint-chart": "^0.2.0",
     "vega": "^6.0.0",
     "vega-interpreter": "^2.2.1",
     "vega-lite": "^6.0.0",
