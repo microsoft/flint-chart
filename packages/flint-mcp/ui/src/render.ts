@@ -13,24 +13,10 @@ import { compile } from 'vega-lite';
 import { parse, View, Error as VegaError } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
 
-/** Recursively drop Flint's private `_`-prefixed annotation keys. */
-function stripPrivate<T>(node: T): T {
-  if (Array.isArray(node)) return node.map(stripPrivate) as unknown as T;
-  if (node && typeof node === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
-      if (k.startsWith('_')) continue;
-      out[k] = stripPrivate(v);
-    }
-    return out as unknown as T;
-  }
-  return node;
-}
-
 export interface FlintRenderResult {
   /** Rendered SVG markup. */
   svg: string;
-  /** The assembled Vega-Lite spec (private keys stripped). */
+  /** The assembled Vega-Lite spec (Flint annotations left in place). */
   vlSpec: Record<string, unknown>;
   /** Assembler warnings, if any. */
   warnings: { severity: string; code: string; message: string }[];
@@ -112,7 +98,14 @@ export async function renderFlintSvg(
   const raw = assembleVegaLite(previewInput) as Record<string, unknown>;
   if (usePreviewDefaults) widenSmallStepPlotsForPreview(raw, previewInput);
   const warnings = (raw._warnings as FlintRenderResult['warnings']) ?? [];
-  const vlSpec = stripPrivate(raw);
+  // Pass the assembled spec straight through: Vega-Lite ignores unknown
+  // top-level keys, so Flint's private annotations (`_warnings`, `_width`,
+  // `_height`, `_options`, `_pivot`, …) are harmless. We must NOT strip
+  // `_`-prefixed keys recursively — template-generated content legitimately
+  // relies on them (e.g. the Bar Table's `datasets.__bt_displayTable` and
+  // `__bt_sort` rows, or the `_count` field from count aggregates), and
+  // removing those deletes the chart's data (blank rows + NaN color domain).
+  const vlSpec = raw;
 
   const compiled = compile(vlSpec as never).spec;
   // Parse with `ast: true` and render through Vega's CSP-safe expression

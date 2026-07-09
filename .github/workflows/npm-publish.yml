@@ -87,7 +87,14 @@ jobs:
 
       - name: Publish flint-chart-mcp
         if: env.mcp_needs_publish == 'true'
-        run: npm publish --workspace packages/flint-mcp --access public
+        run: |
+          # flint-chart-mcp's prepublishOnly typechecks against the local
+          # flint-chart workspace, which resolves to packages/flint-js/dist. When
+          # the flint-chart publish above is skipped (already published), that dist
+          # is never built and the typecheck fails with TS2307. Build it here so
+          # the MCP typecheck always has resolvable flint-chart types.
+          npm run build --workspace packages/flint-js
+          npm publish --workspace packages/flint-mcp --access public
 
       - name: Wait for flint-chart-mcp to resolve
         if: env.mcp_needs_publish == 'true'
