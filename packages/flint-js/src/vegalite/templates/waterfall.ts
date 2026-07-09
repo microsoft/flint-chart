@@ -123,12 +123,7 @@ export const waterfallChartDef: ChartTemplateDef = {
 
         const cornerRadius = (config?.cornerRadius && config.cornerRadius > 0) ? config.cornerRadius : 0;
 
-        // Half the rendered bar width in px, derived from the layout step so the
-        // connector spans only the inter-bar gap (bar right edge → next bar left
-        // edge), matching the responsive bar sizing rather than a fixed size.
         const xStep = ctx.layout?.xStep ?? 0;
-        const stepPad = ctx.layout?.stepPadding ?? 0;
-        const halfBar = xStep > 0 ? (xStep * (1 - stepPad)) / 2 : 0;
 
         // Value labels: keep the text small and only show it when bars are wide
         // enough that adjacent labels won't collide (safe labeling, like the
@@ -191,17 +186,21 @@ export const waterfallChartDef: ChartTemplateDef = {
                 },
             },
             // Thin connector lines bridging each bar to the next at the running
-            // cumulative level. Drawn on top so the gap segments stay visible.
+            // cumulative level, tracing the bar tops from the current bar's left
+            // edge to the next bar's right edge. `bandPosition` (0 = band left
+            // edge, 1 = band right edge) tracks the actual rendered band width, so
+            // the connector shrinks/grows with the bars automatically rather than
+            // relying on a pixel offset derived from the abstract layout step.
             {
                 mark: {
                     type: "rule",
                     color: "#6b7280",
                     opacity: 0.7,
                     strokeWidth: 1,
-                    ...(halfBar > 0 ? { xOffset: -halfBar, x2Offset: halfBar } : {}),
                 },
                 encoding: {
-                    x2: { field: "__wf_lead" },
+                    x: { field: xField, type: "ordinal", sort: null, bandPosition: 0 },
+                    x2: { field: "__wf_lead", bandPosition: 1 },
                     y: { field: "__wf_connector_y", type: "quantitative" },
                 },
             },
