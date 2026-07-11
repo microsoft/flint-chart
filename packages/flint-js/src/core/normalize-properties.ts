@@ -59,7 +59,9 @@ export function normalizeChartProperties(
         const byLabel =
             typeof value === 'string'
                 ? def.options.find(
-                      (o) => o.label.toLowerCase() === value.trim().toLowerCase(),
+                      (o) =>
+                          o.label != null &&
+                          o.label.toLowerCase() === value.trim().toLowerCase(),
                   )
                 : undefined;
         if (byLabel) {
@@ -74,7 +76,9 @@ export function normalizeChartProperties(
 
         // Unrecognized value → drop it so the property falls back to its default,
         // instead of emitting an invalid backend spec that renders blank.
-        const accepted = def.options.map((o) => `'${o.value}'`).join(', ');
+        const accepted = def.options
+            .map((o) => (o.value == null ? '(default)' : `'${o.value}'`))
+            .join(', ');
         const copy = ensureCopy();
         delete copy[def.key];
         warnings.push({
