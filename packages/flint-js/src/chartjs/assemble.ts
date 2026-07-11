@@ -43,6 +43,7 @@ import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSiz
 import { decideColorMaps } from '../core/color-decisions';
 import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
+import { normalizeChartProperties } from '../core/normalize-properties';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -71,7 +72,6 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     const sizeCeiling = input.chart_spec.canvasSize;
     const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
     const canvasSize = baseSize;
-    const chartProperties = input.chart_spec.chartProperties;
     const options = input.options ?? {};
     let chartTemplate = cjsGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
@@ -79,6 +79,14 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     }
 
     const warnings: ChartWarning[] = [];
+
+    // Validate discrete property values against the template's options before
+    // they reach `instantiate` (map known labels → values, drop unknowns).
+    const normalizedProps = normalizeChartProperties(
+        chartTemplate.properties, input.chart_spec.chartProperties,
+    );
+    const chartProperties = normalizedProps.chartProperties;
+    warnings.push(...normalizedProps.warnings);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
