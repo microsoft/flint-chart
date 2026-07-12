@@ -10,7 +10,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { extractCategories, groupBy, getCategoryOrder } from './utils';
+import { extractCategories, groupBy, getCategoryOrder, toEChartsTemporal } from './utils';
 import { getPaletteForScheme } from '../colormap';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
@@ -49,6 +49,10 @@ export const ecAreaChartDef: ChartTemplateDef = {
         const xIsTemporal = xCS.type === 'temporal';
         const yIsDiscrete = isDiscrete(yCS.type);
         const isContinuousColor = !!colorField && (colorType === 'quantitative' || colorType === 'temporal');
+
+        // ECharts' `time` axis can't parse non-ISO date strings; pre-convert temporal
+        // x-values to epoch-ms so points on a time axis always render.
+        const xVal = (v: any) => (xIsTemporal ? toEChartsTemporal(v) : v);
         const categories = xIsDiscrete
             ? extractCategories(table, xField, getCategoryOrder(ctx, 'x'))
             : undefined;
@@ -133,8 +137,8 @@ export const ecAreaChartDef: ChartTemplateDef = {
                 return String(ax).localeCompare(String(bx));
             });
 
-            const pointData = sorted.map((r: any) => [r[xField], r[yField], r[colorField]]);
-            const lineData = sorted.map((r: any) => [r[xField], r[yField]]);
+            const pointData = sorted.map((r: any) => [xVal(r[xField]), r[yField], r[colorField]]);
+            const lineData = sorted.map((r: any) => [xVal(r[xField]), r[yField]]);
 
             const nums = sorted
                 .map((r: any) => Number(r[colorField]))
@@ -242,7 +246,7 @@ export const ecAreaChartDef: ChartTemplateDef = {
                         ? buildValueAlignedYData(rows, xField, yField, sortedX)
                         : sortedDates
                             ? buildTimeAlignedData(rows, xField, yField, sortedDates)
-                            : rows.map(r => [r[xField], r[yField]]);
+                            : rows.map(r => [xVal(r[xField]), r[yField]]);
 
                 const series: any = {
                     name,
@@ -271,7 +275,7 @@ export const ecAreaChartDef: ChartTemplateDef = {
                         : xIsTemporal
                             ? (() => {
                                 const sorted = [...table].sort((a, b) => new Date(a[xField]).getTime() - new Date(b[xField]).getTime());
-                                return sorted.map(r => [r[xField], r[yField]]);
+                                return sorted.map(r => [xVal(r[xField]), r[yField]]);
                             })()
                             : table.map(r => [r[xField], r[yField]]);
 
@@ -396,11 +400,12 @@ function buildTimeAlignedData(
     xField: string,
     yField: string,
     sortedDates: string[],
-): Array<[string, number]> {
+): Array<[number | string, number]> {
     const map = new Map<string, number>();
     for (const row of rows) {
         const n = Number(row[yField]);
         map.set(String(row[xField]), Number.isFinite(n) ? n : 0);
     }
-    return sortedDates.map(d => [d, map.get(d) ?? 0]);
+    // Emit epoch-ms for the time axis so non-ISO date strings still plot.
+    return sortedDates.map(d => [toEChartsTemporal(d) as number | string, map.get(d) ?? 0]);
 }

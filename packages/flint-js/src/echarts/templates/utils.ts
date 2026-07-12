@@ -17,6 +17,26 @@ export function getCategoryOrder(ctx: InstantiateContext, channel: string): stri
         ?? ctx.channelSemantics?.[channel]?.ordinalSortOrder;
 }
 
+/**
+ * Convert a raw value into something an ECharts `time` axis can plot.
+ *
+ * ECharts' built-in time parser only understands ISO-8601-like strings, so
+ * common human-readable dates (e.g. `"Jan 1 2000"` from a CSV) fail to parse
+ * and the corresponding points are silently dropped, leaving an empty chart.
+ * JavaScript's `Date` constructor accepts many more formats, so we pre-parse
+ * temporal values to epoch-milliseconds. Numbers, `Date` instances, and values
+ * that cannot be parsed are returned unchanged.
+ *
+ * Only call this for values destined for a `time` axis.
+ */
+export function toEChartsTemporal(v: unknown): unknown {
+    if (v == null) return v;
+    if (typeof v === 'number') return v;
+    if (v instanceof Date) return v.getTime();
+    const t = new Date(String(v)).getTime();
+    return isNaN(t) ? v : t;
+}
+
 // Re-export circumference-pressure functions from core (shared with VL backend)
 export {
     computeCircumferencePressure,

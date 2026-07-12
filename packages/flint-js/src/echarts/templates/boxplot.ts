@@ -28,6 +28,22 @@ function areCategoriesNumeric(cats: string[]): boolean {
     });
 }
 
+/**
+ * Extract finite numeric values from rows for a field, dropping null/undefined/empty
+ * cells instead of coercing them. `Number(null)` is `0`, which would otherwise inject
+ * spurious zeros (and phantom outliers at 0) for rows with missing measurements.
+ */
+function numericValues(rows: any[], field: string): number[] {
+    const out: number[] = [];
+    for (const r of rows) {
+        const raw = r[field];
+        if (raw == null || raw === '') continue;
+        const n = Number(raw);
+        if (isFinite(n)) out.push(n);
+    }
+    return out;
+}
+
 /** Compute the five-number summary for an array of values. */
 function fiveNumberSummary(
     values: number[],
@@ -167,7 +183,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     const rows = (catGroups.get(cat) || []).filter(
                         (r: any) => String(r[colorField] ?? '') === colorName,
                     );
-                    const values = rows.map((r: any) => Number(r[valField])).filter(v => isFinite(v));
+                    const values = numericValues(rows, valField);
                     boxData.push(fiveNumberSummary(values, whiskerMethod));
 
                     if (showOutliers) {
@@ -205,7 +221,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
             for (let i = 0; i < categories.length; i++) {
                 const cat = categories[i];
                 const rows = catGroups.get(cat) || [];
-                const values = rows.map((r: any) => Number(r[valField])).filter((v: number) => isFinite(v));
+                const values = numericValues(rows, valField);
                 boxData.push(fiveNumberSummary(values, whiskerMethod));
 
                 if (showOutliers) {

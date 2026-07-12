@@ -47,6 +47,24 @@ const SCHEME_COLORS: Record<string, string[]> = {
 
 const DEFAULT_HEATMAP_SCHEME = 'blues';
 
+/**
+ * Format a numeric heatmap cell value for display.
+ *
+ * Aggregated cell values are often floats with floating-point noise
+ * (e.g. `30.46666700000002`). Showing them at full precision makes the labels
+ * long and overlap into an illegible grid, so we round to a small number of
+ * decimals scaled to the magnitude. `maxDecimals` can force coarser rounding
+ * when the cell is narrow.
+ */
+function formatHeatLabel(val: number, maxDecimals = 2): string {
+    if (!Number.isFinite(val)) return '';
+    if (Number.isInteger(val)) return String(val);
+    const abs = Math.abs(val);
+    let decimals = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+    decimals = Math.min(decimals, maxDecimals);
+    return val.toFixed(decimals);
+}
+
 function isDivergingHeatmapScheme(scheme: string | undefined): boolean {
     return scheme === 'blueorange' || scheme === 'redblue';
 }
@@ -228,15 +246,19 @@ export const ecHeatmapDef: ChartTemplateDef = {
             } else {
                 const fontSize = Math.max(8, Math.min(12, Math.round(minDim * 0.2)));
                 heatSeries.label.fontSize = fontSize;
-                // If cell is narrow, truncate displayed value
-                if (cellW < 50) {
-                    const maxChars = Math.max(2, Math.floor(cellW / (fontSize * 0.6)));
-                    heatSeries.label.formatter = (params: any) => {
-                        const val = params.data[2];
-                        const s = String(val);
-                        return s.length > maxChars ? s.slice(0, maxChars) : s;
-                    };
-                }
+                // Always round labels (values are often noisy floats). Pick a decimal
+                // count that fits the cell width; fall back to integer, then hide if
+                // even that overflows — this prevents overlapping, illegible labels.
+                const approxCharW = fontSize * 0.62;
+                const maxChars = Math.max(2, Math.floor(cellW / approxCharW));
+                heatSeries.label.formatter = (params: any) => {
+                    const val = Number(params.data?.[2]);
+                    if (!Number.isFinite(val)) return '';
+                    let s = formatHeatLabel(val);
+                    if (s.length > maxChars) s = formatHeatLabel(val, 0);
+                    if (s.length > maxChars) s = String(Math.round(val));
+                    return s.length > maxChars ? '' : s;
+                };
             }
         }
 
