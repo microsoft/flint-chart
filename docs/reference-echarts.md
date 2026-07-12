@@ -43,7 +43,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `regressionMethod` | choice | `Linear`, `Logarithmic`, `Exponential`, `Power`, `Quadratic`, `Polynomial` | `Linear` | always | Regression fit method. |
+| `regressionMethod` | choice | `linear` (Linear), `log` (Logarithmic), `exp` (Exponential), `pow` (Power), `quad` (Quadratic), `poly` (Polynomial) | `linear` | always | Regression fit method. |
 | `polyOrder` | number | 2 – 10 (step 1) | `3` | always | Polynomial order for the regression fit. |
 
 ### ![](chart-icon-connected-scatter.svg) Connected Scatter Plot
@@ -64,7 +64,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `whiskerMethod` | choice | `Tukey (1.5 × IQR)`, `Min–Max` | `Tukey (1.5 × IQR)` | always | Whiskers |
+| `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 
 ### ![](chart-icon-strip-plot.svg) Strip Plot
@@ -95,7 +95,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `stackMode` | choice | `Stacked (default)`, `Normalize (100%)`, `Layered (overlap)` | — | conditional | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
 
@@ -131,7 +131,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | Line or area interpolation method. |
 | `showPoints` | toggle | on / off | `false` | always | Overlay point markers on the line. |
 
 ### ![](chart-icon-bump.svg) Bump Chart
@@ -152,9 +152,9 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | Line or area interpolation method. |
 | `opacity` | number | 0.1 – 1 (step 0.05) | `0.7` | always | Mark opacity. |
-| `stackMode` | choice | `Stacked (default)`, `Normalize (100%)`, `Center`, `Layered (overlap)` | — | always | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | always | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-streamgraph.svg) Streamgraph
 
@@ -178,8 +178,8 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 60 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `cornerRadius` | number | 0 – 10 (step 1) | `0` | always | Corner radius for supported marks. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
-| `labelType` | choice | `Name + %`, `Name`, `Value`, `Percent`, `None` | `Name + %` | always | Labels |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
+| `labelType` | choice | `categoryPercent` (Name + %), `category` (Name), `value` (Value), `percent` (Percent), `none` (None) | `categoryPercent` | always | Labels |
 
 ### ![](chart-icon-funnel.svg) Funnel Chart
 
@@ -187,8 +187,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `sort` | choice | `Descending (default)`, `Ascending`, `Original order` | — | always | Sort order for ordered stages or categories. |
-| `orient` | choice | `Vertical (default)`, `Horizontal` | — | always | Chart orientation. |
+| `sort` | choice | `descending` (Descending (default)), `ascending` (Ascending), `none` (Original order) | — | always | Sort order for ordered stages or categories. |
+| `orient` | choice | `vertical` (Vertical (default)), `horizontal` (Horizontal) | — | always | Chart orientation. |
 | `gap` | number | 0 – 20 (step 1) | `2` | always | Gap between segments. |
 
 ### ![](chart-icon-treemap.svg) Treemap
@@ -197,7 +197,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `breadcrumb` | choice | `Show (default)`, `Hide` | — | always | Show or hide treemap breadcrumb navigation. |
+| `breadcrumb` | choice | `true` (Show (default)), `false` (Hide) | — | always | Show or hide treemap breadcrumb navigation. |
 
 ### ![](chart-icon-sunburst.svg) Sunburst Chart
 
@@ -206,7 +206,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 80 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
-| `labelRotate` | choice | `Radial (default)`, `Tangential`, `Horizontal` | — | always | Label orientation for sunburst sectors. |
+| `labelRotate` | choice | `radial` (Radial (default)), `tangential` (Tangential), `0` (Horizontal) | — | always | Label orientation for sunburst sectors. |
 
 ### ![](chart-icon-tree.svg) Tree
 
@@ -214,7 +214,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `orient` | choice | `Left → Right (default)`, `Top → Bottom` | — | always | Chart orientation. |
+| `orient` | choice | `LR` (Left → Right (default)), `TB` (Top → Bottom) | — | always | Chart orientation. |
 
 ## Statistical
 
@@ -287,8 +287,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `shape` | choice | `Polygon (default)`, `Circle` | — | always | Grid |
-| `filled` | choice | `Filled (default)`, `Outline only` | — | always | Fill the enclosed radar area. |
+| `shape` | choice | Polygon (default) _(default)_, `circle` (Circle) | — | always | Grid |
+| `filled` | choice | `true` (Filled (default)), `false` (Outline only) | — | always | Fill the enclosed radar area. |
 | `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.3` | always | Fill opacity for the area or region. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
@@ -297,8 +297,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `alignment` | choice | `Left (default)`, `Center` | — | always | Segment alignment for radial charts. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 
 ## Indicator
 
@@ -310,7 +310,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `min` | number | 0 – 1000 (step 10) | `0` | always | Min |
 | `max` | number | 0 – 10000 (step 100) | `100` | always | Max |
-| `showProgress` | choice | `Show (default)`, `Hide` | — | always | Progress |
+| `showProgress` | choice | `true` (Show (default)), `false` (Hide) | — | always | Progress |
 
 ## Flow
 
@@ -320,7 +320,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `orient` | choice | `Horizontal (default)`, `Vertical` | — | always | Chart orientation. |
+| `orient` | choice | `horizontal` (Horizontal (default)), `vertical` (Vertical) | — | always | Chart orientation. |
 | `nodeWidth` | number | 5 – 40 (step 5) | `20` | always | Node Width |
 | `nodeGap` | number | 2 – 30 (step 2) | `10` | always | Node Gap |
 
@@ -330,4 +330,4 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `layout` | choice | `Circular (default)`, `Force-directed` | — | always | Layout |
+| `layout` | choice | `circular` (Circular (default)), `force` (Force-directed) | — | always | Layout |
