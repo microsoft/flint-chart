@@ -6,8 +6,10 @@ import { makeSortAction } from '../../core/encoding-actions';
 import { makeCartesianPivot } from '../../core/pivot';
 import { snapToBoundHeuristic } from '../../core/field-semantics';
 import {
-    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
+} from '../../core/axis-detection';
+import {
+    defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
     resolveAsDiscrete,
 } from './utils';
 

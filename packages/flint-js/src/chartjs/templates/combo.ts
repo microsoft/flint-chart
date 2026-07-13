@@ -28,7 +28,7 @@ import {
     getSeriesBorderColor,
     getSeriesBackgroundColor,
 } from './utils';
-import { detectBandedAxisFromSemantics } from '../../vegalite/templates/utils';
+import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
 
 /** A field is numeric if (nearly) all of its non-null values parse as numbers. */
 function isNumericField(table: any[], field: string): boolean {

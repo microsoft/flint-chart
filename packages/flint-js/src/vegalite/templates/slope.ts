@@ -26,7 +26,8 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { defaultBuildEncodings, resolveDiscreteType } from './utils';
+import { resolveDiscreteType } from '../../core/axis-detection';
+import { defaultBuildEncodings } from './utils';
 
 const isDiscrete = (type: string | undefined) =>
     type === 'nominal' || type === 'ordinal';

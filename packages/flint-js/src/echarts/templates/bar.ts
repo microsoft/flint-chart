@@ -20,7 +20,7 @@ import type { ColorDecision } from '../../core/color-decisions';
 import { pickEChartsPalette } from '../colormap';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
-} from '../../vegalite/templates/utils';
+} from '../../core/axis-detection';
 import { makeCartesianPivot } from '../../core/pivot';
 
 // ---------------------------------------------------------------------------

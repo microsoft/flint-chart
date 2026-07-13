@@ -21,7 +21,7 @@ import {
 } from './utils';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
-} from '../../vegalite/templates/utils';
+} from '../../core/axis-detection';
 import { makeCartesianPivot } from '../../core/pivot';
 
 // ---------------------------------------------------------------------------

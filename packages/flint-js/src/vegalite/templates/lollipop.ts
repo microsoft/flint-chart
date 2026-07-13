@@ -4,7 +4,8 @@
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 import { makeSortAction } from '../../core/encoding-actions';
 import { makeCartesianPivot } from '../../core/pivot';
-import { detectBandedAxisFromSemantics, setMarkProp } from './utils';
+import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
+import { setMarkProp } from './utils';
 
 export const lollipopChartDef: ChartTemplateDef = {
     chart: "Lollipop Chart",

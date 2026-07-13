@@ -186,7 +186,7 @@ properties"). Required channels are noted.
 | `"Stacked Bar Chart"` | x, y, color, column, row | prop `stackMode` |
 | `"Pyramid Chart"` | x, y, color | diverging horizontal bars |
 | `"Lollipop Chart"` | x, y, color, column, row | prop `dotSize` |
-| `"Waterfall Chart"` | x, y, color, column, row | prop `cornerRadius` |
+| `"Waterfall Chart"` | x, y, color, column, row | `color` = Type column, values `start`/`delta`/`end` only; omit it for auto sign coloring; props `cornerRadius`, `totals` |
 | `"Gantt Chart"` | y, x, x2, color, detail, column, row | x = start, x2 = end |
 | `"Bullet Chart"` | y, x, goal, color, column, row | `goal` required (target) |
 | `"Histogram"` | x, color, column, row | x = measure to bin; prop `binCount` |
@@ -231,6 +231,18 @@ channel**:
 
 Rule of thumb: comparing parts-to-whole → Stacked; comparing values
 side-by-side → Grouped (use `group`); single series → Bar.
+
+**Waterfall color is a special "Type" column, not a free category.** On a
+`"Waterfall Chart"` the `color` channel is reserved for a *type* field whose
+values are literally `start`, `delta`, and `end` — it drives which bars anchor
+to zero, not an arbitrary grouping. Do **not** bind `color` to an
+`Increase`/`Decrease` (or up/down, gain/loss) category: the up/down direction is
+already derived from the **sign** of the `y` value and colored automatically
+(green up / red down). For the common case, **omit `color` entirely** and let
+Flint infer the start/delta/end and per-bar sign coloring. To force which bars
+are anchored totals, use the `totals` property (`first`/`last`/`both`), not a
+color field. Only bind `color` when you genuinely have a `start`/`delta`/`end`
+type column.
 
 **Backend coverage.** Vega-Lite supports all of the above. Other backends
 support a subset (verify if targeting a non-VL backend):
@@ -352,6 +364,7 @@ derived). Values are clamped to the ranges shown.
 | Rose Chart | `padAngle` | 0–0.1 (0) | Gap between slices |
 | Lollipop | `dotSize` | 20–300 (80) | Circle size (px) |
 | Waterfall | `cornerRadius` | 0–8 (0) | Round bar corners |
+| Waterfall | `totals` | `auto` \| `none` \| `first` \| `last` \| `both` (`auto`) | Which bars anchor to zero as totals (only when no Type column) |
 | Regression | `regressionMethod` | `linear` \| `log` \| `exp` \| `pow` \| `quad` \| `poly` (`linear`) | Fit method |
 | Regression | `polyOrder` | 1–5 (3) | Polynomial order (when `poly`) |
 | Radar | `filled` | boolean (true) | Fill the polygon |

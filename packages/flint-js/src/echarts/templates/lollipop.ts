@@ -9,7 +9,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, groupBy, DEFAULT_COLORS, getCategoryOrder } from './utils';
 import { detectAxes } from './utils';
-import { detectBandedAxisFromSemantics } from '../../vegalite/templates/utils';
+import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
 
 /** Vega-Lite 风格：茎（rule）黑色、细线，圆点与 color 图例一致 */
 const STEM_COLOR = '#000000';

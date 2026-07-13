@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 import {
     defaultBuildEncodings, applyPointSizeScaling, setMarkProp,
-    detectBandedAxisForceDiscrete,
 } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
 
