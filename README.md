@@ -141,7 +141,8 @@ The [project site](https://microsoft.github.io/flint-chart/) is the main entry
 point for examples, the live editor, and concept docs. For source-level
 references, start with the [API reference](docs/api-reference.md), the
 [Flint MCP project page](https://microsoft.github.io/flint-chart/#/mcp), or the
-[Development guide](docs/DEVELOPMENT.md).
+[Development guide](docs/DEVELOPMENT.md). See the [changelog](CHANGELOG.md) for
+notable changes in each release.
 
 ---
 
