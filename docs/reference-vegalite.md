@@ -48,7 +48,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `regressionMethod` | choice | `Linear`, `Logarithmic`, `Exponential`, `Power`, `Quadratic`, `Polynomial` | `Linear` | always | Regression fit method. |
+| `regressionMethod` | choice | `linear` (Linear), `log` (Logarithmic), `exp` (Exponential), `pow` (Power), `quad` (Quadratic), `poly` (Polynomial) | `linear` | always | Regression fit method. |
 | `polyOrder` | number | 2 – 10 (step 1) | `3` | always | Polynomial order for the regression fit. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
@@ -104,8 +104,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 15 (step 1) | `0` | always | Corner radius for supported marks. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
-| `xAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
-| `yAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
+| `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
@@ -121,7 +121,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `stackMode` | choice | `Stacked (default)`, `Normalize (100%)`, `Center`, `Layered (overlap)` | — | conditional | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
@@ -132,8 +132,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `dotSize` | number | 20 – 300 (step 10) | `80` | always | Size of the dot mark. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
-| `xAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
-| `yAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
+| `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
 
 ### ![](chart-icon-waterfall.svg) Waterfall Chart
 
@@ -142,7 +142,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `0` | always | Corner radius for supported marks. |
-| `totals` | choice | `Auto`, `None`, `First`, `Last`, `Both` | `Auto` | conditional | Totals |
+| `totals` | choice | `auto` (Auto), `none` (None), `first` (First), `last` (Last), `both` (Both) | `auto` | conditional | Totals |
 | `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
@@ -214,7 +214,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `whiskerMethod` | choice | `Tukey (1.5 × IQR)`, `Min–Max` | `Tukey (1.5 × IQR)` | always | Whiskers |
+| `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
@@ -248,15 +248,15 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After`, `Basis (smooth)`, `Cardinal`, `Catmull-Rom` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `showPoints` | toggle | on / off | `false` | always | Overlay point markers on the line. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
 | `includeZero_x` | toggle | on / off | `false` | conditional | Anchor the x-axis at zero. |
 | `includeZero_y` | toggle | on / off | `false` | conditional | Anchor the y-axis at zero. |
-| `xAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
-| `yAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
+| `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
 
 ### Sparkline
 
@@ -264,8 +264,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After`, `Basis (smooth)`, `Cardinal`, `Catmull-Rom` | — | always | Line or area interpolation method. |
-| `baseline` | choice | `Average`, `Zero`, `Median`, `None` | `Average` | always | Reference line |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
+| `baseline` | choice | `mean` (Average), `zero` (Zero), `median` (Median), `none` (None) | `mean` | always | Reference line |
 | `trendWidth` | number | 80 – 600 (step 10) | `240` | always | Sparkline width |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
@@ -303,12 +303,12 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After`, `Basis (smooth)`, `Cardinal`, `Catmull-Rom` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `opacity` | number | 0.1 – 1 (step 0.1) | `0.7` | always | Mark opacity. |
-| `stackMode` | choice | `Stacked (default)`, `Normalize (100%)`, `Center`, `Layered (overlap)` | — | conditional | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
-| `xAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
-| `yAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
+| `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
 
 ### ![](chart-icon-streamgraph.svg) Streamgraph
 
@@ -316,7 +316,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After`, `Basis (smooth)`, `Cardinal`, `Catmull-Rom` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-range-area.svg) Range Area Chart
@@ -325,7 +325,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After`, `Basis (smooth)` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)) | — | always | Line or area interpolation method. |
 | `opacity` | number | 0.1 – 1 (step 0.1) | `0.5` | always | Mark opacity. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
@@ -338,7 +338,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
@@ -349,8 +349,8 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `padAngle` | number | 0 – 0.1 (step 0.005) | `0` | always | Angular gap between radial segments. |
-| `alignment` | choice | `Left (default)`, `Center` | — | always | Segment alignment for radial charts. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-radar.svg) Radar Chart
@@ -378,8 +378,8 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
-| `xAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
-| `yAxisType` | choice | `Temporal`, `Discrete` | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
+| `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 
@@ -397,7 +397,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `layout` | choice | `Horizontal`, `Vertical`, `Grid` | `Grid` | always | Layout |
+| `layout` | choice | `horizontal` (Horizontal), `vertical` (Vertical), `grid` (Grid) | `grid` | always | Layout |
 | `style` | toggle | on / off | `true` | always | Card style |
 | `behindThreshold` | number | 0 – 1 (step 0.05) | `0.5` | conditional | Behind threshold |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
@@ -411,9 +411,9 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `region` | choice | `Auto-detect`, `United States`, `World` | `Auto-detect` | always | Region |
-| `projection` | choice | `Default`, `Mercator`, `Equal Earth`, `Orthographic (Globe)`, `Stereographic`, `Conic Equal Area`, `Conic Equidistant`, `Azimuthal Equidistant`, `Mollweide` | `Default` | conditional | Projection |
-| `projectionCenter` | choice | `Default`, `World (Atlantic) [0, 0]`, `World (Pacific) [150, 0]`, `China [105, 35]`, `USA [-98, 39]`, `Europe [10, 50]`, `Japan [138, 36]`, `India [78, 22]`, `Brazil [-52, -14]`, `Australia [134, -25]`, `Russia [100, 60]`, `Africa [20, 0]`, `Middle East [45, 28]`, `Southeast Asia [115, 5]`, `South America [-60, -15]`, `North America [-100, 45]`, `UK [-2, 54]`, `Germany [10, 51]`, `France [2, 47]`, `Korea [128, 36]` | — | conditional | Center |
+| `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
+| `projection` | choice | `default` (Default), `mercator` (Mercator), `equalEarth` (Equal Earth), `orthographic` (Orthographic (Globe)), `stereographic` (Stereographic), `conicEqualArea` (Conic Equal Area), `conicEquidistant` (Conic Equidistant), `azimuthalEquidistant` (Azimuthal Equidistant), `mollweide` (Mollweide) | `default` | conditional | Projection |
+| `projectionCenter` | choice | Default _(default)_, `0,0` (World (Atlantic) [0, 0]), `150,0` (World (Pacific) [150, 0]), `105,35` (China [105, 35]), `-98,39` (USA [-98, 39]), `10,50` (Europe [10, 50]), `138,36` (Japan [138, 36]), `78,22` (India [78, 22]), `-52,-14` (Brazil [-52, -14]), `134,-25` (Australia [134, -25]), `100,60` (Russia [100, 60]), `20,0` (Africa [20, 0]), `45,28` (Middle East [45, 28]), `115,5` (Southeast Asia [115, 5]), `-60,-15` (South America [-60, -15]), `-100,45` (North America [-100, 45]), `-2,54` (UK [-2, 54]), `10,51` (Germany [10, 51]), `2,47` (France [2, 47]), `128,36` (Korea [128, 36]) | — | conditional | Center |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
 | `includeZero_x` | toggle | on / off | `false` | conditional | Anchor the x-axis at zero. |
@@ -425,4 +425,4 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `region` | choice | `Auto-detect`, `United States`, `World` | `Auto-detect` | always | Region |
+| `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |

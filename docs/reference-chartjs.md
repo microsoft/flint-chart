@@ -119,7 +119,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)`, `Step`, `Step Before`, `Step After` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | Line or area interpolation method. |
 
 ### ![](chart-icon-slope.svg) Slope Chart
 
@@ -133,9 +133,9 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `interpolate` | choice | `Default (linear)`, `Linear`, `Monotone (smooth)` | — | always | Line or area interpolation method. |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)) | — | always | Line or area interpolation method. |
 | `opacity` | number | 0.1 – 1 (step 0.05) | `0.4` | always | Mark opacity. |
-| `stackMode` | choice | `Stacked (default)`, `Layered (overlap)` | — | always | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `layered` (Layered (overlap)) | — | always | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-range-area.svg) Range Area Chart
 
@@ -160,7 +160,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 60 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 
 ### ![](chart-icon-doughnut.svg) Doughnut Chart
 
@@ -169,7 +169,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `innerRadius` | number | 20 – 80 (step 5) | `55` | always | Inner radius as a percentage of the outer radius. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 
 ## Polar
 
@@ -179,7 +179,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `filled` | choice | `Filled (default)`, `Outline only` | — | always | Fill the enclosed radar area. |
+| `filled` | choice | `true` (Filled (default)), `false` (Outline only) | — | always | Fill the enclosed radar area. |
 | `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.3` | always | Fill opacity for the area or region. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
@@ -188,5 +188,5 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `alignment` | choice | `Left (default)`, `Center` | — | always | Segment alignment for radial charts. |
-| `sortSlices` | choice | `Data order`, `Largest first`, `Smallest first` | `Data order` | always | Sort slices |
+| `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |

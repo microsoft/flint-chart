@@ -95,6 +95,16 @@ export const cjsRoseChartDef: ChartTemplateDef = {
         // Alignment: 'center' puts wedge center at 12 o'clock,
         // 'left' puts wedge left edge at 12 o'clock.
         sortSlicesInPlace(labels, values, ctx.chartProperties?.sortSlices);
+
+        // Area-truth: Chart.js `polarArea` maps the datum linearly to the wedge
+        // radius, so raw values make AREA ∝ value² (a 4:1 value reads as 16:1
+        // area). Vega-Lite instead uses a sqrt radius scale. Chart.js' radial `r`
+        // scale has no sqrt type, so we plot sqrt(value) as the radius (making
+        // AREA ∝ value) and keep the true value for the tooltip/label. Guard
+        // against negatives (sqrt(NaN)).
+        const rawValues = values.slice();
+        const radii = values.map(v => Math.sqrt(Math.max(0, v)));
+
         const alignment = ctx.chartProperties?.alignment ?? 'left';
         const n = categories.length;
         // Chart.js polarArea: startAngle 0 = 12 o'clock, CW.
@@ -109,7 +119,7 @@ export const cjsRoseChartDef: ChartTemplateDef = {
             data: {
                 labels,
                 datasets: [{
-                    data: values,
+                    data: radii,
                     backgroundColor: bgColors,
                     borderColor: borderColors,
                     borderWidth: 1,
@@ -122,12 +132,26 @@ export const cjsRoseChartDef: ChartTemplateDef = {
                 scales: {
                     r: {
                         beginAtZero: true,
-                        ticks: { display: true },
+                        // Radii are sqrt(value); the raw tick numbers would
+                        // misrepresent the scale, so hide them (true values are
+                        // surfaced in the tooltip).
+                        ticks: { display: false },
                     },
                 },
                 plugins: {
                     legend: { display: true, position: 'right' as const },
-                    tooltip: { enabled: true },
+                    tooltip: {
+                        enabled: true,
+                        callbacks: {
+                            // Radius is sqrt-transformed; report the true value.
+                            label: (item: any) => {
+                                const raw = rawValues[item.dataIndex];
+                                const shown = raw != null ? raw : item.raw;
+                                const name = item.label != null ? item.label : '';
+                                return `${name}: ${shown}`;
+                            },
+                        },
+                    },
                 },
             },
             _width: Math.max(ctx.canvasSize.width, 350),

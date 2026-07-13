@@ -28,6 +28,17 @@ import { extractCategories, groupBy, computeCircumferencePressure } from './util
  */
 export const EC_ROSE_LEGEND_BRIDGE_SERIES_NAME = '__dfRoseLegendBridge__';
 
+/**
+ * Map a raw measure to a wedge radius so that wedge AREA (not radius) is
+ * proportional to the value. ECharts' polar `radiusAxis` is linear (there is no
+ * `sqrt` axis type), so — unlike Vega-Lite which sets `radius.scale.type = 'sqrt'`
+ * — we transform the data itself. The true value is preserved on each data item
+ * (`_rawValue`) for the tooltip. Guards against negatives (sqrt(NaN)).
+ */
+function roseRadius(value: number): number {
+    return Math.sqrt(Math.max(0, value));
+}
+
 export const ecRoseChartDef: ChartTemplateDef = {
     chart: 'Rose Chart',
     template: { mark: 'arc', encoding: {} },
@@ -67,8 +78,13 @@ export const ecRoseChartDef: ChartTemplateDef = {
         const legendData: string[] = [];
 
         if (colorField) {
-            // Stacked rose: one series per color group
+            // Stacked rose: one series per color group. ECharts stacks by SUMMING
+            // data values, so to make each segment's AREA proportional to its value
+            // we feed the incremental radius sqrt(cumsum) - sqrt(prevCumsum). The
+            // outer edge of each segment then sits at sqrt(total-so-far), mirroring
+            // Vega-Lite's stacked sqrt radius scale.
             const groups = groupBy(table, colorField);
+            const cumSum = categories.map(() => 0);
 
             for (const [name, rows] of groups) {
                 legendData.push(name);
@@ -81,12 +97,19 @@ export const ecRoseChartDef: ChartTemplateDef = {
                     catAgg.set(cat, (catAgg.get(cat) ?? 0) + val);
                 }
 
-                const values = categories.map(c => catAgg.get(c) ?? 0);
+                const data = categories.map((c, i) => {
+                    const val = catAgg.get(c) ?? 0;
+                    const prev = cumSum[i];
+                    const next = prev + val;
+                    cumSum[i] = next;
+                    // Incremental radius so the stacked outer edge lands at sqrt(next).
+                    return { value: roseRadius(next) - roseRadius(prev), _rawValue: val };
+                });
 
                 seriesArr.push({
                     type: 'bar',
                     name,
-                    data: values,
+                    data,
                     coordinateSystem: 'polar',
                     stack: 'rose',
                     emphasis: { focus: 'series' },
@@ -110,8 +133,9 @@ export const ecRoseChartDef: ChartTemplateDef = {
             seriesArr.push({
                 type: 'bar',
                 data: categories.map((c, i) => ({
-                    value: values[i],
+                    value: roseRadius(values[i]),
                     name: String(c),
+                    _rawValue: values[i],
                 })),
                 coordinateSystem: 'polar',
                 emphasis: { focus: 'series' },
@@ -180,6 +204,19 @@ export const ecRoseChartDef: ChartTemplateDef = {
         const option: any = {
             tooltip: {
                 trigger: 'item',
+                // Radii are sqrt-transformed for area-truth; show the true value
+                // (stashed on each data item as `_rawValue`) instead of the radius.
+                formatter: (params: any) => {
+                    const raw = params?.data?._rawValue;
+                    const shown = raw != null ? raw : params?.value;
+                    const cat = params?.name != null && params.name !== '' ? String(params.name) : '';
+                    const series = params?.seriesName;
+                    const head = series && series !== cat
+                        ? (cat ? `${cat} · ${series}` : String(series))
+                        : cat;
+                    const marker = params?.marker ?? '';
+                    return `${marker}${head}: <b>${shown}</b>`;
+                },
             },
             angleAxis: {
                 type: 'category',
@@ -190,6 +227,9 @@ export const ecRoseChartDef: ChartTemplateDef = {
                 // hide axis line for cleaner look
                 axisLine: { show: false },
                 axisTick: { show: false },
+                // Radii encode sqrt(value); showing the raw sqrt tick numbers would
+                // misrepresent the scale, so suppress them (values live in tooltips).
+                axisLabel: { show: false },
             },
             polar: {
                 radius: polarRadius,

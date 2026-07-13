@@ -64,6 +64,7 @@ import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
+import { normalizeChartProperties } from '../core/normalize-properties';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,7 +115,6 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const sizeCeiling = input.chart_spec.canvasSize;
     const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
     const canvasSize = baseSize;
-    const chartProperties = input.chart_spec.chartProperties;
     const options = input.options ?? {};
     let chartTemplate = vlGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
@@ -122,6 +122,16 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     }
 
     const warnings: ChartWarning[] = [];
+
+    // Validate discrete property *values* against the template's declared
+    // options before they reach `instantiate`. This maps a known display label
+    // to its accepted value and drops unrecognized values, so a bad input never
+    // produces an invalid backend spec (which would render blank).
+    const normalizedProps = normalizeChartProperties(
+        chartTemplate.properties, input.chart_spec.chartProperties,
+    );
+    const chartProperties = normalizedProps.chartProperties;
+    warnings.push(...normalizedProps.warnings);
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization

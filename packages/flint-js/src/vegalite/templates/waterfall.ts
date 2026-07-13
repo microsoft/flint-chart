@@ -85,8 +85,14 @@ export const waterfallChartDef: ChartTemplateDef = {
             as: "__wf_prev_sum",
         });
 
+        // A bar is a beige "total" only when its Type value is a recognized anchor
+        // keyword (start/end) — matching the ECharts/Chart.js templates, which key
+        // their color off `start`/`end` too. Any other value, including an
+        // agent-supplied increase/decrease category, is a floating delta colored by
+        // sign, so an unrecognized color vocabulary degrades to sign-based coloring
+        // instead of collapsing every bar to the single "total" hue.
         transforms.push({
-            calculate: `datum['${typeField}'] !== 'delta' ? 'total' : datum['${yField}'] >= 0 ? 'increase' : 'decrease'`,
+            calculate: `(datum['${typeField}'] === 'start' || datum['${typeField}'] === 'end') ? 'total' : datum['${yField}'] >= 0 ? 'increase' : 'decrease'`,
             as: "__wf_color",
         });
 

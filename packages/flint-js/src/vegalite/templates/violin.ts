@@ -32,7 +32,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { detectBandedAxisForceDiscrete } from './utils';
+import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 
 const isDiscrete = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 

@@ -57,6 +57,12 @@ export {
 // Reusable encoding-action factories
 export { makeSortAction, type SortChoice } from './encoding-actions';
 
+// Backend-neutral position-axis detection for bar-like templates
+export {
+    detectBandedAxisFromSemantics,
+    detectBandedAxisForceDiscrete,
+} from './axis-detection';
+
 // Semantic type system
 export {
     SemanticTypes,

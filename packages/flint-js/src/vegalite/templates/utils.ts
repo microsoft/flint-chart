@@ -7,6 +7,7 @@
  */
 
 import type { ChannelSemantics, InstantiateContext } from '../../core/types';
+import { resolveDiscreteType } from '../../core/axis-detection';
 
 // ---------------------------------------------------------------------------
 // Discrete-dimension helpers
@@ -34,32 +35,6 @@ export function isEquallyStrided(field: string, table: any[]): boolean {
 }
 
 /**
- * Get the number of unique non-null values for a field in the data table.
- */
-export function getFieldCardinality(field: string, table: any[]): number {
-    return new Set(table.map((r: any) => r[field]).filter((v: any) => v != null)).size;
-}
-
-/**
- * Determine the discrete type for a given encoding type.
- * Returns the appropriate discrete type without mutating anything.
- */
-export function resolveDiscreteType(
-    currentType: string,
-    field: string | undefined,
-    table: any[],
-): 'nominal' | 'ordinal' {
-    if (currentType === 'nominal') return 'nominal';
-    if (currentType === 'ordinal') return 'ordinal';
-    if (currentType === 'temporal') return 'ordinal';
-    if (currentType === 'quantitative' && field && table.length > 0) {
-        const cardinality = getFieldCardinality(field, table);
-        return cardinality <= 20 ? 'ordinal' : 'nominal';
-    }
-    return 'nominal';
-}
-
-/**
  * Convert a single encoding to a discrete VL type in-place.
  */
 export function resolveAsDiscrete(
@@ -69,81 +44,6 @@ export function resolveAsDiscrete(
     if (!encodingObj) return 'nominal';
     const result = resolveDiscreteType(encodingObj.type, encodingObj.field, table);
     encodingObj.type = result;
-    return result;
-}
-
-/**
- * Detect which positional axis should be the banded/category axis,
- * working from ChannelSemantics (v2 pipeline).
- *
- * Used by declareLayoutMode to set axisFlags and resolvedTypes.
- *
- * @returns  axis: which axis is banded
- *           resolvedTypes: type overrides if conversion was needed
- */
-export function detectBandedAxisFromSemantics(
-    channelSemantics: Record<string, ChannelSemantics>,
-    table: any[],
-    options: { preferAxis?: 'x' | 'y' } = {},
-): { axis: 'x' | 'y'; resolvedTypes?: Record<string, 'nominal' | 'ordinal' | 'quantitative' | 'temporal'> } | null {
-    const xType = channelSemantics.x?.type;
-    const yType = channelSemantics.y?.type;
-
-    // Already discrete?
-    if (xType && isDiscrete(xType)) return { axis: 'x' };
-    if (yType && isDiscrete(yType)) return { axis: 'y' };
-
-    // Both continuous — don't convert, the banded flag handles sizing
-    if (xType && yType) {
-        if (xType === 'quantitative' && yType !== 'quantitative') {
-            return { axis: 'y' };
-        }
-        if (yType === 'quantitative' && xType !== 'quantitative') {
-            return { axis: 'x' };
-        }
-        return { axis: options.preferAxis || 'x' };
-    }
-
-    // Only one axis — convert to discrete
-    if (xType) {
-        const newType = resolveDiscreteType(xType, channelSemantics.x?.field, table);
-        return { axis: 'x', resolvedTypes: { x: newType } };
-    }
-    if (yType) {
-        const newType = resolveDiscreteType(yType, channelSemantics.y?.field, table);
-        return { axis: 'y', resolvedTypes: { y: newType } };
-    }
-
-    return null;
-}
-
-/**
- * Detect which axis is banded, and also force discrete conversion
- * when needed (grouped bar, boxplot must have a truly discrete axis).
- *
- * Returns resolvedTypes with the forced conversion.
- */
-export function detectBandedAxisForceDiscrete(
-    channelSemantics: Record<string, ChannelSemantics>,
-    table: any[],
-    options: { preferAxis?: 'x' | 'y' } = {},
-): { axis: 'x' | 'y'; resolvedTypes?: Record<string, 'nominal' | 'ordinal' | 'quantitative' | 'temporal'> } | null {
-    const result = detectBandedAxisFromSemantics(channelSemantics, table, options);
-    if (!result) return null;
-
-    const axis = result.axis;
-    const cs = channelSemantics[axis];
-    if (!cs) return result;
-
-    // If the axis is NOT already discrete, force conversion
-    if (!isDiscrete(cs.type)) {
-        const newType = resolveDiscreteType(cs.type, cs.field, table);
-        return {
-            axis,
-            resolvedTypes: { ...result.resolvedTypes, [axis]: newType },
-        };
-    }
-
     return result;
 }
 

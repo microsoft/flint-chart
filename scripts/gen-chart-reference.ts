@@ -183,7 +183,17 @@ function domain(p: ChartPropertyDef): string {
             return `${p.min} – ${p.max}${step}`;
         }
         case 'discrete':
-            return p.options.map((o) => `\`${o.label}\``).join(', ');
+            // Show the accepted `value` (what callers pass in
+            // `chartProperties`), with the human label as secondary text — the
+            // labels are not valid inputs. An `undefined` value means "omit the
+            // property to get this default", so render just its label.
+            return p.options
+                .map((o) =>
+                    o.value === undefined || o.value === null
+                        ? `${o.label} _(default)_`
+                        : `\`${o.value}\`${o.label ? ` (${o.label})` : ''}`,
+                )
+                .join(', ');
         case 'binary':
             return 'on / off';
     }
@@ -197,8 +207,10 @@ function defaultValue(p: ChartPropertyDef): string {
     if (raw == null) return '—';
     if (p.key === 'binCount' && raw === 0) return '`Auto`';
     if (p.type === 'discrete') {
+        // Render the accepted `value`, not the display label, so the default
+        // shown matches what a caller passes in `chartProperties`.
         const match = p.options.find((o) => o.value === raw);
-        return match ? `\`${match.label}\`` : `\`${String(raw)}\``;
+        return match ? `\`${String(match.value)}\`` : `\`${String(raw)}\``;
     }
     return `\`${String(raw)}\``;
 }
