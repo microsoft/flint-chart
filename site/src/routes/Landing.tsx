@@ -1,7 +1,7 @@
-import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
-import { SiteNavBar, MicrosoftDisclosures } from '../components/SiteShell';
+import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
@@ -74,9 +74,9 @@ export function Landing() {
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
-                <HeroCTA to="/gallery" label="Explore Gallery" variant="primary" />
+                <HeroCTA to="/gallery" label="Explore Gallery" variant="secondary" />
                 <HeroCTA to="/mcp" label="Get MCP Server" variant="secondary" />
-                <HeroCTA href={GITHUB_REPO} label="Visit GitHub" variant="secondary" />
+                <HeroCTA href={GITHUB_REPO} label="Visit GitHub" icon={<GitHubIcon size={17} />} variant="secondary" />
               </div>
             </div>
           </div>
@@ -346,12 +346,14 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
 
 function HeroCTA({
   label,
+  icon,
   to,
   href,
   variant,
   className,
 }: {
   label: string;
+  icon?: ReactNode;
   to?: string;
   href?: string;
   variant: 'primary' | 'secondary';
@@ -364,17 +366,20 @@ function HeroCTA({
     onFocus: () => setActive(true),
     onBlur: () => setActive(false),
   };
+  const ctaClassName = ['landing-hero-cta', className].filter(Boolean).join(' ');
 
   if (href) {
     return (
-      <a className={className} href={href} style={heroCtaStyle(variant, active)} target="_blank" rel="noreferrer" {...handlers}>
+      <a className={ctaClassName} href={href} style={heroCtaStyle(variant, active)} target="_blank" rel="noreferrer" {...handlers}>
+        {icon}
         {label}
       </a>
     );
   }
 
   return (
-    <Link className={className} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
+    <Link className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
+      {icon}
       {label}
     </Link>
   );
@@ -1029,14 +1034,12 @@ const leadTextColStyle: CSSProperties = {
 
 const leadButtonsColStyle: CSSProperties = {
   flex: '0 0 auto',
-  width: 190,
+  width: 210,
   display: 'flex',
   flexDirection: 'column',
-  borderLeft: `1px solid ${HAIRLINE}`,
-  paddingLeft: 28,
+  paddingTop: 8,
 };
 
-// Right-side quick actions kept flat to avoid competing with the hero copy.
 const actionBoxStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -1085,6 +1088,11 @@ const installLineLinkStyle: CSSProperties = {
 };
 
 const landingInteractiveStyles = `
+  .landing-hero-cta:focus-visible {
+    outline: 2px solid ${siteTheme.accent};
+    outline-offset: 2px;
+  }
+
   .landing-showcase-row {
     width: calc(100% + 96px);
     margin-left: -48px;
@@ -1600,18 +1608,23 @@ const secondaryBtn: CSSProperties = {
 
 function heroCtaStyle(variant: 'primary' | 'secondary', active: boolean): CSSProperties {
   const base: CSSProperties = {
-    display: 'block',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     width: '100%',
+    minHeight: 44,
     boxSizing: 'border-box',
     textAlign: 'center',
-    padding: '10px 18px',
+    padding: '11px 18px',
     borderRadius: siteTheme.radius,
     textDecoration: 'none',
     fontSize: 14.5,
-    fontWeight: 500,
+    fontWeight: 600,
     lineHeight: 1.2,
     border: '1px solid transparent',
-    transition: 'background 0.12s ease, border-color 0.12s ease',
+    transform: active ? 'translateY(-1px)' : 'translateY(0)',
+    transition: 'background 0.12s ease, border-color 0.12s ease, transform 0.12s ease',
   };
   if (variant === 'primary') {
     return {
@@ -1624,6 +1637,6 @@ function heroCtaStyle(variant: 'primary' | 'secondary', active: boolean): CSSPro
     ...base,
     color: siteTheme.text,
     background: active ? siteTheme.hover : PAPER,
-    borderColor: HAIRLINE,
+    borderColor: active ? 'rgba(0, 0, 0, 0.42)' : 'rgba(0, 0, 0, 0.24)',
   };
 }
