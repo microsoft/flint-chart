@@ -55,6 +55,7 @@ import {
 import type { ChartWarning, ChartOption, OptionEvalContext } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
+import { planBandDodge } from '../core/band-dodge';
 import { applyPivot, type PivotSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
@@ -970,9 +971,19 @@ function buildVLEncodings(
         }
         delete resolvedEncodings.group;
 
+        // Suppress the dodge offset when the group field is redundant/nested with
+        // the axis (group == x, or a 1:1 pair): otherwise VL subdivides each band
+        // by the global group domain and every bar collapses to ~1/N width. This
+        // mirrors the grouping suppression in computeLayout so the band budget and
+        // the offset agree. Confident-nested only (maxPerBand <= 1).
+        const groupAxisField = channelSemantics[groupAxis]?.field;
+        const groupIsNested = !!groupAxisField
+            && (groupAxisField === groupCS.field
+                || planBandDodge(data, groupAxisField, groupCS.field).maxPerBand <= 1);
+
         // Create offset encoding for position subdivision.
         // Coordinate sort with color so bar order matches legend order.
-        if (!resolvedEncodings[offsetChannel]) {
+        if (!groupIsNested && !resolvedEncodings[offsetChannel]) {
             const offsetEnc: any = { field: groupCS.field, type: 'nominal' };
             if (resolvedEncodings.color?.sort !== undefined) {
                 offsetEnc.sort = resolvedEncodings.color.sort;

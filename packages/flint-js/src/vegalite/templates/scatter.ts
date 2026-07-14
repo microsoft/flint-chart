@@ -3,10 +3,13 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
+import { planBandDodge, resolveBandDodge } from '../../core/band-dodge';
 import {
     defaultBuildEncodings, applyPointSizeScaling, setMarkProp,
 } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+
+const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
 // Fraction of the band/lane step a boxplot box should occupy. An ungrouped box
 // fills most of its category band; a grouped (dodged) box fills most of its
@@ -179,15 +182,28 @@ export const boxplotDef: ChartTemplateDef = {
     template: { mark: "boxplot", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'position',
-    declareLayoutMode: (cs, table) => {
+    declareLayoutMode: (cs, table, chartProperties) => {
         if (!cs.x?.field || !cs.y?.field) return {};
         const result = detectBandedAxisForceDiscrete(cs, table, { preferAxis: 'x' });
         if (!result) return {};
+        // Decide whether `color` dodges the banded axis into side-by-side
+        // sub-lanes, or is redundant/nested with it (one full-width box per
+        // band). Shared with `instantiate` via `planBandDodge` so the band
+        // budget and the box size agree. Honors the `colorLayout` override.
+        let colorActsAsGroup = false;
+        const colorField = cs.color?.field;
+        const axisField = cs[result.axis]?.field;
+        if (colorField && axisField && isDiscreteType(cs.color?.type)) {
+            const plan = planBandDodge(table, axisField, colorField, {
+                nestedSnapThreshold: chartProperties?.nestedSnapThreshold,
+            });
+            colorActsAsGroup = resolveBandDodge(plan, chartProperties?.colorLayout).dodge;
+        }
         return {
             axisFlags: { [result.axis]: { banded: true } },
             resolvedTypes: result.resolvedTypes,
             paramOverrides: { defaultBandSize: 28 },  // box+whisker needs wider bands
-            colorActsAsGroup: true,  // dodge-by-color → budget band per category, shrink lanes
+            colorActsAsGroup,  // dodge-by-color → budget band per category, shrink lanes
         };
     },
     instantiate: (spec, ctx) => {
@@ -217,16 +233,34 @@ export const boxplotDef: ChartTemplateDef = {
         // dodge the boxes side-by-side (xOffset/yOffset), not overlay them at the
         // same position — overlaid boxes hide whichever is drawn underneath.
         // Vega-Lite needs an explicit offset encoding to lay grouped boxes out.
+        // But only dodge when color actually subdivides a band: when it's
+        // redundant/nested with the axis (`color == x`, or a 1:1 field pair),
+        // `planBandDodge` returns `dodge:false` and we fall through to the
+        // single-band branch below (one full-width box per category).
         const colorEnc = spec.encoding?.color;
         let subgroups = 1;
-        if (colorEnc?.field && hasDiscreteAxis && !spec.encoding.xOffset && !spec.encoding.yOffset) {
-            const offsetChannel = hasDiscreteX ? 'xOffset' : 'yOffset';
-            const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
-            if (colorEnc.sort !== undefined) offsetEnc.sort = colorEnc.sort;
-            spec.encoding[offsetChannel] = offsetEnc;
-            const colorField = ctx.channelSemantics?.color?.field;
-            if (colorField) {
-                subgroups = Math.max(1, new Set(ctx.table.map((r) => r[colorField])).size);
+        const colorField = ctx.channelSemantics?.color?.field;
+        const axisField = hasDiscreteX
+            ? ctx.channelSemantics?.x?.field
+            : ctx.channelSemantics?.y?.field;
+        if (
+            colorEnc?.field && colorField && axisField
+            && isDiscreteType(ctx.channelSemantics?.color?.type)
+            && hasDiscreteAxis && !spec.encoding.xOffset && !spec.encoding.yOffset
+        ) {
+            const plan = planBandDodge(ctx.fullTable ?? ctx.table, axisField, colorField, {
+                nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
+            });
+            const resolved = resolveBandDodge(plan, ctx.chartProperties?.colorLayout);
+            if (resolved.dodge) {
+                const offsetChannel = hasDiscreteX ? 'xOffset' : 'yOffset';
+                const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
+                if (colorEnc.sort !== undefined) offsetEnc.sort = colorEnc.sort;
+                spec.encoding[offsetChannel] = offsetEnc;
+                // Lane count == global distinct colors, which is exactly what the
+                // VL offset scale + the layout band budget both reserve. Sizing by
+                // the max-per-band would overlap in sparse cross-products.
+                subgroups = Math.max(1, resolved.laneCount);
             }
         }
 
@@ -266,6 +300,36 @@ export const boxplotDef: ChartTemplateDef = {
             // Outliers exist only with Tukey whiskers; min–max whiskers absorb
             // every point, so the toggle is irrelevant there.
             check: (ctx) => ({ applicable: ctx.chartProperties?.whiskerMethod !== 'minmax' }),
+        },
+        {
+            key: 'colorLayout', label: 'Color layout', type: 'discrete',
+            options: [
+                { value: 'auto',   label: 'Auto' },
+                { value: 'dodge',  label: 'Side by side' },
+                { value: 'nested', label: 'One per band' },
+            ],
+            defaultValue: 'auto',
+            // Only surface the control when the dodge decision is genuinely
+            // uncertain (sparse cross-product / dirty near-1:1); when color is
+            // clearly redundant or clearly a second dimension, trust Auto.
+            check: (ctx) => {
+                const colorField = ctx.channelSemantics?.color?.field;
+                const xType = ctx.channelSemantics?.x?.type;
+                const axisField = isDiscreteType(xType)
+                    ? ctx.channelSemantics?.x?.field
+                    : ctx.channelSemantics?.y?.field;
+                const rows = ctx.data;
+                if (!colorField || !axisField || !isDiscreteType(ctx.channelSemantics?.color?.type) || !rows) {
+                    return { applicable: false };
+                }
+                const plan = planBandDodge(rows, axisField, colorField, {
+                    nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
+                });
+                return {
+                    applicable: plan.ambiguous,
+                    recommendedValue: plan.dodge ? 'dodge' : 'nested',
+                };
+            },
         },
     ] as ChartPropertyDef[],
 };

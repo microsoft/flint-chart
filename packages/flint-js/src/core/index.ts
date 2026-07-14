@@ -63,6 +63,16 @@ export {
     detectBandedAxisForceDiscrete,
 } from './axis-detection';
 
+// Band-dodge decision (dodge-by-color/group vs. nested full-width)
+export {
+    planBandDodge,
+    resolveBandDodge,
+    DEFAULT_NESTED_SNAP_THRESHOLD,
+    type BandDodgePlan,
+    type PlanBandDodgeOptions,
+    type ColorLayoutMode,
+} from './band-dodge';
+
 // Semantic type system
 export {
     SemanticTypes,

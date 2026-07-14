@@ -14,6 +14,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, groupBy, getCategoryOrder } from './utils';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
+import { planBandDodge, resolveBandDodge } from '../../core/band-dodge';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
 
@@ -127,6 +128,20 @@ export const ecBoxplotDef: ChartTemplateDef = {
         const catCS = channelSemantics[catAxis];
         const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
 
+        // Decide whether `color` genuinely subdivides a category band (dodge into
+        // one series per color) or is redundant/nested with the axis (`color == x`
+        // or a 1:1 field pair) — in which case a single boxplot series is correct.
+        // Sharing `planBandDodge` avoids the collapse-to-slivers bug AND the
+        // degenerate zero-boxes that a per-color series would draw in empty cells.
+        const dodgeColor = colorIsDiscrete && colorField
+            ? resolveBandDodge(
+                planBandDodge(ctx.fullTable ?? table, catField, colorField, {
+                    nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
+                }),
+                ctx.chartProperties?.colorLayout,
+            ).dodge
+            : false;
+
         // 颜色由 ecApplyLayoutToSpec 根据 colorDecisions 统一分配（不在此处硬编码）
         const isHorizontal = catAxis === 'y';
 
@@ -152,14 +167,14 @@ export const ecBoxplotDef: ChartTemplateDef = {
             series: [],
         };
 
-        if (colorIsDiscrete && colorField) {
+        if (colorIsDiscrete && colorField && dodgeColor) {
             // Grouped boxplot: one series per color value (e.g. Male, Female)
             const colorCategories = extractCategories(table, colorField, getCategoryOrder(ctx, 'color'));
             const catGroups = groupBy(table, catField);
 
             for (let cIdx = 0; cIdx < colorCategories.length; cIdx++) {
                 const colorName = colorCategories[cIdx];
-                const boxData: [number, number, number, number, number][] = [];
+                const boxData: ([number, number, number, number, number] | null)[] = [];
                 const outlierData: [number, number][] = [];
 
                 for (let i = 0; i < categories.length; i++) {
@@ -168,7 +183,11 @@ export const ecBoxplotDef: ChartTemplateDef = {
                         (r: any) => String(r[colorField] ?? '') === colorName,
                     );
                     const values = rows.map((r: any) => Number(r[valField])).filter(v => isFinite(v));
-                    boxData.push(fiveNumberSummary(values, whiskerMethod));
+                    // Empty (category, color) cells must draw NO box. Pushing a
+                    // five-number summary of [] yields [0,0,0,0,0] — a degenerate
+                    // flat box at 0 in every unoccupied lane (the sparse-dodge
+                    // zero-box bug). `null` leaves the lane blank.
+                    boxData.push(values.length ? fiveNumberSummary(values, whiskerMethod) : null);
 
                     if (showOutliers) {
                         for (const o of findOutliers(values)) {
@@ -247,6 +266,30 @@ export const ecBoxplotDef: ChartTemplateDef = {
         {
             key: 'showOutliers', label: 'Outliers', type: 'binary', defaultValue: true,
             check: (ctx) => ({ applicable: ctx.chartProperties?.whiskerMethod !== 'minmax' }),
+        } as ChartPropertyDef,
+        {
+            key: 'colorLayout', label: 'Color layout', type: 'discrete',
+            options: [
+                { value: 'auto',   label: 'Auto' },
+                { value: 'dodge',  label: 'Side by side' },
+                { value: 'nested', label: 'One per band' },
+            ],
+            defaultValue: 'auto',
+            check: (ctx) => {
+                const colorField = ctx.channelSemantics?.color?.field;
+                const colorType = ctx.channelSemantics?.color?.type;
+                const axisField = isDiscrete(ctx.channelSemantics?.x?.type)
+                    ? ctx.channelSemantics?.x?.field
+                    : ctx.channelSemantics?.y?.field;
+                const rows = ctx.data;
+                if (!colorField || !axisField || !isDiscrete(colorType) || !rows) {
+                    return { applicable: false };
+                }
+                const plan = planBandDodge(rows, axisField, colorField, {
+                    nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
+                });
+                return { applicable: plan.ambiguous, recommendedValue: plan.dodge ? 'dodge' : 'nested' };
+            },
         } as ChartPropertyDef,
     ],
 };

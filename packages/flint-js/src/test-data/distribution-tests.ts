@@ -219,6 +219,59 @@ export function genBoxplotTests(): TestCase[] {
         });
     }
 
+    // 7. Color redundant with axis (color == x) — must render full-width boxes,
+    //    NOT ~1/N slivers. Colors each category by its own axis value.
+    {
+        const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17', 'Unrated'];
+        const data: any[] = [];
+        for (const r of ratings) for (let i = 0; i < 30; i++) {
+            data.push({ Rating: r, ROI: Math.round(rand() * 300) });
+        }
+        tests.push({
+            title: 'Color == X (redundant color)',
+            description: 'color re-encodes the x category — one full-width box per band, no dodge',
+            tags: ['nominal', 'quantitative', 'color', 'redundant-color', 'medium', 'gallery-pin'],
+            chartType: 'Boxplot',
+            data,
+            fields: [makeField('Rating'), makeField('ROI')],
+            metadata: {
+                Rating: { type: Type.String, semanticType: 'Category', levels: ratings },
+                ROI: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: { x: makeEncodingItem('Rating'), y: makeEncodingItem('ROI'), color: makeEncodingItem('Rating') },
+        });
+    }
+
+    // 8. Sparse cross-product (dept × level, each dept holds only some levels).
+    //    Genuine 2nd dimension → dodges, but sized by the GLOBAL lane count so
+    //    occupied lanes never overlap.
+    {
+        const depts = ['Eng', 'Sales', 'HR', 'Ops', 'Legal', 'Finance'];
+        const levels = ['L1', 'L2', 'L3', 'L4', 'L5'];
+        const subset: Record<string, string[]> = {
+            Eng: ['L1', 'L2'], Sales: ['L2', 'L3'], HR: ['L3', 'L4'],
+            Ops: ['L4', 'L5'], Legal: ['L5', 'L1'], Finance: ['L1', 'L3'],
+        };
+        const data: any[] = [];
+        for (const d of depts) for (const l of subset[d]) for (let i = 0; i < 18; i++) {
+            data.push({ Department: d, Level: l, Comp: Math.round(30000 + rand() * 120000) });
+        }
+        tests.push({
+            title: 'Sparse cross-product (dept × level)',
+            description: 'each dept has 2 of 5 levels — dodges, boxes sized by global lane count',
+            tags: ['nominal', 'quantitative', 'color', 'sparse', 'medium', 'gallery-pin'],
+            chartType: 'Boxplot',
+            data,
+            fields: [makeField('Department'), makeField('Comp'), makeField('Level')],
+            metadata: {
+                Department: { type: Type.String, semanticType: 'Department', levels: depts },
+                Comp: { type: Type.Number, semanticType: 'Amount', levels: [] },
+                Level: { type: Type.String, semanticType: 'Category', levels: levels },
+            },
+            encodingMap: { x: makeEncodingItem('Department'), y: makeEncodingItem('Comp'), color: makeEncodingItem('Level') },
+        });
+    }
+
     return tests;
 }
 

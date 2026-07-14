@@ -59,6 +59,7 @@ import {
     type ElasticStretchParams,
     type GasPressureParams,
 } from './decisions';
+import { planBandDodge } from './band-dodge';
 
 // ---------------------------------------------------------------------------
 // Short discrete axis labels (align with echarts/templates/bar.ts)
@@ -308,7 +309,7 @@ export function computeLayout(
     }
 
     // Detect grouping from 'group' channel + discrete axis
-    let groupField = channelSemantics.group?.field;
+    let groupField: string | undefined = channelSemantics.group?.field;
     // Some templates (e.g. boxplot) subdivide a band by the COLOR field via an
     // explicit offset rather than a dedicated 'group' channel. When they opt in,
     // size the band as a group so total width is budgeted across categories and
@@ -321,6 +322,22 @@ export function computeLayout(
             : channelSemantics.y?.field;
         if (colorCS?.field && isDiscreteType(colorType) && colorCS.field !== axisField) {
             groupField = colorCS.field;
+        }
+    }
+    // Guard: a grouping field that is redundant/nested with the categorical axis
+    // (group == x, or a 1:1 field pair) doesn't actually subdivide any band, so
+    // grouping it would collapse each bar/box to ~1/N of its band. When no band
+    // holds more than one distinct group value (confident-nested; threshold-
+    // independent), suppress grouping so glyphs fill their whole band. Genuine
+    // grouped charts (any band with >1 group value) are untouched.
+    if (groupField) {
+        const groupAxisField = isDiscreteType(effectiveTypes.x ?? channelSemantics.x?.type)
+            ? channelSemantics.x?.field
+            : channelSemantics.y?.field;
+        if (groupAxisField === groupField) {
+            groupField = undefined;  // group == axis: nothing to dodge
+        } else if (groupAxisField && planBandDodge(table, groupAxisField, groupField).maxPerBand <= 1) {
+            groupField = undefined;  // 1:1 / nested with the axis
         }
     }
     let groupAxis: 'x' | 'y' | undefined;

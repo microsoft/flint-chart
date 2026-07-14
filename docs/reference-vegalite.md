@@ -216,6 +216,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
+| `colorLayout` | choice | `auto` (Auto), `dodge` (Side by side), `nested` (One per band) | `auto` | conditional | Color layout |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |

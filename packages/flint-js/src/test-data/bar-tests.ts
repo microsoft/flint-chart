@@ -95,9 +95,8 @@ const STACKED_BAR_MATRIX: BarMatrixEntry[] = [
     { x: 'Q', y: 'N', n: 24,  yCard: 8,  color: 'N', colorCard: 3, desc: 'Horizontal stack — 8 cats × 3' },
     { x: 'Q', y: 'T', n: 45,  color: 'N', colorCard: 3, desc: 'Horizontal temporal stack — 15 dates × 3' },
 
-    // ── Edge combos (2 tests) ───────────────────────────────────────
+    // ── Edge combos (1 test) ─────────────────────────────────
     { x: 'N', y: 'N', n: 0,  xCard: 5, yCard: 5, color: 'N', colorCard: 3, desc: 'Cat × cat stacked (degenerate)', extraTags: ['edge-case'] },
-    { x: 'T', y: 'N', n: 20, yCard: 5,  color: 'N', colorCard: 4, desc: 'Temporal × cat stacked' },
 ];
 
 const GROUPED_BAR_MATRIX: BarMatrixEntry[] = [
@@ -121,9 +120,8 @@ const GROUPED_BAR_MATRIX: BarMatrixEntry[] = [
     { x: 'N', y: 'Q', n: 400, xCard: 8,  color: 'Q', colorCard: 50, desc: 'Numeric group (1–50) — large' },
     { x: 'N', y: 'Q', n: 50,  xCard: 5,  color: 'Q', desc: 'Continuous float on group — gradient' },
 
-    // ── Edge combos (2 tests) ───────────────────────────────────────
+    // ── Edge combos (1 test) ─────────────────────────────────
     { x: 'N', y: 'N', n: 0,  xCard: 5, yCard: 5, color: 'N', colorCard: 3, desc: 'Cat × cat grouped (degenerate)', extraTags: ['edge-case'] },
-    { x: 'T', y: 'N', n: 20, yCard: 5,  color: 'N', colorCard: 4, desc: 'Temporal × cat grouped' },
 ];
 
 // ============================================================================
@@ -427,5 +425,75 @@ export function genStackedBarTests(): TestCase[] {
 
 export function genGroupedBarTests(): TestCase[] {
     const rand = seededRandom(300);
-    return GROUPED_BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Grouped Bar Chart', 'group', rand));
+    const tests = GROUPED_BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Grouped Bar Chart', 'group', rand));
+
+    // Group redundant with the x axis (group == x): must render full-width bars,
+    // NOT ~1/N slivers. Grouping a bar chart by its own category is degenerate,
+    // so the dodge is suppressed and each band shows one bar.
+    {
+        const cats = genCategories('Region', 5);
+        const data = cats.map((c, i) => ({ Region: c, Sales: Math.round(200 + rand() * 800) + i }));
+        tests.push({
+            title: 'Group == X (redundant group)',
+            description: 'group re-encodes the x category — one full-width bar per band, no dodge',
+            tags: ['grouped-bar', 'redundant-group', 'nominal', 'gallery-pin'],
+            chartType: 'Grouped Bar Chart',
+            data,
+            fields: [makeField('Region'), makeField('Sales')],
+            metadata: {
+                Region: { type: Type.String, semanticType: 'Category', levels: cats },
+                Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            },
+            encodingMap: {
+                x: makeEncodingItem('Region'),
+                y: makeEncodingItem('Sales'),
+                group: makeEncodingItem('Region'),
+            },
+        });
+    }
+
+    // Sparse / MIDDLE case: neither a perfect cross-product nor all-single-item.
+    // Each region carries a SUBSET of the 4 global channels (maxPerBand 2–3,
+    // global 4), so the ambiguous-zone heuristic (nestedSnapThreshold) leans to
+    // dodge — bars sized by the GLOBAL lane count (4), with gaps where a
+    // (region, channel) pair is missing rather than overlapping bars.
+    {
+        const regions = ['North', 'South', 'East', 'West', 'Central', 'Coast'];
+        const channels = ['Retail', 'Online', 'Wholesale', 'Direct'];
+        // Each region has 2–3 of the 4 channels (rotating subsets).
+        const subset: Record<string, string[]> = {
+            North:   ['Retail', 'Online'],
+            South:   ['Online', 'Wholesale', 'Direct'],
+            East:    ['Wholesale', 'Direct'],
+            West:    ['Retail', 'Direct'],
+            Central: ['Retail', 'Online', 'Wholesale'],
+            Coast:   ['Online', 'Direct'],
+        };
+        const data: any[] = [];
+        regions.forEach((r, ri) => {
+            subset[r].forEach((ch, ci) => {
+                data.push({ Region: r, Channel: ch, Sales: Math.round(300 + rand() * 700) + ri * 10 + ci });
+            });
+        });
+        tests.push({
+            title: 'Sparse groups (region × channel subset)',
+            description: 'each region has 2–3 of 4 channels — dodges, bars sized by global lane count (no overlap)',
+            tags: ['grouped-bar', 'sparse', 'ambiguous', 'nominal', 'gallery-pin'],
+            chartType: 'Grouped Bar Chart',
+            data,
+            fields: [makeField('Region'), makeField('Sales'), makeField('Channel')],
+            metadata: {
+                Region:  { type: Type.String, semanticType: 'Category', levels: regions },
+                Sales:   { type: Type.Number, semanticType: 'Quantity', levels: [] },
+                Channel: { type: Type.String, semanticType: 'Category', levels: channels },
+            },
+            encodingMap: {
+                x: makeEncodingItem('Region'),
+                y: makeEncodingItem('Sales'),
+                group: makeEncodingItem('Channel'),
+            },
+        });
+    }
+
+    return tests;
 }

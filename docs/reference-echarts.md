@@ -66,6 +66,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
+| `colorLayout` | choice | `auto` (Auto), `dodge` (Side by side), `nested` (One per band) | `auto` | conditional | Color layout |
 
 ### ![](chart-icon-strip-plot.svg) Strip Plot
 

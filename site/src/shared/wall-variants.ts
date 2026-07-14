@@ -28,11 +28,18 @@ export function selectVariants(tests: TestCase[], cap = 4): TestCase[] {
   const clean = tests.filter((t) => !(t.tags ?? []).some((tag) => SKIP_TAGS.has(tag)));
   const pool = clean.length > 0 ? clean : tests;
 
-  const facetIdx = pool.findIndex((t) => (t.tags ?? []).includes('gallery-facet'));
-  if (facetIdx === -1) return strideSample(pool, cap);
+  // Always-show examples (e.g. the color/group dodge demonstrations) are pinned
+  // and appended in addition to the sampled set, so they can't be dropped by the
+  // even sampling regardless of where they sit in the generator.
+  const isPinned = (t: TestCase) => (t.tags ?? []).includes('gallery-pin');
+  const pinned = pool.filter(isPinned);
+  const rest = pool.filter((t) => !isPinned(t));
 
-  // Pin the faceted example last; fill remaining slots from the rest.
-  const facet = pool[facetIdx];
-  const rest = pool.filter((_, i) => i !== facetIdx);
-  return [...strideSample(rest, Math.max(cap - 1, 0)), facet];
+  const facetIdx = rest.findIndex((t) => (t.tags ?? []).includes('gallery-facet'));
+  const sampled = facetIdx === -1
+    ? strideSample(rest, cap)
+    // Pin the faceted example last; fill remaining slots from the rest.
+    : [...strideSample(rest.filter((_, i) => i !== facetIdx), Math.max(cap - 1, 0)), rest[facetIdx]];
+
+  return [...sampled, ...pinned];
 }
