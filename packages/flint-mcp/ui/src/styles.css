@@ -459,3 +459,4 @@ input[type='checkbox'] {
 .bar-link[data-tip]:focus-visible::after {
   opacity: 1;
 }
+
