@@ -30,12 +30,15 @@ renders **locally**.
 ## MCP App: interactive chart view
 
 In hosts that support MCP App UIs (e.g. Claude Desktop), `create_chart_view`
-opens an interactive view that renders the spec live (Vega-Lite → SVG) and shows
-a customization panel built from Flint's own option model — chart type, channel
-bindings, chart properties (corner radius, stack mode, donut hole, …), and
-encoding actions (sort). Rendering and edits run entirely in the host UI; no
-data leaves the host. The UI is a single self-contained HTML bundle served as
-the `ui://flint-chart/chart-view.html` resource and built with `npm run build:ui`.
+opens a chart-first workspace with a live Flint preview and a Vega-Lite output
+tab. Its compact toolbar changes chart views, chart types, and dimensions through
+Flint's own metadata; **Edit chart** reveals channel bindings and applicable chart
+properties (corner radius, stack mode, donut hole, …) only when needed. Rendering,
+validation, compilation, and edits run entirely in the host UI; no data leaves
+the host. The UI is a self-contained HTML bundle served as
+`ui://flint-chart/chart-view.html` and built with `npm run build:ui`. It uses
+bundled Mona Sans under the SIL Open Font License 1.1; see
+`assets/fonts/MonaSans-OFL-1.1.txt` for the complete license text.
 
 ## Resources and prompt
 

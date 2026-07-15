@@ -202,6 +202,50 @@ export function setChartType(
   return next;
 }
 
+/**
+ * Switch chart types without leaving encodings that Flint's target template
+ * cannot accept. The mapping is deliberately limited to Flint's own template
+ * metadata rather than duplicating template rules in the MCP App.
+ */
+export function setCompatibleChartType(
+  input: ChartAssemblyInput,
+  chartType: string,
+): ChartAssemblyInput {
+  const target = vlGetTemplateDef(chartType);
+  if (!target) return setChartType(input, chartType);
+
+  const next = setChartType(input, chartType);
+  const source = input.chart_spec.encodings ?? {};
+  const supported = new Set(target.channels ?? []);
+  const encodings = Object.fromEntries(
+    Object.entries(source).filter(([channel]) => supported.has(channel)),
+  );
+
+  if (chartType === 'Pie Chart') {
+    if (supported.has('size') && !encodings.size && source.y) {
+      encodings.size = source.y;
+    }
+    if (supported.has('color') && !encodings.color && source.x) {
+      encodings.color = source.x;
+    }
+  }
+
+  next.chart_spec.encodings = encodings;
+  return next;
+}
+
+/** Update the authored base plot size while preserving other chart properties. */
+export function setBaseSize(
+  input: ChartAssemblyInput,
+  dimension: 'width' | 'height',
+  value: number,
+): ChartAssemblyInput {
+  const next = cloneInput(input);
+  const current = next.chart_spec.baseSize ?? { width: 360, height: 240 };
+  next.chart_spec.baseSize = { ...current, [dimension]: value };
+  return next;
+}
+
 /** Bind (or clear, when field is undefined) a channel to a field. */
 export function setChannelField(
   input: ChartAssemblyInput,

@@ -12,6 +12,7 @@ import type { ChartAssemblyInput } from 'flint-chart';
 import { compile } from 'vega-lite';
 import { parse, View, Error as VegaError } from 'vega';
 import { expressionInterpreter } from 'vega-interpreter';
+import type { ChartWarning } from 'flint-chart';
 
 export interface FlintRenderResult {
   /** Rendered SVG markup. */
@@ -20,6 +21,19 @@ export interface FlintRenderResult {
   vlSpec: Record<string, unknown>;
   /** Assembler warnings, if any. */
   warnings: { severity: string; code: string; message: string }[];
+}
+
+export interface FlintValidationResult {
+  valid: boolean;
+  warnings: ChartWarning[];
+  errors: ChartWarning[];
+  computedSize?: { width: number; height: number };
+}
+
+export interface FlintCompileResult {
+  spec: Record<string, unknown>;
+  warnings: ChartWarning[];
+  computedSize?: { width: number; height: number };
 }
 
 const DEFAULT_BACKGROUND = '#ffffff';
@@ -84,6 +98,51 @@ function widenSmallStepPlotsForPreview(vlSpec: Record<string, unknown>, input: C
   applyStepMinimum(vlSpec, 'height', yCount);
 }
 
+function compiledInput(input: ChartAssemblyInput): ChartAssemblyInput {
+  return withAppPreviewDefaults(input);
+}
+
+function stripPrivateTopLevelKeys(spec: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(spec).filter(([key]) => !key.startsWith('_')));
+}
+
+/**
+ * Compile through Flint's Vega-Lite assembler. The MCP App only presents the
+ * public backend spec; Flint's private annotations remain available internally
+ * to the renderer where templates may rely on them.
+ */
+export function compileFlintVegaLite(input: ChartAssemblyInput): FlintCompileResult {
+  const raw = assembleVegaLite(compiledInput(input)) as Record<string, unknown>;
+  const width = typeof raw._width === 'number' ? raw._width : undefined;
+  const height = typeof raw._height === 'number' ? raw._height : undefined;
+  return {
+    spec: stripPrivateTopLevelKeys(raw),
+    warnings: (raw._warnings as ChartWarning[]) ?? [],
+    computedSize: width != null && height != null ? { width, height } : undefined,
+  };
+}
+
+/** Validate through Flint assembly before attempting an interactive render. */
+export function validateFlintChart(input: ChartAssemblyInput): FlintValidationResult {
+  try {
+    const result = compileFlintVegaLite(input);
+    const errors = result.warnings.filter((warning) => warning.severity === 'error');
+    return { valid: errors.length === 0, ...result, errors };
+  } catch (error) {
+    return {
+      valid: false,
+      warnings: [],
+      errors: [
+        {
+          severity: 'error',
+          code: 'assembly_failed',
+          message: error instanceof Error ? error.message : String(error),
+        },
+      ],
+    };
+  }
+}
+
 /**
  * Assemble a Flint {@link ChartAssemblyInput} to a Vega-Lite spec and render it
  * to an SVG string. Throws on assembly or compile failure so the caller can
@@ -94,7 +153,7 @@ export async function renderFlintSvg(
   background: string = DEFAULT_BACKGROUND,
 ): Promise<FlintRenderResult> {
   const usePreviewDefaults = usesAutoPreviewSize(input);
-  const previewInput = withAppPreviewDefaults(input);
+  const previewInput = compiledInput(input);
   const raw = assembleVegaLite(previewInput) as Record<string, unknown>;
   if (usePreviewDefaults) widenSmallStepPlotsForPreview(raw, previewInput);
   const warnings = (raw._warnings as FlintRenderResult['warnings']) ?? [];
@@ -119,5 +178,5 @@ export async function renderFlintSvg(
   const svg = await view.toSVG();
   view.finalize();
 
-  return { svg, vlSpec, warnings };
+  return { svg, vlSpec: stripPrivateTopLevelKeys(vlSpec), warnings };
 }

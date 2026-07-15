@@ -1,462 +1,191 @@
-/* Copyright (c) Microsoft Corporation.
-   Licensed under the MIT License.
-
-   Flat "paper" styling: white surfaces, thin neutral hairlines, no shadows,
-   Arial-led sans — matching the Flint site / Data Formulator design language. */
+@font-face {
+  font-family: 'Mona Sans';
+  font-style: normal;
+  font-weight: 200 900;
+  src: url('./assets/MonaSansVF.woff2') format('woff2');
+}
 
 :root {
-  --paper: #ffffff;
-  --ink: #1a1a1a;
-  --muted: #6b6b6b;
-  --hairline: rgba(0, 0, 0, 0.12);
-  --accent: #3a3a3a;
-  --warn: #8a6d00;
-  --error: #b00020;
-  --font: Arial, Roboto, 'Helvetica Neue', sans-serif;
-  --option-cell-width: 176px;
-  --option-readout-width: 44px;
+  color-scheme: dark;
+  --canvas: #0d1117;
+  --surface: #161b22;
+  --surface-raised: #21262d;
+  --border: #30363d;
+  --text: #f0f6fc;
+  --muted: #8b949e;
+  --accent: #2f81f7;
+  --accent-muted: #1f6feb;
+  --danger: #ff7b72;
+  --warning: #d29922;
+  --font: 'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html,
+html, body, #root { min-height: 100%; margin: 0; }
+
 body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font);
-  font-size: 12px;
-  line-height: 1.35;
+  background: var(--canvas);
+  color: var(--text);
+  font: 13px/1.45 var(--font);
 }
 
-#root {
-  height: 100%;
+button, input, select { font: inherit; }
+
+button, select, input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
 }
 
-.status {
-  padding: 24px;
-  color: var(--muted);
+button {
+  background: var(--surface-raised);
+  cursor: pointer;
+  min-height: 28px;
+  padding: 3px 9px;
 }
+
+button:hover:not(:disabled) { border-color: var(--muted); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+button:disabled, select:disabled { color: var(--muted); cursor: not-allowed; opacity: .75; }
+
+.status { color: var(--muted); padding: 24px; }
 
 .app {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  align-items: stretch;
+  gap: 10px;
+  min-height: 100%;
+  padding: 12px;
 }
 
-/* --- preview --- */
-.preview {
+.toolbar {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 7px;
   min-width: 0;
+  overflow-x: auto;
+  padding: 7px;
+  white-space: nowrap;
 }
+
+.view-toggle {
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: inline-flex;
+  flex: none;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  min-height: 26px;
+}
+
+.view-toggle button[aria-pressed='true'] { background: var(--accent-muted); }
+
+.toolbar-control {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  flex: none;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.toolbar-control select, .toolbar-control input {
+  background: var(--canvas);
+  min-height: 28px;
+  padding: 3px 6px;
+}
+
+.toolbar-control select { max-width: 170px; }
+.dimensions input { width: 61px; }
+.dimensions > span[aria-hidden] { color: var(--muted); }
+.toolbar-button { flex: none; }
+
+.workspace {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.preview { min-height: 360px; padding: 14px; }
 
 .chart {
-  background: var(--paper);
-  padding: 6px;
   display: flex;
   justify-content: center;
+  min-height: 330px;
   overflow: auto;
 }
 
-.chart svg {
-  max-width: 100%;
-  height: auto;
-}
+.chart svg { height: auto; max-width: 100%; }
 
 .placeholder {
-  border: 1px solid var(--hairline);
-  padding: 40px;
-  text-align: center;
+  align-items: center;
+  border: 1px dashed var(--border);
   color: var(--muted);
-}
-
-.error {
-  border: 1px solid var(--hairline);
-  border-left: 3px solid var(--error);
-  padding: 12px;
-  color: var(--error);
-}
-
-.error pre {
-  margin: 8px 0 0;
-  white-space: pre-wrap;
-  font-size: 12px;
-  color: var(--ink);
-}
-
-.warnings {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.warnings li {
-  padding: 3px 0;
-}
-
-.warn-sev {
-  display: inline-block;
-  min-width: 56px;
-  color: var(--warn);
-  text-transform: lowercase;
-}
-
-/* --- options bar (muted, inline, below the chart) --- */
-.optionsbar {
-  display: block;
-  padding: 4px 2px 2px;
-  background: transparent;
-  /* No fill and no divider: the chips are self-bounded and the chart frame
-     already separates this strip from the plot above. */
-  color: var(--muted);
-}
-
-.optionsbar-grid {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  min-width: 0;
-}
-
-.opt-empty {
-  color: var(--muted);
-  font-size: 12px;
-  align-self: center;
-}
-
-.opt {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-  min-width: 0;
-  flex: 0 0 auto;
-  /* Each control reads as one bounded unit: a soft shaded pill rather than an
-     outlined box, so a row of controls isn't a grid of hairlines. The tight
-     internal gap binds the label to *its own* widget; the fill separates it
-     from the control before it. */
-  background: rgba(0, 0, 0, 0.045);
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0 5px 0 7px;
-  min-height: 21px;
-  box-sizing: border-box;
-  transition: background 120ms ease;
-}
-
-.opt:hover {
-  /* Hover wakes the *content*, not the box: the fill barely moves (darkening it
-     further just reads as grubbier on a near-white bar) while the label sharpens
-     from muted to ink, so the hovered control becomes more legible. */
-  background: rgba(0, 0, 0, 0.055);
-}
-
-.opt:hover .opt-label {
-  color: var(--ink);
-}
-
-.opt:focus-within {
-  outline: 1.5px solid var(--accent);
-  outline-offset: 0;
-}
-
-.opt-label {
-  color: var(--muted);
-  font-size: 11px;
-  min-width: 0;
-  max-width: 96px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* Caption for the widget to its right; the chip already does the grouping. */
-  letter-spacing: 0.01em;
-  transition: color 120ms ease;
-}
-
-/* cyclic pivot control (alternative views) */
-.pivot-stepper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1px;
-  min-width: 0;
-  width: auto;
-}
-
-/* The chip is the container now -- the stepper drops its own box. */
-.opt.pivot {
-  padding-right: 3px;
-}
-
-.pivot-btn {
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: inherit;
-  border-radius: 4px;
-  width: 18px;
-  height: 18px;
-  line-height: 1;
-  font-size: 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  padding: 0;
-  transition: background 120ms ease;
+  min-height: 330px;
 }
 
-.pivot-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.pivot-state {
-  flex: 1 1 auto;
-  min-width: 3em;
-  text-align: center;
-  font-size: 11px;
-  color: inherit;
-  font-variant-numeric: tabular-nums;
-}
-
-.control-inline {
-  display: grid;
-  grid-template-columns: 44px auto;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.control-readout {
-  text-align: left;
-  color: var(--muted);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-/* toggle switch (binary options) */
-.switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-self: end;
-}
-
-.switch input {
-  position: absolute;
-  inset: 0;
+.output {
+  color: #c9d1d9;
+  font: 12px/1.5 var(--mono);
   margin: 0;
-  opacity: 0;
-  cursor: pointer;
+  min-height: 360px;
+  overflow: auto;
+  padding: 14px;
+  white-space: pre;
 }
 
-.switch-track {
-  width: 24px;
-  height: 13px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.18);
-  transition: background 120ms ease;
-  display: inline-flex;
-  align-items: center;
-  padding: 2px;
-}
-
-.switch-thumb {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--paper);
-  transition: transform 120ms ease;
-}
-
-.switch input:checked + .switch-track {
-  background: var(--accent);
-}
-
-.switch input:checked + .switch-track .switch-thumb {
-  transform: translateX(11px);
-}
-
-.switch input:focus-visible + .switch-track {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-select,
-input[type='range'] {
-  font-family: inherit;
-  font-size: 11px;
-  color: var(--ink);
-}
-
-select {
-  width: auto;
-  min-width: 0;
-}
-
-/* Compact dropdown: visible width hugs the current value; a transparent native
-   select overlays the whole control for native picking + keyboard. */
-.select-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-}
-
-.select-value {
-  font-size: 11px;
-  color: var(--ink);
-  max-width: 110px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.select-chev {
-  flex: none;
-  display: block;
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.select-native {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.error, .warnings, .errors {
   margin: 0;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
-  appearance: none;
+  padding: 10px 14px;
 }
 
-/* Slim slider: a 3px track with a filled-progress left half and a small thumb,
-   so it reads as compact as the surrounding chips rather than a chunky native
-   control. Fill percent comes from --pct (set inline from the current value). */
-input[type='range'] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  min-width: 0;
-  height: 12px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
+.error, .errors { border-top: 1px solid var(--border); color: var(--danger); }
+.error pre { color: var(--text); white-space: pre-wrap; }
+.warnings { border-top: 1px solid var(--border); color: var(--warning); list-style: none; }
+.errors { list-style: none; }
+
+.editor {
+  border-top: 1px solid var(--border);
+  padding: 14px;
 }
 
-input[type='range']::-webkit-slider-runnable-track {
-  height: 3px;
-  border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    var(--accent) 0 var(--pct, 50%),
-    rgba(0, 0, 0, 0.16) var(--pct, 50%) 100%
-  );
-}
+.editor-heading { display: flex; gap: 8px; margin-bottom: 10px; }
+.editor-heading span { color: var(--muted); }
+.bindings, .options { display: flex; flex-wrap: wrap; gap: 8px; }
+.options { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
 
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 9px;
-  height: 9px;
-  margin-top: -3px;
-  border: none;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-input[type='range']::-moz-range-track {
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.16);
-}
-
-input[type='range']::-moz-range-progress {
-  height: 3px;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
-input[type='range']::-moz-range-thumb {
-  width: 9px;
-  height: 9px;
-  border: none;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-input[type='checkbox'] {
-  accent-color: var(--accent);
-}
-
-/* trailing icon action (copy spec) -- shaded to match the control pills */
-.bar-link {
-  position: relative;
-  font-family: inherit;
-  display: inline-flex;
+.option-control {
   align-items: center;
-  justify-content: center;
-  width: 21px;
-  height: 21px;
-  padding: 0;
-  color: var(--muted);
-  background: rgba(0, 0, 0, 0.045);
-  border: 1px solid transparent;
+  background: var(--canvas);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  cursor: pointer;
-  /* Anchor the action to the trailing edge so it never strands mid-wrap
-     between control chips. */
-  margin-left: auto;
-  transition: background 120ms ease, color 120ms ease;
+  display: inline-flex;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 7px;
 }
 
-.bar-link svg {
-  display: block;
-}
+.option-control > span { color: var(--muted); font-size: 12px; }
+.option-control select { background: var(--surface-raised); padding: 2px 4px; }
+.option-control input[type='range'] { accent-color: var(--accent); width: 100px; }
+.option-control output { font-family: var(--mono); min-width: 3ch; }
+.option-control input[type='checkbox'] { accent-color: var(--accent); }
 
-.bar-link:hover {
-  /* Same hover logic as the chips: keep the fill calm, ink the icon. */
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--ink);
-}
-
-.bar-link:disabled {
-  background: rgba(0, 0, 0, 0.045);
-  color: var(--accent);
-  cursor: default;
-}
-
-/* hover hint -- anchored to the button's right edge so it never overflows */
-.bar-link[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
-  padding: 3px 6px;
-  font-size: 11px;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--paper);
-  background: var(--ink);
-  border-radius: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 100ms ease;
-}
-
-.bar-link[data-tip]:hover::after,
-.bar-link[data-tip]:focus-visible::after {
-  opacity: 1;
-}
-
+.send-chart { align-self: flex-end; background: var(--accent-muted); border-color: #58a6ff; }
+.send-error { color: var(--danger); margin: 0; }
