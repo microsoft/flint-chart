@@ -298,5 +298,71 @@ export function genViolinTests(): TestCase[] {
         });
     }
 
+    // 9. SPLIT violin — a genuine 2-value colour sub-group. Each category holds
+    //    two groups (Day / Night), so the mirror seats one on each half: the
+    //    classic split violin for comparing two distributions per category.
+    {
+        const depts = ['Eng', 'Sales', 'Support', 'Ops'];
+        const shifts = ['Day', 'Night'];
+        const data: any[] = [];
+        depts.forEach((d, di) => shifts.forEach((s, si) => {
+            for (let i = 0; i < 70; i++) {
+                const v = normal(rand, 62000 + di * 9000 + si * 7000, 12000);
+                data.push({ Department: d, Shift: s, Salary: Math.round(Math.max(28000, v)) });
+            }
+        }));
+        tests.push({
+            title: 'Salary by department, split by shift (2 groups)',
+            description: 'Split violin — Day vs Night distributions share each department band',
+            tags: ['nominal', 'quantitative', 'distribution', 'color', 'group', 'gallery', 'medium'],
+            chartType: 'Violin Plot',
+            data,
+            fields: [makeField('Department'), makeField('Salary'), makeField('Shift')],
+            metadata: {
+                Department: { type: Type.String, semanticType: 'Category', levels: depts },
+                Salary: { type: Type.Number, semanticType: 'Amount', levels: [] },
+                Shift: { type: Type.String, semanticType: 'Category', levels: shifts },
+            },
+            encodingMap: {
+                x: makeEncodingItem('Department'),
+                y: makeEncodingItem('Salary'),
+                color: makeEncodingItem('Shift'),
+            },
+        });
+    }
+
+    // 10. GRID violin — a 3+ value colour sub-group. A centre stack of three
+    //     densities would misread each layer, so the sub-group is laid out as a
+    //     category × sub-group grid of independent full violins.
+    {
+        const depts = ['Eng', 'Sales', 'Support'];
+        const levels = ['Junior', 'Mid', 'Senior'];
+        const data: any[] = [];
+        depts.forEach((d, di) => levels.forEach((l, li) => {
+            for (let i = 0; i < 60; i++) {
+                const v = normal(rand, 55000 + di * 8000 + li * 22000, 10000 + li * 3000);
+                data.push({ Department: d, Level: l, Salary: Math.round(Math.max(30000, v)) });
+            }
+        }));
+        tests.push({
+            title: 'Salary by department and level (3 groups, grid)',
+            description: 'Grouped violins as a department × level grid, one independent shape per cell',
+            tags: ['nominal', 'quantitative', 'distribution', 'color', 'group', 'grid', 'gallery', 'medium'],
+            chartType: 'Violin Plot',
+            data,
+            fields: [makeField('Department'), makeField('Salary'), makeField('Level')],
+            metadata: {
+                Department: { type: Type.String, semanticType: 'Category', levels: depts },
+                Salary: { type: Type.Number, semanticType: 'Amount', levels: [] },
+                Level: { type: Type.String, semanticType: 'Category', levels: levels },
+            },
+            encodingMap: {
+                x: makeEncodingItem('Department'),
+                y: makeEncodingItem('Salary'),
+                color: makeEncodingItem('Level'),
+            },
+        });
+    }
+
     return tests;
 }

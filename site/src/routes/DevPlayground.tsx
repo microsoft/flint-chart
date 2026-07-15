@@ -1,6 +1,8 @@
 import { siteTheme } from '../shared/theme';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { McpAppMockup } from '../components/McpAppMockup';
+import { DodgeToggleFigure } from '../components/DodgeToggleFigure';
+import { LocalDodgeFigure } from '../components/LocalDodgeFigure';
 import { ChatMockup } from './McpServer';
 
 const PAPER = '#ffffff';
@@ -10,6 +12,10 @@ export function DevPlayground() {
   return (
     <main style={pageStyle}>
       <SpecPipelineFigure />
+
+      <DodgeToggleFigure />
+
+      <LocalDodgeFigure />
 
       <section className="dev-playground-dialog-figure" style={dialogFigureStyle}>
         <ChatMockup />

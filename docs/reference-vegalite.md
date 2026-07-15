@@ -113,6 +113,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-column-stacked.svg) Stacked Bar Chart
@@ -216,6 +217,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
+| `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
@@ -347,7 +349,6 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `padAngle` | number | 0 – 0.1 (step 0.005) | `0` | always | Angular gap between radial segments. |
 | `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |

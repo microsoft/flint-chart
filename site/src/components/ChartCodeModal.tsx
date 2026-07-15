@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
-import { assembleVegaLite, assembleECharts, assembleChartjs } from 'flint-chart';
 import { JsonCodeMirror } from './JsonCodeMirror';
 import { ScaleToFit } from './ScaleToFit';
 import { WallChart } from './WallChart';
@@ -9,7 +8,7 @@ import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { buildPanelModel } from '../shared/chart-options';
 import { buildGalleryEditorHref } from '../shared/editor-payload';
 import { humanizeVariants } from '../shared/wall-title';
-import { BACKEND_LABELS } from '../shared/supported-backends';
+import { BACKEND_LABELS, BACKENDS } from '../shared/supported-backends';
 import type { ChartEntry } from '../shared/chart-categories';
 import { siteTheme } from '../shared/theme';
 
@@ -70,8 +69,8 @@ export function ChartCodeModal({
   }, [testCase, tempOptions]);
 
   const panelModel = useMemo(
-    () => (displayInput ? buildPanelModel(displayInput) : null),
-    [displayInput],
+    () => (displayInput ? buildPanelModel(displayInput, chart.backend) : null),
+    [displayInput, chart.backend],
   );
 
   const inputText = useMemo(
@@ -83,12 +82,7 @@ export function ChartCodeModal({
     if (!testCase) return '';
     try {
       const input = testCaseToAssemblyInput(testCase);
-      const spec =
-        chart.backend === 'vegalite'
-          ? assembleVegaLite(input)
-          : chart.backend === 'echarts'
-            ? assembleECharts(input)
-            : assembleChartjs(input);
+      const spec = BACKENDS[chart.backend].assemble(input);
       // Drop Flint's private `_`-prefixed annotations (`_pivot`, `_warnings`,
       // `_width`, `_height`): they are internal metadata for the host/runtime,
       // not part of the actual backend spec a user would render or copy.

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite } from '../src';
+import { assembleVegaLite, assembleECharts } from '../src';
 
 /**
  * Regression: a boxplot with a color field subdividing a categorical axis must
@@ -123,3 +123,224 @@ describe('grouped boxplot dodging', () => {
     expect(spec.encoding?.yOffset).toBeUndefined();
   });
 });
+
+/**
+ * Regression: a boxplot whose `color` is redundant/nested with its categorical
+ * axis (`color == x`, or a 1:1 different-field pair) must NOT dodge — every box
+ * fills its whole band. Previously the template dodged by the global distinct
+ * color count, collapsing each box to ~1/N of the band. Genuine second
+ * dimensions (including sparse cross-products) must still dodge, sized by the
+ * global lane count.
+ */
+describe('boxplot color redundant with axis (no dodge)', () => {
+  const sizeOf = (s: any) => (typeof s.mark === 'object' ? s.mark.size : undefined);
+  const stepOf = (s: any) => Number(s.width?.step ?? s.height?.step);
+
+  function boxplotInput(rows: any[], types: Record<string, string>, color?: string) {
+    const encodings: any = { x: { field: 'Cat' }, y: { field: 'Val' } };
+    if (color) encodings.color = { field: color };
+    return {
+      data: { values: rows },
+      semantic_types: types,
+      chart_spec: { chartType: 'Boxplot', encodings, baseSize: { width: 500, height: 320 } },
+    } as any;
+  }
+
+  it('color == x → no offset, full-width boxes', () => {
+    const cats = ['G', 'PG', 'PG-13', 'R', 'Other', 'Unknown'];
+    const rows: any[] = [];
+    for (const c of cats) for (let i = 0; i < 20; i++) rows.push({ Cat: c, Val: i + (c.length * 3) });
+    const spec = assembleVegaLite(
+      boxplotInput(rows, { Cat: 'Category', Val: 'Quantity' }, 'Cat'),
+    ) as any;
+    expect(spec.encoding?.xOffset).toBeUndefined();
+    expect(spec.encoding?.yOffset).toBeUndefined();
+    // Full-width box (~band·0.7), not a ~band/6 sliver.
+    expect(sizeOf(spec)).toBeGreaterThan(stepOf(spec) * 0.5);
+  });
+
+  it('1:1 different field (code ↔ name) → no offset, full-width boxes', () => {
+    const pairs = [['US', 'United States'], ['CA', 'Canada'], ['MX', 'Mexico'], ['BR', 'Brazil']];
+    const rows: any[] = [];
+    for (const [code, name] of pairs) for (let i = 0; i < 20; i++) rows.push({ Cat: code, Name: name, Val: i });
+    const spec = assembleVegaLite({
+      data: { values: rows },
+      semantic_types: { Cat: 'Category', Name: 'Category', Val: 'Quantity' },
+      chart_spec: {
+        chartType: 'Boxplot',
+        encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Name' } },
+        baseSize: { width: 500, height: 320 },
+      },
+    } as any) as any;
+    expect(spec.encoding?.xOffset).toBeUndefined();
+    expect(sizeOf(spec)).toBeGreaterThan(stepOf(spec) * 0.5);
+  });
+
+  it('sparse cross-product (dept × level) → auto: local (compact, centered)', () => {
+    // 6 departments, 5 global levels, but each dept holds only 2 of them.
+    const depts = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6'];
+    const levelPairs = [
+      ['L1', 'L2'], ['L2', 'L3'], ['L3', 'L4'], ['L4', 'L5'], ['L5', 'L1'], ['L1', 'L3'],
+    ];
+    const rows: any[] = [];
+    depts.forEach((d, di) => {
+      for (const lv of levelPairs[di]) for (let i = 0; i < 20; i++) rows.push({ Cat: d, Level: lv, Val: i });
+    });
+    const input = {
+      data: { values: rows },
+      semantic_types: { Cat: 'Category', Level: 'Category', Val: 'Quantity' },
+      chart_spec: {
+        chartType: 'Boxplot',
+        encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Level' } },
+        baseSize: { width: 700, height: 320 },
+      } as any,
+    };
+    // Auto → local: centered quantitative offset + the computed transforms.
+    const local = assembleVegaLite(input as any) as any;
+    expect(local.encoding?.xOffset?.field).toBe('__off');
+    expect(local.transform?.some((t: any) => t.as === '__off')).toBe(true);
+
+    // Forced global → the fixed per-color lane grid, sized to the 5 global lanes.
+    input.chart_spec.chartProperties = { dodge: 'global' };
+    const global = assembleVegaLite(input as any) as any;
+    expect(global.encoding?.xOffset?.field).toBe('Level');
+    const fiveLanePitch = (stepOf(global) * 0.8) / 5;
+    expect(sizeOf(global)).toBeLessThanOrEqual(fiveLanePitch);
+  });
+});
+
+/**
+ * ECharts parity: `color == x` must render a SINGLE boxplot series (not one
+ * series per color), which also avoids the degenerate [0,0,0,0,0] zero-boxes a
+ * per-color series would draw in every empty (category, color) cell.
+ */
+describe('ECharts boxplot color redundant with axis', () => {
+  it('color == x → one boxplot series, no zero-box data', () => {
+    const cats = ['G', 'PG', 'PG-13', 'R', 'Other', 'Unknown'];
+    const rows: any[] = [];
+    for (const c of cats) for (let i = 0; i < 20; i++) rows.push({ Cat: c, Val: i + c.length });
+    const option = assembleECharts({
+      data: { values: rows },
+      semantic_types: { Cat: 'Category', Val: 'Quantity' },
+      chart_spec: {
+        chartType: 'Boxplot',
+        encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Cat' } },
+        baseSize: { width: 500, height: 320 },
+      },
+    } as any) as any;
+    const boxSeries = (option.series || []).filter((s: any) => s.type === 'boxplot');
+    expect(boxSeries.length).toBe(1);
+    // No degenerate all-zero five-number summaries.
+    for (const s of boxSeries) {
+      for (const d of s.data as any[]) {
+        if (Array.isArray(d)) expect(d.every((v: number) => v === 0)).toBe(false);
+      }
+    }
+  });
+});
+
+/**
+ * Grouped bar generalization: a `group` field that is redundant/nested with the
+ * categorical axis (group == x, or a 1:1 pair) must NOT dodge — otherwise every
+ * bar collapses to ~1/N of its band. Genuine grouped bars are untouched.
+ */
+describe('grouped bar group redundant with axis (no dodge)', () => {
+  function groupedBarInput(rows: any[], types: Record<string, string>, group: string) {
+    return {
+      data: { values: rows },
+      semantic_types: types,
+      chart_spec: {
+        chartType: 'Grouped Bar Chart',
+        encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, group: { field: group } },
+        baseSize: { width: 500, height: 320 },
+      },
+    } as any;
+  }
+
+  it('group == x → no xOffset dodge', () => {
+    const cats = ['A', 'B', 'C', 'D'];
+    const rows = cats.map((c, i) => ({ Cat: c, Val: (i + 1) * 10 }));
+    const spec = assembleVegaLite(
+      groupedBarInput(rows, { Cat: 'Category', Val: 'Quantity' }, 'Cat'),
+    ) as any;
+    expect(spec.encoding?.xOffset).toBeUndefined();
+    expect(spec.encoding?.yOffset).toBeUndefined();
+  });
+
+  it('1:1 different field group → no xOffset dodge', () => {
+    const pairs = [['A', 'Alpha'], ['B', 'Beta'], ['C', 'Gamma']];
+    const rows = pairs.map(([c, g], i) => ({ Cat: c, Grp: g, Val: (i + 1) * 5 }));
+    const spec = assembleVegaLite(
+      groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp'),
+    ) as any;
+    expect(spec.encoding?.xOffset).toBeUndefined();
+  });
+
+  it('genuine group (x × group cross-product) still dodges', () => {
+    const cats = ['A', 'B', 'C'];
+    const grps = ['G1', 'G2'];
+    const rows: any[] = [];
+    for (const c of cats) for (const g of grps) rows.push({ Cat: c, Grp: g, Val: c.charCodeAt(0) + g.length });
+    const spec = assembleVegaLite(
+      groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp'),
+    ) as any;
+    expect(spec.encoding?.xOffset?.field).toBe('Grp');
+  });
+
+  it('sparse / middle case (each band has a SUBSET of groups) → local (compact) dodge', () => {
+    // 4 global groups, each category holds only 2 of them → maxPerBand 2,
+    // global 4 (sparse). Auto → local: a compact per-band lane index rather
+    // than the full global grid.
+    const cats = ['A', 'B', 'C', 'D'];
+    const subset: Record<string, string[]> = {
+      A: ['G1', 'G2'], B: ['G2', 'G3'], C: ['G3', 'G4'], D: ['G4', 'G1'],
+    };
+    const rows: any[] = [];
+    for (const c of cats) for (const g of subset[c]) rows.push({ Cat: c, Grp: g, Val: c.charCodeAt(0) + g.length });
+    const spec = assembleVegaLite(
+      groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp'),
+    ) as any;
+    // Local dodge → centered per-band quantitative offset + the window/calc
+    // transforms that compute it.
+    expect(spec.encoding?.xOffset?.field).toBe('__off');
+    expect(spec.transform?.some((t: any) => t.window?.[0]?.as === '__laneIdx')).toBe(true);
+    expect(spec.transform?.some((t: any) => t.as === '__off')).toBe(true);
+  });
+
+  it('sparse grouped bar forced to global keeps the group field offset', () => {
+    const cats = ['A', 'B', 'C', 'D'];
+    const subset: Record<string, string[]> = {
+      A: ['G1', 'G2'], B: ['G2', 'G3'], C: ['G3', 'G4'], D: ['G4', 'G1'],
+    };
+    const rows: any[] = [];
+    for (const c of cats) for (const g of subset[c]) rows.push({ Cat: c, Grp: g, Val: c.charCodeAt(0) + g.length });
+    const input = groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp');
+    input.chart_spec.chartProperties = { dodge: 'global' };
+    const spec = assembleVegaLite(input) as any;
+    expect(spec.encoding?.xOffset?.field).toBe('Grp');
+  });
+
+  it('local dodge with one value per band auto-resolves to one-per-band (no offset)', () => {
+    // Grp is 1:1 with Cat → maxPerBand 1. Even when the user explicitly asks for
+    // `local`, there is nothing to subdivide, so it must collapse to full-width
+    // (no xOffset) rather than render a lone left-aligned sliver. (`none` is not
+    // a user-facing option — one-per-band is reached automatically.)
+    const pairs = [['A', 'Alpha'], ['B', 'Beta'], ['C', 'Gamma']];
+    const rows = pairs.map(([c, g], i) => ({ Cat: c, Grp: g, Val: (i + 1) * 5 }));
+    const boxInput = {
+      data: { values: rows },
+      semantic_types: { Cat: 'Category', Grp: 'Category', Val: 'Quantity' },
+      chart_spec: {
+        chartType: 'Boxplot',
+        encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Grp' } },
+        chartProperties: { dodge: 'local' },
+        baseSize: { width: 500, height: 320 },
+      },
+    } as any;
+    const spec = assembleVegaLite(boxInput) as any;
+    expect(spec.encoding?.xOffset).toBeUndefined();
+  });
+});
+
+
+

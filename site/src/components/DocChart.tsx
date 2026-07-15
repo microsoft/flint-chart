@@ -1,12 +1,11 @@
 import { useMemo, type CSSProperties } from 'react';
-import { assembleVegaLite, assembleECharts, assembleChartjs } from 'flint-chart';
 import { TEST_GENERATORS } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { ScaleToFit } from './ScaleToFit';
 import { testCaseToAssemblyInput, type CanvasSize } from '../shared/test-case-utils';
-import type { PreviewBackend } from '../shared/supported-backends';
+import { BACKENDS, type PreviewBackend } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
 
 type Row = Record<string, unknown>;
@@ -125,14 +124,10 @@ export function DocChart({ source, backend = 'vegalite' }: { source: string; bac
         const prepared = input.options
           ? { ...base, options: { ...base.options, ...input.options } }
           : base;
-        if (backend === 'echarts') return { ok: true as const, kind: 'echarts' as const, value: assembleECharts(prepared as never) };
-        if (backend === 'chartjs') return { ok: true as const, kind: 'chartjs' as const, value: assembleChartjs(prepared as never) };
-        return { ok: true as const, kind: 'vegalite' as const, value: assembleVegaLite(prepared as never) };
+        return { ok: true as const, kind: backend, value: BACKENDS[backend].assemble(prepared as never) };
       }
       const prepared = preAggregate(input);
-      if (backend === 'echarts') return { ok: true as const, kind: 'echarts' as const, value: assembleECharts(prepared as never) };
-      if (backend === 'chartjs') return { ok: true as const, kind: 'chartjs' as const, value: assembleChartjs(prepared as never) };
-      return { ok: true as const, kind: 'vegalite' as const, value: assembleVegaLite(prepared as never) };
+      return { ok: true as const, kind: backend, value: BACKENDS[backend].assemble(prepared as never) };
     } catch (err) {
       return { ok: false as const, err: (err as Error)?.message ?? String(err) };
     }

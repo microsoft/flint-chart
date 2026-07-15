@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-15
+
+### Added
+
+- Grouped violin plots in Vega-Lite: a genuine colour sub-group now renders as a
+  split violin for two groups and as a category × sub-group grid of independent
+  violins for three or more, instead of an overlapping mirror.
+- Local (compact) and global (aligned) dodge modes for grouped bar charts
+  (Vega-Lite, ECharts, Chart.js) and boxplots (Vega-Lite, ECharts), selectable
+  through the `dodge` chart property so sparse category × group data reads
+  cleanly.
+
+### Changed
+
+- The `dodge` chart property now offers `auto`, `local`, and `global` only.
+  One-per-band collapsing happens automatically when a colour/group is redundant
+  with the axis, so the manual `none` option was removed.
+- The Vega-Lite Rose Chart no longer exposes an inner-radius control; a rose has
+  no donut hole (Chart.js and ECharts already omitted it).
+
+### Fixed
+
+- Vega-Lite Rose Chart "Sort slices" now reliably reorders the wedges and their
+  legend by value.
+- Chart.js Rose Chart alignment (Left / Center) now rotates the wedges; the
+  rotation was previously set on an option Chart.js ignores for polar charts.
+
 ## [0.2.1] - 2026-07-13
 
 ### Added
@@ -34,5 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.2.1...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.2.2...HEAD
+[0.2.2]: https://github.com/microsoft/flint-chart/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/microsoft/flint-chart/compare/c8e20b052ad9ddad29ba3ecfc825948c424e5ba5...0.2.1

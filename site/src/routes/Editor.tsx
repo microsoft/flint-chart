@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { assembleVegaLite, assembleECharts, assembleChartjs, type ChartAssemblyInput } from 'flint-chart';
+import type { ChartAssemblyInput } from 'flint-chart';
 import { SiteShell } from '../components/SiteShell';
 import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ResizeSplit } from '../components/ResizeSplit';
@@ -11,6 +11,7 @@ import { loadEditorPayload, readEditorCaseParam, readGalleryCaseParams } from '.
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import {
   ALL_BACKENDS,
+  BACKENDS,
   BACKEND_LABELS,
   getSupportedBackends,
   type PreviewBackend,
@@ -110,14 +111,10 @@ export function Editor() {
   const compiledByBackend = useMemo(() => {
     if (!parsed.ok) return { ok: false as const, err: parsed.err };
     const input = parsed.value as ChartAssemblyInput;
-    return {
-      ok: true as const,
-      value: {
-        vegalite: compile(() => assembleVegaLite(input)),
-        echarts: compile(() => assembleECharts(input)),
-        chartjs: compile(() => assembleChartjs(input)),
-      },
-    };
+    const value = Object.fromEntries(
+      ALL_BACKENDS.map((b) => [b, compile(() => BACKENDS[b].assemble(input))]),
+    ) as Record<PreviewBackend, CompileResult<unknown>>;
+    return { ok: true as const, value };
   }, [parsed]);
 
   const activeCompiled = compiledByBackend.ok ? compiledByBackend.value[backend] : null;

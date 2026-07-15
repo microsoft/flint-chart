@@ -4,6 +4,7 @@
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 import { makeSortAction } from '../../core/encoding-actions';
 import { makeCartesianPivot } from '../../core/pivot';
+import { planBandDodge, resolveDodge } from '../../core/band-dodge';
 import { snapToBoundHeuristic } from '../../core/field-semantics';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
@@ -242,21 +243,89 @@ export const groupedBarChartDef: ChartTemplateDef = {
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "group", "column", "row"],
     markCognitiveChannel: 'length',
-    declareLayoutMode: (cs, table) => {
+    declareLayoutMode: (cs, table, chartProperties) => {
         const result = detectBandedAxisForceDiscrete(cs, table, { preferAxis: 'x' });
         const axis = result?.axis || 'x';
 
-        return {
+        const decl: import('../../core/types').LayoutDeclaration = {
             axisFlags: { [axis]: { banded: true } },
             resolvedTypes: result?.resolvedTypes,
         };
+        // `local` dodge budgets only maxPerBand lanes per band (compact), so the
+        // band isn't sized for the full global group domain.
+        const groupField = cs.group?.field;
+        const axisField = cs[axis]?.field;
+        if (groupField && axisField) {
+            const plan = planBandDodge(table, axisField, groupField);
+            const { mode } = resolveDodge(plan, chartProperties?.dodge);
+            if (mode === 'local') decl.groupLaneCount = Math.max(1, plan.maxPerBand);
+        }
+        return decl;
     },
     instantiate: (spec, ctx) => {
         // resolvedEncodings already includes color + xOffset/yOffset from group channel
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         adjustBarMarks(spec, ctx);
+
+        // `local` dodge: replace the global group offset with a per-band lane
+        // index so each band is subdivided into only maxPerBand lanes (compact),
+        // rather than the full global grid. Native x labels stay centered.
+        const offsetCh = spec.encoding?.xOffset ? 'xOffset' : spec.encoding?.yOffset ? 'yOffset' : undefined;
+        const groupField = ctx.channelSemantics?.group?.field;
+        const xDisc = ctx.channelSemantics?.x?.type === 'nominal' || ctx.channelSemantics?.x?.type === 'ordinal';
+        const axisField = xDisc ? ctx.channelSemantics?.x?.field : ctx.channelSemantics?.y?.field;
+        if (offsetCh && groupField && axisField) {
+            const plan = planBandDodge(ctx.fullTable ?? ctx.table, axisField, groupField);
+            const { mode } = resolveDodge(plan, ctx.chartProperties?.dodge);
+            if (mode === 'local') {
+                const maxPB = Math.max(1, plan.maxPerBand);
+                // Center each band's items with a QUANTITATIVE offset in the
+                // band's [-0.5, 0.5] range: a single-item band sits at the band
+                // centre, a partial cluster is centred (not left-anchored). The
+                // native band x-axis is kept, so group labels stay centred.
+                spec.encoding[offsetCh] = {
+                    field: '__off', type: 'quantitative',
+                    scale: { domain: [-0.5, 0.5] }, axis: null, title: null,
+                };
+                spec.transform = [
+                    ...(spec.transform ?? []),
+                    { window: [{ op: 'dense_rank', as: '__laneIdx' }], groupby: [axisField], sort: [{ field: groupField, order: 'ascending' }] },
+                    { joinaggregate: [{ op: 'distinct', field: groupField, as: '__localCount' }], groupby: [axisField] },
+                    { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
+                ];
+                // Constant bar width ≈ 85% of a lane. VL's band reserves ~20%
+                // padding, so the usable per-lane pitch is (band·0.8 / maxPerBand).
+                const band = offsetCh === 'xOffset' ? ctx.layout?.xStep : ctx.layout?.yStep;
+                if (band) {
+                    spec.mark = setMarkProp(spec.mark, 'size', Math.max(2, Math.round((band * 0.8 / maxPB) * 0.85)));
+                }
+            }
+        }
     },
     encodingActions: [makeSortAction()] as EncodingActionDef[],
+    properties: [
+        {
+            key: 'dodge', label: 'Dodge', type: 'discrete',
+            options: [
+                { value: 'auto',   label: 'Auto' },
+                { value: 'local',  label: 'Local (compact)' },
+                { value: 'global', label: 'Global (aligned)' },
+            ],
+            defaultValue: 'auto',
+            // The `group` field is what subdivides each category band.
+            check: (ctx) => {
+                const isDisc = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
+                const groupField = ctx.channelSemantics?.group?.field ?? ctx.encodings?.group?.field;
+                const axisField = isDisc(ctx.channelSemantics?.x?.type)
+                    ? ctx.channelSemantics?.x?.field
+                    : ctx.channelSemantics?.y?.field;
+                const rows = ctx.data;
+                if (!groupField || !axisField || !rows) return { applicable: false };
+                const plan = planBandDodge(rows, axisField, groupField);
+                return { applicable: plan.ambiguous, recommendedValue: plan.mode === 'none' ? 'auto' : plan.mode };
+            },
+        },
+    ] as ChartPropertyDef[],
     // Chart-type transition: the dodge series (`group`) becomes a stacked series
     // (`color`), re-rendering as a Stacked Bar Chart. Plus the orientation flip,
     // role swap (banded axis ↔ series), and series routing to column/row facets.
