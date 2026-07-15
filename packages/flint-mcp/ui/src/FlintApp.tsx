@@ -1,256 +1,214 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/**
+ * Flint chart MCP App.
+ *
+ * Renders a Flint chart spec live (client-side Flint -> Vega-Lite -> SVG) and
+ * offers a data-driven customization panel built entirely from Flint's own
+ * option model (chart type, channel bindings, chart properties, encoding
+ * actions). Mirrors Data Formulator's encoding-shelf idea, restricted to Flint
+ * options, with no server round-trips.
+ */
 import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChartAssemblyInput, ChartOption, ChartWarning } from 'flint-chart';
+import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
 
+import { renderFlintSvg, type FlintRenderResult } from './render';
 import {
   buildPanelModel,
-  dataColumns,
-  setBaseSize,
-  setCompatibleChartType,
   setProperty,
   type PanelModel,
   type ResolvedAction,
 } from './options';
-import {
-  renderFlintSvg,
-  validateFlintChart,
-  type FlintRenderResult,
-  type FlintValidationResult,
-} from './render';
 
 declare const __FLINT_MCP_VERSION__: string;
 
-type ViewMode = 'preview' | 'vega-lite';
-
+/** Control descriptor shared by chart properties and encoding actions. */
 type ControlSpec =
   | { type: 'continuous'; min: number; max: number; step?: number }
   | { type: 'discrete'; options: { value: unknown; label: string }[] }
   | { type: 'binary' };
 
+/** Stable string key for an arbitrary option value (handles undefined/objects). */
 function valueKey(value: unknown): string {
   return JSON.stringify(value ?? null);
 }
 
-function CopyPngButton({ svg }: { svg?: string }) {
-  const [state, setState] = useState<'idle' | 'copied' | 'error'>('idle');
-
-  const copy = useCallback(async () => {
-    if (!svg) return;
-    try {
-      const blob = await svgToPng(svg);
-      if (!navigator.clipboard?.write || !('ClipboardItem' in window)) {
-        throw new Error('This MCP App host does not support image clipboard access.');
-      }
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob }),
-      ]);
-      setState('copied');
-    } catch {
-      setState('error');
-    }
-  }, [svg]);
-
-  return (
-    <button
-      className="toolbar-button"
-      disabled={!svg}
-      onClick={copy}
-      title={state === 'error' ? 'Image clipboard is unavailable in this host' : 'Copy PNG'}
-      type="button"
-    >
-      {state === 'copied' ? 'Copied PNG' : 'Copy PNG'}
-    </button>
-  );
+function compactSelectLabel(label: string): string {
+  const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();
+  if (withoutHint.length <= 16) return withoutHint;
+  return `${withoutHint.slice(0, 13).trimEnd()}...`;
 }
 
-function svgToPng(svg: string): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const source = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = image.naturalWidth || 720;
-      canvas.height = image.naturalHeight || 480;
-      const context = canvas.getContext('2d');
-      if (!context) {
-        URL.revokeObjectURL(source);
-        reject(new Error('Canvas rendering is unavailable.'));
-        return;
-      }
-      context.fillStyle = '#0d1117';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(source);
-        if (blob) resolve(blob);
-        else reject(new Error('Could not create a PNG.'));
-      }, 'image/png');
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(source);
-      reject(new Error('Could not read the chart SVG.'));
-    };
-    image.src = source;
-  });
-}
+// Best-effort sizing: measure each option by its label length + the intrinsic
+// width of its widget, then snap to a small set of tiers. Keeps the strip
+// grid-like (few distinct widths) while letting toggles stay compact and
+// sliders/selects get the room they need.
+const LABEL_CHAR_PX = 6;
+const LABEL_MAX_PX = 96;
+const LABEL_GAP = 6;
+// Small safety margin so short labels (e.g. "Gap") aren't starved by the
+// fixed-width widget and snap up to the next tier when the fit is tight.
+const FIT_BUFFER = 10;
+const WIDGET_PX: Record<string, number> = {
+  continuous: 56 + 4 + 32, // slider track + gap + readout
+  discrete: 104, // select
+  binary: 24, // toggle
+  pivot: 78, // stepper
+};
+const WIDTH_TIERS = [96, 116, 136, 156, 180, 204];
 
-function ChartSelector(props: {
-  input: ChartAssemblyInput;
-  model: PanelModel;
-  onInput: (input: ChartAssemblyInput) => void;
-}) {
-  const { input, model, onInput } = props;
-  const pivot = model.pivot;
-  const value = pivot ? String(pivot.index) : 'current';
-
-  return (
-    <label className="toolbar-control">
-      <span>Chart</span>
-      <select
-        aria-label="Chart view"
-        disabled={!pivot || pivot.length < 2}
-        onChange={(event) => {
-          if (!pivot) return;
-          const index = Number(event.target.value);
-          onInput(setProperty(input, pivot.key, index === 0 ? undefined : pivot.ids[index]));
-        }}
-        value={value}
-      >
-        {pivot && pivot.length > 1 ? (
-          pivot.labels.map((label, index) => (
-            <option key={pivot.ids[index] ?? index} value={String(index)}>
-              {label}
-            </option>
-          ))
-        ) : (
-          <option value="current">Custom chart</option>
-        )}
-      </select>
-    </label>
-  );
-}
-
-function ChartTypeSelector(props: {
-  input: ChartAssemblyInput;
-  model: PanelModel;
-  onInput: (input: ChartAssemblyInput) => void;
-}) {
-  const { input, model, onInput } = props;
-  return (
-    <label className="toolbar-control">
-      <span>Chart type</span>
-      <select
-        aria-label="Chart type"
-        onChange={(event) => onInput(setCompatibleChartType(input, event.target.value))}
-        value={input.chart_spec.chartType}
-      >
-        {model.chartTypes.map((chartType) => (
-          <option key={chartType} value={chartType}>
-            {chartType}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function DimensionsControl(props: {
-  input: ChartAssemblyInput;
-  onInput: (input: ChartAssemblyInput) => void;
-}) {
-  const { input, onInput } = props;
-  const size = input.chart_spec.baseSize ?? { width: 360, height: 240 };
-
-  function change(dimension: 'width' | 'height', rawValue: string) {
-    const value = Number(rawValue);
-    if (!Number.isFinite(value) || value < 1 || value > 4000) return;
-    onInput(setBaseSize(input, dimension, Math.round(value)));
-  }
-
-  return (
-    <span className="toolbar-control dimensions">
-      <input
-        aria-label="Chart width"
-        inputMode="numeric"
-        min="1"
-        onChange={(event) => change('width', event.target.value)}
-        type="number"
-        value={size.width}
-      />
-      <span aria-hidden="true">x</span>
-      <input
-        aria-label="Chart height"
-        inputMode="numeric"
-        min="1"
-        onChange={(event) => change('height', event.target.value)}
-        type="number"
-        value={size.height}
-      />
-      <span aria-hidden="true">px</span>
-    </span>
-  );
+function optionWidth(label: string, kind: string): number {
+  const labelPx = Math.min(LABEL_MAX_PX, Math.ceil(label.length * LABEL_CHAR_PX));
+  const needed = labelPx + LABEL_GAP + (WIDGET_PX[kind] ?? 120) + FIT_BUFFER;
+  return WIDTH_TIERS.find((t) => t >= needed) ?? WIDTH_TIERS[WIDTH_TIERS.length - 1];
 }
 
 function ControlRow(props: {
   label: string;
   spec: ControlSpec;
   value: unknown;
+  width: number;
   onChange: (value: unknown) => void;
 }) {
-  const { label, spec, value, onChange } = props;
+  const { label, spec, value, width, onChange } = props;
+
+  let control: React.ReactNode = null;
   if (spec.type === 'continuous') {
-    const numberValue = typeof value === 'number' ? value : spec.min;
-    return (
-      <label className="option-control">
-        <span>{label}</span>
+    const step = spec.step ?? ((spec.max - spec.min) / 100 || 1);
+    const num = typeof value === 'number' ? value : spec.min;
+    const pct = spec.max > spec.min ? ((num - spec.min) / (spec.max - spec.min)) * 100 : 0;
+    // Reserve exactly enough room for the widest value this slider can actually
+    // show, so the readout sits immediately after the track yet never reflows
+    // the chip while dragging. Scan the real on-grid values (snapped to step) so
+    // we don't over-reserve for off-grid fractions like 0.55 on a 0.1 step.
+    const fmt = (n: number) => Number(n).toLocaleString();
+    const decimals = (String(step).split('.')[1] ?? '').length;
+    const snap = (n: number) => Number(n.toFixed(decimals));
+    const stepN = step > 0 ? step : (spec.max - spec.min) || 1;
+    const count = Math.min(200, Math.max(1, Math.floor((spec.max - spec.min) / stepN)));
+    let readoutCh = 1;
+    for (let i = 0; i <= count; i++) {
+      const v = snap(spec.min + i * stepN);
+      if (v > spec.max + 1e-9) break;
+      readoutCh = Math.max(readoutCh, fmt(v).length);
+    }
+    control = (
+      <span className="control-inline">
         <input
-          max={spec.max}
-          min={spec.min}
-          onChange={(event) => onChange(Number(event.target.value))}
-          step={spec.step ?? ((spec.max - spec.min) / 100 || 1)}
           type="range"
-          value={numberValue}
+          min={spec.min}
+          max={spec.max}
+          step={step}
+          value={num}
+          style={{ '--pct': `${pct}%` } as React.CSSProperties}
+          onChange={(e) => onChange(Number(e.target.value))}
         />
-        <output>{numberValue}</output>
-      </label>
+        <span className="control-readout" style={{ minWidth: `${readoutCh}ch` }}>
+          {fmt(num)}
+        </span>
+      </span>
     );
-  }
-  if (spec.type === 'discrete') {
-    const selected = spec.options.findIndex((option) => valueKey(option.value) === valueKey(value));
-    return (
-      <label className="option-control">
-        <span>{label}</span>
+  } else if (spec.type === 'discrete') {
+    const current = valueKey(value);
+    const idx = spec.options.findIndex((o) => valueKey(o.value) === current);
+    const selectedIndex = idx < 0 ? 0 : idx;
+    const selected = spec.options[selectedIndex];
+    // Hug the *current* value, not the widest option. A sized text label shows
+    // the selection while a transparent native <select> overlays it for picking
+    // (keeps native keyboard + a11y). Without this, the box reserves width for
+    // its longest option, which made short selections like "Default" look long.
+    control = (
+      <span className="select-wrap">
+        <span className="select-value" title={selected?.label}>
+          {compactSelectLabel(selected?.label ?? '')}
+        </span>
+        <svg className="select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
         <select
-          onChange={(event) => onChange(spec.options[Number(event.target.value)]?.value)}
-          value={String(Math.max(0, selected))}
+          className="select-native"
+          value={String(selectedIndex)}
+          title={selected?.label}
+          onChange={(e) => onChange(spec.options[Number(e.target.value)]?.value)}
         >
-          {spec.options.map((option, index) => (
-            <option key={valueKey(option.value)} value={String(index)}>
-              {option.label}
+          {spec.options.map((o, i) => (
+            <option key={i} value={String(i)} title={o.label}>
+              {compactSelectLabel(o.label)}
             </option>
           ))}
         </select>
-      </label>
+      </span>
+    );
+  } else {
+    control = (
+      <span className="switch">
+        <input
+          type="checkbox"
+          checked={Boolean(value)}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className="switch-track" aria-hidden="true">
+          <span className="switch-thumb" />
+        </span>
+      </span>
     );
   }
+
   return (
-    <label className="option-control">
-      <span>{label}</span>
-      <input checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} type="checkbox" />
+    <label className="opt" style={{ '--opt-width': `${width}px` } as React.CSSProperties}>
+      <span className="opt-label" title={label}>{label}</span>
+      {control}
     </label>
   );
 }
 
-function Editor(props: {
+function PivotControl(props: {
+  pivot: NonNullable<PanelModel['pivot']>;
+  width: number;
+  onSelect: (id: string | undefined) => void;
+}) {
+  const { pivot, width, onSelect } = props;
+  const { ids, labels, index, length, label } = pivot;
+  const go = (delta: number) => {
+    const nextIndex = (index + delta + length) % length;
+    // The identity state (index 0) is the absent override — clear it so the
+    // chart returns to the authored view rather than storing a redundant id.
+    onSelect(nextIndex === 0 ? undefined : ids[nextIndex]);
+  };
+  return (
+    <div className="opt pivot" role="group" aria-label={label} style={{ '--opt-width': `${width}px` } as React.CSSProperties}>
+      <span className="opt-label" title={label}>{label}</span>
+      <div className="pivot-stepper">
+        <button className="pivot-btn" aria-label="Previous view" onClick={() => go(-1)}>
+          ‹
+        </button>
+        <span className="pivot-state" title={labels[index]}>
+          {index + 1} / {length}
+        </span>
+        <button className="pivot-btn" aria-label="Next view" onClick={() => go(1)}>
+          ›
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OptionsBar(props: {
   input: ChartAssemblyInput;
   model: PanelModel;
-  onInput: (input: ChartAssemblyInput) => void;
+  onInput: (next: ChartAssemblyInput) => void;
+  onSend: () => void;
+  sent: boolean;
 }) {
-  const { input, model, onInput } = props;
+  const { input, model, onInput, onSend, sent } = props;
+
+  // Lean bar: surface only Flint's dynamic low-level options — visual chart
+  // properties plus encoding actions (sort, …) — inline below the chart,
+  // mirroring Data Formulator's quick-config strip. Deliberately no chart-type
+  // switch or field→channel binding; the agent owns those, the bar fine-tunes.
   const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
     ...model.properties.map((option: ChartOption) => ({
       key: option.key,
@@ -267,61 +225,51 @@ function Editor(props: {
   ];
 
   return (
-    <section className="editor" aria-label="Edit chart">
-      <div className="editor-heading">
-        <strong>Edit chart</strong>
-        <span>Flint options</span>
-      </div>
-      <div className="bindings">
-        {model.channels.map((channel) => (
-          <label className="option-control" key={channel}>
-            <span>{channel}</span>
-            <select
-              onChange={(event) => {
-                const next = { ...input, chart_spec: { ...input.chart_spec, encodings: { ...input.chart_spec.encodings } } };
-                const field = event.target.value;
-                if (field) next.chart_spec.encodings[channel] = { field };
-                else delete next.chart_spec.encodings[channel];
-                onInput(next);
-              }}
-              value={model.bindings[channel] ?? ''}
-            >
-              <option value="">Unbound</option>
-              {dataColumns(input.data.values ?? []).map((field) => (
-                <option key={field} value={field}>{field}</option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-      {controls.length > 0 && (
-        <div className="options">
-          {controls.map((control) => (
+    <div className="optionsbar" role="toolbar" aria-label={`${input.chart_spec.chartType} options`}>
+      <div className="optionsbar-grid">
+        {model.pivot && model.pivot.length > 1 && (
+          <PivotControl
+            pivot={model.pivot}
+            width={optionWidth(model.pivot.label, 'pivot')}
+            onSelect={(id) => onInput(setProperty(input, model.pivot!.key, id))}
+          />
+        )}
+        {controls.length === 0 ? (
+          !(model.pivot && model.pivot.length > 1) && (
+            <span className="opt-empty">No adjustable options for this chart.</span>
+          )
+        ) : (
+          controls.map((control) => (
             <ControlRow
               key={control.key}
               label={control.label}
-              onChange={(value) => onInput(setProperty(input, control.key, value))}
               spec={control.spec}
               value={control.value}
+              width={optionWidth(control.label, control.spec.type)}
+              onChange={(v) => onInput(setProperty(input, control.key, v))}
             />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function ValidationFeedback({ validation }: { validation: FlintValidationResult }) {
-  const issues = validation.valid ? validation.warnings : validation.errors;
-  if (issues.length === 0) return null;
-  return (
-    <ul className={validation.valid ? 'warnings' : 'errors'}>
-      {issues.map((issue: ChartWarning, index) => (
-        <li key={`${issue.code}-${index}`}>
-          <strong>{issue.severity}</strong> {issue.message}
-        </li>
-      ))}
-    </ul>
+          ))
+        )}
+        <button
+          className="bar-link"
+          onClick={onSend}
+          disabled={sent}
+          data-tip={sent ? 'Copied to chat' : 'Copy spec'}
+          aria-label={sent ? 'Copied spec to chat' : 'Copy spec to chat'}
+        >
+          {sent ? (
+            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M3.5 10.5 A1.5 1.5 0 0 1 2.5 9.5 V3 A1.5 1.5 0 0 1 4 1.5 H10.5 A1.5 1.5 0 0 1 11.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -333,52 +281,61 @@ export function FlintAppInner(props: {
   const { app, input, hostContext } = props;
   const [current, setCurrent] = useState<ChartAssemblyInput>(input);
   const [render, setRender] = useState<FlintRenderResult | null>(null);
-  const [renderError, setRenderError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [view, setView] = useState<ViewMode>('preview');
-  const [sendError, setSendError] = useState<string | null>(null);
-  const renderSequence = useRef(0);
-  const model = useMemo(() => buildPanelModel(current), [current]);
-  const validation = useMemo(() => validateFlintChart(current), [current]);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const renderSeq = useRef(0);
 
+  // Re-seed when a new tool input arrives from the host.
   useEffect(() => setCurrent(input), [input]);
 
+  // Clear the "Copied" confirmation a couple of seconds after a successful send.
   useEffect(() => {
-    const sequence = ++renderSequence.current;
-    if (!validation.valid) {
-      setRender(null);
-      setRenderError(null);
-      return;
-    }
-    const timer = window.setTimeout(() => {
+    if (!sent) return;
+    const handle = window.setTimeout(() => setSent(false), 2000);
+    return () => window.clearTimeout(handle);
+  }, [sent]);
+
+  // Live render (debounced) whenever the working spec changes.
+  useEffect(() => {
+    const seq = ++renderSeq.current;
+    setSent(false);
+    const handle = setTimeout(() => {
       renderFlintSvg(current)
-        .then((next) => {
-          if (sequence === renderSequence.current) {
-            setRender(next);
-            setRenderError(null);
+        .then((result) => {
+          if (seq === renderSeq.current) {
+            setRender(result);
+            setError(null);
           }
         })
-        .catch((error) => {
-          if (sequence === renderSequence.current) {
-            setRenderError(error instanceof Error ? error.message : String(error));
+        .catch((err) => {
+          if (seq === renderSeq.current) {
+            setError(err instanceof Error ? err.message : String(err));
           }
         });
     }, 100);
-    return () => window.clearTimeout(timer);
-  }, [current, validation.valid]);
+    return () => clearTimeout(handle);
+  }, [current]);
 
-  const sendEditedChart = useCallback(async () => {
-    const text = `Updated Flint chart spec from the chart view:\n\n\`\`\`json\n${JSON.stringify({
+  const model = useMemo(() => buildPanelModel(current), [current]);
+
+  const handleSend = useCallback(async () => {
+    const payload = {
       chart_spec: current.chart_spec,
       ...(current.semantic_types ? { semantic_types: current.semantic_types } : {}),
-    }, null, 2)}\n\`\`\``;
+    };
+    const text =
+      'Updated Flint chart spec from the chart view:\n\n```json\n' +
+      JSON.stringify(payload, null, 2) +
+      '\n```';
     try {
       await app.sendMessage({ role: 'user', content: [{ type: 'text', text }] });
-      setSendError(null);
-    } catch (error) {
-      setSendError(error instanceof Error ? error.message : 'The host could not send the edited chart.');
+      setSent(true);
+    } catch {
+      /* host may reject; ignore */
     }
   }, [app, current]);
+
+  const warnings = render?.warnings ?? [];
 
   return (
     <main
@@ -390,77 +347,36 @@ export function FlintAppInner(props: {
         paddingLeft: hostContext?.safeAreaInsets?.left,
       }}
     >
-      <header className="workspace-heading">
-        <div>
-          <p>Flint</p>
-          <h1>Interactive chart workspace</h1>
-        </div>
-        <span>Inline data only</span>
-      </header>
-
-      <section className="workspace">
-        <section className="preview-pane" aria-labelledby="preview-heading">
-          <header className="preview-toolbar" role="toolbar" aria-label="Flint chart controls">
-            <h2 id="preview-heading">Preview</h2>
-            <button
-              aria-pressed={view === 'vega-lite'}
-              className="view-mode"
-              onClick={() => setView((mode) => mode === 'preview' ? 'vega-lite' : 'preview')}
-              type="button"
-            >
-              Vega-Lite
-            </button>
-            <ChartSelector input={current} model={model} onInput={setCurrent} />
-            <ChartTypeSelector input={current} model={model} onInput={setCurrent} />
-            <DimensionsControl input={current} onInput={setCurrent} />
-            <div className="toolbar-actions">
-              <CopyPngButton svg={render?.svg} />
-              <button
-                aria-expanded={isEditing}
-                className="toolbar-button"
-                onClick={() => setIsEditing((visible) => !visible)}
-                type="button"
-              >
-                {isEditing ? 'Hide editor' : 'Edit chart'}
-              </button>
-            </div>
-          </header>
-
-          <div className="preview">
-            {renderError ? (
-              <div className="error"><strong>Could not render chart</strong><pre>{renderError}</pre></div>
-            ) : view === 'vega-lite' ? (
-              <pre className="preview-output">
-                {JSON.stringify(render?.vlSpec ?? (validation.valid ? {} : validation), null, 2)}
-              </pre>
-            ) : render ? (
-              <div className="chart-frame">
-                <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
-              </div>
-            ) : (
-              <div className="placeholder">{validation.valid ? 'Rendering chart...' : 'Fix the chart specification to preview it.'}</div>
-            )}
+      <div className="preview">
+        {error ? (
+          <div className="error">
+            <strong>Could not render chart</strong>
+            <pre>{error}</pre>
           </div>
-          <ValidationFeedback validation={validation} />
-        </section>
+        ) : render ? (
+          <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
+        ) : (
+          <div className="placeholder">Rendering…</div>
+        )}
 
-        {isEditing && <Editor input={current} model={model} onInput={setCurrent} />}
+        {warnings.length > 0 && (
+          <ul className="warnings">
+            {warnings.map((w, i) => (
+              <li key={i}>
+                <span className="warn-sev">{w.severity}</span> {w.message}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-        <section className="output-pane" aria-labelledby="output-heading">
-          <header>
-            <h2 id="output-heading">Output</h2>
-            <span>Vega-Lite JSON · read-only</span>
-          </header>
-          <pre className="output">
-            {JSON.stringify(render?.vlSpec ?? (validation.valid ? {} : validation), null, 2)}
-          </pre>
-        </section>
-      </section>
-
-      <button className="send-chart" onClick={() => void sendEditedChart()} type="button">
-        Send edited chart to chat
-      </button>
-      {sendError && <p className="send-error" role="alert">{sendError}</p>}
+      <OptionsBar
+        input={current}
+        model={model}
+        onInput={setCurrent}
+        onSend={handleSend}
+        sent={sent}
+      />
     </main>
   );
 }
@@ -468,22 +384,35 @@ export function FlintAppInner(props: {
 export function FlintApp() {
   const [input, setInput] = useState<ChartAssemblyInput | null>(null);
   const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
+
   const { app, error } = useApp({
     appInfo: { name: 'Flint Chart', version: __FLINT_MCP_VERSION__ },
     capabilities: {},
     autoResize: true,
-    onAppCreated: (createdApp) => {
-      createdApp.onteardown = async () => ({});
-      createdApp.onerror = (appError) => console.error(appError);
-      createdApp.onhostcontextchanged = (params) => setHostContext((previous) => ({ ...previous, ...params }));
-      createdApp.ontoolinput = (params) => {
+    onAppCreated: (app) => {
+      app.onteardown = async () => ({});
+      app.onerror = (err) => console.error(err);
+      app.onhostcontextchanged = (params) =>
+        setHostContext((prev) => ({ ...prev, ...params }));
+      app.ontoolinput = (params) => {
         const args = params?.arguments as ChartAssemblyInput | undefined;
+        // Only accept raw tool args that already carry inline rows. A
+        // local `data.url` cannot be read in the browser, so for those we
+        // wait for the server-resolved input delivered via ontoolresult.
         if (args?.chart_spec && Array.isArray(args.data?.values)) setInput(args);
       };
-      createdApp.ontoolresult = (result) => {
-        const structured = (result as { structuredContent?: { input?: ChartAssemblyInput } }).structuredContent;
+      app.ontoolresult = (result) => {
+        const structured = (result as { structuredContent?: { input?: ChartAssemblyInput } })
+          .structuredContent;
+        // The server pre-resolves data (local data.url → inline values), so
+        // structuredContent.input is authoritative. Prefer it whenever it
+        // carries rows the current input lacks.
         if (structured?.input?.chart_spec && Array.isArray(structured.input.data?.values)) {
-          setInput(structured.input);
+          setInput((prev) =>
+            Array.isArray(prev?.data?.values) && prev!.data.values.length > 0
+              ? prev
+              : structured.input!,
+          );
         }
       };
     },
@@ -493,8 +422,15 @@ export function FlintApp() {
     if (app) setHostContext(app.getHostContext());
   }, [app]);
 
-  if (error) return <div className="status"><strong>App error:</strong> {error.message}</div>;
-  if (!app) return <div className="status">Connecting...</div>;
-  if (!input) return <div className="status">Waiting for inline chart data...</div>;
+  if (error) {
+    return (
+      <div className="status">
+        <strong>App error:</strong> {error.message}
+      </div>
+    );
+  }
+  if (!app) return <div className="status">Connecting…</div>;
+  if (!input) return <div className="status">Waiting for chart data…</div>;
+
   return <FlintAppInner app={app} input={input} hostContext={hostContext} />;
 }

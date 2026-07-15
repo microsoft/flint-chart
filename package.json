@@ -8,9 +8,9 @@
     "site"
   ],
   "scripts": {
-    "build": "npm run build:js && npm run build:mcp",
+    "build": "npm run build -w packages/flint-js && npm run build -w packages/flint-mcp",
     "build:js": "npm run build -w packages/flint-js",
-    "build:mcp": "npm run build -w packages/flint-mcp && node scripts/sync-copilot-plugin.mjs",
+    "build:mcp": "npm run build -w packages/flint-mcp",
     "typecheck": "npm run build:js && npm run typecheck:js && npm run typecheck:mcp",
     "typecheck:js": "npm run typecheck -w packages/flint-js",
     "typecheck:mcp": "npm run typecheck -w packages/flint-mcp",
