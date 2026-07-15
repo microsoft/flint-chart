@@ -342,7 +342,10 @@ export function computeLayout(
     }
     let groupAxis: 'x' | 'y' | undefined;
     if (groupField) {
-        nominalCount.group = new Set(table.map((r: any) => r[groupField])).size;
+        // `local` dodge budgets only `maxPerBand` lanes (declaration.groupLaneCount);
+        // otherwise reserve one lane per global distinct group value.
+        nominalCount.group = declaration.groupLaneCount
+            ?? new Set(table.map((r: any) => r[groupField])).size;
         if (isDiscreteType(effectiveTypes.x ?? channelSemantics.x?.type)) groupAxis = 'x';
         else if (isDiscreteType(effectiveTypes.y ?? channelSemantics.y?.type)) groupAxis = 'y';
     }

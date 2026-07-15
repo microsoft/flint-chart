@@ -27,6 +27,7 @@ import type {
   PivotSurface,
   RawEncodingValue,
 } from 'flint-chart';
+import { BACKENDS, type PreviewBackend } from './supported-backends';
 
 /** Control descriptor shared by chart properties and encoding actions. */
 export type ControlSpec =
@@ -117,8 +118,33 @@ function actionValue(
   }
 }
 
+/**
+ * Chart-property keys the given backend's template actually implements.
+ *
+ * The option list is derived from the Vega-Lite template (`getChartOptions`
+ * assembles VL), but each backend template declares its own `properties` — a
+ * *subset* of the knobs for that chart type (e.g. Chart.js `polarArea` has no
+ * cutout, so a rose chart there can't do "Inner Radius" or "Gap"). We intersect
+ * the shown controls with the selected backend's declared set, hiding dead
+ * controls that would silently do nothing. Returns `null` when there is nothing
+ * to narrow by (the backend template declares no properties → fall back to the
+ * full VL list). For Vega-Lite itself this is a no-op: the option list already
+ * *is* the VL template's properties, so the intersection keeps everything.
+ */
+function backendSupportedPropertyKeys(
+  chartType: string,
+  backend: PreviewBackend,
+): Set<string> | null {
+  const props = BACKENDS[backend].getTemplateDef(chartType)?.properties;
+  if (!props || props.length === 0) return null;
+  return new Set(props.map((p) => p.key));
+}
+
 /** Build the option model (properties + encoding actions) for the input. */
-export function buildPanelModel(input: ChartAssemblyInput): PanelModel {
+export function buildPanelModel(
+  input: ChartAssemblyInput,
+  backend: PreviewBackend = 'vegalite',
+): PanelModel {
   const def = vlGetTemplateDef(input.chart_spec.chartType);
 
   let properties: ChartOption[] = [];
@@ -126,6 +152,14 @@ export function buildPanelModel(input: ChartAssemblyInput): PanelModel {
     properties = getChartOptions(input).filter((o) => o.applicable);
   } catch {
     properties = [];
+  }
+
+  // Non-Vega-Lite backends only honor a subset of the VL properties; drop the
+  // controls the selected backend's template doesn't implement so the options
+  // bar never shows a knob that does nothing.
+  const supported = backendSupportedPropertyKeys(input.chart_spec.chartType, backend);
+  if (supported) {
+    properties = properties.filter((o) => supported.has(o.key));
   }
 
   const encodings = normalizeEncodings(input);

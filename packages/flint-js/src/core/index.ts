@@ -67,9 +67,13 @@ export {
 export {
     planBandDodge,
     resolveBandDodge,
+    resolveDodge,
+    laneCountForMode,
     DEFAULT_NESTED_SNAP_THRESHOLD,
     type BandDodgePlan,
     type PlanBandDodgeOptions,
+    type DodgeMode,
+    type DodgeOption,
     type ColorLayoutMode,
 } from './band-dodge';
 

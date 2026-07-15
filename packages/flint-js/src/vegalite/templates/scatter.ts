@@ -3,7 +3,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
-import { planBandDodge, resolveBandDodge } from '../../core/band-dodge';
+import { planBandDodge, resolveDodge } from '../../core/band-dodge';
 import {
     defaultBuildEncodings, applyPointSizeScaling, setMarkProp,
 } from './utils';
@@ -189,21 +189,26 @@ export const boxplotDef: ChartTemplateDef = {
         // Decide whether `color` dodges the banded axis into side-by-side
         // sub-lanes, or is redundant/nested with it (one full-width box per
         // band). Shared with `instantiate` via `planBandDodge` so the band
-        // budget and the box size agree. Honors the `colorLayout` override.
+        // budget and the box size agree. Honors the `dodge` override.
         let colorActsAsGroup = false;
+        let groupLaneCount: number | undefined;
         const colorField = cs.color?.field;
         const axisField = cs[result.axis]?.field;
         if (colorField && axisField && isDiscreteType(cs.color?.type)) {
             const plan = planBandDodge(table, axisField, colorField, {
                 nestedSnapThreshold: chartProperties?.nestedSnapThreshold,
             });
-            colorActsAsGroup = resolveBandDodge(plan, chartProperties?.colorLayout).dodge;
+            const { mode } = resolveDodge(plan, chartProperties?.dodge);
+            colorActsAsGroup = mode !== 'none';
+            // `local` budgets only maxPerBand lanes per band (compact).
+            if (mode === 'local') groupLaneCount = Math.max(1, plan.maxPerBand);
         }
         return {
             axisFlags: { [result.axis]: { banded: true } },
             resolvedTypes: result.resolvedTypes,
             paramOverrides: { defaultBandSize: 28 },  // box+whisker needs wider bands
             colorActsAsGroup,  // dodge-by-color → budget band per category, shrink lanes
+            ...(groupLaneCount ? { groupLaneCount } : {}),
         };
     },
     instantiate: (spec, ctx) => {
@@ -251,29 +256,39 @@ export const boxplotDef: ChartTemplateDef = {
             const plan = planBandDodge(ctx.fullTable ?? ctx.table, axisField, colorField, {
                 nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
             });
-            const resolved = resolveBandDodge(plan, ctx.chartProperties?.colorLayout);
-            if (resolved.dodge) {
+            const resolved = resolveDodge(plan, ctx.chartProperties?.dodge);
+            if (resolved.mode !== 'none') {
                 const offsetChannel = hasDiscreteX ? 'xOffset' : 'yOffset';
-                const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
-                if (colorEnc.sort !== undefined) offsetEnc.sort = colorEnc.sort;
-                spec.encoding[offsetChannel] = offsetEnc;
-                // Lane count == global distinct colors, which is exactly what the
-                // VL offset scale + the layout band budget both reserve. Sizing by
-                // the max-per-band would overlap in sparse cross-products.
                 subgroups = Math.max(1, resolved.laneCount);
+                if (resolved.mode === 'local') {
+                    // Compact + centered: a quantitative offset over the band's
+                    // [-0.5, 0.5] range places each band's boxes centered, using
+                    // only maxPerBand lanes. Native axis labels stay centered.
+                    const maxPB = Math.max(1, plan.maxPerBand);
+                    spec.encoding[offsetChannel] = {
+                        field: '__off', type: 'quantitative',
+                        scale: { domain: [-0.5, 0.5] }, axis: null,
+                    };
+                    spec.transform = [
+                        ...(spec.transform ?? []),
+                        { window: [{ op: 'dense_rank', as: '__laneIdx' }], groupby: [axisField], sort: [{ field: colorField, order: 'ascending' }] },
+                        { joinaggregate: [{ op: 'distinct', field: colorField, as: '__localCount' }], groupby: [axisField] },
+                        { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
+                    ];
+                } else {
+                    // Global: a fixed lane per distinct color across all bands.
+                    const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
+                    if (colorEnc.sort !== undefined) offsetEnc.sort = colorEnc.sort;
+                    spec.encoding[offsetChannel] = offsetEnc;
+                }
             }
         }
 
-        // Scale box width to the step size of the discrete axis. With
-        // colorActsAsGroup, computeLayout sizes the axis per *category band*
-        // (xStepUnit 'group') and Vega-Lite gets `width:{step, for:'position'}`,
-        // so each band is subdivided into `subgroups` sub-lanes. Vega-Lite's
-        // position band scale reserves ~20% of every step as inter-band padding,
-        // so only ~80% of the step is actual drawing width — the per-subgroup
-        // pitch is `step * USABLE_BAND_FRACTION / subgroups`. Sizing a box to the
-        // raw `step / subgroups` overshoots that pitch and makes adjacent boxes
-        // in a group overlap; account for the padding, then fill most of the lane
-        // so boxes shrink (and stay separated) as subgroups grow.
+        // Scale box width to the step size of the discrete axis. Each band is
+        // subdivided into `subgroups` sub-lanes. VL's position band reserves ~20%
+        // of the step as inter-band padding (both the nominal `global` offset and
+        // the quantitative `local` offset map into that ~80% usable width), so the
+        // per-lane pitch is `step * USABLE_BAND_FRACTION / subgroups`.
         if (hasDiscreteAxis) {
             const boxStep = hasDiscreteX ? layout.xStep : layout.yStep;
             if (subgroups > 1) {
@@ -302,16 +317,16 @@ export const boxplotDef: ChartTemplateDef = {
             check: (ctx) => ({ applicable: ctx.chartProperties?.whiskerMethod !== 'minmax' }),
         },
         {
-            key: 'colorLayout', label: 'Color layout', type: 'discrete',
+            key: 'dodge', label: 'Dodge', type: 'discrete',
             options: [
                 { value: 'auto',   label: 'Auto' },
-                { value: 'dodge',  label: 'Side by side' },
-                { value: 'nested', label: 'One per band' },
+                { value: 'local',  label: 'Local (compact)' },
+                { value: 'global', label: 'Global (aligned)' },
             ],
             defaultValue: 'auto',
-            // Only surface the control when the dodge decision is genuinely
-            // uncertain (sparse cross-product / dirty near-1:1); when color is
-            // clearly redundant or clearly a second dimension, trust Auto.
+            // Surface whenever color genuinely subdivides a band (maxPerBand > 1),
+            // so the user can pick none / local / global; the compiler default is
+            // reported as `recommendedValue`.
             check: (ctx) => {
                 const colorField = ctx.channelSemantics?.color?.field;
                 const xType = ctx.channelSemantics?.x?.type;
@@ -327,7 +342,7 @@ export const boxplotDef: ChartTemplateDef = {
                 });
                 return {
                     applicable: plan.ambiguous,
-                    recommendedValue: plan.dodge ? 'dodge' : 'nested',
+                    recommendedValue: plan.mode === 'none' ? 'auto' : plan.mode,
                 };
             },
         },

@@ -24,29 +24,57 @@
  *     cross-products.
  */
 
-/** Default fraction of bands that must be single-valued for `auto` to snap to
- *  `nested` in the ambiguous zone. Tunable via `planBandDodge` options. */
+/** Default fraction of single-valued bands above which `auto` snaps to `none`
+ *  (mostly-1:1 / dirty near-1:1 data). Tunable via `planBandDodge` options. */
 export const DEFAULT_NESTED_SNAP_THRESHOLD = 0.9;
 
+/** Resolved dodge mode (what actually renders). */
+export type DodgeMode = 'none' | 'local' | 'global';
+
+/** User-facing `dodge` chart-property values (`auto` defers to the compiler). */
+export type DodgeOption = 'auto' | DodgeMode;
+
 export interface BandDodgePlan {
-    /** `auto` recommendation: subdivide the band into sub-lanes? */
+    /** Compiler's recommended default mode. */
+    mode: DodgeMode;
+    /** Back-compat: does the recommendation subdivide the band? (`mode !== 'none'`). */
     dodge: boolean;
-    /** Sub-lanes a global offset scale reserves per band = global distinct
-     *  sub-values. Meaningful whenever the caller decides to dodge. */
+    /** Lanes a *global* offset scale reserves per band = global distinct
+     *  sub-values (the `global` mode lane count). */
     laneCount: number;
-    /** True in the uncertain regime (`1 < maxPerBand < global`) where a
-     *  user-facing toggle should be surfaced instead of trusting `auto`. */
+    /** True when a user override is worth surfacing (any real dodge choice,
+     *  i.e. `maxPerBand > 1`). */
     ambiguous: boolean;
     /** Most distinct sub-values co-occurring within any single band. */
     maxPerBand: number;
-    /** Global distinct sub-values (== `laneCount`). */
+    /** Global distinct sub-values. */
     global: number;
+    /** Number of distinct axis bands. */
+    bandCount: number;
 }
 
 export interface PlanBandDodgeOptions {
-    /** Fraction of single-valued bands above which `auto` snaps to `nested` in
-     *  the ambiguous zone. Defaults to {@link DEFAULT_NESTED_SNAP_THRESHOLD}. */
+    /** Fraction of single-valued bands above which `auto` snaps to `none`.
+     *  Defaults to {@link DEFAULT_NESTED_SNAP_THRESHOLD}. */
     nestedSnapThreshold?: number;
+}
+
+/** Pure recommendation from the per-band statistics. */
+function recommendMode(
+    maxPerBand: number,
+    globalCount: number,
+    nestedFraction: number,
+    threshold: number,
+): DodgeMode {
+    // Nothing subdivides any band → full-width.
+    if (maxPerBand <= 1) return 'none';
+    // Mostly single-valued (a few dirty/outlier multi-color bands) → snap to
+    // full-width rather than dodge the whole chart for a couple of rows.
+    if (nestedFraction >= threshold) return 'none';
+    // Every occupied band spans the full sub-domain → uniform global grid.
+    if (maxPerBand >= globalCount) return 'global';
+    // Sparse / spiky → compact, centered per-band lanes.
+    return 'local';
 }
 
 /**
@@ -86,35 +114,63 @@ export function planBandDodge(
         if (bandSet.size <= 1) singleValuedBands++;
     }
 
-    // Confident: no band holds more than one sub-value → nested.
-    if (maxPerBand <= 1) {
-        return { dodge: false, laneCount: globalCount, ambiguous: false, maxPerBand, global: globalCount };
-    }
-    // Confident: every occupied band spans the full sub-domain → real 2nd dim.
-    if (maxPerBand === globalCount) {
-        return { dodge: true, laneCount: globalCount, ambiguous: false, maxPerBand, global: globalCount };
-    }
-
-    // Ambiguous: resolve the `auto` lean via the snap threshold.
     const threshold = options?.nestedSnapThreshold ?? DEFAULT_NESTED_SNAP_THRESHOLD;
     const nestedFraction = bandCount > 0 ? singleValuedBands / bandCount : 1;
-    const dodge = nestedFraction < threshold;
-    return { dodge, laneCount: globalCount, ambiguous: true, maxPerBand, global: globalCount };
+    const mode = recommendMode(maxPerBand, globalCount, nestedFraction, threshold);
+
+    return {
+        mode,
+        dodge: mode !== 'none',
+        laneCount: globalCount,
+        ambiguous: maxPerBand > 1,
+        maxPerBand,
+        global: globalCount,
+        bandCount,
+    };
 }
 
-/** User-facing `colorLayout` chart-property values. */
-export type ColorLayoutMode = 'auto' | 'dodge' | 'nested';
+/** Number of sub-lanes a resolved mode reserves per band. */
+export function laneCountForMode(plan: BandDodgePlan, mode: DodgeMode): number {
+    if (mode === 'global') return plan.global;
+    if (mode === 'local') return Math.max(1, plan.maxPerBand);
+    return 1;
+}
 
 /**
- * Apply a user `colorLayout` override on top of a plan. `dodge`/`nested` are hard
- * overrides; `auto` (or anything else) follows the plan's recommendation. The
- * lane count is always the plan's global-derived value.
+ * Apply a user `dodge` override on top of a plan. `none`/`local`/`global` are
+ * hard overrides; `auto` (or unset) follows the compiler recommendation. A dodge
+ * mode is downgraded to `none` when nothing actually subdivides a band
+ * (`maxPerBand <= 1`), so forcing dodge on redundant color can't collapse it.
  */
+export function resolveDodge(
+    plan: BandDodgePlan,
+    override?: string,
+): { mode: DodgeMode; laneCount: number } {
+    let mode: DodgeMode =
+        override === 'none' || override === 'local' || override === 'global'
+            ? override
+            : plan.mode;
+    if (mode !== 'none' && plan.maxPerBand <= 1) mode = 'none';
+    return { mode, laneCount: laneCountForMode(plan, mode) };
+}
+
+// ---------------------------------------------------------------------------
+// Back-compat shim (pre-`local` callers that only need a dodge boolean).
+// `local` currently renders via the global offset path, so its lane count is
+// the global one until the per-backend `local` renderer lands (Stage 2).
+// ---------------------------------------------------------------------------
+
+/** @deprecated user-facing values; prefer {@link DodgeOption}. */
+export type ColorLayoutMode = DodgeOption;
+
+/** @deprecated prefer {@link resolveDodge}. Maps the mode to a dodge boolean and
+ *  the global lane count (the only lane count the current renderers support). */
 export function resolveBandDodge(
     plan: BandDodgePlan,
     override?: string,
 ): { dodge: boolean; laneCount: number } {
-    if (override === 'dodge') return { dodge: true, laneCount: plan.laneCount };
-    if (override === 'nested') return { dodge: false, laneCount: plan.laneCount };
-    return { dodge: plan.dodge, laneCount: plan.laneCount };
+    // Legacy override spellings → new modes.
+    const normalized = override === 'dodge' ? 'global' : override === 'nested' ? 'none' : override;
+    const { mode } = resolveDodge(plan, normalized);
+    return { dodge: mode !== 'none', laneCount: plan.laneCount };
 }

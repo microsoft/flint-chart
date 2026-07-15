@@ -66,7 +66,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
-| `colorLayout` | choice | `auto` (Auto), `dodge` (Side by side), `nested` (One per band) | `auto` | conditional | Color layout |
+| `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 
 ### ![](chart-icon-strip-plot.svg) Strip Plot
 
@@ -88,7 +88,9 @@ _No template-specific parameters._
 
 **Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 
 ### ![](chart-icon-column-stacked.svg) Stacked Bar Chart
 

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
-import { assembleVegaLite, assembleECharts, assembleChartjs } from 'flint-chart';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import {
+  BACKENDS,
   BACKEND_LABELS,
   getSupportedBackends,
   type PreviewBackend,
@@ -42,9 +42,7 @@ export function TripleChart({
 
   const compiled = useMemo(() => {
     try {
-      if (backend === 'vegalite') return { ok: true as const, value: assembleVegaLite(input) };
-      if (backend === 'echarts') return { ok: true as const, value: assembleECharts(input) };
-      return { ok: true as const, value: assembleChartjs(input) };
+      return { ok: true as const, value: BACKENDS[backend].assemble(input) };
     } catch (err) {
       return { ok: false as const, err };
     }

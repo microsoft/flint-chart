@@ -495,5 +495,40 @@ export function genGroupedBarTests(): TestCase[] {
         });
     }
 
+    // Explicit global vs local dodge demo (sparse region × channel).
+    {
+        const regions = ['North', 'South', 'East', 'West', 'Central', 'Coast'];
+        const channels = ['Retail', 'Online', 'Wholesale', 'Direct'];
+        const subset: Record<string, string[]> = {
+            North: ['Retail', 'Online'], South: ['Online', 'Wholesale', 'Direct'], East: ['Wholesale', 'Direct'],
+            West: ['Retail', 'Direct'], Central: ['Retail', 'Online', 'Wholesale'], Coast: ['Online', 'Direct'],
+        };
+        const mkData = () => {
+            const d: any[] = [];
+            regions.forEach((r, ri) => subset[r].forEach((ch, ci) => d.push({ Region: r, Channel: ch, Sales: Math.round(300 + ri * 40 + ci * 30) })));
+            return d;
+        };
+        const meta = {
+            Region: { type: Type.String, semanticType: 'Category', levels: regions },
+            Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+            Channel: { type: Type.String, semanticType: 'Category', levels: channels },
+        };
+        for (const mode of ['global', 'local'] as const) {
+            tests.push({
+                title: mode === 'global' ? 'Dodge = Global (aligned)' : 'Dodge = Local (compact)',
+                description: mode === 'global'
+                    ? 'fixed lane per channel across regions — gaps where a channel is absent'
+                    : 'compact maxPerBand lanes per region (VL centered; EC left-aligned)',
+                tags: ['grouped-bar', 'sparse', `dodge-${mode}`, 'gallery-pin'],
+                chartType: 'Grouped Bar Chart',
+                data: mkData(),
+                fields: [makeField('Region'), makeField('Sales'), makeField('Channel')],
+                metadata: meta,
+                chartProperties: { dodge: mode },
+                encodingMap: { x: makeEncodingItem('Region'), y: makeEncodingItem('Sales'), group: makeEncodingItem('Channel') },
+            });
+        }
+    }
+
     return tests;
 }

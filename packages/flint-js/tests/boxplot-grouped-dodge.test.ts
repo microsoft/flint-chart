@@ -176,7 +176,7 @@ describe('boxplot color redundant with axis (no dodge)', () => {
     expect(sizeOf(spec)).toBeGreaterThan(stepOf(spec) * 0.5);
   });
 
-  it('sparse cross-product (dept × level) → dodges, sized by GLOBAL lane count', () => {
+  it('sparse cross-product (dept × level) → auto: local (compact, centered)', () => {
     // 6 departments, 5 global levels, but each dept holds only 2 of them.
     const depts = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6'];
     const levelPairs = [
@@ -186,20 +186,26 @@ describe('boxplot color redundant with axis (no dodge)', () => {
     depts.forEach((d, di) => {
       for (const lv of levelPairs[di]) for (let i = 0; i < 20; i++) rows.push({ Cat: d, Level: lv, Val: i });
     });
-    const spec = assembleVegaLite({
+    const input = {
       data: { values: rows },
       semantic_types: { Cat: 'Category', Level: 'Category', Val: 'Quantity' },
       chart_spec: {
         chartType: 'Boxplot',
         encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Level' } },
         baseSize: { width: 700, height: 320 },
-      },
-    } as any) as any;
-    expect(spec.encoding?.xOffset?.field).toBe('Level');
-    // Global lane count is 5, so a box must fit the 5-lane pitch (band·0.8/5),
-    // NOT the max-per-band pitch of 2 — otherwise occupied lanes overlap.
-    const fiveLanePitch = (stepOf(spec) * 0.8) / 5;
-    expect(sizeOf(spec)).toBeLessThanOrEqual(fiveLanePitch);
+      } as any,
+    };
+    // Auto → local: centered quantitative offset + the computed transforms.
+    const local = assembleVegaLite(input as any) as any;
+    expect(local.encoding?.xOffset?.field).toBe('__off');
+    expect(local.transform?.some((t: any) => t.as === '__off')).toBe(true);
+
+    // Forced global → the fixed per-color lane grid, sized to the 5 global lanes.
+    input.chart_spec.chartProperties = { dodge: 'global' };
+    const global = assembleVegaLite(input as any) as any;
+    expect(global.encoding?.xOffset?.field).toBe('Level');
+    const fiveLanePitch = (stepOf(global) * 0.8) / 5;
+    expect(sizeOf(global)).toBeLessThanOrEqual(fiveLanePitch);
   });
 });
 
@@ -281,10 +287,10 @@ describe('grouped bar group redundant with axis (no dodge)', () => {
     expect(spec.encoding?.xOffset?.field).toBe('Grp');
   });
 
-  it('sparse / middle case (each band has a SUBSET of groups) still dodges', () => {
+  it('sparse / middle case (each band has a SUBSET of groups) → local (compact) dodge', () => {
     // 4 global groups, each category holds only 2 of them → maxPerBand 2,
-    // global 4 (the ambiguous zone). Most bands are multi-valued, so the
-    // nestedSnapThreshold leans to dodge rather than collapsing to full-width.
+    // global 4 (sparse). Auto → local: a compact per-band lane index rather
+    // than the full global grid.
     const cats = ['A', 'B', 'C', 'D'];
     const subset: Record<string, string[]> = {
       A: ['G1', 'G2'], B: ['G2', 'G3'], C: ['G3', 'G4'], D: ['G4', 'G1'],
@@ -294,29 +300,43 @@ describe('grouped bar group redundant with axis (no dodge)', () => {
     const spec = assembleVegaLite(
       groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp'),
     ) as any;
+    // Local dodge → centered per-band quantitative offset + the window/calc
+    // transforms that compute it.
+    expect(spec.encoding?.xOffset?.field).toBe('__off');
+    expect(spec.transform?.some((t: any) => t.window?.[0]?.as === '__laneIdx')).toBe(true);
+    expect(spec.transform?.some((t: any) => t.as === '__off')).toBe(true);
+  });
+
+  it('sparse grouped bar forced to global keeps the group field offset', () => {
+    const cats = ['A', 'B', 'C', 'D'];
+    const subset: Record<string, string[]> = {
+      A: ['G1', 'G2'], B: ['G2', 'G3'], C: ['G3', 'G4'], D: ['G4', 'G1'],
+    };
+    const rows: any[] = [];
+    for (const c of cats) for (const g of subset[c]) rows.push({ Cat: c, Grp: g, Val: c.charCodeAt(0) + g.length });
+    const input = groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp');
+    input.chart_spec.chartProperties = { dodge: 'global' };
+    const spec = assembleVegaLite(input) as any;
     expect(spec.encoding?.xOffset?.field).toBe('Grp');
   });
 
-  it('forcing colorLayout=nested collapses a genuine group to full-width', () => {
-    const cats = ['A', 'B', 'C'];
-    const grps = ['G1', 'G2'];
-    const rows: any[] = [];
-    for (const c of cats) for (const g of grps) rows.push({ Cat: c, Grp: g, Val: c.charCodeAt(0) + g.length });
-    const input = groupedBarInput(rows, { Cat: 'Category', Grp: 'Category', Val: 'Quantity' }, 'Grp');
-    // Boxplot honors colorLayout via the shared helper; grouped bar's group→
-    // xOffset suppression is confident-nested only, so this asserts the boxplot
-    // override path (the user-facing toggle) explicitly.
+  it('local dodge with one value per band auto-resolves to one-per-band (no offset)', () => {
+    // Grp is 1:1 with Cat → maxPerBand 1. Even when the user explicitly asks for
+    // `local`, there is nothing to subdivide, so it must collapse to full-width
+    // (no xOffset) rather than render a lone left-aligned sliver. (`none` is not
+    // a user-facing option — one-per-band is reached automatically.)
+    const pairs = [['A', 'Alpha'], ['B', 'Beta'], ['C', 'Gamma']];
+    const rows = pairs.map(([c, g], i) => ({ Cat: c, Grp: g, Val: (i + 1) * 5 }));
     const boxInput = {
       data: { values: rows },
       semantic_types: { Cat: 'Category', Grp: 'Category', Val: 'Quantity' },
       chart_spec: {
         chartType: 'Boxplot',
         encodings: { x: { field: 'Cat' }, y: { field: 'Val' }, color: { field: 'Grp' } },
-        chartProperties: { colorLayout: 'nested' },
+        chartProperties: { dodge: 'local' },
         baseSize: { width: 500, height: 320 },
       },
     } as any;
-    void input;
     const spec = assembleVegaLite(boxInput) as any;
     expect(spec.encoding?.xOffset).toBeUndefined();
   });

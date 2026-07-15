@@ -18,6 +18,7 @@ import {
 } from './utils';
 import type { ColorDecision } from '../../core/color-decisions';
 import { pickEChartsPalette } from '../colormap';
+import { planBandDodge, resolveDodge } from '../../core/band-dodge';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
@@ -28,6 +29,57 @@ import { makeCartesianPivot } from '../../core/pivot';
 // ---------------------------------------------------------------------------
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
+
+/**
+ * `local` dodge for grouped bars: build `maxPerBand` LANE series (native ECharts
+ * grouping = compact, left-anchored) instead of one series per global group.
+ * Each bar is colored per-datum by its actual group value, and a custom legend
+ * maps group → color. Returns the series[] + legend data, or null when the plan
+ * doesn't call for local dodge.
+ */
+function buildLocalLaneSeries(
+    table: any[],
+    categories: string[],
+    catField: string,
+    groupField: string,
+    valField: string,
+    groupColor: (g: string) => string,
+): { series: any[]; legendData: { name: string; itemStyle: { color: string } }[] } | null {
+    const globalGroups: string[] = [...new Set(table.map((r) => String(r[groupField] ?? '')))].filter(Boolean);
+    // Per-band ordered present groups → lane index.
+    const perBand = new Map<string, string[]>();
+    for (const cat of categories) perBand.set(cat, []);
+    for (const r of table) {
+        const cat = String(r[catField] ?? '');
+        const g = String(r[groupField] ?? '');
+        if (!perBand.has(cat) || !g) continue;
+        const arr = perBand.get(cat)!;
+        if (!arr.includes(g)) arr.push(g);
+    }
+    for (const arr of perBand.values()) arr.sort();
+    const maxPerBand = Math.max(1, ...[...perBand.values()].map((a) => a.length));
+    if (maxPerBand <= 1) return null;
+
+    // value lookup per (cat, group)
+    const valAt = new Map<string, number>();
+    for (const r of table) {
+        const v = Number(r[valField]);
+        if (isFinite(v)) valAt.set(`${r[catField]}\u0000${r[groupField]}`, v);
+    }
+
+    const series = Array.from({ length: maxPerBand }, (_, lane) => ({
+        type: 'bar',
+        name: `__lane${lane}`,
+        data: categories.map((cat) => {
+            const g = perBand.get(cat)?.[lane];
+            if (g === undefined) return '-';
+            const v = valAt.get(`${cat}\u0000${g}`);
+            return v === undefined ? '-' : { value: v, itemStyle: { color: groupColor(g) } };
+        }),
+    }));
+    const legendData = globalGroups.map((g) => ({ name: g, itemStyle: { color: groupColor(g) } }));
+    return { series, legendData };
+}
 
 /**
  * For a category-axis bar chart, build an array of values aligned to the
@@ -639,13 +691,22 @@ export const ecGroupedBarChartDef: ChartTemplateDef = {
     template: { mark: 'bar', encoding: {} },
     channels: ['x', 'y', 'group', 'color', 'column', 'row'],
     markCognitiveChannel: 'length',
-    declareLayoutMode: (cs, table) => {
+    declareLayoutMode: (cs, table, chartProperties) => {
         const result = detectBandedAxisForceDiscrete(cs, table, { preferAxis: 'x' });
         const axis = result?.axis || 'x';
-        return {
+        const decl: import('../../core/types').LayoutDeclaration = {
             axisFlags: { [axis]: { banded: true } },
             resolvedTypes: result?.resolvedTypes,
         };
+        // `local` dodge budgets only maxPerBand lanes per band (compact).
+        const groupField = cs.group?.field || cs.color?.field;
+        const axisField = cs[axis]?.field;
+        if (groupField && axisField) {
+            const plan = planBandDodge(table, axisField, groupField);
+            const { mode } = resolveDodge(plan, chartProperties?.dodge);
+            if (mode === 'local') decl.groupLaneCount = Math.max(1, plan.maxPerBand);
+        }
+        return decl;
     },
     instantiate: (spec, ctx) => {
         const { channelSemantics, table } = ctx;
@@ -874,6 +935,24 @@ export const ecGroupedBarChartDef: ChartTemplateDef = {
                     // 颜色由全局 palette 决定。
                 });
             }
+
+            // `local` dodge → rebuild as compact maxPerBand lane-series (native,
+            // left-anchored), colored per-datum by group. Replaces the per-group
+            // series built above. `none`/`global` keep the native series above.
+            const gAxisField = channelSemantics[categoryAxis]?.field;
+            if (gAxisField) {
+                const plan = planBandDodge(ctx.fullTable ?? table, gAxisField, groupField);
+                const { mode } = resolveDodge(plan, ctx.chartProperties?.dodge);
+                if (mode === 'local') {
+                    const palette = pickEChartsPalette(ctx.colorDecisions?.group ?? ctx.colorDecisions?.color);
+                    const colorFor = (g: string) => palette[legendKeys.indexOf(g) % palette.length] ?? palette[0];
+                    const built = buildLocalLaneSeries(table, categories, catField, groupField, valField, colorFor);
+                    if (built) {
+                        option.series = built.series;
+                        option.legend.data = built.legendData;
+                    }
+                }
+            }
         } else {
             // No grouping — single series
             const data = buildCategoryValues(table, catField, valField, categories);
@@ -884,6 +963,27 @@ export const ecGroupedBarChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    properties: [
+        {
+            key: 'dodge', label: 'Dodge', type: 'discrete',
+            options: [
+                { value: 'auto',   label: 'Auto' },
+                { value: 'local',  label: 'Local (compact)' },
+                { value: 'global', label: 'Global (aligned)' },
+            ],
+            defaultValue: 'auto',
+            check: (ctx) => {
+                const groupField = ctx.channelSemantics?.group?.field ?? ctx.encodings?.group?.field;
+                const axisField = isDiscrete(ctx.channelSemantics?.x?.type)
+                    ? ctx.channelSemantics?.x?.field
+                    : ctx.channelSemantics?.y?.field;
+                const rows = ctx.data;
+                if (!groupField || !axisField || !rows) return { applicable: false };
+                const plan = planBandDodge(rows, axisField, groupField);
+                return { applicable: plan.ambiguous, recommendedValue: plan.mode === 'none' ? 'auto' : plan.mode };
+            },
+        } as ChartPropertyDef,
+    ],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],

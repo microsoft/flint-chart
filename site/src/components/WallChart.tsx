@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
-import { assembleVegaLite, assembleECharts, assembleChartjs } from 'flint-chart';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { testCaseToAssemblyInput, thumbnailCanvasSize, type CanvasSize } from '../shared/test-case-utils';
-import type { PreviewBackend } from '../shared/supported-backends';
+import { BACKENDS, type PreviewBackend } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
 
 /**
@@ -45,9 +44,7 @@ export function WallChart({
 
   const compiled = useMemo(() => {
     try {
-      if (backend === 'vegalite') return { ok: true as const, value: assembleVegaLite(input) };
-      if (backend === 'echarts') return { ok: true as const, value: assembleECharts(input) };
-      return { ok: true as const, value: assembleChartjs(input) };
+      return { ok: true as const, value: BACKENDS[backend].assemble(input) };
     } catch (err) {
       return { ok: false as const, err };
     }

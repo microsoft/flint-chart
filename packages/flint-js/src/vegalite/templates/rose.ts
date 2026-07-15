@@ -42,6 +42,27 @@ export const roseChartDef: ChartTemplateDef = {
         const { x, y, color, column, row, ...rest } = ctx.resolvedEncodings;
         const isFaceted = !!(column || row);
 
+        // Slice ordering: 'none' keeps the category/data order; 'descending' /
+        // 'ascending' reorder the angular wedges (and their colours) by each
+        // category's total. We resolve the order to an EXPLICIT array so that
+        // both theta (slice angle) and the colour/legend follow the same order —
+        // a `{field, op}` sort on theta alone does not reliably reorder the
+        // wedges of a stacked arc.
+        const sortSlices = ctx.chartProperties?.sortSlices;
+        let sliceOrder: string[] | undefined;
+        if ((sortSlices === 'descending' || sortSlices === 'ascending') && x?.field && y?.field) {
+            const totals = new Map<string, number>();
+            for (const rr of ctx.table) {
+                const c = String((rr as any)[x.field] ?? '');
+                totals.set(c, (totals.get(c) ?? 0) + (Number((rr as any)[y.field]) || 0));
+            }
+            sliceOrder = [...totals.keys()].sort((a, b) =>
+                sortSlices === 'descending'
+                    ? (totals.get(b) ?? 0) - (totals.get(a) ?? 0)
+                    : (totals.get(a) ?? 0) - (totals.get(b) ?? 0),
+            );
+        }
+
         // ── theta encoding (shared) ──
         if (x) {
             const thetaEnc: any = { ...x };
@@ -68,11 +89,9 @@ export const roseChartDef: ChartTemplateDef = {
                 // 'left': no range offset needed — default [0, 2π] puts left edge at top
             }
 
-            // Slice ordering (design choice): default keeps the category order;
-            // sorting by value reorders the angular wedges by their radius sum.
-            const sortSlices = ctx.chartProperties?.sortSlices;
-            if ((sortSlices === 'descending' || sortSlices === 'ascending') && y?.field) {
-                thetaEnc.sort = { field: y.field, op: 'sum', order: sortSlices };
+            // Reorder the angular wedges by category total when sorting.
+            if (sliceOrder) {
+                thetaEnc.sort = sliceOrder;
             }
 
             spec.encoding.theta = thetaEnc;
@@ -100,7 +119,9 @@ export const roseChartDef: ChartTemplateDef = {
         } else if (x) {
             // No color channel: color by category (like a pie chart)
             colorEnc = { field: x.field, type: x.type || 'nominal' };
-            if (Array.isArray(x.sort)) {
+            if (sliceOrder) {
+                colorEnc.sort = sliceOrder;
+            } else if (Array.isArray(x.sort)) {
                 colorEnc.sort = x.sort;
             }
         }
@@ -205,9 +226,6 @@ export const roseChartDef: ChartTemplateDef = {
         const config = ctx.chartProperties;
         if (config) {
             const markTarget = spec.layer ? spec.layer[0] : spec;
-            if (config.innerRadius > 0) {
-                markTarget.mark = setMarkProp(markTarget.mark, 'innerRadius', config.innerRadius);
-            }
             if (config.padAngle > 0) {
                 markTarget.mark = setMarkProp(markTarget.mark, 'padAngle', config.padAngle);
             }
@@ -215,7 +233,6 @@ export const roseChartDef: ChartTemplateDef = {
     },
 
     properties: [
-        { key: "innerRadius", label: "Inner Radius", type: "continuous", min: 0, max: 100, step: 5, defaultValue: 0 },
         { key: "padAngle", label: "Gap", type: "continuous", min: 0, max: 0.1, step: 0.005, defaultValue: 0 },
         {
             key: 'alignment', label: 'Alignment', type: 'discrete', options: [

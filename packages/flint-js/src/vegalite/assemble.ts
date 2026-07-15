@@ -55,7 +55,7 @@ import {
 import type { ChartWarning, ChartOption, OptionEvalContext } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
-import { planBandDodge } from '../core/band-dodge';
+import { planBandDodge, resolveDodge } from '../core/band-dodge';
 import { applyPivot, type PivotSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
@@ -445,7 +445,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const resolvedEncodings = buildVLEncodings(
         encodings, channelSemantics, declaration, data,
         canvasSize, semanticTypes, templateMarkType, chartTemplate,
-        fieldDisplayNames,
+        fieldDisplayNames, chartProperties,
     );
 
     // --- Align sort/domain arrays to converted data types ---
@@ -728,6 +728,7 @@ function buildVLEncodings(
     templateMarkType: string | undefined,
     chartTemplate: ChartTemplateDef,
     fieldDisplayNames?: Record<string, string>,
+    chartProperties?: Record<string, any>,
 ): Record<string, any> {
     const resolvedEncodings: Record<string, any> = {};
 
@@ -971,15 +972,18 @@ function buildVLEncodings(
         }
         delete resolvedEncodings.group;
 
-        // Suppress the dodge offset when the group field is redundant/nested with
-        // the axis (group == x, or a 1:1 pair): otherwise VL subdivides each band
-        // by the global group domain and every bar collapses to ~1/N width. This
-        // mirrors the grouping suppression in computeLayout so the band budget and
-        // the offset agree. Confident-nested only (maxPerBand <= 1).
+        // Suppress the dodge offset when the group is redundant/nested with the
+        // axis (group == x, or a 1:1 pair), OR when the user forces `dodge: none`.
+        // Otherwise VL subdivides each band by the global group domain. `local`
+        // and `global` both keep the (global) offset for now — the compact
+        // `local` renderer is a follow-up; the layout budget stays consistent.
         const groupAxisField = channelSemantics[groupAxis]?.field;
+        const groupPlan = groupAxisField
+            ? planBandDodge(data, groupAxisField, groupCS.field)
+            : undefined;
+        const groupMode = groupPlan ? resolveDodge(groupPlan, chartProperties?.dodge).mode : 'global';
         const groupIsNested = !!groupAxisField
-            && (groupAxisField === groupCS.field
-                || planBandDodge(data, groupAxisField, groupCS.field).maxPerBand <= 1);
+            && (groupAxisField === groupCS.field || groupMode === 'none');
 
         // Create offset encoding for position subdivision.
         // Coordinate sort with color so bar order matches legend order.

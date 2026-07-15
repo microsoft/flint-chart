@@ -243,6 +243,15 @@ export interface LayoutDeclaration {
     colorActsAsGroup?: boolean;
 
     /**
+     * Override the number of sub-lanes the grouping field reserves per band.
+     * When unset, computeLayout uses the global distinct count of the group
+     * field. Templates that render `local` (compact) dodge set this to the
+     * per-band max cardinality (`maxPerBand`) so the band is budgeted for only
+     * as many lanes as the busiest band actually uses.
+     */
+    groupLaneCount?: number;
+
+    /**
      * Custom overflow strategy for deciding which discrete values to keep
      * when a channel overflows. If not provided, the default strategy is used.
      *

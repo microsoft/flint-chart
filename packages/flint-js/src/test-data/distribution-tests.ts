@@ -272,6 +272,42 @@ export function genBoxplotTests(): TestCase[] {
         });
     }
 
+    // Explicit global vs local dodge demo (sparse dept × level).
+    {
+        const depts = ['Eng', 'Sales', 'HR', 'Ops', 'Legal', 'Finance'];
+        const levels = ['L1', 'L2', 'L3', 'L4', 'L5'];
+        const subset: Record<string, string[]> = {
+            Eng: ['L1', 'L2'], Sales: ['L2', 'L3'], HR: ['L3', 'L4'], Ops: ['L4', 'L5'], Legal: ['L5', 'L1'], Finance: ['L1', 'L3'],
+        };
+        const mkData = () => {
+            const d: any[] = [];
+            for (const dp of depts) for (const l of subset[dp]) for (let i = 0; i < 18; i++) {
+                d.push({ Department: dp, Level: l, Comp: Math.round(30000 + (l.charCodeAt(1) % 5) * 15000 + rand() * 90000) });
+            }
+            return d;
+        };
+        const meta = {
+            Department: { type: Type.String, semanticType: 'Department', levels: depts },
+            Comp: { type: Type.Number, semanticType: 'Amount', levels: [] },
+            Level: { type: Type.String, semanticType: 'Category', levels: levels },
+        };
+        for (const mode of ['global', 'local'] as const) {
+            tests.push({
+                title: mode === 'global' ? 'Dodge = Global (aligned)' : 'Dodge = Local (compact)',
+                description: mode === 'global'
+                    ? 'fixed lane per level across depts — gaps where a level is absent'
+                    : 'compact maxPerBand lanes per dept, centered (VL)',
+                tags: ['nominal', 'quantitative', 'color', 'sparse', `dodge-${mode}`, 'gallery-pin'],
+                chartType: 'Boxplot',
+                data: mkData(),
+                fields: [makeField('Department'), makeField('Comp'), makeField('Level')],
+                metadata: meta,
+                chartProperties: { dodge: mode },
+                encodingMap: { x: makeEncodingItem('Department'), y: makeEncodingItem('Comp'), color: makeEncodingItem('Level') },
+            });
+        }
+    }
+
     return tests;
 }
 

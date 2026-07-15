@@ -14,7 +14,8 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, groupBy, getCategoryOrder } from './utils';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
-import { planBandDodge, resolveBandDodge } from '../../core/band-dodge';
+import { planBandDodge, resolveDodge } from '../../core/band-dodge';
+import { pickEChartsPalette } from '../colormap';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
 
@@ -83,15 +84,23 @@ export const ecBoxplotDef: ChartTemplateDef = {
     template: { mark: 'boxplot', encoding: {} },
     channels: ['x', 'y', 'color', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'position',
-    declareLayoutMode: (cs, table) => {
+    declareLayoutMode: (cs, table, chartProperties) => {
         if (!cs.x?.field || !cs.y?.field) return {};
         const result = detectBandedAxisForceDiscrete(cs, table, { preferAxis: 'x' });
         if (!result) return {};
-        return {
+        const decl: import('../../core/types').LayoutDeclaration = {
             axisFlags: { [result.axis]: { banded: true } },
             resolvedTypes: result.resolvedTypes,
             paramOverrides: { defaultBandSize: 28 },  // box+whisker needs wider bands
         };
+        const colorField = cs.color?.field;
+        const axisField = cs[result.axis]?.field;
+        if (colorField && axisField && isDiscrete(cs.color?.type)) {
+            const plan = planBandDodge(table, axisField, colorField);
+            const { mode } = resolveDodge(plan, chartProperties?.dodge);
+            if (mode === 'local') decl.groupLaneCount = Math.max(1, plan.maxPerBand);
+        }
+        return decl;
     },
     instantiate: (spec, ctx) => {
         const { channelSemantics, table } = ctx;
@@ -133,14 +142,13 @@ export const ecBoxplotDef: ChartTemplateDef = {
         // or a 1:1 field pair) — in which case a single boxplot series is correct.
         // Sharing `planBandDodge` avoids the collapse-to-slivers bug AND the
         // degenerate zero-boxes that a per-color series would draw in empty cells.
-        const dodgeColor = colorIsDiscrete && colorField
-            ? resolveBandDodge(
-                planBandDodge(ctx.fullTable ?? table, catField, colorField, {
-                    nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
-                }),
-                ctx.chartProperties?.colorLayout,
-            ).dodge
-            : false;
+        const dodgePlan = colorIsDiscrete && colorField
+            ? planBandDodge(ctx.fullTable ?? table, catField, colorField, {
+                nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
+            })
+            : null;
+        const dodgeMode = dodgePlan ? resolveDodge(dodgePlan, ctx.chartProperties?.dodge).mode : 'none';
+        const dodgeColor = dodgeMode !== 'none';
 
         // 颜色由 ecApplyLayoutToSpec 根据 colorDecisions 统一分配（不在此处硬编码）
         const isHorizontal = catAxis === 'y';
@@ -167,7 +175,57 @@ export const ecBoxplotDef: ChartTemplateDef = {
             series: [],
         };
 
-        if (colorIsDiscrete && colorField && dodgeColor) {
+        if (colorIsDiscrete && colorField && dodgeMode === 'local') {
+            // Local (compact) dodge: only `maxPerBand` lanes, packed left-aligned
+            // per band. Each lane is a boxplot series; a band that has fewer than
+            // `maxPerBand` present colors simply leaves trailing lanes null. Boxes
+            // are colored per-datum by their color value (a custom legend maps the
+            // color value → swatch, since lane-series names are synthetic).
+            const globalColors = [...new Set(
+                (ctx.fullTable ?? table).map((r: any) => String(r[colorField] ?? '')),
+            )].filter(Boolean).sort();
+            const palette = pickEChartsPalette(ctx.colorDecisions?.color);
+            const colorFor = (g: string) => palette[Math.max(0, globalColors.indexOf(g)) % palette.length];
+
+            // Per-band ordered present colors → lane index.
+            const perBand = new Map<string, string[]>();
+            for (const cat of categories) perBand.set(cat, []);
+            for (const r of table) {
+                const cat = String(r[catField] ?? '');
+                const g = String(r[colorField] ?? '');
+                if (!perBand.has(cat) || !g) continue;
+                const arr = perBand.get(cat)!;
+                if (!arr.includes(g)) arr.push(g);
+            }
+            for (const arr of perBand.values()) arr.sort();
+            const maxPerBand = Math.max(1, ...[...perBand.values()].map((a) => a.length));
+
+            // value lookup per (cat, color)
+            const catGroups = groupBy(table, catField);
+            for (let lane = 0; lane < maxPerBand; lane++) {
+                const boxData: ({ value: [number, number, number, number, number]; itemStyle: any } | null)[] = [];
+                const outlierData: any[] = [];
+                for (let i = 0; i < categories.length; i++) {
+                    const cat = categories[i];
+                    const g = perBand.get(cat)?.[lane];
+                    if (g === undefined) { boxData.push(null); continue; }
+                    const rows = (catGroups.get(cat) || []).filter((r: any) => String(r[colorField] ?? '') === g);
+                    const values = rows.map((r: any) => Number(r[valField])).filter((v: number) => isFinite(v));
+                    if (!values.length) { boxData.push(null); continue; }
+                    const c = colorFor(g);
+                    boxData.push({ value: fiveNumberSummary(values, whiskerMethod), itemStyle: { color: c, borderColor: c } });
+                    if (showOutliers) {
+                        for (const o of findOutliers(values)) outlierData.push({ value: [i, o], itemStyle: { color: c } });
+                    }
+                }
+                option.series.push({ name: `__lane${lane}`, type: 'boxplot', data: boxData });
+                if (outlierData.length > 0) {
+                    option.series.push({ name: `__lane${lane} (outliers)`, type: 'scatter', data: outlierData, symbolSize: 4 });
+                }
+            }
+            option.legend = { data: globalColors.map((g) => ({ name: g, itemStyle: { color: colorFor(g) } })) };
+            option._legendTitle = colorField;
+        } else if (colorIsDiscrete && colorField && dodgeColor) {
             // Grouped boxplot: one series per color value (e.g. Male, Female)
             const colorCategories = extractCategories(table, colorField, getCategoryOrder(ctx, 'color'));
             const catGroups = groupBy(table, catField);
@@ -268,11 +326,11 @@ export const ecBoxplotDef: ChartTemplateDef = {
             check: (ctx) => ({ applicable: ctx.chartProperties?.whiskerMethod !== 'minmax' }),
         } as ChartPropertyDef,
         {
-            key: 'colorLayout', label: 'Color layout', type: 'discrete',
+            key: 'dodge', label: 'Dodge', type: 'discrete',
             options: [
                 { value: 'auto',   label: 'Auto' },
-                { value: 'dodge',  label: 'Side by side' },
-                { value: 'nested', label: 'One per band' },
+                { value: 'local',  label: 'Local (compact)' },
+                { value: 'global', label: 'Global (aligned)' },
             ],
             defaultValue: 'auto',
             check: (ctx) => {
@@ -288,7 +346,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
                 const plan = planBandDodge(rows, axisField, colorField, {
                     nestedSnapThreshold: ctx.chartProperties?.nestedSnapThreshold,
                 });
-                return { applicable: plan.ambiguous, recommendedValue: plan.dodge ? 'dodge' : 'nested' };
+                return { applicable: plan.ambiguous, recommendedValue: plan.mode === 'none' ? 'auto' : plan.mode };
             },
         } as ChartPropertyDef,
     ],

@@ -107,9 +107,12 @@ export const cjsRoseChartDef: ChartTemplateDef = {
 
         const alignment = ctx.chartProperties?.alignment ?? 'left';
         const n = categories.length;
-        // Chart.js polarArea: startAngle 0 = 12 o'clock, CW.
-        // Default (startAngle=0) is left alignment.
-        // For center: offset by -halfSlice degrees.
+        // Chart.js polarArea rotation lives on the RADIAL SCALE
+        // (`scales.r.startAngle`, in degrees, 0 = 12 o'clock, CW) — the
+        // top-level `options.startAngle` is NOT read for polarArea and has no
+        // effect. Default (0) is left alignment (first wedge's left edge at 12
+        // o'clock); center rotates back by half a slice so the first wedge is
+        // centred on 12 o'clock.
         const startAngle = alignment === 'center' && n > 0
             ? -(180 / n)
             : 0;
@@ -128,10 +131,10 @@ export const cjsRoseChartDef: ChartTemplateDef = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                startAngle,
                 scales: {
                     r: {
                         beginAtZero: true,
+                        startAngle,
                         // Radii are sqrt(value); the raw tick numbers would
                         // misrepresent the scale, so hide them (true values are
                         // surfaced in the tooltip).
