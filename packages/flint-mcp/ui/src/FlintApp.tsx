@@ -127,7 +127,7 @@ function ChartSelector(props: {
             </option>
           ))
         ) : (
-          <option value="current">Current chart</option>
+          <option value="current">Custom chart</option>
         )}
       </select>
     </label>
@@ -173,7 +173,6 @@ function DimensionsControl(props: {
 
   return (
     <span className="toolbar-control dimensions">
-      <span>Dimensions</span>
       <input
         aria-label="Chart width"
         inputMode="numeric"
@@ -191,6 +190,7 @@ function DimensionsControl(props: {
         type="number"
         value={size.height}
       />
+      <span aria-hidden="true">px</span>
     </span>
   );
 }
@@ -390,43 +390,71 @@ export function FlintAppInner(props: {
         paddingLeft: hostContext?.safeAreaInsets?.left,
       }}
     >
-      <header className="toolbar" role="toolbar" aria-label="Flint chart controls">
-        <div className="view-toggle" role="group" aria-label="Chart output">
-          <button aria-pressed={view === 'preview'} onClick={() => setView('preview')} type="button">Preview</button>
-          <button aria-pressed={view === 'vega-lite'} onClick={() => setView('vega-lite')} type="button">Vega-Lite</button>
+      <header className="workspace-heading">
+        <div>
+          <p>Flint</p>
+          <h1>Interactive chart workspace</h1>
         </div>
-        <ChartSelector input={current} model={model} onInput={setCurrent} />
-        <ChartTypeSelector input={current} model={model} onInput={setCurrent} />
-        <DimensionsControl input={current} onInput={setCurrent} />
-        <CopyPngButton svg={render?.svg} />
-        <button
-          aria-expanded={isEditing}
-          className="toolbar-button"
-          onClick={() => setIsEditing((visible) => !visible)}
-          type="button"
-        >
-          {isEditing ? 'Hide editor' : 'Edit chart'}
-        </button>
+        <span>Inline data only</span>
       </header>
 
       <section className="workspace">
-        {view === 'preview' ? (
+        <section className="preview-pane" aria-labelledby="preview-heading">
+          <header className="preview-toolbar" role="toolbar" aria-label="Flint chart controls">
+            <h2 id="preview-heading">Preview</h2>
+            <button
+              aria-pressed={view === 'vega-lite'}
+              className="view-mode"
+              onClick={() => setView((mode) => mode === 'preview' ? 'vega-lite' : 'preview')}
+              type="button"
+            >
+              Vega-Lite
+            </button>
+            <ChartSelector input={current} model={model} onInput={setCurrent} />
+            <ChartTypeSelector input={current} model={model} onInput={setCurrent} />
+            <DimensionsControl input={current} onInput={setCurrent} />
+            <div className="toolbar-actions">
+              <CopyPngButton svg={render?.svg} />
+              <button
+                aria-expanded={isEditing}
+                className="toolbar-button"
+                onClick={() => setIsEditing((visible) => !visible)}
+                type="button"
+              >
+                {isEditing ? 'Hide editor' : 'Edit chart'}
+              </button>
+            </div>
+          </header>
+
           <div className="preview">
             {renderError ? (
               <div className="error"><strong>Could not render chart</strong><pre>{renderError}</pre></div>
+            ) : view === 'vega-lite' ? (
+              <pre className="preview-output">
+                {JSON.stringify(render?.vlSpec ?? (validation.valid ? {} : validation), null, 2)}
+              </pre>
             ) : render ? (
-              <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
+              <div className="chart-frame">
+                <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
+              </div>
             ) : (
               <div className="placeholder">{validation.valid ? 'Rendering chart...' : 'Fix the chart specification to preview it.'}</div>
             )}
           </div>
-        ) : (
+          <ValidationFeedback validation={validation} />
+        </section>
+
+        {isEditing && <Editor input={current} model={model} onInput={setCurrent} />}
+
+        <section className="output-pane" aria-labelledby="output-heading">
+          <header>
+            <h2 id="output-heading">Output</h2>
+            <span>Vega-Lite JSON · read-only</span>
+          </header>
           <pre className="output">
             {JSON.stringify(render?.vlSpec ?? (validation.valid ? {} : validation), null, 2)}
           </pre>
-        )}
-        <ValidationFeedback validation={validation} />
-        {isEditing && <Editor input={current} model={model} onInput={setCurrent} />}
+        </section>
       </section>
 
       <button className="send-chart" onClick={() => void sendEditedChart()} type="button">
