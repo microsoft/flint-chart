@@ -349,7 +349,6 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `padAngle` | number | 0 – 0.1 (step 0.005) | `0` | always | Angular gap between radial segments. |
 | `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |

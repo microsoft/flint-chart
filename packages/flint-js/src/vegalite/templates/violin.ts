@@ -33,6 +33,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
+import { planBandDodge } from '../../core/band-dodge';
 
 const isDiscrete = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
@@ -205,6 +206,7 @@ export const violinPlotDef: ChartTemplateDef = {
 
         // --- Color: default to the category so each violin has its own hue ---
         const catType = isDiscrete(x?.type) ? x.type : 'nominal';
+        const colorType = (color?.type as string) || 'nominal';
         if (colorField) {
             spec.encoding.color = { ...color };
         } else {
@@ -216,7 +218,26 @@ export const violinPlotDef: ChartTemplateDef = {
             spec.encoding.color.legend = null;
         }
 
-        // --- Per-category panels: the category occupies the column/wrap facet ---
+        // --- Grouped sub-distributions (a genuine colour sub-group) ---
+        // A violin cannot dodge full shapes side-by-side inside one panel — the
+        // KDE owns the continuous axis and VL drops an `xOffset` on a continuous
+        // x. So a genuine sub-group is laid out by count:
+        //   • 2 sub-groups  → SPLIT violin (the `stack:'center'` mirror below
+        //     seats one sub-group on each half — the standard split violin).
+        //   • ≥3 sub-groups → a per-(category × sub-group) small-multiples GRID
+        //     so every sub-group keeps its own independent, un-stacked shape (a
+        //     3-way centre stack misreads each layer's width).
+        // `planBandDodge` gates this so a redundant/1:1 colour (maxPerBand ≤ 1)
+        // stays a plain one-violin-per-category chart rather than dodging.
+        const genuineSubgroup =
+            !!colorField && colorField !== catField && !rowField &&
+            planBandDodge(ctx.table, catField, colorField).maxPerBand > 1;
+        const subgroupCount = genuineSubgroup
+            ? new Set(ctx.table.map((r: any) => String(r[colorField]))).size
+            : 0;
+        const useGrid = genuineSubgroup && subgroupCount >= 3;
+
+        // --- Per-category panels ---
         const cats = distinctValues(ctx.table, catField);
         const catCount = Math.max(1, cats.length);
 
@@ -228,12 +249,6 @@ export const violinPlotDef: ChartTemplateDef = {
         const reservedW = 60;   // value axis + its title
         const reservedH = 70;   // facet headers + breathing room
         const minPanelW = 44;
-        const maxPerRow = Math.max(1, Math.floor((canvasW - reservedW) / (minPanelW + spacing)));
-        const columns = Math.min(catCount, maxPerRow);
-        const rows = Math.ceil(catCount / columns);
-        let panelW = Math.round((canvasW - reservedW - (columns - 1) * spacing) / columns);
-        panelW = Math.max(minPanelW, Math.min(panelW, 220));
-        const panelH = Math.max(120, Math.round((canvasH - reservedH) / rows) - (rows > 1 ? 24 : 0));
 
         const facetDef: any = {
             field: catField,
@@ -243,24 +258,50 @@ export const violinPlotDef: ChartTemplateDef = {
             header: { titleOrient: 'bottom', labelOrient: 'bottom', labelPadding: 2 },
         };
 
-        if (row) {
-            // An additional OUTER facet → 2-D grid: category in columns, the
-            // outer field in rows (VL cannot combine a wrap `facet` with `row`).
-            // A non-wrap `column` + `row` pair is left intact by restructureFacets.
+        if (useGrid) {
+            // 2-D grid: category across columns, sub-group down rows. Each cell is
+            // one clean full violin; the row headers label the sub-group, so the
+            // colour legend is redundant.
+            let panelW = Math.round((canvasW - reservedW) / catCount);
+            panelW = Math.max(minPanelW, Math.min(panelW, 220));
+            const panelH = Math.max(70, Math.round((canvasH - reservedH) / subgroupCount) - 10);
             spec.encoding.column = facetDef;
-            spec.encoding.row = row;
+            spec.encoding.row = {
+                field: colorField,
+                type: colorType,
+                ...(color?.sort !== undefined ? { sort: color.sort } : {}),
+                header: { labelAngle: 0 },
+            };
+            if (spec.encoding.color) spec.encoding.color.legend = null;
+            spec.width = panelW;
+            spec.height = panelH;
         } else {
-            // The per-category panels occupy a wrap facet with an EXPLICIT column
-            // count. We set `encoding.facet` directly (not `encoding.column`) so
-            // the assembler's restructureFacets leaves the grid untouched — it
-            // would otherwise collapse an un-tracked column facet to `columns: 1`.
-            spec.encoding.facet = { ...facetDef, columns };
-        }
+            const maxPerRow = Math.max(1, Math.floor((canvasW - reservedW) / (minPanelW + spacing)));
+            const columns = Math.min(catCount, maxPerRow);
+            const gridRows = Math.ceil(catCount / columns);
+            let panelW = Math.round((canvasW - reservedW - (columns - 1) * spacing) / columns);
+            panelW = Math.max(minPanelW, Math.min(panelW, 220));
+            const panelH = Math.max(120, Math.round((canvasH - reservedH) / gridRows) - (gridRows > 1 ? 24 : 0));
 
-        // Explicit per-panel size (numbers) so vlApplyLayoutToSpec keeps them and
-        // the grid is the per-category strip, not a single oversized plot.
-        spec.width = panelW;
-        spec.height = panelH;
+            if (row) {
+                // An additional OUTER facet → 2-D grid: category in columns, the
+                // outer field in rows (VL cannot combine a wrap `facet` with `row`).
+                // A non-wrap `column` + `row` pair is left intact by restructureFacets.
+                spec.encoding.column = facetDef;
+                spec.encoding.row = row;
+            } else {
+                // The per-category panels occupy a wrap facet with an EXPLICIT column
+                // count. We set `encoding.facet` directly (not `encoding.column`) so
+                // the assembler's restructureFacets leaves the grid untouched — it
+                // would otherwise collapse an un-tracked column facet to `columns: 1`.
+                spec.encoding.facet = { ...facetDef, columns };
+            }
+
+            // Explicit per-panel size (numbers) so vlApplyLayoutToSpec keeps them and
+            // the grid is the per-category strip, not a single oversized plot.
+            spec.width = panelW;
+            spec.height = panelH;
+        }
     },
     properties: [
         { key: 'bandwidth', label: 'Bandwidth', type: 'continuous', min: 0.05, max: 2, step: 0.05, defaultValue: 0 },

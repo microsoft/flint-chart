@@ -209,6 +209,73 @@ describe('Vega-Lite Violin Plot — shapes & cardinalities', () => {
   });
 });
 
+describe('Vega-Lite Violin Plot — grouped by a colour sub-group', () => {
+  function groupedInput(subgroups: string[]) {
+    const cats = ['Eng', 'Sales', 'HR'];
+    const rows: any[] = [];
+    let s = 1;
+    const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+    cats.forEach((c, ci) => subgroups.forEach((g, gi) => {
+      for (let i = 0; i < 30; i++) {
+        rows.push({ Dept: c, Shift: g, Salary: Math.round(40000 + ci * 15000 + gi * 9000 + rnd() * 50000) });
+      }
+    }));
+    return {
+      data: { values: rows },
+      semantic_types: { Dept: 'Category', Shift: 'Category', Salary: 'Amount' },
+      chart_spec: {
+        chartType: 'Violin Plot',
+        encodings: { x: 'Dept', y: 'Salary', color: 'Shift' },
+        baseSize: { width: 620, height: 380 },
+      },
+    };
+  }
+
+  it('keeps a 2-value sub-group as a split violin (one panel per category)', () => {
+    const s = assembleVegaLite(groupedInput(['Day', 'Night'])) as any;
+    // Split: still the per-category wrap facet, colour = sub-group, no row grid.
+    expect(s.encoding.facet?.field).toBe('Dept');
+    expect(s.encoding.row ?? null).toBeNull();
+    expect(s.encoding.color.field).toBe('Shift');
+    // The centre-stacked mirror seats the two sub-groups on either half.
+    expect(s.encoding.x.stack).toBe('center');
+  });
+
+  it('lays out a 3+ value sub-group as an independent-violin grid (category × sub-group)', () => {
+    const s = assembleVegaLite(groupedInput(['Day', 'Night', 'Swing'])) as any;
+    expect(s.encoding.column?.field).toBe('Dept');
+    expect(s.encoding.row?.field).toBe('Shift');
+    // Density keyed per (category, sub-group) so each grid cell is its own shape.
+    expect(s.transform[0].groupby).toEqual(
+      expect.arrayContaining(['Dept', 'Shift']),
+    );
+    // Colour legend suppressed — the row headers already label the sub-group.
+    expect(s.encoding.color.legend).toBeNull();
+  });
+
+  it('does NOT grid a redundant (1:1) colour — stays one violin per category', () => {
+    const cats = ['A', 'B', 'C', 'D'];
+    const rows: any[] = [];
+    let s2 = 5;
+    const rnd = () => { s2 = (s2 * 1103515245 + 12345) & 0x7fffffff; return s2 / 0x7fffffff; };
+    cats.forEach((c, ci) => {
+      for (let i = 0; i < 30; i++) rows.push({ Dept: c, Tag: `${c}_t`, Salary: Math.round(40000 + ci * 12000 + rnd() * 40000) });
+    });
+    const s = assembleVegaLite({
+      data: { values: rows },
+      semantic_types: { Dept: 'Category', Tag: 'Category', Salary: 'Amount' },
+      chart_spec: {
+        chartType: 'Violin Plot',
+        encodings: { x: 'Dept', y: 'Salary', color: 'Tag' },
+        baseSize: { width: 560, height: 360 },
+      },
+    }) as any;
+    // 1:1 colour ⇒ no dodge: per-category wrap facet, no row grid.
+    expect(s.encoding.facet?.field).toBe('Dept');
+    expect(s.encoding.row ?? null).toBeNull();
+  });
+});
+
 describe('Violin Plot gallery examples compile', () => {
   for (const tc of genViolinTests()) {
     it(`Vega-Lite: ${tc.title}`, () => {
