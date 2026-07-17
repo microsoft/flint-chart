@@ -25,4 +25,4 @@ export {
 } from './templates';
 
 // VL recommendation & adaptation
-export { vlAdaptChart, vlRecommendEncodings } from './recommendation';
+export { vlAdaptChart, vlRecommendEncodings, vlRecommendChartTypes, vlRecommendCharts } from './recommendation';

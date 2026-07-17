@@ -139,6 +139,20 @@ export {
     type SemanticRole,
 } from './recommendation';
 
+// Data-driven chart *type* recommendation
+export {
+    profileData,
+    rankChartTypes,
+    recommendChartTypes,
+    recommendChartTypesDetailed,
+    type ChartFieldRole,
+    type ProfiledField,
+    type DataProfile,
+    type ChartTypeSuggestion,
+    type RecommendChartTypesOptions,
+    type RecommendedChart,
+} from './chart-type-recommendation';
+
 // Field semantics
 export {
     type SemanticAnnotation,

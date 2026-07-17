@@ -17,7 +17,12 @@ import {
     pickDiscrete,
     pickLowCardDiscrete,
 } from '../core/recommendation';
-import { ecGetTemplateChannels } from './templates';
+import {
+    recommendChartTypes,
+    type RecommendChartTypesOptions,
+    type RecommendedChart,
+} from '../core/chart-type-recommendation';
+import { ecGetTemplateChannels, ecAllTemplateDefs } from './templates';
 
 // ── EC-extended recommendation ──────────────────────────────────────────
 
@@ -102,4 +107,37 @@ export function ecRecommendEncodings(
         if (validChannels.includes(ch)) result[ch] = field;
     }
     return result;
+}
+
+/** Chart-type names ECharts can render (its template catalog). */
+const EC_SUPPORTED_TYPES = ecAllTemplateDefs.map(d => d.chart);
+
+/**
+ * Recommend a ranked list of ECharts chart types for a dataset, restricted to
+ * chart types ECharts can render. See {@link ecRecommendCharts} for the
+ * one-step variant that also fills channels.
+ */
+export function ecRecommendChartTypes(
+    data: any[],
+    semanticTypes: Record<string, string>,
+    options: Omit<RecommendChartTypesOptions, 'supportedTypes'> = {},
+): string[] {
+    return recommendChartTypes(data, semanticTypes, { ...options, supportedTypes: EC_SUPPORTED_TYPES });
+}
+
+/**
+ * One-step recommendation: rank ECharts chart types for the data, then populate
+ * each with {@link ecRecommendEncodings}. Suggestions whose required channels
+ * cannot be filled are dropped, so every returned chart is renderable.
+ */
+export function ecRecommendCharts(
+    data: any[],
+    semanticTypes: Record<string, string>,
+    options: Omit<RecommendChartTypesOptions, 'supportedTypes'> = {},
+): RecommendedChart[] {
+    const { max, ...rest } = options;
+    const charts = ecRecommendChartTypes(data, semanticTypes, rest)
+        .map(chartType => ({ chartType, encodings: ecRecommendEncodings(chartType, data, semanticTypes) }))
+        .filter(s => Object.keys(s.encodings).length > 0);
+    return max != null ? charts.slice(0, max) : charts;
 }
