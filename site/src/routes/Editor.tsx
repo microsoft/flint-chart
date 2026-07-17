@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
+import { useTranslation } from 'react-i18next';
 import { SiteShell } from '../components/SiteShell';
 import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ResizeSplit } from '../components/ResizeSplit';
@@ -55,6 +56,7 @@ function parseLenientJson(text: string): unknown {
  * compiled spec for the backend selected in Preview tabs.
  */
 export function Editor() {
+  const { t } = useTranslation();
   const [text, setText] = useState<string>(JSON.stringify(EXAMPLES[0].input, null, 2));
   const [backend, setBackend] = useState<Backend>('vegalite');
   const [loadedFromGallery, setLoadedFromGallery] = useState(false);
@@ -146,7 +148,7 @@ export function Editor() {
       >
         <section className="editor-code-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
           <InputPane
-            label="Flint spec"
+            label={t('editor.flintSpec')}
             loadedFromGallery={loadedFromGallery}
             text={text}
             onChange={setText}
@@ -177,7 +179,7 @@ export function Editor() {
 
           <OutputPane
             backend={backend}
-            label="Output"
+            label={t('editor.output')}
             text={backendCodeText}
             foldKey={codeFoldKey}
             compiled={activeCompiled}
@@ -212,14 +214,15 @@ function InputPane({
   loadedFromGallery: boolean;
   foldKey: number;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="editor-input-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
       <PaneHeader label={label}>
         {loadedFromGallery ? (
-          <span style={galleryBadgeStyle}>loaded from Gallery</span>
+          <span style={galleryBadgeStyle}>{t('editor.loadedFromGallery')}</span>
         ) : (
           <>
-            <span style={paneHintStyle}>example</span>
+            <span style={paneHintStyle}>{t('editor.example')}</span>
             <select
               style={exampleSelectStyle}
               onChange={(e) => {
@@ -268,11 +271,12 @@ function PreviewPane({
   parsed: { ok: true; value: unknown } | { ok: false; err: unknown };
   compiled: CompileResult<unknown> | null;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="editor-preview-pane" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
       <header style={paneHeaderStyle}>
-        <span style={paneTitleStyle}>Preview</span>
-        <div style={backendToggleStyle} role="tablist" aria-label="Rendering backend">
+        <span style={paneTitleStyle}>{t('editor.preview')}</span>
+        <div style={backendToggleStyle} role="tablist" aria-label={t('editor.backendAria')}>
           {supportedBackends.map((b) => (
             <button
               key={b}
@@ -378,6 +382,7 @@ function OutputActions({
   text: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
   const editor = EXTERNAL_EDITORS[backend];
 
   const copy = async () => {
@@ -393,7 +398,7 @@ function OutputActions({
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
       <button type="button" onClick={copy} style={outputBtnStyle}>
-        {copied ? 'Copied' : 'Copy'}
+        {copied ? t('editor.copied') : t('editor.copy')}
       </button>
       {editor && (
         <button

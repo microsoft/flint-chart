@@ -1,6 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
+import { LocaleLink } from '../i18n/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { stripLocale } from '../i18n/paths';
+import type { Locale } from '../i18n/locales';
 import { CONTENT_MAX_WIDTH, GITHUB_REPO, siteTheme } from '../shared/theme';
 
 const GITHUB_REPO_API = 'https://api.github.com/repos/microsoft/flint-chart';
@@ -33,6 +38,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
 export function SiteNavBar(_props: { flush?: boolean } = {}) {
   const { pathname } = useLocation();
+  const logical = stripLocale(pathname);
+  const { t } = useTranslation();
 
   return (
     <header
@@ -54,31 +61,28 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
       <BrandLink />
 
       <nav className="site-nav-scroll" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
-        <NavLink to="/" active={pathname === '/'}>
-          About
+        <NavLink to="/" active={logical === '/'}>
+          {t('nav.about')}
         </NavLink>
-        <NavLink to="/mcp" active={pathname.startsWith('/mcp')}>
-          MCP Server
+        <NavLink to="/mcp" active={logical.startsWith('/mcp')}>
+          {t('nav.mcp')}
         </NavLink>
-        <NavLink to="/gallery" active={pathname.startsWith('/gallery') || pathname.startsWith('/wall')}>
-          Gallery
+        <NavLink to="/gallery" active={logical.startsWith('/gallery') || logical.startsWith('/wall')}>
+          {t('nav.gallery')}
         </NavLink>
         <NavLink
           to="/documentation"
-          active={pathname.startsWith('/documentation') || pathname.startsWith('/tutorials')}
+          active={logical.startsWith('/documentation') || logical.startsWith('/tutorials')}
         >
-          Documentation
+          {t('nav.documentation')}
         </NavLink>
-        <NavLink to="/editor" active={pathname.startsWith('/editor')}>
-          Online Editor
+        <NavLink to="/editor" active={logical.startsWith('/editor')}>
+          {t('nav.editor')}
         </NavLink>
-        {/* <NavLink to="/tutorials/quick-start" active={pathname === '/tutorials/quick-start'}>
-          Usage
-        </NavLink>
-        <NavLinkExternal href={`${GITHUB_REPO}#ecosystem`} label="Ecosystem" /> */}
       </nav>
 
       <div className="site-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <LanguageSwitch />
         <GitHubLink />
       </div>
     </header>
@@ -89,7 +93,7 @@ function NavLink({ to, active, children }: { to: string; active: boolean; childr
   const [hovered, setHovered] = useState(false);
   const underline = active || hovered;
   return (
-    <Link
+    <LocaleLink
       to={to}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -109,22 +113,14 @@ function NavLink({ to, active, children }: { to: string; active: boolean; childr
       }}
     >
       {children}
-    </Link>
-  );
-}
-
-function NavLinkExternal({ href, label }: { href: string; label: string }) {
-  return (
-    <a href={href} style={navLinkStyle} target="_blank" rel="noreferrer">
-      {label}
-    </a>
+    </LocaleLink>
   );
 }
 
 function BrandLink() {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link
+    <LocaleLink
       to="/"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -135,14 +131,62 @@ function BrandLink() {
       }}
     >
       flint-chart
-    </Link>
+    </LocaleLink>
+  );
+}
+
+function LanguageSwitch() {
+  const { t } = useTranslation();
+  const { locale, setLocale } = useLocale();
+  const options: { id: Locale; labelKey: 'nav.langEn' | 'nav.langZh' }[] = [
+    { id: 'en', labelKey: 'nav.langEn' },
+    { id: 'zh-CN', labelKey: 'nav.langZh' },
+  ];
+
+  return (
+    <div
+      role="group"
+      aria-label={t('nav.langSwitchAria')}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+    >
+      {options.map((opt, i) => {
+        const active = locale === opt.id;
+        return (
+          <span key={opt.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {i > 0 ? (
+              <span aria-hidden="true" style={{ color: siteTheme.border, fontSize: 12 }}>
+                |
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setLocale(opt.id)}
+              aria-pressed={active}
+              style={{
+                ...navLinkStyle,
+                padding: 0,
+                border: 0,
+                background: 'transparent',
+                cursor: 'pointer',
+                color: active ? siteTheme.text : siteTheme.navInactive,
+                fontWeight: active ? 600 : 400,
+              }}
+            >
+              {t(opt.labelKey)}
+            </button>
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
 function GitHubLink() {
+  const { t, i18n } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [starCount, setStarCount] = useState<number | null>(readCachedGitHubStars);
   const compactStarCount = starCount === null ? '' : formatCompactCount(starCount);
+  const countLabel = starCount === null ? '' : starCount.toLocaleString(i18n.language);
 
   useEffect(() => {
     let active = true;
@@ -164,8 +208,16 @@ function GitHubLink() {
       href={GITHUB_REPO}
       target="_blank"
       rel="noreferrer"
-      aria-label={starCount === null ? 'GitHub repository' : `GitHub repository, ${starCount.toLocaleString()} stars`}
-      title={starCount === null ? 'View on GitHub' : `View on GitHub (${starCount.toLocaleString()} stars)`}
+      aria-label={
+        starCount === null
+          ? t('nav.githubAria')
+          : t('nav.githubAriaStars', { count: countLabel })
+      }
+      title={
+        starCount === null
+          ? t('nav.githubTitle')
+          : t('nav.githubTitleStars', { count: countLabel })
+      }
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -178,7 +230,7 @@ function GitHubLink() {
       }}
     >
       <GitHubIcon />
-      GitHub
+      {t('nav.github')}
       <span
         aria-hidden="true"
         style={{
@@ -292,6 +344,7 @@ const navLinkStyle: CSSProperties = {
  * does not display third-party advertising.
  */
 export function MicrosoftDisclosures() {
+  const { t } = useTranslation();
   const linkStyle: CSSProperties = {
     color: siteTheme.textMuted,
     textDecoration: 'none',
@@ -312,18 +365,18 @@ export function MicrosoftDisclosures() {
         flexShrink: 0,
       }}
     >
-      <span style={{ marginRight: 12 }}>© 2026 Microsoft</span>
+      <span style={{ marginRight: 12 }}>{t('footer.copyright')}</span>
       <a className="site-text-link" style={linkStyle} href="https://go.microsoft.com/fwlink/?LinkID=206977">
-        Terms of Use
+        {t('footer.terms')}
       </a>
       <a className="site-text-link" style={linkStyle} href="https://go.microsoft.com/fwlink/?LinkId=521839">
-        Privacy &amp; Cookies
+        {t('footer.privacy')}
       </a>
       <a className="site-text-link" style={linkStyle} href="https://go.microsoft.com/fwlink/?linkid=2259814">
-        Consumer Health Privacy
+        {t('footer.health')}
       </a>
       <a className="site-text-link" style={linkStyle} href="https://www.microsoft.com/trademarks">
-        Trademarks
+        {t('footer.trademarks')}
       </a>
     </footer>
   );

@@ -1,0 +1,283 @@
+{
+  "nav": {
+    "about": "About",
+    "mcp": "MCP Server",
+    "gallery": "Gallery",
+    "documentation": "Documentation",
+    "editor": "Online Editor",
+    "github": "GitHub",
+    "githubAria": "GitHub repository",
+    "githubAriaStars": "GitHub repository, {{count}} stars",
+    "githubTitle": "View on GitHub",
+    "githubTitleStars": "View on GitHub ({{count}} stars)",
+    "langEn": "EN",
+    "langZh": "中文",
+    "langSwitchAria": "Switch language"
+  },
+  "footer": {
+    "copyright": "© 2026 Microsoft",
+    "terms": "Terms of Use",
+    "privacy": "Privacy & Cookies",
+    "health": "Consumer Health Privacy",
+    "trademarks": "Trademarks"
+  },
+  "docs": {
+    "notFound": "Document not found.",
+    "mobileLabel": "Documentation",
+    "mobileAria": "Choose documentation page",
+    "fallbackNote": "Chinese translation is not available yet; showing the English version.",
+    "groups": {
+      "quick-start": "Quick start",
+      "introduction": "Language design",
+      "reference": "Chart guide",
+      "extending": "Development"
+    },
+    "entries": {
+      "getting-started": {
+        "title": "Getting started",
+        "description": "Install Flint, then make your first chart from a simple DataSpec and ChartSpec."
+      },
+      "data-story": {
+        "title": "Example: a data story",
+        "description": "One DataSpec, five bespoke chart designs: switch templates and backends by editing only the ChartSpec."
+      },
+      "setup-flint-mcp": {
+        "title": "Set up Flint MCP",
+        "description": "Configure the MCP server, data roots, tools, resources, backends, and first verification prompt."
+      },
+      "agent-workflows": {
+        "title": "Agent workflows",
+        "description": "Walk through a Data Formulator-style agent workflow that uses Flint as the semantic chart layer."
+      },
+      "chart-sizing": {
+        "title": "Example: Auto Layout",
+        "description": "See how Flint automatically resizes charts as data gets denser or layout slots get constrained."
+      },
+      "overview": {
+        "title": "Overview",
+        "description": "Problem, dataSpec + chartSpec, compiler output, and doc map."
+      },
+      "architecture": {
+        "title": "Architecture",
+        "description": "Three-stage pipeline, design principles, and repo layout."
+      },
+      "semantic-types": {
+        "title": "Semantic Type",
+        "description": "Type hierarchy, annotations, compilation pipeline, and resolution rules."
+      },
+      "color-decisions": {
+        "title": "Color decisions",
+        "description": "Scheme families, ColorDecision, and per-backend palette selection."
+      },
+      "layout-model": {
+        "title": "Auto Layout Algorithm",
+        "description": "Spring, gas-pressure, radial, and area sizing models."
+      },
+      "api-reference": {
+        "title": "API reference",
+        "description": "ChartAssemblyInput, assemblers, encodings, options, and exports."
+      },
+      "reference-vegalite": {
+        "title": "Vega-Lite charts",
+        "description": "Every Vega-Lite chart type, its channels, and configurable parameters."
+      },
+      "reference-echarts": {
+        "title": "ECharts charts",
+        "description": "Every ECharts chart type, its channels, and configurable parameters."
+      },
+      "reference-chartjs": {
+        "title": "Chart.js charts",
+        "description": "Every Chart.js chart type, its channels, and configurable parameters."
+      },
+      "development": {
+        "title": "Development guide",
+        "description": "Monorepo setup, daily commands, and test strategy."
+      },
+      "adding-a-semantic-type": {
+        "title": "Extending semantic types",
+        "description": "Decide when a new field meaning is needed, then register and verify it."
+      },
+      "adding-a-backend": {
+        "title": "Extending backends",
+        "description": "Add a rendering target while keeping semantics and layout in the shared pipeline."
+      },
+      "adding-a-chart-template": {
+        "title": "Extending chart templates",
+        "description": "Add a chart type to an existing backend, then cover it in tests and the gallery."
+      }
+    }
+  },
+  "gallery": {
+    "title": "Example Gallery",
+    "titleBackend": "({{backend}} backend)",
+    "sidebars": {
+      "galleries": "Galleries",
+      "chartTypes": "Chart types"
+    },
+    "mobileBackendsAria": "Choose gallery backend",
+    "intro": {
+      "passInput": "Pass a Flint <code>input</code> (data, semantic types, and a chart spec) to <code>{{fn}}()</code>.",
+      "learnMore": "To learn more about how to use <code>{{fn}}()</code> in your app, see <docsLink>Compile your chart</docsLink>.",
+      "compileLink": "Compile your chart"
+    },
+    "jumpTo": "Jump to {{label}}",
+    "backends": {
+      "vegalite": "Compiles a Flint spec into a clean Vega-Lite specification — ideal for crisp, publication-quality statistical graphics rendered with Vega.",
+      "echarts": "Compiles a Flint spec into an Apache ECharts option — well suited to interactive dashboards and rich visual effects.",
+      "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps."
+    }
+  },
+  "modal": {
+    "openInEditor": "Open in editor →",
+    "close": "Close",
+    "input": "Flint input",
+    "output": "Compiled output",
+    "copy": "Copy",
+    "copied": "Copied",
+    "prev": "Previous example",
+    "next": "Next example"
+  },
+  "editor": {
+    "flintSpec": "Flint spec",
+    "output": "Output",
+    "preview": "Preview",
+    "backendAria": "Rendering backend",
+    "loadedFromGallery": "loaded from Gallery",
+    "example": "example",
+    "copy": "Copy",
+    "copied": "Copied",
+    "compileError": "{{backend}} compile error:"
+  },
+  "options": {
+    "prevView": "Previous view",
+    "nextView": "Next view"
+  },
+  "landing": {
+    "heroTitle": "Flint: A Visualization Language for the AI Era",
+    "attribution": "A Microsoft Research project",
+    "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
+    "installMcp": "To use Flint in agent workflows, check the <mcpLink>MCP server</mcpLink>.",
+    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
+    "ctaGallery": "Explore Gallery",
+    "ctaMcp": "Get MCP Server",
+    "ctaGithub": "Visit GitHub",
+    "ctaDocs": "Read the docs",
+    "howItWorks": "How it works?",
+    "howItWorksBody": "Flint starts with a compact spec: the data, semantic types, and the chart spec. From there, the compiler produces a complete backend-native spec (shown here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart.",
+    "overviewAlt": "Flint workflow: an agent infers a dataSpec from a raw table, a short chartSpec is written, and Flint compiles it into a faceted line chart, then a grouped bar, waterfall, heatmap, and sunburst as the spec is edited.",
+    "leadBefore": "Flint is a visualization intermediate language that lets",
+    "leadHighlight1": "AI agents reliably create expressive, good-looking charts from simple, human-editable chart specs",
+    "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
+    "leadHighlight2": "Flint supports {{chartTypes}} chart types, and it supports rendering in Vega-Lite, ECharts, and Chart.js",
+    "flintSpec": "Flint spec",
+    "compiledChart": "Compiled chart",
+    "backendAria": "Rendering backend",
+    "prevExample": "Previous example",
+    "nextExample": "Next example",
+    "exampleAria": "Example",
+    "openInEditor": "Open this example in the editor",
+    "seeGallery": "See more in the gallery",
+    "closingTitle": "Start building with Flint.",
+    "closingBody": "Open source and ready to use. Start from GitHub or browse examples in the gallery.",
+    "viewGithub": "View on GitHub",
+    "closingCollab": "Flint is built by <msr>Microsoft Research</msr> in collaboration with the <ideas>IDEAS Lab</ideas>, Renmin University of China.",
+    "features": {
+      "semantic": {
+        "title": "Specify with semantic types",
+        "body": "Flint uses semantic types to capture meanings of data fields (e.g., Rank, YearMonth, Delta, Temperature), and uses them to infer the low-level chart configuration like parsing, scale, axes, formatting and color schemes.",
+        "example": "For this heatmap of net new users gains by game and month, Flint determines the temporal value parser, axis formatting, and diverging color scheme and midpoint based on the semantic types of the fields."
+      },
+      "layout": {
+        "title": "Automatic layout optimization",
+        "body": "Flint optimizes the chart layout based on an elastic layout model and banking principles. The compiler dynamically manages sizing, spacing, and arrangement so the chart nicely fits into the canvas.",
+        "example": "As the grouped bar chart number increases, Flint stretches the canvas and reduces the band width so the dense version still fits the canvas nicely, similar to how springs settle into an expandable container."
+      },
+      "adapt": {
+        "title": "Easy to generate and adapt",
+        "body": "Without fragile low-level parameters, Flint specs can be easily generated and adapted by users. Changing a chart design requires only switching the chart type and rebinding visual encodings, and the compiler cascades the new encoding choices to the low-level settings.",
+        "example": "The user can easily turn a faceted bar chart of the 2000 U.S. Census population distribution by gender and age into a pyramid chart by switching the chart type. The compiler handles the rest."
+      },
+      "backends": {
+        "title": "Render with different backends",
+        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, and Chart.js, with {{examples}} backend-specific examples in the gallery. Despite their different APIs and programming models, Flint hides them behind a unified interface. The user can easily switch to different backends and leverage their unique features.",
+        "example": "Vega-Lite has no native sunburst, but the user can easily switch to ECharts. The sunburst chart is a better alternative than the grouped bar chart for visualizing the hierarchy of region × gameType × game."
+      }
+    },
+    "examples": {
+      "facetedLine": {
+        "label": "Faceted line chart",
+        "caption": "Monthly active users by region, laid out as small multiples over time."
+      },
+      "heatmap": {
+        "label": "Diverging heatmap",
+        "caption": "Net user gains and losses by region and month, shown with zero-centered color."
+      },
+      "waterfall": {
+        "label": "Waterfall",
+        "caption": "Monthly gains and losses accumulated into the running user total for the year."
+      },
+      "sunburst": {
+        "label": "Sunburst",
+        "caption": "User activity broken into a three-level hierarchy: region, game type, and game."
+      },
+      "donut": {
+        "label": "Donut chart",
+        "caption": "Film ratings as proportional slices, with an inner radius applied from the chart spec."
+      },
+      "regression": {
+        "label": "Regression scatter",
+        "caption": "Critic and audience scores with a fitted trend line to reveal their relationship."
+      },
+      "sortedBar": {
+        "label": "Sorted bar chart",
+        "caption": "Film genres ordered by count, from the most common to the least."
+      }
+    }
+  },
+  "mcp": {
+    "heroTitle": "Use Flint as an MCP server for your agent",
+    "leadBefore": "Install <code>flint-chart-mcp</code> as a",
+    "leadMcpLink": "Model Context Protocol",
+    "leadAfter": "server and your agent can create charts as an interactive MCP app. By default it opens an interactive Flint chart view; when you need artifacts, it can also return static images or backend-native specs.",
+    "quickStart": "Quick start:",
+    "quickStartBody": "paste this setup request into your agent and let it configure Flint for the current project. For manual setup, see",
+    "installConfigure": "install & configure",
+    "orThe": "or the",
+    "githubReadme": "GitHub README",
+    "experience": "The experience",
+    "experienceBody": "Using Flint through MCP is a simple loop: connect the server, ask for the chart you want, and work with a visualization with dynamic widgets provided by the MCP server.",
+    "step1Title": "Connect Flint MCP server.",
+    "step1Body": "Add the stdio server to your MCP client. The agent can chart local CSV, TSV, or JSON files by default.",
+    "step2Title": "Ask for a chart.",
+    "step2Body": "The agent turns your request into one Flint spec, chooses the chart type and fields, then calls the MCP server to validate and render it.",
+    "step3Title": "Review the interactive result.",
+    "step3Body": "In hosts with MCP Apps, the preferred tool opens a live SVG preview with chart options. When an artifact is needed, Flint can return a PNG, SVG, or compiled backend spec instead.",
+    "provides": "What it provides",
+    "providesBody": "The server keeps the tool surface small: one preferred interactive tool, supporting tools for static render and validation, plus resources that teach the agent Flint's chart vocabulary.",
+    "installTitle": "Install & configure",
+    "installBody": "For manual setup, the server speaks <strong>stdio</strong> and runs zero-install with <code>npx</code>. Point your MCP client at the package:",
+    "dataBody": "Tool calls can embed rows directly with <code>data.values</code>. The agent can also chart a local CSV, TSV, or JSON file by <code>data.url</code> out of the box. Remote URLs are never fetched. For an untrusted deployment, pass <code>--disable-file-reference</code> to reject local file references and accept only inline <code>data.values</code>:",
+    "reference": "Reference",
+    "referenceBody": "The docs cover the full MCP workflow. The package README is the shortest reference for tool inputs, CLI flags, and client config.",
+    "readSetupDocs": "Read setup docs",
+    "tools": {
+      "create_chart_view": "Opens the interactive MCP App: live SVG preview plus chart options. Use this whenever the user wants to see a chart.",
+      "render_chart": "Returns a static PNG or SVG. Use it when the host has no App UI, or when the user asks for an image artifact.",
+      "compile_chart": "Returns the backend-native spec JSON for Vega-Lite, ECharts, or Chart.js, along with assembly warnings.",
+      "validate_chart": "Checks whether a spec is valid, reports warnings or errors, and returns the computed chart size.",
+      "list_chart_types": "Lists chart types and encoding channels, optionally scoped to one backend.",
+      "agentSkill": "Bundled authoring instructions for producing valid ChartAssemblyInput specs.",
+      "chartTypes": "A browsable catalog of chart types and encoding channels across all backends.",
+      "authorPrompt": "Loads the Flint authoring skill in prompt-aware clients before chart tool calls."
+    },
+    "tags": {
+      "toolPreferred": "tool · preferred",
+      "tool": "tool",
+      "resource": "resource",
+      "prompt": "prompt"
+    },
+    "chatTitle": "Agent chat",
+    "copySpec": "Copy spec to chat",
+    "appTag": "MCP App"
+  }
+}

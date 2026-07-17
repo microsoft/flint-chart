@@ -1,5 +1,9 @@
 import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { LocaleLink } from '../i18n/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
+import { LOCALE_URL_SEGMENT } from '../i18n/locales';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
@@ -24,6 +28,9 @@ import overviewImg from '../assets/flint-overview.png';
  * Copy is written to read plainly, with one interactive spec→chart example.
  */
 export function Landing() {
+  const { t } = useTranslation();
+  const features = useMemo(() => getFeatures(t), [t]);
+
   return (
     <div style={pageStyle}>
       <style>{landingInteractiveStyles}</style>
@@ -32,51 +39,72 @@ export function Landing() {
       <main style={mainStyle}>
         {/* ---- Hero ------------------------------------------------------ */}
         <section style={{ ...sectionStyle, paddingTop: 88, paddingBottom: 36 }}>
-          <h1 style={heroTitleStyle}>Flint: A Visualization Language for the AI Era</h1>
-          <div style={heroAttributionStyle}>A Microsoft Research project</div>
+          <h1 style={heroTitleStyle}>{t('landing.heroTitle')}</h1>
+          <div style={heroAttributionStyle}>{t('landing.attribution')}</div>
 
           <div className="landing-lead-columns" style={leadColumnsStyle}>
             <div style={leadTextColStyle}>
-              <p style={leadStyle}>{LEAD_INTRO}</p>
+              <p style={leadStyle}>
+                {t('landing.leadBefore')}{' '}
+                <LeadHighlight>{t('landing.leadHighlight1')}</LeadHighlight>
+                {t('landing.leadMiddle')}{' '}
+                <LeadHighlight>
+                  {t('landing.leadHighlight2', { chartTypes: CHART_FAMILY_COUNT })}
+                </LeadHighlight>
+                .
+              </p>
 
               <div style={installLinesStyle}>
                 <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span> Install Flint with{' '}
-                  <Link
-                    to="/documentation/getting-started#javascript-typescript"
-                    className="landing-skill-link"
-                    style={installLineLinkStyle}
-                  >
-                    npm
-                  </Link>{' '}
-                  (TypeScript / JavaScript).
+                  <span style={promptMarkStyle}>&gt;</span>{' '}
+                  <Trans
+                    i18nKey="landing.installNpm"
+                    components={{
+                      npmLink: (
+                        <LocaleLink
+                          to="/documentation/getting-started#javascript-typescript"
+                          className="landing-skill-link"
+                          style={installLineLinkStyle}
+                        />
+                      ),
+                    }}
+                  />
                 </div>
                 <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span> To use Flint in agent workflows, check the{' '}
-                  <Link
-                    to="/mcp"
-                    className="landing-skill-link"
-                    style={installLineLinkStyle}
-                  >
-                    MCP server
-                  </Link>
-                  .
+                  <span style={promptMarkStyle}>&gt;</span>{' '}
+                  <Trans
+                    i18nKey="landing.installMcp"
+                    components={{
+                      mcpLink: (
+                        <LocaleLink to="/mcp" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
+                    }}
+                  />
                 </div>
                 <div style={installLineStyle}>
-                  <span style={promptMarkStyle}>&gt;</span> Explore {CHART_FAMILY_COUNT} chart types and{' '}
-                  {CHART_GALLERY_ENTRY_COUNT} examples in the{' '}
-                  <Link to="/gallery" className="landing-skill-link" style={installLineLinkStyle}>
-                    gallery
-                  </Link>
-                  .
+                  <span style={promptMarkStyle}>&gt;</span>{' '}
+                  <Trans
+                    i18nKey="landing.installGallery"
+                    values={{ chartTypes: CHART_FAMILY_COUNT, examples: CHART_GALLERY_ENTRY_COUNT }}
+                    components={{
+                      galleryLink: (
+                        <LocaleLink to="/gallery" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
+                    }}
+                  />
                 </div>
               </div>
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
-                <HeroCTA to="/gallery" label="Explore Gallery" variant="secondary" />
-                <HeroCTA to="/mcp" label="Get MCP Server" variant="secondary" />
-                <HeroCTA href={GITHUB_REPO} label="Visit GitHub" icon={<GitHubIcon size={17} />} variant="secondary" />
+                <HeroCTA to="/gallery" label={t('landing.ctaGallery')} variant="secondary" />
+                <HeroCTA to="/mcp" label={t('landing.ctaMcp')} variant="secondary" />
+                <HeroCTA
+                  href={GITHUB_REPO}
+                  label={t('landing.ctaGithub')}
+                  icon={<GitHubIcon size={17} />}
+                  variant="secondary"
+                />
               </div>
             </div>
           </div>
@@ -109,24 +137,27 @@ export function Landing() {
         {/* ---- Feature cards (alternating text / visual) -------------- */}
         <section style={howItWorksSectionStyle}>
           <div style={showcaseIntroStyle}>
-            <h1 style={showcaseHeadingStyle}>How it works?</h1>
+            <h1 style={showcaseHeadingStyle}>{t('landing.howItWorks')}</h1>
             <div style={showcaseIntroBodyStyle}>
               <p style={showcaseIntroTextStyle}>
-                Flint starts with a compact spec: the data, semantic types,
-                and the chart spec. From there, the compiler produces a complete backend-native spec (shown
-                here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart. 
+                {t('landing.howItWorksBody')}
               </p>
               <div className="landing-docs-actions" style={showcaseIntroCtaColStyle}>
                 <div style={actionBoxStyle}>
-                  <HeroCTA className="landing-docs-cta" to="/documentation/overview" label="Read the docs" variant="secondary" />
+                  <HeroCTA
+                    className="landing-docs-cta"
+                    to="/documentation/overview"
+                    label={t('landing.ctaDocs')}
+                    variant="secondary"
+                  />
                 </div>
               </div>
             </div>
           </div>
           <PipelineDiagram />
           <div style={featureGridStyle}>
-            {FEATURES.map((feature, i) => (
-              <article key={feature.title} style={featureGridItemStyle}>
+            {features.map((feature, i) => (
+              <article key={feature.id} style={featureGridItemStyle}>
                 <div style={featureGridTextStyle}>
                   <h2 style={featureTitleStyle}>
                     <span style={featureNumberStyle}>{i + 1}.</span>
@@ -152,41 +183,43 @@ export function Landing() {
         {/* ---- Closing CTA -------------------------------------------- */}
         <section style={{ ...sectionStyle, paddingTop: 56, paddingBottom: 88, textAlign: 'center' }}>
           <h2 style={{ fontSize: 26, margin: '0 0 14px', fontWeight: 500 }}>
-            Start building with Flint.
+            {t('landing.closingTitle')}
           </h2>
           <p style={{ margin: '0 0 30px', color: siteTheme.text, fontSize: 16, lineHeight: 1.7 }}>
-            Open source and ready to use. Start from GitHub or browse examples in the gallery.
+            {t('landing.closingBody')}
           </p>
           <div style={{ ...ctaRowStyle, marginTop: 0, justifyContent: 'center' }}>
             <a href={GITHUB_REPO} style={primaryBtn} target="_blank" rel="noreferrer">
-              View on GitHub
+              {t('landing.viewGithub')}
             </a>
-            <Link to="/gallery" style={secondaryBtn}>
-              Browse the gallery
-            </Link>
+            <LocaleLink to="/gallery" style={secondaryBtn}>
+              {t('landing.seeGallery')}
+            </LocaleLink>
           </div>
           <p style={{ margin: '32px 0 0', color: siteTheme.text, fontSize: 16, lineHeight: 1.7 }}>
-            Flint is built by{' '}
-            <a
-              className="site-text-link"
-              style={contributorLinkStyle}
-              href="https://www.microsoft.com/en-us/research/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Microsoft Research
-            </a>{' '}
-            in collaboration with the{' '}
-            <a
-              className="site-text-link"
-              style={contributorLinkStyle}
-              href="https://ideas-lab.net/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              IDEAS Lab
-            </a>
-            , Renmin University of China.
+            <Trans
+              i18nKey="landing.closingCollab"
+              components={{
+                msr: (
+                  <a
+                    className="site-text-link"
+                    style={contributorLinkStyle}
+                    href="https://www.microsoft.com/en-us/research/"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                ),
+                ideas: (
+                  <a
+                    className="site-text-link"
+                    style={contributorLinkStyle}
+                    href="https://ideas-lab.net/"
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                ),
+              }}
+            />
           </p>
         </section>
       </main>
@@ -199,10 +232,18 @@ export function Landing() {
 /* Interactive showcase                                                */
 /* ------------------------------------------------------------------ */
 
+type ShowcaseExampleKey =
+  | 'facetedLine'
+  | 'heatmap'
+  | 'waterfall'
+  | 'sunburst'
+  | 'donut'
+  | 'regression'
+  | 'sortedBar';
+
 interface ShowcaseExample {
   id: string;
-  label: string;
-  caption: string;
+  exampleKey: ShowcaseExampleKey;
   generator?: string;
   index?: number;
   /** Pre-built test case (for examples not backed by a gallery generator). */
@@ -296,49 +337,42 @@ function moviesSortedBar(): TestCase {
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
     id: 'line',
-    label: 'Faceted line chart',
-    caption: 'Monthly active users by region, laid out as small multiples over time.',
+    exampleKey: 'facetedLine',
     generator: 'Omni: Line',
     index: 0,
     canvasSize: { width: 300, height: 600 },
   },
   {
     id: 'heatmap',
-    label: 'Diverging heatmap',
-    caption: 'Net user gains and losses by region and month, shown with zero-centered color.',
+    exampleKey: 'heatmap',
     generator: 'Omni: Heatmap',
     index: 0,
   },
   {
     id: 'waterfall',
-    label: 'Waterfall',
-    caption: 'Monthly gains and losses accumulated into the running user total for the year.',
+    exampleKey: 'waterfall',
     generator: 'Omni: Waterfall',
     index: 0,
   },
   {
     id: 'sunburst',
-    label: 'Sunburst',
-    caption: 'User activity broken into a three-level hierarchy: region, game type, and game.',
+    exampleKey: 'sunburst',
     generator: 'Omni: Sunburst',
     index: 0,
   },
   {
     id: 'donut',
-    label: 'Donut chart',
-    caption: 'Film ratings as proportional slices, with an inner radius applied from the chart spec.',
+    exampleKey: 'donut',
     testCase: moviesDonut(),
   },
   {
     id: 'regression',
-    label: 'Regression scatter',
-    caption: 'Critic and audience scores with a fitted trend line to reveal their relationship.',
+    exampleKey: 'regression',
     testCase: moviesRegression(),
   },
   {
     id: 'sorted-bar',
-    label: 'Sorted bar chart',
-    caption: 'Film genres ordered by count, from the most common to the least.',
+    exampleKey: 'sortedBar',
     testCase: moviesSortedBar(),
   },
 ];
@@ -378,18 +412,22 @@ function HeroCTA({
   }
 
   return (
-    <Link className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
+    <LocaleLink className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
       {icon}
       {label}
-    </Link>
+    </LocaleLink>
   );
 }
 
 function HeroShowcase() {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
+  const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
+  const exampleCaption = t(`landing.examples.${example.exampleKey}.caption`);
   const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0);
   const testCase = example.testCase ?? galleryTestCase;
   const supported = useMemo(
@@ -413,8 +451,8 @@ function HeroShowcase() {
           className="landing-carousel-arrow"
           type="button"
           onClick={goPrev}
-          aria-label="Previous example"
-          title="Previous example"
+          aria-label={t('landing.prevExample')}
+          title={t('landing.prevExample')}
           style={pagerArrowStyle}
         >
           <ChevronIcon dir="left" />
@@ -423,17 +461,17 @@ function HeroShowcase() {
         <div className="landing-showcase-card" style={{ ...showcaseCardStyle, flex: 1, minWidth: 0 }}>
           <div style={showcasePaneStyle}>
             <div style={paneHeaderRowStyle}>
-              <span style={paneLabelStyle}>Flint spec</span>
+              <span style={paneLabelStyle}>{t('landing.flintSpec')}</span>
               <OpenEditorButton
                 href={
                   example.generator
-                    ? buildGalleryEditorHref(example.generator, example.index ?? 0)
+                    ? buildGalleryEditorHref(example.generator, example.index ?? 0, locale)
                     : undefined
                 }
                 onActivate={
                   example.generator
                     ? undefined
-                    : () => openEditorWithPayload(testCaseToAssemblyInput(testCase))
+                    : () => openEditorWithPayload(testCaseToAssemblyInput(testCase), locale)
                 }
               />
             </div>
@@ -442,8 +480,8 @@ function HeroShowcase() {
 
           <div className="landing-chart-pane" style={{ ...showcasePaneStyle, ...chartPaneStyle, borderLeft: `1px solid ${HAIRLINE}` }}>
             <div className="landing-pane-header" style={paneHeaderRowStyle}>
-              <span style={paneLabelStyle}>Compiled chart</span>
-              <div className="landing-backend-toggle" style={backendToggleStyle} role="tablist" aria-label="Rendering backend">
+              <span style={paneLabelStyle}>{t('landing.compiledChart')}</span>
+              <div className="landing-backend-toggle" style={backendToggleStyle} role="tablist" aria-label={t('landing.backendAria')}>
                 {ALL_BACKENDS.map((b) => {
                   const isSupported = supported.includes(b);
                   const active = b === backend;
@@ -476,32 +514,35 @@ function HeroShowcase() {
           className="landing-carousel-arrow"
           type="button"
           onClick={goNext}
-          aria-label="Next example"
-          title="Next example"
+          aria-label={t('landing.nextExample')}
+          title={t('landing.nextExample')}
           style={pagerArrowStyle}
         >
           <ChevronIcon dir="right" />
         </button>
       </div>
       <p style={showcaseCaptionStyle}>
-        <strong style={{ color: siteTheme.text, fontWeight: 600 }}>{example.label}.</strong>{' '}
-        {example.caption}
+        <strong style={{ color: siteTheme.text, fontWeight: 600 }}>{exampleLabel}.</strong>{' '}
+        {exampleCaption}
       </p>
 
       {/* Example pager dots */}
-      <div style={{ ...dotsRowStyle, marginTop: 16 }} role="tablist" aria-label="Example">
-        {SHOWCASE_EXAMPLES.map((ex, i) => (
+      <div style={{ ...dotsRowStyle, marginTop: 16 }} role="tablist" aria-label={t('landing.exampleAria')}>
+        {SHOWCASE_EXAMPLES.map((ex, i) => {
+          const label = t(`landing.examples.${ex.exampleKey}.label`);
+          return (
           <button
             key={ex.id}
             type="button"
             role="tab"
             aria-selected={i === exampleIdx}
-            aria-label={ex.label}
-            title={ex.label}
+            aria-label={label}
+            title={label}
             onClick={() => setExampleIdx(i)}
             style={dotStyle(i === exampleIdx)}
           />
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -528,7 +569,14 @@ function OpenEditorButton({
   href?: string;
   onActivate?: () => string;
 }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [active, setActive] = useState(false);
+  const defaultHref = useMemo(() => {
+    const segment = LOCALE_URL_SEGMENT[locale];
+    const base = segment ? `/${segment}/editor` : '/editor';
+    return `#${base}`;
+  }, [locale]);
   const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (onActivate) {
       e.preventDefault();
@@ -537,16 +585,16 @@ function OpenEditorButton({
   };
   return (
     <a
-      href={href ?? '#/editor'}
+      href={href ?? defaultHref}
       style={openEditorBtnStyle(active)}
-      title="Open this example in the editor"
+      title={t('landing.openInEditor')}
       onClick={handleClick}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
     >
-      Open in editor →
+      {t('modal.openInEditor')}
     </a>
   );
 }
@@ -607,17 +655,8 @@ const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
 );
 
 // Lead paragraph shown in the hero (the single intro to Flint).
-const LEAD_INTRO = (
-  <>
-    Flint is a visualization intermediate language that lets{' '}
-    <LeadHighlight>AI agents reliably create expressive, good-looking charts from simple, human-editable chart specs</LeadHighlight>. Instead of requiring verbose
-    low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives
-    optimized chart settings from the data, semantic types, chart type, and encodings. {' '}
-    <LeadHighlight>{`Flint supports ${CHART_FAMILY_COUNT} chart types, and it supports rendering in Vega-Lite, ECharts, and Chart.js`}</LeadHighlight>.
-  </>
-);
-
 interface Feature {
+  id: string;
   title: string;
   body: string;
   // Optional concrete example rendered as a callout beneath the body.
@@ -626,46 +665,41 @@ interface Feature {
   demo?: () => FeatureDemoConfig;
 }
 
-const FEATURES: Feature[] = [
-  {
-    title: 'Specify with semantic types',
-    body:
-      'Flint uses semantic types to capture meanings of data fields ' +
-      '(e.g., Rank, YearMonth, Delta, Temperature), and uses them to infer the low-level chart configuration like parsing, scale, axes, formatting and color schemes. ',
-    example:
-      'For this heatmap of net new users gains by game and month, Flint determines the temporal value parser, axis formatting, and diverging color scheme and midpoint based on the semantic types of the fields.',
-    demo: demoSemanticTypes,
-  },
-  {
-    title: 'Automatic layout optimization',
-    body:
-      'Flint optimizes the chart layout based on an elastic layout model and banking principles. ' + 
-      'The compiler dynamically manages sizing, spacing, and arrangement so the chart nicely fits into the canvas. ',
-    example:
-      'As the grouped bar chart number increases, Flint stretches the canvas and reduces the band width so the dense version still fits the canvas nicely, similar to how springs settle into an expandable container.',
-    demo: demoLayout,
-  },
-  {
-    title: 'Easy to generate and adapt',
-    body:
-      'Without fragile low-level parameters, Flint specs can be easily ' +
-      'generated and adapted by users. Changing a chart design requires only switching ' +
-      'the chart type and rebinding visual encodings, and the compiler cascades the new ' +
-      'encoding choices to the low-level settings.',
-    example:
-      'The user can easily turn a faceted bar chart of the 2000 U.S. Census population distribution by gender and age into a pyramid chart by switching the chart type. The compiler handles the rest.',
-    demo: demoAdapt,
-  },
-  {
-    title: 'Render with different backends',
-    body:
-      `Flint supports ${CHART_FAMILY_COUNT} chart types across Vega-Lite, ECharts, and Chart.js, with ${CHART_GALLERY_ENTRY_COUNT} backend-specific examples in the gallery. ` +
-      'Despite their different APIs and programming models, Flint hides them behind a unified interface. The user can easily switch to different backends and leverage their unique features.',
-    example:
-      'Vega-Lite has no native sunburst, but the user can easily switch to ECharts. The sunburst chart is a better alternative than the grouped bar chart for visualizing the hierarchy of region \u00d7 gameType \u00d7 game.',
-    demo: demoBackends,
-  },
-];
+function getFeatures(t: TFunction): Feature[] {
+  return [
+    {
+      id: 'semantic',
+      title: t('landing.features.semantic.title'),
+      body: t('landing.features.semantic.body'),
+      example: t('landing.features.semantic.example'),
+      demo: demoSemanticTypes,
+    },
+    {
+      id: 'layout',
+      title: t('landing.features.layout.title'),
+      body: t('landing.features.layout.body'),
+      example: t('landing.features.layout.example'),
+      demo: demoLayout,
+    },
+    {
+      id: 'adapt',
+      title: t('landing.features.adapt.title'),
+      body: t('landing.features.adapt.body'),
+      example: t('landing.features.adapt.example'),
+      demo: demoAdapt,
+    },
+    {
+      id: 'backends',
+      title: t('landing.features.backends.title'),
+      body: t('landing.features.backends.body', {
+        chartTypes: CHART_FAMILY_COUNT,
+        examples: CHART_GALLERY_ENTRY_COUNT,
+      }),
+      example: t('landing.features.backends.example'),
+      demo: demoBackends,
+    },
+  ];
+}
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */

@@ -11,6 +11,7 @@
  * button.
  */
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ChartOption } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
 import type { ControlSpec, PanelModel, ResolvedAction } from '../shared/chart-options';
@@ -184,6 +185,7 @@ function PivotControl(props: {
   onSelect: (id: string | undefined) => void;
 }) {
   const { pivot, width, onSelect } = props;
+  const { t } = useTranslation();
   const { ids, labels, index, length, label } = pivot;
   const go = (delta: number) => {
     const nextIndex = (index + delta + length) % length;
@@ -220,7 +222,7 @@ function PivotControl(props: {
     <div role="group" aria-label={label} style={optStyleFor(width)}>
       <span style={labelStyle} title={label}>{label}</span>
       <div style={stepperStyle}>
-        <button type="button" aria-label="Previous view" onClick={() => go(-1)} style={btnStyle}>
+        <button type="button" aria-label={t('options.prevView')} onClick={() => go(-1)} style={btnStyle}>
           ‹
         </button>
         <span
@@ -235,7 +237,7 @@ function PivotControl(props: {
         >
           {index + 1} / {length}
         </span>
-        <button type="button" aria-label="Next view" onClick={() => go(1)} style={btnStyle}>
+        <button type="button" aria-label={t('options.nextView')} onClick={() => go(1)} style={btnStyle}>
           ›
         </button>
       </div>

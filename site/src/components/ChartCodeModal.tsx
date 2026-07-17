@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TestCase } from 'flint-chart/test-data';
 import { JsonCodeMirror } from './JsonCodeMirror';
 import { ScaleToFit } from './ScaleToFit';
@@ -7,6 +8,7 @@ import { GalleryOptionsBar } from './GalleryOptionsBar';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { buildPanelModel } from '../shared/chart-options';
 import { buildGalleryEditorHref } from '../shared/editor-payload';
+import { useLocale } from '../i18n/LocaleContext';
 import { humanizeVariants } from '../shared/wall-title';
 import { BACKEND_LABELS, BACKENDS } from '../shared/supported-backends';
 import type { ChartEntry } from '../shared/chart-categories';
@@ -37,6 +39,8 @@ export function ChartCodeModal({
   editorIndices?: number[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
   const [index, setIndex] = useState(() =>
     Math.min(Math.max(initialIndex, 0), Math.max(tests.length - 1, 0)),
   );
@@ -173,7 +177,7 @@ export function ChartCodeModal({
           <div style={{ flex: 1 }} />
           {testCase && (
             <a
-              href={buildGalleryEditorHref(chart.generator, editorIndices?.[index] ?? index)}
+              href={buildGalleryEditorHref(chart.generator, editorIndices?.[index] ?? index, locale)}
               style={{
                 fontSize: 12,
                 color: siteTheme.accent,
@@ -181,10 +185,10 @@ export function ChartCodeModal({
                 whiteSpace: 'nowrap',
               }}
             >
-              Open in editor →
+              {t('modal.openInEditor')}
             </a>
           )}
-          <button type="button" onClick={onClose} aria-label="Close" style={closeBtnStyle}>
+          <button type="button" onClick={onClose} aria-label={t('modal.close')} style={closeBtnStyle}>
             ✕
           </button>
         </div>
@@ -236,7 +240,7 @@ export function ChartCodeModal({
                 <>
                   <button
                     type="button"
-                    aria-label="Previous example"
+                    aria-label={t('modal.prev')}
                     onClick={() => setIndex((i) => (i > 0 ? i - 1 : i))}
                     disabled={index === 0}
                     style={{ ...arrowBtnStyle, left: 8 }}
@@ -245,7 +249,7 @@ export function ChartCodeModal({
                   </button>
                   <button
                     type="button"
-                    aria-label="Next example"
+                    aria-label={t('modal.next')}
                     onClick={() => setIndex((i) => (i < tests.length - 1 ? i + 1 : i))}
                     disabled={index === tests.length - 1}
                     style={{ ...arrowBtnStyle, right: 8 }}
@@ -315,14 +319,14 @@ export function ChartCodeModal({
               }}
             >
               <CodeTabButton active={tab === 'input'} onClick={() => setTab('input')}>
-                Flint spec
+                {t('modal.input')}
               </CodeTabButton>
               <CodeTabButton active={tab === 'output'} onClick={() => setTab('output')}>
-                {chart.backendLabel} spec
+                {t('modal.output')}
               </CodeTabButton>
               <div style={{ flex: 1 }} />
               <button type="button" onClick={copy} style={copyBtnStyle}>
-                {copied ? 'Copied' : 'Copy'}
+                {copied ? t('modal.copied') : t('modal.copy')}
               </button>
             </div>
             <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>

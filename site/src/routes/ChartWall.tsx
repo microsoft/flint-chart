@@ -7,7 +7,8 @@ import {
   type CSSProperties,
   type Ref,
 } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
 import { TEST_GENERATORS, type TestCase } from 'flint-chart/test-data';
 import { SiteShell } from '../components/SiteShell';
 import { CodeBlock } from '../components/CodeBlock';
@@ -19,6 +20,8 @@ import {
 import { ChartThumb } from '../components/ChartThumb';
 import { WallChart } from '../components/WallChart';
 import { ChartCodeModal } from '../components/ChartCodeModal';
+import { LocaleLink } from '../i18n/LocaleLink';
+import { useLocale } from '../i18n/LocaleContext';
 import {
   CHART_CATEGORIES,
   type ChartCategory,
@@ -124,6 +127,8 @@ interface ActiveModal {
 export function ChartWall() {
   const { backend: backendParam } = useParams<{ backend?: string }>();
   const navigate = useNavigate();
+  const { lp } = useLocale();
+  const { t } = useTranslation();
   const category = resolveCategory(backendParam);
 
   const mainRef = useRef<HTMLDivElement>(null);
@@ -135,9 +140,9 @@ export function ChartWall() {
   // Keep the URL canonical (e.g. /gallery -> /gallery/vegalite) without adding history.
   useEffect(() => {
     if (backendParam !== category.id) {
-      navigate(`/gallery/${category.id}`, { replace: true });
+      navigate(lp(`/gallery/${category.id}`), { replace: true });
     }
-  }, [backendParam, category.id, navigate]);
+  }, [backendParam, category.id, navigate, lp]);
 
   const groups = useMemo(() => buildGroups(category.charts), [category]);
   const sectionIds = useMemo(
@@ -204,7 +209,7 @@ export function ChartWall() {
 
   const scrollToGallery = useCallback((id: PreviewBackend) => {
     if (id !== category.id) {
-      navigate(`/gallery/${id}`);
+      navigate(lp(`/gallery/${id}`));
       return;
     }
 
@@ -217,7 +222,7 @@ export function ChartWall() {
     window.setTimeout(() => {
       navScrollingRef.current = false;
     }, 700);
-  }, [category.id, navigate]);
+  }, [category.id, navigate, lp]);
 
   const scrollToChart = useCallback((id: string) => {
     const root = mainRef.current;
@@ -288,7 +293,11 @@ export function ChartWall() {
             <div className="gallery-content" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 40px 96px' }}>
               <header className="gallery-header" style={{ marginBottom: 18 }}>
                 <h1 className="gallery-title" style={{ margin: 0, fontSize: 28, fontWeight: 600, letterSpacing: -0.4 }}>
-                  Example Gallery<span className="gallery-title-backend"> ({category.label} backend)</span>
+                  {t('gallery.title')}
+                  <span className="gallery-title-backend">
+                    {' '}
+                    {t('gallery.titleBackend', { backend: category.label })}
+                  </span>
                 </h1>
                 <MobileBackendTabs category={category} onSelectBackend={scrollToGallery} />
               </header>
@@ -389,9 +398,10 @@ function WallSidebar({
   onNavigate: (id: string) => void;
   onSelectBackend: (id: PreviewBackend) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <SidebarNav sidebarRef={sidebarRef}>
-      <SidebarNavSection label="Galleries" first>
+      <SidebarNavSection label={t('gallery.sidebars.galleries')} first>
         {CHART_CATEGORIES.map((c) => (
           <BackendNavItem
             key={c.id}
@@ -403,7 +413,7 @@ function WallSidebar({
         ))}
       </SidebarNavSection>
 
-      <SidebarNavSection label="Chart types">
+      <SidebarNavSection label={t('gallery.sidebars.chartTypes')}>
         {groups.map((group, index) => (
           <div
             key={group.id}
@@ -489,8 +499,9 @@ function MobileBackendTabs({
   category: ChartCategory;
   onSelectBackend: (id: PreviewBackend) => void;
 }) {
+  const { t } = useTranslation();
   return (
-    <div className="gallery-mobile-backends" aria-label="Choose gallery backend">
+    <div className="gallery-mobile-backends" aria-label={t('gallery.mobileBackendsAria')}>
       {CHART_CATEGORIES.map((candidate) => {
         const active = candidate.id === category.id;
         return (
@@ -523,6 +534,7 @@ function BackendIntro({
   groups: FamilyGroup[];
   onNavigate: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   // One clickable chip per rendered chart-type section (deduped by display
   // name), so every chip reliably jumps to a section that exists on the wall.
   const chartLinks = useMemo(() => {
@@ -548,6 +560,8 @@ function BackendIntro({
 
 const ${resultNames[category.id]} = ${category.fn}(input);`;
 
+  const backendDesc = t(`gallery.backends.${category.id}`);
+
   return (
     <div className="gallery-intro" data-gallery-intro="" style={{ marginTop: 22 }}>
       <p
@@ -560,8 +574,12 @@ const ${resultNames[category.id]} = ${category.fn}(input);`;
           lineHeight: 1.65,
         }}
       >
-        {category.description} Pass a Flint <code style={inlineCodeStyle}>input</code> (data,
-        semantic types, and a chart spec) to <code style={inlineCodeStyle}>{category.fn}()</code>.
+        {backendDesc}{' '}
+        <Trans
+          i18nKey="gallery.intro.passInput"
+          values={{ fn: category.fn }}
+          components={{ code: <code style={inlineCodeStyle} /> }}
+        />
       </p>
 
       <div className="gallery-intro-code">
@@ -580,16 +598,20 @@ const ${resultNames[category.id]} = ${category.fn}(input);`;
           lineHeight: 1.6,
         }}
       >
-        To learn more about how to use <code style={inlineCodeStyle}>{category.fn}()</code> in
-        your app, see{' '}
-        <Link
-          to="/documentation/getting-started#compile-your-chart"
-          className="site-text-link"
-          style={{ color: siteTheme.accent, fontWeight: 600 }}
-        >
-          Compile your chart
-        </Link>
-        .
+        <Trans
+          i18nKey="gallery.intro.learnMore"
+          values={{ fn: category.fn }}
+          components={{
+            code: <code style={inlineCodeStyle} />,
+            docsLink: (
+              <LocaleLink
+                to="/documentation/getting-started#compile-your-chart"
+                className="site-text-link"
+                style={{ color: siteTheme.accent, fontWeight: 600 }}
+              />
+            ),
+          }}
+        />
       </p>
 
       <div className="gallery-chip-panel" style={{ margin: '12px 0 0', maxWidth: 760 }}>
@@ -612,13 +634,14 @@ interface ChartLink {
 /** A small, clickable chart-type chip (icon + name) that jumps to its section. */
 function ChartChip({ link, onNavigate }: { link: ChartLink; onNavigate: (id: string) => void }) {
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       onClick={() => onNavigate(link.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      title={`Jump to ${link.label}`}
+      title={t('gallery.jumpTo', { label: link.label })}
       style={{
         ...chartNameChipStyle,
         background: hovered ? siteTheme.accentBg : siteTheme.surface,
