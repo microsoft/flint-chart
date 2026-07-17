@@ -46,7 +46,7 @@ DataSpec 为这些列命名并记录其含义：
 - `YearMonth` 告诉 Flint 将 `period` 解析为时间并格式化月份刻度。
 - `Quantity` 为 `totalUsers` 提供数值轴。
 - `Profit` 将 `newUsers` 标记为有符号值，因此热力图可在零附近使用发散色标。
-- `region.sortOrder` 使地区分面按 N、E、S、W 阅读，而非原始表的任意顺序。
+- `region.sortOrder` 使地区面板按 N、E、S、W 排列，而不是沿用原始表中的任意顺序。
 
 下方示例使用从该源数据派生的、可直接作图的视图：
 
@@ -62,7 +62,7 @@ AI 智能体、SQL 查询、notebook 或应用层可以准备这些视图。Flin
 
 首先提出一个宽泛问题：用户在哪里？
 
-折线视图包含 `region`、`period`、`gameType` 和 `totalUsers`。分面折线图为每个地区一个面板，每种游戏类型一条线：
+折线视图包含 `region`、`period`、`gameType` 和 `totalUsers`。图表按地区拆成多个面板，每种游戏类型对应一条线：
 
 ```json
 "chart_spec": {
@@ -82,9 +82,9 @@ AI 智能体、SQL 查询、notebook 或应用层可以准备这些视图。Flin
 
 值得注意：
 
-- ChartSpec 指定 `column: region`；Flint 自动处理小多图分面布局。
+- ChartSpec 指定 `column: region`；Flint 自动将各地区排成多个面板。
 - 因 DataSpec 声明 `YearMonth`，`period` 保持为时间轴。
-- 图表扩展为可读的分面布局，而非将所有面板挤进 base size。
+- 图表会为多个面板留出足够空间，而不是把它们全挤进 `baseSize`。
 
 接下来将视图从地区趋势面板切换为月度对比。分组柱状视图包含 `period`、`gameType` 和 `totalUsers`：
 
@@ -104,7 +104,7 @@ AI 智能体、SQL 查询、notebook 或应用层可以准备这些视图。Flin
 { "generator": "Omni: Grouped Bar", "canvasSize": { "width": 640, "height": 340 }, "options": { "maxStretch": 1 } }
 ```
 
-这是第一个回报：只需更换模板和少量通道，图表设计就从分面折线变为分组柱状。源语义保持不变，尽管分组柱状视图以不同方式汇总。
+这是第一个回报：只需更换模板和少量通道，图表设计就从多面板折线图变为分组柱状图。虽然数据汇总方式不同，字段语义保持不变。
 
 ## 第二幕：变化
 
@@ -176,7 +176,7 @@ echarts
 
 同一份源数据集经过五个可直接作图的视图与五种图表设计：
 
-- 分面折线图展示地区趋势；
+- 多面板折线图展示地区趋势；
 - 分组柱状图进行月度对比；
 - 瀑布图展示组合变化；
 - 热力图展示游戏×月份变动；
@@ -184,8 +184,8 @@ echarts
 
 三项 Flint 特性承担了大部分图表工作：
 
-- **语义类型决定底层设置。** 时间解析、定量轴、发散颜色和分面顺序都来自 DataSpec。
-- **自动布局保持复杂视图可读。** 分面、分组柱、密集热力图与径向图可在可用画布内扩展或缩放。
+- **语义类型决定底层设置。** 时间解析、定量轴、发散颜色和面板顺序都来自 DataSpec。
+- **自动布局保持复杂视图可读。** 多面板图、分组柱状图、密集热力图和径向图都能根据可用画布扩展或缩放。
 - **图表设计和渲染后端都容易切换。** 只要视图包含所需字段，ChartSpec 通常只需修改几行；图表类型受支持时，同一份输入可以编译到 Vega-Lite、ECharts 或 Chart.js。
 
 这就是示例背后的现实承诺：准备正确视图，标注字段含义，然后更换图表设计而无需手写后端规范。
@@ -195,5 +195,5 @@ echarts
 - [入门指南](/documentation/getting-started) 用一张小图介绍 DataSpec 与 ChartSpec。
 - [Gallery](/gallery) 展示每种图表模板与后端组合。
 - [Semantic Type](/documentation/semantic-types) 说明语义标签如何驱动时间解析、颜色与聚合行为等默认值。
-- [Auto Layout Algorithm](/documentation/layout-model) 说明 Flint 如何为密集、分面与层次视图定尺寸。
+- [自动布局算法](/documentation/layout-model) 说明 Flint 如何为密集、多面板和层次视图计算尺寸。
 - [在线编辑器](/editor) 可实时编辑 Flint 规范。

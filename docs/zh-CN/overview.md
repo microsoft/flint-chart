@@ -75,7 +75,7 @@ data  +  semantic_types  +  chart_spec  →  assemble*()  →  后端配置
 
 ### chartSpec 示例
 
-分面折线图：
+按地区拆分的折线图：
 
 ```json
 {
