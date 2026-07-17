@@ -1,4 +1,6 @@
 import type { TestCase } from 'flint-chart/test-data';
+import type { Locale } from '../i18n/locales';
+import { localizeVariantTitle } from './gallery-labels';
 
 /**
  * Derives short, human-readable, Vega-Lite-gallery-style captions for the
@@ -289,7 +291,7 @@ function cardQualifierKey(variants: TestCase[], idxs: number[]): CardKey {
  * addition, examples that exist to demonstrate stretching / high cardinality
  * are *always* annotated with that concrete count, collision or not.
  */
-export function humanizeVariants(variants: TestCase[]): string[] {
+export function humanizeVariants(variants: TestCase[], locale: Locale = 'en'): string[] {
   const out = variants.map(baseTitle);
   const hasParen = (s: string) => s.includes('(');
 
@@ -357,5 +359,13 @@ export function humanizeVariants(variants: TestCase[]): string[] {
     });
   }
 
-  return out;
+  if (locale !== 'zh-CN') return out;
+
+  const localized = out.map((title) => localizeVariantTitle(title, locale));
+  const seen = new Map<string, number>();
+  return localized.map((title) => {
+    const count = (seen.get(title) ?? 0) + 1;
+    seen.set(title, count);
+    return count === 1 ? title : `${title}（${count}）`;
+  });
 }

@@ -156,7 +156,7 @@
     "heroTitle": "Flint: A Visualization Language for the AI Era",
     "attribution": "A Microsoft Research project",
     "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
-    "installMcp": "To use Flint in agent workflows, check the <mcpLink>MCP server</mcpLink>.",
+    "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
     "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",
@@ -259,6 +259,7 @@
     "dataBody": "Tool calls can embed rows directly with <code>data.values</code>. The agent can also chart a local CSV, TSV, or JSON file by <code>data.url</code> out of the box. Remote URLs are never fetched. For an untrusted deployment, pass <code>--disable-file-reference</code> to reject local file references and accept only inline <code>data.values</code>:",
     "reference": "Reference",
     "referenceBody": "The docs cover the full MCP workflow. The package README is the shortest reference for tool inputs, CLI flags, and client config.",
+    "skillNote": "Adding Flint to your own app? The standalone <skillLink>Flint Agent Skill</skillLink> teaches coding agents to author specs and integrate Flint.",
     "readSetupDocs": "Read setup docs",
     "tools": {
       "create_chart_view": "Opens the interactive MCP App: live SVG preview plus chart options. Use this whenever the user wants to see a chart.",

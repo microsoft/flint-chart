@@ -1,12 +1,12 @@
 # 智能体工作流
 
-本指南介绍一种 Data Formulator 风格的集成：自定义智能体产品中，智能体协助创建图表，但宿主负责数据执行、验证、状态、UI 控件、编译、渲染与审阅。
+本指南介绍一种 Data Formulator 风格的集成方式：智能体协助创建图表，应用负责数据处理、校验、状态管理、界面控件、编译和渲染。
 
 若你只想在聊天或 IDE 客户端中将 Flint 作为 MCP 工具连接，请从[配置 Flint MCP](/documentation/setup-flint-mcp) 开始。本页聚焦库式集成：即 [Data Formulator](https://github.com/microsoft/data-formulator) 等产品所用的模式——智能体可提议数据塑形与图表请求，而产品控制实际运行与存储内容。
 
 ## 核心思想
 
-不要让智能体以 Vega-Lite、ECharts、Chart.js 或渲染器代码作为主要产物。让它编写 Flint `ChartAssemblyInput`：
+不要让智能体直接输出 Vega-Lite、ECharts、Chart.js 或渲染器代码。让它生成 Flint `ChartAssemblyInput`：
 
 ```jsonc
 {
@@ -27,7 +27,7 @@
 }
 ```
 
-这使图表请求小而可检查、可编辑。Flint 编译器推导低层图表决策：轴类型、零基线、时间解析、数字格式、颜色默认值、尺寸、布局与后端特定的 mark 细节。
+这样得到的图表请求简洁、可检查、可编辑。Flint 编译器负责轴类型、零基线、时间解析、数字格式、默认颜色、尺寸、布局和后端图形细节。
 
 将 Flint 视为智能体与渲染器之间的语义图表层：
 
@@ -54,7 +54,7 @@ product renders, stores, edits, or asks the agent for a revision
 | Flint | 将语义图表请求编译为带确定性设计默认值的后端原生图表规范。 |
 | Renderer | 在浏览器、notebook、服务或导出流水线中绘制后端规范。 |
 
-这种拆分使工作流稳健。智能体在语义层工作，语言模型在此有用。产品保持对执行、状态、安全与用户体验的控制。Flint 处理不应写在 prompt 中的可视化规则。
+这种分工让工作流更稳定。智能体处理图表意图，应用控制执行、状态、安全和用户体验，Flint 负责不应堆在提示词里的可视化规则。
 
 ## 将 Flint 输入存为图表状态
 
@@ -63,7 +63,7 @@ product renders, stores, edits, or asks the agent for a revision
 - **DataSpec** 是 `data` 与 `semantic_types` 部分。它告诉 Flint 有哪些列及其含义。
 - **ChartSpec** 是 `chart_spec` 部分。它告诉 Flint 使用哪种图表模板以及字段如何映射到通道。
 
-存储的输入通常足够小，可放入产品数据库、notebook 单元、仪表盘配置或对话状态对象。它也可编辑：你的 UI 可更改通道、图表类型、排序选项、尺寸或图表属性，而无需让智能体重新生成低层后端 JSON。
+Flint 输入通常很小，可以存入产品数据库、notebook 单元、仪表盘配置或对话状态。界面可以直接修改通道、图表类型、排序、尺寸和图表属性，无需让智能体重新生成底层 JSON。
 
 按需编译后端规范：
 
@@ -86,13 +86,13 @@ npm install chart.js                   # Chart.js rendering
 
 Python 支持将使用相同的输入结构，但计划在后续版本发布，不属于首次公开发版。目前请在已发布工作流中使用 npm 包或 MCP 服务器。
 
-## 为智能体提供 authoring skill
+## 为智能体提供图表编写指南
 
-chart-author skill 位于
+图表编写指南位于
 [agent-skills/flint-chart-author/SKILL.md](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-chart-author/SKILL.md)。
-将其作为参考说明用于智能体 prompt、工具描述或检索上下文。
+可以将它放入智能体提示词、工具描述或检索上下文。
 
-当智能体未安装库或无法调用 live catalog 工具时，该 skill 很重要。它包含确切的图表类型名称、支持的通道、图表属性、语义类型与数据绑定规则。
+即使智能体没有安装 Flint，也可以通过这份指南了解准确的图表类型名称、支持的通道、图表属性、语义类型和数据绑定规则。
 
 给智能体的持久指令是：
 
@@ -127,7 +127,7 @@ Show monthly revenue by region.
 
 ### 1. 向智能体发送紧凑上下文
 
-宿主发送用户请求与数据概要。通常无需发送整个数据集。
+应用向智能体发送用户请求和数据概要，通常无需发送整个数据集。
 
 ```text
 Use the Flint chart authoring skill.
@@ -179,7 +179,7 @@ Leave chart_input.data.values empty; the host will bind rows after executing the
 
 重要属性是拆分：智能体不会把聚合塞进后端 JSON，Flint 输入只引用派生表中会存在的字段。
 
-### 3. 在宿主中执行并检查
+### 3. 在应用中执行并检查
 
 产品在自有可信或沙箱计算路径中执行 `transform_code`，然后在渲染前检查 `chart_df`。例如：
 
@@ -191,11 +191,11 @@ month    region   revenue
 2025-02  West     22640.75
 ```
 
-此时宿主可拒绝结果：代码使用未知列、产生过多行、出现意外空值或未能通过策略检查。智能体提议操作；产品决定是否运行并保留。
+如果代码使用未知列、产生过多行、出现意外空值或未通过安全检查，应用可以拒绝执行。智能体提出方案，应用决定是否运行和保留结果。
 
 ### 4. 绑定行并用 Flint 编译
 
-执行后，宿主用 `chart_df` 的行填充 `chart_input.data.values` 并编译图表。
+执行后，应用将 `chart_df` 的数据写入 `chart_input.data.values`，再编译图表。
 
 ```ts
 import { assembleVegaLite } from 'flint-chart';
@@ -218,20 +218,20 @@ const echartsOption = assembleECharts(chartInput);
 
 ### 5. 围绕 Flint 状态构建 UI
 
-在 Data Formulator 风格 UI 中，产品可同时展示两种产物：
+在 Data Formulator 风格的界面中，产品可以同时展示两项内容：
 
 - 派生数据视图（`chart_df`），供用户检查正在作图的表格；
 - ChartSpec 控件，使用户可更改图表类型、通道、排序、尺寸或图表属性，而无需编辑后端 JSON。
 
-若用户说「也按 segment 拆分」，宿主可请智能体修订，或暴露直接 UI 操作，将 `segment` 加入 `column`、`row` 或 `color`，取决于图表设计。无论哪种方式，修订都会更改 Flint 输入并重新编译。
+如果用户说“也按 segment 拆分”，应用可以让智能体修改规范，也可以提供界面控件，将 `segment` 加入 `column`、`row` 或 `color`。无论采用哪种方式，都只需修改 Flint 输入并重新编译。
 
 ### 6. 将后端微调放在下游
 
-若产品需要后端特定的标注或交互，在 Flint 编译语义图表之后应用。将 Flint 输入作为规范状态；将 patch 后的 Vega-Lite 或 ECharts JSON 视为渲染时产物。
+如果产品需要某个后端特有的标注或交互，请在 Flint 编译之后添加。Flint 输入仍是图表的主要状态；修改后的 Vega-Lite 或 ECharts JSON 只用于最终渲染。
 
-## 可复用 prompt 模板
+## 可复用的提示词
 
-对于产品集成，使用比自由聊天更严格的 prompt。请智能体返回系统可验证的机器可读对象。当数据视图已可直接作图时，只要求 Flint 输入：
+集成到产品时，提示词应比自由对话更严格，并要求智能体返回可验证的结构化数据。如果当前数据已经可以直接作图，只需让智能体返回 Flint 输入：
 
 ```text
 Use the Flint chart authoring skill.
@@ -261,7 +261,7 @@ execute the code, inspect the derived table, and bind data.values afterward.
 
 ## 渲染或保存前验证
 
-验证属于宿主，不应只在 prompt 中。接受智能体创作的图表前，请检查：
+校验应由应用执行，不能只依赖提示词。接受智能体生成的图表前，请检查：
 
 - 每个编码字段存在于当前或派生数据视图中；
 - `semantic_types` 使用 Flint 已注册标签，而非自造名称；
@@ -271,7 +271,7 @@ execute the code, inspect the derived table, and bind data.values afterward.
 - 本地策略允许请求的后端、数据大小、图表大小与文件访问模式；
 - 派生数据塑形发生在 Flint 上游，而非通过自造的 Flint transform 属性。
 
-若产品内部使用 MCP 服务器，`validate_chart` 可执行单独的服务端验证。若产品直接嵌入库，在 try/catch 中调用相关 assembler，并在自有审阅 UI 中展示警告或错误。
+如果产品使用 MCP 服务器，可以调用 `validate_chart` 在服务端校验。如果产品直接集成 Flint 库，请在 `try/catch` 中调用对应的编译函数，并在界面中显示警告或错误。
 
 ## 构建编辑循环
 
@@ -300,7 +300,7 @@ execute the code, inspect the derived table, and bind data.values afterward.
 
 不要将 patch 后的 Vega-Lite、ECharts 或 Chart.js JSON 回灌 Flint。一旦编辑后端 JSON，它就不再是可移植的 Flint 状态。
 
-## 实用的宿主循环
+## 一套实用流程
 
 典型的自定义智能体实现如下：
 
@@ -319,8 +319,8 @@ execute the code, inspect the derived table, and bind data.values afterward.
 
 - [入门指南](/documentation/getting-started) 用一张小图解释 DataSpec 与 ChartSpec 的结构。
 - [示例：数据故事](/documentation/data-story) 展示同一份源数据视图如何仅通过更改 ChartSpec 变成多种图表设计。
-- [配置 Flint MCP](/documentation/setup-flint-mcp) 说明如何在需要现成智能体工具面时暴露 Flint 为 MCP 服务器。
+- [配置 Flint MCP](/documentation/setup-flint-mcp) 说明如何通过 MCP 服务器为智能体提供 Flint 图表工具。
 - [Vega-Lite charts](/documentation/reference-vegalite)、
   [ECharts charts](/documentation/reference-echarts) 与
   [Chart.js charts](/documentation/reference-chartjs) 按后端列出支持的图表类型。
-- [Semantic Type](/documentation/semantic-types) 列出智能体可用于字段的标签。
+- [语义类型](/documentation/semantic-types) 列出智能体可用于字段的标签。

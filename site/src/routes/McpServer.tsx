@@ -59,6 +59,23 @@ export function McpServer() {
           </p>
 
           <CodeBlock copyable>{setupPrompt}</CodeBlock>
+
+          <p style={skillNoteStyle}>
+            <Trans
+              i18nKey="mcp.skillNote"
+              components={{
+                skillLink: (
+                  <a
+                    href="https://skills.sh/microsoft/flint-chart/flint-chart-author"
+                    className="mcp-link"
+                    style={setupInlineLinkStyle}
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                ),
+              }}
+            />
+          </p>
         </header>
 
         {/* ---- Article body ----------------------------------------- */}
@@ -377,6 +394,13 @@ const setupLeadStyle: CSSProperties = {
   ...leadStyle,
   marginTop: 24,
   marginBottom: 16,
+};
+
+const skillNoteStyle: CSSProperties = {
+  ...leadStyle,
+  fontSize: 15.5,
+  marginTop: 18,
+  marginBottom: 0,
 };
 
 const setupLabelStyle: CSSProperties = {

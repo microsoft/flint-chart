@@ -98,7 +98,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column.svg) Bar Chart
 
-**Encoding channels:** `x`, `y`, `color`, `group`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

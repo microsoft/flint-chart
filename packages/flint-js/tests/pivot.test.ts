@@ -36,16 +36,23 @@ const BAR_ENC = {
 };
 
 describe('computePivot — enumeration', () => {
+  it('reserves the group channel for Grouped Bar', () => {
+    expect(barChartDef.channels).not.toContain('group');
+    expect(groupedBarChartDef.channels).toContain('group');
+  });
+
   it('bar chart exposes default + orientation + role + series routing states', () => {
     const comp = computePivot(barChartDef, BAR_ENC, BAR_DATA);
     expect(comp).not.toBeNull();
-    // series field is on color (stacked); routes to group / column / row. The
+    // series field is on color; plain Bar can route it to column / row facets.
+    // Group routing belongs to the explicit Grouped Bar chart type. The
     // orbit is enumerated at runtime and also composes these generators (e.g.
     // orient · series:*), so assert the single-generator states are all present
     // rather than pinning an exact flat list.
-    for (const id of ['default', 'flip:x-y', 'swap:x-color', 'series:group', 'series:column', 'series:row']) {
+    for (const id of ['default', 'flip:x-y', 'swap:x-color', 'series:column', 'series:row']) {
       expect(comp!.ids).toContain(id);
     }
+    expect(comp!.ids).not.toContain('series:group');
     expect(comp!.ids[0]).toBe('default');
     // composition shows up as multi-step path ids.
     expect(comp!.ids.some(id => id.includes('|'))).toBe(true);
@@ -66,11 +73,9 @@ describe('computePivot — enumeration', () => {
     expect(role.y.field).toBe('sales');
   });
 
-  it('series routing moves color onto group (grouped), column and row (facets)', () => {
+  it('series routing moves color onto column and row facets, not group', () => {
     const comp = computePivot(barChartDef, BAR_ENC, BAR_DATA)!;
-    const grouped = comp.statesById['series:group'];
-    expect(grouped.group.field).toBe('segment');
-    expect(grouped.color).toBeUndefined();
+    expect(comp.statesById['series:group']).toBeUndefined();
     const cols = comp.statesById['series:column'];
     expect(cols.column.field).toBe('segment');
     expect(cols.color).toBeUndefined();
@@ -78,7 +83,7 @@ describe('computePivot — enumeration', () => {
     expect(rows.row.field).toBe('segment');
   });
 
-  it('routes a series authored on column back to color/group/row', () => {
+  it('routes a series authored on column back to color/row, not group', () => {
     const enc = {
       x: { field: 'segment', type: 'nominal' as const },
       y: { field: 'sales', type: 'quantitative' as const },
@@ -86,7 +91,7 @@ describe('computePivot — enumeration', () => {
     };
     const comp = computePivot(barChartDef, enc, BAR_DATA)!;
     expect(comp.ids).toContain('series:color');
-    expect(comp.ids).toContain('series:group');
+    expect(comp.ids).not.toContain('series:group');
     expect(comp.ids).toContain('series:row');
     expect(comp.statesById['series:color'].color.field).toBe('region');
     expect(comp.statesById['series:color'].column).toBeUndefined();

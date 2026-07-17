@@ -70,7 +70,7 @@ assembleVegaLite(input)   // or assembleECharts, assembleChartjs
        └── applyLayoutToSpec()           step, width/height, padding
        │
        ▼
-   Native spec + optional warnings
+       后端配置 + 可选警告
 ```
 
 规范编排：`packages/flint-js/src/vegalite/assemble.ts`。
@@ -95,7 +95,7 @@ assembleVegaLite(input)   // or assembleECharts, assembleChartjs
 
 ### 命名视图变换
 
-Flint 将部分替代方案暴露为**命名视图**，而非要求用户或智能体重写图表规范。命名视图是对编码分配的小型变换：翻转坐标轴、将分类轴与颜色系列交换、将系列路由到分面，或以兄弟图表类型重新渲染相同字段。宿主仅在 `chart_spec.chartProperties.pivot` 中存储所选状态 id；编译器重新计算得到的编码映射，并在该视图上运行常规的语义、溢出、布局与后端生成流水线。
+Flint 将部分替代方案提供为**命名视图**，用户或智能体无需重写图表规范。命名视图会小范围调整字段映射，例如翻转坐标轴、交换分类轴与颜色系列、将系列移到分面，或改用相关图表类型渲染相同字段。应用只需在 `chart_spec.chartProperties.pivot` 中保存所选状态 id；编译器会重新计算字段映射，再执行语义解析、溢出处理、布局和后端生成。
 
 该模型在群论意义上成立，但刻意保持实用。从作者分配 `a0` 出发，沿四个算子生成的轨道遍历：
 

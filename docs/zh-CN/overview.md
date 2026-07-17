@@ -1,6 +1,6 @@
 # 概览
 
-**Flint** 是一种面向数据可视化的语义驱动中间语言（IL）。你声明每个字段的*含义*以及想要的图表；编译器会推导比例尺、坐标轴、聚合、格式化、布局和颜色，然后输出 Vega-Lite、ECharts 或 Chart.js。
+**Flint** 是一种可视化中间语言。你只需说明每个字段的*含义*和想要的图表；编译器会自动设置比例尺、坐标轴、聚合、格式、布局和颜色，再生成 Vega-Lite、ECharts 或 Chart.js 配置。
 
 如果你是 Flint 新手，请从[入门指南](/documentation/getting-started)开始，然后再回到这里了解架构与 API 地图。
 
@@ -22,7 +22,7 @@
 
 # §1 Flint 是什么
 
-Flint 将**数据语义**与**图表意图**分离，就像中间语言将程序逻辑与目标机器代码分离一样。作者无需手动微调相互依赖的低层参数，LLM 智能体也可以输出紧凑的 Flint 程序，而不是冗长、重新生成成本高、且在小改动下易碎的原生规范。
+Flint 将**数据语义**与**图表意图**分开。你不必手动调整相互依赖的底层参数，AI 智能体也只需生成简洁的 Flint 输入，无需编写冗长且难维护的后端配置。
 
 ---
 
@@ -50,7 +50,7 @@ Flint 将**数据语义**与**图表意图**分离，就像中间语言将程序
 原始行数据存放在 `data` 中。三者共同构成 `ChartAssemblyInput`：
 
 ```text
-data  +  semantic_types  +  chart_spec  →  assemble*()  →  native spec
+data  +  semantic_types  +  chart_spec  →  assemble*()  →  后端配置
 ```
 
 ### dataSpec 示例
@@ -124,7 +124,7 @@ data  +  semantic_types  +  chart_spec  →  assemble*()  →  native spec
 
 1. **前端** — 从 dataSpec + data 推导编码类型、格式、聚合、比例尺、域、颜色和排序
 2. **优化器** — 用基于物理的尺寸选择坐标轴跨度、带宽步长、分面网格和宽高比；先从[示例：自动布局](/documentation/chart-sizing)入手，再用[自动布局算法](/documentation/layout-model)了解公式
-3. **代码生成器** — 为每个 `chartType` 使用动态模板，输出库原生规范
+3. **代码生成器** — 根据 `chartType` 选择模板，生成对应后端的配置
 
 流水线详情见[架构](/documentation/architecture)。
 

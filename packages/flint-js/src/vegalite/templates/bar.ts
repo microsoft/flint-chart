@@ -67,7 +67,7 @@ function getSafeHeatmapIntrinsicDomain(ctx: any, colorField: string | undefined)
 export const barChartDef: ChartTemplateDef = {
     chart: "Bar Chart",
     template: { mark: "bar", encoding: {} },
-    channels: ["x", "y", "color", "group", "opacity", "column", "row"],
+    channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'length',
     declareLayoutMode: (cs, table) => {
         const result = detectBandedAxisFromSemantics(cs, table, { preferAxis: 'x' });
@@ -91,7 +91,7 @@ export const barChartDef: ChartTemplateDef = {
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
-        shift: ['color', 'group', 'column', 'row'],
+        shift: ['color', 'column', 'row'],
     }),
 };
 

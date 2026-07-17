@@ -97,7 +97,7 @@ interface ChartAssemblyInput {
 | 形式 | 说明 |
 |------|-------------|
 | `{ values: rows[] }` | 内联行对象（编辑器与教程） |
-| `{ url: "..." }` | 远程 JSON 或 CSV URL |
+| `{ url: "..." }` | 由运行环境解析的数据路径或 URL。Flint MCP 仅支持本地 JSON、CSV 和 TSV 文件，不读取远程 URL。 |
 
 ### `semantic_types`
 

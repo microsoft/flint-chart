@@ -52,7 +52,7 @@ export function ChartCodeModal({
 
   const testCase = tests[index];
 
-  const titles = useMemo(() => humanizeVariants(tests), [tests]);
+  const titles = useMemo(() => humanizeVariants(tests, locale), [locale, tests]);
 
   // Switching examples resets the temporary overrides.
   useEffect(() => setTempOptions({}), [index]);

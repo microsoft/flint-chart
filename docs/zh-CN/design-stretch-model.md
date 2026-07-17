@@ -33,7 +33,7 @@ stretch 乘数 $\beta$ 限制轴相对基准可增长的距离，按维度设置
 
 **基准永不超过上限。** 计算上限前，基准按维度钳制到上限（$L_0 = \min(\text{baseSize}, \text{canvasSize})$）。因此 `canvasSize` *小于*基准时（例如固定槽位且 `baseSize` 保持默认），$L_0$ 会缩小以适配框体。图表压缩并降级文字，而非溢出。省略 `baseSize` 时，单独 `canvasSize` 表现为纯 **fit-to-box**：$L_0 = \text{canvasSize}$，$\beta = 1$，图表无法超出框体。
 
-驱动宽度的模型（discrete x-axis、gas-pressure x、treemap x-split）使用 $\beta_x$；驱动高度的模型（discrete y-axis、gas-pressure y、treemap y-split）使用 $\beta_y$；radial/area 上限使用 $\max(\beta_x, \beta_y)$。同一上限约束**分面**布局：small-multiple 网格的总 stretch 范围不可超过 `canvasSize`。下文各节写单一 $\beta$ 时，请按该维度理解为 $\beta_x$ 或 $\beta_y$。
+驱动宽度的模型（离散 x 轴、x 方向气压模型、矩形树图 x 分割）使用 $\beta_x$；驱动高度的模型（离散 y 轴、y 方向气压模型、矩形树图 y 分割）使用 $\beta_y$；径向和面积模型使用 $\max(\beta_x, \beta_y)$。同一上限也约束**分面**布局：小多图网格的总伸展范围不能超过 `canvasSize`。下文只写 $\beta$ 时，请根据当前维度理解为 $\beta_x$ 或 $\beta_y$。
 
 ---
 

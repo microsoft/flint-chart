@@ -78,6 +78,15 @@ export function Landing() {
                       mcpLink: (
                         <LocaleLink to="/mcp" className="landing-skill-link" style={installLineLinkStyle} />
                       ),
+                      skillLink: (
+                        <a
+                          href="https://skills.sh/microsoft/flint-chart/flint-chart-author"
+                          className="landing-skill-link"
+                          style={installLineLinkStyle}
+                          target="_blank"
+                          rel="noreferrer"
+                        />
+                      ),
                     }}
                   />
                 </div>

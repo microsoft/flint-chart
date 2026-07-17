@@ -448,7 +448,7 @@ export const ecBarChartDef: ChartTemplateDef = {
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
-        shift: ['color', 'group', 'column', 'row'],
+        shift: ['color', 'column', 'row'],
     }),
 };
 

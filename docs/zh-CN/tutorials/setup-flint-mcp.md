@@ -1,29 +1,29 @@
 # 配置 Flint MCP
 
-本页说明如何在 MCP 客户端中运行 `flint-chart-mcp`，以及连接后服务器暴露的内容。它比简短的 MCP 概览页更详细，但仍从基本配置路径开始。
+本页介绍如何在 MCP 客户端中配置 `flint-chart-mcp`，以及服务器提供哪些工具和资源。
 
-若你希望 VS Code、Claude Desktop、Cursor 或其他 MCP 客户端中的智能体创建、验证、预览或渲染 Flint 图表，请使用本页。对于直接嵌入库的自定义智能体与产品集成，参见[智能体工作流](/documentation/agent-workflows)。
+如果你想让 VS Code、Claude Desktop、Cursor 或其他 MCP 客户端中的智能体创建 Flint 图表，请从这里开始。如果要将 Flint 库直接集成到自己的智能体产品中，请参阅[智能体工作流](/documentation/agent-workflows)。
 
 ## MCP 服务器提供什么
 
-MCP 服务器是 Flint 面向智能体的执行端。智能体编写一份语义化的 `ChartAssemblyInput`，服务器在本地编译、验证、渲染或打开该图表。
+智能体负责生成 `ChartAssemblyInput`，MCP 服务器负责在本地校验、编译和渲染图表。
 
-| Tool | 用途 |
+| 工具 | 用途 |
 |------|------|
-| `create_chart_view` | 当宿主支持 MCP Apps 时的首选默认：打开带实时 SVG 预览与图表选项的交互式图表视图。 |
-| `validate_chart` | 检查 Flint 输入是否有效，并查看警告、错误与计算尺寸。 |
-| `render_chart` | 需要产物或宿主无 MCP App UI 时，在本地渲染静态 PNG 或 SVG。 |
-| `compile_chart` | 返回后端原生的 Vega-Lite、ECharts 或 Chart.js JSON。 |
-| `list_chart_types` | 查看支持的图表类型与编码通道。 |
+| `create_chart_view` | 打开交互式图表视图，提供实时 SVG 预览和图表选项。客户端支持 MCP Apps 时优先使用。 |
+| `validate_chart` | 检查 Flint 输入，返回警告、错误和计算后的图表尺寸。 |
+| `render_chart` | 渲染静态 PNG 或 SVG。客户端不支持 MCP Apps，或需要导出图片时使用。 |
+| `compile_chart` | 生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范。 |
+| `list_chart_types` | 列出支持的图表类型和编码通道。 |
 
-| Resource or prompt | 用途 |
+| 资源或提示词 | 用途 |
 |--------------------|------|
-| `flint://agent-skill` | 加载捆绑的 chart-author 说明。 |
+| `flint://agent-skill` | 加载随服务器提供的 Flint 图表编写指南。 |
 | `flint://chart-types` | 浏览支持的图表目录。 |
-| `ui://flint-chart/chart-view.html` | MCP App 宿主中 `create_chart_view` 使用的捆绑 UI 资源。 |
-| `author_flint_chart` | 从嵌入 chart-author skill 的 prompt 开始。 |
+| `ui://flint-chart/chart-view.html` | `create_chart_view` 使用的 MCP App 界面资源。 |
+| `author_flint_chart` | 加载 Flint 图表编写指南的提示词。 |
 
-为获得最佳效果，请让客户端加载 `flint://agent-skill`，或运行 `author_flint_chart` 提示，再让智能体调用图表工具。该 skill 会教智能体有效的 `chartType` 名称、字段到通道的映射、语义类型、数据绑定规则，以及何时使用各渲染工具。
+调用图表工具前，请让客户端加载 `flint://agent-skill`，或运行 `author_flint_chart` 提示词。编写指南包含有效的 `chartType` 名称、字段与通道的对应关系、语义类型、数据绑定规则，以及各渲染工具的适用场景。
 
 ## 要求
 
@@ -31,9 +31,9 @@ MCP 服务器是 Flint 面向智能体的执行端。智能体编写一份语义
 
 - 能运行 stdio 服务器的 MCP 客户端；
 - 该客户端可用的 Node.js 与 npm；
-- 图表数据直接嵌入工具调用，或从主机上的本地文件读取。
+- 图表数据直接嵌入工具调用，或从本地文件读取。
 
-服务器在主机上进程内渲染。内联行与本地文件保持本地；服务器不会将数据上传到远程渲染服务。
+服务器在本地渲染图表，不会把内联数据或本地文件上传到远程渲染服务。
 
 ## 使用 `npx` 运行
 
@@ -43,7 +43,7 @@ MCP 服务器是 Flint 面向智能体的执行端。智能体编写一份语义
 npx -y flint-chart-mcp
 ```
 
-该命令启动 stdio MCP 服务器。实践中，你通常将其写入客户端的 MCP 配置，而非手动运行。
+该命令会启动 stdio MCP 服务器。通常只需把它写入 MCP 客户端配置，无需手动运行。
 
 ## 配置 VS Code
 
@@ -61,7 +61,7 @@ npx -y flint-chart-mcp
 }
 ```
 
-若智能体应通过 `data.url` 对本地 `.csv`、`.tsv` 或 `.json` 文件作图，默认即可。若要在不可信部署中加强限制，使用 `--disable-file-reference` 完全拒绝本地文件引用（智能体须通过 `data.values` 内联传入行）：
+默认配置允许智能体通过 `data.url` 读取本地 `.csv`、`.tsv` 或 `.json` 文件。如果运行环境不可信，请使用 `--disable-file-reference` 禁用本地文件引用。此时智能体必须通过 `data.values` 直接传入数据：
 
 ```jsonc
 {
@@ -75,7 +75,7 @@ npx -y flint-chart-mcp
 }
 ```
 
-修改服务器代码或配置后，请在客户端重启 MCP 服务器。有用的冒烟测试是让智能体用 `list_chart_types` 列出 Flint 图表类型。
+修改服务器代码或配置后，请在客户端重启 MCP 服务器。可以让智能体调用 `list_chart_types`，确认连接是否正常。
 
 ## 配置 Claude Desktop 或 Cursor
 
@@ -138,10 +138,10 @@ VS Code 本地源码配置：
 
 MCP 工具调用可通过两种方式绑定数据：
 
-- **内嵌行：** 在工具调用中直接传入 `data: { values: [...] }`。这是小型或已准备表格的最简路径。
-- **本地文件引用：** 对主机上的 `.json`、`.csv` 或 `.tsv` 文件传入 `data: { url: "..." }`。
+- **直接传入数据：** 在工具调用中设置 `data: { values: [...] }`，适合较小或已经整理好的表格。
+- **读取本地文件：** 使用 `data: { url: "..." }` 引用本地 `.json`、`.csv` 或 `.tsv` 文件。
 
-默认情况下，服务器信任主机并读取智能体引用的任意本地文件（相对路径相对于工作目录解析）；智能体本也可内联相同行。远程 URL 永远不会被获取。
+默认情况下，服务器可以读取智能体指定的本地文件；相对路径从当前工作目录开始解析。服务器不会读取远程 URL。
 
 对于不可信部署，使用 `--disable-file-reference` 完全拒绝本地文件引用。智能体须通过 `data.values` 内联传入行：
 
@@ -167,7 +167,7 @@ npx -y flint-chart-mcp --backends vegalite,echarts
 FLINT_MCP_BACKENDS=vegalite,echarts npx -y flint-chart-mcp
 ```
 
-当用户希望在支持 MCP App 的主机中查看并迭代图表时，使用 `create_chart_view`。需要静态产物时使用 `render_chart`。当用户需要供其他渲染器或编辑器使用的后端原生 JSON 时，使用 `compile_chart`。
+客户端支持 MCP Apps 时，使用 `create_chart_view` 查看和调整图表。需要静态图片时使用 `render_chart`。需要在其他渲染器或编辑器中继续使用时，通过 `compile_chart` 生成对应的 JSON 规范。
 
 ## 验证配置
 
@@ -187,12 +187,12 @@ Use region as Category and revenue as Quantity.
 Open it with create_chart_view if this client supports MCP Apps; otherwise render an SVG.
 ```
 
-若 `list_chart_types` 可用但本地文件图表失败，请检查文件路径是否正确，以及是否未设置 `--disable-file-reference`。若 `create_chart_view` 不可用，主机可能不支持 MCP Apps；请让智能体改用 `render_chart`。
+如果 `list_chart_types` 可用，但无法读取本地文件，请检查文件路径以及是否设置了 `--disable-file-reference`。如果 `create_chart_view` 不可用，客户端可能不支持 MCP Apps；请改用 `render_chart`。
 
 ## 下一步
 
 - [智能体工作流](/documentation/agent-workflows) 说明如何将 Flint 的语义图表契约嵌入自定义智能体或智能体产品。
 - [入门指南](/documentation/getting-started) 用一张小图解释 `DataSpec` 与 `ChartSpec` 的结构。
-- [Vega-Lite charts](/documentation/reference-vegalite)、
-  [ECharts charts](/documentation/reference-echarts) 与
-  [Chart.js charts](/documentation/reference-chartjs) 按后端列出支持的图表类型。
+- [Vega-Lite 图表](/documentation/reference-vegalite)、
+  [ECharts 图表](/documentation/reference-echarts) 和
+  [Chart.js 图表](/documentation/reference-chartjs) 按后端列出支持的图表类型。

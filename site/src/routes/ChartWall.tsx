@@ -30,7 +30,9 @@ import {
 import { selectVariants } from '../shared/wall-variants';
 import { isFacetedTestCase } from '../shared/test-case-utils';
 import { CHART_FAMILIES, familyForChart } from '../shared/wall-families';
+import { localizeChartLabel, localizeFamilyLabel } from '../shared/gallery-labels';
 import { humanizeVariants } from '../shared/wall-title';
+import type { Locale } from '../i18n/locales';
 import type { PreviewBackend } from '../shared/supported-backends';
 import { siteTheme, CONTENT_MAX_WIDTH } from '../shared/theme';
 import { scrollNavItemIntoView } from '../shared/scroll-to-heading';
@@ -83,7 +85,7 @@ interface FamilyGroup {
  * under their gallery family so related chart types stay together while each
  * type keeps its own heading and sidebar entry.
  */
-function buildGroups(charts: ChartEntry[]): FamilyGroup[] {
+function buildGroups(charts: ChartEntry[], locale: Locale): FamilyGroup[] {
   const sectionsByFamily = new Map<string, ChartSection[]>();
 
   for (const chart of charts) {
@@ -91,7 +93,7 @@ function buildGroups(charts: ChartEntry[]): FamilyGroup[] {
     const variants = selectVariants(full, MAX_VARIANTS);
     if (variants.length === 0) continue;
     const indices = variants.map((v) => full.indexOf(v));
-    const titles = humanizeVariants(variants);
+    const titles = humanizeVariants(variants, locale);
     const tiles = variants.map((testCase, pos) => ({
       chart,
       testCase,
@@ -101,14 +103,18 @@ function buildGroups(charts: ChartEntry[]): FamilyGroup[] {
       indices,
     }));
     const familyId = familyForChart(chart);
+    const localizedChart = { ...chart, label: localizeChartLabel(chart.label, locale) };
     const bucket = sectionsByFamily.get(familyId) ?? [];
-    bucket.push({ chart, tiles });
+    bucket.push({
+      chart: localizedChart,
+      tiles: tiles.map((tile) => ({ ...tile, chart: localizedChart })),
+    });
     sectionsByFamily.set(familyId, bucket);
   }
 
   return CHART_FAMILIES.map((family) => ({
     id: family.id,
-    label: family.label,
+    label: localizeFamilyLabel(family.id, family.label, locale),
     sections: sectionsByFamily.get(family.id) ?? [],
   })).filter((group) => group.sections.length > 0);
 }
@@ -127,7 +133,7 @@ interface ActiveModal {
 export function ChartWall() {
   const { backend: backendParam } = useParams<{ backend?: string }>();
   const navigate = useNavigate();
-  const { lp } = useLocale();
+  const { locale, lp } = useLocale();
   const { t } = useTranslation();
   const category = resolveCategory(backendParam);
 
@@ -144,7 +150,7 @@ export function ChartWall() {
     }
   }, [backendParam, category.id, navigate, lp]);
 
-  const groups = useMemo(() => buildGroups(category.charts), [category]);
+  const groups = useMemo(() => buildGroups(category.charts, locale), [category, locale]);
   const sectionIds = useMemo(
     () => groups.flatMap((g) => g.sections.map((s) => s.chart.id)),
     [groups],

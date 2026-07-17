@@ -23,7 +23,7 @@
 ```
 packages/flint-js/src/<backend>/
 ├── index.ts              # public barrel
-├── assemble.ts           # orchestrator: ChartAssemblyInput → native spec
+├── assemble.ts           # 编排入口：ChartAssemblyInput → 后端配置
 ├── instantiate-spec.ts   # encoding + layout → spec (optional; some backends inline this)
 ├── recommendation.ts     # chart-type recommendations (optional)
 └── templates/

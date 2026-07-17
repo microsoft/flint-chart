@@ -82,7 +82,7 @@ AI 智能体、SQL 查询、notebook 或应用层可以准备这些视图。Flin
 
 值得注意：
 
-- ChartSpec 指定 `column: region`；Flint 处理 small-multiple 布局。
+- ChartSpec 指定 `column: region`；Flint 自动处理小多图分面布局。
 - 因 DataSpec 声明 `YearMonth`，`period` 保持为时间轴。
 - 图表扩展为可读的分面布局，而非将所有面板挤进 base size。
 
@@ -184,9 +184,9 @@ echarts
 
 三项 Flint 特性承担了大部分图表工作：
 
-- **语义类型驱动低层设置。** 时间解析、定量轴、发散颜色与有序分面来自 DataSpec。
+- **语义类型决定底层设置。** 时间解析、定量轴、发散颜色和分面顺序都来自 DataSpec。
 - **自动布局保持复杂视图可读。** 分面、分组柱、密集热力图与径向图可在可用画布内扩展或缩放。
-- **图表设计与后端切换成本低。** 视图具备正确字段后，ChartSpec 只需改几行，最终 assembler 在图表类型受支持时可指向 Vega-Lite、ECharts 或 Chart.js。
+- **图表设计和渲染后端都容易切换。** 只要视图包含所需字段，ChartSpec 通常只需修改几行；图表类型受支持时，同一份输入可以编译到 Vega-Lite、ECharts 或 Chart.js。
 
 这就是示例背后的现实承诺：准备正确视图，标注字段含义，然后更换图表设计而无需手写后端规范。
 
