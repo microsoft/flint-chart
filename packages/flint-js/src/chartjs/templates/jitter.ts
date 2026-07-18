@@ -181,12 +181,6 @@ export const cjsStripPlotDef: ChartTemplateDef = {
         { key: 'opacity', label: 'Opacity', type: 'continuous', min: 0, max: 1, step: 0.05, defaultValue: 0 },
     ] as ChartPropertyDef[],
     pivot: makeCartesianPivot({
-        transitions: [
-            {
-                to: 'Scatter Plot',
-                label: 'Scatter',
-                route: { from: 'color', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
+        // θ (Strip → Scatter) declared centrally in core/chart-transitions.ts.
     }),
 };

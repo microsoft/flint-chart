@@ -225,6 +225,134 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Combined transform control: chart-type icon dropdown + arrange switcher,
+   fused into one compact pill. */
+.transform-control {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.tc-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 7px 0 0 7px;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tc-type:hover,
+.tc-type[aria-expanded='true'] {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.tc-type-static {
+  cursor: default;
+}
+
+.tc-type-static:hover {
+  background: transparent;
+}
+
+.tc-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tc-caret {
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.tc-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 5px 0;
+  background: var(--hairline);
+}
+
+.tc-arrange {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 3px;
+}
+
+.arrange-state {
+  min-width: 2.5em;
+  max-width: 11em;
+  text-align: center;
+  padding: 0 2px;
+  font-size: 11px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tc-menu {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.tc-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.tc-opt:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tc-opt-selected {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.tc-opt-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tc-opt span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
 .control-inline {
   display: grid;
   grid-template-columns: 44px auto;

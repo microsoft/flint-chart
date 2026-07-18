@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
 
 import { renderFlintSvg, type FlintRenderResult } from './render';
+import { chartIconFor } from './chart-icons';
 import {
   buildPanelModel,
   setProperty,
@@ -165,33 +166,105 @@ function ControlRow(props: {
   );
 }
 
-function PivotControl(props: {
-  pivot: NonNullable<PanelModel['pivot']>;
-  width: number;
-  onSelect: (id: string | undefined) => void;
+/**
+ * Combined transform control: the chart-type switch (an icon dropdown listing
+ * sibling chart types) and the arrange switch (‹ name ›) fused into ONE compact
+ * pill. When a chart has no sibling types the chart-type part is a static,
+ * non-clickable chip; when it has no arrangements the arrange part is omitted.
+ */
+function TransformControl(props: {
+  chartType?: PanelModel['pivot'];
+  arrange?: PanelModel['pivot'];
+  onChartType: (id: string | undefined) => void;
+  onArrange: (id: string | undefined) => void;
 }) {
-  const { pivot, width, onSelect } = props;
-  const { ids, labels, index, length, label } = pivot;
-  const go = (delta: number) => {
-    const nextIndex = (index + delta + length) % length;
-    // The identity state (index 0) is the absent override — clear it so the
-    // chart returns to the authored view rather than storing a redundant id.
-    onSelect(nextIndex === 0 ? undefined : ids[nextIndex]);
+  const { chartType, arrange, onChartType, onArrange } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const canSwitchType = !!chartType && chartType.length > 1;
+  const hasArrange = !!arrange && arrange.length > 1;
+  const curName = chartType ? chartType.labels[chartType.index] : undefined;
+  const curIcon = curName ? chartIconFor(curName) : undefined;
+
+  const goArrange = (delta: number) => {
+    if (!arrange) return;
+    const n = (arrange.index + delta + arrange.length) % arrange.length;
+    onArrange(n === 0 ? undefined : arrange.ids[n]);
   };
+
   return (
-    <div className="opt pivot" role="group" aria-label={label} style={{ '--opt-width': `${width}px` } as React.CSSProperties}>
-      <span className="opt-label" title={label}>{label}</span>
-      <div className="pivot-stepper">
-        <button className="pivot-btn" aria-label="Previous view" onClick={() => go(-1)}>
-          ‹
-        </button>
-        <span className="pivot-state" title={labels[index]}>
-          {index + 1} / {length}
-        </span>
-        <button className="pivot-btn" aria-label="Next view" onClick={() => go(1)}>
-          ›
-        </button>
-      </div>
+    <div className="transform-control" ref={rootRef}>
+      {chartType &&
+        (canSwitchType ? (
+          <button
+            type="button"
+            className="tc-type"
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-label={`${chartType.label}: ${curName ?? ''}`}
+            title={curName}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {curIcon && <img className="tc-icon" src={curIcon} alt="" />}
+            <svg className="tc-caret" width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M3 4.5 L6 7.5 L9 4.5" />
+            </svg>
+          </button>
+        ) : (
+          <span className="tc-type tc-type-static" title={curName}>
+            {curIcon && <img className="tc-icon" src={curIcon} alt="" />}
+          </span>
+        ))}
+
+      {chartType && hasArrange && <span className="tc-divider" />}
+
+      {hasArrange && (
+        <div className="tc-arrange" role="group" aria-label={arrange!.label}>
+          <button className="pivot-btn" aria-label="Previous view" onClick={() => goArrange(-1)}>
+            ‹
+          </button>
+          <span className="arrange-state" title={arrange!.labels[arrange!.index]}>
+            {arrange!.labels[arrange!.index]}
+          </span>
+          <button className="pivot-btn" aria-label="Next view" onClick={() => goArrange(1)}>
+            ›
+          </button>
+        </div>
+      )}
+
+      {open && canSwitchType && chartType && (
+        <ul className="tc-menu" role="listbox" aria-label={chartType.label}>
+          {chartType.labels.map((lbl, i) => {
+            const ic = chartIconFor(lbl);
+            const selected = i === chartType.index;
+            return (
+              <li
+                key={i}
+                role="option"
+                aria-selected={selected}
+                className={selected ? 'tc-opt tc-opt-selected' : 'tc-opt'}
+                onClick={() => {
+                  onChartType(i === 0 ? undefined : chartType.ids[i]);
+                  setOpen(false);
+                }}
+              >
+                {ic && <img className="tc-opt-icon" src={ic} alt="" />}
+                <span>{lbl}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
@@ -227,15 +300,20 @@ function OptionsBar(props: {
   return (
     <div className="optionsbar" role="toolbar" aria-label={`${input.chart_spec.chartType} options`}>
       <div className="optionsbar-grid">
-        {model.pivot && model.pivot.length > 1 && (
-          <PivotControl
-            pivot={model.pivot}
-            width={optionWidth(model.pivot.label, 'pivot')}
-            onSelect={(id) => onInput(setProperty(input, model.pivot!.key, id))}
+        {((model.chartType && model.chartType.length > 1) ||
+          (model.arrange && model.arrange.length > 1)) && (
+          <TransformControl
+            chartType={model.chartType}
+            arrange={model.arrange}
+            onChartType={(id) => onInput(setProperty(input, model.chartType!.key, id))}
+            onArrange={(id) => onInput(setProperty(input, model.arrange!.key, id))}
           />
         )}
         {controls.length === 0 ? (
-          !(model.pivot && model.pivot.length > 1) && (
+          !(
+            (model.chartType && model.chartType.length > 1) ||
+            (model.arrange && model.arrange.length > 1)
+          ) && (
             <span className="opt-empty">No adjustable options for this chart.</span>
           )
         ) : (

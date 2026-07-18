@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Network graph: nodes connected by edges (force/circular layout) -->
+  <!-- Edges -->
+  <line x1="128" y1="132" x2="128" y2="58"  stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="128" y1="132" x2="200" y2="104" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="128" y1="132" x2="178" y2="196" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="128" y1="132" x2="74"  y2="196" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="128" y1="132" x2="56"  y2="104" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="128" y1="58"  x2="200" y2="104" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="74"  y1="196" x2="56"  y2="104" stroke="#B8B8B8" stroke-width="3"/>
+  <line x1="200" y1="104" x2="178" y2="196" stroke="#B8B8B8" stroke-width="3"/>
+  <!-- Nodes -->
+  <circle cx="128" cy="132" r="18" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <circle cx="128" cy="58"  r="15" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <circle cx="200" cy="104" r="13" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <circle cx="178" cy="196" r="14" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <circle cx="74"  cy="196" r="12" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <circle cx="56"  cy="104" r="13" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+</svg>

@@ -16,6 +16,7 @@
 import {
   getChartOptions,
   getChartPivot,
+  getChartTransform,
   resolveEncodingType,
   vlGetTemplateDef,
 } from 'flint-chart';
@@ -51,6 +52,10 @@ export interface PanelModel {
   actions: ResolvedAction[];
   /** Cyclic pivot surface (alternative views), or undefined when single-view. */
   pivot?: PivotSurface;
+  /** Control B — chart-type transitions (θ), or undefined when no siblings. */
+  chartType?: PivotSurface;
+  /** Control A — local rearrangement group (τ/σ/γ), or undefined when trivial. */
+  arrange?: PivotSurface;
 }
 
 /** Extract the bound field name from a raw encoding value (shorthand-aware). */
@@ -184,5 +189,17 @@ export function buildPanelModel(
     pivot = undefined;
   }
 
-  return { properties, actions, pivot };
+  // Factored two-control transform surfaces (chart type = θ, arrange = τ/σ/γ).
+  let chartType: PivotSurface | undefined;
+  let arrange: PivotSurface | undefined;
+  try {
+    const transform = getChartTransform(input);
+    chartType = transform?.chartType;
+    arrange = transform?.arrange;
+  } catch {
+    chartType = undefined;
+    arrange = undefined;
+  }
+
+  return { properties, actions, pivot, chartType, arrange };
 }

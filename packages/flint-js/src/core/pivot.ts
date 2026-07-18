@@ -39,6 +39,7 @@
  */
 
 import { ChartEncoding, ChartTemplateDef, PivotDef, PivotTransition } from './types';
+import { getChartTransitions } from './chart-transitions';
 
 /** Resolved pivot surface attached to the assembled spec as `_pivot`. */
 export interface PivotSurface {
@@ -135,6 +136,37 @@ function orderPair(a: string, b: string): [string, string] {
 }
 
 /**
+ * Human-friendly channel names for the arrange labels shown in the UI (the
+ * dropdown/switcher). Keeps the stored *ids* untouched — only the display text.
+ */
+const CHANNEL_DISPLAY: Record<string, string> = {
+    x: 'X',
+    y: 'Y',
+    color: 'Color',
+    size: 'Size',
+    group: 'Groups',
+    column: 'Columns',
+    row: 'Rows',
+    detail: 'Detail',
+    opacity: 'Opacity',
+};
+function chDisplay(ch: string): string {
+    return CHANNEL_DISPLAY[ch] ?? ch.charAt(0).toUpperCase() + ch.slice(1);
+}
+
+/** The set of channels whose bound field differs between two encodings. */
+function changedChannels(
+    a: Record<string, ChartEncoding>,
+    b: Record<string, ChartEncoding>,
+): Set<string> {
+    const out = new Set<string>();
+    for (const ch of new Set([...Object.keys(a), ...Object.keys(b)])) {
+        if (a[ch]?.field !== b[ch]?.field) out.add(ch);
+    }
+    return out;
+}
+
+/**
  * Transpose generator (τ): exchange two axis *slots* wholesale (`x↔y`). This is
  * the orientation/flip — it carries each channel's full encoding to the other,
  * so it is profile-agnostic (category↔measure on a bar, measure↔measure on a
@@ -158,7 +190,7 @@ function transposeState(
     const next = clone(base);
     next[a] = { ...eb };
     next[b] = { ...ea };
-    return { id: `flip:${a}-${b}`, label: `τ_${a}↔${b}`, enc: next };
+    return { id: `flip:${a}-${b}`, label: `${chDisplay(a)} ⇄ ${chDisplay(b)}`, enc: next };
 }
 
 type ChannelProfile = 'measure' | 'category' | 'time';
@@ -209,7 +241,7 @@ function permuteSwapState(
     if (!profile || profile !== channelProfile(auxEnc, template)) return null; // different profile
 
     const id = `swap:${a}-${b}`;
-    const label = `σ_${a}↔${b}`;
+    const label = `${chDisplay(a)} ⇄ ${chDisplay(b)}`;
 
     if (profile === 'measure') {
         // Demoting a measure to an aux channel only reads on position marks; on a
@@ -254,9 +286,9 @@ function routeBudget(target: string, facetBudget: number): number {
     return 20; // color legend
 }
 
-/** Operator label for routing the series onto a grouping channel (γ = shift). */
-function routeLabel(target: string): string {
-    return `γ_→${target}`;
+/** Operator label for routing the series from its current channel onto another. */
+function routeLabel(from: string, to: string): string {
+    return `${chDisplay(from)} ⇄ ${chDisplay(to)}`;
 }
 
 /** Find the discrete series field and the grouping channel it currently sits on. */
@@ -302,9 +334,73 @@ function seriesRoutingStates(
         const next = clone(base);
         delete next[src.channel];
         next[target] = { ...src.enc };
-        out.push({ id: `series:${target}`, enc: next, label: routeLabel(target) });
+        out.push({ id: `series:${target}`, enc: next, label: routeLabel(src.channel, target) });
     }
     return out;
+}
+
+/**
+ * The *domain* position axis encoding — the non-measure x/y (a category/time
+ * axis). Prefers whichever position channel is not a measure.
+ */
+function domainAxisEnc(base: Record<string, ChartEncoding>): ChartEncoding | undefined {
+    if (base.x?.field && !isMeasure(base.x)) return base.x;
+    if (base.y?.field && !isMeasure(base.y)) return base.y;
+    return undefined;
+}
+
+/** The *measure* position axis encoding — the quantitative/aggregated x/y. */
+function measureAxisEnc(base: Record<string, ChartEncoding>): ChartEncoding | undefined {
+    if (base.x?.field && isMeasure(base.x)) return base.x;
+    if (base.y?.field && isMeasure(base.y)) return base.y;
+    return undefined;
+}
+
+/**
+ * Evaluate a transition's declarative *data-characteristic* gates against the
+ * authored encoding + data (design-docs/chart-transform-two-axes.md §4.9.3).
+ * These are the "not all mappings make sense" guards: a candidate edge is only
+ * offered when the shared fields actually support the sibling's reading.
+ */
+function transitionGatesPass(
+    base: Record<string, ChartEncoding>,
+    data: any[],
+    t: PivotTransition,
+): boolean {
+    if (t.requireOrderedAxis) {
+        const domain = domainAxisEnc(base);
+        // Ordered = temporal or ordinal; plain nominal never qualifies.
+        if (!domain || !(domain.type === 'temporal' || domain.type === 'ordinal')) return false;
+    }
+    if (t.requireNonNegative) {
+        const measure = measureAxisEnc(base);
+        if (measure?.field) {
+            for (const row of data) {
+                const v = row?.[measure.field];
+                if (typeof v === 'number' && v < 0) return false;
+            }
+        }
+    }
+    if (t.maxCategoryCardinality != null) {
+        const domain = domainAxisEnc(base);
+        if (domain?.field && distinctCount(data, domain.field) > t.maxCategoryCardinality) return false;
+    }
+    if (t.requireNoSeries) {
+        for (const ch of GROUPING_CHANNELS) {
+            if (isDiscrete(base[ch])) return false;
+        }
+    }
+    if (t.requireSeries) {
+        const seriesChannels = ['color', 'group', 'detail', 'column', 'row'];
+        if (!seriesChannels.some((ch) => isDiscrete(base[ch]))) return false;
+    }
+    if (t.requireBiaxialMeasure) {
+        if (!isMeasure(base.x) || !isMeasure(base.y)) return false;
+    }
+    if (t.requireNoSize) {
+        if (base.size?.field) return false;
+    }
+    return true;
 }
 
 /**
@@ -321,6 +417,7 @@ function transitionState(
     template: ChartTemplateDef,
     t: PivotTransition,
 ): { enc: Record<string, ChartEncoding>; chartType: string; label: string } | null {
+    if (!transitionGatesPass(base, data, t)) return null;
     const enc = clone(base);
     const route = t.route;
     if (route) {
@@ -348,10 +445,30 @@ function transitionState(
             if (dstEnc?.field) enc[spillCh] = { ...dstEnc };
             else delete enc[spillCh];
         } else {
-            // move: the target slot must be empty so we don't clobber a field
-            if (dstEnc?.field) return null;
-            delete enc[fromCh];
-            enc[route.to] = { ...srcEnc };
+            // move: bring the source field onto the target channel. If it is
+            // already there (from === to, e.g. `series` resolved to the target),
+            // it's a no-op; otherwise the target must be empty so we don't clobber.
+            if (fromCh !== route.to) {
+                if (dstEnc?.field) return null;
+                delete enc[fromCh];
+                enc[route.to] = { ...srcEnc };
+            }
+        }
+    }
+    // Re-orient the domain axis for the sibling if requested (bar → line/area):
+    // a horizontal bar carries the ordered/temporal domain on `y`, but a line
+    // pins it to the horizontal — swap x/y wholesale so we never render a
+    // vertical line chart.
+    if (t.orientDomainAxis) {
+        const target = t.orientDomainAxis;
+        const other = target === 'x' ? 'y' : 'x';
+        const domainOnOther = !!enc[other]?.field && !isMeasure(enc[other]);
+        const targetFreeForDomain = !enc[target]?.field || isMeasure(enc[target]);
+        if (domainOnOther && targetFreeForDomain) {
+            const a = enc[target];
+            const b = enc[other];
+            if (b) enc[target] = { ...b }; else delete enc[target];
+            if (a) enc[other] = { ...a }; else delete enc[other];
         }
     }
     return { enc, chartType: t.to, label: t.label };
@@ -382,12 +499,16 @@ function pivotSteps(
     template: ChartTemplateDef,
     enc: Record<string, ChartEncoding>,
     data: any[],
+    opts?: { local?: boolean; transitions?: boolean },
+    resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
 ): PivotStep[] {
     const def = template.pivot;
     if (!def) return [];
+    const includeLocal = opts?.local !== false;
+    const includeTransitions = opts?.transitions !== false;
     const steps: PivotStep[] = [];
     // τ: each declared axis-slot pair contributes its wholesale flip (orientation).
-    for (const pair of def.transpose ?? []) {
+    if (includeLocal) for (const pair of def.transpose ?? []) {
         if (pair.length !== 2) continue;
         const s = transposeState(enc, template, [pair[0], pair[1]]);
         if (s) steps.push({ id: s.id, label: s.label, enc: s.enc });
@@ -395,7 +516,7 @@ function pivotSteps(
     // σ: each permutable block contributes its within-block axis↔aux field swaps as
     // candidate one-step moves; the orbit BFS composes them to close the block's
     // symmetric group. Profile-mismatched pairs return null and are dropped.
-    for (const block of def.permute ?? []) {
+    if (includeLocal) for (const block of def.permute ?? []) {
         for (let i = 0; i < block.length; i++) {
             for (let j = i + 1; j < block.length; j++) {
                 const s = permuteSwapState(enc, template, [block[i], block[j]]);
@@ -403,13 +524,19 @@ function pivotSteps(
             }
         }
     }
-    if (def.shift && def.shift.length) {
+    if (includeLocal && def.shift && def.shift.length) {
         for (const s of seriesRoutingStates(enc, template, data, def.shift, def.facetBudget ?? 12)) {
             steps.push({ id: s.id, label: s.label, enc: s.enc });
         }
     }
-    if (def.transitions) {
-        for (const t of def.transitions) {
+    // θ: chart-type transitions are sourced from the CENTRAL registry (keyed by
+    // the template's chart name), not the template itself — a template no longer
+    // declares what it can turn into. A candidate edge is emitted only when its
+    // target template exists in the active backend (via `resolveTemplate`, when
+    // supplied); the per-edge data gates run inside transitionState.
+    if (includeTransitions) {
+        for (const t of getChartTransitions(template.chart)) {
+            if (resolveTemplate && !resolveTemplate(t.to)) continue; // backend can't render it
             const st = transitionState(enc, data, template, t);
             // Operator notation: θ = chart-type transition, subscripted by the target view.
             if (st) steps.push({ id: `type:${t.to}`, label: `θ_→${t.label.toLowerCase()}`, enc: st.enc, chartType: st.chartType });
@@ -477,11 +604,13 @@ export function computePivot(
     base: Record<string, ChartEncoding>,
     data: any[],
     resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
+    opts?: { includeTransitions?: boolean; key?: string; label?: string },
 ): PivotComputation | null {
     const def = template.pivot;
     if (!def) return null;
-    const key = def.key ?? 'pivot';
-    const label = def.label ?? 'View';
+    const key = opts?.key ?? def.key ?? 'pivot';
+    const label = opts?.label ?? def.label ?? 'View';
+    const includeTransitions = opts?.includeTransitions !== false;
 
     const ids: string[] = ['default'];
     const labels: string[] = ['Default'];
@@ -510,7 +639,7 @@ export function computePivot(
 
     while (queue.length > 0 && ids.length < MAX_PIVOT_STATES) {
         const cur = queue.shift()!;
-        for (const step of pivotSteps(cur.template, cur.enc, data)) {
+        for (const step of pivotSteps(cur.template, cur.enc, data, { local: true, transitions: includeTransitions }, resolveTemplate)) {
             // A θ step switches the effective chart type (and thus the template
             // whose generators apply next); σ/γ steps stay on the current one.
             let nextChartType = step.chartType ?? cur.chartType;
@@ -525,10 +654,29 @@ export function computePivot(
                 ? (resolved ?? { ...cur.template, pivot: undefined })
                 : cur.template;
             if (!isRenderableState(nextTemplate, step.enc)) continue; // avoid invalid combos
+            // Drop OVERLAPPING arrangement compositions. Composing two generators
+            // that touch a shared channel yields a confusing 3-cycle (flip X⇄Y then
+            // swap Y⇄Color rotates all three axes, not a clean pairwise swap). We
+            // only compose steps whose moved channels are DISJOINT from what the
+            // path already moved — so every state is a single generator or an
+            // INDEPENDENT combo. The generators themselves are unchanged (the
+            // overlapping states still exist in theory), we just don't enumerate them.
+            if (step.chartType === undefined && cur.id !== 'default') {
+                const already = changedChannels(base, cur.enc);
+                const now = changedChannels(cur.enc, step.enc);
+                let overlaps = false;
+                for (const ch of now) {
+                    if (already.has(ch)) { overlaps = true; break; }
+                }
+                if (overlaps) continue;
+            }
             const fp = encodingKey(step.enc, nextChartType);
             if (seen.has(fp)) continue; // dedup (stabilizer)
             seen.add(fp);
             const id = cur.id === 'default' ? step.id : `${cur.id}|${step.id}`;
+            // Compositions are now always DISJOINT (see the overlap guard above),
+            // so a plain operator join reads cleanly with no double-counted channel
+            // (e.g. `X ⇄ Y · Color ⇄ Columns`). θ states join the same way.
             const stepLabel = cur.id === 'default' ? step.label : `${cur.label} · ${step.label}`;
             ids.push(id);
             labels.push(stepLabel);
@@ -572,5 +720,191 @@ export function applyPivot(
             ids: comp.ids,
             labels: comp.labels,
         },
+    };
+}
+
+// ─── Factored two-control model (design-docs/chart-transform-two-axes.md) ─────
+//
+// The single composed orbit above is re-exposed as TWO independent controls:
+//   - Control B (chart type, θ): a one-hop transition menu enumerated from the
+//     object's *identity* — no composition, independent of Control A.
+//   - Control A (arrange, τ/σ/γ): the local group of the *effective* chart type
+//     (authored, or the θ-selected sibling), BFS-composed and deduped.
+// The two are stored as separate override keys (`chartType`, `arrange`). A θ
+// switch resets `arrange` to identity and rebuilds Control A on the new object.
+
+/** Both control surfaces resolved for the current input. */
+export interface TransformSurface {
+    /** Control B — chart-type transitions (dropdown). Absent when no siblings. */
+    chartType?: PivotSurface;
+    /** Control A — local rearrangement group (stepper). Absent when trivial. */
+    arrange?: PivotSurface;
+}
+
+/** Override keys the two controls read/write under `chartProperties`. */
+export const TRANSFORM_CHART_TYPE_KEY = 'chartType';
+export const TRANSFORM_ARRANGE_KEY = 'arrange';
+
+/** Build a PivotSurface for a chosen state id within a computation. */
+function buildSurface(comp: PivotComputation, id: string): PivotSurface {
+    const index = Math.max(0, comp.ids.indexOf(id));
+    return {
+        key: comp.key,
+        label: comp.label,
+        length: comp.ids.length,
+        index,
+        ids: comp.ids,
+        labels: comp.labels,
+    };
+}
+
+/**
+ * Control A enumeration: the local rearrangement group (τ/σ/γ only, no θ) of a
+ * template, BFS-composed and deduped exactly like {@link computePivot} but with
+ * chart-type transitions excluded. Runs on the *effective* object's identity
+ * encoding (post-θ), so it offers exactly the moves that make sense there.
+ */
+export function computeArrangeStates(
+    template: ChartTemplateDef,
+    base: Record<string, ChartEncoding>,
+    data: any[],
+): PivotComputation | null {
+    return computePivot(template, base, data, undefined, {
+        includeTransitions: false,
+        key: TRANSFORM_ARRANGE_KEY,
+        label: 'Arrange',
+    });
+}
+
+/**
+ * Control B enumeration: the one-hop chart-type transitions (θ only) of a
+ * template, enumerated from the object's *identity* encoding — no composition,
+ * no τ/σ/γ. Each state re-routes fields for a sibling chart type and carries a
+ * `chartType` override the compiler re-dispatches on. State 0 is the authored
+ * type (`default`, no override); labels are the sibling chart-type display
+ * names so the dropdown reads "Bar Chart · Line Chart · …". Returns `null` when
+ * the template declares no transitions.
+ */
+export function computeChartTypeStates(
+    template: ChartTemplateDef,
+    base: Record<string, ChartEncoding>,
+    data: any[],
+    resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
+): PivotComputation | null {
+    // Transitions come from the central registry (keyed by chart name), NOT from
+    // the template's pivot def — so a template with no local τ/σ/γ group (e.g. a
+    // Pyramid) can still offer chart-type siblings.
+    const transitions = getChartTransitions(template.chart);
+    if (transitions.length === 0) return null;
+
+    const ids: string[] = ['default'];
+    const labels: string[] = [template.chart];
+    const statesById: Record<string, Record<string, ChartEncoding>> = { default: clone(base) };
+    const chartTypeById: Record<string, string | undefined> = { default: undefined };
+    const seenChartTypes = new Set<string>([template.chart]);
+
+    for (const t of transitions) {
+        // Backend gate: skip a target the active backend can't render.
+        if (resolveTemplate && !resolveTemplate(t.to)) continue;
+        const st = transitionState(base, data, template, t);
+        if (!st) continue;
+        // One sibling per target chart type; skip a hop back to the authored type.
+        if (seenChartTypes.has(st.chartType)) continue;
+        seenChartTypes.add(st.chartType);
+        const id = `type:${t.to}`;
+        ids.push(id);
+        labels.push(st.chartType);
+        statesById[id] = st.enc;
+        chartTypeById[id] = st.chartType;
+    }
+
+    if (ids.length <= 1) return null;
+    return { key: TRANSFORM_CHART_TYPE_KEY, label: 'Chart type', ids, labels, statesById, chartTypeById };
+}
+
+/**
+ * Resolve the two transform override ids from `chartProperties`, with a
+ * backward-compatible shim for the legacy single composed `pivot` id: a
+ * `type:*` token routes to the chart-type override and the remaining τ/σ/γ
+ * tokens (before it) route to arrange. Because a θ resets arrange in the new
+ * model, tokens *after* a `type:*` token are dropped (best-effort migration).
+ */
+function resolveTransformOverrides(
+    chartProperties: Record<string, any> | undefined,
+): { chartTypeId: string | undefined; arrangeId: string | undefined } {
+    let chartTypeId = chartProperties?.[TRANSFORM_CHART_TYPE_KEY];
+    let arrangeId = chartProperties?.[TRANSFORM_ARRANGE_KEY];
+    if (typeof chartTypeId !== 'string') chartTypeId = undefined;
+    if (typeof arrangeId !== 'string') arrangeId = undefined;
+
+    if (chartTypeId === undefined && arrangeId === undefined) {
+        const legacy = chartProperties?.pivot;
+        if (typeof legacy === 'string' && legacy.length > 0 && legacy !== 'default') {
+            const tokens = legacy.split('|');
+            const typeIdx = tokens.findIndex((t) => t.startsWith('type:'));
+            if (typeIdx >= 0) {
+                chartTypeId = tokens[typeIdx];
+                const local = tokens.slice(0, typeIdx);
+                arrangeId = local.length ? local.join('|') : undefined;
+            } else {
+                arrangeId = legacy;
+            }
+        }
+    }
+    return { chartTypeId, arrangeId };
+}
+
+/**
+ * Resolve the active state for the two independent controls and return the
+ * transformed encodings + both surfaces. Order (design §4.10.1): apply the
+ * chart-type transition (Control B) from the authored identity FIRST, re-select
+ * the sibling template, THEN enumerate + apply that object's local arrange group
+ * (Control A). A stale/absent `arrange` id falls back to identity — which is the
+ * reset-on-θ behavior for free (design §4.10.2).
+ */
+export function applyTransform(
+    template: ChartTemplateDef,
+    base: Record<string, ChartEncoding>,
+    data: any[],
+    chartProperties: Record<string, any> | undefined,
+    resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
+): {
+    encodings: Record<string, ChartEncoding>;
+    chartType: string | undefined;
+    surface: TransformSurface;
+} {
+    const { chartTypeId, arrangeId } = resolveTransformOverrides(chartProperties);
+
+    // Control B — chart type (θ), from the authored identity.
+    let effectiveTemplate = template;
+    let effectiveEnc = base;
+    let chartType: string | undefined;
+    let chartTypeSurface: PivotSurface | undefined;
+    const ctComp = computeChartTypeStates(template, base, data, resolveTemplate);
+    if (ctComp && ctComp.ids.length > 1) {
+        const id = chartTypeId && ctComp.ids.includes(chartTypeId) ? chartTypeId : 'default';
+        effectiveEnc = ctComp.statesById[id];
+        chartType = ctComp.chartTypeById[id];
+        if (chartType) {
+            const resolved = resolveTemplate?.(chartType);
+            if (resolved) effectiveTemplate = resolved;
+        }
+        chartTypeSurface = buildSurface(ctComp, id);
+    }
+
+    // Control A — arrange (τ/σ/γ), on the effective object.
+    let encodings = effectiveEnc;
+    let arrangeSurface: PivotSurface | undefined;
+    const arrComp = computeArrangeStates(effectiveTemplate, effectiveEnc, data);
+    if (arrComp && arrComp.ids.length > 1) {
+        const id = arrangeId && arrComp.ids.includes(arrangeId) ? arrangeId : arrComp.ids[0];
+        encodings = arrComp.statesById[id];
+        arrangeSurface = buildSurface(arrComp, id);
+    }
+
+    return {
+        encodings,
+        chartType,
+        surface: { chartType: chartTypeSurface, arrange: arrangeSurface },
     };
 }

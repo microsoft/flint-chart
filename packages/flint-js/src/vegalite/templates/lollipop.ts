@@ -55,7 +55,7 @@ export const lollipopChartDef: ChartTemplateDef = {
         const yType = yEnc?.type;
 
         const isMeasure = (t: string | undefined) =>
-            t != null && t !== 'nominal' && t !== 'ordinal';
+            t != null && t !== 'nominal' && t !== 'ordinal' && t !== 'temporal';
 
         if (isMeasure(yType)) {
             spec.layer[0].encoding.y2 = { datum: 0 };

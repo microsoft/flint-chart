@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Gauge: semicircular track with value arc + needle -->
+  <path d="M 42 158 A 86 86 0 0 1 214 158" fill="none" stroke="#B8B8B8" stroke-width="20" stroke-linecap="round"/>
+  <path d="M 42 158 A 86 86 0 0 1 173.57 85.07" fill="none" stroke="#76c6ff" stroke-width="20" stroke-linecap="round"/>
+  <line x1="128" y1="158" x2="149.89" y2="97.86" stroke="#363636" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="128" cy="158" r="11" fill="#363636"/>
+</svg>

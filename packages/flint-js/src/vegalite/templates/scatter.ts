@@ -54,17 +54,8 @@ export const scatterPlotDef: ChartTemplateDef = {
         // Route the discrete grouping field across color / facet channels so a
         // grouped scatter and a faceted scatter are states of one another.
         shift: ['color', 'group', 'column', 'row'],
-        // Chart-type transition: the discrete series field (wherever it sits —
-        // color, column or row) moves onto the `x` category axis, re-rendering
-        // the cloud as a Strip/Jitter plot. The displaced quantitative x spills
-        // to a `color` gradient. Offered whenever a discrete series exists.
-        transitions: [
-            {
-                to: 'Strip Plot',
-                label: 'Jitter',
-                route: { from: 'series', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
+        // θ chart-type transitions (Scatter → Strip / Regression) are declared
+        // centrally in core/chart-transitions.ts, not on the template.
     }),
 };
 
@@ -145,6 +136,15 @@ export const regressionDef: ChartTemplateDef = {
             min: 2, max: 10, step: 1, defaultValue: 3,
         },
     ] as ChartPropertyDef[],
+    // A regression is a scatter with a fitted trend, so it shares the scatter's
+    // local rearrangement group: flip the axes, demote a measure to color/size,
+    // and route a discrete series across color / facet channels. (θ chart-type
+    // transitions are declared centrally in core/chart-transitions.ts.)
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color', 'size']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };
 
 export const rangedDotPlotDef: ChartTemplateDef = {

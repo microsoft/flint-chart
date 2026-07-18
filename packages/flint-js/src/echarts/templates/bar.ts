@@ -672,15 +672,7 @@ export const ecStackedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Grouped Bar Chart',
-                label: 'Grouped',
-                route: { from: 'color', to: 'group', mode: 'move' },
-                requireDiscreteSource: true,
-                maxSourceCardinality: 12,
-            },
-        ],
+        // θ (→ Grouped Bar) declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -988,13 +980,6 @@ export const ecGroupedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Stacked Bar Chart',
-                label: 'Stacked',
-                route: { from: 'group', to: 'color', mode: 'move' },
-                requireDiscreteSource: true,
-            },
-        ],
+        // θ (→ Stacked Bar) declared centrally in core/chart-transitions.ts.
     }),
 };

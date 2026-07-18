@@ -114,8 +114,6 @@ export const densityPlotDef: ChartTemplateDef = {
     // back to a binned Histogram.
     pivot: makeCartesianPivot({
         shift: ['color', 'column', 'row'],
-        transitions: [
-            { to: 'Histogram', label: 'Histogram' },
-        ],
+        // θ (→ Histogram / ECDF) is declared centrally in core/chart-transitions.ts.
     }),
 };

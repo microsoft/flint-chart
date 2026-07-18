@@ -333,14 +333,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Stacked Bar Chart',
-                label: 'Stacked',
-                route: { from: 'group', to: 'color', mode: 'move' },
-                requireDiscreteSource: true,
-            },
-        ],
+        // θ (→ Stacked Bar) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -396,15 +389,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Grouped Bar Chart',
-                label: 'Grouped',
-                route: { from: 'color', to: 'group', mode: 'move' },
-                requireDiscreteSource: true,
-                maxSourceCardinality: 12,
-            },
-        ],
+        // θ (→ Grouped Bar) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -442,9 +427,7 @@ export const histogramDef: ChartTemplateDef = {
     // smooth kernel Density Plot.
     pivot: makeCartesianPivot({
         shift: ['color', 'column', 'row'],
-        transitions: [
-            { to: 'Density Plot', label: 'Density' },
-        ],
+        // θ (→ Density Plot / ECDF) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
