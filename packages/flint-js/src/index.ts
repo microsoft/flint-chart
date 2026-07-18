@@ -14,6 +14,7 @@
  *   vegalite/   — Vega-Lite backend: assembly, templates, spec instantiation
  *   echarts/    — ECharts backend: assembly, templates, spec instantiation
  *   chartjs/    — Chart.js backend: assembly, templates, spec instantiation
+ *   plotly/     — Plotly backend: assembly, templates, spec instantiation
  *
  * Assembly functions:
  *   assembleVegaLite(input)  — Vega-Lite spec
@@ -52,3 +53,4 @@ export * from './echarts';
 
 // Chart.js backend: assembleChartjs, templates, spec instantiation
 export * from './chartjs';
+export * from './plotly';

@@ -6,6 +6,7 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
 } from '../src';
 
 const DATA = [
@@ -45,6 +46,13 @@ describe('public API smoke', () => {
     const config = assembleChartjs(INPUT) as any;
     expect(config).toBeDefined();
     expect(config.type ?? config.data ?? config.options).toBeDefined();
+  });
+
+  it('assemblePlotly returns a figure object', () => {
+    const figure = assemblePlotly(INPUT) as any;
+    expect(figure).toBeDefined();
+    expect(Array.isArray(figure.data)).toBe(true);
+    expect(figure.layout).toBeDefined();
   });
 
   it('line chart with quantitative color uses a line layer plus colored points', () => {
