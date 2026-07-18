@@ -251,8 +251,8 @@ support a subset (verify if targeting a non-VL backend):
   `"Funnel"`, `"Treemap"`, `"Sunburst"`, `"Sankey"`,
   `"Parallel Coordinates"`, `"Graph"`, `"Tree"`.
 - **Chart.js** supports: Scatter, Bubble, Bar, Grouped Bar, Stacked Bar,
-  Combo, Line, Bump, Area, Range Area, Pie, Doughnut, Histogram, Radar, Rose,
-  Slope, Connected Scatter.
+  Lollipop, Bump, Combo, Line, Area, Range Area, Pie, Doughnut, Histogram,
+  Radar, Rose, Slope, Connected Scatter.
 
 You do not need to call the library or inspect its source to author the
 input — pick from this table.

@@ -6,7 +6,7 @@ The Chart.js backend is the lightweight embedding target for common chart famili
 
 ## What this page covers
 
-This reference lists the 21 chart types currently supported by the Chart.js backend, grouped into 5 categories. Each chart entry shows:
+This reference lists the 22 chart types currently supported by the Chart.js backend, grouped into 5 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -84,6 +84,14 @@ _No template-specific parameters._
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
 _No template-specific parameters._
+
+### ![](chart-icon-lollipop.svg) Lollipop Chart
+
+**Encoding channels:** `x`, `y`, `color`, `column`, `row`
+
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `dotSize` | number | 20 – 300 (step 10) | `80` | always | Size of the dot mark. |
 
 ### ![](chart-icon-combo.svg) Combo Chart
 
