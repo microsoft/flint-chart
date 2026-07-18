@@ -6,7 +6,8 @@
  * Pure logic — no UI dependencies.
  */
 
-import type { ChannelSemantics } from '../../core/types';
+import type { ChannelSemantics, InstantiateContext } from '../../core/types';
+import { pickPlotlyPalette } from '../colormap';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
 
@@ -116,8 +117,8 @@ export function coerceIsoDateForPlotly(raw: unknown): string | null {
 
 /**
  * Plotly's default qualitative palette (plotly.js `layout.colorway` defaults).
- * Kept local to this backend, mirroring how each backend owns its palette.
- * Integration with core color-decisions is a follow-up.
+ * Fallback when no color decision is available; the decision-aware path lives
+ * in ../colormap.ts (mirroring chartjs/colormap.ts).
  */
 export const PLOTLY_COLORS = [
     '#636efa', // blue-violet
@@ -132,7 +133,28 @@ export const PLOTLY_COLORS = [
     '#FECB52', // yellow
 ];
 
-/** Series color by index (wraps around the default palette). */
-export function getSeriesColor(index: number): string {
-    return PLOTLY_COLORS[index % PLOTLY_COLORS.length];
+/**
+ * 从 color-decisions 解析调色板；若没有决策则回退到 Plotly 默认 plotly10。
+ * (Mirror of chartjs/templates/utils.ts getChartJsPalette.)
+ */
+export function getPlotlyPalette(ctx: InstantiateContext, preferred: 'color' | 'group' = 'color'): string[] {
+    const decisions = ctx.colorDecisions;
+    const decision =
+        preferred === 'color'
+            ? decisions?.color ?? decisions?.group
+            : decisions?.group ?? decisions?.color;
+
+    const palette = pickPlotlyPalette(decision);
+    if (palette.length > 0) {
+        return palette;
+    }
+    return PLOTLY_COLORS;
+}
+
+/** Series color by index from a resolved palette. */
+export function getSeriesColor(palette: string[], index: number): string {
+    if (!palette.length) {
+        return PLOTLY_COLORS[index % PLOTLY_COLORS.length];
+    }
+    return palette[index % palette.length];
 }

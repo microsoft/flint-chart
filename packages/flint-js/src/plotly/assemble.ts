@@ -20,14 +20,14 @@
  *   Figures are pure JSON — no callback functions anywhere — so compiled
  *   specs survive serialization across process boundaries.
  *
- * First-merge scope: no `column` / `row` facet support; encodings on
- * unsupported channels are dropped with a warning (follow-up: subplot grids).
+ * column/row facets render as a subplot grid (see facet.ts), mirroring the
+ * Chart.js backend's facet decisions (shared nice y-domain, leftmost-only
+ * y labels, column wrapping).
  *
  * This module has NO React, Redux, or UI framework dependencies.
  */
 
 import {
-    ChartEncoding,
     ChartTemplateDef,
     ChartAssemblyInput,
     AssembleOptions,
@@ -44,6 +44,7 @@ import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
 import { plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';
+import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
 
@@ -93,24 +94,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;
 
-    // First-merge scope: drop encodings on channels this template does not
-    // declare (notably column/row facets) instead of silently mis-rendering.
-    const supported: Record<string, ChartEncoding> = {};
-    for (const [ch, enc] of Object.entries(normalized.encodings)) {
-        if (chartTemplate.channels.includes(ch)) {
-            supported[ch] = enc;
-        } else {
-            warnings.push({
-                severity: 'warning',
-                code: 'unsupported-channel',
-                message: `Channel "${ch}" is not supported by the Plotly ${chartType} template yet and was ignored.`,
-                channel: ch,
-                field: enc.field,
-            });
-        }
-    }
-
-    const encodings = applyEncodingOverrides(chartTemplate, supported, chartProperties);
+    const encodings = applyEncodingOverrides(chartTemplate, normalized.encodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
     data = applyAggregation(encodings, data);
@@ -233,11 +217,135 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         }),
     };
 
-    const figure: any = structuredClone(chartTemplate.template);
-    chartTemplate.instantiate(figure, instantiateContext);
-    plApplyLayoutToSpec(figure, instantiateContext, warnings);
-    if (addTooltipsOpt) plApplyTooltips(figure);
-    if (chartTemplate.postProcess) chartTemplate.postProcess(figure, instantiateContext);
+    const colField = channelSemantics.column?.field;
+    const rowField = channelSemantics.row?.field;
+    const hasFacet = !!(colField || rowField);
+
+    let figure: any;
+    if (hasFacet) {
+        const colValues = colField ? [...new Set(values.map((r: any) => String(r[colField])))] : [''];
+        const rowValues = rowField ? [...new Set(values.map((r: any) => String(r[rowField])))] : [''];
+
+        // Shared y-domain across panels (mirror the Chart.js backend): nice
+        // bounds so the shared top/bottom land on round tick values.
+        const yField = channelSemantics.y?.field;
+        let sharedYDomain: { min: number; max: number } | undefined;
+        if (yField) {
+            const nums = values
+                .map((r: any) => r[yField])
+                .filter((v: any) => typeof v === 'number' && Number.isFinite(v)) as number[];
+            if (nums.length > 0) {
+                const rawMin = Math.min(...nums);
+                const rawMax = Math.max(...nums);
+                const forceZero = !!channelSemantics.y?.zero?.zero;
+                const min = forceZero ? Math.min(0, rawMin) : rawMin;
+                const max = forceZero ? Math.max(0, rawMax) : rawMax;
+                sharedYDomain = niceBounds(min, max);
+            }
+        }
+
+        // Column wrapping: a column-only facet with more categories than fit
+        // in one row wraps into a 2D grid (matching the other backends). The
+        // wrap width comes from the shared facet-grid budget.
+        const maxColsPerRow = (colField && !rowField)
+            ? (facetGridResult?.columns ?? colValues.length)
+            : colValues.length;
+        const wrapColumnOnly = !!colField && !rowField && maxColsPerRow < colValues.length;
+
+        const gridRows: Array<Array<{ colVal: string; rowVal: string }>> = [];
+        if (wrapColumnOnly) {
+            for (let i = 0; i < colValues.length; i += maxColsPerRow) {
+                gridRows.push(
+                    colValues.slice(i, i + maxColsPerRow).map((cv) => ({ colVal: cv, rowVal: '' })),
+                );
+            }
+        } else {
+            for (let ri = 0; ri < rowValues.length; ri++) {
+                gridRows.push(colValues.map((cv) => ({ colVal: cv, rowVal: rowValues[ri] })));
+            }
+        }
+        const gridCols = Math.max(1, ...gridRows.map(r => r.length));
+
+        // Panel plot size — same discrete/continuous rules as plApplyLayoutToSpec.
+        const xIsDiscrete = layoutResult.xNominalCount > 0 || layoutResult.xContinuousAsDiscrete > 0;
+        const yIsDiscrete = layoutResult.yNominalCount > 0 || layoutResult.yContinuousAsDiscrete > 0;
+        let panelWidth: number;
+        let panelHeight: number;
+        if (xIsDiscrete && layoutResult.xStepUnit !== 'group') {
+            const n = layoutResult.xNominalCount || layoutResult.xContinuousAsDiscrete || 0;
+            panelWidth = n > 0 ? layoutResult.xStep * n : (layoutResult.subplotWidth || canvasSize.width);
+        } else {
+            panelWidth = layoutResult.subplotWidth || canvasSize.width;
+        }
+        if (yIsDiscrete && layoutResult.yStepUnit !== 'group') {
+            const n = layoutResult.yNominalCount || layoutResult.yContinuousAsDiscrete || 0;
+            panelHeight = n > 0 ? layoutResult.yStep * n : (layoutResult.subplotHeight || canvasSize.height);
+        } else {
+            panelHeight = layoutResult.subplotHeight || canvasSize.height;
+        }
+
+        const panels: PlotlyFacetPanel[] = [];
+        for (let ri = 0; ri < gridRows.length; ri++) {
+            const cells = gridRows[ri];
+            for (let ci = 0; ci < cells.length; ci++) {
+                const { colVal, rowVal } = cells[ci];
+                const panelData = values.filter((r: any) => {
+                    if (colField && String(r[colField]) !== colVal) return false;
+                    if (rowField && String(r[rowField]) !== rowVal) return false;
+                    return true;
+                });
+
+                const panelFigure: any = structuredClone(chartTemplate.template);
+                const panelContext: InstantiateContext = {
+                    ...instantiateContext,
+                    table: panelData,
+                };
+                chartTemplate.instantiate(panelFigure, panelContext);
+                if (chartTemplate.postProcess) chartTemplate.postProcess(panelFigure, panelContext);
+
+                panels.push({
+                    rowIndex: ri,
+                    colIndex: ci,
+                    rowHeader: rowField ? rowVal : undefined,
+                    colHeader: colField ? colVal : undefined,
+                    figure: panelFigure,
+                });
+            }
+        }
+
+        figure = plCombineFacetPanels(panels, {
+            rows: gridRows.length,
+            cols: gridCols,
+            panelWidth,
+            panelHeight,
+            sharedYDomain,
+            hasColHeader: !!colField,
+            hasRowHeader: !!rowField,
+            colHeaderPerRow: wrapColumnOnly,
+            showLegend: !!channelSemantics.color?.field,
+        });
+
+        // Apply the shared x-label rotation / font decisions to every panel axis.
+        if (layoutResult.xLabel) {
+            for (const key of Object.keys(figure.layout)) {
+                if (!/^xaxis\d*$/.test(key)) continue;
+                const ax = figure.layout[key];
+                if (layoutResult.xLabel.labelAngle) {
+                    ax.tickangle = Math.abs(layoutResult.xLabel.labelAngle);
+                }
+                if (layoutResult.xLabel.fontSize) {
+                    ax.tickfont = { ...(ax.tickfont || {}), size: layoutResult.xLabel.fontSize };
+                }
+            }
+        }
+        if (addTooltipsOpt) plApplyTooltips(figure);
+    } else {
+        figure = structuredClone(chartTemplate.template);
+        chartTemplate.instantiate(figure, instantiateContext);
+        plApplyLayoutToSpec(figure, instantiateContext, warnings);
+        if (addTooltipsOpt) plApplyTooltips(figure);
+        if (chartTemplate.postProcess) chartTemplate.postProcess(figure, instantiateContext);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // RESULT

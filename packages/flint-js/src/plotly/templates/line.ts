@@ -16,6 +16,7 @@ import {
     groupBy,
     buildCategoryAlignedData,
     coerceIsoDateForPlotly,
+    getPlotlyPalette,
     getSeriesColor,
 } from './utils';
 
@@ -43,7 +44,7 @@ function lineShape(interpolate: unknown): 'linear' | 'spline' | 'hv' | 'vh' | 'h
 export const plLineChartDef: ChartTemplateDef = {
     chart: 'Line Chart',
     template: { mark: 'line', encoding: {} },
-    channels: ['x', 'y', 'color', 'opacity'],
+    channels: ['x', 'y', 'color', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'position',
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
@@ -71,6 +72,7 @@ export const plLineChartDef: ChartTemplateDef = {
         const showPoints = chartProperties?.showPoints === true;
         const mode = showPoints ? 'lines+markers' : 'lines';
 
+        const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
         const makeTrace = (name: string, rows: any[], colorIndex: number) => {
             const xVals = xIsDiscrete
@@ -85,7 +87,7 @@ export const plLineChartDef: ChartTemplateDef = {
                 name,
                 x: xVals,
                 y: yVals,
-                line: { color: getSeriesColor(colorIndex), shape },
+                line: { color: getSeriesColor(palette, colorIndex), shape },
             };
         };
 

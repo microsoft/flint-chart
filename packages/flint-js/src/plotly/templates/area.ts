@@ -15,6 +15,7 @@ import {
     groupBy,
     buildCategoryAlignedData,
     coerceIsoDateForPlotly,
+    getPlotlyPalette,
     getSeriesColor,
 } from './utils';
 
@@ -32,7 +33,7 @@ function fillColor(hex: string, alpha: number): string {
 export const plAreaChartDef: ChartTemplateDef = {
     chart: 'Area Chart',
     template: { mark: 'area', encoding: {} },
-    channels: ['x', 'y', 'color', 'opacity'],
+    channels: ['x', 'y', 'color', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'area',
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
@@ -60,13 +61,14 @@ export const plAreaChartDef: ChartTemplateDef = {
         const stacked = stackMode !== 'layered';
         const smooth = chartProperties?.interpolate === 'monotone';
 
+        const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
         const makeTrace = (name: string, rows: any[], colorIndex: number) => {
             const xVals = xIsDiscrete ? categories! : rows.map(r => mapX(r[xField]));
             const yVals = xIsDiscrete
                 ? buildCategoryAlignedData(rows, xField, yField, categories!)
                 : rows.map(r => (r[yField] == null ? null : r[yField]));
-            const color = getSeriesColor(colorIndex);
+            const color = getSeriesColor(palette, colorIndex);
             const trace: any = {
                 type: 'scatter',
                 mode: 'lines',

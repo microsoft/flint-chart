@@ -12,13 +12,13 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { extractCategories, buildCategoryAlignedData, detectAxes, getSeriesColor } from './utils';
+import { extractCategories, buildCategoryAlignedData, detectAxes, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
 
 export const plBarChartDef: ChartTemplateDef = {
     chart: 'Bar Chart',
     template: { mark: 'bar', encoding: {} },
-    channels: ['x', 'y', 'color', 'opacity'],
+    channels: ['x', 'y', 'color', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'length',
     declareLayoutMode: (cs, table) => {
         const result = detectBandedAxisFromSemantics(cs, table, { preferAxis: 'x' });
@@ -40,6 +40,7 @@ export const plBarChartDef: ChartTemplateDef = {
         const values = buildCategoryAlignedData(table, catField, valField, categories);
 
         const isHorizontal = categoryAxis === 'y';
+        const palette = getPlotlyPalette(ctx);
 
         const catAxisSpec = {
             type: 'category' as const,
@@ -62,7 +63,7 @@ export const plBarChartDef: ChartTemplateDef = {
                 ...(isHorizontal
                     ? { x: values, y: categories, orientation: 'h' }
                     : { x: categories, y: values }),
-                marker: { color: getSeriesColor(0) },
+                marker: { color: getSeriesColor(palette, 0) },
             }],
             layout: {
                 ...(isHorizontal

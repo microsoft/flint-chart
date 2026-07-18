@@ -10,7 +10,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { groupBy, getSeriesColor } from './utils';
+import { groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 
 /** Compute a reasonable marker diameter based on canvas area and point count. */
 function computeMarkerSize(width: number, height: number, pointCount: number): number {
@@ -24,7 +24,7 @@ function computeMarkerSize(width: number, height: number, pointCount: number): n
 export const plScatterPlotDef: ChartTemplateDef = {
     chart: 'Scatter Plot',
     template: { mark: 'circle', encoding: {} },
-    channels: ['x', 'y', 'color', 'size', 'opacity'],
+    channels: ['x', 'y', 'color', 'size', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'position',
     instantiate: (spec, ctx) => {
         const { channelSemantics, table, chartProperties } = ctx;
@@ -36,6 +36,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
 
         const opacity = Number(chartProperties?.opacity ?? 1);
 
+        const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
         const makeTrace = (name: string | undefined, rows: any[], colorIndex: number) => ({
             type: 'scatter',
@@ -44,7 +45,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
             x: rows.map(r => r[xField]),
             y: rows.map(r => r[yField]),
             marker: {
-                color: getSeriesColor(colorIndex),
+                color: getSeriesColor(palette, colorIndex),
                 opacity,
                 line: { color: '#ffffff', width: 0.5 },
             },
