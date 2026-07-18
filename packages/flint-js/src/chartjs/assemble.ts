@@ -31,6 +31,7 @@ import {
     LayoutDeclaration,
     InstantiateContext,
 } from '../core/types';
+import { buildChartDescription } from '../core/a11y-description';
 import type { ChartWarning } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
@@ -420,6 +421,18 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     }
 
     cjsConfig._dataLength = values.length;
+
+    // Accessible description metadata. Chart.js renders to a canvas with no
+    // native description surface, so hosts read `_a11y.description` and set it
+    // as the canvas aria-label (see docs/accessibility.md).
+    cjsConfig._a11y = {
+        description: buildChartDescription({
+            chartType,
+            channelSemantics,
+            table: values,
+            fieldDisplayNames: input.field_display_names,
+        }),
+    };
 
     if (pivoted.surface) {
         cjsConfig._pivot = pivoted.surface;

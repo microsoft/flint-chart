@@ -52,6 +52,7 @@ import {
     LayoutDeclaration,
     InstantiateContext,
 } from '../core/types';
+import { buildChartDescription } from '../core/a11y-description';
 import type { ChartWarning, ChartOption, OptionEvalContext } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
@@ -671,6 +672,15 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (pivoted.surface) {
         result._pivot = pivoted.surface;
     }
+
+    // Accessible description (structural + statistical), exposed through the
+    // Vega-Lite `description` property (rendered as the SVG aria-label).
+    if (result.description == null) {
+        result.description = buildChartDescription({
+            chartType, channelSemantics, table: data, fieldDisplayNames,
+        });
+    }
+
     return result;
 }
 
