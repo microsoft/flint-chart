@@ -2,13 +2,15 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
   cjsGetTemplateDef,
   ecGetTemplateDef,
   vlGetTemplateDef,
+  plGetTemplateDef,
   type ChartAssemblyInput,
 } from 'flint-chart';
 
-export type PreviewBackend = 'vegalite' | 'echarts' | 'chartjs';
+export type PreviewBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
 
 /** A backend's template def (or `undefined` when it has no template for a type). */
 type TemplateDef = ReturnType<typeof vlGetTemplateDef>;
@@ -50,6 +52,12 @@ export const BACKENDS: Record<PreviewBackend, BackendAdapter> = {
     label: 'Chart.js',
     assemble: assembleChartjs,
     getTemplateDef: cjsGetTemplateDef,
+  },
+  plotly: {
+    id: 'plotly',
+    label: 'Plotly',
+    assemble: assemblePlotly,
+    getTemplateDef: plGetTemplateDef,
   },
 };
 

@@ -3,6 +3,7 @@ import type { TestCase } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
+import { PlotlyView } from './PlotlyView';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import {
   BACKENDS,
@@ -130,6 +131,7 @@ export function TripleChart({
             {backend === 'vegalite' && <VegaLiteView spec={compiled.value} />}
             {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
             {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
+            {backend === 'plotly' && <PlotlyView figure={compiled.value} height={320} />}
           </>
         ) : (
           <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
