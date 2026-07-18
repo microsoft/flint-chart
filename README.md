@@ -32,8 +32,10 @@ This repo contains two main components:
 ## Features
 
 
-- **Semantic chart specs.** Flint captures what each field means using 70+
-  semantic types such as `Rank`, `Temperature`, `Price`, or `Country`.
+- **Semantic chart specs.** Flint captures what each field means using 40+
+  semantic types such as `Rank`, `Temperature`, `Price`, or `Country`, plus
+  optional `unit` / `intrinsicDomain` annotations that enable currency and
+  percent axis formatting.
 - **Automatic layout.** Flint adapts sizing, spacing, labels, marks, and legends
   to the data cardinality, chart design, and canvas constraints.
 - **Multiple backends.** Compile one input to 30+ chart types across

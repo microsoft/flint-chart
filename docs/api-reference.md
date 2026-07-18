@@ -47,6 +47,11 @@ interface SemanticAnnotation {
 
 Bare string shorthand: `"Price"` is equivalent to `{ semanticType: "Price" }`.
 
+`unit` and `intrinsicDomain` also drive formatting: a known currency `unit`
+(`USD`, `EUR`, `CNY`, …) puts the symbol on `Price` axis labels, and
+`intrinsicDomain: [0, 1]` renders fractional `Percentage` values as percent
+axis labels (`0.42` → `42%`) with a capped domain (Vega-Lite backend today).
+
 ---
 
 # §2 Assemblers

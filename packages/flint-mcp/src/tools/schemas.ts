@@ -88,7 +88,12 @@ export function buildAssemblyInputShape(disableFileReference = false) {
     semantic_types: z
       .record(z.string(), z.any())
       .optional()
-      .describe('Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }.'),
+      .describe(
+        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. ' +
+          'An entry may also be an annotation object { semanticType, unit, intrinsicDomain }: ' +
+          '{ revenue: { semanticType: "Price", unit: "USD" } } adds a currency symbol to axis labels; ' +
+          '{ share: { semanticType: "Percentage", intrinsicDomain: [0, 1] } } formats values as percentages.',
+      ),
     chart_spec: chartSpecSchema,
     options: z
       .record(z.string(), z.any())
