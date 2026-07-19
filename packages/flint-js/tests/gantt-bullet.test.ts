@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { assembleVegaLite, getChartOptions } from '../src';
-import { formatGanttDuration, sortGanttRows } from '../src/chart-types/gantt';
+import { coerceGanttEndpoint, formatGanttDuration, sortGanttRows } from '../src/chart-types/gantt';
 import { genGanttTests, genBulletTests } from '../src/test-data';
 import type { TestCase } from '../src/test-data/types';
 
@@ -50,6 +50,11 @@ describe('Gantt chart', () => {
     expect(formatGanttDuration(90_000)).toBe('1.5min');
     expect(formatGanttDuration(7_200_000)).toBe('2h');
     expect(formatGanttDuration(129_600_000)).toBe('1.5d');
+  });
+
+  it('distinguishes epoch seconds from millisecond timestamps before 2001', () => {
+    expect(coerceGanttEndpoint(1_700_000_000, true)).toBe(1_700_000_000_000);
+    expect(coerceGanttEndpoint(946_684_800_000, true)).toBe(946_684_800_000);
   });
 
   it('keeps an explicitly temporal one-task interval temporal', () => {

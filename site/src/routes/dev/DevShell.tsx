@@ -3,6 +3,7 @@ import { siteTheme } from '../../shared/theme';
 import './dev.css';
 
 const pages = [
+  { to: 'news', label: 'News' },
   { to: 'illustrations', label: 'Illustrations' },
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },

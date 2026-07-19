@@ -23,7 +23,7 @@ export function coerceGanttEndpoint(value: unknown, temporal: boolean): number {
     if (value == null) return NaN;
     if (!temporal) return Number(value);
     if (value instanceof Date) return value.getTime();
-    if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
+    if (typeof value === 'number') return Math.abs(value) < 1e11 ? value * 1000 : value;
     return Date.parse(String(value));
 }
 

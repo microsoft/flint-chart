@@ -44,6 +44,17 @@ This repo contains two main components:
   chart guidance so they can choose a template, validate it, and open an
   interactive chart view in MCP-capable clients.
 
+## Updates
+
+- **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart
+  types and edit chart properties in place. ([v0.3.0](https://github.com/microsoft/flint-chart/releases/tag/0.3.0))
+- **July 15, 2026** — Flint 0.2.2 added compact dodge modes and grouped violin
+  layouts.
+- **July 13, 2026** — Flint 0.2.1 improved chart-property validation and backend
+  consistency. ([v0.2.1](https://github.com/microsoft/flint-chart/releases/tag/0.2.1))
+
+See the [changelog](CHANGELOG.md) for complete release notes.
+
 
 <p align="center">
   <img src="docs/figs/compile-demo.png" alt="Flint compiling a compact chart spec into a Vega-Lite spec and rendered heatmap visualization." width="100%">
