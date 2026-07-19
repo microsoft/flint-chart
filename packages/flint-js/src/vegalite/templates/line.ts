@@ -20,7 +20,7 @@ export const interpolateConfigProperty: ChartPropertyDef = {
 };
 
 const showPointsProperty: ChartPropertyDef = {
-    key: "showPoints", label: "Show points", type: "binary", defaultValue: false,
+    key: "showPoints", label: "Points", type: "binary", defaultValue: false,
 };
 
 export function applyInterpolate(mark: any, config?: Record<string, any>): any {

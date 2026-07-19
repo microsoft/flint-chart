@@ -282,6 +282,6 @@ export const waterfallChartDef: ChartTemplateDef = {
             // template (see core/waterfall.ts resolveTotalsMode).
             check: (ctx) => ({ applicable: !ctx.encodings?.color?.field }),
         },
-        { key: 'showTextLabels', label: 'Show labels', type: 'binary', defaultValue: false },
+        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
 };

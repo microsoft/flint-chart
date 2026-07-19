@@ -23,8 +23,8 @@ export interface FlintRenderResult {
 }
 
 const DEFAULT_BACKGROUND = '#ffffff';
-const APP_PREVIEW_BASE_SIZE = { width: 360, height: 360 } as const;
-const APP_PREVIEW_CANVAS_SIZE = { width: 720, height: 720 } as const;
+const APP_PREVIEW_BASE_SIZE = { width: 360, height: 270 } as const;
+const APP_PREVIEW_CANVAS_SIZE = { width: 720, height: 540 } as const;
 const APP_PREVIEW_MIN_STEP_PLOT_SIZE = { width: 220, height: 160 } as const;
 const APP_PREVIEW_MAX_AUTO_STEP = 96;
 

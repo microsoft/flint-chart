@@ -128,7 +128,7 @@ function Chevron({ color }: { color: string }) {
 
 /**
  * Combined transform control: the chart-type switch (an icon dropdown listing
- * sibling chart types) and the arrange switch (‹ name ›) fused into ONE compact
+ * sibling chart types) and the arrange cycle button (name ›) fused into ONE compact
  * pill. When a chart has no sibling types the chart-type part is a static,
  * non-clickable chip; when it has no arrangements the arrange part is omitted.
  */
@@ -157,6 +157,7 @@ function TransformControl(props: {
   const hasArrange = !!arrange && arrange.length > 1;
   const curName = chartType ? chartType.labels[chartType.index] : undefined;
   const curIcon = curName ? chartIconFor(curName) : undefined;
+  const arrangeLabel = hasArrange ? arrange!.labels[arrange!.index] : '';
 
   const iconStyle: CSSProperties = { width: 15, height: 15, display: 'block', flex: '0 0 auto' };
   const segStyle: CSSProperties = {
@@ -167,22 +168,6 @@ function TransformControl(props: {
     border: 'none',
     color: siteTheme.text,
   };
-  const arrowStyle: CSSProperties = {
-    width: 20,
-    height: 20,
-    padding: 0,
-    border: 'none',
-    borderRadius: 999,
-    background: 'transparent',
-    color: siteTheme.text,
-    cursor: 'pointer',
-    fontSize: 13,
-    lineHeight: 1,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
-
   const goArrange = (delta: number) => {
     if (!arrange) return;
     const n = (arrange.index + delta + arrange.length) % arrange.length;
@@ -238,28 +223,18 @@ function TransformControl(props: {
       )}
 
       {hasArrange && (
-        <div role="group" aria-label={arrange!.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '0 3px' }}>
-          <button type="button" aria-label={t('options.prevView')} onClick={() => goArrange(-1)} style={arrowStyle}>
-            ‹
-          </button>
-          <span
-            style={{
-              fontSize: 12,
-              color: siteTheme.text,
-              textAlign: 'center',
-              minWidth: 40,
-              maxWidth: 132,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              padding: '0 2px',
-            }}
-            title={arrange!.labels[arrange!.index]}
+        <div className="gopt-transform-arrange" role="group" aria-label={arrange!.label}>
+          <button
+            type="button"
+            className="gopt-transform-next"
+            aria-label={`${t('options.nextView')}; ${arrangeLabel}`}
+            title={arrangeLabel}
+            onClick={() => goArrange(1)}
           >
-            {arrange!.labels[arrange!.index]}
-          </span>
-          <button type="button" aria-label={t('options.nextView')} onClick={() => goArrange(1)} style={arrowStyle}>
-            ›
+            <span className="gopt-transform-state">
+              {arrangeLabel}
+            </span>
+            <span className="gopt-transform-arrow" aria-hidden="true">›</span>
           </button>
         </div>
       )}

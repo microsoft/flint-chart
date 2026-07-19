@@ -584,7 +584,7 @@ export const heatmapDef: ChartTemplateDef = {
         }
     },
     properties: [
-        { key: 'showTextLabels', label: 'Show labels', type: 'binary', defaultValue: false },
+        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
     // Color scheme is an encoding-level edit (writes encoding.scheme on the
     // color channel), so it is exposed as a Category-B encoding action rather

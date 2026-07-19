@@ -168,7 +168,7 @@ function ControlRow(props: {
 
 /**
  * Combined transform control: the chart-type switch (an icon dropdown listing
- * sibling chart types) and the arrange switch (‹ name ›) fused into ONE compact
+ * sibling chart types) and the arrange cycle button (name ›) fused into ONE compact
  * pill. When a chart has no sibling types the chart-type part is a static,
  * non-clickable chip; when it has no arrangements the arrange part is omitted.
  */
@@ -195,6 +195,7 @@ function TransformControl(props: {
   const hasArrange = !!arrange && arrange.length > 1;
   const curName = chartType ? chartType.labels[chartType.index] : undefined;
   const curIcon = curName ? chartIconFor(curName) : undefined;
+  const arrangeLabel = hasArrange ? arrange!.labels[arrange!.index] : '';
 
   const goArrange = (delta: number) => {
     if (!arrange) return;
@@ -230,14 +231,17 @@ function TransformControl(props: {
 
       {hasArrange && (
         <div className="tc-arrange" role="group" aria-label={arrange!.label}>
-          <button className="pivot-btn" aria-label="Previous view" onClick={() => goArrange(-1)}>
-            ‹
-          </button>
-          <span className="arrange-state" title={arrange!.labels[arrange!.index]}>
-            {arrange!.labels[arrange!.index]}
-          </span>
-          <button className="pivot-btn" aria-label="Next view" onClick={() => goArrange(1)}>
-            ›
+          <button
+            type="button"
+            className="tc-arrange-next"
+            aria-label={`Next view; current: ${arrangeLabel}`}
+            title={arrangeLabel}
+            onClick={() => goArrange(1)}
+          >
+            <span className="arrange-state">
+              {arrangeLabel}
+            </span>
+            <span className="tc-arrange-arrow" aria-hidden="true">›</span>
           </button>
         </div>
       )}

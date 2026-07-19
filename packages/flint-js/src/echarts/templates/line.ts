@@ -289,7 +289,7 @@ export const ecLineChartDef: ChartTemplateDef = {
                 { value: 'step-after', label: 'Step After' },
             ],
         } as ChartPropertyDef,
-        { key: 'showPoints', label: 'Show points', type: 'binary', defaultValue: false } as ChartPropertyDef,
+        { key: 'showPoints', label: 'Points', type: 'binary', defaultValue: false } as ChartPropertyDef,
     ],
     pivot: makeCartesianPivot({
         permute: [['y', 'color']],

@@ -517,6 +517,36 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     chartTemplate.instantiate(vgObj, instantiateContext);
 
+    // Facet-identity augmentation is presentation-only: the structural series
+    // has already moved to column/row for semantics, layout, stacking, and
+    // dodging. Reapply its learned color now so faceted panels preserve visual
+    // identity without making the compiler treat color as another series role.
+    if (transformed.augmentation?.kind === 'facet-identity') {
+        const facetEncoding = resolvedEncodings[transformed.augmentation.facetChannel];
+        if (facetEncoding?.field) {
+            const colorEncoding = { ...facetEncoding };
+            delete colorEncoding.header;
+            delete colorEncoding.axis;
+            delete colorEncoding.columns;
+            const scheme = transformed.augmentation.colorEncoding.scheme;
+            if (scheme) {
+                colorEncoding.scale = { ...(colorEncoding.scale ?? {}), scheme };
+            }
+            vgObj.encoding = vgObj.encoding || {};
+            vgObj.encoding.color = colorEncoding;
+
+            // Vega-Lite implicitly stacks bars/areas whenever a discrete color
+            // channel is present. This color is redundant identity, not a stack
+            // series, so pin the quantitative position channel to unstacked.
+            for (const axis of ['x', 'y']) {
+                const encoding = vgObj.encoding[axis];
+                if (encoding?.type === 'quantitative' && encoding.stack === undefined) {
+                    encoding.stack = null;
+                }
+            }
+        }
+    }
+
     // Merge any warnings emitted by instantiate
     if (vgObj._warnings && Array.isArray(vgObj._warnings)) {
         warnings.push(...vgObj._warnings);

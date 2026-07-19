@@ -799,7 +799,7 @@ export const barTableDef: ChartTemplateDef = {
         // meaningful (additive, single-sign, non-zero total). Its `check`
         // reports applicability per render from the measure's data.
         {
-            key: 'showPercent', label: 'Show % of Total', type: 'binary', defaultValue: false,
+            key: 'showPercent', label: '% of total', type: 'binary', defaultValue: false,
             check: (ctx) => {
                 // A "% of total" share only reads sensibly for an additive,
                 // single-sign measure with a non-zero total — a share of a

@@ -44,6 +44,113 @@ const BAR_ENC = {
 };
 
 describe('computePivot — enumeration', () => {
+  it('augments a color series with mutually exclusive facet identity states', () => {
+    const comp = computeArrangeStates(barChartDef, BAR_ENC, BAR_DATA)!;
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).not.toContain('augment:row');
+    expect(comp.labels[comp.ids.indexOf('augment:column')]).toBe('Color + Columns');
+    expect(comp.statesById['augment:column'].column.field).toBe('segment');
+    expect(comp.statesById['augment:column'].color).toBeUndefined();
+    expect(comp.augmentationById['augment:column']).toMatchObject({
+      kind: 'facet-identity',
+      sourceChannel: 'color',
+      facetChannel: 'column',
+      colorEncoding: { field: 'segment', type: 'nominal' },
+    });
+    expect(comp.ids.some(id => id.includes('augment:column|augment:row'))).toBe(false);
+  });
+
+  it('prefers row augmentation for a horizontal bar', () => {
+    const enc = {
+      x: { field: 'sales', type: 'quantitative' as const },
+      y: { field: 'region', type: 'nominal' as const },
+      color: { field: 'segment', type: 'nominal' as const },
+    };
+    const comp = computeArrangeStates(barChartDef, enc, BAR_DATA)!;
+    expect(comp.ids).toContain('augment:row');
+    expect(comp.ids).not.toContain('augment:column');
+  });
+
+  it('revalidates facet preference after composing an orientation flip', () => {
+    const comp = computeArrangeStates(barChartDef, BAR_ENC, BAR_DATA)!;
+    expect(comp.ids).not.toContain('augment:column|flip:x-y');
+    expect(comp.ids).toContain('flip:x-y|augment:row');
+    expect(comp.augmentationById['flip:x-y|augment:row']?.facetChannel).toBe('row');
+  });
+
+  it('defaults to column augmentation without a discrete domain axis', () => {
+    const enc = {
+      x: { field: 'sales', type: 'quantitative' as const },
+      y: { field: 'profit', type: 'quantitative' as const },
+      color: { field: 'segment', type: 'nominal' as const },
+    };
+    const data = BAR_DATA.map((row, index) => ({ ...row, profit: index + 1 }));
+    const comp = computeArrangeStates(scatterPlotDef, enc, data)!;
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).not.toContain('augment:row');
+  });
+
+  it('only shifts an authored facet toward the preferred direction', () => {
+    const data = BAR_DATA.map((row, index) => ({ ...row, market: index % 2 ? 'East' : 'West' }));
+    const verticalWithRow = computeArrangeStates(barChartDef, {
+      x: { field: 'region', type: 'nominal' },
+      y: { field: 'sales', type: 'quantitative' },
+      row: { field: 'market', type: 'nominal' },
+    }, data)!;
+    expect(verticalWithRow.ids).toContain('series:column');
+
+    const horizontalWithColumn = computeArrangeStates(barChartDef, {
+      x: { field: 'sales', type: 'quantitative' },
+      y: { field: 'region', type: 'nominal' },
+      column: { field: 'market', type: 'nominal' },
+    }, data)!;
+    expect(horizontalWithColumn.ids).toContain('series:row');
+
+    const verticalWithColumn = computeArrangeStates(barChartDef, {
+      x: { field: 'region', type: 'nominal' },
+      y: { field: 'sales', type: 'quantitative' },
+      column: { field: 'market', type: 'nominal' },
+    }, data)!;
+    expect(verticalWithColumn.ids).not.toContain('series:row');
+  });
+
+  it('materializes facet identity color after structural bar layout', () => {
+    const spec = assembleVegaLite({
+      data: { values: BAR_DATA },
+      semantic_types: BAR_SEMANTIC,
+      chart_spec: {
+        chartType: 'Bar Chart',
+        encodings: BAR_ENC,
+        chartProperties: { arrange: 'augment:column' },
+      },
+    });
+    expect(spec.encoding.facet.field).toBe('segment');
+    expect(spec.encoding.color.field).toBe('segment');
+    expect(spec.encoding.y.stack).toBeNull();
+  });
+
+  it.each([
+    ['Grouped Bar Chart', { x: 'region', y: 'sales', group: 'segment' }],
+    ['Line Chart', { x: 'region', y: 'sales', color: 'segment' }],
+    ['Scatter Plot', { x: 'sales', y: 'profit', color: 'segment' }],
+  ])('materializes facet identity color for %s', (chartType, encodings) => {
+    const data = BAR_DATA.map((row, index) => ({ ...row, profit: index + 1 }));
+    const spec = assembleVegaLite({
+      data: { values: data },
+      semantic_types: { ...BAR_SEMANTIC, profit: 'Quantity' },
+      chart_spec: {
+        chartType,
+        encodings,
+        chartProperties: { arrange: 'augment:column' },
+      },
+    });
+    const marks = spec.spec?.encoding ?? spec.encoding;
+    const facet = spec.facet ?? spec.encoding?.facet ?? spec.encoding?.column;
+    expect(facet.field).toBe('segment');
+    expect(marks.color.field).toBe('segment');
+    expect(marks.xOffset).toBeUndefined();
+  });
+
   it('reserves the group channel for Grouped Bar', () => {
     expect(barChartDef.channels).not.toContain('group');
     expect(groupedBarChartDef.channels).toContain('group');
@@ -55,9 +162,9 @@ describe('computePivot — enumeration', () => {
     // series field is on color; plain Bar can route it to column / row facets.
     // Group routing belongs to the explicit Grouped Bar chart type. The
     // orbit is enumerated at runtime and also composes these generators (e.g.
-    // orient · series:*), so assert the single-generator states are all present
+    // orient · augment:*), so assert the single-generator states are all present
     // rather than pinning an exact flat list.
-    for (const id of ['default', 'flip:x-y', 'swap:x-color', 'series:column', 'series:row']) {
+    for (const id of ['default', 'flip:x-y', 'swap:x-color', 'augment:column', 'augment:row']) {
       expect(comp!.ids).toContain(id);
     }
     expect(comp!.ids).not.toContain('series:group');
@@ -81,13 +188,13 @@ describe('computePivot — enumeration', () => {
     expect(role.y.field).toBe('sales');
   });
 
-  it('series routing moves color onto column and row facets, not group', () => {
+  it('series augmentation retains color identity across column and row facets', () => {
     const comp = computePivot(barChartDef, BAR_ENC, BAR_DATA)!;
     expect(comp.statesById['series:group']).toBeUndefined();
-    const cols = comp.statesById['series:column'];
+    const cols = comp.statesById['augment:column'];
     expect(cols.column.field).toBe('segment');
     expect(cols.color).toBeUndefined();
-    const rows = comp.statesById['series:row'];
+    const rows = comp.statesById['augment:row'];
     expect(rows.row.field).toBe('segment');
   });
 
@@ -103,6 +210,42 @@ describe('computePivot — enumeration', () => {
     expect(comp.ids).toContain('series:row');
     expect(comp.statesById['series:color'].color.field).toBe('region');
     expect(comp.statesById['series:color'].column).toBeUndefined();
+    expect(comp.statesById['series:row'].row.field).toBe('region');
+  });
+
+  it('separates facet shifting from augmentation when color and column are occupied', () => {
+    const enc = {
+      x: { field: 'region', type: 'nominal' as const },
+      y: { field: 'sales', type: 'quantitative' as const },
+      color: { field: 'segment', type: 'nominal' as const },
+      column: { field: 'market', type: 'nominal' as const },
+    };
+    const data = BAR_DATA.map((row, index) => ({ ...row, market: index % 2 ? 'East' : 'West' }));
+    const comp = computePivot(barChartDef, enc, data)!;
+
+    expect(comp.ids).not.toContain('augment:column');
+    expect(comp.ids).not.toContain('series:column');
+    expect(comp.ids).toContain('augment:row');
+    expect(comp.labels[comp.ids.indexOf('augment:row')]).toBe('Color + Rows');
+    expect(comp.statesById['augment:row'].column.field).toBe('market');
+    expect(comp.augmentationById['augment:row']?.colorEncoding.field).toBe('segment');
+    expect(comp.ids).toContain('series:row');
+    expect(comp.labels[comp.ids.indexOf('series:row')]).toBe('Columns ⇄ Rows');
+    expect(comp.statesById['series:row'].row.field).toBe('market');
+    expect(comp.statesById['series:row'].color.field).toBe('segment');
+
+    const spec = assembleVegaLite({
+      data: { values: data },
+      semantic_types: { ...BAR_SEMANTIC, market: 'Category' },
+      chart_spec: {
+        chartType: 'Bar Chart',
+        encodings: enc,
+        chartProperties: { arrange: 'augment:row' },
+      },
+    });
+    expect(spec.encoding.facet.field).toBe('market');
+    expect(spec.encoding.row).toBeUndefined();
+    expect(spec.encoding.color.field).toBe('segment');
   });
 
   it('returns null when the template declares no pivot', () => {
@@ -159,8 +302,8 @@ describe('computePivot — gating', () => {
       sales: i,
     }));
     const comp = computePivot(barChartDef, BAR_ENC, wide)!;
-    expect(comp.ids).not.toContain('series:column');
-    expect(comp.ids).not.toContain('series:row');
+    expect(comp.ids).not.toContain('augment:column');
+    expect(comp.ids).not.toContain('augment:row');
   });
 
   it('scatter with two measures exposes orientation + a regression transition', () => {
@@ -327,7 +470,7 @@ describe('backend pivot parity — ECharts and Chart.js', () => {
       chartType: 'Stacked Bar Chart',
       encodings: { x: 'region', y: 'sales', color: 'segment' },
       baseSize: { width: 400, height: 300 },
-      chartProperties: { pivot: 'series:column', stackMode: backend === 'vegalite' ? 'center' : 'normalize' },
+      chartProperties: { pivot: 'augment:column', stackMode: backend === 'vegalite' ? 'center' : 'normalize' },
     },
   });
 
@@ -388,9 +531,9 @@ describe('backend pivot parity — ECharts and Chart.js', () => {
 
   it('does not keep stack offsets when a stacked series is routed to facets', () => {
     const vl = assembleVegaLite(stackedFacetInput('vegalite')) as any;
-    expect(vl.encoding.color).toBeUndefined();
+    expect(vl.encoding.color.field).toBe('segment');
     expect(vl.encoding.facet?.field ?? vl.encoding.column?.field).toBe('segment');
-    expect(vl.encoding.y.stack).toBeUndefined();
+    expect(vl.encoding.y.stack).toBeNull();
 
     const ec = assembleECharts(stackedFacetInput('echarts')) as any;
     for (const series of ec.series ?? []) {
@@ -573,12 +716,12 @@ describe('computePivot — runtime orbit (composition, dedup, validity)', () => 
     const comp = computePivot(scatterPlotDef, SCATTER_ENC, SCATTER_DATA, vlGetTemplateDef)!;
     // single-generator states are present...
     expect(comp.ids).toContain('flip:x-y');
-    expect(comp.ids).toContain('series:column');
+    expect(comp.ids).toContain('augment:column');
     // ...and so are their compositions, with a composed operator label.
-    expect(comp.ids).toContain('flip:x-y|series:column');
-    const i = comp.ids.indexOf('flip:x-y|series:column');
-    expect(comp.labels[i]).toBe('X ⇄ Y · Color ⇄ Columns');
-    const enc = comp.statesById['flip:x-y|series:column'];
+    expect(comp.ids).toContain('flip:x-y|augment:column');
+    const i = comp.ids.indexOf('flip:x-y|augment:column');
+    expect(comp.labels[i]).toBe('X ⇄ Y · Color + Columns');
+    const enc = comp.statesById['flip:x-y|augment:column'];
     expect(enc.x.field).toBe('b');     // orientation swapped the axes
     expect(enc.y.field).toBe('a');
     expect(enc.column.field).toBe('c'); // series routed to a facet
@@ -663,8 +806,8 @@ describe('computePivot — Tier-1 templates (lollipop, area, histogram, density)
     const comp = computePivot(lollipopChartDef, BAR_ENC, BAR_DATA)!;
     expect(comp.ids).toContain('flip:x-y');
     expect(comp.ids).toContain('swap:x-color');
-    expect(comp.ids).toContain('series:column');
-    expect(comp.ids).toContain('series:row');
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).toContain('augment:row');
   });
 
   it('lollipop offers a chart-type transition to a bar', () => {
@@ -710,8 +853,8 @@ describe('computePivot — Tier-1 templates (lollipop, area, histogram, density)
     const comp = computePivot(areaChartDef, enc, BAR_DATA, vlGetTemplateDef)!;
     // No vertical area: x is pinned (no orientation flip).
     expect(comp.ids).not.toContain('flip:x-y');
-    expect(comp.ids).toContain('series:column');
-    expect(comp.ids).toContain('series:row');
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).toContain('augment:row');
     // θ edge to a line (same T×M signature).
     expect(comp.ids.some(id => id.includes('type:Line Chart'))).toBe(true);
   });
@@ -728,8 +871,8 @@ describe('computePivot — Tier-1 templates (lollipop, area, histogram, density)
 
   it('histogram routes a series to facets and offers a density transition', () => {
     const comp = computePivot(histogramDef, DIST_ENC, DIST_DATA)!;
-    expect(comp.ids).toContain('series:column');
-    expect(comp.ids).toContain('series:row');
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).toContain('augment:row');
     expect(comp.ids).toContain('type:Density Plot');
     expect(comp.chartTypeById['type:Density Plot']).toBe('Density Plot');
     // The transition re-views the same field; nothing is re-routed.
@@ -738,8 +881,8 @@ describe('computePivot — Tier-1 templates (lollipop, area, histogram, density)
 
   it('density routes a series to facets and offers a histogram transition', () => {
     const comp = computePivot(densityPlotDef, DIST_ENC, DIST_DATA)!;
-    expect(comp.ids).toContain('series:column');
-    expect(comp.ids).toContain('series:row');
+    expect(comp.ids).toContain('augment:column');
+    expect(comp.ids).toContain('augment:row');
     expect(comp.ids).toContain('type:Histogram');
     expect(comp.chartTypeById['type:Histogram']).toBe('Histogram');
     expect(comp.statesById['type:Histogram'].x.field).toBe('score');
@@ -846,9 +989,10 @@ describe('computeArrangeStates — Control A (τ/σ/γ only, no θ)', () => {
     const comp = computeArrangeStates(barChartDef, BAR_ENC, BAR_DATA)!;
     expect(comp.key).toBe('arrange');
     expect(comp.ids[0]).toBe('default');
-    for (const id of ['flip:x-y', 'swap:x-color', 'series:column', 'series:row']) {
+    for (const id of ['flip:x-y', 'swap:x-color', 'augment:column']) {
       expect(comp.ids).toContain(id);
     }
+    expect(comp.ids).not.toContain('augment:row');
     expect(comp.ids.some((id) => id.startsWith('type:'))).toBe(false);
   });
 

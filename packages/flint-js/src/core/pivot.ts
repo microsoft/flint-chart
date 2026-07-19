@@ -55,6 +55,14 @@ export interface PivotSurface {
     labels: string[];
 }
 
+/** A redundant identity encoding added by a local Arrange operator. */
+export interface EncodingAugmentation {
+    kind: 'facet-identity';
+    sourceChannel: 'color' | 'group';
+    facetChannel: 'column' | 'row';
+    colorEncoding: ChartEncoding;
+}
+
 /** Internal: a fully enumerated pivot for a given encoding map + data. */
 export interface PivotComputation {
     key: string;
@@ -62,6 +70,7 @@ export interface PivotComputation {
     ids: string[];
     labels: string[];
     statesById: Record<string, Record<string, ChartEncoding>>;
+    augmentationById: Record<string, EncodingAugmentation | undefined>;
     /**
      * Chart-type override per state id, set only for chart-type *transition*
      * states (§4.6). Absent/undefined entries render with the authored template.
@@ -291,28 +300,24 @@ function routeLabel(from: string, to: string): string {
     return `${chDisplay(from)} ⇄ ${chDisplay(to)}`;
 }
 
-/** Find the discrete series field and the grouping channel it currently sits on. */
-function findSeries(
+/** Locate a discrete series for chart-type transition routing. */
+function findTransitionSeries(
     base: Record<string, ChartEncoding>,
     candidates: string[],
     channels: string[],
 ): { channel: string; enc: ChartEncoding } | null {
-    for (const ch of candidates) {
-        if (channels.includes(ch) && isDiscrete(base[ch])) {
-            return { channel: ch, enc: base[ch]! };
+    for (const channel of candidates) {
+        if (channels.includes(channel) && isDiscrete(base[channel])) {
+            return { channel, enc: base[channel]! };
         }
     }
     return null;
 }
 
 /**
- * Series-routing generator (γ): take the chart's single discrete series field and
- * offer every *other* shiftable channel as an alternative placement — color
- * (stacked), group (grouped/dodged), column/row (facets). The candidate domain is
- * the template's declared `shift` list; this is the dimension that unifies
- * stacked/grouped/faceted presentations behind one template. Returns one state
- * per admissible target (present on the template, currently empty, cardinality
- * within budget).
+ * Identity channels augment onto empty facets; facet channels shift normally.
+ * Keeping the sources independent avoids destructive color-to-facet moves and
+ * lets a chart with both color and column offer two distinct row alternatives.
  */
 function seriesRoutingStates(
     base: Record<string, ChartEncoding>,
@@ -320,23 +325,75 @@ function seriesRoutingStates(
     data: any[],
     shiftChannels: string[],
     facetBudget: number,
-): { id: string; enc: Record<string, ChartEncoding>; label: string }[] {
+    preferredFacet?: 'column' | 'row',
+): { id: string; enc: Record<string, ChartEncoding>; label: string; augmentation?: EncodingAugmentation }[] {
     const channels = template.channels ?? [];
-    const src = findSeries(base, shiftChannels, channels);
-    if (!src) return [];
-    const card = distinctCount(data, src.enc.field);
-    const out: { id: string; enc: Record<string, ChartEncoding>; label: string }[] = [];
-    for (const target of shiftChannels) {
-        if (target === src.channel) continue;
-        if (!channels.includes(target)) continue;
-        if (base[target]?.field) continue; // occupied — don't clobber
-        if (card > routeBudget(target, facetBudget)) continue;
-        const next = clone(base);
-        delete next[src.channel];
-        next[target] = { ...src.enc };
-        out.push({ id: `series:${target}`, enc: next, label: routeLabel(src.channel, target) });
+    const out: { id: string; enc: Record<string, ChartEncoding>; label: string; augmentation?: EncodingAugmentation }[] = [];
+
+    const identitySource: 'color' | 'group' | undefined = isDiscrete(base.color)
+        ? 'color'
+        : (!base.color?.field && isDiscrete(base.group) ? 'group' : undefined);
+    if (identitySource && shiftChannels.includes(identitySource) && channels.includes(identitySource)) {
+        const identityEncoding = base[identitySource]!;
+        const card = distinctCount(data, identityEncoding.field);
+        const facetTargets = preferredFacet ? [preferredFacet] : ['column', 'row'] as const;
+        for (const target of facetTargets) {
+            if (!shiftChannels.includes(target) || !channels.includes(target)) continue;
+            if (base[target]?.field || card > routeBudget(target, facetBudget)) continue;
+            const next = clone(base);
+            delete next[identitySource];
+            next[target] = { ...identityEncoding };
+            out.push({
+                id: `augment:${target}`,
+                enc: next,
+                label: `Color + ${chDisplay(target)}`,
+                augmentation: {
+                    kind: 'facet-identity',
+                    sourceChannel: identitySource,
+                    facetChannel: target,
+                    colorEncoding: { ...identityEncoding },
+                },
+            });
+        }
+    }
+
+    const facetSource = (['column', 'row'] as const).find(channel =>
+        shiftChannels.includes(channel) && channels.includes(channel) && isDiscrete(base[channel]),
+    );
+    if (facetSource) {
+        const facetEncoding = base[facetSource]!;
+        const card = distinctCount(data, facetEncoding.field);
+        for (const target of shiftChannels) {
+            if (target === facetSource || target === 'group') continue;
+            if ((target === 'column' || target === 'row') && preferredFacet && target !== preferredFacet) continue;
+            if (!channels.includes(target) || base[target]?.field) continue;
+            if (card > routeBudget(target, facetBudget)) continue;
+            const next = clone(base);
+            delete next[facetSource];
+            next[target] = { ...facetEncoding };
+            out.push({ id: `series:${target}`, enc: next, label: routeLabel(facetSource, target) });
+        }
     }
     return out;
+}
+
+/** Preferred small-multiple direction for the compact dynamic Arrange surface. */
+function preferredFacetTarget(base: Record<string, ChartEncoding>): 'column' | 'row' {
+    const domain = domainAxisEnc(base);
+    return domain === base.y ? 'row' : 'column';
+}
+
+/** Facet channel newly targeted by a composed transformation, if any. */
+function changedFacetTarget(
+    authored: Record<string, ChartEncoding>,
+    transformed: Record<string, ChartEncoding>,
+): 'column' | 'row' | undefined {
+    for (const channel of ['column', 'row'] as const) {
+        if (transformed[channel]?.field && transformed[channel]?.field !== authored[channel]?.field) {
+            return channel;
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -424,7 +481,7 @@ function transitionState(
         // Resolve the source channel. `'series'` finds the discrete grouping
         // field wherever it sits (color/column/row); a literal name is used as-is.
         const fromCh = route.from === 'series'
-            ? findSeries(base, GROUPING_CHANNELS, template.channels ?? [])?.channel
+            ? findTransitionSeries(base, GROUPING_CHANNELS, template.channels ?? [])?.channel
             : route.from;
         if (!fromCh) return null;
         const srcEnc = base[fromCh];
@@ -485,6 +542,7 @@ interface PivotStep {
     label: string;
     enc: Record<string, ChartEncoding>;
     chartType?: string;
+    augmentation?: EncodingAugmentation;
 }
 
 /**
@@ -499,7 +557,7 @@ function pivotSteps(
     template: ChartTemplateDef,
     enc: Record<string, ChartEncoding>,
     data: any[],
-    opts?: { local?: boolean; transitions?: boolean },
+    opts?: { local?: boolean; transitions?: boolean; preferFacetTarget?: boolean },
     resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
 ): PivotStep[] {
     const def = template.pivot;
@@ -525,8 +583,9 @@ function pivotSteps(
         }
     }
     if (includeLocal && def.shift && def.shift.length) {
-        for (const s of seriesRoutingStates(enc, template, data, def.shift, def.facetBudget ?? 12)) {
-            steps.push({ id: s.id, label: s.label, enc: s.enc });
+        const preferredFacet = opts?.preferFacetTarget ? preferredFacetTarget(enc) : undefined;
+        for (const s of seriesRoutingStates(enc, template, data, def.shift, def.facetBudget ?? 12, preferredFacet)) {
+            steps.push({ id: s.id, label: s.label, enc: s.enc, augmentation: s.augmentation });
         }
     }
     // θ: chart-type transitions are sourced from the CENTRAL registry (keyed by
@@ -604,7 +663,7 @@ export function computePivot(
     base: Record<string, ChartEncoding>,
     data: any[],
     resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
-    opts?: { includeTransitions?: boolean; key?: string; label?: string },
+    opts?: { includeTransitions?: boolean; key?: string; label?: string; preferFacetTarget?: boolean },
 ): PivotComputation | null {
     const def = template.pivot;
     if (!def) return null;
@@ -617,6 +676,9 @@ export function computePivot(
     const statesById: Record<string, Record<string, ChartEncoding>> = {
         default: clone(base),
     };
+    const augmentationById: Record<string, EncodingAugmentation | undefined> = {
+        default: undefined,
+    };
     const chartTypeById: Record<string, string | undefined> = {
         default: undefined,
     };
@@ -627,10 +689,11 @@ export function computePivot(
         enc: Record<string, ChartEncoding>;
         chartType: string | undefined;
         template: ChartTemplateDef;
+        augmentation: EncodingAugmentation | undefined;
     }
 
     const seen = new Set<string>([encodingKey(base, undefined)]);
-    const queue: OrbitNode[] = [{ id: 'default', label: 'Default', enc: clone(base), chartType: undefined, template }];
+    const queue: OrbitNode[] = [{ id: 'default', label: 'Default', enc: clone(base), chartType: undefined, template, augmentation: undefined }];
     // The authored chart type *is* home: a θ path that lands back on it (e.g.
     // Stacked → Grouped → Stacked) is not a new view, so we normalize its
     // effective chartType to `undefined`. This lets the stabilizer dedup fold
@@ -639,7 +702,11 @@ export function computePivot(
 
     while (queue.length > 0 && ids.length < MAX_PIVOT_STATES) {
         const cur = queue.shift()!;
-        for (const step of pivotSteps(cur.template, cur.enc, data, { local: true, transitions: includeTransitions }, resolveTemplate)) {
+        for (const step of pivotSteps(cur.template, cur.enc, data, {
+            local: true,
+            transitions: includeTransitions,
+            preferFacetTarget: opts?.preferFacetTarget,
+        }, resolveTemplate)) {
             // A θ step switches the effective chart type (and thus the template
             // whose generators apply next); σ/γ steps stay on the current one.
             let nextChartType = step.chartType ?? cur.chartType;
@@ -654,6 +721,10 @@ export function computePivot(
                 ? (resolved ?? { ...cur.template, pivot: undefined })
                 : cur.template;
             if (!isRenderableState(nextTemplate, step.enc)) continue; // avoid invalid combos
+            if (opts?.preferFacetTarget) {
+                const facetTarget = changedFacetTarget(base, step.enc);
+                if (facetTarget && facetTarget !== preferredFacetTarget(step.enc)) continue;
+            }
             // Drop OVERLAPPING arrangement compositions. Composing two generators
             // that touch a shared channel yields a confusing 3-cycle (flip X⇄Y then
             // swap Y⇄Color rotates all three axes, not a clean pairwise swap). We
@@ -682,12 +753,16 @@ export function computePivot(
             labels.push(stepLabel);
             statesById[id] = step.enc;
             chartTypeById[id] = nextChartType;
-            queue.push({ id, label: stepLabel, enc: step.enc, chartType: nextChartType, template: nextTemplate });
+            const augmentation = step.chartType
+                ? undefined
+                : (step.augmentation ?? cur.augmentation);
+            augmentationById[id] = augmentation;
+            queue.push({ id, label: stepLabel, enc: step.enc, chartType: nextChartType, template: nextTemplate, augmentation });
             if (ids.length >= MAX_PIVOT_STATES) break;
         }
     }
 
-    return { key, label, ids, labels, statesById, chartTypeById };
+    return { key, label, ids, labels, statesById, augmentationById, chartTypeById };
 }
 
 /**
@@ -701,16 +776,17 @@ export function applyPivot(
     data: any[],
     chartProperties: Record<string, any> | undefined,
     resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
-): { encodings: Record<string, ChartEncoding>; chartType: string | undefined; surface: PivotSurface | undefined } {
+): { encodings: Record<string, ChartEncoding>; augmentation: EncodingAugmentation | undefined; chartType: string | undefined; surface: PivotSurface | undefined } {
     const comp = computePivot(template, base, data, resolveTemplate);
     if (!comp || comp.ids.length <= 1) {
-        return { encodings: base, chartType: undefined, surface: undefined };
+        return { encodings: base, augmentation: undefined, chartType: undefined, surface: undefined };
     }
     const stored = chartProperties?.[comp.key];
     const id = typeof stored === 'string' && comp.ids.includes(stored) ? stored : comp.ids[0];
     const index = comp.ids.indexOf(id);
     return {
         encodings: comp.statesById[id],
+        augmentation: comp.augmentationById[id],
         chartType: comp.chartTypeById[id],
         surface: {
             key: comp.key,
@@ -773,6 +849,7 @@ export function computeArrangeStates(
         includeTransitions: false,
         key: TRANSFORM_ARRANGE_KEY,
         label: 'Arrange',
+        preferFacetTarget: true,
     });
 }
 
@@ -800,6 +877,7 @@ export function computeChartTypeStates(
     const ids: string[] = ['default'];
     const labels: string[] = [template.chart];
     const statesById: Record<string, Record<string, ChartEncoding>> = { default: clone(base) };
+    const augmentationById: Record<string, EncodingAugmentation | undefined> = { default: undefined };
     const chartTypeById: Record<string, string | undefined> = { default: undefined };
     const seenChartTypes = new Set<string>([template.chart]);
 
@@ -819,7 +897,7 @@ export function computeChartTypeStates(
     }
 
     if (ids.length <= 1) return null;
-    return { key: TRANSFORM_CHART_TYPE_KEY, label: 'Chart type', ids, labels, statesById, chartTypeById };
+    return { key: TRANSFORM_CHART_TYPE_KEY, label: 'Chart type', ids, labels, statesById, augmentationById, chartTypeById };
 }
 
 /**
@@ -870,6 +948,7 @@ export function applyTransform(
     resolveTemplate?: (chartType: string) => ChartTemplateDef | undefined,
 ): {
     encodings: Record<string, ChartEncoding>;
+    augmentation: EncodingAugmentation | undefined;
     chartType: string | undefined;
     surface: TransformSurface;
 } {
@@ -894,16 +973,19 @@ export function applyTransform(
 
     // Control A — arrange (τ/σ/γ), on the effective object.
     let encodings = effectiveEnc;
+    let augmentation: EncodingAugmentation | undefined;
     let arrangeSurface: PivotSurface | undefined;
     const arrComp = computeArrangeStates(effectiveTemplate, effectiveEnc, data);
     if (arrComp && arrComp.ids.length > 1) {
         const id = arrangeId && arrComp.ids.includes(arrangeId) ? arrangeId : arrComp.ids[0];
         encodings = arrComp.statesById[id];
+        augmentation = arrComp.augmentationById[id];
         arrangeSurface = buildSurface(arrComp, id);
     }
 
     return {
         encodings,
+        augmentation,
         chartType,
         surface: { chartType: chartTypeSurface, arrange: arrangeSurface },
     };

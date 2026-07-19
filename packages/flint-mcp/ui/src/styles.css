@@ -57,13 +57,23 @@ body {
   background: var(--paper);
   padding: 6px;
   display: flex;
+  width: 100%;
+  max-width: 600px;
+  height: 75vw;
+  max-height: 360px;
+  margin-inline: auto;
   justify-content: center;
+  align-items: center;
   overflow: auto;
 }
 
 .chart svg {
-  max-width: 100%;
+  display: block;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  flex: none;
 }
 
 .placeholder {
@@ -286,21 +296,55 @@ body {
 
 .tc-arrange {
   display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.tc-arrange-next {
+  appearance: none;
+  display: inline-flex;
   align-items: center;
-  gap: 1px;
-  padding: 0 3px;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 26px;
+  padding: 0 8px 0 5px;
+  border: none;
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tc-arrange:first-child .tc-arrange-next {
+  border-radius: 7px;
+}
+
+.tc-arrange-next:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.tc-arrange-next:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .arrange-state {
   min-width: 2.5em;
   max-width: 11em;
   text-align: center;
-  padding: 0 2px;
   font-size: 11px;
   color: var(--ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tc-arrange-arrow {
+  flex: 0 0 auto;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .tc-menu {

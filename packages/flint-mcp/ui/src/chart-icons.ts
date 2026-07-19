@@ -36,6 +36,7 @@ const ICON_FILE_BY_CHART: Record<string, string> = {
     'Candlestick Chart': 'chart-icon-candlestick.svg',
     'Parallel Coordinates': 'chart-icon-parallel.svg',
     'Line Chart': 'chart-icon-line.svg',
+    'Sparkline': 'chart-icon-sparkline.svg',
     'Bump Chart': 'chart-icon-bump.svg',
     'Slope Chart': 'chart-icon-slope.svg',
     'Area Chart': 'chart-icon-area.svg',

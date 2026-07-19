@@ -42,8 +42,7 @@ export interface BandDodgePlan {
     /** Lanes a *global* offset scale reserves per band = global distinct
      *  sub-values (the `global` mode lane count). */
     laneCount: number;
-    /** True when a user override is worth surfacing (any real dodge choice,
-     *  i.e. `maxPerBand > 1`). */
+    /** True when local and global dodge can produce different layouts. */
     ambiguous: boolean;
     /** Most distinct sub-values co-occurring within any single band. */
     maxPerBand: number;
@@ -109,9 +108,11 @@ export function planBandDodge(
     const bandCount = perBand.size;
     let maxPerBand = 0;
     let singleValuedBands = 0;
+    let completeBands = 0;
     for (const bandSet of perBand.values()) {
         if (bandSet.size > maxPerBand) maxPerBand = bandSet.size;
         if (bandSet.size <= 1) singleValuedBands++;
+        if (bandSet.size === globalCount) completeBands++;
     }
 
     const threshold = options?.nestedSnapThreshold ?? DEFAULT_NESTED_SNAP_THRESHOLD;
@@ -122,7 +123,7 @@ export function planBandDodge(
         mode,
         dodge: mode !== 'none',
         laneCount: globalCount,
-        ambiguous: maxPerBand > 1,
+        ambiguous: maxPerBand > 1 && completeBands < bandCount,
         maxPerBand,
         global: globalCount,
         bandCount,
