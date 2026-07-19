@@ -197,13 +197,20 @@ describe('boxplot color redundant with axis (no dodge)', () => {
     };
     // Auto → local: centered quantitative offset + the computed transforms.
     const local = assembleVegaLite(input as any) as any;
-    expect(local.encoding?.xOffset?.field).toBe('__off');
-    expect(local.transform?.some((t: any) => t.as === '__off')).toBe(true);
+    const boxLayer = local.layer?.find((layer: any) => layer.mark?.type === 'boxplot');
+    const separatorLayer = local.layer?.find((layer: any) => layer.mark?.type === 'rule');
+    expect(boxLayer?.encoding?.xOffset?.field).toBe('__off');
+    expect(boxLayer?.transform?.some((t: any) => t.as === '__off')).toBe(true);
+    expect(separatorLayer?.mark?.strokeDash).toEqual([4, 4]);
+    expect(separatorLayer?.encoding?.x?.bandPosition).toBe(1);
+    expect(separatorLayer?.encoding?.x?.axis).not.toBeNull();
+    expect(separatorLayer?.data?.values).toHaveLength(depts.length - 1);
 
     // Forced global → the fixed per-color lane grid, sized to the 5 global lanes.
     input.chart_spec.chartProperties = { dodge: 'global' };
     const global = assembleVegaLite(input as any) as any;
     expect(global.encoding?.xOffset?.field).toBe('Level');
+    expect(global.encoding?.x?.axis?.tickBand).toBeUndefined();
     const fiveLanePitch = (stepOf(global) * 0.8) / 5;
     expect(sizeOf(global)).toBeLessThanOrEqual(fiveLanePitch);
   });
@@ -236,6 +243,78 @@ describe('ECharts boxplot color redundant with axis', () => {
         if (Array.isArray(d)) expect(d.every((v: number) => v === 0)).toBe(false);
       }
     }
+  });
+});
+
+describe('ECharts sparse grouped boxplot', () => {
+  const sparseInput = (dodge: 'global' | 'local') => {
+    const groups: Record<string, string[]> = {
+      A: ['G1', 'G2'], B: ['G2'], C: ['G3', 'G4'], D: ['G4', 'G1'],
+    };
+    const rows: any[] = [];
+    for (const [category, presentGroups] of Object.entries(groups)) {
+      for (const group of presentGroups) {
+        for (let index = 0; index < 8; index++) {
+          rows.push({ Category: category, Group: group, Score: index === 7 ? 100 : index + 1 });
+        }
+      }
+    }
+    return {
+      data: { values: rows },
+      semantic_types: { Category: 'Category', Group: 'Category', Score: 'Quantity' },
+      chart_spec: {
+        chartType: 'Boxplot',
+        encodings: { x: 'Category', y: 'Score', color: 'Group' },
+        chartProperties: { dodge },
+        baseSize: { width: 500, height: 320 },
+      },
+    } as any;
+  };
+
+  it.each(['global', 'local'] as const)('uses ECharts missing-value sentinels for %s dodge gaps', (dodge) => {
+    const option = assembleECharts(sparseInput(dodge)) as any;
+    const cells = option.series
+      .filter((series: any) => series.type === 'boxplot')
+      .flatMap((series: any) => series.data);
+
+    expect(cells).toContain('-');
+    expect(cells).not.toContain(null);
+  });
+
+  it('offsets global outliers onto their boxplot lane', () => {
+    const option = assembleECharts(sparseInput('global')) as any;
+    const outliers = option.series.find((series: any) => series.name === 'G1 (outliers)');
+    expect(outliers?.type).toBe('custom');
+
+    const api = {
+      value: (index: number) => [0, 100][index],
+      coord: ([category, value]: number[]) => [category * 100 + 50, 300 - value],
+      size: () => [100, 0],
+      visual: () => '#5470c6',
+    };
+    const rendered = outliers.renderItem({}, api);
+    expect(rendered.shape.cx).toBeLessThan(50);
+    expect(rendered.shape.cy).toBe(200);
+  });
+
+  it('adds dashed category separators only for local dodge', () => {
+    const local = assembleECharts(sparseInput('local')) as any;
+    const separators = local.series.find((series: any) => series.name === '__groupSeparators');
+    expect(separators?.type).toBe('custom');
+    expect(separators.data).toHaveLength(local.xAxis.data.length - 1);
+
+    const rendered = separators.renderItem(
+      { coordSys: { x: 10, y: 20, width: 400, height: 200 } },
+      {
+        value: () => 0,
+        coord: ([category]: number[]) => [50 + category * 100, 100],
+      },
+    );
+    expect(rendered.shape).toEqual({ x1: 100, y1: 20, x2: 100, y2: 220 });
+    expect(rendered.style.lineDash).toEqual([4, 4]);
+
+    const global = assembleECharts(sparseInput('global')) as any;
+    expect(global.series.some((series: any) => series.name === '__groupSeparators')).toBe(false);
   });
 });
 

@@ -51,6 +51,29 @@ def test_stack_mode_not_applicable_without_color_channel():
     assert "stackMode" not in _applicable_keys(spec)
 
 
+def _area_spec(*, layered: bool, with_color: bool = True) -> dict[str, Any]:
+    return assemble_vegalite({
+        "data": {"values": STACK_ROWS},
+        "semantic_types": {"region": "Category", "cat": "Category", "val": "Quantity"},
+        "chart_spec": {
+            "chartType": "Area Chart",
+            "encodings": {
+                "x": {"field": "region"},
+                "y": {"field": "val"},
+                **({"color": {"field": "cat"}} if with_color else {}),
+            },
+            "chartProperties": {"stackMode": "layered"} if layered else {},
+            "baseSize": CANVAS,
+        },
+    })
+
+
+def test_area_opacity_only_applicable_for_layered_multi_series():
+    assert "opacity" not in _applicable_keys(_area_spec(layered=False))
+    assert "opacity" not in _applicable_keys(_area_spec(layered=True, with_color=False))
+    assert "opacity" in _applicable_keys(_area_spec(layered=True))
+
+
 # ── independentYAxis ────────────────────────────────────────────────────────
 
 FACET_ROWS = [

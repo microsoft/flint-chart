@@ -50,9 +50,18 @@ export {
     computePivot,
     applyPivot,
     makeCartesianPivot,
+    computeArrangeStates,
+    computeChartTypeStates,
+    applyTransform,
+    TRANSFORM_CHART_TYPE_KEY,
+    TRANSFORM_ARRANGE_KEY,
     type PivotSurface,
     type PivotComputation,
+    type TransformSurface,
 } from './pivot';
+
+// Central chart-type transition registry (the θ graph)
+export { CHART_TRANSITIONS, getChartTransitions } from './chart-transitions';
 
 // Reusable encoding-action factories
 export { makeSortAction, type SortChoice } from './encoding-actions';
@@ -138,6 +147,20 @@ export {
     recommendChannels,
     type SemanticRole,
 } from './recommendation';
+
+// Data-driven chart *type* recommendation
+export {
+    profileData,
+    rankChartTypes,
+    recommendChartTypes,
+    recommendChartTypesDetailed,
+    type ChartFieldRole,
+    type ProfiledField,
+    type DataProfile,
+    type ChartTypeSuggestion,
+    type RecommendChartTypesOptions,
+    type RecommendedChart,
+} from './chart-type-recommendation';
 
 // Field semantics
 export {

@@ -29,7 +29,12 @@ import {
     isValidLineSeriesData,
     nameMatches,
 } from '../core/recommendation';
-import { vlGetTemplateChannels } from './templates';
+import {
+    recommendChartTypes,
+    type RecommendChartTypesOptions,
+    type RecommendedChart,
+} from '../core/chart-type-recommendation';
+import { vlGetTemplateChannels, vlAllTemplateDefs } from './templates';
 
 // ── VL-extended recommendation ──────────────────────────────────────────
 
@@ -236,4 +241,50 @@ export function vlRecommendEncodings(
         }
     }
     return result;
+}
+
+/** Chart-type names Vega-Lite can render (its template catalog). */
+const VL_SUPPORTED_TYPES = vlAllTemplateDefs.map(d => d.chart);
+
+/**
+ * Recommend a ranked list of Vega-Lite chart types for a dataset.
+ *
+ * Wraps the backend-agnostic `recommendChartTypes`, restricting results to
+ * chart types Vega-Lite can render. Call it first, then feed the chosen type to
+ * {@link vlRecommendEncodings} to populate channels — or use
+ * {@link vlRecommendCharts} to do both in one step.
+ *
+ * @param data           Array of row objects.
+ * @param semanticTypes  Field→semantic-type map (e.g. `{ Entity: "Country" }`).
+ * @param options        Optional `max` cap on the number of suggestions.
+ * @returns              Ranked VL chart-type names (best first).
+ */
+export function vlRecommendChartTypes(
+    data: any[],
+    semanticTypes: Record<string, string>,
+    options: Omit<RecommendChartTypesOptions, 'supportedTypes'> = {},
+): string[] {
+    return recommendChartTypes(data, semanticTypes, { ...options, supportedTypes: VL_SUPPORTED_TYPES });
+}
+
+/**
+ * One-step recommendation: rank Vega-Lite chart types for the data, then
+ * populate each with {@link vlRecommendEncodings}. Suggestions whose required
+ * channels cannot be filled are dropped, so every returned chart is renderable.
+ *
+ * @param data           Array of row objects.
+ * @param semanticTypes  Field→semantic-type map.
+ * @param options        Optional `max` cap on the number of charts returned.
+ * @returns              Ranked `{ chartType, encodings }` pairs (best first).
+ */
+export function vlRecommendCharts(
+    data: any[],
+    semanticTypes: Record<string, string>,
+    options: Omit<RecommendChartTypesOptions, 'supportedTypes'> = {},
+): RecommendedChart[] {
+    const { max, ...rest } = options;
+    const charts = vlRecommendChartTypes(data, semanticTypes, rest)
+        .map(chartType => ({ chartType, encodings: vlRecommendEncodings(chartType, data, semanticTypes) }))
+        .filter(s => Object.keys(s.encodings).length > 0);
+    return max != null ? charts.slice(0, max) : charts;
 }

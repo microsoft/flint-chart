@@ -182,7 +182,7 @@ properties"). Required channels are noted.
 | `"Ranged Dot Plot"` | x, y, color | dumbbell of two x per category |
 | `"Strip Plot"` | x, y, color, size, column, row | jittered points; props `stepWidth`, `pointSize`, `opacity` |
 | `"Bar Chart"` | x, y, color, opacity, column, row | one discrete + one measure; prop `cornerRadius` |
-| `"Grouped Bar Chart"` | x, y, group, column, row | `group` = the clustering category |
+| `"Grouped Bar Chart"` | x, y, group, column, row | `group` = the clustering category; prop `dodge` |
 | `"Stacked Bar Chart"` | x, y, color, column, row | prop `stackMode` |
 | `"Pyramid Chart"` | x, y, color | diverging horizontal bars |
 | `"Lollipop Chart"` | x, y, color, column, row | prop `dotSize` |
@@ -190,7 +190,7 @@ properties"). Required channels are noted.
 | `"Gantt Chart"` | y, x, x2, color, detail, column, row | x = start, x2 = end |
 | `"Bullet Chart"` | y, x, goal, color, column, row | `goal` required (target) |
 | `"Histogram"` | x, color, column, row | x = measure to bin; prop `binCount` |
-| `"Boxplot"` | x, y, color, opacity, column, row | category + measure; props `whiskerMethod`, `showOutliers` |
+| `"Boxplot"` | x, y, color, opacity, column, row | category + measure; props `whiskerMethod`, `showOutliers`, `dodge` |
 | `"ECDF Plot"` | x, color, detail, column, row | x = measure; cumulative distribution (step line); prop `showPoints` |
 | `"Heatmap"` | x, y, color, column, row | color = the measure |
 | `"Line Chart"` | x, y, color, strokeDash, detail, opacity, column, row | props `interpolate`, `showPoints` |
@@ -199,11 +199,11 @@ properties"). Required channels are noted.
 | `"Slope Chart"` | x, y, color, detail, column, row | two-period value change; straight segments + end points, one line per category |
 | `"Area Chart"` | x, y, color, opacity, column, row | props `interpolate`, `opacity`, `stackMode` |
 | `"Range Area Chart"` | x, y, y2, color, column, row | x + y + y2 required; translucent band from `y` (low) to `y2` (high), value axis fits the band (not zero) |
-| `"Violin Plot"` | x, y, color, row | x (category) + y (measure) required; mirrored KDE density per category, prop `bandwidth`; **Vega-Lite only**; `column` is used internally for the per-category panels |
+| `"Violin Plot"` | x, y, color, row | x (category) + y (measure) required; mirrored KDE density per category, prop `bandwidth`; **Vega-Lite only**; a genuine `color` subgroup splits two groups or grids 3+ groups |
 | `"Streamgraph"` | x, y, color, column, row | centre-stacked areas |
 | `"Density Plot"` | x, color, column, row | prop `bandwidth` |
-| `"Pie Chart"` | size, color, column, row | `size` = slice value (→ angle), `color` = category |
-| `"Rose Chart"` | x, y, color, column, row | polar bars; props `alignment`, `innerRadius`, `padAngle` |
+| `"Pie Chart"` | size, color, column, row | `size` = slice value (→ angle), `color` = category; props `innerRadius`, `sortSlices` |
+| `"Rose Chart"` | x, y, color, column, row | polar bars; props `alignment`, `padAngle`, `sortSlices` |
 | `"Radar Chart"` | x, y, color, column, row | props `filled`, `fillOpacity`, `strokeWidth` |
 | `"Candlestick Chart"` | x, open, high, low, close, column, row | OHLC all required |
 | `"Bar Table"` | y, x, color, column, row | compact bars + value labels |
@@ -218,10 +218,9 @@ category on `x` (or `y`) plus one measure. They differ in how a **second**
 category is shown — and each reads that second category from a **different
 channel**:
 
-- `"Bar Chart"` — no second category. One bar per `x` value. A `color`
-  encoding just tints the bars (or stacks segments if multiple rows share an
-  `x`). It has **no `group` channel**, so a `group` encoding is silently
-  ignored.
+- `"Bar Chart"` — use for a single series. When multiple rows share an `x`, a
+  second category on `color` produces stacked segments. For side-by-side bars,
+  use `"Grouped Bar Chart"` with the second category on `group`.
 - `"Stacked Bar Chart"` — second category on `color`, drawn as **stacked**
   segments within each bar (totals matter). Tune with `stackMode`
   (`stacked` / `normalize` / `layered`).
@@ -344,7 +343,8 @@ derived). Values are clamped to the ranges shown.
 | Chart type | Property | Type / range (default) | Effect |
 |---|---|---|---|
 | Bar Chart | `cornerRadius` | 0–15 (0) | Round bar corners (px) |
-| Bar / Area / Stacked Bar | `stackMode` | `stacked` \| `normalize` \| `layered` (unset) | Stacking behavior; `normalize` = 100% |
+| Area / Stacked Bar | `stackMode` | `stacked` \| `normalize` \| `center` \| `layered` (unset) | Stacking behavior; `normalize` = 100%, `center` = streamgraph |
+| Grouped Bar / Boxplot | `dodge` | `auto` \| `local` \| `global` (`auto`) | `local` compacts sparse groups per category; `global` preserves aligned group lanes; leave `auto` unless the user requests one |
 | Line / Area / Sparkline | `interpolate` | `linear` \| `monotone` \| `step` \| `step-before` \| `step-after` \| `basis` \| `cardinal` \| `catmull-rom` (`linear`) | Curve shape |
 | Line / ECDF Plot | `showPoints` | boolean (false) | Draw point markers on the line |
 | Sparkline | `baseline` | `mean` \| `zero` \| `median` \| `none` (`mean`) | Reference line per spark row |
@@ -359,12 +359,13 @@ derived). Values are clamped to the ranges shown.
 | Histogram | `binCount` | 5–50 (10) | Number of bins |
 | Density Plot | `bandwidth` | 0.05–2 (0=auto) | Kernel bandwidth |
 | Pie Chart | `innerRadius` | 0–100 (0) | Donut hole size (>0 → donut) |
+| Pie / Rose | `sortSlices` | `none` \| `descending` \| `ascending` (`none`) | Order wedges and their legend by slice value |
 | Rose Chart | `alignment` | `left` \| `center` (`left`) | Wedge alignment |
-| Rose Chart | `innerRadius` | 0–100 (0) | Inner radius |
 | Rose Chart | `padAngle` | 0–0.1 (0) | Gap between slices |
 | Lollipop | `dotSize` | 20–300 (80) | Circle size (px) |
 | Waterfall | `cornerRadius` | 0–8 (0) | Round bar corners |
 | Waterfall | `totals` | `auto` \| `none` \| `first` \| `last` \| `both` (`auto`) | Which bars anchor to zero as totals (only when no Type column) |
+| Waterfall | `showTextLabels` | boolean (false) | Render value labels on bars |
 | Regression | `regressionMethod` | `linear` \| `log` \| `exp` \| `pow` \| `quad` \| `poly` (`linear`) | Fit method |
 | Regression | `polyOrder` | 1–5 (3) | Polynomial order (when `poly`) |
 | Radar | `filled` | boolean (true) | Fill the polygon |

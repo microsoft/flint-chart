@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Treemap rectangles -->
+  <rect x="38" y="38" width="110" height="130" fill="#76c6ff" stroke="#363636" stroke-width="2" rx="2"/>
+  <rect x="154" y="38" width="64" height="70" fill="#B8B8B8" stroke="#363636" stroke-width="2" rx="2"/>
+  <rect x="154" y="114" width="64" height="54" fill="#76c6ff" stroke="#363636" stroke-width="2" rx="2" opacity="0.6"/>
+  <rect x="38" y="174" width="70" height="44" fill="#B8B8B8" stroke="#363636" stroke-width="2" rx="2" opacity="0.8"/>
+  <rect x="114" y="174" width="104" height="44" fill="#76c6ff" stroke="#363636" stroke-width="2" rx="2" opacity="0.4"/>
+</svg>

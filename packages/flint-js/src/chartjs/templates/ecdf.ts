@@ -115,6 +115,6 @@ export const cjsEcdfPlotDef: ChartTemplateDef = {
         delete spec.encoding;
     },
     properties: [
-        { key: 'showPoints', label: 'Show points', type: 'binary', defaultValue: false } as ChartPropertyDef,
+        { key: 'showPoints', label: 'Points', type: 'binary', defaultValue: false } as ChartPropertyDef,
     ],
 };

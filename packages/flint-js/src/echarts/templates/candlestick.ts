@@ -160,10 +160,10 @@ export const ecCandlestickDef: ChartTemplateDef = {
 
     properties: [
         {
-            key: 'showMA', label: 'Show Moving Avg', type: 'binary', defaultValue: false,
+            key: 'showMA', label: 'Moving average', type: 'binary', defaultValue: false,
         } as ChartPropertyDef,
         {
-            key: 'maWindow', label: 'MA Window', type: 'continuous',
+            key: 'maWindow', label: 'Average window', type: 'continuous',
             min: 3, max: 30, step: 1, defaultValue: 5,
         } as ChartPropertyDef,
     ],

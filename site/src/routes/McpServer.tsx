@@ -1,12 +1,26 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
 import { SiteNavBar, MicrosoftDisclosures } from '../components/SiteShell';
+import { LocaleLink } from '../i18n/LocaleLink';
 import { GITHUB_REPO, siteTheme } from '../shared/theme';
 import chartPreview from '../assets/mcp-chart-preview.svg';
 
+const SURFACE_ITEMS = [
+  { tagKey: 'toolPreferred', name: 'create_chart_view', descKey: 'create_chart_view', highlight: true },
+  { tagKey: 'tool', name: 'render_chart', descKey: 'render_chart' },
+  { tagKey: 'tool', name: 'compile_chart', descKey: 'compile_chart' },
+  { tagKey: 'tool', name: 'validate_chart', descKey: 'validate_chart' },
+  { tagKey: 'tool', name: 'list_chart_types', descKey: 'list_chart_types' },
+  { tagKey: 'resource', name: 'flint://agent-skill', descKey: 'agentSkill' },
+  { tagKey: 'resource', name: 'flint://chart-types', descKey: 'chartTypes' },
+  { tagKey: 'prompt', name: 'author_flint_chart', descKey: 'authorPrompt' },
+] as const;
+
 /** Dedicated page for the Flint MCP server, matching the landing page canvas. */
 export function McpServer() {
+  const { t } = useTranslation();
+
   function scrollToInstallConfig() {
     document.getElementById('install-config')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -19,45 +33,57 @@ export function McpServer() {
       <main style={mainStyle}>
         {/* ---- Hero -------------------------------------------------- */}
         <header style={heroSectionStyle}>
-          <h1 style={heroTitleStyle}>Use Flint as an MCP server for your agent</h1>
+          <h1 style={heroTitleStyle}>{t('mcp.heroTitle')}</h1>
           <p style={leadStyle}>
-            Install <code style={codeInlineStyle}>flint-chart-mcp</code> as a{' '}
+            <Trans i18nKey="mcp.leadBefore" components={{ code: <code style={codeInlineStyle} /> }} />{' '}
             <a href="https://modelcontextprotocol.io" className="mcp-link" style={linkStyle} target="_blank" rel="noreferrer">
-              Model Context Protocol
+              {t('mcp.leadMcpLink')}
             </a>{' '}
-            server and your agent can create charts as an interactive MCP app. By default it opens an interactive Flint
-            chart view; when you need artifacts, it can also return static images
-            or backend-native specs.
+            {t('mcp.leadAfter')}
           </p>
 
           <p style={setupLeadStyle}>
             <span style={setupLabelStyle}>
-              <span aria-hidden="true" style={setupLabelIconStyle}>⚡</span>Quick start:
+              <span aria-hidden="true" style={setupLabelIconStyle}>⚡</span>
+              {t('mcp.quickStart')}
             </span>{' '}
-            paste this setup request into your agent and let it configure Flint for the current project. For manual setup,
-            see{' '}
+            {t('mcp.quickStartBody')}{' '}
             <button type="button" className="mcp-link" style={setupInlineButtonStyle} onClick={scrollToInstallConfig}>
-              install &amp; configure
+              {t('mcp.installConfigure')}
             </button>{' '}
-            or the{' '}
+            {t('mcp.orThe')}{' '}
             <a href={`${GITHUB_REPO}/tree/main/packages/flint-mcp`} className="mcp-link" style={setupInlineLinkStyle} target="_blank" rel="noreferrer">
-              GitHub README
+              {t('mcp.githubReadme')}
             </a>
             .
           </p>
 
           <CodeBlock copyable>{setupPrompt}</CodeBlock>
+
+          <p style={skillNoteStyle}>
+            <Trans
+              i18nKey="mcp.skillNote"
+              components={{
+                skillLink: (
+                  <a
+                    href="https://skills.sh/microsoft/flint-chart/flint-chart-author"
+                    className="mcp-link"
+                    style={setupInlineLinkStyle}
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                ),
+              }}
+            />
+          </p>
         </header>
 
         {/* ---- Article body ----------------------------------------- */}
         <article style={articleStyle}>
           {/* ---- The experience --------------------------------------- */}
           <Prose>
-            <h2 style={firstH2Style}>The experience</h2>
-            <p style={pStyle}>
-              Using Flint through MCP is a simple loop: connect the server, ask
-              for the chart you want, and work with a visualization with dynamic widgets provided by the MCP server.
-            </p>
+            <h2 style={firstH2Style}>{t('mcp.experience')}</h2>
+            <p style={pStyle}>{t('mcp.experienceBody')}</p>
           </Prose>
 
           <ChatMockup />
@@ -65,84 +91,46 @@ export function McpServer() {
           <Prose>
             <ol style={stepListStyle}>
               <li style={stepItemStyle}>
-                <strong>Connect Flint MCP server.</strong> Add the stdio server to your
-                MCP client. The agent can chart local CSV, TSV, or JSON
-                files by default.
+                <strong>{t('mcp.step1Title')}</strong> {t('mcp.step1Body')}
               </li>
               <li style={stepItemStyle}>
-                <strong>Ask for a chart.</strong> The agent turns your request
-                into one Flint spec, chooses the chart type and fields, then
-                calls the MCP server to validate and render it.
+                <strong>{t('mcp.step2Title')}</strong> {t('mcp.step2Body')}
               </li>
               <li style={stepItemStyle}>
-                <strong>Review the interactive result.</strong> In hosts with MCP Apps, the
-                preferred tool opens a live SVG preview with chart options. When
-                an artifact is needed, Flint can return a PNG, SVG, or compiled
-                backend spec instead.
+                <strong>{t('mcp.step3Title')}</strong> {t('mcp.step3Body')}
               </li>
             </ol>
           </Prose>
 
           {/* ---- What it provides ------------------------------------- */}
           <Prose>
-            <h2 style={h2Style}>What it provides</h2>
-            <p style={pStyle}>
-              The server keeps the tool surface small: one preferred interactive
-              tool, supporting tools for static render and validation, plus
-              resources that teach the agent Flint's chart vocabulary.
-            </p>
+            <h2 style={h2Style}>{t('mcp.provides')}</h2>
+            <p style={pStyle}>{t('mcp.providesBody')}</p>
           </Prose>
 
           <div style={cardGridStyle}>
-            <SurfaceCard
-              tag="tool · preferred"
-              name="create_chart_view"
-              desc="Opens the interactive MCP App: live SVG preview plus chart options. Use this whenever the user wants to see a chart."
-              highlight
-            />
-            <SurfaceCard
-              tag="tool"
-              name="render_chart"
-              desc="Returns a static PNG or SVG. Use it when the host has no App UI, or when the user asks for an image artifact."
-            />
-            <SurfaceCard
-              tag="tool"
-              name="compile_chart"
-              desc="Returns the backend-native spec JSON for Vega-Lite, ECharts, or Chart.js, along with assembly warnings."
-            />
-            <SurfaceCard
-              tag="tool"
-              name="validate_chart"
-              desc="Checks whether a spec is valid, reports warnings or errors, and returns the computed chart size."
-            />
-            <SurfaceCard
-              tag="tool"
-              name="list_chart_types"
-              desc="Lists chart types and encoding channels, optionally scoped to one backend."
-            />
-            <SurfaceCard
-              tag="resource"
-              name="flint://agent-skill"
-              desc="Bundled authoring instructions for producing valid ChartAssemblyInput specs."
-            />
-            <SurfaceCard
-              tag="resource"
-              name="flint://chart-types"
-              desc="A browsable catalog of chart types and encoding channels across all backends."
-            />
-            <SurfaceCard
-              tag="prompt"
-              name="author_flint_chart"
-              desc="Loads the Flint authoring skill in prompt-aware clients before chart tool calls."
-            />
+            {SURFACE_ITEMS.map((item) => (
+              <SurfaceCard
+                key={item.name}
+                tag={t(`mcp.tags.${item.tagKey}`)}
+                name={item.name}
+                desc={t(`mcp.tools.${item.descKey}`)}
+                highlight={'highlight' in item ? item.highlight : undefined}
+              />
+            ))}
           </div>
 
           {/* ---- Install ---------------------------------------------- */}
           <Prose>
-            <h2 id="install-config" style={h2Style}>Install &amp; configure</h2>
+            <h2 id="install-config" style={h2Style}>{t('mcp.installTitle')}</h2>
             <p style={pStyle}>
-              For manual setup, the server speaks <strong>stdio</strong> and runs zero-install with{' '}
-              <code style={codeInlineStyle}>npx</code>. Point your MCP client at the package:
+              <Trans
+                i18nKey="mcp.installBody"
+                components={{
+                  strong: <strong />,
+                  code: <code style={codeInlineStyle} />,
+                }}
+              />
             </p>
           </Prose>
 
@@ -150,14 +138,10 @@ export function McpServer() {
 
           <Prose>
             <p style={pStyle}>
-              Tool calls can embed rows directly with{' '}
-              <code style={codeInlineStyle}>data.values</code>. The agent can
-              also chart a local CSV, TSV, or JSON file by{' '}
-              <code style={codeInlineStyle}>data.url</code> out of the box.
-              Remote URLs are never fetched. For an untrusted deployment, pass{' '}
-              <code style={codeInlineStyle}>--disable-file-reference</code> to
-              reject local file references and accept only inline{' '}
-              <code style={codeInlineStyle}>data.values</code>:
+              <Trans
+                i18nKey="mcp.dataBody"
+                components={{ code: <code style={codeInlineStyle} /> }}
+              />
             </p>
           </Prose>
 
@@ -165,19 +149,16 @@ export function McpServer() {
 
           {/* ---- Next ------------------------------------------------- */}
           <Prose>
-            <h2 style={h2Style}>Reference</h2>
-            <p style={pStyle}>
-              The docs cover the full MCP workflow. The package README is the
-              shortest reference for tool inputs, CLI flags, and client config.
-            </p>
+            <h2 style={h2Style}>{t('mcp.reference')}</h2>
+            <p style={pStyle}>{t('mcp.referenceBody')}</p>
           </Prose>
 
           <div style={nextRowStyle}>
-            <Link to="/documentation/setup-flint-mcp" style={primaryBtn}>
-              Read setup docs
-            </Link>
+            <LocaleLink to="/documentation/setup-flint-mcp" style={primaryBtn}>
+              {t('mcp.readSetupDocs')}
+            </LocaleLink>
             <a href={`${GITHUB_REPO}/tree/main/packages/flint-mcp`} style={secondaryBtn} target="_blank" rel="noreferrer">
-              GitHub README
+              {t('mcp.githubReadme')}
             </a>
           </div>
         </article>
@@ -193,13 +174,15 @@ export function McpServer() {
 /* ------------------------------------------------------------------ */
 
 export function ChatMockup() {
+  const { t } = useTranslation();
+
   return (
     <div style={chatFrameStyle}>
       <div style={chatTitleBarStyle}>
         <span style={{ ...trafficDot, background: '#ec6a5e' }} />
         <span style={{ ...trafficDot, background: '#f4bf4f' }} />
         <span style={{ ...trafficDot, background: '#61c554' }} />
-        <span style={chatTitleTextStyle}>Agent chat</span>
+        <span style={chatTitleTextStyle}>{t('mcp.chatTitle')}</span>
       </div>
 
       <div style={chatBodyStyle}>
@@ -228,7 +211,7 @@ export function ChatMockup() {
             <div style={appCardStyle}>
               <div style={appBarStyle}>
                 <span style={appBarTitleStyle}>Flint Chart</span>
-                <span style={appBarTagStyle}>MCP App</span>
+                <span style={appBarTagStyle}>{t('mcp.appTag')}</span>
               </div>
 
               <div style={appBodyStyle}>
@@ -242,7 +225,7 @@ export function ChatMockup() {
                     <MockSelect label="Sort" value="None" />
                     <MockToggle label="Show values" on={false} />
                   </div>
-                  <span style={copyBtnStyle}>Copy spec to chat</span>
+                  <span style={copyBtnStyle}>{t('mcp.copySpec')}</span>
                 </div>
               </div>
             </div>
@@ -411,6 +394,13 @@ const setupLeadStyle: CSSProperties = {
   ...leadStyle,
   marginTop: 24,
   marginBottom: 16,
+};
+
+const skillNoteStyle: CSSProperties = {
+  ...leadStyle,
+  fontSize: 15.5,
+  marginTop: 18,
+  marginBottom: 0,
 };
 
 const setupLabelStyle: CSSProperties = {

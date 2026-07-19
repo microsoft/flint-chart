@@ -106,15 +106,13 @@ describe('Vega-Lite Sparkline', () => {
     expect(avgPanel(spec).spec.encoding.color.field).toBe('Metric');
   });
 
-  it('self-scales each strip by default, but honors a shared Y when requested', () => {
+  it('always self-scales each strip and does not expose a Y-scale option', () => {
     const auto = assembleVegaLite(toInput(byTitle(cases, MULTI))) as any;
-    // Each strip owns its own y scale by default so the trace fills the band and
-    // lines up with its centered category label and value.
     expect(trendPanel(auto).resolve?.scale?.y).toBe('independent');
+    expect(auto._options).not.toContainEqual(expect.objectContaining({ key: 'independentYAxis' }));
 
-    const shared = assembleVegaLite(toInput(byTitle(cases, MULTI), { independentYAxis: false })) as any;
-    // Opting into a shared scale keeps every row comparable by absolute level.
-    expect(trendPanel(shared).resolve?.scale?.y).toBe('shared');
+    const legacyOverride = assembleVegaLite(toInput(byTitle(cases, MULTI), { independentYAxis: false })) as any;
+    expect(trendPanel(legacyOverride).resolve?.scale?.y).toBe('independent');
   });
 
   it('honors the interpolate (curve) property', () => {
@@ -149,6 +147,36 @@ describe('Vega-Lite Sparkline', () => {
     expect(catPanel(spec).spec.encoding.text.field).toBe('Metric');
     expect(avgPanel(spec).spec.mark).toMatchObject({ type: 'text', align: 'right' });
     expect(avgPanel(spec).spec.encoding.text).toMatchObject({ field: 'flintSparkAvg', format: '.3~s' });
+  });
+
+  it('preserves semantic currency formatting in the average column', () => {
+    const spec = assembleVegaLite({
+      data: {
+        values: [
+          { month: '2025-01-01', item: 'Bananas', price: 0.59 },
+          { month: '2025-02-01', item: 'Bananas', price: 0.61 },
+        ],
+      },
+      semantic_types: {
+        month: 'YearMonth',
+        item: 'Category',
+        price: { semanticType: 'Price', unit: 'USD' },
+      },
+      chart_spec: {
+        chartType: 'Sparkline',
+        encodings: { x: 'month', y: 'price', color: 'item' },
+        baseSize: { width: 480, height: 360 },
+      },
+    }) as any;
+
+    expect(avgPanel(spec).spec.transform).toContainEqual({
+      calculate: "'$' + format(datum.flintSparkAvg, ',.2f')",
+      as: 'flintSparkAvgFormatted',
+    });
+    expect(avgPanel(spec).spec.encoding.text).toEqual({
+      field: 'flintSparkAvgFormatted',
+      type: 'nominal',
+    });
   });
 
   it('uses a compact base sparkline width by default and honors a tuned width', () => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { MarkdownView } from '../components/MarkdownView';
 import {
@@ -8,17 +9,19 @@ import {
   SIDEBAR_NAV_WIDTH,
 } from '../components/SidebarNav';
 import { SiteShell } from '../components/SiteShell';
+import { useLocale } from '../i18n/LocaleContext';
 import type { DocSection } from '../shared/docs-catalog';
 import {
   getDocEntry,
   getDocGroups,
-  // sectionTitle,
 } from '../shared/docs-catalog';
 import { getDocMarkdown } from '../shared/load-docs';
 import { DOC_SCROLL_TO_KEY, scrollToHeading, scrollNavItemIntoView } from '../shared/scroll-to-heading';
 import { CONTENT_MAX_WIDTH, siteTheme } from '../shared/theme';
 
 export function DocSectionPage({ section }: { section: DocSection }) {
+  const { t } = useTranslation();
+  const { locale, lp } = useLocale();
   const mainRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const location = useLocation();
@@ -29,7 +32,9 @@ export function DocSectionPage({ section }: { section: DocSection }) {
   const firstSlug = docs[0]?.slug;
   const activeSlug = slug ?? firstSlug;
   const entry = activeSlug ? getDocEntry(section, activeSlug) : undefined;
-  const markdown = entry ? getDocMarkdown(entry) : null;
+  const loaded = entry ? getDocMarkdown(entry, locale) : null;
+  const markdown = loaded?.markdown ?? null;
+  const usedFallback = loaded?.usedFallback ?? false;
 
   // Canonicalize a slug-less URL (/documentation) to the first doc WITHOUT a
   // redirect render. We render the default doc immediately and only replace the
@@ -39,9 +44,9 @@ export function DocSectionPage({ section }: { section: DocSection }) {
   // /documentation/:slug routes (they share this component instance).
   useEffect(() => {
     if (!slug && firstSlug) {
-      navigate(`/${section}/${firstSlug}`, { replace: true });
+      navigate(lp(`/${section}/${firstSlug}`), { replace: true });
     }
-  }, [slug, section, firstSlug, navigate]);
+  }, [slug, section, firstSlug, navigate, lp]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
@@ -93,7 +98,11 @@ export function DocSectionPage({ section }: { section: DocSection }) {
         >
           <SidebarNav sidebarRef={sidebarRef}>
             {groups.map((group, gi) => (
-              <SidebarNavSection key={group.id} label={group.label} first={gi === 0}>
+              <SidebarNavSection
+                key={group.id}
+                label={t(`docs.groups.${group.id}`)}
+                first={gi === 0}
+              >
                 {group.docs.map((doc) => {
                   const active = doc.slug === activeSlug;
                   return (
@@ -101,11 +110,11 @@ export function DocSectionPage({ section }: { section: DocSection }) {
                       key={doc.slug}
                       as="link"
                       active={active}
-                      to={`/${section}/${doc.slug}`}
+                      to={lp(`/${section}/${doc.slug}`)}
                       icon={doc.icon}
                       dataAttr={{ 'data-doc-nav': doc.slug }}
                     >
-                      {doc.title}
+                      {t(`docs.entries.${doc.slug}.title`)}
                     </SidebarNavItem>
                   );
                 })}
@@ -120,13 +129,30 @@ export function DocSectionPage({ section }: { section: DocSection }) {
               activeSlug={activeSlug}
               onNavigate={(nextSlug) => {
                 mainRef.current?.scrollTo({ top: 0 });
-                navigate(`/${section}/${nextSlug}`);
+                navigate(lp(`/${section}/${nextSlug}`));
               }}
             />
             {!entry || !markdown ? (
-              <p style={{ color: siteTheme.textMuted }}>Document not found.</p>
+              <p style={{ color: siteTheme.textMuted }}>{t('docs.notFound')}</p>
             ) : (
-              <MarkdownView source={markdown} scrollContainerRef={mainRef} />
+              <>
+                {usedFallback ? (
+                  <p
+                    style={{
+                      margin: '0 0 16px',
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      background: 'rgba(31, 35, 40, 0.06)',
+                      color: siteTheme.textMuted,
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {t('docs.fallbackNote')}
+                  </p>
+                ) : null}
+                <MarkdownView source={markdown} scrollContainerRef={mainRef} />
+              </>
             )}
           </main>
         </div>
@@ -146,20 +172,21 @@ function MobileDocPicker({
   activeSlug?: string;
   onNavigate: (slug: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <label className="doc-mobile-picker" style={docMobilePickerStyle}>
-      <span style={docMobilePickerLabelStyle}>Documentation</span>
+      <span style={docMobilePickerLabelStyle}>{t('docs.mobileLabel')}</span>
       <select
         value={activeSlug ?? ''}
         onChange={(event) => onNavigate(event.currentTarget.value)}
         style={docMobileSelectStyle}
-        aria-label="Choose documentation page"
+        aria-label={t('docs.mobileAria')}
       >
         {groups.map((group) => (
-          <optgroup key={group.id} label={group.label}>
+          <optgroup key={group.id} label={t(`docs.groups.${group.id}`)}>
             {group.docs.map((doc) => (
               <option key={doc.slug} value={doc.slug}>
-                {doc.title}
+                {t(`docs.entries.${doc.slug}.title`)}
               </option>
             ))}
           </optgroup>

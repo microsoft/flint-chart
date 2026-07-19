@@ -77,6 +77,8 @@ const PARAM_DESCRIPTIONS: Record<string, string> = {
     pointSize: 'Point or marker size.',
     dotSize: 'Size of the dot mark.',
     cornerRadius: 'Corner radius for supported marks.',
+    taskHeight: 'Task bar height as a percentage of each row.',
+    intervalLabels: 'Text shown on task intervals.',
     interpolate: 'Line or area interpolation method.',
     showPoints: 'Overlay point markers on the line.',
     showTextLabels: 'Render value labels on the marks.',

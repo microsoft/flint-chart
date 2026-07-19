@@ -609,13 +609,7 @@ export const ecScatterPlotDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color', 'size']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Strip Plot',
-                label: 'Jitter',
-                route: { from: 'series', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
+        // θ transitions declared centrally in core/chart-transitions.ts.
     }),
     postProcess: (option, ctx) => {
         if (!option.series || !Array.isArray(option.series)) return;

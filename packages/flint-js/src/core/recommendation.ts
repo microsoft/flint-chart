@@ -710,16 +710,18 @@ export function pick(
         }
     }
     if (candidates.length === 0) return undefined;
-    // Prefer fields from the user's existing encodings when available
+    // Deterministic selection: prefer a field the user already uses, otherwise
+    // the first candidate in table order. Stable, so a given dataset always
+    // yields the same suggestion (no random tie-break).
     if (tv.preferredFields) {
         const preferred = candidates.filter(n => tv.preferredFields!.has(n));
         if (preferred.length > 0) {
-            const chosen = preferred[Math.floor(Math.random() * preferred.length)];
+            const chosen = preferred[0];
             used.add(chosen);
             return chosen;
         }
     }
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const chosen = candidates[0];
     used.add(chosen);
     return chosen;
 }
@@ -797,6 +799,22 @@ function isValidGroupingField(tv: InternalTableView, xField: string, colorField:
     return true;
 }
 
+/**
+ * Deterministic grouping/series selection: choose the lowest-cardinality
+ * candidate (fewest distinct values → the most readable legend), breaking ties
+ * by table order. Replaces an earlier random tie-break so recommendations are
+ * stable and prefer compact color/series encodings.
+ */
+function lowestCardinality(tv: InternalTableView, candidates: string[]): string {
+    let best = candidates[0];
+    let bestCard = tv.fieldLevels[best]?.length ?? Infinity;
+    for (let i = 1; i < candidates.length; i++) {
+        const card = tv.fieldLevels[candidates[i]]?.length ?? Infinity;
+        if (card < bestCard) { best = candidates[i]; bestCard = card; }
+    }
+    return best;
+}
+
 export function pickValidGroupingField(
     tv: InternalTableView, used: Set<string>, xField: string, maxCard = 20,
 ): string | undefined {
@@ -812,16 +830,17 @@ export function pickValidGroupingField(
         if (isValidGroupingField(tv, xField, name)) candidates.push(name);
     }
     if (candidates.length === 0) return undefined;
-    // Prefer fields from existing encodings
+    // Prefer a field the user already uses; otherwise the lowest-cardinality
+    // valid grouping field (fewest colors). Deterministic — no random pick.
     if (tv.preferredFields) {
         const preferred = candidates.filter(n => tv.preferredFields!.has(n));
         if (preferred.length > 0) {
-            const chosen = preferred[Math.floor(Math.random() * preferred.length)];
+            const chosen = lowestCardinality(tv, preferred);
             used.add(chosen);
             return chosen;
         }
     }
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const chosen = lowestCardinality(tv, candidates);
     used.add(chosen);
     return chosen;
 }
@@ -864,16 +883,17 @@ export function pickLineChartColorField(
         if (isValidLineSeriesData(tv, xField, name)) candidates.push(name);
     }
     if (candidates.length === 0) return undefined;
-    // Prefer fields from existing encodings
+    // Prefer a field the user already uses; otherwise the lowest-cardinality
+    // valid series field (fewest lines/colors). Deterministic — no random pick.
     if (tv.preferredFields) {
         const preferred = candidates.filter(n => tv.preferredFields!.has(n));
         if (preferred.length > 0) {
-            const chosen = preferred[Math.floor(Math.random() * preferred.length)];
+            const chosen = lowestCardinality(tv, preferred);
             used.add(chosen);
             return chosen;
         }
     }
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const chosen = lowestCardinality(tv, candidates);
     used.add(chosen);
     return chosen;
 }
@@ -989,11 +1009,14 @@ export function getRecommendation(chartType: string, tv: InternalTableView): Rec
             const xField = pickDiscrete(tv, used);
             const yField = pickQuantitative(tv, used);
             if (!xField || !yField) return {};
-            const colorField = pickValidGroupingField(tv, used, xField, 20);
-            if (!colorField) return {};
+            const seriesField = pickValidGroupingField(tv, used, xField, 20);
+            if (!seriesField) return {};
             assign('x', xField);
             assign('y', yField);
-            assign('color', colorField);
+            // A grouped bar dodges by the `group` channel (not `color`) across
+            // all three backends — assigning `color` here would be dropped by
+            // the Vega-Lite template, leaving an ungrouped bar.
+            assign('group', seriesField);
             break;
         }
 

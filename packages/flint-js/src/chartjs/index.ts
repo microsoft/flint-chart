@@ -32,4 +32,4 @@ export {
 } from './templates';
 
 // CJS recommendation & adaptation
-export { cjsAdaptChart, cjsRecommendEncodings } from './recommendation';
+export { cjsAdaptChart, cjsRecommendEncodings, cjsRecommendChartTypes, cjsRecommendCharts } from './recommendation';

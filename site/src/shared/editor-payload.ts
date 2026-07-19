@@ -30,12 +30,20 @@ export function loadEditorPayload(id: string): unknown | null {
   }
 }
 
+import { LOCALE_URL_SEGMENT, type Locale } from '../i18n/locales';
+
 /**
  * Gallery deep link — small URL, no sessionStorage write during render.
  * Editor resolves via TEST_GENERATORS[generator][index].
  */
-export function buildGalleryEditorHref(generator: string, index: number): string {
-  return `#/editor?g=${encodeURIComponent(generator)}&i=${index}`;
+export function buildGalleryEditorHref(
+  generator: string,
+  index: number,
+  locale: Locale = 'en',
+): string {
+  const segment = LOCALE_URL_SEGMENT[locale];
+  const base = segment ? `/${segment}/editor` : '/editor';
+  return `#${base}?g=${encodeURIComponent(generator)}&i=${index}`;
 }
 
 /** Read `case` query param (sessionStorage token) from the current hash URL. */
@@ -55,8 +63,10 @@ export function readGalleryCaseParams(): { generator: string; index: number } | 
 }
 
 /** Save payload on user action (not during render) and navigate to editor. */
-export function openEditorWithPayload(input: unknown): string {
+export function openEditorWithPayload(input: unknown, locale: Locale = 'en'): string {
   const id = saveEditorPayload(input);
-  if (id) return `#/editor?case=${encodeURIComponent(id)}`;
-  return '#/editor';
+  const segment = LOCALE_URL_SEGMENT[locale];
+  const base = segment ? `/${segment}/editor` : '/editor';
+  if (id) return `#${base}?case=${encodeURIComponent(id)}`;
+  return `#${base}`;
 }

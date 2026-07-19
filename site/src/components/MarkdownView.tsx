@@ -9,6 +9,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { CodeBlock, PlainTextBlock, resolveCodeLanguage } from './CodeBlock';
 import { SizingPlayground } from './SizingPlayground';
 import { DocChart } from './DocChart';
+import { useLocale } from '../i18n/LocaleContext';
 import { resolveMarkdownHref, resolveMarkdownImageSrc } from '../shared/load-docs';
 import { DOC_SCROLL_TO_KEY, scrollToHeading } from '../shared/scroll-to-heading';
 import { siteTheme } from '../shared/theme';
@@ -27,7 +28,8 @@ function slugifyHeading(text: string): string {
   return text
     .trim()
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
+    // Keep letters/numbers across scripts (incl. CJK) so Chinese headings get stable ids.
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
@@ -46,6 +48,7 @@ export function MarkdownView({
   scrollContainerRef?: RefObject<HTMLElement | null>;
 }) {
   const location = useLocation();
+  const { locale, lp } = useLocale();
   const scrollRoot = () => scrollContainerRef?.current ?? null;
 
   const components: Components = {
@@ -67,7 +70,7 @@ export function MarkdownView({
         );
       }
 
-      const internal = href ? resolveMarkdownHref(href) : null;
+      const internal = href ? resolveMarkdownHref(href, locale) : null;
       if (internal) {
         const [to, hash = ''] = internal.split('#');
         return (
@@ -89,8 +92,10 @@ export function MarkdownView({
         );
       }
       if (href?.startsWith('/') && !href.startsWith('//')) {
+        const [pathPart, hash = ''] = href.split('#');
+        const to = lp(pathPart);
         return (
-          <Link to={href} style={linkStyle}>
+          <Link to={hash ? `${to}#${hash}` : to} style={linkStyle}>
             {children}
           </Link>
         );

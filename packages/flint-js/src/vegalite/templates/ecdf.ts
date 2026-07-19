@@ -32,7 +32,7 @@ import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { setMarkProp } from './utils';
 
 const showPointsProperty: ChartPropertyDef = {
-    key: 'showPoints', label: 'Show points', type: 'binary', defaultValue: false,
+    key: 'showPoints', label: 'Points', type: 'binary', defaultValue: false,
 };
 
 /**

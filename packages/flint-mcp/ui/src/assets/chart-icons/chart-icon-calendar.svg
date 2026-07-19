@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Calendar heatmap: a grid of day cells with varying intensity (weeks x days) -->
+  <!-- Row 0 -->
+  <rect x="44"  y="60"  width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <rect x="76"  y="60"  width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="108" y="60"  width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="140" y="60"  width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="172" y="60"  width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <rect x="204" y="60"  width="26" height="26" rx="3" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <!-- Row 1 -->
+  <rect x="44"  y="92"  width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="76"  y="92"  width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="108" y="92"  width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <rect x="140" y="92"  width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="172" y="92"  width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="204" y="92"  width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <!-- Row 2 -->
+  <rect x="44"  y="124" width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="76"  y="124" width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="108" y="124" width="26" height="26" rx="3" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <rect x="140" y="124" width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <rect x="172" y="124" width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="204" y="124" width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <!-- Row 3 -->
+  <rect x="44"  y="156" width="26" height="26" rx="3" fill="#cfe9fa" stroke="#363636" stroke-width="2"/>
+  <rect x="76"  y="156" width="26" height="26" rx="3" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <rect x="108" y="156" width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="140" y="156" width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+  <rect x="172" y="156" width="26" height="26" rx="3" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <rect x="204" y="156" width="26" height="26" rx="3" fill="#3aa6ee" stroke="#363636" stroke-width="2"/>
+</svg>

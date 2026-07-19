@@ -5,7 +5,7 @@
 [![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp)
+**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
 
 Flint is a visualization intermediate language that lets **AI agents create
 expressive, polished visualizations from simple, human-editable chart specs**.
@@ -43,6 +43,17 @@ This repo contains two main components:
 - **Agent-ready chart authoring.** The MCP server gives agents Flint tools and
   chart guidance so they can choose a template, validate it, and open an
   interactive chart view in MCP-capable clients.
+
+## Updates
+
+- **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart
+  types and edit chart properties in place. ([v0.3.0](https://github.com/microsoft/flint-chart/releases/tag/0.3.0))
+- **July 15, 2026** — Flint 0.2.2 added compact dodge modes and grouped violin
+  layouts.
+- **July 13, 2026** — Flint 0.2.1 improved chart-property validation and backend
+  consistency. ([v0.2.1](https://github.com/microsoft/flint-chart/releases/tag/0.2.1))
+
+See the [changelog](CHANGELOG.md) for complete release notes.
 
 
 <p align="center">

@@ -734,6 +734,56 @@ export interface PivotTransition {
     requireDiscreteSource?: boolean;
     /** Only offer when the routed source field's distinct count is within this budget. */
     maxSourceCardinality?: number;
+    /**
+     * Only offer when the *domain* position axis (the non-measure x/y) carries an
+     * ordered type — `temporal` or `ordinal`, never plain `nominal`. This is the
+     * hard gate for bar → line/area: you may not connect unordered categories.
+     * Per the design decision, order is taken from the resolved encoding type
+     * (derived from the semantic type), NOT inferred from sort state.
+     */
+    requireOrderedAxis?: boolean;
+    /**
+     * Only offer when every value on the *measure* position axis is ≥ 0. The gate
+     * for part-to-whole / filled siblings (pie, area) where a negative magnitude
+     * would misread.
+     */
+    requireNonNegative?: boolean;
+    /**
+     * Only offer when the *domain* axis distinct count is within this budget — the
+     * low-cardinality guard for pie/rose (few slices) and line → bar (few ticks).
+     */
+    maxCategoryCardinality?: number;
+    /**
+     * Only offer when NO discrete series channel (color/group/column/row) is bound
+     * — the single-series guard for a part-to-whole pie/donut.
+     */
+    requireNoSeries?: boolean;
+    /**
+     * Only offer when a discrete series channel (color/group/detail/column/row) IS
+     * bound — the multi-series guard for small-multiple siblings (e.g. Line →
+     * Sparkline needs a series to make one strip per category).
+     */
+    requireSeries?: boolean;
+    /**
+     * Only offer when BOTH position axes (x and y) are measures (quantitative or
+     * aggregated) — the guard for a fitted trend (Scatter → Regression): a
+     * regression line is meaningless over a nominal/category axis.
+     */
+    requireBiaxialMeasure?: boolean;
+    /**
+     * Only offer when the `size` channel is NOT bound — keeps a fitted-trend
+     * sibling (Regression) to a clean 2-variable scatter rather than layering it
+     * over a bubble chart.
+     */
+    requireNoSize?: boolean;
+    /**
+     * After routing, force the *domain* (non-measure) position axis onto this
+     * channel, swapping `x`/`y` wholesale if it currently sits on the other. Used
+     * for bar → line/area: a *horizontal* bar carries the ordered/temporal domain
+     * on `y`, but a line pins time to the horizontal, so the transition must
+     * re-orient to `x` (otherwise you get a nonsensical vertical line chart).
+     */
+    orientDomainAxis?: 'x' | 'y';
 }
 
 /**

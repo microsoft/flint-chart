@@ -302,7 +302,12 @@ export const ecAreaChartDef: ChartTemplateDef = {
                 { value: 'step-after', label: 'Step After' },
             ],
         } as ChartPropertyDef,
-        { key: 'opacity', label: 'Opacity', type: 'continuous', min: 0.1, max: 1, step: 0.05, defaultValue: 0.7 } as ChartPropertyDef,
+        {
+            key: 'opacity', label: 'Opacity', type: 'continuous', min: 0.1, max: 1, step: 0.05, defaultValue: 0.7,
+            check: (ctx) => ({
+                applicable: !!ctx.encodings.color?.field && ctx.chartProperties?.stackMode === 'layered',
+            }),
+        } as ChartPropertyDef,
         {
             key: 'stackMode', label: 'Stack', type: 'discrete', options: [
                 { value: undefined, label: 'Stacked (default)' },

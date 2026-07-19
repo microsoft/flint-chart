@@ -56,7 +56,7 @@ import type { ChartWarning, ChartOption, OptionEvalContext } from '../core/types
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
 import { planBandDodge, resolveDodge } from '../core/band-dodge';
-import { applyPivot, type PivotSurface } from '../core/pivot';
+import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
@@ -182,23 +182,27 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             typedRawEncodings[axis] = { ...typedRawEncodings[axis], type: choice };
         }
     }
-    // Pivot (derived Category-B operator): re-route fields across position/
-    // legend/facet channels to surface alternative views (orientation swap,
-    // series↔axis role swap, facet split). Composed BEFORE other overrides so
-    // sort/overflow/layout all resolve against the post-pivot channel map. The
-    // chosen state id is stored by the host under chartProperties[pivot.key];
-    // the resolved surface is surfaced to hosts via `_pivot` / getChartPivot.
-    const pivoted = applyPivot(chartTemplate, typedRawEncodings, data, chartProperties, vlGetTemplateDef);
-    // A chart-type *transition* pivot state re-renders the same data as a sibling
+    // Transform (derived Category-B operator): re-route fields across position/
+    // legend/facet channels + optionally re-render as a sibling chart type, to
+    // surface alternative views. Split into TWO independent controls (see
+    // design-docs/chart-transform-two-axes.md):
+    //   - Control B (chart type, θ): stored under chartProperties.chartType
+    //   - Control A (arrange, τ/σ/γ): stored under chartProperties.arrange
+    // (A legacy composed `pivot` id is migrated by applyTransform.) Composed
+    // BEFORE other overrides so sort/overflow/layout resolve against the result.
+    // Both surfaces are exposed to hosts via `_transform` / getChartTransform;
+    // the legacy single-control `_pivot` surface is still emitted below.
+    const authoredTemplate = chartTemplate;
+    const transformed = applyTransform(chartTemplate, typedRawEncodings, data, chartProperties, vlGetTemplateDef);
+    // A chart-type *transition* (Control B) re-renders the same data as a sibling
     // chart type (e.g. Grouped Bar → Stacked Bar, Scatter → Strip/Jitter). The
-    // authored chartType / encodings are untouched; the pivot enumeration above
-    // ran against the authored template, but rendering now re-dispatches to the
-    // sibling template so its instantiate / layout logic takes over. See §4.6.
-    if (pivoted.chartType && pivoted.chartType !== chartType) {
-        const swapped = vlGetTemplateDef(pivoted.chartType) as ChartTemplateDef | undefined;
+    // authored chartType / encodings are untouched; rendering re-dispatches to
+    // the sibling template so its instantiate / layout logic takes over. See §4.6.
+    if (transformed.chartType && transformed.chartType !== chartType) {
+        const swapped = vlGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
-    const composedEncodings = applyEncodingOverrides(chartTemplate, pivoted.encodings, chartProperties);
+    const composedEncodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Template-level encoding normalization (e.g. Sparkline remaps its series
     // field onto the `row` facet channel). Runs BEFORE semantics/layout so the
@@ -513,6 +517,36 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     chartTemplate.instantiate(vgObj, instantiateContext);
 
+    // Facet-identity augmentation is presentation-only: the structural series
+    // has already moved to column/row for semantics, layout, stacking, and
+    // dodging. Reapply its learned color now so faceted panels preserve visual
+    // identity without making the compiler treat color as another series role.
+    if (transformed.augmentation?.kind === 'facet-identity') {
+        const facetEncoding = resolvedEncodings[transformed.augmentation.facetChannel];
+        if (facetEncoding?.field) {
+            const colorEncoding = { ...facetEncoding };
+            delete colorEncoding.header;
+            delete colorEncoding.axis;
+            delete colorEncoding.columns;
+            const scheme = transformed.augmentation.colorEncoding.scheme;
+            if (scheme) {
+                colorEncoding.scale = { ...(colorEncoding.scale ?? {}), scheme };
+            }
+            vgObj.encoding = vgObj.encoding || {};
+            vgObj.encoding.color = colorEncoding;
+
+            // Vega-Lite implicitly stacks bars/areas whenever a discrete color
+            // channel is present. This color is redundant identity, not a stack
+            // series, so pin the quantitative position channel to unstacked.
+            for (const axis of ['x', 'y']) {
+                const encoding = vgObj.encoding[axis];
+                if (encoding?.type === 'quantitative' && encoding.stack === undefined) {
+                    encoding.stack = null;
+                }
+            }
+        }
+    }
+
     // Merge any warnings emitted by instantiate
     if (vgObj._warnings && Array.isArray(vgObj._warnings)) {
         warnings.push(...vgObj._warnings);
@@ -668,8 +702,16 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // active index) for the current encodings + data. Hosts read this to render
     // a cyclic prev/next control and write the chosen id back to
     // chartProperties[pivot.key]. Absent when the chart has <= 1 state.
-    if (pivoted.surface) {
-        result._pivot = pivoted.surface;
+    if (transformed.surface) {
+        result._transform = transformed.surface;
+    }
+    // Legacy single-control surface (composed orbit) for backward-compat
+    // consumers (getChartPivot). Enumerated from the AUTHORED template so its
+    // ids/labels match the pre-split contract. Rendering above is driven by
+    // `transformed` (the two-control model); this is surface-only.
+    const legacyPivot = applyPivot(authoredTemplate, typedRawEncodings, data, chartProperties, vlGetTemplateDef);
+    if (legacyPivot.surface) {
+        result._pivot = legacyPivot.surface;
     }
     return result;
 }
@@ -707,6 +749,21 @@ export function getChartOptions(input: ChartAssemblyInput): ChartOption[] {
 export function getChartPivot(input: ChartAssemblyInput): PivotSurface | undefined {
     const spec = assembleVegaLite(input);
     return spec && spec._pivot ? (spec._pivot as PivotSurface) : undefined;
+}
+
+/**
+ * Inspect a chart spec + dataset and report the two-control transform surface
+ * Flint exposes for it — Control B (chart-type transitions, a dropdown) and
+ * Control A (local rearrangement group, a stepper). Either sub-surface is
+ * absent when that control has a single state. Mirrors getChartPivot but for the
+ * factored model (design-docs/chart-transform-two-axes.md). Hosts render a
+ * dropdown seeded from `chartType.index` (writing the chosen id to
+ * chartProperties.chartType) and a cyclic stepper seeded from `arrange.index`
+ * (writing chartProperties.arrange).
+ */
+export function getChartTransform(input: ChartAssemblyInput): TransformSurface | undefined {
+    const spec = assembleVegaLite(input);
+    return spec && spec._transform ? (spec._transform as TransformSurface) : undefined;
 }
 
 // ===========================================================================

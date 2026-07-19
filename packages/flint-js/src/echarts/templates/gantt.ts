@@ -21,18 +21,15 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
+import {
+    coerceGanttEndpoint,
+    formatGanttLabel,
+    ganttLabelReservePx,
+    GANTT_PROPERTIES,
+    isGanttTemporal,
+    sortGanttRows,
+} from '../../chart-types/gantt';
 import { DEFAULT_COLORS } from './utils';
-
-/** Parse a start/end endpoint to a number: epoch-ms for temporal, else numeric. */
-function toNumber(value: unknown, temporal: boolean): number {
-    if (value == null) return NaN;
-    if (temporal) {
-        if (value instanceof Date) return value.getTime();
-        if (typeof value === 'number') return value;
-        return Date.parse(String(value));
-    }
-    return Number(value);
-}
 
 /** Format an epoch-ms value as a compact ISO date (YYYY-MM-DD). */
 function fmtDate(ms: number): string {
@@ -47,27 +44,31 @@ export const ecGanttChartDef: ChartTemplateDef = {
     markCognitiveChannel: 'position',
     declareLayoutMode: () => ({ axisFlags: { y: { banded: true } } }),
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table } = ctx;
+        const { channelSemantics, table, chartProperties, semanticTypes } = ctx;
         const taskField = channelSemantics.y?.field;
         const startField = channelSemantics.x?.field;
         const endField = channelSemantics.x2?.field;
         const colorField = channelSemantics.color?.field;
         if (!taskField || !startField || !endField || table.length === 0) return;
 
-        const temporal = channelSemantics.x?.type === 'temporal';
+        const temporal = isGanttTemporal(channelSemantics.x?.type, semanticTypes[startField]);
 
         // One row per task, sorted by start ascending so the timeline reads
         // chronologically. The y-axis is inverted below, so the earliest task,
         // first in this list, ends up at the top.
-        const rows = table
-            .map((r: any) => ({
+        const rows = sortGanttRows(table
+            .map((r: any, inputIndex: number) => ({
                 task: String(r[taskField] ?? ''),
-                start: toNumber(r[startField], temporal),
-                end: toNumber(r[endField], temporal),
+                start: coerceGanttEndpoint(r[startField], temporal),
+                end: coerceGanttEndpoint(r[endField], temporal),
                 group: colorField != null ? String(r[colorField] ?? '') : undefined,
+                inputIndex,
             }))
-            .filter((r) => r.task && Number.isFinite(r.start) && Number.isFinite(r.end))
-            .sort((a, b) => a.start - b.start);
+            .filter((r) => r.task && Number.isFinite(r.start) && Number.isFinite(r.end)));
+        const taskHeight = chartProperties?.taskHeight ?? 70;
+        const cornerRadius = chartProperties?.cornerRadius ?? 2;
+        const intervalLabels = chartProperties?.intervalLabels === true;
+        const labelReserve = ganttLabelReservePx(rows, temporal);
 
         const tasks = rows.map((r) => r.task);
 
@@ -98,7 +99,10 @@ export const ecGanttChartDef: ChartTemplateDef = {
                     return `${r.task}<br/>${startField}: ${s}<br/>${endField}: ${e}${grp}`;
                 },
             },
-            grid: { containLabel: true },
+            grid: {
+                containLabel: true,
+                ...(intervalLabels ? { right: labelReserve } : {}),
+            },
             xAxis: {
                 type: 'value',
                 scale: true,
@@ -125,15 +129,23 @@ export const ecGanttChartDef: ChartTemplateDef = {
                     itemStyle: { color: 'transparent' },
                     silent: true,
                     emphasis: { disabled: true },
-                    barWidth: '62%',
+                    barWidth: `${taskHeight}%`,
                 },
                 {
                     type: 'bar',
                     name: 'Task',
                     stack: 'gantt',
                     data: durationData,
-                    barWidth: '62%',
-                    itemStyle: { borderRadius: 2 },
+                    barWidth: `${taskHeight}%`,
+                    itemStyle: { borderRadius: cornerRadius },
+                    label: {
+                        show: intervalLabels,
+                        position: 'right',
+                        formatter: (p: any) => {
+                            const row = rows[p.dataIndex];
+                            return row ? formatGanttLabel(row.start, row.end, temporal) : '';
+                        },
+                    },
                 },
             ],
         };
@@ -149,7 +161,7 @@ export const ecGanttChartDef: ChartTemplateDef = {
                     name: g,
                     stack: 'gantt',
                     data: [],
-                    barWidth: '62%',
+                    barWidth: `${taskHeight}%`,
                     itemStyle: { color: groupColor.get(g) },
                 });
             }
@@ -160,4 +172,5 @@ export const ecGanttChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    properties: GANTT_PROPERTIES,
 };

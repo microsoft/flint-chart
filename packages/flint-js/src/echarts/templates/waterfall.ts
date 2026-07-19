@@ -6,7 +6,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { resolveTotalsMode } from '../../core/waterfall';
+import { resolveTotalsMode } from '../../chart-types/waterfall';
 import { extractCategories } from './utils';
 
 /** True if all category labels parse as numbers → horizontal; else vertical (align with line/bar). */
@@ -38,7 +38,7 @@ export const ecWaterfallChartDef: ChartTemplateDef = {
 
         const hasTypeCol = !!colorField;
         // Which bars (if any) touch down to zero as full "total" bars. The default
-        // is data-aware (see core/waterfall.ts): first is a start total, last is a
+        // is data-aware (see chart-types/waterfall.ts): first is a start total, last is a
         // total only when it reconciles with the prior cumulative. The user's
         // `totals` property overrides this; an explicit Type column is
         // authoritative. Mirror vegalite/templates/waterfall.ts.

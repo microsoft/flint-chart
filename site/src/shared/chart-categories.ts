@@ -292,3 +292,19 @@ export function getAllChartEntries(): Array<{ category: ChartCategory; chart: Ch
     category.charts.map((chart) => ({ category, chart })),
   );
 }
+
+/** chart-type display name (a template's `generator`) → its icon asset URL. */
+const CHART_ICON_BY_GENERATOR: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const category of CHART_CATEGORIES) {
+    for (const chart of category.charts) {
+      if (!(chart.generator in map)) map[chart.generator] = chart.icon;
+    }
+  }
+  return map;
+})();
+
+/** Look up a chart type's icon by its display name (e.g. 'Grouped Bar Chart'). */
+export function chartIconFor(generator: string): string | undefined {
+  return CHART_ICON_BY_GENERATOR[generator];
+}

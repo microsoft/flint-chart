@@ -4,6 +4,7 @@
 import { ChartTemplateDef, ChartPropertyDef, ChannelSemantics } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
 import type { FormatSpec } from '../../core/field-semantics';
+import { formatSpecToVegaExpr } from '../format';
 
 /**
  * Bar Table — a ranked horizontal "data bar table".
@@ -617,20 +618,13 @@ export const barTableDef: ChartTemplateDef = {
             if (!fmt || (!fmt.pattern && !fmt.prefix && !fmt.suffix)) {
                 return { field: sourceField, type: 'quantitative' };
             }
-            const hasAffix = !!(fmt.prefix || fmt.suffix);
-            if (!hasAffix) {
+            if (!fmt.abbreviate && fmt.pattern && !fmt.prefix && !fmt.suffix) {
                 return { field: sourceField, type: 'quantitative', format: fmt.pattern };
             }
-            // Escape backslashes first (so we don't double-escape the ones
-            // we add next), then escape single quotes for safe embedding in
-            // the Vega expression string literal.
-            const escPfx = (fmt.prefix ?? '').replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-            const escSfx = (fmt.suffix ?? '').replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-            const formatExpr = fmt.pattern
-                ? `format(datum['${sourceField}'], '${fmt.pattern}')`
-                : `datum['${sourceField}']`;
+            const formatExpr = formatSpecToVegaExpr(fmt, `datum[${JSON.stringify(sourceField)}]`);
+            if (!formatExpr) return { field: sourceField, type: 'quantitative' };
             transformsOut.push({
-                calculate: `'${escPfx}' + ${formatExpr} + '${escSfx}'`,
+                calculate: formatExpr,
                 as: outFieldHint,
             });
             return { field: outFieldHint, type: 'nominal' };
@@ -799,7 +793,7 @@ export const barTableDef: ChartTemplateDef = {
         // meaningful (additive, single-sign, non-zero total). Its `check`
         // reports applicability per render from the measure's data.
         {
-            key: 'showPercent', label: 'Show % of Total', type: 'binary', defaultValue: false,
+            key: 'showPercent', label: '% of total', type: 'binary', defaultValue: false,
             check: (ctx) => {
                 // A "% of total" share only reads sensibly for an additive,
                 // single-sign measure with a non-zero total — a share of a

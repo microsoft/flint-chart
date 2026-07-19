@@ -11,7 +11,7 @@
  */
 
 // VL assembly function
-export { assembleVegaLite, getChartOptions, getChartPivot } from './assemble';
+export { assembleVegaLite, getChartOptions, getChartPivot, getChartTransform } from './assemble';
 
 // VL spec instantiation (Phase 2)
 export { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
@@ -25,4 +25,4 @@ export {
 } from './templates';
 
 // VL recommendation & adaptation
-export { vlAdaptChart, vlRecommendEncodings } from './recommendation';
+export { vlAdaptChart, vlRecommendEncodings, vlRecommendChartTypes, vlRecommendCharts } from './recommendation';

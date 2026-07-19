@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Parallel coordinates: vertical axes crossed by multi-segment lines -->
+  <!-- Axes -->
+  <line x1="52"  y1="40" x2="52"  y2="216" stroke="#363636" stroke-width="3" stroke-linecap="round"/>
+  <line x1="118" y1="40" x2="118" y2="216" stroke="#363636" stroke-width="3" stroke-linecap="round"/>
+  <line x1="184" y1="40" x2="184" y2="216" stroke="#363636" stroke-width="3" stroke-linecap="round"/>
+  <line x1="226" y1="40" x2="226" y2="216" stroke="#363636" stroke-width="3" stroke-linecap="round"/>
+  <!-- Series lines -->
+  <polyline points="52,80 118,150 184,72 226,120" fill="none" stroke="#76c6ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="52,150 118,90 184,160 226,76" fill="none" stroke="#B8B8B8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="52,112 118,180 184,116 226,170" fill="none" stroke="#3aa6ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

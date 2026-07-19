@@ -1,0 +1,5730 @@
+{
+  "source": "U.S. Bureau of Labor Statistics average price data",
+  "sourceUrl": "https://gist.githubusercontent.com/Chenglong-MS/75827bc7daac7ba407863f499c494b37/raw/95af6fd0cc978932af9f6cacc7cd3c0c01d4dffa/average-price-data.csv",
+  "values": [
+    {
+      "month": "2015-08-01",
+      "item": "Bananas",
+      "price": 0.58,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Bananas",
+      "price": 0.58,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Bananas",
+      "price": 0.577,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Bananas",
+      "price": 0.575,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Bananas",
+      "price": 0.58,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Bananas",
+      "price": 0.581,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Bananas",
+      "price": 0.586,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Bananas",
+      "price": 0.57,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Bananas",
+      "price": 0.569,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Bananas",
+      "price": 0.567,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Bananas",
+      "price": 0.562,
+      "annualChange": -3.1
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Bananas",
+      "price": 0.575,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Bananas",
+      "price": 0.57,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Bananas",
+      "price": 0.576,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": -1.4
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": 0.0
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Bananas",
+      "price": 0.571,
+      "annualChange": -2.6
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Bananas",
+      "price": 0.571,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Bananas",
+      "price": 0.564,
+      "annualChange": -1.1
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Bananas",
+      "price": 0.572,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Bananas",
+      "price": 0.565,
+      "annualChange": -0.4
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Bananas",
+      "price": 0.561,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Bananas",
+      "price": 0.544,
+      "annualChange": -5.4
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Bananas",
+      "price": 0.548,
+      "annualChange": -3.9
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Bananas",
+      "price": 0.551,
+      "annualChange": -3.8
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Bananas",
+      "price": 0.558,
+      "annualChange": -3.1
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Bananas",
+      "price": 0.568,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Bananas",
+      "price": 0.582,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Bananas",
+      "price": 0.578,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Bananas",
+      "price": 0.575,
+      "annualChange": 2.0
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Bananas",
+      "price": 0.575,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Bananas",
+      "price": 0.575,
+      "annualChange": 1.8
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Bananas",
+      "price": 0.569,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": 5.3
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Bananas",
+      "price": 0.566,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Bananas",
+      "price": 0.577,
+      "annualChange": 3.4
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Bananas",
+      "price": 0.576,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Bananas",
+      "price": 0.571,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Bananas",
+      "price": 0.581,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Bananas",
+      "price": 0.567,
+      "annualChange": -1.9
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Bananas",
+      "price": 0.579,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Bananas",
+      "price": 0.569,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Bananas",
+      "price": 0.578,
+      "annualChange": 1.6
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Bananas",
+      "price": 0.569,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Bananas",
+      "price": 0.573,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Bananas",
+      "price": 0.57,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Bananas",
+      "price": 0.576,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2020-04-01",
+      "item": "Bananas",
+      "price": 0.581,
+      "annualChange": 2.5
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Bananas",
+      "price": 0.589,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Bananas",
+      "price": 0.588,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Bananas",
+      "price": 0.58,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Bananas",
+      "price": 0.576,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Bananas",
+      "price": 0.574,
+      "annualChange": 0.9
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Bananas",
+      "price": 0.577,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Bananas",
+      "price": 0.578,
+      "annualChange": 0.9
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Bananas",
+      "price": 0.572,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Bananas",
+      "price": 0.597,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Bananas",
+      "price": 0.59,
+      "annualChange": 2.8
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Bananas",
+      "price": 0.594,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Bananas",
+      "price": 0.604,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Bananas",
+      "price": 0.6,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Bananas",
+      "price": 0.595,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Bananas",
+      "price": 0.594,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Bananas",
+      "price": 0.589,
+      "annualChange": 2.3
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Bananas",
+      "price": 0.597,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Bananas",
+      "price": 0.6,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Bananas",
+      "price": 0.619,
+      "annualChange": 7.1
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Bananas",
+      "price": 0.622,
+      "annualChange": 8.7
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Bananas",
+      "price": 0.63,
+      "annualChange": 5.5
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Bananas",
+      "price": 0.628,
+      "annualChange": 6.4
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Bananas",
+      "price": 0.642,
+      "annualChange": 8.1
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Bananas",
+      "price": 0.637,
+      "annualChange": 5.5
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Bananas",
+      "price": 0.642,
+      "annualChange": 7.0
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Bananas",
+      "price": 0.64,
+      "annualChange": 7.6
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Bananas",
+      "price": 0.64,
+      "annualChange": 7.7
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Bananas",
+      "price": 0.643,
+      "annualChange": 9.2
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Bananas",
+      "price": 0.643,
+      "annualChange": 7.7
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Bananas",
+      "price": 0.634,
+      "annualChange": 5.7
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Bananas",
+      "price": 0.631,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Bananas",
+      "price": 0.628,
+      "annualChange": 1.0
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Bananas",
+      "price": 0.639,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Bananas",
+      "price": 0.641,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Bananas",
+      "price": 0.632,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Bananas",
+      "price": 0.635,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Bananas",
+      "price": 0.628,
+      "annualChange": -2.2
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": -2.3
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Bananas",
+      "price": 0.631,
+      "annualChange": -1.4
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Bananas",
+      "price": 0.631,
+      "annualChange": -1.9
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": -2.8
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Bananas",
+      "price": 0.626,
+      "annualChange": -1.3
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Bananas",
+      "price": 0.627,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Bananas",
+      "price": 0.617,
+      "annualChange": -3.4
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": -2.5
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Bananas",
+      "price": 0.629,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Bananas",
+      "price": 0.626,
+      "annualChange": -1.4
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Bananas",
+      "price": 0.622,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": 0.0
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Bananas",
+      "price": 0.613,
+      "annualChange": -2.9
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Bananas",
+      "price": 0.612,
+      "annualChange": -3.0
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Bananas",
+      "price": 0.617,
+      "annualChange": -1.3
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Bananas",
+      "price": 0.619,
+      "annualChange": -1.1
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Bananas",
+      "price": 0.622,
+      "annualChange": -0.8
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Bananas",
+      "price": 0.615,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Bananas",
+      "price": 0.621,
+      "annualChange": 0.6
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Bananas",
+      "price": 0.619,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Bananas",
+      "price": 0.625,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Bananas",
+      "price": 0.635,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Bananas",
+      "price": 0.655,
+      "annualChange": 5.3
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Bananas",
+      "price": 0.654,
+      "annualChange": 4.6
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Bananas",
+      "price": 0.657,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Bananas",
+      "price": 0.666,
+      "annualChange": 8.8
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Navel oranges",
+      "price": 1.493,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Navel oranges",
+      "price": 1.48,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Navel oranges",
+      "price": 1.514,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Navel oranges",
+      "price": 1.329,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Navel oranges",
+      "price": 1.229,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Navel oranges",
+      "price": 1.196,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Navel oranges",
+      "price": 1.194,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Navel oranges",
+      "price": 1.188,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Navel oranges",
+      "price": 1.176,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Navel oranges",
+      "price": 1.148,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Navel oranges",
+      "price": 1.186,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Navel oranges",
+      "price": 1.268,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Navel oranges",
+      "price": 1.365,
+      "annualChange": -8.6
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Navel oranges",
+      "price": 1.41,
+      "annualChange": -4.7
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Navel oranges",
+      "price": 1.412,
+      "annualChange": -6.7
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Navel oranges",
+      "price": 1.239,
+      "annualChange": -6.8
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Navel oranges",
+      "price": 1.169,
+      "annualChange": -4.9
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Navel oranges",
+      "price": 1.186,
+      "annualChange": -0.8
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Navel oranges",
+      "price": 1.191,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Navel oranges",
+      "price": 1.18,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Navel oranges",
+      "price": 1.174,
+      "annualChange": -0.2
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Navel oranges",
+      "price": 1.226,
+      "annualChange": 6.8
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Navel oranges",
+      "price": 1.346,
+      "annualChange": 13.5
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Navel oranges",
+      "price": 1.462,
+      "annualChange": 15.3
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Navel oranges",
+      "price": 1.453,
+      "annualChange": 6.4
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Navel oranges",
+      "price": 1.48,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Navel oranges",
+      "price": 1.59,
+      "annualChange": 12.6
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Navel oranges",
+      "price": 1.486,
+      "annualChange": 19.9
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Navel oranges",
+      "price": 1.315,
+      "annualChange": 12.5
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Navel oranges",
+      "price": 1.326,
+      "annualChange": 11.8
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Navel oranges",
+      "price": 1.339,
+      "annualChange": 12.4
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Navel oranges",
+      "price": 1.305,
+      "annualChange": 10.6
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Navel oranges",
+      "price": 1.291,
+      "annualChange": 10.0
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Navel oranges",
+      "price": 1.348,
+      "annualChange": 10.0
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Navel oranges",
+      "price": 1.409,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Navel oranges",
+      "price": 1.538,
+      "annualChange": 5.2
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Navel oranges",
+      "price": 1.559,
+      "annualChange": 7.3
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Navel oranges",
+      "price": 1.511,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Navel oranges",
+      "price": 1.502,
+      "annualChange": -5.5
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Navel oranges",
+      "price": 1.437,
+      "annualChange": -3.3
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Navel oranges",
+      "price": 1.389,
+      "annualChange": 5.6
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Navel oranges",
+      "price": 1.344,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Navel oranges",
+      "price": 1.298,
+      "annualChange": -3.1
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Navel oranges",
+      "price": 1.346,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Navel oranges",
+      "price": 1.28,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Navel oranges",
+      "price": 1.331,
+      "annualChange": -1.3
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Navel oranges",
+      "price": 1.296,
+      "annualChange": -8.0
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Navel oranges",
+      "price": 1.411,
+      "annualChange": -8.3
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Navel oranges",
+      "price": 1.442,
+      "annualChange": -7.5
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Navel oranges",
+      "price": 1.426,
+      "annualChange": -5.6
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Navel oranges",
+      "price": 1.47,
+      "annualChange": -2.1
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Navel oranges",
+      "price": 1.429,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Navel oranges",
+      "price": 1.327,
+      "annualChange": -4.5
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Navel oranges",
+      "price": 1.244,
+      "annualChange": -7.4
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Navel oranges",
+      "price": 1.218,
+      "annualChange": -6.2
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Navel oranges",
+      "price": 1.174,
+      "annualChange": -12.8
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Navel oranges",
+      "price": 1.209,
+      "annualChange": -9.2
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Navel oranges",
+      "price": 1.296,
+      "annualChange": 0.0
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Navel oranges",
+      "price": 1.329,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Navel oranges",
+      "price": 1.303,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Navel oranges",
+      "price": 1.321,
+      "annualChange": 8.5
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Navel oranges",
+      "price": 1.266,
+      "annualChange": 7.8
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Navel oranges",
+      "price": 1.32,
+      "annualChange": null
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Navel oranges",
+      "price": 1.317,
+      "annualChange": 8.9
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Navel oranges",
+      "price": 1.354,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Navel oranges",
+      "price": 1.49,
+      "annualChange": null
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Navel oranges",
+      "price": 1.44,
+      "annualChange": null
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Navel oranges",
+      "price": 1.448,
+      "annualChange": 9.0
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Navel oranges",
+      "price": 1.427,
+      "annualChange": 9.5
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Navel oranges",
+      "price": 1.445,
+      "annualChange": 9.4
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Navel oranges",
+      "price": 1.48,
+      "annualChange": 16.9
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Navel oranges",
+      "price": 1.505,
+      "annualChange": 14.0
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Navel oranges",
+      "price": 1.546,
+      "annualChange": 17.4
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Navel oranges",
+      "price": 1.6,
+      "annualChange": 18.2
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Navel oranges",
+      "price": 1.703,
+      "annualChange": null
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Navel oranges",
+      "price": 1.73,
+      "annualChange": null
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Navel oranges",
+      "price": 1.73,
+      "annualChange": 16.1
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Navel oranges",
+      "price": 1.641,
+      "annualChange": 14.0
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Navel oranges",
+      "price": 1.485,
+      "annualChange": 2.6
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Navel oranges",
+      "price": 1.514,
+      "annualChange": 6.1
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Navel oranges",
+      "price": 1.549,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Navel oranges",
+      "price": 1.509,
+      "annualChange": 2.0
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Navel oranges",
+      "price": 1.53,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Navel oranges",
+      "price": 1.512,
+      "annualChange": -2.2
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Navel oranges",
+      "price": 1.535,
+      "annualChange": -4.1
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Navel oranges",
+      "price": 1.591,
+      "annualChange": null
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Navel oranges",
+      "price": 1.623,
+      "annualChange": -4.7
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Navel oranges",
+      "price": 1.637,
+      "annualChange": -5.4
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Navel oranges",
+      "price": 1.693,
+      "annualChange": -2.1
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Navel oranges",
+      "price": 1.664,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Navel oranges",
+      "price": 1.601,
+      "annualChange": 7.8
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Navel oranges",
+      "price": 1.55,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Navel oranges",
+      "price": 1.532,
+      "annualChange": -1.1
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Navel oranges",
+      "price": 1.516,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Navel oranges",
+      "price": 1.475,
+      "annualChange": -3.6
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Navel oranges",
+      "price": 1.545,
+      "annualChange": 2.2
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Navel oranges",
+      "price": 1.582,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Navel oranges",
+      "price": 1.627,
+      "annualChange": 2.3
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Navel oranges",
+      "price": 1.728,
+      "annualChange": 6.5
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Navel oranges",
+      "price": 1.733,
+      "annualChange": 5.9
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Navel oranges",
+      "price": 1.805,
+      "annualChange": 6.6
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Navel oranges",
+      "price": 1.729,
+      "annualChange": 3.9
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Navel oranges",
+      "price": 1.564,
+      "annualChange": -2.3
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Navel oranges",
+      "price": 1.531,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Navel oranges",
+      "price": 1.536,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Navel oranges",
+      "price": 1.484,
+      "annualChange": -2.1
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Navel oranges",
+      "price": 1.485,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Navel oranges",
+      "price": 1.564,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Navel oranges",
+      "price": 1.633,
+      "annualChange": 3.2
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Navel oranges",
+      "price": 1.795,
+      "annualChange": 3.9
+    },
+    {
+      "month": "2015-08-01",
+      "item": "White bread",
+      "price": 1.42,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "White bread",
+      "price": 1.432,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "White bread",
+      "price": 1.418,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "White bread",
+      "price": 1.409,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "White bread",
+      "price": 1.428,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "White bread",
+      "price": 1.425,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "White bread",
+      "price": 1.407,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "White bread",
+      "price": 1.416,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "White bread",
+      "price": 1.406,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "White bread",
+      "price": 1.382,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "White bread",
+      "price": 1.333,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "White bread",
+      "price": 1.349,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "White bread",
+      "price": 1.341,
+      "annualChange": -5.6
+    },
+    {
+      "month": "2016-09-01",
+      "item": "White bread",
+      "price": 1.329,
+      "annualChange": -7.2
+    },
+    {
+      "month": "2016-10-01",
+      "item": "White bread",
+      "price": 1.343,
+      "annualChange": -5.3
+    },
+    {
+      "month": "2016-11-01",
+      "item": "White bread",
+      "price": 1.362,
+      "annualChange": -3.3
+    },
+    {
+      "month": "2016-12-01",
+      "item": "White bread",
+      "price": 1.362,
+      "annualChange": -4.6
+    },
+    {
+      "month": "2017-01-01",
+      "item": "White bread",
+      "price": 1.351,
+      "annualChange": -5.2
+    },
+    {
+      "month": "2017-02-01",
+      "item": "White bread",
+      "price": 1.358,
+      "annualChange": -3.5
+    },
+    {
+      "month": "2017-03-01",
+      "item": "White bread",
+      "price": 1.329,
+      "annualChange": -6.1
+    },
+    {
+      "month": "2017-04-01",
+      "item": "White bread",
+      "price": 1.328,
+      "annualChange": -5.5
+    },
+    {
+      "month": "2017-05-01",
+      "item": "White bread",
+      "price": 1.327,
+      "annualChange": -4.0
+    },
+    {
+      "month": "2017-06-01",
+      "item": "White bread",
+      "price": 1.335,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2017-07-01",
+      "item": "White bread",
+      "price": 1.327,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2017-08-01",
+      "item": "White bread",
+      "price": 1.348,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2017-09-01",
+      "item": "White bread",
+      "price": 1.349,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2017-10-01",
+      "item": "White bread",
+      "price": 1.328,
+      "annualChange": -1.1
+    },
+    {
+      "month": "2017-11-01",
+      "item": "White bread",
+      "price": 1.295,
+      "annualChange": -4.9
+    },
+    {
+      "month": "2017-12-01",
+      "item": "White bread",
+      "price": 1.316,
+      "annualChange": -3.4
+    },
+    {
+      "month": "2018-01-01",
+      "item": "White bread",
+      "price": 1.281,
+      "annualChange": -5.2
+    },
+    {
+      "month": "2018-02-01",
+      "item": "White bread",
+      "price": 1.265,
+      "annualChange": -6.8
+    },
+    {
+      "month": "2018-03-01",
+      "item": "White bread",
+      "price": 1.309,
+      "annualChange": -1.5
+    },
+    {
+      "month": "2018-04-01",
+      "item": "White bread",
+      "price": 1.281,
+      "annualChange": -3.5
+    },
+    {
+      "month": "2018-05-01",
+      "item": "White bread",
+      "price": 1.293,
+      "annualChange": -2.6
+    },
+    {
+      "month": "2018-06-01",
+      "item": "White bread",
+      "price": 1.279,
+      "annualChange": -4.2
+    },
+    {
+      "month": "2018-07-01",
+      "item": "White bread",
+      "price": 1.293,
+      "annualChange": -2.6
+    },
+    {
+      "month": "2018-08-01",
+      "item": "White bread",
+      "price": 1.302,
+      "annualChange": -3.4
+    },
+    {
+      "month": "2018-09-01",
+      "item": "White bread",
+      "price": 1.288,
+      "annualChange": -4.5
+    },
+    {
+      "month": "2018-10-01",
+      "item": "White bread",
+      "price": 1.277,
+      "annualChange": -3.8
+    },
+    {
+      "month": "2018-11-01",
+      "item": "White bread",
+      "price": 1.274,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2018-12-01",
+      "item": "White bread",
+      "price": 1.29,
+      "annualChange": -2.0
+    },
+    {
+      "month": "2019-01-01",
+      "item": "White bread",
+      "price": 1.274,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2019-02-01",
+      "item": "White bread",
+      "price": 1.282,
+      "annualChange": 1.3
+    },
+    {
+      "month": "2019-03-01",
+      "item": "White bread",
+      "price": 1.261,
+      "annualChange": -3.7
+    },
+    {
+      "month": "2019-04-01",
+      "item": "White bread",
+      "price": 1.285,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2019-05-01",
+      "item": "White bread",
+      "price": 1.289,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2019-06-01",
+      "item": "White bread",
+      "price": 1.28,
+      "annualChange": 0.1
+    },
+    {
+      "month": "2019-07-01",
+      "item": "White bread",
+      "price": 1.281,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2019-08-01",
+      "item": "White bread",
+      "price": 1.275,
+      "annualChange": -2.1
+    },
+    {
+      "month": "2019-09-01",
+      "item": "White bread",
+      "price": 1.296,
+      "annualChange": 0.6
+    },
+    {
+      "month": "2019-10-01",
+      "item": "White bread",
+      "price": 1.325,
+      "annualChange": 3.8
+    },
+    {
+      "month": "2019-11-01",
+      "item": "White bread",
+      "price": 1.361,
+      "annualChange": 6.8
+    },
+    {
+      "month": "2019-12-01",
+      "item": "White bread",
+      "price": 1.363,
+      "annualChange": 5.7
+    },
+    {
+      "month": "2020-01-01",
+      "item": "White bread",
+      "price": 1.351,
+      "annualChange": 6.0
+    },
+    {
+      "month": "2020-02-01",
+      "item": "White bread",
+      "price": 1.375,
+      "annualChange": 7.3
+    },
+    {
+      "month": "2020-03-01",
+      "item": "White bread",
+      "price": 1.374,
+      "annualChange": 9.0
+    },
+    {
+      "month": "2020-04-01",
+      "item": "White bread",
+      "price": 1.406,
+      "annualChange": 9.4
+    },
+    {
+      "month": "2020-05-01",
+      "item": "White bread",
+      "price": 1.412,
+      "annualChange": 9.5
+    },
+    {
+      "month": "2020-06-01",
+      "item": "White bread",
+      "price": 1.474,
+      "annualChange": 15.2
+    },
+    {
+      "month": "2020-07-01",
+      "item": "White bread",
+      "price": 1.485,
+      "annualChange": 15.9
+    },
+    {
+      "month": "2020-08-01",
+      "item": "White bread",
+      "price": 1.495,
+      "annualChange": 17.3
+    },
+    {
+      "month": "2020-09-01",
+      "item": "White bread",
+      "price": 1.492,
+      "annualChange": 15.1
+    },
+    {
+      "month": "2020-10-01",
+      "item": "White bread",
+      "price": 1.503,
+      "annualChange": 13.4
+    },
+    {
+      "month": "2020-11-01",
+      "item": "White bread",
+      "price": 1.515,
+      "annualChange": 11.3
+    },
+    {
+      "month": "2020-12-01",
+      "item": "White bread",
+      "price": 1.538,
+      "annualChange": 12.8
+    },
+    {
+      "month": "2021-01-01",
+      "item": "White bread",
+      "price": 1.546,
+      "annualChange": 14.4
+    },
+    {
+      "month": "2021-02-01",
+      "item": "White bread",
+      "price": 1.537,
+      "annualChange": 11.8
+    },
+    {
+      "month": "2021-03-01",
+      "item": "White bread",
+      "price": 1.526,
+      "annualChange": 11.1
+    },
+    {
+      "month": "2021-04-01",
+      "item": "White bread",
+      "price": 1.51,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2021-05-01",
+      "item": "White bread",
+      "price": 1.511,
+      "annualChange": 7.0
+    },
+    {
+      "month": "2021-06-01",
+      "item": "White bread",
+      "price": 1.51,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2021-07-01",
+      "item": "White bread",
+      "price": 1.491,
+      "annualChange": 0.4
+    },
+    {
+      "month": "2021-08-01",
+      "item": "White bread",
+      "price": 1.467,
+      "annualChange": -1.9
+    },
+    {
+      "month": "2021-09-01",
+      "item": "White bread",
+      "price": 1.58,
+      "annualChange": 5.9
+    },
+    {
+      "month": "2021-10-01",
+      "item": "White bread",
+      "price": 1.526,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2021-11-01",
+      "item": "White bread",
+      "price": 1.547,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2021-12-01",
+      "item": "White bread",
+      "price": 1.532,
+      "annualChange": -0.4
+    },
+    {
+      "month": "2022-01-01",
+      "item": "White bread",
+      "price": 1.555,
+      "annualChange": 0.6
+    },
+    {
+      "month": "2022-02-01",
+      "item": "White bread",
+      "price": 1.578,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2022-03-01",
+      "item": "White bread",
+      "price": 1.607,
+      "annualChange": 5.3
+    },
+    {
+      "month": "2022-04-01",
+      "item": "White bread",
+      "price": 1.612,
+      "annualChange": 6.8
+    },
+    {
+      "month": "2022-05-01",
+      "item": "White bread",
+      "price": 1.606,
+      "annualChange": 6.3
+    },
+    {
+      "month": "2022-06-01",
+      "item": "White bread",
+      "price": 1.691,
+      "annualChange": 12.0
+    },
+    {
+      "month": "2022-07-01",
+      "item": "White bread",
+      "price": 1.715,
+      "annualChange": 15.0
+    },
+    {
+      "month": "2022-08-01",
+      "item": "White bread",
+      "price": 1.756,
+      "annualChange": 19.7
+    },
+    {
+      "month": "2022-09-01",
+      "item": "White bread",
+      "price": 1.749,
+      "annualChange": 10.7
+    },
+    {
+      "month": "2022-10-01",
+      "item": "White bread",
+      "price": 1.814,
+      "annualChange": 18.9
+    },
+    {
+      "month": "2022-11-01",
+      "item": "White bread",
+      "price": 1.847,
+      "annualChange": 19.4
+    },
+    {
+      "month": "2022-12-01",
+      "item": "White bread",
+      "price": 1.873,
+      "annualChange": 22.3
+    },
+    {
+      "month": "2023-01-01",
+      "item": "White bread",
+      "price": 1.888,
+      "annualChange": 21.4
+    },
+    {
+      "month": "2023-02-01",
+      "item": "White bread",
+      "price": 1.896,
+      "annualChange": 20.2
+    },
+    {
+      "month": "2023-03-01",
+      "item": "White bread",
+      "price": 1.936,
+      "annualChange": 20.5
+    },
+    {
+      "month": "2023-04-01",
+      "item": "White bread",
+      "price": 1.989,
+      "annualChange": 23.4
+    },
+    {
+      "month": "2023-05-01",
+      "item": "White bread",
+      "price": 1.951,
+      "annualChange": 21.5
+    },
+    {
+      "month": "2023-06-01",
+      "item": "White bread",
+      "price": 1.937,
+      "annualChange": 14.5
+    },
+    {
+      "month": "2023-07-01",
+      "item": "White bread",
+      "price": 1.98,
+      "annualChange": 15.5
+    },
+    {
+      "month": "2023-08-01",
+      "item": "White bread",
+      "price": 1.97,
+      "annualChange": 12.2
+    },
+    {
+      "month": "2023-09-01",
+      "item": "White bread",
+      "price": 1.972,
+      "annualChange": 12.8
+    },
+    {
+      "month": "2023-10-01",
+      "item": "White bread",
+      "price": 2.002,
+      "annualChange": 10.4
+    },
+    {
+      "month": "2023-11-01",
+      "item": "White bread",
+      "price": 1.976,
+      "annualChange": 7.0
+    },
+    {
+      "month": "2023-12-01",
+      "item": "White bread",
+      "price": 2.024,
+      "annualChange": 8.1
+    },
+    {
+      "month": "2024-01-01",
+      "item": "White bread",
+      "price": 2.033,
+      "annualChange": 7.7
+    },
+    {
+      "month": "2024-02-01",
+      "item": "White bread",
+      "price": 2.006,
+      "annualChange": 5.8
+    },
+    {
+      "month": "2024-03-01",
+      "item": "White bread",
+      "price": 1.997,
+      "annualChange": 3.2
+    },
+    {
+      "month": "2024-04-01",
+      "item": "White bread",
+      "price": 1.998,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2024-05-01",
+      "item": "White bread",
+      "price": 1.971,
+      "annualChange": 1.0
+    },
+    {
+      "month": "2024-06-01",
+      "item": "White bread",
+      "price": 1.973,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2024-07-01",
+      "item": "White bread",
+      "price": 1.975,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2024-08-01",
+      "item": "White bread",
+      "price": 1.951,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2024-09-01",
+      "item": "White bread",
+      "price": 1.976,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2024-10-01",
+      "item": "White bread",
+      "price": 1.937,
+      "annualChange": -3.2
+    },
+    {
+      "month": "2024-11-01",
+      "item": "White bread",
+      "price": 1.916,
+      "annualChange": -3.0
+    },
+    {
+      "month": "2024-12-01",
+      "item": "White bread",
+      "price": 1.912,
+      "annualChange": -5.5
+    },
+    {
+      "month": "2025-01-01",
+      "item": "White bread",
+      "price": 1.925,
+      "annualChange": -5.3
+    },
+    {
+      "month": "2025-02-01",
+      "item": "White bread",
+      "price": 1.925,
+      "annualChange": -4.0
+    },
+    {
+      "month": "2025-03-01",
+      "item": "White bread",
+      "price": 1.88,
+      "annualChange": -5.9
+    },
+    {
+      "month": "2025-04-01",
+      "item": "White bread",
+      "price": 1.913,
+      "annualChange": -4.3
+    },
+    {
+      "month": "2025-05-01",
+      "item": "White bread",
+      "price": 1.876,
+      "annualChange": -4.8
+    },
+    {
+      "month": "2025-06-01",
+      "item": "White bread",
+      "price": 1.864,
+      "annualChange": -5.5
+    },
+    {
+      "month": "2025-07-01",
+      "item": "White bread",
+      "price": 1.851,
+      "annualChange": -6.3
+    },
+    {
+      "month": "2025-08-01",
+      "item": "White bread",
+      "price": 1.841,
+      "annualChange": -5.6
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Tomatoes",
+      "price": 1.737,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Tomatoes",
+      "price": 1.775,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Tomatoes",
+      "price": 1.844,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Tomatoes",
+      "price": 1.977,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Tomatoes",
+      "price": 1.932,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Tomatoes",
+      "price": 2.528,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Tomatoes",
+      "price": 2.316,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Tomatoes",
+      "price": 1.941,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Tomatoes",
+      "price": 1.862,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Tomatoes",
+      "price": 1.695,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Tomatoes",
+      "price": 1.709,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Tomatoes",
+      "price": 1.635,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Tomatoes",
+      "price": 1.685,
+      "annualChange": -3.0
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Tomatoes",
+      "price": 1.786,
+      "annualChange": 0.6
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Tomatoes",
+      "price": 1.994,
+      "annualChange": 8.1
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Tomatoes",
+      "price": 1.984,
+      "annualChange": 0.4
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Tomatoes",
+      "price": 1.972,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Tomatoes",
+      "price": 2.048,
+      "annualChange": -19.0
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Tomatoes",
+      "price": 1.93,
+      "annualChange": -16.7
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Tomatoes",
+      "price": 1.943,
+      "annualChange": 0.1
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Tomatoes",
+      "price": 1.902,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Tomatoes",
+      "price": 1.867,
+      "annualChange": 10.1
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Tomatoes",
+      "price": 1.873,
+      "annualChange": 9.6
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Tomatoes",
+      "price": 1.952,
+      "annualChange": 19.4
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Tomatoes",
+      "price": 1.846,
+      "annualChange": 9.6
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Tomatoes",
+      "price": 1.828,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Tomatoes",
+      "price": 1.813,
+      "annualChange": -9.1
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Tomatoes",
+      "price": 1.933,
+      "annualChange": -2.6
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Tomatoes",
+      "price": 2.237,
+      "annualChange": 13.4
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Tomatoes",
+      "price": 2.336,
+      "annualChange": 14.1
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Tomatoes",
+      "price": 2.026,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Tomatoes",
+      "price": 1.868,
+      "annualChange": -3.9
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Tomatoes",
+      "price": 1.802,
+      "annualChange": -5.3
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Tomatoes",
+      "price": 1.675,
+      "annualChange": -10.3
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Tomatoes",
+      "price": 1.706,
+      "annualChange": -8.9
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Tomatoes",
+      "price": 1.887,
+      "annualChange": -3.3
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Tomatoes",
+      "price": 1.737,
+      "annualChange": -5.9
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Tomatoes",
+      "price": 1.826,
+      "annualChange": -0.1
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Tomatoes",
+      "price": 1.901,
+      "annualChange": 4.9
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Tomatoes",
+      "price": 2.057,
+      "annualChange": 6.4
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Tomatoes",
+      "price": 2.175,
+      "annualChange": -2.8
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Tomatoes",
+      "price": 2.227,
+      "annualChange": -4.7
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Tomatoes",
+      "price": 2.068,
+      "annualChange": 2.1
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Tomatoes",
+      "price": 2.079,
+      "annualChange": 11.3
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Tomatoes",
+      "price": 1.947,
+      "annualChange": 8.0
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Tomatoes",
+      "price": 1.823,
+      "annualChange": 8.8
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Tomatoes",
+      "price": 1.812,
+      "annualChange": 6.2
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Tomatoes",
+      "price": 1.799,
+      "annualChange": -4.7
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Tomatoes",
+      "price": 1.864,
+      "annualChange": 7.3
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Tomatoes",
+      "price": 1.911,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Tomatoes",
+      "price": 1.779,
+      "annualChange": -6.4
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Tomatoes",
+      "price": 1.903,
+      "annualChange": -7.5
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Tomatoes",
+      "price": 1.954,
+      "annualChange": -10.2
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Tomatoes",
+      "price": 2.221,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Tomatoes",
+      "price": 2.197,
+      "annualChange": 6.2
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Tomatoes",
+      "price": 1.851,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Tomatoes",
+      "price": 1.922,
+      "annualChange": 6.1
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Tomatoes",
+      "price": 1.977,
+      "annualChange": 9.9
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Tomatoes",
+      "price": 1.874,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Tomatoes",
+      "price": 1.847,
+      "annualChange": -3.3
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Tomatoes",
+      "price": 1.911,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Tomatoes",
+      "price": 1.935,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Tomatoes",
+      "price": 1.893,
+      "annualChange": -3.1
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Tomatoes",
+      "price": 1.928,
+      "annualChange": -13.2
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Tomatoes",
+      "price": 1.838,
+      "annualChange": -16.3
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Tomatoes",
+      "price": 1.768,
+      "annualChange": null
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Tomatoes",
+      "price": 1.786,
+      "annualChange": null
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Tomatoes",
+      "price": 1.804,
+      "annualChange": -2.5
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Tomatoes",
+      "price": 1.83,
+      "annualChange": -4.8
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Tomatoes",
+      "price": 1.827,
+      "annualChange": -7.6
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Tomatoes",
+      "price": 1.858,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Tomatoes",
+      "price": 1.828,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Tomatoes",
+      "price": 1.892,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Tomatoes",
+      "price": 1.924,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Tomatoes",
+      "price": 1.906,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Tomatoes",
+      "price": 1.892,
+      "annualChange": -1.9
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Tomatoes",
+      "price": 1.826,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Tomatoes",
+      "price": 1.827,
+      "annualChange": 3.3
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Tomatoes",
+      "price": 1.794,
+      "annualChange": 0.4
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Tomatoes",
+      "price": 1.819,
+      "annualChange": 0.8
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Tomatoes",
+      "price": 1.842,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Tomatoes",
+      "price": 1.842,
+      "annualChange": 0.8
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Tomatoes",
+      "price": 1.89,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Tomatoes",
+      "price": 1.901,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Tomatoes",
+      "price": 1.974,
+      "annualChange": 4.3
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Tomatoes",
+      "price": 2.107,
+      "annualChange": 9.5
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Tomatoes",
+      "price": 2.228,
+      "annualChange": 16.9
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Tomatoes",
+      "price": 2.11,
+      "annualChange": 11.5
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Tomatoes",
+      "price": 1.99,
+      "annualChange": 9.0
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Tomatoes",
+      "price": 1.932,
+      "annualChange": 5.7
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Tomatoes",
+      "price": 1.874,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Tomatoes",
+      "price": 1.798,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Tomatoes",
+      "price": 1.911,
+      "annualChange": 3.7
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Tomatoes",
+      "price": 1.896,
+      "annualChange": 2.9
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Tomatoes",
+      "price": 1.877,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Tomatoes",
+      "price": 1.844,
+      "annualChange": -3.0
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Tomatoes",
+      "price": 1.865,
+      "annualChange": -5.5
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Tomatoes",
+      "price": 1.942,
+      "annualChange": -7.8
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Tomatoes",
+      "price": 1.995,
+      "annualChange": -10.5
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Tomatoes",
+      "price": 2.146,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Tomatoes",
+      "price": 2.132,
+      "annualChange": 7.1
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Tomatoes",
+      "price": 2.044,
+      "annualChange": 5.8
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Tomatoes",
+      "price": 1.962,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Tomatoes",
+      "price": 1.859,
+      "annualChange": 3.4
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Tomatoes",
+      "price": 1.843,
+      "annualChange": -3.6
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Tomatoes",
+      "price": 1.945,
+      "annualChange": 2.6
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Tomatoes",
+      "price": 1.996,
+      "annualChange": 6.3
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Tomatoes",
+      "price": 1.936,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Tomatoes",
+      "price": 1.98,
+      "annualChange": 6.2
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Tomatoes",
+      "price": 2.03,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Tomatoes",
+      "price": 2.067,
+      "annualChange": 3.6
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Tomatoes",
+      "price": 2.05,
+      "annualChange": -4.5
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Tomatoes",
+      "price": 1.848,
+      "annualChange": -13.3
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Tomatoes",
+      "price": 1.819,
+      "annualChange": -11.0
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Tomatoes",
+      "price": 1.793,
+      "annualChange": -8.6
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Tomatoes",
+      "price": 1.705,
+      "annualChange": -8.3
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Tomatoes",
+      "price": 1.737,
+      "annualChange": -5.8
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Tomatoes",
+      "price": 1.793,
+      "annualChange": -7.8
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Tomatoes",
+      "price": 1.925,
+      "annualChange": -3.6
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Whole chicken",
+      "price": 1.428,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Whole chicken",
+      "price": 1.415,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Whole chicken",
+      "price": 1.43,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Whole chicken",
+      "price": 1.484,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Whole chicken",
+      "price": 1.437,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Whole chicken",
+      "price": 1.429,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Whole chicken",
+      "price": 1.478,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Whole chicken",
+      "price": 1.463,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Whole chicken",
+      "price": 1.496,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Whole chicken",
+      "price": 1.489,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Whole chicken",
+      "price": 1.408,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Whole chicken",
+      "price": 1.445,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Whole chicken",
+      "price": 1.426,
+      "annualChange": -0.1
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Whole chicken",
+      "price": 1.487,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Whole chicken",
+      "price": 1.502,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Whole chicken",
+      "price": 1.478,
+      "annualChange": -0.4
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Whole chicken",
+      "price": 1.463,
+      "annualChange": 1.8
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Whole chicken",
+      "price": 1.418,
+      "annualChange": -0.8
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Whole chicken",
+      "price": 1.473,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Whole chicken",
+      "price": 1.462,
+      "annualChange": -0.1
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Whole chicken",
+      "price": 1.444,
+      "annualChange": -3.5
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Whole chicken",
+      "price": 1.499,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Whole chicken",
+      "price": 1.497,
+      "annualChange": 6.3
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Whole chicken",
+      "price": 1.496,
+      "annualChange": 3.5
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Whole chicken",
+      "price": 1.489,
+      "annualChange": 4.4
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Whole chicken",
+      "price": 1.48,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Whole chicken",
+      "price": 1.484,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Whole chicken",
+      "price": 1.451,
+      "annualChange": -1.8
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Whole chicken",
+      "price": 1.47,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Whole chicken",
+      "price": 1.509,
+      "annualChange": 6.4
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Whole chicken",
+      "price": 1.478,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Whole chicken",
+      "price": 1.502,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Whole chicken",
+      "price": 1.511,
+      "annualChange": 4.6
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Whole chicken",
+      "price": 1.523,
+      "annualChange": 1.6
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Whole chicken",
+      "price": 1.514,
+      "annualChange": 1.1
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Whole chicken",
+      "price": 1.519,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Whole chicken",
+      "price": 1.511,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Whole chicken",
+      "price": 1.487,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Whole chicken",
+      "price": 1.444,
+      "annualChange": -2.7
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Whole chicken",
+      "price": 1.501,
+      "annualChange": 3.4
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Whole chicken",
+      "price": 1.466,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Whole chicken",
+      "price": 1.473,
+      "annualChange": -2.4
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Whole chicken",
+      "price": 1.486,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Whole chicken",
+      "price": 1.468,
+      "annualChange": -2.3
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Whole chicken",
+      "price": 1.463,
+      "annualChange": -3.2
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Whole chicken",
+      "price": 1.479,
+      "annualChange": -2.9
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Whole chicken",
+      "price": 1.59,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Whole chicken",
+      "price": 1.562,
+      "annualChange": 2.8
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Whole chicken",
+      "price": 1.514,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Whole chicken",
+      "price": 1.487,
+      "annualChange": 0.0
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Whole chicken",
+      "price": 1.538,
+      "annualChange": 6.5
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Whole chicken",
+      "price": 1.43,
+      "annualChange": -4.7
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Whole chicken",
+      "price": 1.45,
+      "annualChange": -1.1
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Whole chicken",
+      "price": 1.409,
+      "annualChange": -4.3
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Whole chicken",
+      "price": 1.362,
+      "annualChange": -8.3
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Whole chicken",
+      "price": 1.4,
+      "annualChange": -4.6
+    },
+    {
+      "month": "2020-04-01",
+      "item": "Whole chicken",
+      "price": 1.571,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Whole chicken",
+      "price": 1.747,
+      "annualChange": 9.9
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Whole chicken",
+      "price": 1.712,
+      "annualChange": 9.6
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Whole chicken",
+      "price": 1.609,
+      "annualChange": 6.3
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Whole chicken",
+      "price": 1.542,
+      "annualChange": 3.7
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Whole chicken",
+      "price": 1.58,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Whole chicken",
+      "price": 1.639,
+      "annualChange": 14.6
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Whole chicken",
+      "price": 1.621,
+      "annualChange": 11.8
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Whole chicken",
+      "price": 1.595,
+      "annualChange": 13.2
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Whole chicken",
+      "price": 1.583,
+      "annualChange": 16.2
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Whole chicken",
+      "price": 1.543,
+      "annualChange": 10.2
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Whole chicken",
+      "price": 1.515,
+      "annualChange": -3.6
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Whole chicken",
+      "price": 1.486,
+      "annualChange": null
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Whole chicken",
+      "price": 1.474,
+      "annualChange": -15.6
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Whole chicken",
+      "price": 1.435,
+      "annualChange": -16.2
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Whole chicken",
+      "price": 1.472,
+      "annualChange": -8.5
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Whole chicken",
+      "price": 1.504,
+      "annualChange": -2.5
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Whole chicken",
+      "price": 1.523,
+      "annualChange": -3.6
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Whole chicken",
+      "price": 1.583,
+      "annualChange": -3.4
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Whole chicken",
+      "price": 1.606,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Whole chicken",
+      "price": 1.622,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Whole chicken",
+      "price": 1.632,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Whole chicken",
+      "price": 1.724,
+      "annualChange": 11.7
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Whole chicken",
+      "price": 1.794,
+      "annualChange": 18.4
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Whole chicken",
+      "price": 1.824,
+      "annualChange": 22.7
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Whole chicken",
+      "price": 1.826,
+      "annualChange": 23.9
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Whole chicken",
+      "price": 1.88,
+      "annualChange": 31.0
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Whole chicken",
+      "price": 1.879,
+      "annualChange": 27.6
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Whole chicken",
+      "price": 1.891,
+      "annualChange": 25.7
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Whole chicken",
+      "price": 1.863,
+      "annualChange": 22.3
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Whole chicken",
+      "price": 1.843,
+      "annualChange": 16.4
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Whole chicken",
+      "price": 1.83,
+      "annualChange": 13.9
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Whole chicken",
+      "price": 1.855,
+      "annualChange": 14.4
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Whole chicken",
+      "price": 1.894,
+      "annualChange": 16.1
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Whole chicken",
+      "price": 1.868,
+      "annualChange": 8.4
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Whole chicken",
+      "price": 1.873,
+      "annualChange": 4.4
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Whole chicken",
+      "price": 1.92,
+      "annualChange": 5.3
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Whole chicken",
+      "price": 1.953,
+      "annualChange": 7.0
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Whole chicken",
+      "price": 1.891,
+      "annualChange": 0.6
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Whole chicken",
+      "price": 1.958,
+      "annualChange": 4.2
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Whole chicken",
+      "price": 1.901,
+      "annualChange": 0.5
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Whole chicken",
+      "price": 1.926,
+      "annualChange": 3.4
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Whole chicken",
+      "price": 1.976,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Whole chicken",
+      "price": 1.955,
+      "annualChange": 6.8
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Whole chicken",
+      "price": 1.987,
+      "annualChange": 7.1
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Whole chicken",
+      "price": 1.951,
+      "annualChange": 3.0
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Whole chicken",
+      "price": 1.991,
+      "annualChange": 6.6
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Whole chicken",
+      "price": 1.953,
+      "annualChange": 4.3
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Whole chicken",
+      "price": 2.013,
+      "annualChange": 4.8
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Whole chicken",
+      "price": 2.007,
+      "annualChange": 2.8
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Whole chicken",
+      "price": 1.988,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Whole chicken",
+      "price": 1.988,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Whole chicken",
+      "price": 1.979,
+      "annualChange": 4.1
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Whole chicken",
+      "price": 1.987,
+      "annualChange": 3.2
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Whole chicken",
+      "price": 2.076,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Whole chicken",
+      "price": 2.061,
+      "annualChange": 5.4
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Whole chicken",
+      "price": 2.061,
+      "annualChange": 3.7
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Whole chicken",
+      "price": 2.051,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Whole chicken",
+      "price": 2.064,
+      "annualChange": 3.7
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Whole chicken",
+      "price": 2.059,
+      "annualChange": 5.4
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Whole chicken",
+      "price": 2.061,
+      "annualChange": 2.4
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Whole chicken",
+      "price": 2.086,
+      "annualChange": 3.9
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Whole chicken",
+      "price": 2.078,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Whole chicken",
+      "price": 2.076,
+      "annualChange": 4.4
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Eggs",
+      "price": 2.943,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Eggs",
+      "price": 2.966,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Eggs",
+      "price": 2.808,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Eggs",
+      "price": 2.664,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Eggs",
+      "price": 2.751,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Eggs",
+      "price": 2.328,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Eggs",
+      "price": 2.267,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Eggs",
+      "price": 2.081,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Eggs",
+      "price": 1.793,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Eggs",
+      "price": 1.684,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Eggs",
+      "price": 1.491,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Eggs",
+      "price": 1.546,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Eggs",
+      "price": 1.455,
+      "annualChange": -50.6
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Eggs",
+      "price": 1.471,
+      "annualChange": -50.4
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Eggs",
+      "price": 1.39,
+      "annualChange": -50.5
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Eggs",
+      "price": 1.321,
+      "annualChange": -50.4
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Eggs",
+      "price": 1.383,
+      "annualChange": -49.7
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Eggs",
+      "price": 1.599,
+      "annualChange": -31.3
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Eggs",
+      "price": 1.464,
+      "annualChange": -35.4
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Eggs",
+      "price": 1.404,
+      "annualChange": -32.5
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Eggs",
+      "price": 1.409,
+      "annualChange": -21.4
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Eggs",
+      "price": 1.414,
+      "annualChange": -16.0
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Eggs",
+      "price": 1.332,
+      "annualChange": -10.7
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Eggs",
+      "price": 1.333,
+      "annualChange": -13.8
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Eggs",
+      "price": 1.367,
+      "annualChange": -6.0
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Eggs",
+      "price": 1.422,
+      "annualChange": -3.3
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Eggs",
+      "price": 1.54,
+      "annualChange": 10.8
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Eggs",
+      "price": 1.506,
+      "annualChange": 14.0
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Eggs",
+      "price": 1.815,
+      "annualChange": 31.2
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Eggs",
+      "price": 1.769,
+      "annualChange": 10.6
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Eggs",
+      "price": 1.755,
+      "annualChange": 19.9
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Eggs",
+      "price": 1.831,
+      "annualChange": 30.4
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Eggs",
+      "price": 2.081,
+      "annualChange": 47.7
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Eggs",
+      "price": 1.987,
+      "annualChange": 40.5
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Eggs",
+      "price": 1.628,
+      "annualChange": 22.2
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Eggs",
+      "price": 1.725,
+      "annualChange": 29.4
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Eggs",
+      "price": 1.622,
+      "annualChange": 18.7
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Eggs",
+      "price": 1.651,
+      "annualChange": 16.1
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Eggs",
+      "price": 1.66,
+      "annualChange": 7.8
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Eggs",
+      "price": 1.596,
+      "annualChange": 6.0
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Eggs",
+      "price": 1.595,
+      "annualChange": -12.1
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Eggs",
+      "price": 1.554,
+      "annualChange": -12.2
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Eggs",
+      "price": 1.557,
+      "annualChange": -11.3
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Eggs",
+      "price": 1.544,
+      "annualChange": -15.7
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Eggs",
+      "price": 1.463,
+      "annualChange": -29.7
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Eggs",
+      "price": 1.362,
+      "annualChange": -31.5
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Eggs",
+      "price": 1.203,
+      "annualChange": -26.1
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Eggs",
+      "price": 1.243,
+      "annualChange": -27.9
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Eggs",
+      "price": 1.219,
+      "annualChange": -24.8
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Eggs",
+      "price": 1.383,
+      "annualChange": -16.2
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Eggs",
+      "price": 1.282,
+      "annualChange": -22.8
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Eggs",
+      "price": 1.405,
+      "annualChange": -12.0
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Eggs",
+      "price": 1.535,
+      "annualChange": -3.8
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Eggs",
+      "price": 1.461,
+      "annualChange": -6.0
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Eggs",
+      "price": 1.449,
+      "annualChange": -6.9
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Eggs",
+      "price": 1.525,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2020-04-01",
+      "item": "Eggs",
+      "price": 2.019,
+      "annualChange": 38.0
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Eggs",
+      "price": 1.64,
+      "annualChange": 20.4
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Eggs",
+      "price": 1.554,
+      "annualChange": 29.2
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Eggs",
+      "price": 1.401,
+      "annualChange": 12.7
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Eggs",
+      "price": 1.328,
+      "annualChange": 8.9
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Eggs",
+      "price": 1.353,
+      "annualChange": -2.2
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Eggs",
+      "price": 1.408,
+      "annualChange": 9.8
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Eggs",
+      "price": 1.45,
+      "annualChange": 3.2
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Eggs",
+      "price": 1.481,
+      "annualChange": -3.5
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Eggs",
+      "price": 1.466,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Eggs",
+      "price": 1.597,
+      "annualChange": 10.2
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Eggs",
+      "price": 1.625,
+      "annualChange": 6.6
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Eggs",
+      "price": 1.62,
+      "annualChange": -19.8
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Eggs",
+      "price": 1.625,
+      "annualChange": -0.9
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Eggs",
+      "price": 1.642,
+      "annualChange": 5.7
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Eggs",
+      "price": 1.642,
+      "annualChange": 17.2
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Eggs",
+      "price": 1.709,
+      "annualChange": 28.7
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Eggs",
+      "price": 1.835,
+      "annualChange": 35.6
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Eggs",
+      "price": 1.821,
+      "annualChange": 29.3
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Eggs",
+      "price": 1.718,
+      "annualChange": 18.5
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Eggs",
+      "price": 1.788,
+      "annualChange": 20.7
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Eggs",
+      "price": 1.929,
+      "annualChange": 31.6
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Eggs",
+      "price": 2.005,
+      "annualChange": 25.5
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Eggs",
+      "price": 2.046,
+      "annualChange": 25.9
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Eggs",
+      "price": 2.52,
+      "annualChange": 55.6
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Eggs",
+      "price": 2.863,
+      "annualChange": 76.2
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Eggs",
+      "price": 2.707,
+      "annualChange": 64.9
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Eggs",
+      "price": 2.936,
+      "annualChange": 78.8
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Eggs",
+      "price": 3.116,
+      "annualChange": 82.3
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Eggs",
+      "price": 2.902,
+      "annualChange": 58.1
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Eggs",
+      "price": 3.419,
+      "annualChange": 87.8
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Eggs",
+      "price": 3.589,
+      "annualChange": 108.9
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Eggs",
+      "price": 4.25,
+      "annualChange": 137.7
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Eggs",
+      "price": 4.823,
+      "annualChange": 150.0
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Eggs",
+      "price": 4.211,
+      "annualChange": 110.0
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Eggs",
+      "price": 3.446,
+      "annualChange": 68.4
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Eggs",
+      "price": 3.27,
+      "annualChange": 29.8
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Eggs",
+      "price": 2.666,
+      "annualChange": -6.9
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Eggs",
+      "price": 2.219,
+      "annualChange": -18.0
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Eggs",
+      "price": 2.094,
+      "annualChange": -28.7
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Eggs",
+      "price": 2.043,
+      "annualChange": -34.4
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Eggs",
+      "price": 2.065,
+      "annualChange": -28.8
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Eggs",
+      "price": 2.072,
+      "annualChange": -39.4
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Eggs",
+      "price": 2.138,
+      "annualChange": -40.4
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Eggs",
+      "price": 2.507,
+      "annualChange": -41.0
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Eggs",
+      "price": 2.522,
+      "annualChange": -47.7
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Eggs",
+      "price": 2.996,
+      "annualChange": -28.9
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Eggs",
+      "price": 2.992,
+      "annualChange": -13.2
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Eggs",
+      "price": 2.864,
+      "annualChange": -12.4
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Eggs",
+      "price": 2.699,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Eggs",
+      "price": 2.715,
+      "annualChange": 22.4
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Eggs",
+      "price": 3.08,
+      "annualChange": 47.1
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Eggs",
+      "price": 3.204,
+      "annualChange": 56.8
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Eggs",
+      "price": 3.821,
+      "annualChange": 85.0
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Eggs",
+      "price": 3.37,
+      "annualChange": 62.6
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Eggs",
+      "price": 3.649,
+      "annualChange": 70.7
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Eggs",
+      "price": 4.146,
+      "annualChange": 65.4
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Eggs",
+      "price": 4.953,
+      "annualChange": 96.4
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Eggs",
+      "price": 5.897,
+      "annualChange": 96.8
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Eggs",
+      "price": 6.227,
+      "annualChange": 108.1
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Eggs",
+      "price": 5.122,
+      "annualChange": 78.8
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Eggs",
+      "price": 4.548,
+      "annualChange": 68.5
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Eggs",
+      "price": 3.775,
+      "annualChange": 39.0
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Eggs",
+      "price": 3.599,
+      "annualChange": 16.9
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Eggs",
+      "price": 3.587,
+      "annualChange": 12.0
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Ground beef",
+      "price": 4.222,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Ground beef",
+      "price": 4.195,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Ground beef",
+      "price": 4.119,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Ground beef",
+      "price": 4.082,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Ground beef",
+      "price": 4.025,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Ground beef",
+      "price": 4.019,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Ground beef",
+      "price": 3.945,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Ground beef",
+      "price": 3.929,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Ground beef",
+      "price": 3.933,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Ground beef",
+      "price": 3.902,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Ground beef",
+      "price": 3.84,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Ground beef",
+      "price": 3.807,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Ground beef",
+      "price": 3.912,
+      "annualChange": -7.3
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Ground beef",
+      "price": 3.791,
+      "annualChange": -9.6
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Ground beef",
+      "price": 3.742,
+      "annualChange": -9.2
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Ground beef",
+      "price": 3.703,
+      "annualChange": -9.3
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Ground beef",
+      "price": 3.619,
+      "annualChange": -10.1
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Ground beef",
+      "price": 3.621,
+      "annualChange": -9.9
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Ground beef",
+      "price": 3.549,
+      "annualChange": -10.0
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Ground beef",
+      "price": 3.59,
+      "annualChange": -8.6
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Ground beef",
+      "price": 3.675,
+      "annualChange": -6.6
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Ground beef",
+      "price": 3.645,
+      "annualChange": -6.6
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Ground beef",
+      "price": 3.768,
+      "annualChange": -1.9
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Ground beef",
+      "price": 3.866,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Ground beef",
+      "price": 3.785,
+      "annualChange": -3.2
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Ground beef",
+      "price": 3.801,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Ground beef",
+      "price": 3.703,
+      "annualChange": -1.0
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Ground beef",
+      "price": 3.775,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Ground beef",
+      "price": 3.729,
+      "annualChange": 3.0
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Ground beef",
+      "price": 3.668,
+      "annualChange": 1.3
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Ground beef",
+      "price": 3.659,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Ground beef",
+      "price": 3.728,
+      "annualChange": 3.8
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Ground beef",
+      "price": 3.775,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Ground beef",
+      "price": 3.688,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Ground beef",
+      "price": 3.824,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Ground beef",
+      "price": 3.786,
+      "annualChange": -2.1
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Ground beef",
+      "price": 3.738,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Ground beef",
+      "price": 3.701,
+      "annualChange": -2.6
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Ground beef",
+      "price": 3.692,
+      "annualChange": -0.3
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Ground beef",
+      "price": 3.745,
+      "annualChange": -0.8
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Ground beef",
+      "price": 3.709,
+      "annualChange": -0.5
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Ground beef",
+      "price": 3.727,
+      "annualChange": 1.6
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Ground beef",
+      "price": 3.847,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Ground beef",
+      "price": 3.831,
+      "annualChange": 2.8
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Ground beef",
+      "price": 3.907,
+      "annualChange": 3.5
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Ground beef",
+      "price": 4.023,
+      "annualChange": 9.1
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Ground beef",
+      "price": 3.951,
+      "annualChange": 3.3
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Ground beef",
+      "price": 4.001,
+      "annualChange": 5.7
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Ground beef",
+      "price": 4.019,
+      "annualChange": 7.5
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Ground beef",
+      "price": 3.885,
+      "annualChange": 5.0
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Ground beef",
+      "price": 4.027,
+      "annualChange": 9.1
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Ground beef",
+      "price": 3.993,
+      "annualChange": 6.6
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Ground beef",
+      "price": 4.066,
+      "annualChange": 9.6
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Ground beef",
+      "price": 4.1,
+      "annualChange": 10.0
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Ground beef",
+      "price": 4.033,
+      "annualChange": 4.8
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Ground beef",
+      "price": 4.108,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2020-04-01",
+      "item": "Ground beef",
+      "price": 4.343,
+      "annualChange": 11.2
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Ground beef",
+      "price": 4.789,
+      "annualChange": 19.0
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Ground beef",
+      "price": 5.33,
+      "annualChange": 34.9
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Ground beef",
+      "price": 4.732,
+      "annualChange": 18.3
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Ground beef",
+      "price": 4.307,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Ground beef",
+      "price": 4.165,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Ground beef",
+      "price": 4.212,
+      "annualChange": 4.6
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Ground beef",
+      "price": 4.33,
+      "annualChange": 8.4
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Ground beef",
+      "price": 4.202,
+      "annualChange": 3.3
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Ground beef",
+      "price": 4.31,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Ground beef",
+      "price": 4.252,
+      "annualChange": 5.4
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Ground beef",
+      "price": 4.377,
+      "annualChange": 6.5
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Ground beef",
+      "price": 4.29,
+      "annualChange": -1.2
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Ground beef",
+      "price": 4.495,
+      "annualChange": -6.1
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Ground beef",
+      "price": 4.565,
+      "annualChange": -14.4
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Ground beef",
+      "price": 4.521,
+      "annualChange": -4.5
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Ground beef",
+      "price": 4.636,
+      "annualChange": 7.6
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Ground beef",
+      "price": 4.786,
+      "annualChange": 14.9
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Ground beef",
+      "price": 4.869,
+      "annualChange": 15.6
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Ground beef",
+      "price": 4.81,
+      "annualChange": 11.1
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Ground beef",
+      "price": 4.792,
+      "annualChange": 14.0
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Ground beef",
+      "price": 4.765,
+      "annualChange": 10.6
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Ground beef",
+      "price": 4.627,
+      "annualChange": 8.8
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Ground beef",
+      "price": 4.87,
+      "annualChange": 11.3
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Ground beef",
+      "price": 4.945,
+      "annualChange": 15.3
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Ground beef",
+      "price": 4.894,
+      "annualChange": 8.9
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Ground beef",
+      "price": 4.997,
+      "annualChange": 9.5
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Ground beef",
+      "price": 5.075,
+      "annualChange": 12.3
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Ground beef",
+      "price": 5.12,
+      "annualChange": 10.4
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Ground beef",
+      "price": 4.89,
+      "annualChange": 2.2
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Ground beef",
+      "price": 4.789,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Ground beef",
+      "price": 4.728,
+      "annualChange": -1.7
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Ground beef",
+      "price": 4.758,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Ground beef",
+      "price": 4.644,
+      "annualChange": -2.5
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Ground beef",
+      "price": 4.777,
+      "annualChange": 3.2
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Ground beef",
+      "price": 4.753,
+      "annualChange": -2.4
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Ground beef",
+      "price": 4.747,
+      "annualChange": -4.0
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Ground beef",
+      "price": 4.953,
+      "annualChange": 1.2
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Ground beef",
+      "price": 5.106,
+      "annualChange": 2.2
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Ground beef",
+      "price": 5.253,
+      "annualChange": 3.5
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Ground beef",
+      "price": 5.259,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Ground beef",
+      "price": 5.185,
+      "annualChange": 6.0
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Ground beef",
+      "price": 5.349,
+      "annualChange": 11.7
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Ground beef",
+      "price": 5.201,
+      "annualChange": 10.0
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Ground beef",
+      "price": 5.118,
+      "annualChange": 7.6
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Ground beef",
+      "price": 5.093,
+      "annualChange": 9.7
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Ground beef",
+      "price": 5.213,
+      "annualChange": 9.1
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Ground beef",
+      "price": 5.421,
+      "annualChange": 14.1
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Ground beef",
+      "price": 5.277,
+      "annualChange": 11.2
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Ground beef",
+      "price": 5.331,
+      "annualChange": 7.6
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Ground beef",
+      "price": 5.364,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Ground beef",
+      "price": 5.47,
+      "annualChange": 4.1
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Ground beef",
+      "price": 5.638,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Ground beef",
+      "price": 5.576,
+      "annualChange": 7.5
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Ground beef",
+      "price": 5.586,
+      "annualChange": 4.4
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Ground beef",
+      "price": 5.605,
+      "annualChange": 7.8
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Ground beef",
+      "price": 5.576,
+      "annualChange": 8.9
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Ground beef",
+      "price": 5.495,
+      "annualChange": 7.9
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Ground beef",
+      "price": 5.744,
+      "annualChange": 10.2
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Ground beef",
+      "price": 5.854,
+      "annualChange": 8.0
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Ground beef",
+      "price": 5.996,
+      "annualChange": 13.6
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Ground beef",
+      "price": 6.018,
+      "annualChange": 12.9
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Ground beef",
+      "price": 6.103,
+      "annualChange": 13.8
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Ground beef",
+      "price": 6.338,
+      "annualChange": 15.9
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Ground beef",
+      "price": 6.626,
+      "annualChange": 17.5
+    },
+    {
+      "month": "2015-08-01",
+      "item": "Whole milk",
+      "price": 3.389,
+      "annualChange": null
+    },
+    {
+      "month": "2015-09-01",
+      "item": "Whole milk",
+      "price": 3.392,
+      "annualChange": null
+    },
+    {
+      "month": "2015-10-01",
+      "item": "Whole milk",
+      "price": 3.338,
+      "annualChange": null
+    },
+    {
+      "month": "2015-11-01",
+      "item": "Whole milk",
+      "price": 3.299,
+      "annualChange": null
+    },
+    {
+      "month": "2015-12-01",
+      "item": "Whole milk",
+      "price": 3.31,
+      "annualChange": null
+    },
+    {
+      "month": "2016-01-01",
+      "item": "Whole milk",
+      "price": 3.313,
+      "annualChange": null
+    },
+    {
+      "month": "2016-02-01",
+      "item": "Whole milk",
+      "price": 3.23,
+      "annualChange": null
+    },
+    {
+      "month": "2016-03-01",
+      "item": "Whole milk",
+      "price": 3.187,
+      "annualChange": null
+    },
+    {
+      "month": "2016-04-01",
+      "item": "Whole milk",
+      "price": 3.155,
+      "annualChange": null
+    },
+    {
+      "month": "2016-05-01",
+      "item": "Whole milk",
+      "price": 3.157,
+      "annualChange": null
+    },
+    {
+      "month": "2016-06-01",
+      "item": "Whole milk",
+      "price": 3.115,
+      "annualChange": null
+    },
+    {
+      "month": "2016-07-01",
+      "item": "Whole milk",
+      "price": 3.062,
+      "annualChange": null
+    },
+    {
+      "month": "2016-08-01",
+      "item": "Whole milk",
+      "price": 3.141,
+      "annualChange": -7.3
+    },
+    {
+      "month": "2016-09-01",
+      "item": "Whole milk",
+      "price": 3.229,
+      "annualChange": -4.8
+    },
+    {
+      "month": "2016-10-01",
+      "item": "Whole milk",
+      "price": 3.292,
+      "annualChange": -1.4
+    },
+    {
+      "month": "2016-11-01",
+      "item": "Whole milk",
+      "price": 3.28,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2016-12-01",
+      "item": "Whole milk",
+      "price": 3.29,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2017-01-01",
+      "item": "Whole milk",
+      "price": 3.318,
+      "annualChange": 0.2
+    },
+    {
+      "month": "2017-02-01",
+      "item": "Whole milk",
+      "price": 3.3,
+      "annualChange": 2.2
+    },
+    {
+      "month": "2017-03-01",
+      "item": "Whole milk",
+      "price": 3.315,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2017-04-01",
+      "item": "Whole milk",
+      "price": 3.259,
+      "annualChange": 3.3
+    },
+    {
+      "month": "2017-05-01",
+      "item": "Whole milk",
+      "price": 3.242,
+      "annualChange": 2.7
+    },
+    {
+      "month": "2017-06-01",
+      "item": "Whole milk",
+      "price": 3.213,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2017-07-01",
+      "item": "Whole milk",
+      "price": 3.219,
+      "annualChange": 5.1
+    },
+    {
+      "month": "2017-08-01",
+      "item": "Whole milk",
+      "price": 3.168,
+      "annualChange": 0.9
+    },
+    {
+      "month": "2017-09-01",
+      "item": "Whole milk",
+      "price": 3.209,
+      "annualChange": -0.6
+    },
+    {
+      "month": "2017-10-01",
+      "item": "Whole milk",
+      "price": 3.158,
+      "annualChange": -4.1
+    },
+    {
+      "month": "2017-11-01",
+      "item": "Whole milk",
+      "price": 3.15,
+      "annualChange": -4.0
+    },
+    {
+      "month": "2017-12-01",
+      "item": "Whole milk",
+      "price": 3.155,
+      "annualChange": -4.1
+    },
+    {
+      "month": "2018-01-01",
+      "item": "Whole milk",
+      "price": 2.961,
+      "annualChange": -10.8
+    },
+    {
+      "month": "2018-02-01",
+      "item": "Whole milk",
+      "price": 2.923,
+      "annualChange": -11.4
+    },
+    {
+      "month": "2018-03-01",
+      "item": "Whole milk",
+      "price": 2.903,
+      "annualChange": -12.4
+    },
+    {
+      "month": "2018-04-01",
+      "item": "Whole milk",
+      "price": 2.924,
+      "annualChange": -10.3
+    },
+    {
+      "month": "2018-05-01",
+      "item": "Whole milk",
+      "price": 2.919,
+      "annualChange": -10.0
+    },
+    {
+      "month": "2018-06-01",
+      "item": "Whole milk",
+      "price": 2.877,
+      "annualChange": -10.5
+    },
+    {
+      "month": "2018-07-01",
+      "item": "Whole milk",
+      "price": 2.839,
+      "annualChange": -11.8
+    },
+    {
+      "month": "2018-08-01",
+      "item": "Whole milk",
+      "price": 2.871,
+      "annualChange": -9.4
+    },
+    {
+      "month": "2018-09-01",
+      "item": "Whole milk",
+      "price": 2.89,
+      "annualChange": -9.9
+    },
+    {
+      "month": "2018-10-01",
+      "item": "Whole milk",
+      "price": 2.913,
+      "annualChange": -7.8
+    },
+    {
+      "month": "2018-11-01",
+      "item": "Whole milk",
+      "price": 2.877,
+      "annualChange": -8.7
+    },
+    {
+      "month": "2018-12-01",
+      "item": "Whole milk",
+      "price": 2.853,
+      "annualChange": -9.6
+    },
+    {
+      "month": "2019-01-01",
+      "item": "Whole milk",
+      "price": 2.913,
+      "annualChange": -1.6
+    },
+    {
+      "month": "2019-02-01",
+      "item": "Whole milk",
+      "price": 2.9,
+      "annualChange": -0.8
+    },
+    {
+      "month": "2019-03-01",
+      "item": "Whole milk",
+      "price": 2.944,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2019-04-01",
+      "item": "Whole milk",
+      "price": 2.98,
+      "annualChange": 1.9
+    },
+    {
+      "month": "2019-05-01",
+      "item": "Whole milk",
+      "price": 2.963,
+      "annualChange": 1.5
+    },
+    {
+      "month": "2019-06-01",
+      "item": "Whole milk",
+      "price": 3.054,
+      "annualChange": 6.2
+    },
+    {
+      "month": "2019-07-01",
+      "item": "Whole milk",
+      "price": 3.031,
+      "annualChange": 6.8
+    },
+    {
+      "month": "2019-08-01",
+      "item": "Whole milk",
+      "price": 3.045,
+      "annualChange": 6.1
+    },
+    {
+      "month": "2019-09-01",
+      "item": "Whole milk",
+      "price": 3.102,
+      "annualChange": 7.3
+    },
+    {
+      "month": "2019-10-01",
+      "item": "Whole milk",
+      "price": 3.119,
+      "annualChange": 7.1
+    },
+    {
+      "month": "2019-11-01",
+      "item": "Whole milk",
+      "price": 3.189,
+      "annualChange": 10.8
+    },
+    {
+      "month": "2019-12-01",
+      "item": "Whole milk",
+      "price": 3.188,
+      "annualChange": 11.7
+    },
+    {
+      "month": "2020-01-01",
+      "item": "Whole milk",
+      "price": 3.253,
+      "annualChange": 11.7
+    },
+    {
+      "month": "2020-02-01",
+      "item": "Whole milk",
+      "price": 3.196,
+      "annualChange": 10.2
+    },
+    {
+      "month": "2020-03-01",
+      "item": "Whole milk",
+      "price": 3.248,
+      "annualChange": 10.3
+    },
+    {
+      "month": "2020-04-01",
+      "item": "Whole milk",
+      "price": 3.267,
+      "annualChange": 9.6
+    },
+    {
+      "month": "2020-05-01",
+      "item": "Whole milk",
+      "price": 3.21,
+      "annualChange": 8.3
+    },
+    {
+      "month": "2020-06-01",
+      "item": "Whole milk",
+      "price": 3.198,
+      "annualChange": 4.7
+    },
+    {
+      "month": "2020-07-01",
+      "item": "Whole milk",
+      "price": 3.255,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2020-08-01",
+      "item": "Whole milk",
+      "price": 3.406,
+      "annualChange": 11.9
+    },
+    {
+      "month": "2020-09-01",
+      "item": "Whole milk",
+      "price": 3.448,
+      "annualChange": 11.2
+    },
+    {
+      "month": "2020-10-01",
+      "item": "Whole milk",
+      "price": 3.38,
+      "annualChange": 8.4
+    },
+    {
+      "month": "2020-11-01",
+      "item": "Whole milk",
+      "price": 3.425,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2020-12-01",
+      "item": "Whole milk",
+      "price": 3.535,
+      "annualChange": 10.9
+    },
+    {
+      "month": "2021-01-01",
+      "item": "Whole milk",
+      "price": 3.468,
+      "annualChange": 6.6
+    },
+    {
+      "month": "2021-02-01",
+      "item": "Whole milk",
+      "price": 3.368,
+      "annualChange": 5.4
+    },
+    {
+      "month": "2021-03-01",
+      "item": "Whole milk",
+      "price": 3.348,
+      "annualChange": 3.1
+    },
+    {
+      "month": "2021-04-01",
+      "item": "Whole milk",
+      "price": 3.447,
+      "annualChange": 5.5
+    },
+    {
+      "month": "2021-05-01",
+      "item": "Whole milk",
+      "price": 3.497,
+      "annualChange": 8.9
+    },
+    {
+      "month": "2021-06-01",
+      "item": "Whole milk",
+      "price": 3.557,
+      "annualChange": 11.2
+    },
+    {
+      "month": "2021-07-01",
+      "item": "Whole milk",
+      "price": 3.627,
+      "annualChange": 11.4
+    },
+    {
+      "month": "2021-08-01",
+      "item": "Whole milk",
+      "price": 3.56,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2021-09-01",
+      "item": "Whole milk",
+      "price": 3.585,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2021-10-01",
+      "item": "Whole milk",
+      "price": 3.663,
+      "annualChange": 8.4
+    },
+    {
+      "month": "2021-11-01",
+      "item": "Whole milk",
+      "price": 3.671,
+      "annualChange": 7.2
+    },
+    {
+      "month": "2021-12-01",
+      "item": "Whole milk",
+      "price": 3.743,
+      "annualChange": 5.9
+    },
+    {
+      "month": "2022-01-01",
+      "item": "Whole milk",
+      "price": 3.787,
+      "annualChange": 9.2
+    },
+    {
+      "month": "2022-02-01",
+      "item": "Whole milk",
+      "price": 3.875,
+      "annualChange": 15.1
+    },
+    {
+      "month": "2022-03-01",
+      "item": "Whole milk",
+      "price": 3.917,
+      "annualChange": 17.0
+    },
+    {
+      "month": "2022-04-01",
+      "item": "Whole milk",
+      "price": 4.012,
+      "annualChange": 16.4
+    },
+    {
+      "month": "2022-05-01",
+      "item": "Whole milk",
+      "price": 4.204,
+      "annualChange": 20.2
+    },
+    {
+      "month": "2022-06-01",
+      "item": "Whole milk",
+      "price": 4.153,
+      "annualChange": 16.8
+    },
+    {
+      "month": "2022-07-01",
+      "item": "Whole milk",
+      "price": 4.156,
+      "annualChange": 14.6
+    },
+    {
+      "month": "2022-08-01",
+      "item": "Whole milk",
+      "price": 4.194,
+      "annualChange": 17.8
+    },
+    {
+      "month": "2022-09-01",
+      "item": "Whole milk",
+      "price": 4.181,
+      "annualChange": 16.6
+    },
+    {
+      "month": "2022-10-01",
+      "item": "Whole milk",
+      "price": 4.184,
+      "annualChange": 14.2
+    },
+    {
+      "month": "2022-11-01",
+      "item": "Whole milk",
+      "price": 4.218,
+      "annualChange": 14.9
+    },
+    {
+      "month": "2022-12-01",
+      "item": "Whole milk",
+      "price": 4.211,
+      "annualChange": 12.5
+    },
+    {
+      "month": "2023-01-01",
+      "item": "Whole milk",
+      "price": 4.204,
+      "annualChange": 11.0
+    },
+    {
+      "month": "2023-02-01",
+      "item": "Whole milk",
+      "price": 4.163,
+      "annualChange": 7.4
+    },
+    {
+      "month": "2023-03-01",
+      "item": "Whole milk",
+      "price": 4.098,
+      "annualChange": 4.6
+    },
+    {
+      "month": "2023-04-01",
+      "item": "Whole milk",
+      "price": 4.042,
+      "annualChange": 0.7
+    },
+    {
+      "month": "2023-05-01",
+      "item": "Whole milk",
+      "price": 4.042,
+      "annualChange": -3.9
+    },
+    {
+      "month": "2023-06-01",
+      "item": "Whole milk",
+      "price": 3.985,
+      "annualChange": -4.0
+    },
+    {
+      "month": "2023-07-01",
+      "item": "Whole milk",
+      "price": 3.971,
+      "annualChange": -4.5
+    },
+    {
+      "month": "2023-08-01",
+      "item": "Whole milk",
+      "price": 3.927,
+      "annualChange": -6.4
+    },
+    {
+      "month": "2023-09-01",
+      "item": "Whole milk",
+      "price": 3.965,
+      "annualChange": -5.2
+    },
+    {
+      "month": "2023-10-01",
+      "item": "Whole milk",
+      "price": 3.927,
+      "annualChange": -6.1
+    },
+    {
+      "month": "2023-11-01",
+      "item": "Whole milk",
+      "price": 3.997,
+      "annualChange": -5.2
+    },
+    {
+      "month": "2023-12-01",
+      "item": "Whole milk",
+      "price": 4.008,
+      "annualChange": -4.8
+    },
+    {
+      "month": "2024-01-01",
+      "item": "Whole milk",
+      "price": 3.958,
+      "annualChange": -5.9
+    },
+    {
+      "month": "2024-02-01",
+      "item": "Whole milk",
+      "price": 3.94,
+      "annualChange": -5.4
+    },
+    {
+      "month": "2024-03-01",
+      "item": "Whole milk",
+      "price": 3.893,
+      "annualChange": -5.0
+    },
+    {
+      "month": "2024-04-01",
+      "item": "Whole milk",
+      "price": 3.868,
+      "annualChange": -4.3
+    },
+    {
+      "month": "2024-05-01",
+      "item": "Whole milk",
+      "price": 3.864,
+      "annualChange": -4.4
+    },
+    {
+      "month": "2024-06-01",
+      "item": "Whole milk",
+      "price": 3.956,
+      "annualChange": -0.7
+    },
+    {
+      "month": "2024-07-01",
+      "item": "Whole milk",
+      "price": 3.983,
+      "annualChange": 0.3
+    },
+    {
+      "month": "2024-08-01",
+      "item": "Whole milk",
+      "price": 4.044,
+      "annualChange": 3.0
+    },
+    {
+      "month": "2024-09-01",
+      "item": "Whole milk",
+      "price": 4.021,
+      "annualChange": 1.4
+    },
+    {
+      "month": "2024-10-01",
+      "item": "Whole milk",
+      "price": 4.041,
+      "annualChange": 2.9
+    },
+    {
+      "month": "2024-11-01",
+      "item": "Whole milk",
+      "price": 4.138,
+      "annualChange": 3.5
+    },
+    {
+      "month": "2024-12-01",
+      "item": "Whole milk",
+      "price": 4.101,
+      "annualChange": 2.3
+    },
+    {
+      "month": "2025-01-01",
+      "item": "Whole milk",
+      "price": 4.025,
+      "annualChange": 1.7
+    },
+    {
+      "month": "2025-02-01",
+      "item": "Whole milk",
+      "price": 4.026,
+      "annualChange": 2.2
+    },
+    {
+      "month": "2025-03-01",
+      "item": "Whole milk",
+      "price": 4.05,
+      "annualChange": 4.0
+    },
+    {
+      "month": "2025-04-01",
+      "item": "Whole milk",
+      "price": 4.074,
+      "annualChange": 5.3
+    },
+    {
+      "month": "2025-05-01",
+      "item": "Whole milk",
+      "price": 4.022,
+      "annualChange": 4.1
+    },
+    {
+      "month": "2025-06-01",
+      "item": "Whole milk",
+      "price": 4.029,
+      "annualChange": 1.8
+    },
+    {
+      "month": "2025-07-01",
+      "item": "Whole milk",
+      "price": 4.162,
+      "annualChange": 4.5
+    },
+    {
+      "month": "2025-08-01",
+      "item": "Whole milk",
+      "price": 4.171,
+      "annualChange": 3.1
+    }
+  ]
+}

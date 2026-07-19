@@ -1,0 +1,302 @@
+{
+  "nav": {
+    "about": "关于",
+    "mcp": "MCP 服务器",
+    "gallery": "图表示例",
+    "documentation": "文档",
+    "editor": "在线编辑器",
+    "github": "GitHub",
+    "githubAria": "GitHub 仓库",
+    "githubAriaStars": "GitHub 仓库，{{count}} 星",
+    "githubTitle": "在 GitHub 上查看",
+    "githubTitleStars": "在 GitHub 上查看（{{count}} 星）",
+    "langEn": "EN",
+    "langZh": "中文",
+    "langSwitchAria": "切换语言"
+  },
+  "footer": {
+    "copyright": "© 2026 Microsoft",
+    "terms": "Terms of Use",
+    "privacy": "Privacy & Cookies",
+    "health": "Consumer Health Privacy",
+    "trademarks": "Trademarks"
+  },
+  "docs": {
+    "notFound": "未找到文档。",
+    "mobileLabel": "文档",
+    "mobileAria": "选择文档页面",
+    "fallbackNote": "暂无中文译本，正在显示英文原文。",
+    "groups": {
+      "quick-start": "快速开始",
+      "introduction": "语言设计",
+      "reference": "图表指南",
+      "extending": "开发"
+    },
+    "entries": {
+      "getting-started": {
+        "title": "入门指南",
+        "description": "安装 Flint，并用简单的 DataSpec 与 ChartSpec 制作第一张图。"
+      },
+      "data-story": {
+        "title": "示例：数据故事",
+        "description": "同一份 DataSpec、五种图表设计：只需改 ChartSpec 即可切换模板与后端。"
+      },
+      "setup-flint-mcp": {
+        "title": "配置 Flint MCP",
+        "description": "配置 MCP 服务器、本地文件访问、工具、资源和渲染后端，并验证连接。"
+      },
+      "agent-workflows": {
+        "title": "智能体工作流",
+        "description": "了解如何在智能体产品中用 Flint 生成、校验和修改图表。"
+      },
+      "chart-sizing": {
+        "title": "示例：自动布局",
+        "description": "观察数据变密或布局槽位受限时，Flint 如何自动调整图表尺寸。"
+      },
+      "overview": {
+        "title": "概览",
+        "description": "问题背景、dataSpec + chartSpec、编译输出与文档地图。"
+      },
+      "architecture": {
+        "title": "架构",
+        "description": "三阶段流水线、设计原则与仓库布局。"
+      },
+      "semantic-types": {
+        "title": "语义类型",
+        "description": "类型层级、注解、编译流水线与解析规则。"
+      },
+      "color-decisions": {
+        "title": "颜色决策",
+        "description": "色板族、ColorDecision 以及各后端的调色板选择。"
+      },
+      "layout-model": {
+        "title": "自动布局算法",
+        "description": "弹簧、气压、径向与面积等尺寸模型。"
+      },
+      "api-reference": {
+        "title": "API 参考",
+        "description": "ChartAssemblyInput、组装器、编码、选项与导出。"
+      },
+      "reference-vegalite": {
+        "title": "Vega-Lite 图表",
+        "description": "全部 Vega-Lite 图表类型、通道与可配置参数。"
+      },
+      "reference-echarts": {
+        "title": "ECharts 图表",
+        "description": "全部 ECharts 图表类型、通道与可配置参数。"
+      },
+      "reference-chartjs": {
+        "title": "Chart.js 图表",
+        "description": "全部 Chart.js 图表类型、通道与可配置参数。"
+      },
+      "development": {
+        "title": "开发指南",
+        "description": "Monorepo 搭建、日常命令与测试策略。"
+      },
+      "adding-a-semantic-type": {
+        "title": "扩展语义类型",
+        "description": "判断何时需要新的字段含义，然后注册并验证。"
+      },
+      "adding-a-backend": {
+        "title": "扩展后端",
+        "description": "在共享流水线中保留语义与布局的同时，新增渲染目标。"
+      },
+      "adding-a-chart-template": {
+        "title": "扩展图表模板",
+        "description": "为已有后端新增图表类型，并覆盖测试与图表示例。"
+      }
+    }
+  },
+  "gallery": {
+    "title": "图表示例",
+    "titleBackend": "（{{backend}} 后端）",
+    "sidebars": {
+      "galleries": "示例库",
+      "chartTypes": "图表类型"
+    },
+    "mobileBackendsAria": "选择示例库后端",
+    "intro": {
+      "passInput": "将 Flint 的 <code>input</code>（数据、语义类型与图表规范）传入 <code>{{fn}}()</code>。",
+      "learnMore": "若要了解如何在应用中使用 <code>{{fn}}()</code>，请参阅 <docsLink>编译图表</docsLink>。",
+      "compileLink": "编译图表"
+    },
+    "jumpTo": "跳转到 {{label}}",
+    "backends": {
+      "vegalite": "将 Flint 规范编译为干净的 Vega-Lite 规范——适合用 Vega 渲染清晰、出版级的统计图形。",
+      "echarts": "将 Flint 规范编译为 Apache ECharts option——适合交互式仪表盘与丰富视觉效果。",
+      "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。"
+    }
+  },
+  "modal": {
+    "openInEditor": "在编辑器中打开 →",
+    "close": "关闭",
+    "input": "Flint 输入",
+    "output": "编译输出",
+    "copy": "复制",
+    "copied": "已复制",
+    "prev": "上一个示例",
+    "next": "下一个示例"
+  },
+  "editor": {
+    "flintSpec": "Flint 规范",
+    "output": "输出",
+    "preview": "预览",
+    "backendAria": "渲染后端",
+    "loadedFromGallery": "来自图表示例",
+    "example": "示例",
+    "copy": "复制",
+    "copied": "已复制",
+    "compileError": "{{backend}} 编译错误："
+  },
+  "options": {
+    "prevView": "上一个视图",
+    "nextView": "下一个视图"
+  },
+  "landing": {
+    "heroTitle": "Flint：为 AI 而生的可视化语言",
+    "attribution": "Microsoft Research 项目",
+    "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
+    "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
+    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例。",
+    "ctaGallery": "浏览图表示例",
+    "ctaMcp": "使用 MCP 服务器",
+    "ctaGithub": "访问 GitHub",
+    "ctaDocs": "阅读文档",
+    "news": {
+      "title": "更新",
+      "dynamicWidgets": {
+        "date": "2026 年 7 月 19 日",
+        "dateTime": "2026-07-19",
+        "text": "Flint 0.3.0 新增动态图表组件，支持就地切换图表类型和编辑图表属性。"
+      },
+      "release022": {
+        "date": "2026 年 7 月 15 日",
+        "dateTime": "2026-07-15",
+        "text": "Flint 0.2.2 新增紧凑错列模式和分组小提琴图布局。"
+      },
+      "release021": {
+        "date": "2026 年 7 月 13 日",
+        "dateTime": "2026-07-13",
+        "text": "Flint 0.2.1 改进了图表属性校验和多后端一致性。"
+      }
+    },
+    "howItWorks": "Flint 如何工作？",
+    "howItWorksBody": "Flint 只需一份精简规范，其中包含数据、语义类型和图表规范。编译器会补全必要的底层细节，生成完整的后端原生规范（此处以 Vega-Lite 为例），再渲染成清晰美观的图表。",
+    "overviewAlt": "Flint 工作流：智能体从原始表格推断 dataSpec，编写简短的 chartSpec，Flint 将其编译为按地区展示的折线图；随后在编辑规范时依次得到分组柱状图、瀑布图、热力图与旭日图。",
+    "leadBefore": "Flint 是一种可视化中间语言，帮助",
+    "leadHighlight1": "AI 智能体从简洁、可人工编辑的图表规范出发，稳定生成表现力强、观感出色的图表",
+    "leadMiddle": "。你不必手动编写比例尺、坐标轴、间距、布局等繁琐的底层参数；Flint 编译器会结合数据、语义类型、图表类型和编码，自动推导出更合适的图表配置。",
+    "leadHighlight2": "Flint 目前支持 {{chartTypes}} 种图表类型，可输出为 Vega-Lite、ECharts 和 Chart.js",
+    "flintSpec": "Flint 规范",
+    "compiledChart": "编译结果",
+    "backendAria": "渲染后端",
+    "prevExample": "上一个示例",
+    "nextExample": "下一个示例",
+    "exampleAria": "示例",
+    "openInEditor": "在编辑器中打开此示例",
+    "seeGallery": "在图表示例中查看更多",
+    "closingTitle": "开始使用 Flint",
+    "closingBody": "Flint 已开源，可直接使用。前往 GitHub 获取源码，或先浏览图表示例。",
+    "viewGithub": "在 GitHub 上查看",
+    "closingCollab": "Flint 由 <msr>Microsoft Research</msr> 与中国人民大学 <ideas>IDEAS Lab</ideas> 合作构建。",
+    "features": {
+      "semantic": {
+        "title": "用语义类型表达数据含义",
+        "body": "Flint 用语义类型描述数据字段的含义（如 Rank、YearMonth、Delta、Temperature），再据此推导数据解析、比例尺、坐标轴、格式和配色方案等底层配置。",
+        "example": "这张热力图按游戏和月份展示用户净增量。Flint 根据字段的语义类型，自动选择时间解析方式、坐标轴格式，以及发散色板和色彩中点。"
+      },
+      "layout": {
+        "title": "自动布局优化",
+        "body": "Flint 结合弹性布局模型与倾斜优化原则（banking）调整图表布局。编译器会动态协调尺寸、间距和排布，让图表恰当地填入画布。",
+        "example": "随着分组柱状图中的类别增多，Flint 会适度拉伸画布、缩小柱带宽度，让信息密集的图表依然清晰舒展。整个过程就像弹簧在可伸缩的容器中重新达到平衡。"
+      },
+      "adapt": {
+        "title": "易于生成，方便修改",
+        "body": "Flint 规范不依赖脆弱的底层参数，因此更容易生成和修改。要改变图表设计，通常只需切换图表类型、重新绑定视觉编码，编译器便会自动调整相关的底层配置。",
+        "example": "只需切换图表类型，就能把按性别分别展示 2000 年美国人口年龄分布的柱状图改为人口金字塔，其余细节交给编译器处理。"
+      },
+      "backends": {
+        "title": "一份规范，多种渲染后端",
+        "body": "Flint 支持通过 Vega-Lite、ECharts 和 Chart.js 渲染 {{chartTypes}} 种图表，图表示例中还收录了 {{examples}} 个针对不同后端的示例。三者的 API 和编程模型各不相同，Flint 则用统一接口抹平差异，让你可以按需切换后端、发挥各自所长。",
+        "example": "Vega-Lite 没有原生旭日图，但可以轻松切换到 ECharts。对于 region × gameType × game 这样的层级结构，旭日图通常比分组柱状图更合适。"
+      }
+    },
+    "examples": {
+      "facetedLine": {
+        "label": "分地区折线图",
+        "caption": "按地区拆分成多个小图，展示月活用户随时间的变化。"
+      },
+      "heatmap": {
+        "label": "发散热力图",
+        "caption": "按地区与月份展示用户净增减，颜色以零为中心。"
+      },
+      "waterfall": {
+        "label": "瀑布图",
+        "caption": "逐月累加用户增减量，呈现全年用户总数的变化过程。"
+      },
+      "sunburst": {
+        "label": "旭日图",
+        "caption": "将用户活动拆成三级层级：地区、游戏类型与游戏。"
+      },
+      "donut": {
+        "label": "环图",
+        "caption": "以比例扇区展示影片分级，并从图表规范应用内半径。"
+      },
+      "regression": {
+        "label": "回归散点图",
+        "caption": "评论与观众评分，并拟合趋势线以揭示关系。"
+      },
+      "sortedBar": {
+        "label": "排序柱状图",
+        "caption": "按数量从多到少排列影片类型。"
+      }
+    }
+  },
+  "mcp": {
+    "heroTitle": "让智能体通过 Flint MCP 创建图表",
+    "leadBefore": "将 <code>flint-chart-mcp</code> 配置为",
+    "leadMcpLink": "Model Context Protocol",
+    "leadAfter": "服务器后，智能体便能创建图表，并以交互式 MCP App 呈现结果。Flint 默认打开可交互的图表视图；需要导出结果时，也可以返回静态图片，或生成可供 Vega-Lite、ECharts 和 Chart.js 直接使用的规范。",
+    "quickStart": "让 AI 智能体帮你配置：",
+    "quickStartBody": "把下面这段请求发给智能体即可。若想手动配置，请参阅",
+    "installConfigure": "安装与配置",
+    "orThe": "或",
+    "githubReadme": "GitHub README",
+    "experience": "使用方式",
+    "experienceBody": "通过 MCP 使用 Flint 只需三步：连接服务器，描述你想要的图表，再通过 MCP 提供的控件查看和调整结果。",
+    "step1Title": "连接 Flint MCP 服务器。",
+    "step1Body": "将 stdio 服务器添加到 MCP 客户端。默认情况下，智能体可以直接读取本地 CSV、TSV 或 JSON 文件并生成图表。",
+    "step2Title": "描述你想要的图表。",
+    "step2Body": "智能体会把需求转换成 Flint 规范，选择合适的图表类型和字段，再调用 MCP 服务器进行校验和渲染。",
+    "step3Title": "查看并调整结果。",
+    "step3Body": "如果你的 MCP 客户端支持 MCP Apps，Flint 会直接打开实时 SVG 预览，并提供图表选项供你调整。需要导出时，也可以生成 PNG、SVG，或可供各渲染后端直接使用的规范。",
+    "provides": "功能一览",
+    "providesBody": "服务器提供一组精简而明确的工具和资源：你可以交互式查看图表，也可以进行静态渲染、规范校验，或让智能体进一步了解 Flint 支持的图表类型和写法。",
+    "installTitle": "安装与配置",
+    "installBody": "手动配置时，服务器通过 <strong>stdio</strong> 通信，并可直接通过 <code>npx</code> 运行，无需预先安装。将下面的服务器配置添加到 MCP 客户端：",
+    "dataBody": "调用工具时，可以通过 <code>data.values</code> 直接传入数据行，也可以通过 <code>data.url</code> 读取本地 CSV、TSV 或 JSON 文件。Flint 不会获取远程 URL。如果服务器运行在不受信任的环境中，请传入 <code>--disable-file-reference</code> 禁用本地文件引用，此时只接受内联的 <code>data.values</code>：",
+    "reference": "延伸阅读",
+    "referenceBody": "配置文档完整介绍了 MCP 工作流；包 README 则提供工具参数、CLI 选项和客户端配置的快速参考。",
+    "skillNote": "想把 Flint 集成到自己的应用中？独立的 <skillLink>Flint Agent Skill</skillLink> 可以指导编程智能体编写 Flint 规范并完成集成。",
+    "readSetupDocs": "查看配置文档",
+    "tools": {
+      "create_chart_view": "打开交互式 MCP App，提供实时 SVG 预览和图表选项。需要查看图表时优先使用。",
+      "render_chart": "返回静态 PNG 或 SVG。MCP 客户端不支持 App UI，或需要导出图片时使用。",
+      "compile_chart": "生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范，并返回编译警告。",
+      "validate_chart": "检查规范是否有效，报告警告或错误，并返回计算得到的图表尺寸。",
+      "list_chart_types": "列出可用的图表类型和编码通道，也可按渲染后端筛选。",
+      "agentSkill": "随包提供的编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
+      "chartTypes": "覆盖所有渲染后端的图表类型和编码通道目录，可直接浏览查询。",
+      "authorPrompt": "在支持提示词的客户端中，于调用图表工具前加载 Flint 编写指南。"
+    },
+    "tags": {
+      "toolPreferred": "工具 · 首选",
+      "tool": "工具",
+      "resource": "资源",
+      "prompt": "提示词"
+    },
+    "chatTitle": "智能体对话",
+    "copySpec": "复制规范到对话",
+    "appTag": "MCP App"
+  }
+}

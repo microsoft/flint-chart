@@ -67,7 +67,7 @@ function getSafeHeatmapIntrinsicDomain(ctx: any, colorField: string | undefined)
 export const barChartDef: ChartTemplateDef = {
     chart: "Bar Chart",
     template: { mark: "bar", encoding: {} },
-    channels: ["x", "y", "color", "group", "opacity", "column", "row"],
+    channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'length',
     declareLayoutMode: (cs, table) => {
         const result = detectBandedAxisFromSemantics(cs, table, { preferAxis: 'x' });
@@ -91,7 +91,7 @@ export const barChartDef: ChartTemplateDef = {
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
-        shift: ['color', 'group', 'column', 'row'],
+        shift: ['color', 'column', 'row'],
     }),
 };
 
@@ -333,14 +333,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Stacked Bar Chart',
-                label: 'Stacked',
-                route: { from: 'group', to: 'color', mode: 'move' },
-                requireDiscreteSource: true,
-            },
-        ],
+        // θ (→ Stacked Bar) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -384,7 +377,6 @@ export const stackedBarChartDef: ChartTemplateDef = {
             { value: undefined, label: "Stacked (default)" },
             { value: "normalize", label: "Normalize (100%)" },
             { value: "center", label: "Center" },
-            { value: "layered", label: "Layered (overlap)" },
         ] },
     ] as ChartPropertyDef[],
     encodingActions: [makeSortAction()] as EncodingActionDef[],
@@ -396,15 +388,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
         shift: ['color', 'group', 'column', 'row'],
-        transitions: [
-            {
-                to: 'Grouped Bar Chart',
-                label: 'Grouped',
-                route: { from: 'color', to: 'group', mode: 'move' },
-                requireDiscreteSource: true,
-                maxSourceCardinality: 12,
-            },
-        ],
+        // θ (→ Grouped Bar) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -442,9 +426,7 @@ export const histogramDef: ChartTemplateDef = {
     // smooth kernel Density Plot.
     pivot: makeCartesianPivot({
         shift: ['color', 'column', 'row'],
-        transitions: [
-            { to: 'Density Plot', label: 'Density' },
-        ],
+        // θ (→ Density Plot / ECDF) is declared centrally in core/chart-transitions.ts.
     }),
 };
 
@@ -601,7 +583,7 @@ export const heatmapDef: ChartTemplateDef = {
         }
     },
     properties: [
-        { key: 'showTextLabels', label: 'Show labels', type: 'binary', defaultValue: false },
+        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
     // Color scheme is an encoding-level edit (writes encoding.scheme on the
     // color channel), so it is exposed as a Category-B encoding action rather

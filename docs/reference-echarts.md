@@ -98,7 +98,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)) | — | conditional | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
 
@@ -156,7 +156,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | Line or area interpolation method. |
-| `opacity` | number | 0.1 – 1 (step 0.05) | `0.7` | always | Mark opacity. |
+| `opacity` | number | 0.1 – 1 (step 0.05) | `0.7` | conditional | Mark opacity. |
 | `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | always | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-streamgraph.svg) Streamgraph
@@ -274,7 +274,11 @@ _No template-specific parameters._
 
 **Encoding channels:** `y`, `x`, `x2`, `color`, `detail`, `column`, `row`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `taskHeight` | number | 40 – 90 (step 5) | `70` | always | Task bar height as a percentage of each row. |
+| `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
+| `intervalLabels` | toggle | on / off | `false` | always | Text shown on task intervals. |
 
 ### ![](chart-icon-bullet.svg) Bullet Chart
 
