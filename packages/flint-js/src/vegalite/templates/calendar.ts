@@ -49,7 +49,9 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         const scheme = encScheme && encScheme !== 'default' ? encScheme : 'viridis';
         const colorScale =
             scheme === 'github'
-                ? { range: GITHUB_RANGE }
+                // Quantile scale snaps counts into the 5 canonical GitHub buckets
+                // (equal-count bins → discrete levels), rather than a smooth ramp.
+                ? { type: 'quantile' as const, range: GITHUB_RANGE }
                 : { scheme: VL_SCHEMES.has(scheme) ? scheme : 'viridis' };
 
         spec.encoding = {

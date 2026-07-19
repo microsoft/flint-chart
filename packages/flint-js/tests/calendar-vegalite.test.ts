@@ -74,11 +74,14 @@ describe('Vega-Lite Calendar Heatmap', () => {
         expect(spec.encoding.color.field).toBeUndefined();
     });
 
-    it('resolves the github scheme to an explicit range (no built-in Vega-Lite scheme)', () => {
+    it('resolves the github scheme to a quantile scale over the canonical 5-bucket range', () => {
         const spec = assembleVegaLite(calInput({ scheme: 'github' })) as any;
         expect(spec.encoding.color.scale.scheme).toBeUndefined();
-        expect(Array.isArray(spec.encoding.color.scale.range)).toBe(true);
-        expect(spec.encoding.color.scale.range[0]).toBe('#ebedf0');
+        // Quantile scale → discrete GitHub buckets, not a continuous ramp.
+        expect(spec.encoding.color.scale.type).toBe('quantile');
+        expect(spec.encoding.color.scale.range).toEqual([
+            '#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39',
+        ]);
     });
 
     it('passes a named scheme straight through to scale.scheme', () => {
