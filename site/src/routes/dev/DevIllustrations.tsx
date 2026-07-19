@@ -6,7 +6,6 @@ export function DevIllustrations() {
   return (
     <div className="dev-page dev-page-figures">
       <header className="dev-page-heading">
-        <p>Export surfaces</p>
         <h1>Illustrations</h1>
       </header>
       <ChartRedesignFigure />

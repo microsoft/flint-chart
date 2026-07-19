@@ -5,7 +5,6 @@ export function DevLabs() {
   return (
     <div className="dev-page">
       <header className="dev-page-heading">
-        <p>Experimental</p>
         <h1>Labs</h1>
       </header>
       <DodgeToggleFigure />
