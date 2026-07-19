@@ -21,7 +21,7 @@ import type {
     InstantiateContext,
     ChartWarning,
 } from '../core/types';
-import type { FormatSpec } from '../core/field-semantics';
+import { formatSpecToLabelExpr } from './format';
 import { snapToBoundHeuristic } from '../core/field-semantics';
 
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
@@ -468,66 +468,6 @@ export function vlApplyLayoutToSpec(
 // ---------------------------------------------------------------------------
 // vlApplyFieldContext — Apply field-level semantic decisions to VL encodings
 // ---------------------------------------------------------------------------
-
-/**
- * Build a Vega expression that abbreviates large numbers using a small
- * set of universally understood suffixes: K (thousands), M (millions),
- * B (billions), T (trillions).
- *
- * The expression is a nested ternary that picks the right divisor:
- *   abs(v) >= 1e12 → v/1e12 + "T"
- *   abs(v) >= 1e9  → v/1e9  + "B"
- *   abs(v) >= 1e6  → v/1e6  + "M"
- *   abs(v) >= 1e3  → v/1e3  + "K"
- *   else           → plain number
- *
- * @param prefix  Optional prefix (e.g., "$")
- * @param suffix  Optional suffix (e.g., " kg")
- * @returns  A Vega labelExpr string
- */
-function buildAbbreviationExpr(prefix?: string, suffix?: string): string {
-    const pfx = prefix ? `'${prefix}' + ` : '';
-    const sfx = suffix ? ` + '${suffix}'` : '';
-    // Use ~g to drop trailing zeros from the fractional digit
-    return (
-        `${pfx}(abs(datum.value) >= 1e12 ? format(datum.value / 1e12, '~g') + 'T' : ` +
-        `abs(datum.value) >= 1e9 ? format(datum.value / 1e9, '~g') + 'B' : ` +
-        `abs(datum.value) >= 1e6 ? format(datum.value / 1e6, '~g') + 'M' : ` +
-        `abs(datum.value) >= 1e3 ? format(datum.value / 1e3, '~g') + 'K' : ` +
-        `format(datum.value, ','))${sfx}`
-    );
-}
-
-/**
- * Build a VL-compatible format expression from a FormatSpec.
- *
- * - d3's `format()` handles the numeric pattern.
- * - Prefix/suffix are prepended/appended via a Vega expression.
- * - When `abbreviate` is true, large values are compacted (1K, 1M, 1B, 1T).
- *
- * Returns an `axis.labelExpr` / `legend.labelExpr` string, or null if
- * no formatting is needed (plain data labels suffice).
- */
-function formatSpecToLabelExpr(fmt: FormatSpec): string | null {
-    // Abbreviation takes priority — produces its own complete expression
-    if (fmt.abbreviate) {
-        return buildAbbreviationExpr(fmt.prefix, fmt.suffix);
-    }
-
-    if (!fmt.pattern) return null;
-    const hasPrefix = !!fmt.prefix;
-    const hasSuffix = !!fmt.suffix;
-
-    if (!hasPrefix && !hasSuffix) {
-        // Pure d3-format — can use axis.format directly (no expr needed)
-        return null;
-    }
-
-    // Build Vega expression: format(datum.value, pattern) with prefix/suffix
-    const pfx = hasPrefix ? `'${fmt.prefix}' + ` : '';
-    const sfx = hasSuffix ? ` + '${fmt.suffix}'` : '';
-    return `${pfx}format(datum.value, '${fmt.pattern}')${sfx}`;
-}
 
 /**
  * Compute the positive and negative stacked extremes for a quantitative field.

@@ -15,6 +15,32 @@
   color: #4b525a;
 }
 
+.gopt-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b525a;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.gopt-reset:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.07);
+  color: #1f2328;
+}
+
+.gopt-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .gopt-transform-arrange {
   display: inline-flex;
   align-items: stretch;
@@ -101,6 +127,11 @@
   outline-offset: 0;
 }
 
+.gopt-discrete {
+  position: relative;
+  padding: 0;
+}
+
 .gopt-label {
   color: #4b525a;
   font-size: 11px;
@@ -182,14 +213,26 @@
   background: #0078d4;
 }
 
-/* discrete: compact dropdown whose visible width hugs the current value; a
-   transparent native <select> overlays it for native picking + keyboard. */
-.gopt-select {
-  position: relative;
+/* Discrete property dropdown, matching the chart-type selector menu. */
+.gopt-select-trigger {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   min-width: 0;
+  min-height: 22px;
+  padding: 0 5px 0 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.gopt-select-trigger:hover,
+.gopt-select-trigger[aria-expanded='true'] {
+  background: rgba(0, 0, 0, 0.025);
 }
 
 .gopt-select-value {
@@ -208,19 +251,49 @@
   pointer-events: none;
 }
 
-.gopt-select-native {
+.gopt-select-menu {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  z-index: 60;
   margin: 0;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
+  padding: 4px;
+  min-width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid #d0d7de;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.gopt-select-menu-top {
+  left: -1px;
+  bottom: calc(100% + 5px);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.gopt-select-option {
   appearance: none;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #1f2328;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gopt-select-option:hover,
+.gopt-select-option:focus-visible {
+  background: rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+
+.gopt-select-option-selected {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 /* binary: small toggle switch */

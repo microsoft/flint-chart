@@ -12,7 +12,8 @@
  */
 import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useApp } from '@modelcontextprotocol/ext-apps/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
 
 import { renderFlintSvg, type FlintRenderResult } from './render';
@@ -41,6 +42,80 @@ function compactSelectLabel(label: string): string {
   const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();
   if (withoutHint.length <= 16) return withoutHint;
   return `${withoutHint.slice(0, 13).trimEnd()}...`;
+}
+
+function DiscreteControl(props: {
+  label: string;
+  options: { value: unknown; label: string }[];
+  selectedIndex: number;
+  width: number;
+  onChange: (value: unknown) => void;
+}) {
+  const { label, options, selectedIndex, width, onChange } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = options[selectedIndex];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      className="opt opt-discrete"
+      style={{ '--opt-width': `${width}px` } as React.CSSProperties}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${label}: ${selected?.label ?? ''}`}
+        title={selected?.label}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="opt-label" title={label}>{label}</span>
+        <span className="select-value">{compactSelectLabel(selected?.label ?? '')}</span>
+        <svg className="select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="select-menu select-menu-top" role="listbox" aria-label={label}>
+          {options.map((option, index) => {
+            const isSelected = index === selectedIndex;
+            return (
+              <li key={index} role="option" aria-selected={isSelected}>
+                <button
+                  type="button"
+                  className={isSelected ? 'select-option select-option-selected' : 'select-option'}
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 // Best-effort sizing: measure each option by its label length + the intrinsic
@@ -76,6 +151,20 @@ function ControlRow(props: {
 }) {
   const { label, spec, value, width, onChange } = props;
 
+  if (spec.type === 'discrete') {
+    const current = valueKey(value);
+    const index = spec.options.findIndex((option) => valueKey(option.value) === current);
+    return (
+      <DiscreteControl
+        label={label}
+        options={spec.options}
+        selectedIndex={index < 0 ? 0 : index}
+        width={width}
+        onChange={onChange}
+      />
+    );
+  }
+
   let control: React.ReactNode = null;
   if (spec.type === 'continuous') {
     const step = spec.step ?? ((spec.max - spec.min) / 100 || 1);
@@ -110,37 +199,6 @@ function ControlRow(props: {
         <span className="control-readout" style={{ minWidth: `${readoutCh}ch` }}>
           {fmt(num)}
         </span>
-      </span>
-    );
-  } else if (spec.type === 'discrete') {
-    const current = valueKey(value);
-    const idx = spec.options.findIndex((o) => valueKey(o.value) === current);
-    const selectedIndex = idx < 0 ? 0 : idx;
-    const selected = spec.options[selectedIndex];
-    // Hug the *current* value, not the widest option. A sized text label shows
-    // the selection while a transparent native <select> overlays it for picking
-    // (keeps native keyboard + a11y). Without this, the box reserves width for
-    // its longest option, which made short selections like "Default" look long.
-    control = (
-      <span className="select-wrap">
-        <span className="select-value" title={selected?.label}>
-          {compactSelectLabel(selected?.label ?? '')}
-        </span>
-        <svg className="select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <select
-          className="select-native"
-          value={String(selectedIndex)}
-          title={selected?.label}
-          onChange={(e) => onChange(spec.options[Number(e.target.value)]?.value)}
-        >
-          {spec.options.map((o, i) => (
-            <option key={i} value={String(i)} title={o.label}>
-              {compactSelectLabel(o.label)}
-            </option>
-          ))}
-        </select>
       </span>
     );
   } else {
@@ -273,14 +331,95 @@ function TransformControl(props: {
   );
 }
 
+function ActionButton(props: {
+  label: string;
+  className?: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const { label, className = '', disabled = false, onClick, children } = props;
+  const [showTip, setShowTip] = useState(false);
+  const [tipPosition, setTipPosition] = useState({ left: 0, top: 0 });
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    if (!showTip || !anchorRef.current || !tipRef.current) return;
+    const anchor = anchorRef.current.getBoundingClientRect();
+    const tip = tipRef.current.getBoundingClientRect();
+    const gutter = 6;
+    const left = Math.min(
+      window.innerWidth - tip.width - gutter,
+      Math.max(gutter, anchor.left + (anchor.width - tip.width) / 2),
+    );
+    const above = anchor.top - tip.height - gutter;
+    const top = above >= gutter ? above : anchor.bottom + gutter;
+    setTipPosition({ left, top });
+  }, [label, showTip]);
+
+  useEffect(() => {
+    if (!showTip) return;
+    const hide = () => setShowTip(false);
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('resize', hide);
+    return () => {
+      window.removeEventListener('scroll', hide, true);
+      window.removeEventListener('resize', hide);
+    };
+  }, [showTip]);
+
+  return (
+    <span
+      ref={anchorRef}
+      className="action-tip-anchor"
+      onMouseEnter={() => setShowTip(true)}
+      onMouseLeave={() => setShowTip(false)}
+      onFocus={() => setShowTip(true)}
+      onBlur={() => setShowTip(false)}
+    >
+      <button
+        type="button"
+        className={`bar-link ${className}`.trim()}
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
+      >
+        {children}
+      </button>
+      {showTip && createPortal(
+        <span
+          ref={tipRef}
+          className="action-tooltip"
+          role="tooltip"
+          style={{ left: tipPosition.left, top: tipPosition.top }}
+        >
+          {label}
+        </span>,
+        document.body,
+      )}
+    </span>
+  );
+}
+
 function OptionsBar(props: {
   input: ChartAssemblyInput;
   model: PanelModel;
   onInput: (next: ChartAssemblyInput) => void;
-  onSend: () => void;
-  sent: boolean;
+  onReset: () => void;
+  canReset: boolean;
+  onCopyPng: () => void;
+  copyStatus: 'idle' | 'copying' | 'copied' | 'downloaded' | 'error';
+  copyError: string | null;
 }) {
-  const { input, model, onInput, onSend, sent } = props;
+  const { input, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
+  const copyFeedback = {
+    idle: 'Copy PNG',
+    copying: 'Copying PNG…',
+    copied: 'PNG copied',
+    downloaded: 'PNG downloaded',
+    error: copyError ? `Copy failed: ${copyError}` : 'Could not copy PNG',
+  }[copyStatus];
 
   // Lean bar: surface only Flint's dynamic low-level options — visual chart
   // properties plus encoding actions (sort, …) — inline below the chart,
@@ -332,24 +471,35 @@ function OptionsBar(props: {
             />
           ))
         )}
-        <button
-          className="bar-link"
-          onClick={onSend}
-          disabled={sent}
-          data-tip={sent ? 'Copied to chat' : 'Copy spec'}
-          aria-label={sent ? 'Copied spec to chat' : 'Copy spec to chat'}
-        >
-          {sent ? (
+        <span className="bar-actions">
+          <ActionButton
+            className="bar-reset"
+            onClick={onReset}
+            disabled={!canReset}
+            label="Reset chart"
+          >
             <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4 5.5H1.5V3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 5.5A6 6 0 1 1 2.8 11" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
-          ) : (
-            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
-              <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M3.5 10.5 A1.5 1.5 0 0 1 2.5 9.5 V3 A1.5 1.5 0 0 1 4 1.5 H10.5 A1.5 1.5 0 0 1 11.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
+          </ActionButton>
+          <ActionButton
+            onClick={onCopyPng}
+            disabled={copyStatus === 'copying'}
+            label={copyFeedback}
+          >
+            {copyStatus === 'copied' || copyStatus === 'downloaded' ? (
+              <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+                <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M3.5 10.5 A1.5 1.5 0 0 1 2.5 9.5 V3 A1.5 1.5 0 0 1 4 1.5 H10.5 A1.5 1.5 0 0 1 11.5 2.5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            )}
+          </ActionButton>
+        </span>
       </div>
     </div>
   );
@@ -364,23 +514,24 @@ export function FlintAppInner(props: {
   const [current, setCurrent] = useState<ChartAssemblyInput>(input);
   const [render, setRender] = useState<FlintRenderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'downloaded' | 'error'>('idle');
+  const [copyError, setCopyError] = useState<string | null>(null);
   const renderSeq = useRef(0);
 
   // Re-seed when a new tool input arrives from the host.
   useEffect(() => setCurrent(input), [input]);
 
-  // Clear the "Copied" confirmation a couple of seconds after a successful send.
+  // Clear export feedback after a couple of seconds.
   useEffect(() => {
-    if (!sent) return;
-    const handle = window.setTimeout(() => setSent(false), 2000);
+    if (copyStatus === 'idle' || copyStatus === 'copying') return;
+    const handle = window.setTimeout(() => setCopyStatus('idle'), 2500);
     return () => window.clearTimeout(handle);
-  }, [sent]);
+  }, [copyStatus]);
 
   // Live render (debounced) whenever the working spec changes.
   useEffect(() => {
     const seq = ++renderSeq.current;
-    setSent(false);
+    setCopyStatus('idle');
     const handle = setTimeout(() => {
       renderFlintSvg(current)
         .then((result) => {
@@ -399,23 +550,60 @@ export function FlintAppInner(props: {
   }, [current]);
 
   const model = useMemo(() => buildPanelModel(current), [current]);
+  const canReset = useMemo(
+    () => JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec),
+    [current.chart_spec, input.chart_spec],
+  );
 
-  const handleSend = useCallback(async () => {
-    const payload = {
-      chart_spec: current.chart_spec,
-      ...(current.semantic_types ? { semantic_types: current.semantic_types } : {}),
-    };
-    const text =
-      'Updated Flint chart spec from the chart view:\n\n```json\n' +
-      JSON.stringify(payload, null, 2) +
-      '\n```';
+  const handleCopyPng = useCallback(async () => {
+    if (!render?.png) return;
+    setCopyStatus('copying');
+    setCopyError(null);
+    const png = render.png;
+    let clipboardError: unknown;
     try {
-      await app.sendMessage({ role: 'user', content: [{ type: 'text', text }] });
-      setSent(true);
-    } catch {
-      /* host may reject; ignore */
+      if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+        setCopyStatus('copied');
+        return;
+      }
+    } catch (err) {
+      clipboardError = err;
+      // Fall through to a host-mediated download when clipboard images are denied.
     }
-  }, [app, current]);
+    if (!app.getHostCapabilities()?.downloadFile) {
+      const message = clipboardError instanceof Error
+        ? clipboardError.message
+        : 'Image clipboard access is unavailable in this host';
+      setCopyError(message);
+      setCopyStatus('error');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await png.arrayBuffer());
+      let binary = '';
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      const result = await app.downloadFile({
+        contents: [{
+          type: 'resource',
+          resource: {
+            uri: 'file:///flint-chart.png',
+            mimeType: 'image/png',
+            blob: btoa(binary),
+          },
+        }],
+      });
+      if (result.isError) {
+        setCopyError('The host declined the PNG download');
+        setCopyStatus('error');
+      } else {
+        setCopyStatus('downloaded');
+      }
+    } catch (err) {
+      setCopyError(err instanceof Error ? err.message : 'PNG export failed');
+      setCopyStatus('error');
+    }
+  }, [app, render]);
 
   const warnings = render?.warnings ?? [];
 
@@ -456,8 +644,11 @@ export function FlintAppInner(props: {
         input={current}
         model={model}
         onInput={setCurrent}
-        onSend={handleSend}
-        sent={sent}
+        onReset={() => setCurrent(input)}
+        canReset={canReset}
+        onCopyPng={handleCopyPng}
+        copyStatus={copyStatus}
+        copyError={copyError}
       />
     </main>
   );

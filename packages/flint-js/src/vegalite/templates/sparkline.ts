@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef, ChartEncoding } from '../../core/types';
+import type { FormatSpec } from '../../core/field-semantics';
+import { formatSpecToVegaExpr } from '../format';
 import { interpolateConfigProperty, applyInterpolate } from './line';
 
 /**
@@ -97,6 +99,8 @@ const approxNum = (v: number): string => {
     if (a >= 1e3) return (v / 1e3).toFixed(1) + 'k';
     return String(Math.round(v * 10) / 10);
 };
+const approxFormattedNum = (v: number, fmt?: FormatSpec): string =>
+    `${fmt?.prefix ?? ''}${approxNum(v)}${fmt?.suffix ?? ''}${fmt?.pattern ? '0' : ''}`;
 
 export const sparklineDef: ChartTemplateDef = {
     chart: 'Sparkline',
@@ -144,15 +148,6 @@ export const sparklineDef: ChartTemplateDef = {
         const hasColor = !!enc.color?.field;
         const baseline = (ctx.chartProperties?.baseline as string) ?? 'mean';
         const useMedian = baseline === 'median';
-        // Per-strip independent Y is the default: each strip self-scales to its
-        // own range so the trace fills the band and sits centered next to its
-        // category label and value (Tufte's "dataword" — shape-at-a-glance). A
-        // shared scale instead pins every trace to one global range, which
-        // shoves low-level series to the strip floor (and high ones to the top),
-        // visibly misaligning them from their centered label/number. Set
-        // `independentYAxis: false` to opt back into the shared, level-comparable
-        // scale. Applies to the trend facet's per-row y resolution.
-        const independentY = ctx.chartProperties?.independentYAxis !== false;
 
         // Guard: without both position fields there is no trend to draw; leave
         // a valid single-line spec so assembly still succeeds.
@@ -199,6 +194,19 @@ export const sparklineDef: ChartTemplateDef = {
 
         const catData = regions.map(r => ({ [facetField]: r }));
         const avgData = regions.map(r => ({ [facetField]: r, flintSparkAvg: aggOf(r) }));
+        const valueFmt = ctx.channelSemantics?.y?.format;
+        const avgTransforms: any[] = [];
+        let avgTextEncoding: any = { field: 'flintSparkAvg', type: 'quantitative', format: '.3~s' };
+        const valueExpr = valueFmt
+            ? formatSpecToVegaExpr(valueFmt, 'datum.flintSparkAvg')
+            : null;
+        if (valueExpr) {
+            avgTransforms.push({
+                calculate: valueExpr,
+                as: 'flintSparkAvgFormatted',
+            });
+            avgTextEncoding = { field: 'flintSparkAvgFormatted', type: 'nominal' };
+        }
 
         // ── Sizing (manual, like the Bar Table — the layout engine's faceted
         // sizing doesn't apply to a hand-built hconcat). Column widths follow
@@ -214,7 +222,7 @@ export const sparklineDef: ChartTemplateDef = {
         const maxCatChars = Math.max(textWidth(categoryTitle), 4,
             ...regions.map(r => textWidth(r)));
         const maxAvgChars = Math.max(textWidth(avgTitle), 4,
-            ...avgData.map(d => textWidth(approxNum(d.flintSparkAvg))));
+            ...avgData.map(d => textWidth(approxFormattedNum(d.flintSparkAvg, valueFmt))));
         const catW = Math.min(200, Math.max(40, Math.round(maxCatChars * CHAR_PX) + 10));
         const avgW = Math.min(96, Math.max(34, Math.round(maxAvgChars * CHAR_PX) + 8));
         // Compact by default (DEFAULT_TREND_W), tunable via `trendWidth`, and
@@ -280,11 +288,7 @@ export const sparklineDef: ChartTemplateDef = {
             data: { values: trendData },
             facet: { row: facetRow },
             spec: { width: trendW, height: stripH, layer: layers },
-            // Per-row y resolution: `independent` (default) self-scales each
-            // strip so its trace fills the band and aligns with its row label;
-            // `shared` (via `independentYAxis: false`) keeps every row on one
-            // comparable scale.
-            resolve: { scale: { y: independentY ? 'independent' : 'shared' } },
+            resolve: { scale: { y: 'independent' } },
             title: { text: trendTitle, anchor: 'middle', ...HEADER_STYLE },
         };
         const avgPanel = {
@@ -292,11 +296,12 @@ export const sparklineDef: ChartTemplateDef = {
             facet: { row: facetRow },
             spec: {
                 width: avgW, height: stripH,
+                ...(avgTransforms.length ? { transform: avgTransforms } : {}),
                 mark: { type: 'text', align: 'right', baseline: 'middle', fontSize: 11, fontWeight: 600 },
                 encoding: {
                     y: { value: stripH / 2 },
                     x: { value: avgW },
-                    text: { field: 'flintSparkAvg', type: 'quantitative', format: '.3~s' },
+                    text: avgTextEncoding,
                     ...(hasColor
                         ? { color: { field: facetField, type: 'nominal', legend: null } }
                         : { color: { value: MONO_VALUE } }),

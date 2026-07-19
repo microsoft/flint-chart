@@ -244,6 +244,8 @@ export const boxplotDef: ChartTemplateDef = {
         // single-band branch below (one full-width box per category).
         const colorEnc = spec.encoding?.color;
         let subgroups = 1;
+        let localSeparatorAxis: 'x' | 'y' | undefined;
+        let localSeparatorValues: Record<string, unknown>[] = [];
         const colorField = ctx.channelSemantics?.color?.field;
         const axisField = hasDiscreteX
             ? ctx.channelSemantics?.x?.field
@@ -275,6 +277,9 @@ export const boxplotDef: ChartTemplateDef = {
                         { joinaggregate: [{ op: 'distinct', field: colorField, as: '__localCount' }], groupby: [axisField] },
                         { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
                     ];
+                    localSeparatorAxis = hasDiscreteX ? 'x' : 'y';
+                    const categories = [...new Set((ctx.fullTable ?? ctx.table).map((row) => row[axisField]))];
+                    localSeparatorValues = categories.slice(0, -1).map((category) => ({ [axisField]: category }));
                 } else {
                     // Global: a fixed lane per distinct color across all bands.
                     const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
@@ -299,6 +304,29 @@ export const boxplotDef: ChartTemplateDef = {
                 const boxSize = Math.max(4, Math.round(boxStep * BOXPLOT_BAND_FILL));
                 spec.mark = setMarkProp(spec.mark, 'size', boxSize);
             }
+        }
+
+        if (localSeparatorAxis && localSeparatorValues.length > 0) {
+            const boxLayer = { mark: spec.mark, encoding: spec.encoding, transform: spec.transform };
+            const axisEncoding = spec.encoding[localSeparatorAxis];
+            spec.layer = [
+                {
+                    data: { values: localSeparatorValues },
+                    mark: { type: 'rule', stroke: '#c9ced6', strokeDash: [4, 4], strokeWidth: 1, opacity: 0.75 },
+                    encoding: {
+                        [localSeparatorAxis]: {
+                            field: axisField,
+                            type: 'nominal',
+                            sort: axisEncoding.sort,
+                            bandPosition: 1,
+                        },
+                    },
+                },
+                boxLayer,
+            ];
+            delete spec.mark;
+            delete spec.encoding;
+            delete spec.transform;
         }
     },
     properties: [

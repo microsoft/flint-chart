@@ -204,6 +204,7 @@ describe('MCP server', () => {
     const read = await client.readResource({ uri: 'ui://flint-chart/chart-view.html' });
     const html = resourceText(read.contents[0]);
     expect(html.toLowerCase()).toContain('<!doctype html>');
+    expect((read.contents[0] as any)._meta?.ui?.permissions?.clipboardWrite).toEqual({});
   });
 
   it('exposes a prompt that embeds the agent skill', async () => {    const { prompts } = await client.listPrompts();

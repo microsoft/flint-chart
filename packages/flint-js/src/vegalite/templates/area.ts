@@ -150,7 +150,10 @@ export const areaChartDef: ChartTemplateDef = {
     },
     properties: [
         interpolateConfigProperty,
-        { key: "opacity", label: "Opacity", type: "continuous", min: 0.1, max: 1, step: 0.1, defaultValue: 0.7 },
+        { key: "opacity", label: "Opacity", type: "continuous", min: 0.1, max: 1, step: 0.1, defaultValue: 0.7,
+          check: (ctx) => ({
+              applicable: !!ctx.encodings.color?.field && ctx.chartProperties?.stackMode === 'layered',
+          }) },
         { key: "stackMode", label: "Stack", type: "discrete",
           // A stack mode only does something when a series dimension (color) is
           // present to stack; without it there is a single area band.

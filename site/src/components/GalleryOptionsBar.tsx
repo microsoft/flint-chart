@@ -30,6 +30,78 @@ function compactSelectLabel(label: string): string {
   return `${withoutHint.slice(0, 13).trimEnd()}...`;
 }
 
+function DiscreteControl(props: {
+  label: string;
+  options: { value: unknown; label: string }[];
+  selectedIndex: number;
+  onChange: (value: unknown) => void;
+}) {
+  const { label, options, selectedIndex, onChange } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = options[selectedIndex];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      className="gopt gopt-discrete"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="gopt-select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${label}: ${selected?.label ?? ''}`}
+        title={selected?.label}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="gopt-label" title={label}>{label}</span>
+        <span className="gopt-select-value">{compactSelectLabel(selected?.label ?? '')}</span>
+        <svg className="gopt-select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="gopt-select-menu gopt-select-menu-top" role="listbox" aria-label={label}>
+          {options.map((option, index) => {
+            const isSelected = index === selectedIndex;
+            return (
+              <li key={index} role="option" aria-selected={isSelected}>
+                <button
+                  type="button"
+                  className={isSelected ? 'gopt-select-option gopt-select-option-selected' : 'gopt-select-option'}
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ControlRow(props: {
   label: string;
   spec: ControlSpec;
@@ -37,6 +109,19 @@ function ControlRow(props: {
   onChange: (value: unknown) => void;
 }) {
   const { label, spec, value, onChange } = props;
+
+  if (spec.type === 'discrete') {
+    const current = valueKey(value);
+    const index = spec.options.findIndex((option) => valueKey(option.value) === current);
+    return (
+      <DiscreteControl
+        label={label}
+        options={spec.options}
+        selectedIndex={index < 0 ? 0 : index}
+        onChange={onChange}
+      />
+    );
+  }
 
   let control: React.ReactNode = null;
   if (spec.type === 'continuous') {
@@ -55,33 +140,6 @@ function ControlRow(props: {
           onChange={(e) => onChange(Number(e.target.value))}
         />
         <span className="gopt-readout">{Number(num).toLocaleString()}</span>
-      </span>
-    );
-  } else if (spec.type === 'discrete') {
-    const current = valueKey(value);
-    const idx = spec.options.findIndex((o) => valueKey(o.value) === current);
-    const selectedIndex = idx < 0 ? 0 : idx;
-    const selected = spec.options[selectedIndex];
-    control = (
-      <span className="gopt-select">
-        <span className="gopt-select-value" title={selected?.label}>
-          {compactSelectLabel(selected?.label ?? '')}
-        </span>
-        <svg className="gopt-select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <select
-          className="gopt-select-native"
-          value={String(selectedIndex)}
-          title={selected?.label}
-          onChange={(e) => onChange(spec.options[Number(e.target.value)]?.value)}
-        >
-          {spec.options.map((o, i) => (
-            <option key={i} value={String(i)} title={o.label}>
-              {compactSelectLabel(o.label)}
-            </option>
-          ))}
-        </select>
       </span>
     );
   } else {
@@ -305,10 +363,12 @@ function TransformControl(props: {
 export function GalleryOptionsBar(props: {
   model: PanelModel;
   onChange: (key: string, value: unknown) => void;
+  onReset: () => void;
+  canReset: boolean;
   chartType: string;
   style?: CSSProperties;
 }) {
-  const { model, onChange, chartType, style } = props;
+  const { model, onChange, onReset, canReset, chartType, style } = props;
 
   const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
     ...model.properties.map((option: ChartOption) => ({
@@ -352,6 +412,19 @@ export function GalleryOptionsBar(props: {
           />
         ))
       )}
+      <button
+        type="button"
+        className="gopt-reset"
+        onClick={onReset}
+        disabled={!canReset}
+        title="Reset chart"
+        aria-label="Reset chart"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 5.5H1.5V3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 5.5A6 6 0 1 1 2.8 11" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+      </button>
     </div>
   );
 }

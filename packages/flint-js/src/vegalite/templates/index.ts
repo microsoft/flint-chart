@@ -219,10 +219,11 @@ const AXIS_DTYPE_PROPERTIES: ChartPropertyDef[] = [
  */
 function withInjectedProperties(def: ChartTemplateDef): ChartTemplateDef {
     const hasFacetChannels = def.channels?.some(ch => ch === 'column' || ch === 'row');
+    const supportsFacetAxisControl = hasFacetChannels && def.chart !== 'Sparkline';
     const isPosition = def.markCognitiveChannel === 'position';
     const wantsAxisDtype = AXIS_DTYPE_CHARTS.has(def.chart);
     const extra: ChartPropertyDef[] = [
-        ...(hasFacetChannels ? FACET_AXIS_PROPERTIES : []),
+        ...(supportsFacetAxisControl ? FACET_AXIS_PROPERTIES : []),
         ...(isPosition ? LOG_SCALE_PROPERTIES : []),
         ...(isPosition ? ZERO_BASELINE_PROPERTIES : []),
         ...(wantsAxisDtype ? AXIS_DTYPE_PROPERTIES : []),

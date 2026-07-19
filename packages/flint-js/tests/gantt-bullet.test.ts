@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite } from '../src';
+import { assembleVegaLite, getChartOptions } from '../src';
+import { formatGanttDuration, sortGanttRows } from '../src/chart-types/gantt';
 import { genGanttTests, genBulletTests } from '../src/test-data';
 import type { TestCase } from '../src/test-data/types';
 
@@ -42,6 +43,38 @@ function toInput(tc: TestCase) {
 describe('Gantt chart', () => {
   const spec = assembleVegaLite(toInput(genGanttTests()[0])) as any;
 
+  it('formats elapsed durations with an adaptive unit', () => {
+    expect(formatGanttDuration(0)).toBe('0ms');
+    expect(formatGanttDuration(500)).toBe('500ms');
+    expect(formatGanttDuration(30_000)).toBe('30s');
+    expect(formatGanttDuration(90_000)).toBe('1.5min');
+    expect(formatGanttDuration(7_200_000)).toBe('2h');
+    expect(formatGanttDuration(129_600_000)).toBe('1.5d');
+  });
+
+  it('keeps an explicitly temporal one-task interval temporal', () => {
+    const input = {
+      data: { values: [{ task: 'Review', start: '2026-07-19T09:00:00Z', end: '2026-07-19T10:30:00Z' }] },
+      semantic_types: { task: 'Category', start: 'DateTime', end: 'DateTime' },
+      chart_spec: {
+        chartType: 'Gantt Chart',
+        encodings: { y: 'task', x: 'start', x2: 'end' },
+        chartProperties: { intervalLabels: true },
+      },
+    };
+    const configured = assembleVegaLite(input as any) as any;
+
+    expect(configured.layer[0].encoding.x.type).toBe('temporal');
+    expect(configured.transform[0].calculate).toContain("'h'");
+  });
+
+  it('exposes labels as an off-by-default binary toggle', () => {
+    const labels = getChartOptions(toInput(genGanttTests()[0]) as any)
+      .find((option) => option.key === 'intervalLabels');
+
+    expect(labels).toMatchObject({ type: 'binary', value: false, applicable: true });
+  });
+
   it('renders a single bar mark spanning x → x2', () => {
     expect(spec.mark?.type).toBe('bar');
     expect(spec.encoding?.x?.field).toBe('start');
@@ -61,6 +94,35 @@ describe('Gantt chart', () => {
 
   it('colors bars by phase', () => {
     expect(spec.encoding?.color?.field).toBe('phase');
+  });
+
+  it('applies task height, corners, and interval labels while retaining start order', () => {
+    const input = toInput(genGanttTests()[0]) as any;
+    input.chart_spec.chartProperties = {
+      taskHeight: 55,
+      cornerRadius: 6,
+      intervalLabels: true,
+    };
+    const configured = assembleVegaLite(input) as any;
+    const bar = configured.layer[0];
+    const labels = configured.layer[1];
+
+    expect(bar.mark).toMatchObject({ type: 'bar', height: { band: 0.55 }, cornerRadius: 6 });
+    expect(bar.encoding.y.sort).toMatchObject({ field: 'start', order: 'ascending' });
+    expect(labels.mark.type).toBe('text');
+    expect(labels.encoding.y.axis).not.toBeNull();
+    expect(labels.encoding.text.field).toBe('__gantt_label');
+    expect(configured.transform.some((t: any) => t.as === '__gantt_label')).toBe(true);
+    expect(bar.encoding.x.scale.padding).toBeGreaterThanOrEqual(40);
+  });
+
+  it('uses input order as the tie-breaker for equal starts', () => {
+    const rows = sortGanttRows([
+      { task: 'Second', start: 10, end: 15, inputIndex: 1 },
+      { task: 'First', start: 10, end: 20, inputIndex: 0 },
+      { task: 'Later', start: 20, end: 25, inputIndex: 2 },
+    ]);
+    expect(rows.map((row) => row.task)).toEqual(['First', 'Second', 'Later']);
   });
 });
 

@@ -663,7 +663,6 @@ export const ecStackedBarChartDef: ChartTemplateDef = {
             key: 'stackMode', label: 'Stack', type: 'discrete', options: [
                 { value: undefined, label: 'Stacked (default)' },
                 { value: 'normalize', label: 'Normalize (100%)' },
-                { value: 'layered', label: 'Layered (overlap)' },
             ],
             check: (ctx) => ({ applicable: !!ctx.encodings.color?.field }),
         },

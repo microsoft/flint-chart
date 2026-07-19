@@ -20,7 +20,15 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { coerceUnixMsForChartJs, DEFAULT_COLORS, DEFAULT_BG_COLORS } from './utils';
+import {
+    coerceGanttEndpoint,
+    formatGanttLabel,
+    ganttLabelReservePx,
+    GANTT_PROPERTIES,
+    isGanttTemporal,
+    sortGanttRows,
+} from '../../chart-types/gantt';
+import { DEFAULT_COLORS, DEFAULT_BG_COLORS } from './utils';
 
 function fmtDate(ms: number): string {
     if (!Number.isFinite(ms)) return '';
@@ -34,25 +42,29 @@ export const cjsGanttChartDef: ChartTemplateDef = {
     markCognitiveChannel: 'position',
     declareLayoutMode: () => ({ axisFlags: { y: { banded: true } } }),
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table } = ctx;
+        const { channelSemantics, table, chartProperties, semanticTypes } = ctx;
         const taskField = channelSemantics.y?.field;
         const startField = channelSemantics.x?.field;
         const endField = channelSemantics.x2?.field;
         const colorField = channelSemantics.color?.field;
         if (!taskField || !startField || !endField || table.length === 0) return;
 
-        const temporal = channelSemantics.x?.type === 'temporal';
-        const num = (v: unknown) => (temporal ? coerceUnixMsForChartJs(v) : Number(v));
+        const temporal = isGanttTemporal(channelSemantics.x?.type, semanticTypes[startField]);
+        const num = (v: unknown) => coerceGanttEndpoint(v, temporal);
 
-        const rows = table
-            .map((r: any) => ({
+        const rows = sortGanttRows(table
+            .map((r: any, inputIndex: number) => ({
                 task: String(r[taskField] ?? ''),
                 start: num(r[startField]),
                 end: num(r[endField]),
                 group: colorField != null ? String(r[colorField] ?? '') : undefined,
+                inputIndex,
             }))
-            .filter((r) => r.task && Number.isFinite(r.start) && Number.isFinite(r.end))
-            .sort((a, b) => a.start - b.start);
+            .filter((r) => r.task && Number.isFinite(r.start) && Number.isFinite(r.end)));
+        const taskHeight = chartProperties?.taskHeight ?? 70;
+        const cornerRadius = chartProperties?.cornerRadius ?? 2;
+        const intervalLabels = chartProperties?.intervalLabels === true;
+        const labelReserve = ganttLabelReservePx(rows, temporal);
 
         const groups = colorField
             ? Array.from(new Set(rows.map((r) => r.group ?? '')))
@@ -83,14 +95,18 @@ export const cjsGanttChartDef: ChartTemplateDef = {
                     backgroundColor: bg,
                     borderColor: border,
                     borderWidth: 1,
-                    borderRadius: 2,
+                    borderRadius: cornerRadius,
                     borderSkipped: false,
+                    barPercentage: taskHeight / 100,
                 }],
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                ...(intervalLabels
+                    ? { layout: { padding: { right: labelReserve } } }
+                    : {}),
                 scales: {
                     x: {
                         beginAtZero: false,
@@ -132,8 +148,33 @@ export const cjsGanttChartDef: ChartTemplateDef = {
             },
         };
 
+        if (intervalLabels) {
+            config.plugins = [{
+                id: 'ganttLabels',
+                afterDatasetsDraw: (chart: any) => {
+                    const { ctx: canvasContext } = chart;
+                    canvasContext.save();
+                    canvasContext.fillStyle = '#333333';
+                    canvasContext.font = '10px sans-serif';
+                    canvasContext.textAlign = 'left';
+                    canvasContext.textBaseline = 'middle';
+                    chart.getDatasetMeta(0).data.forEach((bar: any, index: number) => {
+                        const row = rows[index];
+                        if (!row) return;
+                        canvasContext.fillText(
+                            formatGanttLabel(row.start, row.end, temporal),
+                            bar.x + 4,
+                            bar.y,
+                        );
+                    });
+                    canvasContext.restore();
+                },
+            }];
+        }
+
         Object.assign(spec, config);
         delete spec.mark;
         delete spec.encoding;
     },
+    properties: GANTT_PROPERTIES,
 };

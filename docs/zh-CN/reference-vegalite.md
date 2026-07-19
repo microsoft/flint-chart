@@ -269,7 +269,6 @@ _无模板专属参数。_
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | 折线或面积插值方法。 |
 | `baseline` | choice | `mean` (Average), `zero` (Zero), `median` (Median), `none` (None) | `mean` | always | 参考线 |
 | `trendWidth` | number | 80 – 600 (step 10) | `240` | always | 迷你图宽度 |
-| `independentYAxis` | toggle | on / off | `false` | conditional | 为分面使用独立的 y 轴比例尺。 |
 | `logScale_x` | toggle | on / off | `false` | conditional | 在 x 轴上使用对数/symlog 比例尺。 |
 | `logScale_y` | toggle | on / off | `false` | conditional | 在 y 轴上使用对数/symlog 比例尺。 |
 | `includeZero_x` | toggle | on / off | `false` | conditional | 将 x 轴锚定在零。 |

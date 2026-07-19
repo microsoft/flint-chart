@@ -377,7 +377,6 @@ export const stackedBarChartDef: ChartTemplateDef = {
             { value: undefined, label: "Stacked (default)" },
             { value: "normalize", label: "Normalize (100%)" },
             { value: "center", label: "Center" },
-            { value: "layered", label: "Layered (overlap)" },
         ] },
     ] as ChartPropertyDef[],
     encodingActions: [makeSortAction()] as EncodingActionDef[],

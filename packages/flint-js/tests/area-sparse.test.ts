@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite } from '../src';
+import { assembleVegaLite, getChartOptions } from '../src';
 
 // Series 'A' is missing 2020-02, series 'B' is missing 2020-03.
 const SPARSE = [
@@ -48,5 +48,29 @@ describe('sparse area gap handling — no fabricated data', () => {
         const aFeb = (spec.data.values as any[]).find((r) => r.s === 'A' && String(r.d).startsWith('2020-02'));
         expect(Math.round(aFeb.v)).toBe(20);
         expect(spec.encoding.y.stack).not.toBe(null); // still stacked
+    });
+});
+
+describe('area opacity option applicability', () => {
+    const input = (chartProperties?: Record<string, unknown>, withColor = true) => ({
+        data: { values: SPARSE },
+        semantic_types: { d: 'Date', v: 'Quantity', s: 'Category' },
+        chart_spec: {
+            chartType: 'Area Chart',
+            encodings: { x: 'd', y: 'v', ...(withColor ? { color: 's' } : {}) },
+            chartProperties,
+            baseSize: { width: 400, height: 300 },
+        },
+    });
+    const opacityApplicable = (chartInput: ReturnType<typeof input>) =>
+        getChartOptions(chartInput).find((option) => option.key === 'opacity')?.applicable;
+
+    it('hides opacity for stacked or single-series areas', () => {
+        expect(opacityApplicable(input())).toBe(false);
+        expect(opacityApplicable(input(undefined, false))).toBe(false);
+    });
+
+    it('shows opacity for layered multi-series areas', () => {
+        expect(opacityApplicable(input({ stackMode: 'layered' }))).toBe(true);
     });
 });

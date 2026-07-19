@@ -103,7 +103,7 @@ const areaInput: ChartAssemblyInput = {
       y: { field: 'hours' },
       color: { field: 'stage' },
     },
-    chartProperties: { opacity: 0.7, interpolate: 'monotone' },
+    chartProperties: { interpolate: 'monotone' },
     baseSize: { width: 360, height: 360 },
     canvasSize: { width: 720, height: 720 },
   },
@@ -174,7 +174,7 @@ const sparklineInput: ChartAssemblyInput = {
 const examples: Example[] = [
   { id: 'line', title: 'Line Chart', note: 'pivot · dropdown · toggle', input: lineInput },
   { id: 'scatter', title: 'Scatter Plot', note: 'opacity slider · regression dropdown', input: scatterInput },
-  { id: 'area', title: 'Area Chart', note: 'opacity slider · curve · stack', input: areaInput },
+  { id: 'area', title: 'Area Chart', note: 'curve · stack', input: areaInput },
   { id: 'bar', title: 'Bar Chart', note: 'corners slider · sort', input: barInput },
   { id: 'sparkline', title: 'Sparkline', note: 'curve · shared Y · packed rows', input: sparklineInput },
 ];
