@@ -16,6 +16,7 @@ import { cjsStripPlotDef } from './jitter';
 import { cjsBarChartDef, cjsStackedBarChartDef, cjsGroupedBarChartDef } from './bar';
 import { cjsComboChartDef } from './combo';
 import { cjsLineChartDef } from './line';
+import { cjsBumpChartDef } from './bump';
 import { cjsSlopeChartDef } from './slope';
 import { cjsAreaChartDef } from './area';
 import { cjsRangeAreaChartDef } from './range-area';
@@ -34,7 +35,7 @@ import { cjsWaterfallChartDef } from './waterfall';
 export const cjsTemplateDefs: { [key: string]: ChartTemplateDef[] } = {
     'Scatter & Point': [cjsScatterPlotDef, cjsConnectedScatterDef, cjsBubbleChartDef, cjsStripPlotDef],
     'Bar':             [cjsBarChartDef, cjsGroupedBarChartDef, cjsStackedBarChartDef, cjsComboChartDef, cjsHistogramDef, cjsWaterfallChartDef, cjsGanttChartDef],
-    'Line & Area':     [cjsLineChartDef, cjsSlopeChartDef, cjsAreaChartDef, cjsRangeAreaChartDef, cjsEcdfPlotDef],
+    'Line & Area':     [cjsLineChartDef, cjsBumpChartDef, cjsSlopeChartDef, cjsAreaChartDef, cjsRangeAreaChartDef, cjsEcdfPlotDef],
     'Part-to-Whole':   [cjsPieChartDef, cjsDoughnutChartDef],
     'Polar':           [cjsRadarChartDef, cjsRoseChartDef],
 };
