@@ -272,3 +272,4 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 - [Semantic Type](/documentation/semantic-types) — type hierarchy and resolution
 - [Getting started](/documentation/getting-started) — hands-on walkthrough
 - [Extending backends](/documentation/adding-a-backend) — new `assemble*()` target
+- [Accessibility](/documentation/accessibility) — generated descriptions, aria, decal opt-in

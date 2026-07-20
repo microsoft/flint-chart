@@ -1085,6 +1085,14 @@ export interface AssembleOptions {
     /** Whether to add tooltips to the chart (default: false) */
     addTooltips?: boolean;
     /**
+     * Opt in to ECharts decal patterns (`aria.decal`): per-series texture
+     * overlays that keep series distinguishable without color (color-vision
+     * deficiency support). Off by default because decals visibly change the
+     * chart. Accessible descriptions and aria labels are always emitted and
+     * need no flag. ECharts backend only (default: false).
+     */
+    a11yDecal?: boolean;
+    /**
      * Fraction of each step reserved for inter-category padding (0–1).
      * VL pads *inside* the step (band = step × (1 − padding)), so this
      * value should match VL's paddingInner.  ECharts pads *outside* the

@@ -58,6 +58,7 @@ import {
     LayoutDeclaration,
     InstantiateContext,
 } from '../core/types';
+import { buildChartDescription } from '../core/a11y-description';
 import type { ChartWarning } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
@@ -498,6 +499,24 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
     // RESULT
     // ═══════════════════════════════════════════════════════════════════════
+
+    // Accessible metadata via ECharts' built-in aria module. The generated
+    // label description is invisible metadata and always on; decal patterns
+    // visibly change the chart, so they stay behind options.a11yDecal.
+    if (ecOption.aria == null) {
+        ecOption.aria = {
+            enabled: true,
+            label: {
+                description: buildChartDescription({
+                    chartType,
+                    channelSemantics,
+                    table: values,
+                    fieldDisplayNames: input.field_display_names,
+                }),
+            },
+            ...(effectiveOptions.a11yDecal ? { decal: { show: true } } : {}),
+        };
+    }
 
     // Attach metadata
     if (warnings.length > 0) {
