@@ -1,0 +1,115 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Segment": "Category",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "Segment",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 88.6,
+        "Y": 36.1,
+        "Segment": "Electronics",
+        "Size": 33
+      },
+      {
+        "X": 26.6,
+        "Y": 56.1,
+        "Segment": "Clothing",
+        "Size": 77.6
+      },
+      {
+        "X": 80.8,
+        "Y": 84.9,
+        "Segment": "Food",
+        "Size": 36.9
+      },
+      {
+        "X": 6.5,
+        "Y": 20.2,
+        "Segment": "Electronics",
+        "Size": 32.8
+      },
+      {
+        "X": 68,
+        "Y": 79.1,
+        "Segment": "Clothing",
+        "Size": 62.4
+      },
+      {
+        "X": 77.2,
+        "Y": 26.9,
+        "Segment": "Food",
+        "Size": 62
+      },
+      {
+        "X": 81.6,
+        "Y": 2.7,
+        "Segment": "Electronics",
+        "Size": 39.3
+      },
+      {
+        "X": 35.9,
+        "Y": 88,
+        "Segment": "Clothing",
+        "Size": 58.7
+      },
+      {
+        "X": 26.9,
+        "Y": 32.2,
+        "Segment": "Food",
+        "Size": 96.7
+      },
+      {
+        "X": 73.2,
+        "Y": 39.8,
+        "Segment": "Electronics",
+        "Size": 47.5
+      },
+      {
+        "X": 12.5,
+        "Y": 6.8,
+        "Segment": "Clothing",
+        "Size": 20.1
+      },
+      {
+        "X": 84,
+        "Y": 75.3,
+        "Segment": "Food",
+        "Size": 31.3
+      },
+      {
+        "X": 1,
+        "Y": 1.5,
+        "Segment": "Electronics",
+        "Size": 21.7
+      },
+      {
+        "X": 26.7,
+        "Y": 60.9,
+        "Segment": "Clothing",
+        "Size": 90.9
+      },
+      {
+        "X": 41.4,
+        "Y": 44.9,
+        "Segment": "Food",
+        "Size": 78.1
+      }
+    ]
+  }
+}

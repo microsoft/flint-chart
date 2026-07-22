@@ -1,0 +1,73 @@
+{
+  "semantic_types": {
+    "Unemployment Rate": "Quantity",
+    "Inflation Rate": "Quantity",
+    "Year": "Year"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Unemployment Rate",
+      "y": "Inflation Rate",
+      "order": "Year"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": 2014,
+        "Unemployment Rate": 6.2,
+        "Inflation Rate": 1.6
+      },
+      {
+        "Year": 2015,
+        "Unemployment Rate": 5.3,
+        "Inflation Rate": 0.1
+      },
+      {
+        "Year": 2016,
+        "Unemployment Rate": 4.9,
+        "Inflation Rate": 1.3
+      },
+      {
+        "Year": 2017,
+        "Unemployment Rate": 4.4,
+        "Inflation Rate": 2.1
+      },
+      {
+        "Year": 2018,
+        "Unemployment Rate": 3.9,
+        "Inflation Rate": 2.4
+      },
+      {
+        "Year": 2019,
+        "Unemployment Rate": 3.7,
+        "Inflation Rate": 1.8
+      },
+      {
+        "Year": 2020,
+        "Unemployment Rate": 8.1,
+        "Inflation Rate": 1.2
+      },
+      {
+        "Year": 2021,
+        "Unemployment Rate": 5.4,
+        "Inflation Rate": 4.7
+      },
+      {
+        "Year": 2022,
+        "Unemployment Rate": 3.6,
+        "Inflation Rate": 8
+      },
+      {
+        "Year": 2023,
+        "Unemployment Rate": 3.7,
+        "Inflation Rate": 4.1
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "EndDate": "Date"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "EndDate"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "EndDate": "2023-11-07"
+      },
+      {
+        "Category": "Phone",
+        "EndDate": "2023-01-28"
+      },
+      {
+        "Category": "Tablet",
+        "EndDate": "2023-07-24"
+      },
+      {
+        "Category": "Desktop",
+        "EndDate": "2023-04-27"
+      },
+      {
+        "Category": "Monitor",
+        "EndDate": "2023-07-12"
+      }
+    ]
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Y": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Y"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Y": 22.5
+      },
+      {
+        "Category": "Clothing",
+        "Y": 84.4
+      },
+      {
+        "Category": "Electronics",
+        "Y": 34.8
+      },
+      {
+        "Category": "Clothing",
+        "Y": 96.6
+      },
+      {
+        "Category": "Electronics",
+        "Y": 71.5
+      },
+      {
+        "Category": "Clothing",
+        "Y": 15.6
+      },
+      {
+        "Category": "Electronics",
+        "Y": 76.2
+      },
+      {
+        "Category": "Clothing",
+        "Y": 5.1
+      },
+      {
+        "Category": "Electronics",
+        "Y": 37.5
+      },
+      {
+        "Category": "Clothing",
+        "Y": 29.1
+      },
+      {
+        "Category": "Electronics",
+        "Y": 69.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 61.4
+      },
+      {
+        "Category": "Electronics",
+        "Y": 72.9
+      },
+      {
+        "Category": "Clothing",
+        "Y": 8.4
+      },
+      {
+        "Category": "Electronics",
+        "Y": 38.2
+      },
+      {
+        "Category": "Clothing",
+        "Y": 88.3
+      },
+      {
+        "Category": "Electronics",
+        "Y": 31.9
+      },
+      {
+        "Category": "Clothing",
+        "Y": 26.9
+      },
+      {
+        "Category": "Electronics",
+        "Y": 42.2
+      },
+      {
+        "Category": "Clothing",
+        "Y": 38.4
+      },
+      {
+        "Category": "Electronics",
+        "Y": 63.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 55
+      },
+      {
+        "Category": "Electronics",
+        "Y": 30.8
+      },
+      {
+        "Category": "Clothing",
+        "Y": 25.7
+      },
+      {
+        "Category": "Electronics",
+        "Y": 3.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 11.6
+      },
+      {
+        "Category": "Electronics",
+        "Y": 11.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 93.9
+      },
+      {
+        "Category": "Electronics",
+        "Y": 34.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 16.6
+      }
+    ]
+  }
+}

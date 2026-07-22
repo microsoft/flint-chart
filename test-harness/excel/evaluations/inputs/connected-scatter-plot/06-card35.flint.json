@@ -1,0 +1,203 @@
+{
+  "semantic_types": {
+    "X Position": "Quantity",
+    "Y Position": "Quantity",
+    "Step": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "X Position",
+      "y": "Y Position",
+      "order": "Step"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Step": 0,
+        "X Position": 68.1,
+        "Y Position": 60
+      },
+      {
+        "Step": 1,
+        "X Position": 72.6,
+        "Y Position": 62
+      },
+      {
+        "Step": 2,
+        "X Position": 70.9,
+        "Y Position": 67.2
+      },
+      {
+        "Step": 3,
+        "X Position": 69.5,
+        "Y Position": 70.2
+      },
+      {
+        "Step": 4,
+        "X Position": 66.8,
+        "Y Position": 75.2
+      },
+      {
+        "Step": 5,
+        "X Position": 65.9,
+        "Y Position": 76.9
+      },
+      {
+        "Step": 6,
+        "X Position": 59.3,
+        "Y Position": 77.8
+      },
+      {
+        "Step": 7,
+        "X Position": 52.7,
+        "Y Position": 78.9
+      },
+      {
+        "Step": 8,
+        "X Position": 48.4,
+        "Y Position": 79.4
+      },
+      {
+        "Step": 9,
+        "X Position": 42.8,
+        "Y Position": 75.7
+      },
+      {
+        "Step": 10,
+        "X Position": 37.9,
+        "Y Position": 70.9
+      },
+      {
+        "Step": 11,
+        "X Position": 31.9,
+        "Y Position": 63.2
+      },
+      {
+        "Step": 12,
+        "X Position": 30.3,
+        "Y Position": 57.6
+      },
+      {
+        "Step": 13,
+        "X Position": 30.4,
+        "Y Position": 50.5
+      },
+      {
+        "Step": 14,
+        "X Position": 35,
+        "Y Position": 41.4
+      },
+      {
+        "Step": 15,
+        "X Position": 38,
+        "Y Position": 32.3
+      },
+      {
+        "Step": 16,
+        "X Position": 46.9,
+        "Y Position": 25.9
+      },
+      {
+        "Step": 17,
+        "X Position": 54.2,
+        "Y Position": 21.1
+      },
+      {
+        "Step": 18,
+        "X Position": 66.1,
+        "Y Position": 21.5
+      },
+      {
+        "Step": 19,
+        "X Position": 77.2,
+        "Y Position": 21.6
+      },
+      {
+        "Step": 20,
+        "X Position": 86.2,
+        "Y Position": 27.8
+      },
+      {
+        "Step": 21,
+        "X Position": 93.7,
+        "Y Position": 33.6
+      },
+      {
+        "Step": 22,
+        "X Position": 104.2,
+        "Y Position": 43.2
+      },
+      {
+        "Step": 23,
+        "X Position": 107.4,
+        "Y Position": 55.5
+      },
+      {
+        "Step": 24,
+        "X Position": 107.7,
+        "Y Position": 67.3
+      },
+      {
+        "Step": 25,
+        "X Position": 106.7,
+        "Y Position": 83.2
+      },
+      {
+        "Step": 26,
+        "X Position": 99.8,
+        "Y Position": 95.8
+      },
+      {
+        "Step": 27,
+        "X Position": 90.8,
+        "Y Position": 103.8
+      },
+      {
+        "Step": 28,
+        "X Position": 77.7,
+        "Y Position": 112.7
+      },
+      {
+        "Step": 29,
+        "X Position": 60.8,
+        "Y Position": 117.2
+      },
+      {
+        "Step": 30,
+        "X Position": 48.4,
+        "Y Position": 115.2
+      },
+      {
+        "Step": 31,
+        "X Position": 29.8,
+        "Y Position": 111.9
+      },
+      {
+        "Step": 32,
+        "X Position": 19.5,
+        "Y Position": 105.4
+      },
+      {
+        "Step": 33,
+        "X Position": 4.9,
+        "Y Position": 93.5
+      },
+      {
+        "Step": 34,
+        "X Position": -3.4,
+        "Y Position": 76.8
+      },
+      {
+        "Step": 35,
+        "X Position": -6.3,
+        "Y Position": 59.1
+      }
+    ]
+  }
+}

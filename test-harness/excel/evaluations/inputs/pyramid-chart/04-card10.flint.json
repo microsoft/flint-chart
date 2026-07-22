@@ -1,0 +1,73 @@
+{
+  "semantic_types": {
+    "Degree Level": "Category",
+    "Count": "Count",
+    "Outcome": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Degree Level",
+      "x": "Count",
+      "color": "Outcome"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Degree Level": "High School",
+        "Outcome": "Admitted",
+        "Count": 3305
+      },
+      {
+        "Degree Level": "High School",
+        "Outcome": "Rejected",
+        "Count": 2560
+      },
+      {
+        "Degree Level": "Associate",
+        "Outcome": "Admitted",
+        "Count": 4171
+      },
+      {
+        "Degree Level": "Associate",
+        "Outcome": "Rejected",
+        "Count": 1598
+      },
+      {
+        "Degree Level": "Bachelor",
+        "Outcome": "Admitted",
+        "Count": 2264
+      },
+      {
+        "Degree Level": "Bachelor",
+        "Outcome": "Rejected",
+        "Count": 1009
+      },
+      {
+        "Degree Level": "Master",
+        "Outcome": "Admitted",
+        "Count": 447
+      },
+      {
+        "Degree Level": "Master",
+        "Outcome": "Rejected",
+        "Count": 1535
+      },
+      {
+        "Degree Level": "Doctorate",
+        "Outcome": "Admitted",
+        "Count": 1663
+      },
+      {
+        "Degree Level": "Doctorate",
+        "Outcome": "Rejected",
+        "Count": 208
+      }
+    ]
+  }
+}

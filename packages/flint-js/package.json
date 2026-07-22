@@ -50,10 +50,20 @@
       "import": "./dist/echarts/index.js",
       "require": "./dist/echarts/index.cjs"
     },
+    "./plotly": {
+      "types": "./dist/plotly/index.d.ts",
+      "import": "./dist/plotly/index.js",
+      "require": "./dist/plotly/index.cjs"
+    },
     "./chartjs": {
       "types": "./dist/chartjs/index.d.ts",
       "import": "./dist/chartjs/index.js",
       "require": "./dist/chartjs/index.cjs"
+    },
+    "./excel": {
+      "types": "./dist/excel/index.d.ts",
+      "import": "./dist/excel/index.js",
+      "require": "./dist/excel/index.cjs"
     },
     "./test-data": {
       "types": "./dist/test-data/index.d.ts",
@@ -87,6 +97,7 @@
   },
   "peerDependencies": {
     "chart.js": "^4.0.0",
+    "plotly.js": "^2.0.0 || ^3.0.0",
     "echarts": "^5.0.0 || ^6.0.0",
     "vega": "^5.0.0 || ^6.0.0",
     "vega-lite": "^5.0.0 || ^6.0.0"
@@ -102,6 +113,9 @@
       "optional": true
     },
     "chart.js": {
+      "optional": true
+    },
+    "plotly.js": {
       "optional": true
     }
   },

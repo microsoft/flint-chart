@@ -1,0 +1,3023 @@
+{
+  "semantic_types": {
+    "Department": "Department",
+    "Compensation": "Amount",
+    "Level": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Department",
+      "y": "Compensation",
+      "color": "Level"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 146942
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 72824
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 28969
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 58947
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 70066
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 43824
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 167706
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 105483
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 132009
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 52044
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 82344
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 82273
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 109563
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 94558
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Intern",
+        "Compensation": 89065
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 162930
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 158880
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 165534
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 182107
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 117416
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 139107
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 176471
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 74754
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 98386
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 29677
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 53964
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 140616
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 152346
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 80345
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Junior",
+        "Compensation": 86686
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 86304
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 144446
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 134411
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 167851
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 94792
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 161473
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 170996
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 106959
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 89210
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 153683
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 148507
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 138119
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 185002
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 136505
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Mid",
+        "Compensation": 183567
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 166033
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 159207
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 60558
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 199978
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 176068
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 121789
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 136114
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 84672
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 180547
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 158516
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 178804
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 87125
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 111674
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 50471
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Senior",
+        "Compensation": 70991
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 189867
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 172211
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 46417
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 183270
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 69313
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 164153
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 67210
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 175330
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 153155
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 196369
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 79962
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 129469
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 64937
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 115222
+      },
+      {
+        "Department": "Engineering",
+        "Level": "Lead",
+        "Compensation": 183400
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 155467
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 32860
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 174729
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 190183
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 61200
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 145961
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 39642
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 66732
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 186677
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 111027
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 28184
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 166597
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 195275
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 66321
+      },
+      {
+        "Department": "Sales",
+        "Level": "Intern",
+        "Compensation": 102604
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 46150
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 70042
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 163238
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 94776
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 77542
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 40621
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 70457
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 151853
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 192655
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 129255
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 142866
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 169220
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 188531
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 108186
+      },
+      {
+        "Department": "Sales",
+        "Level": "Junior",
+        "Compensation": 60725
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 29216
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 179113
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 25716
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 152276
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 132228
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 52873
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 194415
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 134621
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 194851
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 109957
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 64662
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 43382
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 95783
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 29810
+      },
+      {
+        "Department": "Sales",
+        "Level": "Mid",
+        "Compensation": 191072
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 114381
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 47205
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 123348
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 89150
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 25153
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 139276
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 37384
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 90824
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 157063
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 81120
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 155402
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 165035
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 188392
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 54415
+      },
+      {
+        "Department": "Sales",
+        "Level": "Senior",
+        "Compensation": 34808
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 197043
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 27832
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 26729
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 27490
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 48501
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 27393
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 167972
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 27417
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 54697
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 45030
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 148904
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 158913
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 199708
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 193360
+      },
+      {
+        "Department": "Sales",
+        "Level": "Lead",
+        "Compensation": 72003
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 60009
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 73709
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 194798
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 90075
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 165620
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 57972
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 141196
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 113265
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 192632
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 95930
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 49578
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 115607
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 174247
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 138134
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Intern",
+        "Compensation": 85374
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 72424
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 126748
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 179808
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 156068
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 168200
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 190182
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 33566
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 139319
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 66140
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 34582
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 73881
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 121614
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 164820
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 87253
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Junior",
+        "Compensation": 166649
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 189072
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 116356
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 174926
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 177179
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 64980
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 148079
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 119401
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 78925
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 188354
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 120776
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 74385
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 196717
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 140588
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 32419
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Mid",
+        "Compensation": 115529
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 89050
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 88385
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 103486
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 157605
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 92387
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 165817
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 37133
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 75650
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 104456
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 188609
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 33119
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 148110
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 108694
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 26866
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Senior",
+        "Compensation": 67551
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 128097
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 102942
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 128884
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 26396
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 42729
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 143351
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 98117
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 52877
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 83631
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 183749
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 74300
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 157221
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 121483
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 64454
+      },
+      {
+        "Department": "Marketing",
+        "Level": "Lead",
+        "Compensation": 49212
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 73755
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 102046
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 116327
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 25926
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 185652
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 26363
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 191048
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 69665
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 128955
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 180078
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 146066
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 50705
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 149303
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 33329
+      },
+      {
+        "Department": "HR",
+        "Level": "Intern",
+        "Compensation": 192836
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 187219
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 112769
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 88688
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 129799
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 178256
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 140272
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 144024
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 31280
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 45902
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 100443
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 119633
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 118738
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 137571
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 87150
+      },
+      {
+        "Department": "HR",
+        "Level": "Junior",
+        "Compensation": 180790
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 29217
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 33304
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 107069
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 190117
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 169024
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 29796
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 137914
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 75454
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 132500
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 82709
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 83858
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 144843
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 151982
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 93584
+      },
+      {
+        "Department": "HR",
+        "Level": "Mid",
+        "Compensation": 162265
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 189251
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 134744
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 159542
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 101653
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 154261
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 70782
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 191135
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 123517
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 132421
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 149897
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 42516
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 65816
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 196742
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 50013
+      },
+      {
+        "Department": "HR",
+        "Level": "Senior",
+        "Compensation": 68809
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 105192
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 144708
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 153922
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 143104
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 155457
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 47204
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 107783
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 101932
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 120617
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 41495
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 54945
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 183372
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 41202
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 29056
+      },
+      {
+        "Department": "HR",
+        "Level": "Lead",
+        "Compensation": 119763
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 27701
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 100698
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 25178
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 48605
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 37437
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 99323
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 194257
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 95259
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 137771
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 111591
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 52117
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 75000
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 199619
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 94110
+      },
+      {
+        "Department": "Finance",
+        "Level": "Intern",
+        "Compensation": 77021
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 38739
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 104236
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 161688
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 108927
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 89288
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 68265
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 55456
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 198449
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 29423
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 156988
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 41338
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 46418
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 28601
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 165025
+      },
+      {
+        "Department": "Finance",
+        "Level": "Junior",
+        "Compensation": 25098
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 102658
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 69783
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 193433
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 79169
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 91837
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 37743
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 166672
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 63569
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 46310
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 129147
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 65831
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 102018
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 167376
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 155955
+      },
+      {
+        "Department": "Finance",
+        "Level": "Mid",
+        "Compensation": 193539
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 113478
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 102812
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 39993
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 190502
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 162809
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 61479
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 108007
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 194206
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 124801
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 181438
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 86571
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 71045
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 60198
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 89389
+      },
+      {
+        "Department": "Finance",
+        "Level": "Senior",
+        "Compensation": 189763
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 169025
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 46765
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 71704
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 109463
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 170385
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 162037
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 28796
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 116099
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 56603
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 59139
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 146565
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 50517
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 143394
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 129735
+      },
+      {
+        "Department": "Finance",
+        "Level": "Lead",
+        "Compensation": 156581
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 38096
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 150529
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 168335
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 188762
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 156308
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 168881
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 83420
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 140564
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 167277
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 81116
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 97091
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 126302
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 31488
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 49276
+      },
+      {
+        "Department": "Legal",
+        "Level": "Intern",
+        "Compensation": 110910
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 164255
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 41039
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 85297
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 194706
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 127243
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 97227
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 141365
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 141236
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 70866
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 197436
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 151401
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 126533
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 68409
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 32127
+      },
+      {
+        "Department": "Legal",
+        "Level": "Junior",
+        "Compensation": 105557
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 153571
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 187769
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 75698
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 31666
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 68432
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 59249
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 70282
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 183296
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 162424
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 62758
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 65441
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 188837
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 185411
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 172841
+      },
+      {
+        "Department": "Legal",
+        "Level": "Mid",
+        "Compensation": 140282
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 147293
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 199018
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 148931
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 83148
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 116767
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 71085
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 194840
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 92671
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 44322
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 139001
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 143625
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 148192
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 93771
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 152557
+      },
+      {
+        "Department": "Legal",
+        "Level": "Senior",
+        "Compensation": 128919
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 98918
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 41125
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 131786
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 149402
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 116344
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 140369
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 35825
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 128555
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 94742
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 28683
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 143439
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 185824
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 117776
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 62612
+      },
+      {
+        "Department": "Legal",
+        "Level": "Lead",
+        "Compensation": 65143
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 79011
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 70465
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 111711
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 146590
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 115683
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 60019
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 63042
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 118062
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 143377
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 189434
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 71444
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 109341
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 51713
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 119667
+      },
+      {
+        "Department": "Operations",
+        "Level": "Intern",
+        "Compensation": 162300
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 71824
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 27541
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 29592
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 29118
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 108943
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 176423
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 140345
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 155106
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 97771
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 190400
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 26709
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 43129
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 38501
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 129576
+      },
+      {
+        "Department": "Operations",
+        "Level": "Junior",
+        "Compensation": 108576
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 132394
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 42755
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 61119
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 168924
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 111144
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 75931
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 89204
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 57989
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 76106
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 70174
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 110441
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 151535
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 103174
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 172982
+      },
+      {
+        "Department": "Operations",
+        "Level": "Mid",
+        "Compensation": 54399
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 102457
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 189837
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 192404
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 103852
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 185504
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 168884
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 126126
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 49525
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 84949
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 110825
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 134756
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 190420
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 188670
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 168405
+      },
+      {
+        "Department": "Operations",
+        "Level": "Senior",
+        "Compensation": 135625
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 104613
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 37237
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 71630
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 77536
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 126014
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 94994
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 68167
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 160301
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 77366
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 72032
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 187768
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 61813
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 113900
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 186249
+      },
+      {
+        "Department": "Operations",
+        "Level": "Lead",
+        "Compensation": 95117
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 36288
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 41856
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 173218
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 179920
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 116722
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 28436
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 195200
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 25285
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 83113
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 61183
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 25058
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 131333
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 63468
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 109030
+      },
+      {
+        "Department": "Support",
+        "Level": "Intern",
+        "Compensation": 59208
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 81684
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 184929
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 131514
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 131090
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 184717
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 71204
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 93080
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 93046
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 53592
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 28659
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 98832
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 161084
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 120749
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 160365
+      },
+      {
+        "Department": "Support",
+        "Level": "Junior",
+        "Compensation": 106202
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 141149
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 191802
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 149027
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 118019
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 119462
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 45221
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 33737
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 46021
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 182193
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 162757
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 53786
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 131051
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 56855
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 87531
+      },
+      {
+        "Department": "Support",
+        "Level": "Mid",
+        "Compensation": 106631
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 178746
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 166352
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 100566
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 91923
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 70473
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 69378
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 42964
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 64852
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 85399
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 150271
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 27339
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 139308
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 54824
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 79555
+      },
+      {
+        "Department": "Support",
+        "Level": "Senior",
+        "Compensation": 114130
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 39242
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 166371
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 67494
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 41634
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 125765
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 101207
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 184008
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 53784
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 98900
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 83179
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 116417
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 139558
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 54339
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 154645
+      },
+      {
+        "Department": "Support",
+        "Level": "Lead",
+        "Compensation": 35402
+      }
+    ]
+  }
+}

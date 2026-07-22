@@ -300,6 +300,16 @@ export function genPieTests(): TestCase[] {
     return tests;
 }
 
+export function genDonutTests(): TestCase[] {
+    return genPieTests().map(test => ({
+        ...test,
+        title: test.title.replace('Pie', 'Donut'),
+        description: test.description.replace('Pie', 'Donut'),
+        chartType: 'Donut Chart',
+        chartProperties: { ...test.chartProperties, innerRadius: 50 },
+    }));
+}
+
 // ------ Ranged Dot Plot ------
 export function genRangedDotPlotTests(): TestCase[] {
     const tests: TestCase[] = [];
@@ -1136,7 +1146,7 @@ export function genCandlestickTests(): TestCase[] {
         const baseDate = new Date('2024-01-02');
         for (let i = 0; i < days; i++) {
             const date = new Date(baseDate);
-            date.setDate(baseDate.getDate() + i);
+            date.setUTCDate(baseDate.getUTCDate() + i);
             const change = (rand() - 0.48) * 4;  // slight upward bias
             const open = Math.round(price * 100) / 100;
             const close = Math.round((price + change) * 100) / 100;
@@ -1242,7 +1252,7 @@ export function genCandlestickTests(): TestCase[] {
             const baseDate = new Date('2024-03-01');
             for (let i = 0; i < 20; i++) {
                 const date = new Date(baseDate);
-                date.setDate(baseDate.getDate() + i);
+                date.setUTCDate(baseDate.getUTCDate() + i);
                 const change = (rand() - 0.48) * 4;
                 const open = Math.round(price * 100) / 100;
                 const close = Math.round((price + change) * 100) / 100;

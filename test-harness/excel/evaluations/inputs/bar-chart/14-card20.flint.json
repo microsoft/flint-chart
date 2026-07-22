@@ -1,0 +1,101 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 1,
+        "Value": 633
+      },
+      {
+        "X": 2,
+        "Value": 80
+      },
+      {
+        "X": 3,
+        "Value": 121
+      },
+      {
+        "X": 4,
+        "Value": 174
+      },
+      {
+        "X": 5,
+        "Value": 21
+      },
+      {
+        "X": 6,
+        "Value": 606
+      },
+      {
+        "X": 7,
+        "Value": 734
+      },
+      {
+        "X": 8,
+        "Value": 638
+      },
+      {
+        "X": 9,
+        "Value": 122
+      },
+      {
+        "X": 10,
+        "Value": 242
+      },
+      {
+        "X": 11,
+        "Value": 376
+      },
+      {
+        "X": 12,
+        "Value": 735
+      },
+      {
+        "X": 13,
+        "Value": 981
+      },
+      {
+        "X": 14,
+        "Value": 555
+      },
+      {
+        "X": 15,
+        "Value": 970
+      },
+      {
+        "X": 16,
+        "Value": 54
+      },
+      {
+        "X": 17,
+        "Value": 601
+      },
+      {
+        "X": 18,
+        "Value": 134
+      },
+      {
+        "X": 19,
+        "Value": 924
+      },
+      {
+        "X": 20,
+        "Value": 172
+      }
+    ]
+  }
+}

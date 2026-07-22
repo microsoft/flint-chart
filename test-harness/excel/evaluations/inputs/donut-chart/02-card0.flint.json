@@ -1,0 +1,104 @@
+{
+  "semantic_types": {
+    "Region": "Category",
+    "Sales": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Donut Chart",
+    "encodings": {
+      "size": "Sales",
+      "color": "Region"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "innerRadius": 50
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Region": "Electronics",
+        "Sales": 4347
+      },
+      {
+        "Region": "Clothing",
+        "Sales": 4301
+      },
+      {
+        "Region": "Food",
+        "Sales": 5098
+      },
+      {
+        "Region": "Books",
+        "Sales": 1293
+      },
+      {
+        "Region": "Sports",
+        "Sales": 4163
+      },
+      {
+        "Region": "Home",
+        "Sales": 2869
+      },
+      {
+        "Region": "Garden",
+        "Sales": 5444
+      },
+      {
+        "Region": "Auto",
+        "Sales": 2591
+      },
+      {
+        "Region": "Health",
+        "Sales": 1407
+      },
+      {
+        "Region": "Beauty",
+        "Sales": 2246
+      },
+      {
+        "Region": "Toys",
+        "Sales": 5168
+      },
+      {
+        "Region": "Music",
+        "Sales": 3215
+      },
+      {
+        "Region": "Movies",
+        "Sales": 3360
+      },
+      {
+        "Region": "Software",
+        "Sales": 1176
+      },
+      {
+        "Region": "Games",
+        "Sales": 4497
+      },
+      {
+        "Region": "Office",
+        "Sales": 5262
+      },
+      {
+        "Region": "Pet",
+        "Sales": 1783
+      },
+      {
+        "Region": "Baby",
+        "Sales": 4292
+      },
+      {
+        "Region": "Tools",
+        "Sales": 5312
+      },
+      {
+        "Region": "Crafts",
+        "Sales": 5358
+      }
+    ]
+  }
+}

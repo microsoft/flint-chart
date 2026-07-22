@@ -1,0 +1,2421 @@
+{
+  "semantic_types": {
+    "Department": "Department",
+    "Salary": "Amount"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Department",
+      "y": "Salary"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Engineering",
+        "Salary": 79984
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 103836
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 71569
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 46139
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 80917
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 78792
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 119516
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 77207
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 111998
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 89270
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 59331
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 41468
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 52099
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 55959
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 126408
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 114034
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 113583
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 87931
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 119107
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 51152
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 91412
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 63785
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 137701
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 84038
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 92194
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 128943
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 126729
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 114677
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 116625
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 91094
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 123268
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 140563
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 63202
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 61807
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 130557
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 126992
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 92215
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 114070
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 114849
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 127951
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 131796
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 79419
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 96708
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 32167
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 92332
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 47540
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 100494
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 66265
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 54614
+      },
+      {
+        "Department": "Engineering",
+        "Salary": 70664
+      },
+      {
+        "Department": "Sales",
+        "Salary": 74396
+      },
+      {
+        "Department": "Sales",
+        "Salary": 36995
+      },
+      {
+        "Department": "Sales",
+        "Salary": 109734
+      },
+      {
+        "Department": "Sales",
+        "Salary": 78112
+      },
+      {
+        "Department": "Sales",
+        "Salary": 91016
+      },
+      {
+        "Department": "Sales",
+        "Salary": 120197
+      },
+      {
+        "Department": "Sales",
+        "Salary": 138649
+      },
+      {
+        "Department": "Sales",
+        "Salary": 47342
+      },
+      {
+        "Department": "Sales",
+        "Salary": 136093
+      },
+      {
+        "Department": "Sales",
+        "Salary": 54703
+      },
+      {
+        "Department": "Sales",
+        "Salary": 125941
+      },
+      {
+        "Department": "Sales",
+        "Salary": 64355
+      },
+      {
+        "Department": "Sales",
+        "Salary": 118553
+      },
+      {
+        "Department": "Sales",
+        "Salary": 101069
+      },
+      {
+        "Department": "Sales",
+        "Salary": 121977
+      },
+      {
+        "Department": "Sales",
+        "Salary": 41111
+      },
+      {
+        "Department": "Sales",
+        "Salary": 45802
+      },
+      {
+        "Department": "Sales",
+        "Salary": 51768
+      },
+      {
+        "Department": "Sales",
+        "Salary": 117315
+      },
+      {
+        "Department": "Sales",
+        "Salary": 48958
+      },
+      {
+        "Department": "Sales",
+        "Salary": 64320
+      },
+      {
+        "Department": "Sales",
+        "Salary": 124206
+      },
+      {
+        "Department": "Sales",
+        "Salary": 65715
+      },
+      {
+        "Department": "Sales",
+        "Salary": 54616
+      },
+      {
+        "Department": "Sales",
+        "Salary": 117906
+      },
+      {
+        "Department": "Sales",
+        "Salary": 148055
+      },
+      {
+        "Department": "Sales",
+        "Salary": 92065
+      },
+      {
+        "Department": "Sales",
+        "Salary": 112006
+      },
+      {
+        "Department": "Sales",
+        "Salary": 109021
+      },
+      {
+        "Department": "Sales",
+        "Salary": 101215
+      },
+      {
+        "Department": "Sales",
+        "Salary": 52792
+      },
+      {
+        "Department": "Sales",
+        "Salary": 49007
+      },
+      {
+        "Department": "Sales",
+        "Salary": 43479
+      },
+      {
+        "Department": "Sales",
+        "Salary": 126739
+      },
+      {
+        "Department": "Sales",
+        "Salary": 45283
+      },
+      {
+        "Department": "Sales",
+        "Salary": 87822
+      },
+      {
+        "Department": "Sales",
+        "Salary": 90616
+      },
+      {
+        "Department": "Sales",
+        "Salary": 124109
+      },
+      {
+        "Department": "Sales",
+        "Salary": 128329
+      },
+      {
+        "Department": "Sales",
+        "Salary": 119472
+      },
+      {
+        "Department": "Sales",
+        "Salary": 59869
+      },
+      {
+        "Department": "Sales",
+        "Salary": 73901
+      },
+      {
+        "Department": "Sales",
+        "Salary": 120655
+      },
+      {
+        "Department": "Sales",
+        "Salary": 33103
+      },
+      {
+        "Department": "Sales",
+        "Salary": 94497
+      },
+      {
+        "Department": "Sales",
+        "Salary": 69237
+      },
+      {
+        "Department": "Sales",
+        "Salary": 88576
+      },
+      {
+        "Department": "Sales",
+        "Salary": 43702
+      },
+      {
+        "Department": "Sales",
+        "Salary": 41048
+      },
+      {
+        "Department": "Sales",
+        "Salary": 66471
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 30207
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 143862
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 63964
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 143735
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 96224
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 63087
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 38266
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 110675
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 53654
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 145848
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 86051
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 85848
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 143618
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 40226
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 65474
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 89208
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 105519
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 37281
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 115584
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 123931
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 127988
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 33134
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 146512
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 85031
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 92909
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 133796
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 87409
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 107630
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 113374
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 53648
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 38775
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 147049
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 108986
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 114471
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 129030
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 147330
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 148050
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 143018
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 48809
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 67299
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 41329
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 111048
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 89757
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 82702
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 72125
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 142188
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 125380
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 127908
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 127439
+      },
+      {
+        "Department": "Marketing",
+        "Salary": 39375
+      },
+      {
+        "Department": "HR",
+        "Salary": 34632
+      },
+      {
+        "Department": "HR",
+        "Salary": 126355
+      },
+      {
+        "Department": "HR",
+        "Salary": 70480
+      },
+      {
+        "Department": "HR",
+        "Salary": 92867
+      },
+      {
+        "Department": "HR",
+        "Salary": 37548
+      },
+      {
+        "Department": "HR",
+        "Salary": 54270
+      },
+      {
+        "Department": "HR",
+        "Salary": 48302
+      },
+      {
+        "Department": "HR",
+        "Salary": 70414
+      },
+      {
+        "Department": "HR",
+        "Salary": 62537
+      },
+      {
+        "Department": "HR",
+        "Salary": 44191
+      },
+      {
+        "Department": "HR",
+        "Salary": 95192
+      },
+      {
+        "Department": "HR",
+        "Salary": 108972
+      },
+      {
+        "Department": "HR",
+        "Salary": 110646
+      },
+      {
+        "Department": "HR",
+        "Salary": 43948
+      },
+      {
+        "Department": "HR",
+        "Salary": 87552
+      },
+      {
+        "Department": "HR",
+        "Salary": 113418
+      },
+      {
+        "Department": "HR",
+        "Salary": 83329
+      },
+      {
+        "Department": "HR",
+        "Salary": 53009
+      },
+      {
+        "Department": "HR",
+        "Salary": 106153
+      },
+      {
+        "Department": "HR",
+        "Salary": 139857
+      },
+      {
+        "Department": "HR",
+        "Salary": 80618
+      },
+      {
+        "Department": "HR",
+        "Salary": 85563
+      },
+      {
+        "Department": "HR",
+        "Salary": 31599
+      },
+      {
+        "Department": "HR",
+        "Salary": 149033
+      },
+      {
+        "Department": "HR",
+        "Salary": 95124
+      },
+      {
+        "Department": "HR",
+        "Salary": 56169
+      },
+      {
+        "Department": "HR",
+        "Salary": 49160
+      },
+      {
+        "Department": "HR",
+        "Salary": 99299
+      },
+      {
+        "Department": "HR",
+        "Salary": 143542
+      },
+      {
+        "Department": "HR",
+        "Salary": 83184
+      },
+      {
+        "Department": "HR",
+        "Salary": 127815
+      },
+      {
+        "Department": "HR",
+        "Salary": 128696
+      },
+      {
+        "Department": "HR",
+        "Salary": 57923
+      },
+      {
+        "Department": "HR",
+        "Salary": 128171
+      },
+      {
+        "Department": "HR",
+        "Salary": 111025
+      },
+      {
+        "Department": "HR",
+        "Salary": 49223
+      },
+      {
+        "Department": "HR",
+        "Salary": 70180
+      },
+      {
+        "Department": "HR",
+        "Salary": 95860
+      },
+      {
+        "Department": "HR",
+        "Salary": 64234
+      },
+      {
+        "Department": "HR",
+        "Salary": 120743
+      },
+      {
+        "Department": "HR",
+        "Salary": 68529
+      },
+      {
+        "Department": "HR",
+        "Salary": 62533
+      },
+      {
+        "Department": "HR",
+        "Salary": 93905
+      },
+      {
+        "Department": "HR",
+        "Salary": 76409
+      },
+      {
+        "Department": "HR",
+        "Salary": 139367
+      },
+      {
+        "Department": "HR",
+        "Salary": 120579
+      },
+      {
+        "Department": "HR",
+        "Salary": 71874
+      },
+      {
+        "Department": "HR",
+        "Salary": 125167
+      },
+      {
+        "Department": "HR",
+        "Salary": 140774
+      },
+      {
+        "Department": "HR",
+        "Salary": 136544
+      },
+      {
+        "Department": "Finance",
+        "Salary": 69363
+      },
+      {
+        "Department": "Finance",
+        "Salary": 48357
+      },
+      {
+        "Department": "Finance",
+        "Salary": 30420
+      },
+      {
+        "Department": "Finance",
+        "Salary": 128394
+      },
+      {
+        "Department": "Finance",
+        "Salary": 131698
+      },
+      {
+        "Department": "Finance",
+        "Salary": 110538
+      },
+      {
+        "Department": "Finance",
+        "Salary": 147196
+      },
+      {
+        "Department": "Finance",
+        "Salary": 67192
+      },
+      {
+        "Department": "Finance",
+        "Salary": 38318
+      },
+      {
+        "Department": "Finance",
+        "Salary": 34213
+      },
+      {
+        "Department": "Finance",
+        "Salary": 46033
+      },
+      {
+        "Department": "Finance",
+        "Salary": 94796
+      },
+      {
+        "Department": "Finance",
+        "Salary": 55243
+      },
+      {
+        "Department": "Finance",
+        "Salary": 81853
+      },
+      {
+        "Department": "Finance",
+        "Salary": 77939
+      },
+      {
+        "Department": "Finance",
+        "Salary": 65503
+      },
+      {
+        "Department": "Finance",
+        "Salary": 94101
+      },
+      {
+        "Department": "Finance",
+        "Salary": 132290
+      },
+      {
+        "Department": "Finance",
+        "Salary": 101968
+      },
+      {
+        "Department": "Finance",
+        "Salary": 113234
+      },
+      {
+        "Department": "Finance",
+        "Salary": 98756
+      },
+      {
+        "Department": "Finance",
+        "Salary": 135886
+      },
+      {
+        "Department": "Finance",
+        "Salary": 60667
+      },
+      {
+        "Department": "Finance",
+        "Salary": 51838
+      },
+      {
+        "Department": "Finance",
+        "Salary": 96182
+      },
+      {
+        "Department": "Finance",
+        "Salary": 70296
+      },
+      {
+        "Department": "Finance",
+        "Salary": 120549
+      },
+      {
+        "Department": "Finance",
+        "Salary": 52817
+      },
+      {
+        "Department": "Finance",
+        "Salary": 116045
+      },
+      {
+        "Department": "Finance",
+        "Salary": 71351
+      },
+      {
+        "Department": "Finance",
+        "Salary": 95539
+      },
+      {
+        "Department": "Finance",
+        "Salary": 71081
+      },
+      {
+        "Department": "Finance",
+        "Salary": 119365
+      },
+      {
+        "Department": "Finance",
+        "Salary": 59659
+      },
+      {
+        "Department": "Finance",
+        "Salary": 146549
+      },
+      {
+        "Department": "Finance",
+        "Salary": 102740
+      },
+      {
+        "Department": "Finance",
+        "Salary": 128560
+      },
+      {
+        "Department": "Finance",
+        "Salary": 43043
+      },
+      {
+        "Department": "Finance",
+        "Salary": 121258
+      },
+      {
+        "Department": "Finance",
+        "Salary": 75581
+      },
+      {
+        "Department": "Finance",
+        "Salary": 146248
+      },
+      {
+        "Department": "Finance",
+        "Salary": 87136
+      },
+      {
+        "Department": "Finance",
+        "Salary": 69892
+      },
+      {
+        "Department": "Finance",
+        "Salary": 49926
+      },
+      {
+        "Department": "Finance",
+        "Salary": 118695
+      },
+      {
+        "Department": "Finance",
+        "Salary": 84880
+      },
+      {
+        "Department": "Finance",
+        "Salary": 78038
+      },
+      {
+        "Department": "Finance",
+        "Salary": 50055
+      },
+      {
+        "Department": "Finance",
+        "Salary": 128572
+      },
+      {
+        "Department": "Finance",
+        "Salary": 130241
+      },
+      {
+        "Department": "Legal",
+        "Salary": 105276
+      },
+      {
+        "Department": "Legal",
+        "Salary": 33123
+      },
+      {
+        "Department": "Legal",
+        "Salary": 73300
+      },
+      {
+        "Department": "Legal",
+        "Salary": 100086
+      },
+      {
+        "Department": "Legal",
+        "Salary": 42974
+      },
+      {
+        "Department": "Legal",
+        "Salary": 47913
+      },
+      {
+        "Department": "Legal",
+        "Salary": 134755
+      },
+      {
+        "Department": "Legal",
+        "Salary": 129647
+      },
+      {
+        "Department": "Legal",
+        "Salary": 71643
+      },
+      {
+        "Department": "Legal",
+        "Salary": 77455
+      },
+      {
+        "Department": "Legal",
+        "Salary": 85373
+      },
+      {
+        "Department": "Legal",
+        "Salary": 79200
+      },
+      {
+        "Department": "Legal",
+        "Salary": 141159
+      },
+      {
+        "Department": "Legal",
+        "Salary": 117834
+      },
+      {
+        "Department": "Legal",
+        "Salary": 128099
+      },
+      {
+        "Department": "Legal",
+        "Salary": 97340
+      },
+      {
+        "Department": "Legal",
+        "Salary": 87835
+      },
+      {
+        "Department": "Legal",
+        "Salary": 67217
+      },
+      {
+        "Department": "Legal",
+        "Salary": 102888
+      },
+      {
+        "Department": "Legal",
+        "Salary": 100329
+      },
+      {
+        "Department": "Legal",
+        "Salary": 47139
+      },
+      {
+        "Department": "Legal",
+        "Salary": 80689
+      },
+      {
+        "Department": "Legal",
+        "Salary": 73309
+      },
+      {
+        "Department": "Legal",
+        "Salary": 119926
+      },
+      {
+        "Department": "Legal",
+        "Salary": 144388
+      },
+      {
+        "Department": "Legal",
+        "Salary": 33137
+      },
+      {
+        "Department": "Legal",
+        "Salary": 80274
+      },
+      {
+        "Department": "Legal",
+        "Salary": 70713
+      },
+      {
+        "Department": "Legal",
+        "Salary": 48109
+      },
+      {
+        "Department": "Legal",
+        "Salary": 65012
+      },
+      {
+        "Department": "Legal",
+        "Salary": 118670
+      },
+      {
+        "Department": "Legal",
+        "Salary": 145864
+      },
+      {
+        "Department": "Legal",
+        "Salary": 121660
+      },
+      {
+        "Department": "Legal",
+        "Salary": 126934
+      },
+      {
+        "Department": "Legal",
+        "Salary": 77505
+      },
+      {
+        "Department": "Legal",
+        "Salary": 86428
+      },
+      {
+        "Department": "Legal",
+        "Salary": 58158
+      },
+      {
+        "Department": "Legal",
+        "Salary": 113297
+      },
+      {
+        "Department": "Legal",
+        "Salary": 82379
+      },
+      {
+        "Department": "Legal",
+        "Salary": 36986
+      },
+      {
+        "Department": "Legal",
+        "Salary": 77406
+      },
+      {
+        "Department": "Legal",
+        "Salary": 105526
+      },
+      {
+        "Department": "Legal",
+        "Salary": 42388
+      },
+      {
+        "Department": "Legal",
+        "Salary": 149220
+      },
+      {
+        "Department": "Legal",
+        "Salary": 116800
+      },
+      {
+        "Department": "Legal",
+        "Salary": 37115
+      },
+      {
+        "Department": "Legal",
+        "Salary": 87910
+      },
+      {
+        "Department": "Legal",
+        "Salary": 119172
+      },
+      {
+        "Department": "Legal",
+        "Salary": 68275
+      },
+      {
+        "Department": "Legal",
+        "Salary": 122644
+      },
+      {
+        "Department": "Operations",
+        "Salary": 104218
+      },
+      {
+        "Department": "Operations",
+        "Salary": 132453
+      },
+      {
+        "Department": "Operations",
+        "Salary": 71059
+      },
+      {
+        "Department": "Operations",
+        "Salary": 110295
+      },
+      {
+        "Department": "Operations",
+        "Salary": 140614
+      },
+      {
+        "Department": "Operations",
+        "Salary": 85025
+      },
+      {
+        "Department": "Operations",
+        "Salary": 108393
+      },
+      {
+        "Department": "Operations",
+        "Salary": 96081
+      },
+      {
+        "Department": "Operations",
+        "Salary": 52143
+      },
+      {
+        "Department": "Operations",
+        "Salary": 67000
+      },
+      {
+        "Department": "Operations",
+        "Salary": 49200
+      },
+      {
+        "Department": "Operations",
+        "Salary": 42607
+      },
+      {
+        "Department": "Operations",
+        "Salary": 109916
+      },
+      {
+        "Department": "Operations",
+        "Salary": 130383
+      },
+      {
+        "Department": "Operations",
+        "Salary": 87408
+      },
+      {
+        "Department": "Operations",
+        "Salary": 86437
+      },
+      {
+        "Department": "Operations",
+        "Salary": 79567
+      },
+      {
+        "Department": "Operations",
+        "Salary": 54884
+      },
+      {
+        "Department": "Operations",
+        "Salary": 50910
+      },
+      {
+        "Department": "Operations",
+        "Salary": 95991
+      },
+      {
+        "Department": "Operations",
+        "Salary": 105027
+      },
+      {
+        "Department": "Operations",
+        "Salary": 41414
+      },
+      {
+        "Department": "Operations",
+        "Salary": 97686
+      },
+      {
+        "Department": "Operations",
+        "Salary": 147006
+      },
+      {
+        "Department": "Operations",
+        "Salary": 114464
+      },
+      {
+        "Department": "Operations",
+        "Salary": 130073
+      },
+      {
+        "Department": "Operations",
+        "Salary": 30826
+      },
+      {
+        "Department": "Operations",
+        "Salary": 119619
+      },
+      {
+        "Department": "Operations",
+        "Salary": 142819
+      },
+      {
+        "Department": "Operations",
+        "Salary": 61218
+      },
+      {
+        "Department": "Operations",
+        "Salary": 64009
+      },
+      {
+        "Department": "Operations",
+        "Salary": 63862
+      },
+      {
+        "Department": "Operations",
+        "Salary": 106052
+      },
+      {
+        "Department": "Operations",
+        "Salary": 123279
+      },
+      {
+        "Department": "Operations",
+        "Salary": 81949
+      },
+      {
+        "Department": "Operations",
+        "Salary": 129288
+      },
+      {
+        "Department": "Operations",
+        "Salary": 41875
+      },
+      {
+        "Department": "Operations",
+        "Salary": 57744
+      },
+      {
+        "Department": "Operations",
+        "Salary": 127040
+      },
+      {
+        "Department": "Operations",
+        "Salary": 54109
+      },
+      {
+        "Department": "Operations",
+        "Salary": 109504
+      },
+      {
+        "Department": "Operations",
+        "Salary": 59300
+      },
+      {
+        "Department": "Operations",
+        "Salary": 117312
+      },
+      {
+        "Department": "Operations",
+        "Salary": 121291
+      },
+      {
+        "Department": "Operations",
+        "Salary": 40267
+      },
+      {
+        "Department": "Operations",
+        "Salary": 34430
+      },
+      {
+        "Department": "Operations",
+        "Salary": 91222
+      },
+      {
+        "Department": "Operations",
+        "Salary": 102480
+      },
+      {
+        "Department": "Operations",
+        "Salary": 85086
+      },
+      {
+        "Department": "Operations",
+        "Salary": 58115
+      },
+      {
+        "Department": "Support",
+        "Salary": 118620
+      },
+      {
+        "Department": "Support",
+        "Salary": 149317
+      },
+      {
+        "Department": "Support",
+        "Salary": 68469
+      },
+      {
+        "Department": "Support",
+        "Salary": 143461
+      },
+      {
+        "Department": "Support",
+        "Salary": 55436
+      },
+      {
+        "Department": "Support",
+        "Salary": 91470
+      },
+      {
+        "Department": "Support",
+        "Salary": 78582
+      },
+      {
+        "Department": "Support",
+        "Salary": 73305
+      },
+      {
+        "Department": "Support",
+        "Salary": 53285
+      },
+      {
+        "Department": "Support",
+        "Salary": 65384
+      },
+      {
+        "Department": "Support",
+        "Salary": 124043
+      },
+      {
+        "Department": "Support",
+        "Salary": 92747
+      },
+      {
+        "Department": "Support",
+        "Salary": 58997
+      },
+      {
+        "Department": "Support",
+        "Salary": 59396
+      },
+      {
+        "Department": "Support",
+        "Salary": 41987
+      },
+      {
+        "Department": "Support",
+        "Salary": 132760
+      },
+      {
+        "Department": "Support",
+        "Salary": 84140
+      },
+      {
+        "Department": "Support",
+        "Salary": 129039
+      },
+      {
+        "Department": "Support",
+        "Salary": 62084
+      },
+      {
+        "Department": "Support",
+        "Salary": 107873
+      },
+      {
+        "Department": "Support",
+        "Salary": 129745
+      },
+      {
+        "Department": "Support",
+        "Salary": 38019
+      },
+      {
+        "Department": "Support",
+        "Salary": 49613
+      },
+      {
+        "Department": "Support",
+        "Salary": 146420
+      },
+      {
+        "Department": "Support",
+        "Salary": 106826
+      },
+      {
+        "Department": "Support",
+        "Salary": 47659
+      },
+      {
+        "Department": "Support",
+        "Salary": 56597
+      },
+      {
+        "Department": "Support",
+        "Salary": 43409
+      },
+      {
+        "Department": "Support",
+        "Salary": 32847
+      },
+      {
+        "Department": "Support",
+        "Salary": 114625
+      },
+      {
+        "Department": "Support",
+        "Salary": 84560
+      },
+      {
+        "Department": "Support",
+        "Salary": 98375
+      },
+      {
+        "Department": "Support",
+        "Salary": 81946
+      },
+      {
+        "Department": "Support",
+        "Salary": 90811
+      },
+      {
+        "Department": "Support",
+        "Salary": 45278
+      },
+      {
+        "Department": "Support",
+        "Salary": 130411
+      },
+      {
+        "Department": "Support",
+        "Salary": 74569
+      },
+      {
+        "Department": "Support",
+        "Salary": 61195
+      },
+      {
+        "Department": "Support",
+        "Salary": 44836
+      },
+      {
+        "Department": "Support",
+        "Salary": 134794
+      },
+      {
+        "Department": "Support",
+        "Salary": 68282
+      },
+      {
+        "Department": "Support",
+        "Salary": 109957
+      },
+      {
+        "Department": "Support",
+        "Salary": 108277
+      },
+      {
+        "Department": "Support",
+        "Salary": 70837
+      },
+      {
+        "Department": "Support",
+        "Salary": 94900
+      },
+      {
+        "Department": "Support",
+        "Salary": 124168
+      },
+      {
+        "Department": "Support",
+        "Salary": 38910
+      },
+      {
+        "Department": "Support",
+        "Salary": 145748
+      },
+      {
+        "Department": "Support",
+        "Salary": 84154
+      },
+      {
+        "Department": "Support",
+        "Salary": 111023
+      },
+      {
+        "Department": "Design",
+        "Salary": 142030
+      },
+      {
+        "Department": "Design",
+        "Salary": 124766
+      },
+      {
+        "Department": "Design",
+        "Salary": 120280
+      },
+      {
+        "Department": "Design",
+        "Salary": 93524
+      },
+      {
+        "Department": "Design",
+        "Salary": 31632
+      },
+      {
+        "Department": "Design",
+        "Salary": 99215
+      },
+      {
+        "Department": "Design",
+        "Salary": 46955
+      },
+      {
+        "Department": "Design",
+        "Salary": 112023
+      },
+      {
+        "Department": "Design",
+        "Salary": 34632
+      },
+      {
+        "Department": "Design",
+        "Salary": 127594
+      },
+      {
+        "Department": "Design",
+        "Salary": 130281
+      },
+      {
+        "Department": "Design",
+        "Salary": 50078
+      },
+      {
+        "Department": "Design",
+        "Salary": 32691
+      },
+      {
+        "Department": "Design",
+        "Salary": 140668
+      },
+      {
+        "Department": "Design",
+        "Salary": 145162
+      },
+      {
+        "Department": "Design",
+        "Salary": 76636
+      },
+      {
+        "Department": "Design",
+        "Salary": 113245
+      },
+      {
+        "Department": "Design",
+        "Salary": 43226
+      },
+      {
+        "Department": "Design",
+        "Salary": 78383
+      },
+      {
+        "Department": "Design",
+        "Salary": 89681
+      },
+      {
+        "Department": "Design",
+        "Salary": 123869
+      },
+      {
+        "Department": "Design",
+        "Salary": 49143
+      },
+      {
+        "Department": "Design",
+        "Salary": 39626
+      },
+      {
+        "Department": "Design",
+        "Salary": 55326
+      },
+      {
+        "Department": "Design",
+        "Salary": 44276
+      },
+      {
+        "Department": "Design",
+        "Salary": 82534
+      },
+      {
+        "Department": "Design",
+        "Salary": 124622
+      },
+      {
+        "Department": "Design",
+        "Salary": 106886
+      },
+      {
+        "Department": "Design",
+        "Salary": 100407
+      },
+      {
+        "Department": "Design",
+        "Salary": 45243
+      },
+      {
+        "Department": "Design",
+        "Salary": 133984
+      },
+      {
+        "Department": "Design",
+        "Salary": 132256
+      },
+      {
+        "Department": "Design",
+        "Salary": 124613
+      },
+      {
+        "Department": "Design",
+        "Salary": 67464
+      },
+      {
+        "Department": "Design",
+        "Salary": 51447
+      },
+      {
+        "Department": "Design",
+        "Salary": 135502
+      },
+      {
+        "Department": "Design",
+        "Salary": 85835
+      },
+      {
+        "Department": "Design",
+        "Salary": 47562
+      },
+      {
+        "Department": "Design",
+        "Salary": 112262
+      },
+      {
+        "Department": "Design",
+        "Salary": 94277
+      },
+      {
+        "Department": "Design",
+        "Salary": 98629
+      },
+      {
+        "Department": "Design",
+        "Salary": 149231
+      },
+      {
+        "Department": "Design",
+        "Salary": 63708
+      },
+      {
+        "Department": "Design",
+        "Salary": 36264
+      },
+      {
+        "Department": "Design",
+        "Salary": 63093
+      },
+      {
+        "Department": "Design",
+        "Salary": 149893
+      },
+      {
+        "Department": "Design",
+        "Salary": 148886
+      },
+      {
+        "Department": "Design",
+        "Salary": 142140
+      },
+      {
+        "Department": "Design",
+        "Salary": 54334
+      },
+      {
+        "Department": "Design",
+        "Salary": 43848
+      },
+      {
+        "Department": "Research",
+        "Salary": 91964
+      },
+      {
+        "Department": "Research",
+        "Salary": 99097
+      },
+      {
+        "Department": "Research",
+        "Salary": 100529
+      },
+      {
+        "Department": "Research",
+        "Salary": 42939
+      },
+      {
+        "Department": "Research",
+        "Salary": 56595
+      },
+      {
+        "Department": "Research",
+        "Salary": 140310
+      },
+      {
+        "Department": "Research",
+        "Salary": 132219
+      },
+      {
+        "Department": "Research",
+        "Salary": 101077
+      },
+      {
+        "Department": "Research",
+        "Salary": 144561
+      },
+      {
+        "Department": "Research",
+        "Salary": 49150
+      },
+      {
+        "Department": "Research",
+        "Salary": 45804
+      },
+      {
+        "Department": "Research",
+        "Salary": 83331
+      },
+      {
+        "Department": "Research",
+        "Salary": 83953
+      },
+      {
+        "Department": "Research",
+        "Salary": 94999
+      },
+      {
+        "Department": "Research",
+        "Salary": 101956
+      },
+      {
+        "Department": "Research",
+        "Salary": 33164
+      },
+      {
+        "Department": "Research",
+        "Salary": 39355
+      },
+      {
+        "Department": "Research",
+        "Salary": 63672
+      },
+      {
+        "Department": "Research",
+        "Salary": 32155
+      },
+      {
+        "Department": "Research",
+        "Salary": 123287
+      },
+      {
+        "Department": "Research",
+        "Salary": 111126
+      },
+      {
+        "Department": "Research",
+        "Salary": 80545
+      },
+      {
+        "Department": "Research",
+        "Salary": 54473
+      },
+      {
+        "Department": "Research",
+        "Salary": 111217
+      },
+      {
+        "Department": "Research",
+        "Salary": 40731
+      },
+      {
+        "Department": "Research",
+        "Salary": 137643
+      },
+      {
+        "Department": "Research",
+        "Salary": 63170
+      },
+      {
+        "Department": "Research",
+        "Salary": 125359
+      },
+      {
+        "Department": "Research",
+        "Salary": 131760
+      },
+      {
+        "Department": "Research",
+        "Salary": 67805
+      },
+      {
+        "Department": "Research",
+        "Salary": 142686
+      },
+      {
+        "Department": "Research",
+        "Salary": 108345
+      },
+      {
+        "Department": "Research",
+        "Salary": 135207
+      },
+      {
+        "Department": "Research",
+        "Salary": 38713
+      },
+      {
+        "Department": "Research",
+        "Salary": 73035
+      },
+      {
+        "Department": "Research",
+        "Salary": 71124
+      },
+      {
+        "Department": "Research",
+        "Salary": 123338
+      },
+      {
+        "Department": "Research",
+        "Salary": 123828
+      },
+      {
+        "Department": "Research",
+        "Salary": 83515
+      },
+      {
+        "Department": "Research",
+        "Salary": 58003
+      },
+      {
+        "Department": "Research",
+        "Salary": 42196
+      },
+      {
+        "Department": "Research",
+        "Salary": 51199
+      },
+      {
+        "Department": "Research",
+        "Salary": 35254
+      },
+      {
+        "Department": "Research",
+        "Salary": 128896
+      },
+      {
+        "Department": "Research",
+        "Salary": 52692
+      },
+      {
+        "Department": "Research",
+        "Salary": 52659
+      },
+      {
+        "Department": "Research",
+        "Salary": 99469
+      },
+      {
+        "Department": "Research",
+        "Salary": 109774
+      },
+      {
+        "Department": "Research",
+        "Salary": 149458
+      },
+      {
+        "Department": "Research",
+        "Salary": 37221
+      },
+      {
+        "Department": "QA",
+        "Salary": 74511
+      },
+      {
+        "Department": "QA",
+        "Salary": 48619
+      },
+      {
+        "Department": "QA",
+        "Salary": 119656
+      },
+      {
+        "Department": "QA",
+        "Salary": 46338
+      },
+      {
+        "Department": "QA",
+        "Salary": 60000
+      },
+      {
+        "Department": "QA",
+        "Salary": 114199
+      },
+      {
+        "Department": "QA",
+        "Salary": 122876
+      },
+      {
+        "Department": "QA",
+        "Salary": 37779
+      },
+      {
+        "Department": "QA",
+        "Salary": 93936
+      },
+      {
+        "Department": "QA",
+        "Salary": 117596
+      },
+      {
+        "Department": "QA",
+        "Salary": 95262
+      },
+      {
+        "Department": "QA",
+        "Salary": 80060
+      },
+      {
+        "Department": "QA",
+        "Salary": 68683
+      },
+      {
+        "Department": "QA",
+        "Salary": 138711
+      },
+      {
+        "Department": "QA",
+        "Salary": 136279
+      },
+      {
+        "Department": "QA",
+        "Salary": 54425
+      },
+      {
+        "Department": "QA",
+        "Salary": 143391
+      },
+      {
+        "Department": "QA",
+        "Salary": 70176
+      },
+      {
+        "Department": "QA",
+        "Salary": 144806
+      },
+      {
+        "Department": "QA",
+        "Salary": 93701
+      },
+      {
+        "Department": "QA",
+        "Salary": 140920
+      },
+      {
+        "Department": "QA",
+        "Salary": 57365
+      },
+      {
+        "Department": "QA",
+        "Salary": 114027
+      },
+      {
+        "Department": "QA",
+        "Salary": 118486
+      },
+      {
+        "Department": "QA",
+        "Salary": 45865
+      },
+      {
+        "Department": "QA",
+        "Salary": 35221
+      },
+      {
+        "Department": "QA",
+        "Salary": 57198
+      },
+      {
+        "Department": "QA",
+        "Salary": 64623
+      },
+      {
+        "Department": "QA",
+        "Salary": 51166
+      },
+      {
+        "Department": "QA",
+        "Salary": 82639
+      },
+      {
+        "Department": "QA",
+        "Salary": 95121
+      },
+      {
+        "Department": "QA",
+        "Salary": 114703
+      },
+      {
+        "Department": "QA",
+        "Salary": 78726
+      },
+      {
+        "Department": "QA",
+        "Salary": 87117
+      },
+      {
+        "Department": "QA",
+        "Salary": 110519
+      },
+      {
+        "Department": "QA",
+        "Salary": 81097
+      },
+      {
+        "Department": "QA",
+        "Salary": 101191
+      },
+      {
+        "Department": "QA",
+        "Salary": 137217
+      },
+      {
+        "Department": "QA",
+        "Salary": 98828
+      },
+      {
+        "Department": "QA",
+        "Salary": 138746
+      },
+      {
+        "Department": "QA",
+        "Salary": 129509
+      },
+      {
+        "Department": "QA",
+        "Salary": 41967
+      },
+      {
+        "Department": "QA",
+        "Salary": 40984
+      },
+      {
+        "Department": "QA",
+        "Salary": 73179
+      },
+      {
+        "Department": "QA",
+        "Salary": 107324
+      },
+      {
+        "Department": "QA",
+        "Salary": 132308
+      },
+      {
+        "Department": "QA",
+        "Salary": 33902
+      },
+      {
+        "Department": "QA",
+        "Salary": 96884
+      },
+      {
+        "Department": "QA",
+        "Salary": 115122
+      },
+      {
+        "Department": "QA",
+        "Salary": 147917
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 64497
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 96031
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 46229
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 34646
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 107502
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 126406
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 80438
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 69212
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 146301
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 139205
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 33198
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 138451
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 78184
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 95863
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 109115
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 112081
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 52585
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 59234
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 79594
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 31000
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 39541
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 71030
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 97871
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 137660
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 116448
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 120894
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 89998
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 64199
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 129374
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 45934
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 118110
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 96248
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 107250
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 98014
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 136688
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 93539
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 47930
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 58701
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 130046
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 66543
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 56123
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 123028
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 67373
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 71826
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 31390
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 103624
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 111196
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 43988
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 46399
+      },
+      {
+        "Department": "DevOps",
+        "Salary": 130701
+      }
+    ]
+  }
+}

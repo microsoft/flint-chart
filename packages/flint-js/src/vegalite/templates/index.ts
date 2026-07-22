@@ -22,7 +22,7 @@ import { bumpChartDef } from './bump';
 import { slopeChartDef } from './slope';
 import { areaChartDef, streamgraphDef } from './area';
 import { rangeAreaChartDef } from './range-area';
-import { pieChartDef } from './pie';
+import { donutChartDef, pieChartDef } from './pie';
 import { lollipopChartDef } from './lollipop';
 import { densityPlotDef } from './density';
 import { violinPlotDef } from './violin';
@@ -250,7 +250,7 @@ export const vlTemplateDefs: { [key: string]: ChartTemplateDef[] } = Object.from
         "Bars":            [barChartDef, groupedBarChartDef, stackedBarChartDef, lollipopChartDef, waterfallChartDef, ganttChartDef, bulletChartDef],
         "Distributions":   [histogramDef, densityPlotDef, ecdfPlotDef, violinPlotDef, boxplotDef, pyramidChartDef, candlestickChartDef],
         "Lines & Areas":   [lineChartDef, sparklineDef, bumpChartDef, slopeChartDef, areaChartDef, streamgraphDef, rangeAreaChartDef],
-        "Circular":        [pieChartDef, roseChartDef, radarChartDef],
+        "Circular":        [pieChartDef, donutChartDef, roseChartDef, radarChartDef],
         "Tables & Maps":   [heatmapDef, barTableDef, kpiCardDef, mapDef, choroplethDef],
     }).map(([category, defs]) => [category, defs.map(withInjectedProperties)]),
 );

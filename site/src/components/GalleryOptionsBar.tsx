@@ -132,6 +132,7 @@ function ControlRow(props: {
       <span className="gopt-inline">
         <input
           type="range"
+          className="site-range"
           min={spec.min}
           max={spec.max}
           step={step}

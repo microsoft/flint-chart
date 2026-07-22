@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 37.6,
+        "Y": 26.7,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 35.2,
+        "Y": 64.1,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 36.4,
+        "Y": 5.3,
+        "Segment": "Food"
+      },
+      {
+        "X": 52.9,
+        "Y": 15.8,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 45.4,
+        "Y": 32.9,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 19.3,
+        "Y": 6.5,
+        "Segment": "Food"
+      },
+      {
+        "X": 98.7,
+        "Y": 54.6,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 8.9,
+        "Y": 99.3,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 43.4,
+        "Y": 70.2,
+        "Segment": "Food"
+      },
+      {
+        "X": 18.7,
+        "Y": 54.4,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 99.5,
+        "Y": 19,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 68.4,
+        "Y": 39.9,
+        "Segment": "Food"
+      },
+      {
+        "X": 43.9,
+        "Y": 74.7,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 17.8,
+        "Y": 81.1,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 80.6,
+        "Y": 9.7,
+        "Segment": "Food"
+      },
+      {
+        "X": 3,
+        "Y": 13.4,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 63.7,
+        "Y": 38,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 24.9,
+        "Y": 50.7,
+        "Segment": "Food"
+      },
+      {
+        "X": 52.1,
+        "Y": 10.4,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 98.4,
+        "Y": 34.9,
+        "Segment": "Clothing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Stage": "Category",
+    "Count": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Funnel Chart",
+    "encodings": {
+      "y": "Stage",
+      "size": "Count"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Stage": "Visits",
+        "Count": 10006
+      },
+      {
+        "Stage": "Signups",
+        "Count": 5230
+      },
+      {
+        "Stage": "Trials",
+        "Count": 2984
+      },
+      {
+        "Stage": "Purchases",
+        "Count": 1670
+      },
+      {
+        "Stage": "Renewals",
+        "Count": 839
+      }
+    ]
+  }
+}

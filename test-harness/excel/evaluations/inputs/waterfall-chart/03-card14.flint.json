@@ -1,0 +1,93 @@
+{
+  "semantic_types": {
+    "Month": "Category",
+    "Amount": "Quantity",
+    "Type": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Waterfall Chart",
+    "encodings": {
+      "x": "Month",
+      "y": "Amount",
+      "color": "Type"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Opening",
+        "Amount": 10000,
+        "Type": "start"
+      },
+      {
+        "Month": "Jan",
+        "Amount": 500,
+        "Type": "delta"
+      },
+      {
+        "Month": "Feb",
+        "Amount": 200,
+        "Type": "delta"
+      },
+      {
+        "Month": "Mar",
+        "Amount": -150,
+        "Type": "delta"
+      },
+      {
+        "Month": "Apr",
+        "Amount": 300,
+        "Type": "delta"
+      },
+      {
+        "Month": "May",
+        "Amount": -100,
+        "Type": "delta"
+      },
+      {
+        "Month": "Jun",
+        "Amount": -250,
+        "Type": "delta"
+      },
+      {
+        "Month": "Jul",
+        "Amount": 400,
+        "Type": "delta"
+      },
+      {
+        "Month": "Aug",
+        "Amount": 150,
+        "Type": "delta"
+      },
+      {
+        "Month": "Sep",
+        "Amount": -300,
+        "Type": "delta"
+      },
+      {
+        "Month": "Oct",
+        "Amount": 200,
+        "Type": "delta"
+      },
+      {
+        "Month": "Nov",
+        "Amount": -50,
+        "Type": "delta"
+      },
+      {
+        "Month": "Dec",
+        "Amount": 100,
+        "Type": "delta"
+      },
+      {
+        "Month": "Closing",
+        "Amount": 11000,
+        "Type": "end"
+      }
+    ]
+  }
+}

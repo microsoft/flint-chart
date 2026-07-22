@@ -1,0 +1,688 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Group": "USA",
+        "Size": 877
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Japan",
+        "Size": 702
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Germany",
+        "Size": 376
+      },
+      {
+        "Category": "Electronics",
+        "Group": "UK",
+        "Size": 465
+      },
+      {
+        "Category": "Electronics",
+        "Group": "France",
+        "Size": 239
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Brazil",
+        "Size": 372
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Australia",
+        "Size": 565
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Mexico",
+        "Size": 587
+      },
+      {
+        "Category": "Clothing",
+        "Group": "USA",
+        "Size": 325
+      },
+      {
+        "Category": "Clothing",
+        "Group": "China",
+        "Size": 251
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Japan",
+        "Size": 529
+      },
+      {
+        "Category": "Clothing",
+        "Group": "France",
+        "Size": 558
+      },
+      {
+        "Category": "Clothing",
+        "Group": "India",
+        "Size": 681
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Brazil",
+        "Size": 327
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Canada",
+        "Size": 484
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Australia",
+        "Size": 815
+      },
+      {
+        "Category": "Clothing",
+        "Group": "South Korea",
+        "Size": 856
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Mexico",
+        "Size": 152
+      },
+      {
+        "Category": "Food",
+        "Group": "USA",
+        "Size": 188
+      },
+      {
+        "Category": "Food",
+        "Group": "Japan",
+        "Size": 970
+      },
+      {
+        "Category": "Food",
+        "Group": "Australia",
+        "Size": 457
+      },
+      {
+        "Category": "Food",
+        "Group": "South Korea",
+        "Size": 263
+      },
+      {
+        "Category": "Food",
+        "Group": "Mexico",
+        "Size": 634
+      },
+      {
+        "Category": "Books",
+        "Group": "USA",
+        "Size": 760
+      },
+      {
+        "Category": "Books",
+        "Group": "China",
+        "Size": 207
+      },
+      {
+        "Category": "Books",
+        "Group": "Japan",
+        "Size": 691
+      },
+      {
+        "Category": "Books",
+        "Group": "Germany",
+        "Size": 515
+      },
+      {
+        "Category": "Books",
+        "Group": "UK",
+        "Size": 668
+      },
+      {
+        "Category": "Books",
+        "Group": "France",
+        "Size": 401
+      },
+      {
+        "Category": "Books",
+        "Group": "Brazil",
+        "Size": 506
+      },
+      {
+        "Category": "Books",
+        "Group": "Canada",
+        "Size": 682
+      },
+      {
+        "Category": "Books",
+        "Group": "Australia",
+        "Size": 220
+      },
+      {
+        "Category": "Books",
+        "Group": "South Korea",
+        "Size": 118
+      },
+      {
+        "Category": "Books",
+        "Group": "Mexico",
+        "Size": 205
+      },
+      {
+        "Category": "Sports",
+        "Group": "USA",
+        "Size": 788
+      },
+      {
+        "Category": "Sports",
+        "Group": "China",
+        "Size": 694
+      },
+      {
+        "Category": "Sports",
+        "Group": "Japan",
+        "Size": 323
+      },
+      {
+        "Category": "Sports",
+        "Group": "Germany",
+        "Size": 442
+      },
+      {
+        "Category": "Sports",
+        "Group": "UK",
+        "Size": 181
+      },
+      {
+        "Category": "Sports",
+        "Group": "India",
+        "Size": 301
+      },
+      {
+        "Category": "Sports",
+        "Group": "Brazil",
+        "Size": 960
+      },
+      {
+        "Category": "Sports",
+        "Group": "Canada",
+        "Size": 613
+      },
+      {
+        "Category": "Sports",
+        "Group": "Australia",
+        "Size": 949
+      },
+      {
+        "Category": "Sports",
+        "Group": "South Korea",
+        "Size": 940
+      },
+      {
+        "Category": "Sports",
+        "Group": "Mexico",
+        "Size": 549
+      },
+      {
+        "Category": "Home",
+        "Group": "China",
+        "Size": 311
+      },
+      {
+        "Category": "Home",
+        "Group": "UK",
+        "Size": 523
+      },
+      {
+        "Category": "Home",
+        "Group": "France",
+        "Size": 482
+      },
+      {
+        "Category": "Home",
+        "Group": "Canada",
+        "Size": 501
+      },
+      {
+        "Category": "Home",
+        "Group": "Australia",
+        "Size": 501
+      },
+      {
+        "Category": "Home",
+        "Group": "South Korea",
+        "Size": 535
+      },
+      {
+        "Category": "Home",
+        "Group": "Mexico",
+        "Size": 804
+      },
+      {
+        "Category": "Garden",
+        "Group": "China",
+        "Size": 142
+      },
+      {
+        "Category": "Garden",
+        "Group": "Japan",
+        "Size": 250
+      },
+      {
+        "Category": "Garden",
+        "Group": "Germany",
+        "Size": 392
+      },
+      {
+        "Category": "Garden",
+        "Group": "UK",
+        "Size": 158
+      },
+      {
+        "Category": "Garden",
+        "Group": "Canada",
+        "Size": 343
+      },
+      {
+        "Category": "Garden",
+        "Group": "Australia",
+        "Size": 193
+      },
+      {
+        "Category": "Garden",
+        "Group": "South Korea",
+        "Size": 815
+      },
+      {
+        "Category": "Garden",
+        "Group": "Mexico",
+        "Size": 324
+      },
+      {
+        "Category": "Auto",
+        "Group": "USA",
+        "Size": 167
+      },
+      {
+        "Category": "Auto",
+        "Group": "China",
+        "Size": 355
+      },
+      {
+        "Category": "Auto",
+        "Group": "Germany",
+        "Size": 742
+      },
+      {
+        "Category": "Auto",
+        "Group": "UK",
+        "Size": 163
+      },
+      {
+        "Category": "Auto",
+        "Group": "France",
+        "Size": 524
+      },
+      {
+        "Category": "Auto",
+        "Group": "India",
+        "Size": 912
+      },
+      {
+        "Category": "Auto",
+        "Group": "Brazil",
+        "Size": 376
+      },
+      {
+        "Category": "Auto",
+        "Group": "Canada",
+        "Size": 984
+      },
+      {
+        "Category": "Auto",
+        "Group": "South Korea",
+        "Size": 668
+      },
+      {
+        "Category": "Health",
+        "Group": "China",
+        "Size": 192
+      },
+      {
+        "Category": "Health",
+        "Group": "Germany",
+        "Size": 465
+      },
+      {
+        "Category": "Health",
+        "Group": "UK",
+        "Size": 639
+      },
+      {
+        "Category": "Health",
+        "Group": "France",
+        "Size": 797
+      },
+      {
+        "Category": "Health",
+        "Group": "Brazil",
+        "Size": 230
+      },
+      {
+        "Category": "Health",
+        "Group": "Canada",
+        "Size": 696
+      },
+      {
+        "Category": "Health",
+        "Group": "Australia",
+        "Size": 314
+      },
+      {
+        "Category": "Health",
+        "Group": "Mexico",
+        "Size": 770
+      },
+      {
+        "Category": "Beauty",
+        "Group": "USA",
+        "Size": 326
+      },
+      {
+        "Category": "Beauty",
+        "Group": "Japan",
+        "Size": 393
+      },
+      {
+        "Category": "Beauty",
+        "Group": "UK",
+        "Size": 739
+      },
+      {
+        "Category": "Beauty",
+        "Group": "France",
+        "Size": 109
+      },
+      {
+        "Category": "Beauty",
+        "Group": "Brazil",
+        "Size": 600
+      },
+      {
+        "Category": "Beauty",
+        "Group": "Canada",
+        "Size": 640
+      },
+      {
+        "Category": "Beauty",
+        "Group": "Australia",
+        "Size": 170
+      },
+      {
+        "Category": "Beauty",
+        "Group": "South Korea",
+        "Size": 912
+      },
+      {
+        "Category": "Beauty",
+        "Group": "Mexico",
+        "Size": 341
+      },
+      {
+        "Category": "Toys",
+        "Group": "USA",
+        "Size": 886
+      },
+      {
+        "Category": "Toys",
+        "Group": "China",
+        "Size": 683
+      },
+      {
+        "Category": "Toys",
+        "Group": "UK",
+        "Size": 513
+      },
+      {
+        "Category": "Toys",
+        "Group": "India",
+        "Size": 319
+      },
+      {
+        "Category": "Toys",
+        "Group": "Brazil",
+        "Size": 396
+      },
+      {
+        "Category": "Toys",
+        "Group": "Canada",
+        "Size": 722
+      },
+      {
+        "Category": "Toys",
+        "Group": "Australia",
+        "Size": 910
+      },
+      {
+        "Category": "Music",
+        "Group": "USA",
+        "Size": 820
+      },
+      {
+        "Category": "Music",
+        "Group": "China",
+        "Size": 674
+      },
+      {
+        "Category": "Music",
+        "Group": "Japan",
+        "Size": 568
+      },
+      {
+        "Category": "Music",
+        "Group": "Germany",
+        "Size": 990
+      },
+      {
+        "Category": "Music",
+        "Group": "UK",
+        "Size": 885
+      },
+      {
+        "Category": "Music",
+        "Group": "India",
+        "Size": 625
+      },
+      {
+        "Category": "Music",
+        "Group": "Brazil",
+        "Size": 682
+      },
+      {
+        "Category": "Music",
+        "Group": "Canada",
+        "Size": 185
+      },
+      {
+        "Category": "Music",
+        "Group": "Australia",
+        "Size": 109
+      },
+      {
+        "Category": "Music",
+        "Group": "Mexico",
+        "Size": 663
+      },
+      {
+        "Category": "Movies",
+        "Group": "USA",
+        "Size": 420
+      },
+      {
+        "Category": "Movies",
+        "Group": "China",
+        "Size": 203
+      },
+      {
+        "Category": "Movies",
+        "Group": "Japan",
+        "Size": 735
+      },
+      {
+        "Category": "Movies",
+        "Group": "Germany",
+        "Size": 508
+      },
+      {
+        "Category": "Movies",
+        "Group": "UK",
+        "Size": 385
+      },
+      {
+        "Category": "Movies",
+        "Group": "France",
+        "Size": 160
+      },
+      {
+        "Category": "Movies",
+        "Group": "India",
+        "Size": 340
+      },
+      {
+        "Category": "Movies",
+        "Group": "Brazil",
+        "Size": 706
+      },
+      {
+        "Category": "Movies",
+        "Group": "Canada",
+        "Size": 520
+      },
+      {
+        "Category": "Movies",
+        "Group": "Australia",
+        "Size": 817
+      },
+      {
+        "Category": "Movies",
+        "Group": "South Korea",
+        "Size": 527
+      },
+      {
+        "Category": "Movies",
+        "Group": "Mexico",
+        "Size": 433
+      },
+      {
+        "Category": "Software",
+        "Group": "USA",
+        "Size": 376
+      },
+      {
+        "Category": "Software",
+        "Group": "Germany",
+        "Size": 375
+      },
+      {
+        "Category": "Software",
+        "Group": "UK",
+        "Size": 998
+      },
+      {
+        "Category": "Software",
+        "Group": "France",
+        "Size": 662
+      },
+      {
+        "Category": "Software",
+        "Group": "India",
+        "Size": 974
+      },
+      {
+        "Category": "Software",
+        "Group": "Brazil",
+        "Size": 245
+      },
+      {
+        "Category": "Software",
+        "Group": "Canada",
+        "Size": 564
+      },
+      {
+        "Category": "Software",
+        "Group": "Australia",
+        "Size": 761
+      },
+      {
+        "Category": "Software",
+        "Group": "South Korea",
+        "Size": 518
+      },
+      {
+        "Category": "Games",
+        "Group": "China",
+        "Size": 922
+      },
+      {
+        "Category": "Games",
+        "Group": "Japan",
+        "Size": 637
+      },
+      {
+        "Category": "Games",
+        "Group": "Germany",
+        "Size": 619
+      },
+      {
+        "Category": "Games",
+        "Group": "UK",
+        "Size": 335
+      },
+      {
+        "Category": "Games",
+        "Group": "France",
+        "Size": 311
+      },
+      {
+        "Category": "Games",
+        "Group": "India",
+        "Size": 501
+      },
+      {
+        "Category": "Games",
+        "Group": "Brazil",
+        "Size": 364
+      },
+      {
+        "Category": "Games",
+        "Group": "Australia",
+        "Size": 280
+      },
+      {
+        "Category": "Games",
+        "Group": "South Korea",
+        "Size": 289
+      }
+    ]
+  }
+}

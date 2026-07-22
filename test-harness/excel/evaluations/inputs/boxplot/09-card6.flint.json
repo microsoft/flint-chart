@@ -1,0 +1,1106 @@
+{
+  "semantic_types": {
+    "Department": "Department",
+    "Comp": "Amount",
+    "Level": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Department",
+      "y": "Comp",
+      "color": "Level"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "dodge": "local"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 106111
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 151334
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 165719
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 99511
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 104253
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 153821
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 111815
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 166713
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 156992
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 126234
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 130040
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 105738
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 179380
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 113100
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 167151
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 134589
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 155988
+      },
+      {
+        "Department": "Eng",
+        "Level": "L1",
+        "Comp": 167830
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 51689
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 52646
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 31766
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 103628
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 93789
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 47480
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 63341
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 51654
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 101208
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 88786
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 34355
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 51871
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 61997
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 61489
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 63147
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 31101
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 77552
+      },
+      {
+        "Department": "Eng",
+        "Level": "L2",
+        "Comp": 33444
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 44995
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 51806
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 49493
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 44652
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 38083
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 69552
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 32461
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 79728
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 75763
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 31946
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 68965
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 75514
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 73115
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 79003
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 31404
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 42364
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 106969
+      },
+      {
+        "Department": "Sales",
+        "Level": "L2",
+        "Comp": 84095
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 128935
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 79223
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 127697
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 59578
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 74443
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 78349
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 119148
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 112878
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 121883
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 91028
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 92014
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 97197
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 83582
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 46949
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 134625
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 131986
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 56254
+      },
+      {
+        "Department": "Sales",
+        "Level": "L3",
+        "Comp": 97134
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 108076
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 55798
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 80829
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 126830
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 70984
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 77644
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 58974
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 101366
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 46509
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 122929
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 125243
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 121636
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 68423
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 61234
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 93853
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 45663
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 121945
+      },
+      {
+        "Department": "HR",
+        "Level": "L3",
+        "Comp": 52981
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 93655
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 133807
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 72613
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 91573
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 149975
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 85162
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 141346
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 144524
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 94513
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 75311
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 86953
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 93214
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 104827
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 71511
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 107040
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 96583
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 118599
+      },
+      {
+        "Department": "HR",
+        "Level": "L4",
+        "Comp": 66142
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 66619
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 149015
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 63266
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 145234
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 140359
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 108074
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 111510
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 83122
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 136135
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 137463
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 126713
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 92684
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 113667
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 61790
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 91979
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 140992
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 132117
+      },
+      {
+        "Department": "Ops",
+        "Level": "L4",
+        "Comp": 92700
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 127897
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 103264
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 84973
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 107750
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 149173
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 117862
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 102924
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 141436
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 123431
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 95288
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 135545
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 114411
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 138146
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 86904
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 76665
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 159710
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 82951
+      },
+      {
+        "Department": "Ops",
+        "Level": "L5",
+        "Comp": 155326
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 121401
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 78617
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 113705
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 76327
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 152726
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 150833
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 106286
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 115145
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 155492
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 119816
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 79481
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 148794
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 124293
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 85456
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 121329
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 139497
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 112826
+      },
+      {
+        "Department": "Legal",
+        "Level": "L5",
+        "Comp": 147313
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 98062
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 146429
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 158538
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 91865
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 121717
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 94656
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 126593
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 141095
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 157662
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 137494
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 107623
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 90303
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 136715
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 161107
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 157614
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 135635
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 90385
+      },
+      {
+        "Department": "Legal",
+        "Level": "L1",
+        "Comp": 163819
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 116487
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 120399
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 164792
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 177884
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 170041
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 102729
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 101864
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 144923
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 140347
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 178244
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 102950
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 123103
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 157355
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 105522
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 148084
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 168144
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 172315
+      },
+      {
+        "Department": "Finance",
+        "Level": "L1",
+        "Comp": 168176
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 125430
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 123468
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 81218
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 99234
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 122348
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 73752
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 63500
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 121064
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 92309
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 102062
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 128095
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 92148
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 108179
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 75343
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 82177
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 106735
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 108899
+      },
+      {
+        "Department": "Finance",
+        "Level": "L3",
+        "Comp": 118384
+      }
+    ]
+  }
+}

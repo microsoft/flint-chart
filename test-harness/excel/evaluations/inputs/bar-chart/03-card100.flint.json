@@ -1,0 +1,421 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "James Walker",
+        "Value": 276
+      },
+      {
+        "Category": "Paul Wilson",
+        "Value": 172
+      },
+      {
+        "Category": "Jessica Martin",
+        "Value": 476
+      },
+      {
+        "Category": "Christopher Moore",
+        "Value": 278
+      },
+      {
+        "Category": "Betty Wilson",
+        "Value": 645
+      },
+      {
+        "Category": "Steven Lewis",
+        "Value": 653
+      },
+      {
+        "Category": "Karen Lopez",
+        "Value": 775
+      },
+      {
+        "Category": "Sandra Wright",
+        "Value": 780
+      },
+      {
+        "Category": "Daniel King",
+        "Value": 496
+      },
+      {
+        "Category": "Mark Taylor",
+        "Value": 927
+      },
+      {
+        "Category": "Sandra Thomas",
+        "Value": 654
+      },
+      {
+        "Category": "Karen Rodriguez",
+        "Value": 655
+      },
+      {
+        "Category": "Patricia Jackson",
+        "Value": 768
+      },
+      {
+        "Category": "Donna Hill",
+        "Value": 922
+      },
+      {
+        "Category": "Donna White",
+        "Value": 66
+      },
+      {
+        "Category": "Michael Brown",
+        "Value": 471
+      },
+      {
+        "Category": "Elizabeth Robinson",
+        "Value": 458
+      },
+      {
+        "Category": "Mary Jones",
+        "Value": 633
+      },
+      {
+        "Category": "Richard Rodriguez",
+        "Value": 904
+      },
+      {
+        "Category": "Christopher Clark",
+        "Value": 668
+      },
+      {
+        "Category": "Christopher Lopez",
+        "Value": 404
+      },
+      {
+        "Category": "Susan Ramirez",
+        "Value": 618
+      },
+      {
+        "Category": "Steven Wilson",
+        "Value": 83
+      },
+      {
+        "Category": "Paul Anderson",
+        "Value": 779
+      },
+      {
+        "Category": "Joseph Rodriguez",
+        "Value": 381
+      },
+      {
+        "Category": "Elizabeth Wright",
+        "Value": 80
+      },
+      {
+        "Category": "Kimberly Jackson",
+        "Value": 420
+      },
+      {
+        "Category": "Betty Hernandez",
+        "Value": 711
+      },
+      {
+        "Category": "David King",
+        "Value": 388
+      },
+      {
+        "Category": "Matthew Lopez",
+        "Value": 975
+      },
+      {
+        "Category": "Susan Hernandez",
+        "Value": 450
+      },
+      {
+        "Category": "Jennifer Lee",
+        "Value": 107
+      },
+      {
+        "Category": "Richard Flores",
+        "Value": 18
+      },
+      {
+        "Category": "John Anderson",
+        "Value": 160
+      },
+      {
+        "Category": "Kimberly Wright",
+        "Value": 30
+      },
+      {
+        "Category": "Joseph Williams",
+        "Value": 784
+      },
+      {
+        "Category": "Lisa Torres",
+        "Value": 541
+      },
+      {
+        "Category": "Andrew Rodriguez",
+        "Value": 591
+      },
+      {
+        "Category": "Karen Johnson",
+        "Value": 847
+      },
+      {
+        "Category": "Steven Jones",
+        "Value": 826
+      },
+      {
+        "Category": "Joshua Ramirez",
+        "Value": 955
+      },
+      {
+        "Category": "Emily Martinez",
+        "Value": 626
+      },
+      {
+        "Category": "Robert Walker",
+        "Value": 546
+      },
+      {
+        "Category": "Robert Lewis",
+        "Value": 946
+      },
+      {
+        "Category": "Sandra Lopez",
+        "Value": 859
+      },
+      {
+        "Category": "Nancy Miller",
+        "Value": 326
+      },
+      {
+        "Category": "Christopher Sanchez",
+        "Value": 636
+      },
+      {
+        "Category": "Daniel Flores",
+        "Value": 111
+      },
+      {
+        "Category": "Mary Walker",
+        "Value": 334
+      },
+      {
+        "Category": "Anthony Ramirez",
+        "Value": 120
+      },
+      {
+        "Category": "Anthony Hill",
+        "Value": 602
+      },
+      {
+        "Category": "Matthew Miller",
+        "Value": 216
+      },
+      {
+        "Category": "Andrew King",
+        "Value": 160
+      },
+      {
+        "Category": "William Perez",
+        "Value": 932
+      },
+      {
+        "Category": "William Martinez",
+        "Value": 544
+      },
+      {
+        "Category": "Margaret Garcia",
+        "Value": 733
+      },
+      {
+        "Category": "Barbara Anderson",
+        "Value": 794
+      },
+      {
+        "Category": "Thomas Smith",
+        "Value": 724
+      },
+      {
+        "Category": "Kimberly Thomas",
+        "Value": 834
+      },
+      {
+        "Category": "Karen Garcia",
+        "Value": 378
+      },
+      {
+        "Category": "Sarah Torres",
+        "Value": 174
+      },
+      {
+        "Category": "Emily Hill",
+        "Value": 248
+      },
+      {
+        "Category": "Sarah Walker",
+        "Value": 312
+      },
+      {
+        "Category": "Michael Clark",
+        "Value": 451
+      },
+      {
+        "Category": "Joshua Wright",
+        "Value": 850
+      },
+      {
+        "Category": "Andrew Walker",
+        "Value": 541
+      },
+      {
+        "Category": "Nancy Young",
+        "Value": 831
+      },
+      {
+        "Category": "John Lewis",
+        "Value": 464
+      },
+      {
+        "Category": "John Brown",
+        "Value": 83
+      },
+      {
+        "Category": "Anthony Thomas",
+        "Value": 490
+      },
+      {
+        "Category": "Joshua Moore",
+        "Value": 212
+      },
+      {
+        "Category": "John Hernandez",
+        "Value": 977
+      },
+      {
+        "Category": "James Perez",
+        "Value": 282
+      },
+      {
+        "Category": "James Scott",
+        "Value": 476
+      },
+      {
+        "Category": "Matthew Sanchez",
+        "Value": 52
+      },
+      {
+        "Category": "Joseph Sanchez",
+        "Value": 108
+      },
+      {
+        "Category": "Paul Perez",
+        "Value": 464
+      },
+      {
+        "Category": "Joshua Rodriguez",
+        "Value": 307
+      },
+      {
+        "Category": "Anthony Sanchez",
+        "Value": 435
+      },
+      {
+        "Category": "Linda King",
+        "Value": 691
+      },
+      {
+        "Category": "Elizabeth Smith",
+        "Value": 982
+      },
+      {
+        "Category": "Sandra Miller",
+        "Value": 792
+      },
+      {
+        "Category": "Nancy Allen",
+        "Value": 991
+      },
+      {
+        "Category": "Patricia Brown",
+        "Value": 99
+      },
+      {
+        "Category": "Lisa Clark",
+        "Value": 756
+      },
+      {
+        "Category": "Lisa Thompson",
+        "Value": 702
+      },
+      {
+        "Category": "Nancy Clark",
+        "Value": 214
+      },
+      {
+        "Category": "Steven Miller",
+        "Value": 43
+      },
+      {
+        "Category": "Charles King",
+        "Value": 143
+      },
+      {
+        "Category": "Paul Harris",
+        "Value": 586
+      },
+      {
+        "Category": "Ashley Jackson",
+        "Value": 775
+      },
+      {
+        "Category": "John Moore",
+        "Value": 974
+      },
+      {
+        "Category": "Betty Flores",
+        "Value": 756
+      },
+      {
+        "Category": "Linda Young",
+        "Value": 721
+      },
+      {
+        "Category": "Joshua Jones",
+        "Value": 562
+      },
+      {
+        "Category": "Margaret Anderson",
+        "Value": 21
+      },
+      {
+        "Category": "Anthony Wilson",
+        "Value": 545
+      },
+      {
+        "Category": "Karen Jones",
+        "Value": 618
+      },
+      {
+        "Category": "Daniel Rodriguez",
+        "Value": 817
+      },
+      {
+        "Category": "Betty Clark",
+        "Value": 337
+      }
+    ]
+  }
+}

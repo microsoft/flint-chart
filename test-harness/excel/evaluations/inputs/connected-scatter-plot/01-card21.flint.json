@@ -1,0 +1,169 @@
+{
+  "semantic_types": {
+    "GDP Growth": "Quantity",
+    "Inflation": "Quantity",
+    "Year": "Year",
+    "Country": "Country"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "GDP Growth",
+      "y": "Inflation",
+      "order": "Year",
+      "color": "Country"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "USA",
+        "Year": 2016,
+        "GDP Growth": 1.7,
+        "Inflation": 1.3
+      },
+      {
+        "Country": "USA",
+        "Year": 2017,
+        "GDP Growth": 2.3,
+        "Inflation": 2.1
+      },
+      {
+        "Country": "USA",
+        "Year": 2018,
+        "GDP Growth": 2.9,
+        "Inflation": 2.4
+      },
+      {
+        "Country": "USA",
+        "Year": 2019,
+        "GDP Growth": 2.3,
+        "Inflation": 1.8
+      },
+      {
+        "Country": "USA",
+        "Year": 2020,
+        "GDP Growth": -3.4,
+        "Inflation": 1.2
+      },
+      {
+        "Country": "USA",
+        "Year": 2021,
+        "GDP Growth": 5.9,
+        "Inflation": 4.7
+      },
+      {
+        "Country": "USA",
+        "Year": 2022,
+        "GDP Growth": 2.1,
+        "Inflation": 8
+      },
+      {
+        "Country": "USA",
+        "Year": 2023,
+        "GDP Growth": 2.5,
+        "Inflation": 4.1
+      },
+      {
+        "Country": "China",
+        "Year": 2016,
+        "GDP Growth": 6.8,
+        "Inflation": 2
+      },
+      {
+        "Country": "China",
+        "Year": 2017,
+        "GDP Growth": 6.9,
+        "Inflation": 1.6
+      },
+      {
+        "Country": "China",
+        "Year": 2018,
+        "GDP Growth": 6.7,
+        "Inflation": 2.1
+      },
+      {
+        "Country": "China",
+        "Year": 2019,
+        "GDP Growth": 6,
+        "Inflation": 2.9
+      },
+      {
+        "Country": "China",
+        "Year": 2020,
+        "GDP Growth": 2.2,
+        "Inflation": 2.4
+      },
+      {
+        "Country": "China",
+        "Year": 2021,
+        "GDP Growth": 8.4,
+        "Inflation": 0.9
+      },
+      {
+        "Country": "China",
+        "Year": 2022,
+        "GDP Growth": 3,
+        "Inflation": 2
+      },
+      {
+        "Country": "China",
+        "Year": 2023,
+        "GDP Growth": 5.2,
+        "Inflation": 0.2
+      },
+      {
+        "Country": "Japan",
+        "Year": 2016,
+        "GDP Growth": 0.8,
+        "Inflation": -0.1
+      },
+      {
+        "Country": "Japan",
+        "Year": 2017,
+        "GDP Growth": 1.7,
+        "Inflation": 0.5
+      },
+      {
+        "Country": "Japan",
+        "Year": 2018,
+        "GDP Growth": 0.6,
+        "Inflation": 1
+      },
+      {
+        "Country": "Japan",
+        "Year": 2019,
+        "GDP Growth": -0.4,
+        "Inflation": 0.5
+      },
+      {
+        "Country": "Japan",
+        "Year": 2020,
+        "GDP Growth": -4.3,
+        "Inflation": 0
+      },
+      {
+        "Country": "Japan",
+        "Year": 2021,
+        "GDP Growth": 2.1,
+        "Inflation": -0.2
+      },
+      {
+        "Country": "Japan",
+        "Year": 2022,
+        "GDP Growth": 1,
+        "Inflation": 2.5
+      },
+      {
+        "Country": "Japan",
+        "Year": 2023,
+        "GDP Growth": 1.9,
+        "Inflation": 3.3
+      }
+    ]
+  }
+}

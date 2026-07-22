@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Age Group": "Category",
+    "Population": "Quantity",
+    "Gender": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Age Group",
+      "x": "Population",
+      "color": "Gender"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Age Group": "0-14",
+        "Gender": "Male",
+        "Population": 2612
+      },
+      {
+        "Age Group": "0-14",
+        "Gender": "Female",
+        "Population": 619
+      },
+      {
+        "Age Group": "15-29",
+        "Gender": "Male",
+        "Population": 695
+      },
+      {
+        "Age Group": "15-29",
+        "Gender": "Female",
+        "Population": 1916
+      },
+      {
+        "Age Group": "30-44",
+        "Gender": "Male",
+        "Population": 476
+      },
+      {
+        "Age Group": "30-44",
+        "Gender": "Female",
+        "Population": -257
+      },
+      {
+        "Age Group": "45-59",
+        "Gender": "Male",
+        "Population": 1558
+      },
+      {
+        "Age Group": "45-59",
+        "Gender": "Female",
+        "Population": 934
+      },
+      {
+        "Age Group": "60-74",
+        "Gender": "Male",
+        "Population": 2
+      },
+      {
+        "Age Group": "60-74",
+        "Gender": "Female",
+        "Population": 98
+      },
+      {
+        "Age Group": "75+",
+        "Gender": "Male",
+        "Population": -388
+      },
+      {
+        "Age Group": "75+",
+        "Gender": "Female",
+        "Population": 1841
+      }
+    ]
+  }
+}

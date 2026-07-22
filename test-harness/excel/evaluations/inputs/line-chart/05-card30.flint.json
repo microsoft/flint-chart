@@ -1,0 +1,173 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Value": "Quantity",
+    "ColorVal": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Value",
+      "color": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2020-01-01",
+        "Value": 117,
+        "ColorVal": 2.4
+      },
+      {
+        "Date": "2020-02-06",
+        "Value": 109,
+        "ColorVal": 1.9
+      },
+      {
+        "Date": "2020-03-14",
+        "Value": 113,
+        "ColorVal": 0.3
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 117,
+        "ColorVal": 4.2
+      },
+      {
+        "Date": "2020-05-26",
+        "Value": 112,
+        "ColorVal": 9.5
+      },
+      {
+        "Date": "2020-07-01",
+        "Value": 121,
+        "ColorVal": 2.5
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 134,
+        "ColorVal": 7.5
+      },
+      {
+        "Date": "2020-09-12",
+        "Value": 130,
+        "ColorVal": 2.7
+      },
+      {
+        "Date": "2020-10-19",
+        "Value": 136,
+        "ColorVal": 4.3
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 152,
+        "ColorVal": 6.4
+      },
+      {
+        "Date": "2020-12-31",
+        "Value": 158,
+        "ColorVal": 3.8
+      },
+      {
+        "Date": "2021-02-05",
+        "Value": 165,
+        "ColorVal": 2.5
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 164,
+        "ColorVal": 4.7
+      },
+      {
+        "Date": "2021-04-19",
+        "Value": 175,
+        "ColorVal": 9.1
+      },
+      {
+        "Date": "2021-05-26",
+        "Value": 173,
+        "ColorVal": 6
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 161,
+        "ColorVal": 4.8
+      },
+      {
+        "Date": "2021-08-07",
+        "Value": 167,
+        "ColorVal": 6.1
+      },
+      {
+        "Date": "2021-09-12",
+        "Value": 157,
+        "ColorVal": 1.4
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 151,
+        "ColorVal": 8.8
+      },
+      {
+        "Date": "2021-11-24",
+        "Value": 149,
+        "ColorVal": 7.3
+      },
+      {
+        "Date": "2021-12-31",
+        "Value": 159,
+        "ColorVal": 3.8
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 177,
+        "ColorVal": 3.1
+      },
+      {
+        "Date": "2022-03-14",
+        "Value": 195,
+        "ColorVal": 8.1
+      },
+      {
+        "Date": "2022-04-19",
+        "Value": 211,
+        "ColorVal": 5
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 220,
+        "ColorVal": 0.4
+      },
+      {
+        "Date": "2022-07-01",
+        "Value": 228,
+        "ColorVal": 6.3
+      },
+      {
+        "Date": "2022-08-07",
+        "Value": 229,
+        "ColorVal": 1.3
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 221,
+        "ColorVal": 8.4
+      },
+      {
+        "Date": "2022-10-19",
+        "Value": 206,
+        "ColorVal": 0.2
+      },
+      {
+        "Date": "2022-11-24",
+        "Value": 191,
+        "ColorVal": 7.6
+      }
+    ]
+  }
+}

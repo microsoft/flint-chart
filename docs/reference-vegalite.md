@@ -6,7 +6,7 @@ The Vega-Lite backend serves as Flint's reference implementation and offers the 
 
 ## What this page covers
 
-This reference lists the 34 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
+This reference lists the 35 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -336,6 +336,16 @@ _No template-specific parameters._
 ## Circular
 
 ### ![](chart-icon-pie.svg) Pie Chart
+
+**Encoding channels:** `size`, `color`, `column`, `row`
+
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
+| `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+
+### Donut Chart
 
 **Encoding channels:** `size`, `color`, `column`, `row`
 

@@ -1,0 +1,143 @@
+{
+  "semantic_types": {
+    "Signal A": "Quantity",
+    "Signal B": "Quantity",
+    "Step": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Signal A",
+      "y": "Signal B",
+      "order": "Step"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Step": 0,
+        "Signal A": 90,
+        "Signal B": 50
+      },
+      {
+        "Step": 1,
+        "Signal A": 88.5,
+        "Signal B": 60.4
+      },
+      {
+        "Step": 2,
+        "Signal A": 84.2,
+        "Signal B": 67.8
+      },
+      {
+        "Step": 3,
+        "Signal A": 77.3,
+        "Signal B": 70
+      },
+      {
+        "Step": 4,
+        "Signal A": 68.4,
+        "Signal B": 66.3
+      },
+      {
+        "Step": 5,
+        "Signal A": 58.1,
+        "Signal B": 58
+      },
+      {
+        "Step": 6,
+        "Signal A": 47.3,
+        "Signal B": 47.3
+      },
+      {
+        "Step": 7,
+        "Signal A": 36.6,
+        "Signal B": 37.4
+      },
+      {
+        "Step": 8,
+        "Signal A": 26.9,
+        "Signal B": 31.2
+      },
+      {
+        "Step": 9,
+        "Signal A": 19,
+        "Signal B": 30.4
+      },
+      {
+        "Step": 10,
+        "Signal A": 13.3,
+        "Signal B": 35.4
+      },
+      {
+        "Step": 11,
+        "Signal A": 10.4,
+        "Signal B": 44.6
+      },
+      {
+        "Step": 12,
+        "Signal A": 10.4,
+        "Signal B": 55.4
+      },
+      {
+        "Step": 13,
+        "Signal A": 13.3,
+        "Signal B": 64.6
+      },
+      {
+        "Step": 14,
+        "Signal A": 19,
+        "Signal B": 69.6
+      },
+      {
+        "Step": 15,
+        "Signal A": 26.9,
+        "Signal B": 68.8
+      },
+      {
+        "Step": 16,
+        "Signal A": 36.6,
+        "Signal B": 62.6
+      },
+      {
+        "Step": 17,
+        "Signal A": 47.3,
+        "Signal B": 52.7
+      },
+      {
+        "Step": 18,
+        "Signal A": 58.1,
+        "Signal B": 42
+      },
+      {
+        "Step": 19,
+        "Signal A": 68.4,
+        "Signal B": 33.7
+      },
+      {
+        "Step": 20,
+        "Signal A": 77.3,
+        "Signal B": 30
+      },
+      {
+        "Step": 21,
+        "Signal A": 84.2,
+        "Signal B": 32.2
+      },
+      {
+        "Step": 22,
+        "Signal A": 88.5,
+        "Signal B": 39.6
+      },
+      {
+        "Step": 23,
+        "Signal A": 90,
+        "Signal B": 50
+      }
+    ]
+  }
+}

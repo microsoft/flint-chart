@@ -1,0 +1,42 @@
+{
+  "semantic_types": {
+    "Region": "Category",
+    "Sales": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Region",
+      "y": "Sales",
+      "group": "Region"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Region": "Electronics",
+        "Sales": 300
+      },
+      {
+        "Region": "Clothing",
+        "Sales": 527
+      },
+      {
+        "Region": "Food",
+        "Sales": 975
+      },
+      {
+        "Region": "Books",
+        "Sales": 311
+      },
+      {
+        "Region": "Sports",
+        "Sales": 930
+      }
+    ]
+  }
+}

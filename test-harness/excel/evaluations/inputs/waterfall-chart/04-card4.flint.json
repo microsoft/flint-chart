@@ -1,0 +1,37 @@
+{
+  "semantic_types": {
+    "Quarter": "Category",
+    "Change": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Waterfall Chart",
+    "encodings": {
+      "x": "Quarter",
+      "y": "Change"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Quarter": "Q1",
+        "Change": 300
+      },
+      {
+        "Quarter": "Q2",
+        "Change": 150
+      },
+      {
+        "Quarter": "Q3",
+        "Change": -100
+      },
+      {
+        "Quarter": "Q4",
+        "Change": 200
+      }
+    ]
+  }
+}

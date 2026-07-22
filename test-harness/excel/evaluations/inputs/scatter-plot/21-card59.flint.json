@@ -1,0 +1,261 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 95.1,
+        "Group": "James Walker"
+      },
+      {
+        "X": 67.9,
+        "Group": "Paul Wilson"
+      },
+      {
+        "X": 28.4,
+        "Group": "Jessica Martin"
+      },
+      {
+        "X": 42.2,
+        "Group": "Christopher Moore"
+      },
+      {
+        "X": 50.4,
+        "Group": "Betty Wilson"
+      },
+      {
+        "X": 97.7,
+        "Group": "Steven Lewis"
+      },
+      {
+        "X": 35.8,
+        "Group": "Karen Lopez"
+      },
+      {
+        "X": 25.8,
+        "Group": "Sandra Wright"
+      },
+      {
+        "X": 46.5,
+        "Group": "Daniel King"
+      },
+      {
+        "X": 89.6,
+        "Group": "Mark Taylor"
+      },
+      {
+        "X": 82.7,
+        "Group": "Sandra Thomas"
+      },
+      {
+        "X": 99.5,
+        "Group": "Karen Rodriguez"
+      },
+      {
+        "X": 54.1,
+        "Group": "Patricia Jackson"
+      },
+      {
+        "X": 77.1,
+        "Group": "Donna Hill"
+      },
+      {
+        "X": 97.7,
+        "Group": "Donna White"
+      },
+      {
+        "X": 24,
+        "Group": "Michael Brown"
+      },
+      {
+        "X": 27.4,
+        "Group": "Elizabeth Robinson"
+      },
+      {
+        "X": 43.3,
+        "Group": "Mary Jones"
+      },
+      {
+        "X": 58.5,
+        "Group": "Richard Rodriguez"
+      },
+      {
+        "X": 11.1,
+        "Group": "Christopher Clark"
+      },
+      {
+        "X": 18.3,
+        "Group": "Christopher Lopez"
+      },
+      {
+        "X": 65.6,
+        "Group": "Susan Ramirez"
+      },
+      {
+        "X": 24.3,
+        "Group": "Steven Wilson"
+      },
+      {
+        "X": 13.9,
+        "Group": "Paul Anderson"
+      },
+      {
+        "X": 31.7,
+        "Group": "Joseph Rodriguez"
+      },
+      {
+        "X": 8.9,
+        "Group": "Elizabeth Wright"
+      },
+      {
+        "X": 88.6,
+        "Group": "Kimberly Jackson"
+      },
+      {
+        "X": 33.6,
+        "Group": "Betty Hernandez"
+      },
+      {
+        "X": 46.4,
+        "Group": "David King"
+      },
+      {
+        "X": 6.7,
+        "Group": "Matthew Lopez"
+      },
+      {
+        "X": 1.1,
+        "Group": "Susan Hernandez"
+      },
+      {
+        "X": 51.1,
+        "Group": "Jennifer Lee"
+      },
+      {
+        "X": 41,
+        "Group": "Richard Flores"
+      },
+      {
+        "X": 38.5,
+        "Group": "John Anderson"
+      },
+      {
+        "X": 15.9,
+        "Group": "Kimberly Wright"
+      },
+      {
+        "X": 71.2,
+        "Group": "Joseph Williams"
+      },
+      {
+        "X": 74.3,
+        "Group": "Lisa Torres"
+      },
+      {
+        "X": 55.1,
+        "Group": "Andrew Rodriguez"
+      },
+      {
+        "X": 6.9,
+        "Group": "Karen Johnson"
+      },
+      {
+        "X": 32.9,
+        "Group": "Steven Jones"
+      },
+      {
+        "X": 28.1,
+        "Group": "Joshua Ramirez"
+      },
+      {
+        "X": 3.8,
+        "Group": "Emily Martinez"
+      },
+      {
+        "X": 25.1,
+        "Group": "Robert Walker"
+      },
+      {
+        "X": 31,
+        "Group": "Robert Lewis"
+      },
+      {
+        "X": 29.8,
+        "Group": "Sandra Lopez"
+      },
+      {
+        "X": 92,
+        "Group": "Nancy Miller"
+      },
+      {
+        "X": 10.6,
+        "Group": "Christopher Sanchez"
+      },
+      {
+        "X": 87.9,
+        "Group": "Daniel Flores"
+      },
+      {
+        "X": 80.4,
+        "Group": "Mary Walker"
+      },
+      {
+        "X": 22.1,
+        "Group": "Anthony Ramirez"
+      },
+      {
+        "X": 24.8,
+        "Group": "Anthony Hill"
+      },
+      {
+        "X": 92.2,
+        "Group": "Matthew Miller"
+      },
+      {
+        "X": 9.2,
+        "Group": "Andrew King"
+      },
+      {
+        "X": 41.4,
+        "Group": "William Perez"
+      },
+      {
+        "X": 10.3,
+        "Group": "William Martinez"
+      },
+      {
+        "X": 37.4,
+        "Group": "Margaret Garcia"
+      },
+      {
+        "X": 74.4,
+        "Group": "Barbara Anderson"
+      },
+      {
+        "X": 94.8,
+        "Group": "Thomas Smith"
+      },
+      {
+        "X": 47.2,
+        "Group": "Kimberly Thomas"
+      },
+      {
+        "X": 37.6,
+        "Group": "Karen Garcia"
+      }
+    ]
+  }
+}
