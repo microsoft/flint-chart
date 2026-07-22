@@ -1,0 +1,143 @@
+{
+  "semantic_types": {
+    "Income Bracket": "Category",
+    "Count": "Count",
+    "Area": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Income Bracket",
+      "x": "Count",
+      "color": "Area"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Income Bracket": "<$20K",
+        "Area": "Urban",
+        "Count": 2948
+      },
+      {
+        "Income Bracket": "<$20K",
+        "Area": "Rural",
+        "Count": 963
+      },
+      {
+        "Income Bracket": "$20-30K",
+        "Area": "Urban",
+        "Count": 1621
+      },
+      {
+        "Income Bracket": "$20-30K",
+        "Area": "Rural",
+        "Count": 795
+      },
+      {
+        "Income Bracket": "$30-40K",
+        "Area": "Urban",
+        "Count": 790
+      },
+      {
+        "Income Bracket": "$30-40K",
+        "Area": "Rural",
+        "Count": 1034
+      },
+      {
+        "Income Bracket": "$40-50K",
+        "Area": "Urban",
+        "Count": 2441
+      },
+      {
+        "Income Bracket": "$40-50K",
+        "Area": "Rural",
+        "Count": 915
+      },
+      {
+        "Income Bracket": "$50-60K",
+        "Area": "Urban",
+        "Count": 2787
+      },
+      {
+        "Income Bracket": "$50-60K",
+        "Area": "Rural",
+        "Count": 263
+      },
+      {
+        "Income Bracket": "$60-70K",
+        "Area": "Urban",
+        "Count": 1799
+      },
+      {
+        "Income Bracket": "$60-70K",
+        "Area": "Rural",
+        "Count": 475
+      },
+      {
+        "Income Bracket": "$70-80K",
+        "Area": "Urban",
+        "Count": 2352
+      },
+      {
+        "Income Bracket": "$70-80K",
+        "Area": "Rural",
+        "Count": 1285
+      },
+      {
+        "Income Bracket": "$80-90K",
+        "Area": "Urban",
+        "Count": 547
+      },
+      {
+        "Income Bracket": "$80-90K",
+        "Area": "Rural",
+        "Count": 832
+      },
+      {
+        "Income Bracket": "$90-100K",
+        "Area": "Urban",
+        "Count": 172
+      },
+      {
+        "Income Bracket": "$90-100K",
+        "Area": "Rural",
+        "Count": 1038
+      },
+      {
+        "Income Bracket": "$100-120K",
+        "Area": "Urban",
+        "Count": 1464
+      },
+      {
+        "Income Bracket": "$100-120K",
+        "Area": "Rural",
+        "Count": 197
+      },
+      {
+        "Income Bracket": "$120-150K",
+        "Area": "Urban",
+        "Count": 2846
+      },
+      {
+        "Income Bracket": "$120-150K",
+        "Area": "Rural",
+        "Count": 109
+      },
+      {
+        "Income Bracket": "$150K+",
+        "Area": "Urban",
+        "Count": 577
+      },
+      {
+        "Income Bracket": "$150K+",
+        "Area": "Rural",
+        "Count": 1857
+      }
+    ]
+  }
+}

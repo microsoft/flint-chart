@@ -1,0 +1,81 @@
+{
+  "semantic_types": {
+    "Item": "Category",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Treemap",
+    "encodings": {
+      "color": "Item",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Item": "Electronics",
+        "Size": 453
+      },
+      {
+        "Item": "Clothing",
+        "Size": 366
+      },
+      {
+        "Item": "Food",
+        "Size": 413
+      },
+      {
+        "Item": "Books",
+        "Size": 307
+      },
+      {
+        "Item": "Sports",
+        "Size": 180
+      },
+      {
+        "Item": "Home",
+        "Size": 421
+      },
+      {
+        "Item": "Garden",
+        "Size": 292
+      },
+      {
+        "Item": "Auto",
+        "Size": 439
+      },
+      {
+        "Item": "Health",
+        "Size": 220
+      },
+      {
+        "Item": "Beauty",
+        "Size": 381
+      },
+      {
+        "Item": "Toys",
+        "Size": 149
+      },
+      {
+        "Item": "Music",
+        "Size": 62
+      },
+      {
+        "Item": "Movies",
+        "Size": 323
+      },
+      {
+        "Item": "Software",
+        "Size": 418
+      },
+      {
+        "Item": "Games",
+        "Size": 135
+      }
+    ]
+  }
+}

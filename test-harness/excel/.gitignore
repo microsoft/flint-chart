@@ -1,0 +1,6 @@
+evaluations/out/
+node_modules/
+*.log
+
+# Excel lock/temp files
+~$*

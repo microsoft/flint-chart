@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Level": "Rank"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "size": "Level"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 72,
+        "Y": 77.7,
+        "Level": "Low"
+      },
+      {
+        "X": 87.7,
+        "Y": 43.7,
+        "Level": "Medium"
+      },
+      {
+        "X": 43.3,
+        "Y": 31.7,
+        "Level": "High"
+      },
+      {
+        "X": 14.4,
+        "Y": 44,
+        "Level": "Critical"
+      },
+      {
+        "X": 75.2,
+        "Y": 95.8,
+        "Level": "Low"
+      },
+      {
+        "X": 82.8,
+        "Y": 62.8,
+        "Level": "Medium"
+      },
+      {
+        "X": 51.7,
+        "Y": 0.5,
+        "Level": "High"
+      },
+      {
+        "X": 93.8,
+        "Y": 55,
+        "Level": "Critical"
+      },
+      {
+        "X": 19.8,
+        "Y": 74.4,
+        "Level": "Low"
+      },
+      {
+        "X": 36.3,
+        "Y": 44.7,
+        "Level": "Medium"
+      },
+      {
+        "X": 14.9,
+        "Y": 14.2,
+        "Level": "High"
+      },
+      {
+        "X": 31.8,
+        "Y": 92.8,
+        "Level": "Critical"
+      },
+      {
+        "X": 75.1,
+        "Y": 69.2,
+        "Level": "Low"
+      },
+      {
+        "X": 72.9,
+        "Y": 33.9,
+        "Level": "Medium"
+      },
+      {
+        "X": 46.2,
+        "Y": 57.2,
+        "Level": "High"
+      },
+      {
+        "X": 64.4,
+        "Y": 21.9,
+        "Level": "Critical"
+      },
+      {
+        "X": 73.9,
+        "Y": 66.2,
+        "Level": "Low"
+      },
+      {
+        "X": 19,
+        "Y": 17.9,
+        "Level": "Medium"
+      },
+      {
+        "X": 81.9,
+        "Y": 35.7,
+        "Level": "High"
+      },
+      {
+        "X": 84.9,
+        "Y": 93.9,
+        "Level": "Critical"
+      }
+    ]
+  }
+}

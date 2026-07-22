@@ -1,0 +1,101 @@
+{
+  "semantic_types": {
+    "Product": "Category",
+    "Metric": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Radar Chart",
+    "encodings": {
+      "x": "Metric",
+      "y": "Value",
+      "color": "Product"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "filled": false
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Product": "Widget",
+        "Metric": "Quality",
+        "Value": 90
+      },
+      {
+        "Product": "Widget",
+        "Metric": "Price",
+        "Value": 60
+      },
+      {
+        "Product": "Widget",
+        "Metric": "Durability",
+        "Value": 80
+      },
+      {
+        "Product": "Widget",
+        "Metric": "Design",
+        "Value": 75
+      },
+      {
+        "Product": "Widget",
+        "Metric": "Support",
+        "Value": 85
+      },
+      {
+        "Product": "Gadget",
+        "Metric": "Quality",
+        "Value": 70
+      },
+      {
+        "Product": "Gadget",
+        "Metric": "Price",
+        "Value": 85
+      },
+      {
+        "Product": "Gadget",
+        "Metric": "Durability",
+        "Value": 65
+      },
+      {
+        "Product": "Gadget",
+        "Metric": "Design",
+        "Value": 90
+      },
+      {
+        "Product": "Gadget",
+        "Metric": "Support",
+        "Value": 50
+      },
+      {
+        "Product": "Doohickey",
+        "Metric": "Quality",
+        "Value": 80
+      },
+      {
+        "Product": "Doohickey",
+        "Metric": "Price",
+        "Value": 70
+      },
+      {
+        "Product": "Doohickey",
+        "Metric": "Durability",
+        "Value": 90
+      },
+      {
+        "Product": "Doohickey",
+        "Metric": "Design",
+        "Value": 60
+      },
+      {
+        "Product": "Doohickey",
+        "Metric": "Support",
+        "Value": 70
+      }
+    ]
+  }
+}

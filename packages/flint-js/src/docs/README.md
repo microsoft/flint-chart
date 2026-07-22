@@ -851,9 +851,9 @@ interface ChartTemplateDef {
 
 ### `OverflowStrategy`
 
-Customizable per-template. The default strategy in `filter-overflow.ts` handles:
-connected marks (keep all for continuity), user sorts, auto-sorts,
-bar sum-aggregate, numeric sort, first-N.
+Customizable per-template. The default strategy in `filter-overflow.ts` keeps
+the first values in the selected display order: explicit user sort, canonical
+semantic order, numeric order, then data encounter order.
 
 ```typescript
 type OverflowStrategy = (
@@ -1013,13 +1013,14 @@ When discrete channels overflow the canvas budget, the library:
    count, placeholder string
 5. Emits `ChartWarning` for the UI
 
-The default overflow strategy priority:
-1. Connected marks (line, area) → keep all (truncation breaks continuity)
-2. User-specified sort → keep top/bottom N by sort order
-3. Quantitative opposite axis → sort by opposite, keep top N
-4. Bar with count aggregate → sum-aggregate and keep top N
-5. Numeric field → numeric sort, keep first N
-6. Fallback → keep first N in data order
+The default overflow strategy follows the chart's display order:
+1. User-specified sort → keep the first N values in that order
+2. Canonical semantic order (months, ranks, quarters, etc.) → keep the first N
+3. Numeric discrete field → numeric ascending, keep the first N
+4. Fallback → keep the first N in data encounter order
+
+Overflow does not introduce a measure-based top-N ranking. Select an explicit
+value sort when the largest or smallest categories should be retained.
 
 ---
 

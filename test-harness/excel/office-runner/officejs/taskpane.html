@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flint Render</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+      :root {
+        --bg: #f7f7f8;
+        --surface: #ffffff;
+        --border: rgba(0, 0, 0, 0.12);
+        --text: #1f2328;
+        --muted: #4b525a;
+        --accent: #0078d4;
+        --err: #cf222e;
+        --font: 'Inter', -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; font-family: var(--font); font-size: 13px;
+        color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased;
+      }
+      .wrap { padding: 14px; }
+      .head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+      .head img { width: 34px; height: 34px; }
+      .head .title { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+      .head .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+      .status {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px;
+        background: var(--surface); font-size: 12px; color: var(--muted); margin-bottom: 14px;
+      }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #c7ccd2; flex: none; }
+      .status.ready .dot, .status.busy .dot { background: var(--accent); }
+      .status.busy .dot { animation: pulse 1s infinite; }
+      .status.err .dot { background: var(--err); }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .card + .card { margin-top: 12px; }
+      .card-h {
+        font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+        color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--border);
+      }
+      .preview { padding: 12px; display: flex; align-items: center; justify-content: center; min-height: 120px; }
+      .preview img { max-width: 100%; border: 1px solid var(--border); border-radius: 6px; }
+      .preview .empty { color: var(--muted); font-size: 12px; }
+      .metric { padding: 10px 12px; display: flex; gap: 18px; }
+      .metric b { color: var(--text); font-variant-numeric: tabular-nums; }
+      .metric span { color: var(--muted); font-size: 11px; display: block; }
+      .log { margin: 0; padding: 10px 12px; font-family: var(--mono); font-size: 11px;
+             color: var(--muted); line-height: 1.55; max-height: 34vh; overflow: auto; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="head">
+        <img src="/officejs/icon-80.png?v=3" alt="Flint" />
+        <div>
+          <div class="title">Flint Render</div>
+          <div class="sub">Office.js chart → PNG worker</div>
+        </div>
+      </div>
+
+      <div id="status" class="status idle"><span class="dot"></span><span id="status-text">initializing…</span></div>
+
+      <div class="card">
+        <div class="card-h">Last render</div>
+        <div class="preview" id="preview"><span class="empty">no charts rendered yet</span></div>
+      </div>
+
+      <div class="card">
+        <div class="metric">
+          <div><b id="m-count">0</b><span>rendered</span></div>
+          <div><b id="m-type">—</b><span>last type</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Activity</div>
+        <pre class="log" id="log"></pre>
+      </div>
+    </div>
+    <script type="module" src="/officejs/taskpane.js?v=backend-runtime-1"></script>
+  </body>
+</html>

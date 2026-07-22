@@ -1,0 +1,523 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 68.8,
+        "Y": 7.6,
+        "Segment": "James Walker"
+      },
+      {
+        "X": 53.3,
+        "Y": 78.7,
+        "Segment": "Paul Wilson"
+      },
+      {
+        "X": 73.8,
+        "Y": 84.1,
+        "Segment": "Jessica Martin"
+      },
+      {
+        "X": 77.4,
+        "Y": 71.9,
+        "Segment": "Christopher Moore"
+      },
+      {
+        "X": 11.6,
+        "Y": 45.9,
+        "Segment": "Betty Wilson"
+      },
+      {
+        "X": 81.3,
+        "Y": 14.2,
+        "Segment": "Steven Lewis"
+      },
+      {
+        "X": 24.9,
+        "Y": 46.6,
+        "Segment": "Karen Lopez"
+      },
+      {
+        "X": 96.8,
+        "Y": 13.4,
+        "Segment": "Sandra Wright"
+      },
+      {
+        "X": 74.6,
+        "Y": 40.1,
+        "Segment": "Daniel King"
+      },
+      {
+        "X": 15,
+        "Y": 58.7,
+        "Segment": "Mark Taylor"
+      },
+      {
+        "X": 47.1,
+        "Y": 37.9,
+        "Segment": "Sandra Thomas"
+      },
+      {
+        "X": 82.3,
+        "Y": 34.1,
+        "Segment": "Karen Rodriguez"
+      },
+      {
+        "X": 22.5,
+        "Y": 67.5,
+        "Segment": "Patricia Jackson"
+      },
+      {
+        "X": 39.1,
+        "Y": 98.2,
+        "Segment": "Donna Hill"
+      },
+      {
+        "X": 91.6,
+        "Y": 27.6,
+        "Segment": "Donna White"
+      },
+      {
+        "X": 56.2,
+        "Y": 20.6,
+        "Segment": "Michael Brown"
+      },
+      {
+        "X": 48.6,
+        "Y": 99.3,
+        "Segment": "Elizabeth Robinson"
+      },
+      {
+        "X": 19,
+        "Y": 20.1,
+        "Segment": "Mary Jones"
+      },
+      {
+        "X": 66.7,
+        "Y": 55.8,
+        "Segment": "Richard Rodriguez"
+      },
+      {
+        "X": 81.5,
+        "Y": 32.4,
+        "Segment": "Christopher Clark"
+      },
+      {
+        "X": 71.9,
+        "Y": 29.2,
+        "Segment": "Christopher Lopez"
+      },
+      {
+        "X": 21.4,
+        "Y": 13.5,
+        "Segment": "Susan Ramirez"
+      },
+      {
+        "X": 1.5,
+        "Y": 34.9,
+        "Segment": "Steven Wilson"
+      },
+      {
+        "X": 3.5,
+        "Y": 97.8,
+        "Segment": "Paul Anderson"
+      },
+      {
+        "X": 21.1,
+        "Y": 63,
+        "Segment": "Joseph Rodriguez"
+      },
+      {
+        "X": 0.9,
+        "Y": 5.3,
+        "Segment": "Elizabeth Wright"
+      },
+      {
+        "X": 69,
+        "Y": 64.3,
+        "Segment": "Kimberly Jackson"
+      },
+      {
+        "X": 22.8,
+        "Y": 75.6,
+        "Segment": "Betty Hernandez"
+      },
+      {
+        "X": 65.6,
+        "Y": 48.9,
+        "Segment": "David King"
+      },
+      {
+        "X": 61.9,
+        "Y": 78.3,
+        "Segment": "Matthew Lopez"
+      },
+      {
+        "X": 97.9,
+        "Y": 33.2,
+        "Segment": "Susan Hernandez"
+      },
+      {
+        "X": 53.8,
+        "Y": 84.1,
+        "Segment": "Jennifer Lee"
+      },
+      {
+        "X": 58.4,
+        "Y": 52.5,
+        "Segment": "Richard Flores"
+      },
+      {
+        "X": 25.3,
+        "Y": 59.1,
+        "Segment": "John Anderson"
+      },
+      {
+        "X": 70.7,
+        "Y": 16,
+        "Segment": "Kimberly Wright"
+      },
+      {
+        "X": 28.6,
+        "Y": 73.7,
+        "Segment": "Joseph Williams"
+      },
+      {
+        "X": 38.3,
+        "Y": 2.8,
+        "Segment": "Lisa Torres"
+      },
+      {
+        "X": 25.6,
+        "Y": 17.4,
+        "Segment": "Andrew Rodriguez"
+      },
+      {
+        "X": 9.4,
+        "Y": 8.3,
+        "Segment": "Karen Johnson"
+      },
+      {
+        "X": 27.4,
+        "Y": 25.4,
+        "Segment": "Steven Jones"
+      },
+      {
+        "X": 31.6,
+        "Y": 77.2,
+        "Segment": "Joshua Ramirez"
+      },
+      {
+        "X": 66.3,
+        "Y": 7.6,
+        "Segment": "Emily Martinez"
+      },
+      {
+        "X": 5.8,
+        "Y": 81.7,
+        "Segment": "Robert Walker"
+      },
+      {
+        "X": 21.2,
+        "Y": 17.9,
+        "Segment": "Robert Lewis"
+      },
+      {
+        "X": 52.7,
+        "Y": 97.3,
+        "Segment": "Sandra Lopez"
+      },
+      {
+        "X": 44.3,
+        "Y": 82.1,
+        "Segment": "Nancy Miller"
+      },
+      {
+        "X": 18.1,
+        "Y": 57.5,
+        "Segment": "Christopher Sanchez"
+      },
+      {
+        "X": 38.5,
+        "Y": 99.1,
+        "Segment": "Daniel Flores"
+      },
+      {
+        "X": 35.8,
+        "Y": 76.5,
+        "Segment": "Mary Walker"
+      },
+      {
+        "X": 96.4,
+        "Y": 74.4,
+        "Segment": "Anthony Ramirez"
+      },
+      {
+        "X": 87.3,
+        "Y": 22.1,
+        "Segment": "James Walker"
+      },
+      {
+        "X": 6.8,
+        "Y": 2.2,
+        "Segment": "Paul Wilson"
+      },
+      {
+        "X": 8.2,
+        "Y": 56.2,
+        "Segment": "Jessica Martin"
+      },
+      {
+        "X": 95.8,
+        "Y": 73,
+        "Segment": "Christopher Moore"
+      },
+      {
+        "X": 34.2,
+        "Y": 10.5,
+        "Segment": "Betty Wilson"
+      },
+      {
+        "X": 68.1,
+        "Y": 76.5,
+        "Segment": "Steven Lewis"
+      },
+      {
+        "X": 80.4,
+        "Y": 21,
+        "Segment": "Karen Lopez"
+      },
+      {
+        "X": 71.5,
+        "Y": 44.6,
+        "Segment": "Sandra Wright"
+      },
+      {
+        "X": 78.7,
+        "Y": 78.4,
+        "Segment": "Daniel King"
+      },
+      {
+        "X": 1.5,
+        "Y": 3.8,
+        "Segment": "Mark Taylor"
+      },
+      {
+        "X": 28.1,
+        "Y": 53.6,
+        "Segment": "Sandra Thomas"
+      },
+      {
+        "X": 63.3,
+        "Y": 87.6,
+        "Segment": "Karen Rodriguez"
+      },
+      {
+        "X": 95,
+        "Y": 30.9,
+        "Segment": "Patricia Jackson"
+      },
+      {
+        "X": 53.7,
+        "Y": 48.2,
+        "Segment": "Donna Hill"
+      },
+      {
+        "X": 74.6,
+        "Y": 62.4,
+        "Segment": "Donna White"
+      },
+      {
+        "X": 93.2,
+        "Y": 25.7,
+        "Segment": "Michael Brown"
+      },
+      {
+        "X": 20.7,
+        "Y": 78.1,
+        "Segment": "Elizabeth Robinson"
+      },
+      {
+        "X": 30.4,
+        "Y": 17.6,
+        "Segment": "Mary Jones"
+      },
+      {
+        "X": 3.2,
+        "Y": 10.2,
+        "Segment": "Richard Rodriguez"
+      },
+      {
+        "X": 16.9,
+        "Y": 21.3,
+        "Segment": "Christopher Clark"
+      },
+      {
+        "X": 5.9,
+        "Y": 65.8,
+        "Segment": "Christopher Lopez"
+      },
+      {
+        "X": 63.2,
+        "Y": 76.9,
+        "Segment": "Susan Ramirez"
+      },
+      {
+        "X": 70.7,
+        "Y": 29.1,
+        "Segment": "Steven Wilson"
+      },
+      {
+        "X": 82.9,
+        "Y": 88.3,
+        "Segment": "Paul Anderson"
+      },
+      {
+        "X": 93.7,
+        "Y": 77.9,
+        "Segment": "Joseph Rodriguez"
+      },
+      {
+        "X": 85.7,
+        "Y": 78.4,
+        "Segment": "Elizabeth Wright"
+      },
+      {
+        "X": 48.4,
+        "Y": 61.3,
+        "Segment": "Kimberly Jackson"
+      },
+      {
+        "X": 22.6,
+        "Y": 39.4,
+        "Segment": "Betty Hernandez"
+      },
+      {
+        "X": 8.1,
+        "Y": 30.3,
+        "Segment": "David King"
+      },
+      {
+        "X": 41.8,
+        "Y": 96.9,
+        "Segment": "Matthew Lopez"
+      },
+      {
+        "X": 51.5,
+        "Y": 35.3,
+        "Segment": "Susan Hernandez"
+      },
+      {
+        "X": 11.4,
+        "Y": 16.8,
+        "Segment": "Jennifer Lee"
+      },
+      {
+        "X": 30.9,
+        "Y": 9.7,
+        "Segment": "Richard Flores"
+      },
+      {
+        "X": 60.1,
+        "Y": 96.1,
+        "Segment": "John Anderson"
+      },
+      {
+        "X": 64.4,
+        "Y": 89.7,
+        "Segment": "Kimberly Wright"
+      },
+      {
+        "X": 9.7,
+        "Y": 57.9,
+        "Segment": "Joseph Williams"
+      },
+      {
+        "X": 69.1,
+        "Y": 57.7,
+        "Segment": "Lisa Torres"
+      },
+      {
+        "X": 67.2,
+        "Y": 15.6,
+        "Segment": "Andrew Rodriguez"
+      },
+      {
+        "X": 10.5,
+        "Y": 70,
+        "Segment": "Karen Johnson"
+      },
+      {
+        "X": 16.7,
+        "Y": 36.7,
+        "Segment": "Steven Jones"
+      },
+      {
+        "X": 50.4,
+        "Y": 3.7,
+        "Segment": "Joshua Ramirez"
+      },
+      {
+        "X": 47.4,
+        "Y": 51.8,
+        "Segment": "Emily Martinez"
+      },
+      {
+        "X": 8.7,
+        "Y": 34.4,
+        "Segment": "Robert Walker"
+      },
+      {
+        "X": 93.4,
+        "Y": 9.8,
+        "Segment": "Robert Lewis"
+      },
+      {
+        "X": 14.9,
+        "Y": 17.5,
+        "Segment": "Sandra Lopez"
+      },
+      {
+        "X": 98.5,
+        "Y": 92.2,
+        "Segment": "Nancy Miller"
+      },
+      {
+        "X": 34.7,
+        "Y": 51.7,
+        "Segment": "Christopher Sanchez"
+      },
+      {
+        "X": 76.5,
+        "Y": 35.8,
+        "Segment": "Daniel Flores"
+      },
+      {
+        "X": 37.4,
+        "Y": 46.1,
+        "Segment": "Mary Walker"
+      },
+      {
+        "X": 34.2,
+        "Y": 2.6,
+        "Segment": "Anthony Ramirez"
+      }
+    ]
+  }
+}

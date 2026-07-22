@@ -1,0 +1,263 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Step": "Category",
+    "Series": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Step",
+      "color": "Series"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 0,
+        "Step": "Stage 1",
+        "Series": "Electronics"
+      },
+      {
+        "X": 9.1,
+        "Step": "Stage 2",
+        "Series": "Electronics"
+      },
+      {
+        "X": 18.2,
+        "Step": "Stage 3",
+        "Series": "Electronics"
+      },
+      {
+        "X": 27.3,
+        "Step": "Stage 4",
+        "Series": "Electronics"
+      },
+      {
+        "X": 36.4,
+        "Step": "Stage 5",
+        "Series": "Electronics"
+      },
+      {
+        "X": 45.5,
+        "Step": "Stage 6",
+        "Series": "Electronics"
+      },
+      {
+        "X": 54.5,
+        "Step": "Stage 7",
+        "Series": "Electronics"
+      },
+      {
+        "X": 63.6,
+        "Step": "Stage 8",
+        "Series": "Electronics"
+      },
+      {
+        "X": 72.7,
+        "Step": "Stage 9",
+        "Series": "Electronics"
+      },
+      {
+        "X": 81.8,
+        "Step": "Stage 10",
+        "Series": "Electronics"
+      },
+      {
+        "X": 90.9,
+        "Step": "Stage 11",
+        "Series": "Electronics"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 12",
+        "Series": "Electronics"
+      },
+      {
+        "X": 0,
+        "Step": "Stage 1",
+        "Series": "Clothing"
+      },
+      {
+        "X": 9.1,
+        "Step": "Stage 2",
+        "Series": "Clothing"
+      },
+      {
+        "X": 18.2,
+        "Step": "Stage 3",
+        "Series": "Clothing"
+      },
+      {
+        "X": 27.3,
+        "Step": "Stage 4",
+        "Series": "Clothing"
+      },
+      {
+        "X": 36.4,
+        "Step": "Stage 5",
+        "Series": "Clothing"
+      },
+      {
+        "X": 45.5,
+        "Step": "Stage 6",
+        "Series": "Clothing"
+      },
+      {
+        "X": 54.5,
+        "Step": "Stage 7",
+        "Series": "Clothing"
+      },
+      {
+        "X": 63.6,
+        "Step": "Stage 8",
+        "Series": "Clothing"
+      },
+      {
+        "X": 72.7,
+        "Step": "Stage 9",
+        "Series": "Clothing"
+      },
+      {
+        "X": 81.8,
+        "Step": "Stage 10",
+        "Series": "Clothing"
+      },
+      {
+        "X": 90.9,
+        "Step": "Stage 11",
+        "Series": "Clothing"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 12",
+        "Series": "Clothing"
+      },
+      {
+        "X": 0,
+        "Step": "Stage 1",
+        "Series": "Food"
+      },
+      {
+        "X": 9.1,
+        "Step": "Stage 2",
+        "Series": "Food"
+      },
+      {
+        "X": 18.2,
+        "Step": "Stage 3",
+        "Series": "Food"
+      },
+      {
+        "X": 27.3,
+        "Step": "Stage 4",
+        "Series": "Food"
+      },
+      {
+        "X": 36.4,
+        "Step": "Stage 5",
+        "Series": "Food"
+      },
+      {
+        "X": 45.5,
+        "Step": "Stage 6",
+        "Series": "Food"
+      },
+      {
+        "X": 54.5,
+        "Step": "Stage 7",
+        "Series": "Food"
+      },
+      {
+        "X": 63.6,
+        "Step": "Stage 8",
+        "Series": "Food"
+      },
+      {
+        "X": 72.7,
+        "Step": "Stage 9",
+        "Series": "Food"
+      },
+      {
+        "X": 81.8,
+        "Step": "Stage 10",
+        "Series": "Food"
+      },
+      {
+        "X": 90.9,
+        "Step": "Stage 11",
+        "Series": "Food"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 12",
+        "Series": "Food"
+      },
+      {
+        "X": 0,
+        "Step": "Stage 1",
+        "Series": "Books"
+      },
+      {
+        "X": 9.1,
+        "Step": "Stage 2",
+        "Series": "Books"
+      },
+      {
+        "X": 18.2,
+        "Step": "Stage 3",
+        "Series": "Books"
+      },
+      {
+        "X": 27.3,
+        "Step": "Stage 4",
+        "Series": "Books"
+      },
+      {
+        "X": 36.4,
+        "Step": "Stage 5",
+        "Series": "Books"
+      },
+      {
+        "X": 45.5,
+        "Step": "Stage 6",
+        "Series": "Books"
+      },
+      {
+        "X": 54.5,
+        "Step": "Stage 7",
+        "Series": "Books"
+      },
+      {
+        "X": 63.6,
+        "Step": "Stage 8",
+        "Series": "Books"
+      },
+      {
+        "X": 72.7,
+        "Step": "Stage 9",
+        "Series": "Books"
+      },
+      {
+        "X": 81.8,
+        "Step": "Stage 10",
+        "Series": "Books"
+      },
+      {
+        "X": 90.9,
+        "Step": "Stage 11",
+        "Series": "Books"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 12",
+        "Series": "Books"
+      }
+    ]
+  }
+}

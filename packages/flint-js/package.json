@@ -55,6 +55,11 @@
       "import": "./dist/chartjs/index.js",
       "require": "./dist/chartjs/index.cjs"
     },
+    "./excel": {
+      "types": "./dist/excel/index.d.ts",
+      "import": "./dist/excel/index.js",
+      "require": "./dist/excel/index.cjs"
+    },
     "./test-data": {
       "types": "./dist/test-data/index.d.ts",
       "import": "./dist/test-data/index.js",

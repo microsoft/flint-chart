@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, expect, it } from 'vitest';
-import { assembleECharts, assembleVegaLite } from '../src';
+import { assembleECharts, assembleExcel, assembleVegaLite } from '../src';
 
 const HEATMAP_DATA = [
   { day: 'Mon', hour: '09:00', value: 1 },
@@ -50,6 +50,18 @@ function divergingHeatmapInput() {
 }
 
 describe('heatmap color defaults', () => {
+  it('rejects heatmaps because Office.js has no native heatmap chart type', () => {
+    expect(() => assembleExcel(heatmapInput())).toThrow(
+      'Excel backend does not support chart type "Heatmap" as a native Office.js chart.',
+    );
+  });
+
+  it('also rejects diverging heatmaps rather than emulating a color scale', () => {
+    expect(() => assembleExcel(divergingHeatmapInput())).toThrow(
+      'Excel backend does not support chart type "Heatmap" as a native Office.js chart.',
+    );
+  });
+
   it('uses blues for non-diverging Vega-Lite heatmaps by default', () => {
     const spec = assembleVegaLite(heatmapInput()) as any;
 

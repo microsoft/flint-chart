@@ -1,0 +1,623 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Value": "Quantity",
+    "Series": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Area Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Value",
+      "color": "Series"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2020-01-01",
+        "Value": 145,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-01-28",
+        "Value": 138,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 129,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-03-23",
+        "Value": 117,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 113,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-05-16",
+        "Value": 103,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 92,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-07-10",
+        "Value": 98,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 96,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-09-03",
+        "Value": 103,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 100,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-10-28",
+        "Value": 112,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 129,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-12-21",
+        "Value": 147,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 172,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-02-14",
+        "Value": 182,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 199,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-04-10",
+        "Value": 209,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 210,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-06-04",
+        "Value": 203,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 199,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-07-28",
+        "Value": 202,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 200,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-09-21",
+        "Value": 192,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 180,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-11-15",
+        "Value": 178,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 184,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-01-09",
+        "Value": 185,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 190,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-03-04",
+        "Value": 203,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 206,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-04-28",
+        "Value": 214,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 224,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-06-22",
+        "Value": 233,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 232,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-08-16",
+        "Value": 223,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 223,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-10-09",
+        "Value": 215,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 217,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2022-12-03",
+        "Value": 214,
+        "Series": "Electronics"
+      },
+      {
+        "Date": "2020-01-01",
+        "Value": 209,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-01-28",
+        "Value": 217,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 217,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-03-23",
+        "Value": 225,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 235,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-05-16",
+        "Value": 243,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 245,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-07-10",
+        "Value": 251,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 254,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-09-03",
+        "Value": 264,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 266,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-10-28",
+        "Value": 268,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 273,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-12-21",
+        "Value": 278,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 277,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-02-14",
+        "Value": 279,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 277,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-04-10",
+        "Value": 276,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 274,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-06-04",
+        "Value": 281,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 292,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-07-28",
+        "Value": 294,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 302,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-09-21",
+        "Value": 315,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 324,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-11-15",
+        "Value": 334,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 341,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-01-09",
+        "Value": 353,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 366,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-03-04",
+        "Value": 371,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 383,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-04-28",
+        "Value": 399,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 404,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-06-22",
+        "Value": 409,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 408,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-08-16",
+        "Value": 415,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 422,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-10-09",
+        "Value": 433,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 435,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2022-12-03",
+        "Value": 433,
+        "Series": "Clothing"
+      },
+      {
+        "Date": "2020-01-01",
+        "Value": 93,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-01-28",
+        "Value": 104,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 124,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-03-23",
+        "Value": 130,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 128,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-05-16",
+        "Value": 138,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 155,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-07-10",
+        "Value": 163,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 175,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-09-03",
+        "Value": 194,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 199,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-10-28",
+        "Value": 194,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 194,
+        "Series": "Food"
+      },
+      {
+        "Date": "2020-12-21",
+        "Value": 204,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 217,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-02-14",
+        "Value": 229,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 233,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-04-10",
+        "Value": 238,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 243,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-06-04",
+        "Value": 238,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 232,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-07-28",
+        "Value": 223,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 222,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-09-21",
+        "Value": 216,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 205,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-11-15",
+        "Value": 199,
+        "Series": "Food"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 190,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-01-09",
+        "Value": 186,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 193,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-03-04",
+        "Value": 189,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 197,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-04-28",
+        "Value": 202,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 206,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-06-22",
+        "Value": 208,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 214,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-08-16",
+        "Value": 210,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 206,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-10-09",
+        "Value": 216,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 233,
+        "Series": "Food"
+      },
+      {
+        "Date": "2022-12-03",
+        "Value": 251,
+        "Series": "Food"
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "semantic_types": {
+    "Department": "Category",
+    "Variance": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Waterfall Chart",
+    "encodings": {
+      "x": "Department",
+      "y": "Variance"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Engineering",
+        "Variance": 120
+      },
+      {
+        "Department": "Sales",
+        "Variance": -45
+      },
+      {
+        "Department": "Marketing",
+        "Variance": -80
+      },
+      {
+        "Department": "Operations",
+        "Variance": 35
+      },
+      {
+        "Department": "HR",
+        "Variance": -20
+      },
+      {
+        "Department": "Finance",
+        "Variance": 15
+      },
+      {
+        "Department": "Support",
+        "Variance": -30
+      }
+    ]
+  }
+}

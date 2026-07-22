@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Flint Render — Excel task pane add-in that renders Excel artifacts to PNG
+  via Office.js `chart.getImage()`. Sideload for local development only.
+
+  Sideload on Excel for Mac:
+    cp manifest.xml ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/
+  then in Excel: Insert > My Add-ins > (Developer) Flint Render.
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+  <Id>2e3cb77a-afbe-499c-9c60-9b0dca994868</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Flint</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Flint Render" />
+  <Description DefaultValue="Renders Flint Excel artifacts to PNG via Office.js." />
+  <IconUrl DefaultValue="https://localhost:3000/officejs/icon-32.png?v=3" />
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/officejs/icon-80.png?v=3" />
+  <SupportUrl DefaultValue="https://localhost:3000/taskpane.html" />
+  <AppDomains>
+    <AppDomain>https://localhost:3000</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.2">
+      <Set Name="ExcelApi" MinVersion="1.2" />
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html" />
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="FlintGroup">
+                <Label resid="Flint.GroupLabel" />
+                <Icon>
+                  <bt:Image size="16" resid="Flint.Icon16" />
+                  <bt:Image size="32" resid="Flint.Icon32" />
+                  <bt:Image size="80" resid="Flint.Icon80" />
+                </Icon>
+                <Control xsi:type="Button" id="Flint.TaskpaneButton">
+                  <Label resid="Flint.TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="Flint.TaskpaneButton.Label" />
+                    <Description resid="Flint.TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Flint.Icon16" />
+                    <bt:Image size="32" resid="Flint.Icon32" />
+                    <bt:Image size="80" resid="Flint.Icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>FlintTaskpane</TaskpaneId>
+                    <SourceLocation resid="Flint.Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Flint.Icon16" DefaultValue="https://localhost:3000/officejs/icon-16.png?v=3" />
+        <bt:Image id="Flint.Icon32" DefaultValue="https://localhost:3000/officejs/icon-32.png?v=3" />
+        <bt:Image id="Flint.Icon80" DefaultValue="https://localhost:3000/officejs/icon-80.png?v=3" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Flint.Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Flint.GroupLabel" DefaultValue="Flint" />
+        <bt:String id="Flint.TaskpaneButton.Label" DefaultValue="Flint Render" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Flint.TaskpaneButton.Tooltip" DefaultValue="Open the Flint render worker." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

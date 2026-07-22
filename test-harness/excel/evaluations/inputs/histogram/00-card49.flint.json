@@ -1,0 +1,319 @@
+{
+  "semantic_types": {
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Histogram",
+    "encodings": {
+      "x": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Value": 12
+      },
+      {
+        "Value": 26
+      },
+      {
+        "Value": 23
+      },
+      {
+        "Value": 41
+      },
+      {
+        "Value": 59
+      },
+      {
+        "Value": 52
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 65
+      },
+      {
+        "Value": 66
+      },
+      {
+        "Value": 48
+      },
+      {
+        "Value": 50
+      },
+      {
+        "Value": 57
+      },
+      {
+        "Value": 52
+      },
+      {
+        "Value": 41
+      },
+      {
+        "Value": 30
+      },
+      {
+        "Value": 72
+      },
+      {
+        "Value": 53
+      },
+      {
+        "Value": 45
+      },
+      {
+        "Value": 17
+      },
+      {
+        "Value": 63
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 31
+      },
+      {
+        "Value": 63
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 19
+      },
+      {
+        "Value": 63
+      },
+      {
+        "Value": 81
+      },
+      {
+        "Value": 40
+      },
+      {
+        "Value": 64
+      },
+      {
+        "Value": 52
+      },
+      {
+        "Value": 53
+      },
+      {
+        "Value": 37
+      },
+      {
+        "Value": 38
+      },
+      {
+        "Value": 45
+      },
+      {
+        "Value": 18
+      },
+      {
+        "Value": 37
+      },
+      {
+        "Value": 41
+      },
+      {
+        "Value": 51
+      },
+      {
+        "Value": 70
+      },
+      {
+        "Value": 63
+      },
+      {
+        "Value": 69
+      },
+      {
+        "Value": 34
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 59
+      },
+      {
+        "Value": 41
+      },
+      {
+        "Value": 26
+      },
+      {
+        "Value": 43
+      },
+      {
+        "Value": 35
+      },
+      {
+        "Value": 43
+      },
+      {
+        "Value": 57
+      },
+      {
+        "Value": 53
+      },
+      {
+        "Value": 46
+      },
+      {
+        "Value": 41
+      },
+      {
+        "Value": 51
+      },
+      {
+        "Value": 42
+      },
+      {
+        "Value": 38
+      },
+      {
+        "Value": 47
+      },
+      {
+        "Value": 52
+      },
+      {
+        "Value": 55
+      },
+      {
+        "Value": 54
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 45
+      },
+      {
+        "Value": 60
+      },
+      {
+        "Value": 78
+      },
+      {
+        "Value": 71
+      },
+      {
+        "Value": 55
+      },
+      {
+        "Value": 21
+      },
+      {
+        "Value": 69
+      },
+      {
+        "Value": 57
+      },
+      {
+        "Value": 51
+      },
+      {
+        "Value": 69
+      },
+      {
+        "Value": 49
+      },
+      {
+        "Value": 27
+      },
+      {
+        "Value": 62
+      },
+      {
+        "Value": 43
+      },
+      {
+        "Value": 36
+      },
+      {
+        "Value": 66
+      },
+      {
+        "Value": 47
+      },
+      {
+        "Value": 37
+      },
+      {
+        "Value": 52
+      },
+      {
+        "Value": 23
+      },
+      {
+        "Value": 46
+      },
+      {
+        "Value": 39
+      },
+      {
+        "Value": 55
+      },
+      {
+        "Value": 51
+      },
+      {
+        "Value": 49
+      },
+      {
+        "Value": 56
+      },
+      {
+        "Value": 63
+      },
+      {
+        "Value": 75
+      },
+      {
+        "Value": 68
+      },
+      {
+        "Value": 59
+      },
+      {
+        "Value": 42
+      },
+      {
+        "Value": 61
+      },
+      {
+        "Value": 42
+      },
+      {
+        "Value": 30
+      },
+      {
+        "Value": 37
+      },
+      {
+        "Value": 78
+      },
+      {
+        "Value": 68
+      },
+      {
+        "Value": 64
+      },
+      {
+        "Value": 59
+      }
+    ]
+  }
+}

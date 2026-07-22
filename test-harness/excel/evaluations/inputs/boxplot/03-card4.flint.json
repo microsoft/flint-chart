@@ -1,0 +1,1023 @@
+{
+  "semantic_types": {
+    "Group": "Category",
+    "Score": "Score",
+    "Gender": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Group",
+      "y": "Score",
+      "color": "Gender"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 27
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 74
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 56
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 100
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 37
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 57
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 23
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 77
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 61
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 81
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 62
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 99
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 27
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 47
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 21
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 38
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 79
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 78
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 91
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 37
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 55
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 72
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 71
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 53
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Male",
+        "Score": 51
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 98
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 35
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 98
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 21
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 79
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 70
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 27
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 70
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 32
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 31
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 82
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 72
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 93
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 60
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 74
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 49
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 98
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 78
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 88
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 47
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 64
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 54
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 46
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 32
+      },
+      {
+        "Group": "Electronics",
+        "Gender": "Female",
+        "Score": 50
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 72
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 21
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 61
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 54
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 25
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 84
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 24
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 43
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 92
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 66
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 93
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 66
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 49
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 66
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 30
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 91
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 76
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 64
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 26
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 39
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 27
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 71
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 82
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 29
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Male",
+        "Score": 28
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 34
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 26
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 53
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 71
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 25
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 91
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 54
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 37
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 53
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 54
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 46
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 60
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 48
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 22
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 76
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 77
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 46
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 25
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 83
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 75
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 30
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 87
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 41
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 90
+      },
+      {
+        "Group": "Clothing",
+        "Gender": "Female",
+        "Score": 67
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 46
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 31
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 58
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 29
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 24
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 47
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 52
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 32
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 85
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 94
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 77
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 36
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 77
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 49
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 92
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 21
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 54
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 39
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 22
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 42
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 52
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 32
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 33
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 89
+      },
+      {
+        "Group": "Food",
+        "Gender": "Male",
+        "Score": 46
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 97
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 43
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 94
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 45
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 29
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 74
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 53
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 92
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 52
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 55
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 73
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 66
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 73
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 38
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 25
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 36
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 57
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 82
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 24
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 46
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 34
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 74
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 94
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 22
+      },
+      {
+        "Group": "Food",
+        "Gender": "Female",
+        "Score": 41
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 20
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 76
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 38
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 91
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 77
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 46
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 26
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 36
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 75
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 42
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 26
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 32
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 27
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 92
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 31
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 94
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 22
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 40
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 30
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 35
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 23
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 67
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 98
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 65
+      },
+      {
+        "Group": "Books",
+        "Gender": "Male",
+        "Score": 67
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 100
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 60
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 98
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 30
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 72
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 87
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 60
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 41
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 26
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 75
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 93
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 28
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 72
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 24
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 63
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 21
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 32
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 21
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 37
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 36
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 77
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 99
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 21
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 43
+      },
+      {
+        "Group": "Books",
+        "Gender": "Female",
+        "Score": 89
+      }
+    ]
+  }
+}

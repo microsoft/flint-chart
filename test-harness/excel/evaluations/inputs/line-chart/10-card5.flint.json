@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Step": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Step"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 0,
+        "Step": "Stage 1"
+      },
+      {
+        "X": 25,
+        "Step": "Stage 2"
+      },
+      {
+        "X": 50,
+        "Step": "Stage 3"
+      },
+      {
+        "X": 75,
+        "Step": "Stage 4"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 5"
+      }
+    ]
+  }
+}

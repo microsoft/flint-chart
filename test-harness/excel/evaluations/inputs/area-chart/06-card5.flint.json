@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Stage": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Area Chart",
+    "encodings": {
+      "x": "Stage",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Stage": "Stage 1",
+        "Value": 217
+      },
+      {
+        "Stage": "Stage 2",
+        "Value": 224
+      },
+      {
+        "Stage": "Stage 3",
+        "Value": 226
+      },
+      {
+        "Stage": "Stage 4",
+        "Value": 235
+      },
+      {
+        "Stage": "Stage 5",
+        "Value": 236
+      }
+    ]
+  }
+}

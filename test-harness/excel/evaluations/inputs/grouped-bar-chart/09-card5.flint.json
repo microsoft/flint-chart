@@ -1,0 +1,273 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity",
+    "ColorVal": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value",
+      "group": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 463,
+        "ColorVal": 32.32
+      },
+      {
+        "Category": "Laptop",
+        "Value": 566,
+        "ColorVal": 38.29
+      },
+      {
+        "Category": "Laptop",
+        "Value": 529,
+        "ColorVal": 37.65
+      },
+      {
+        "Category": "Laptop",
+        "Value": 922,
+        "ColorVal": 9.81
+      },
+      {
+        "Category": "Laptop",
+        "Value": 788,
+        "ColorVal": 10.93
+      },
+      {
+        "Category": "Laptop",
+        "Value": 527,
+        "ColorVal": 1.86
+      },
+      {
+        "Category": "Laptop",
+        "Value": 991,
+        "ColorVal": 11.69
+      },
+      {
+        "Category": "Laptop",
+        "Value": 581,
+        "ColorVal": 16.23
+      },
+      {
+        "Category": "Laptop",
+        "Value": 297,
+        "ColorVal": 30.57
+      },
+      {
+        "Category": "Laptop",
+        "Value": 634,
+        "ColorVal": 14.39
+      },
+      {
+        "Category": "Phone",
+        "Value": 611,
+        "ColorVal": 28.8
+      },
+      {
+        "Category": "Phone",
+        "Value": 766,
+        "ColorVal": 11.33
+      },
+      {
+        "Category": "Phone",
+        "Value": 665,
+        "ColorVal": 2.13
+      },
+      {
+        "Category": "Phone",
+        "Value": 593,
+        "ColorVal": 6.47
+      },
+      {
+        "Category": "Phone",
+        "Value": 228,
+        "ColorVal": 35.89
+      },
+      {
+        "Category": "Phone",
+        "Value": 235,
+        "ColorVal": 34.12
+      },
+      {
+        "Category": "Phone",
+        "Value": 46,
+        "ColorVal": 34.35
+      },
+      {
+        "Category": "Phone",
+        "Value": 15,
+        "ColorVal": 3.86
+      },
+      {
+        "Category": "Phone",
+        "Value": 745,
+        "ColorVal": 18.13
+      },
+      {
+        "Category": "Phone",
+        "Value": 528,
+        "ColorVal": 37.92
+      },
+      {
+        "Category": "Tablet",
+        "Value": 52,
+        "ColorVal": 16.96
+      },
+      {
+        "Category": "Tablet",
+        "Value": 846,
+        "ColorVal": 35.69
+      },
+      {
+        "Category": "Tablet",
+        "Value": 738,
+        "ColorVal": 28.15
+      },
+      {
+        "Category": "Tablet",
+        "Value": 90,
+        "ColorVal": 28.1
+      },
+      {
+        "Category": "Tablet",
+        "Value": 865,
+        "ColorVal": 18.43
+      },
+      {
+        "Category": "Tablet",
+        "Value": 698,
+        "ColorVal": 1.59
+      },
+      {
+        "Category": "Tablet",
+        "Value": 843,
+        "ColorVal": 25.45
+      },
+      {
+        "Category": "Tablet",
+        "Value": 68,
+        "ColorVal": 24.81
+      },
+      {
+        "Category": "Tablet",
+        "Value": 426,
+        "ColorVal": 32.88
+      },
+      {
+        "Category": "Tablet",
+        "Value": 786,
+        "ColorVal": 34.33
+      },
+      {
+        "Category": "Desktop",
+        "Value": 25,
+        "ColorVal": 10.99
+      },
+      {
+        "Category": "Desktop",
+        "Value": 884,
+        "ColorVal": 37.34
+      },
+      {
+        "Category": "Desktop",
+        "Value": 720,
+        "ColorVal": 37.94
+      },
+      {
+        "Category": "Desktop",
+        "Value": 475,
+        "ColorVal": 28.42
+      },
+      {
+        "Category": "Desktop",
+        "Value": 217,
+        "ColorVal": 12.06
+      },
+      {
+        "Category": "Desktop",
+        "Value": 852,
+        "ColorVal": 11.68
+      },
+      {
+        "Category": "Desktop",
+        "Value": 86,
+        "ColorVal": 18.77
+      },
+      {
+        "Category": "Desktop",
+        "Value": 463,
+        "ColorVal": 2.28
+      },
+      {
+        "Category": "Desktop",
+        "Value": 316,
+        "ColorVal": 16.39
+      },
+      {
+        "Category": "Desktop",
+        "Value": 250,
+        "ColorVal": 26.99
+      },
+      {
+        "Category": "Monitor",
+        "Value": 680,
+        "ColorVal": 9.95
+      },
+      {
+        "Category": "Monitor",
+        "Value": 591,
+        "ColorVal": 38.38
+      },
+      {
+        "Category": "Monitor",
+        "Value": 343,
+        "ColorVal": 9.6
+      },
+      {
+        "Category": "Monitor",
+        "Value": 307,
+        "ColorVal": 3.78
+      },
+      {
+        "Category": "Monitor",
+        "Value": 324,
+        "ColorVal": 15.43
+      },
+      {
+        "Category": "Monitor",
+        "Value": 613,
+        "ColorVal": 16.55
+      },
+      {
+        "Category": "Monitor",
+        "Value": 55,
+        "ColorVal": 30.47
+      },
+      {
+        "Category": "Monitor",
+        "Value": 759,
+        "ColorVal": 31.68
+      },
+      {
+        "Category": "Monitor",
+        "Value": 465,
+        "ColorVal": 18.57
+      },
+      {
+        "Category": "Monitor",
+        "Value": 282,
+        "ColorVal": 23.85
+      }
+    ]
+  }
+}

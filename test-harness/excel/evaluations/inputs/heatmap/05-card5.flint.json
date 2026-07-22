@@ -1,0 +1,2023 @@
+{
+  "semantic_types": {
+    "Product": "Product",
+    "Date": "Date",
+    "Score": "Score"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Product",
+      "y": "Date",
+      "color": "Score"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Product": "Laptop",
+        "Date": "2016-01-01",
+        "Score": 39
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-01-14",
+        "Score": 41
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-01-28",
+        "Score": 5
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-02-11",
+        "Score": 47
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-02-24",
+        "Score": 82
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-03-09",
+        "Score": 65
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-03-23",
+        "Score": 24
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-04-05",
+        "Score": 10
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-04-19",
+        "Score": 8
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-05-03",
+        "Score": 18
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-05-16",
+        "Score": 37
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-05-30",
+        "Score": 7
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-06-13",
+        "Score": 42
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-06-26",
+        "Score": 12
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-07-10",
+        "Score": 72
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-07-24",
+        "Score": 13
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-08-07",
+        "Score": 26
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-08-20",
+        "Score": 62
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-09-03",
+        "Score": 91
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-09-17",
+        "Score": 1
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-09-30",
+        "Score": 74
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-10-14",
+        "Score": 84
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-10-28",
+        "Score": 90
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-11-10",
+        "Score": 47
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-11-24",
+        "Score": 36
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-12-08",
+        "Score": 31
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2016-12-21",
+        "Score": 82
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-01-04",
+        "Score": 37
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-01-18",
+        "Score": 58
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-01-31",
+        "Score": 47
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-02-14",
+        "Score": 55
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-02-28",
+        "Score": 94
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-03-14",
+        "Score": 51
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-03-27",
+        "Score": 34
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-04-10",
+        "Score": 1
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-04-24",
+        "Score": 3
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-05-07",
+        "Score": 7
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-05-21",
+        "Score": 13
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-06-04",
+        "Score": 45
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-06-17",
+        "Score": 79
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-07-01",
+        "Score": 97
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-07-15",
+        "Score": 59
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-07-28",
+        "Score": 52
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-08-11",
+        "Score": 9
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-08-25",
+        "Score": 18
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-09-07",
+        "Score": 69
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-09-21",
+        "Score": 67
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-10-05",
+        "Score": 61
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-10-19",
+        "Score": 60
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-11-01",
+        "Score": 41
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-11-15",
+        "Score": 53
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-11-29",
+        "Score": 99
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-12-12",
+        "Score": 52
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2017-12-26",
+        "Score": 31
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-01-09",
+        "Score": 81
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-01-22",
+        "Score": 14
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-02-05",
+        "Score": 82
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-02-19",
+        "Score": 53
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-03-04",
+        "Score": 28
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-03-18",
+        "Score": 88
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-04-01",
+        "Score": 11
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-04-14",
+        "Score": 9
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-04-28",
+        "Score": 61
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-05-12",
+        "Score": 5
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-05-26",
+        "Score": 70
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-06-08",
+        "Score": 91
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-06-22",
+        "Score": 90
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-07-06",
+        "Score": 6
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-07-19",
+        "Score": 48
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-08-02",
+        "Score": 11
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-08-16",
+        "Score": 34
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-08-29",
+        "Score": 48
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-09-12",
+        "Score": 83
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-09-26",
+        "Score": 90
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-10-09",
+        "Score": 88
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-10-23",
+        "Score": 94
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-11-06",
+        "Score": 91
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-11-19",
+        "Score": 53
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-12-03",
+        "Score": 47
+      },
+      {
+        "Product": "Laptop",
+        "Date": "2018-12-17",
+        "Score": 95
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-01-01",
+        "Score": 79
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-01-14",
+        "Score": 64
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-01-28",
+        "Score": 88
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-02-11",
+        "Score": 35
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-02-24",
+        "Score": 36
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-03-09",
+        "Score": 43
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-03-23",
+        "Score": 38
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-04-05",
+        "Score": 38
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-04-19",
+        "Score": 87
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-05-03",
+        "Score": 99
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-05-16",
+        "Score": 8
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-05-30",
+        "Score": 94
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-06-13",
+        "Score": 65
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-06-26",
+        "Score": 93
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-07-10",
+        "Score": 32
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-07-24",
+        "Score": 38
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-08-07",
+        "Score": 71
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-08-20",
+        "Score": 20
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-09-03",
+        "Score": 71
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-09-17",
+        "Score": 51
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-09-30",
+        "Score": 36
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-10-14",
+        "Score": 7
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-10-28",
+        "Score": 17
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-11-10",
+        "Score": 9
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-11-24",
+        "Score": 61
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-12-08",
+        "Score": 45
+      },
+      {
+        "Product": "Phone",
+        "Date": "2016-12-21",
+        "Score": 87
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-01-04",
+        "Score": 12
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-01-18",
+        "Score": 24
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-01-31",
+        "Score": 62
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-02-14",
+        "Score": 31
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-02-28",
+        "Score": 58
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-03-14",
+        "Score": 33
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-03-27",
+        "Score": 59
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-04-10",
+        "Score": 76
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-04-24",
+        "Score": 15
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-05-07",
+        "Score": 9
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-05-21",
+        "Score": 86
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-06-04",
+        "Score": 42
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-06-17",
+        "Score": 83
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-07-01",
+        "Score": 53
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-07-15",
+        "Score": 74
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-07-28",
+        "Score": 84
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-08-11",
+        "Score": 64
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-08-25",
+        "Score": 28
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-09-07",
+        "Score": 92
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-09-21",
+        "Score": 98
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-10-05",
+        "Score": 88
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-10-19",
+        "Score": 4
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-11-01",
+        "Score": 97
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-11-15",
+        "Score": 21
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-11-29",
+        "Score": 86
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-12-12",
+        "Score": 95
+      },
+      {
+        "Product": "Phone",
+        "Date": "2017-12-26",
+        "Score": 53
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-01-09",
+        "Score": 33
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-01-22",
+        "Score": 82
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-02-05",
+        "Score": 46
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-02-19",
+        "Score": 74
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-03-04",
+        "Score": 54
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-03-18",
+        "Score": 88
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-04-01",
+        "Score": 89
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-04-14",
+        "Score": 61
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-04-28",
+        "Score": 17
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-05-12",
+        "Score": 58
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-05-26",
+        "Score": 26
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-06-08",
+        "Score": 1
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-06-22",
+        "Score": 41
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-07-06",
+        "Score": 34
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-07-19",
+        "Score": 7
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-08-02",
+        "Score": 55
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-08-16",
+        "Score": 34
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-08-29",
+        "Score": 64
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-09-12",
+        "Score": 37
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-09-26",
+        "Score": 37
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-10-09",
+        "Score": 55
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-10-23",
+        "Score": 22
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-11-06",
+        "Score": 92
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-11-19",
+        "Score": 96
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-12-03",
+        "Score": 4
+      },
+      {
+        "Product": "Phone",
+        "Date": "2018-12-17",
+        "Score": 51
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-01-01",
+        "Score": 54
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-01-14",
+        "Score": 76
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-01-28",
+        "Score": 100
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-02-11",
+        "Score": 45
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-02-24",
+        "Score": 7
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-03-09",
+        "Score": 59
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-03-23",
+        "Score": 16
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-04-05",
+        "Score": 50
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-04-19",
+        "Score": 68
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-05-03",
+        "Score": 94
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-05-16",
+        "Score": 41
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-05-30",
+        "Score": 61
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-06-13",
+        "Score": 96
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-06-26",
+        "Score": 18
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-07-10",
+        "Score": 48
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-07-24",
+        "Score": 64
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-08-07",
+        "Score": 51
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-08-20",
+        "Score": 61
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-09-03",
+        "Score": 68
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-09-17",
+        "Score": 65
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-09-30",
+        "Score": 59
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-10-14",
+        "Score": 84
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-10-28",
+        "Score": 78
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-11-10",
+        "Score": 39
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-11-24",
+        "Score": 7
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-12-08",
+        "Score": 69
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2016-12-21",
+        "Score": 22
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-01-04",
+        "Score": 96
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-01-18",
+        "Score": 5
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-01-31",
+        "Score": 66
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-02-14",
+        "Score": 40
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-02-28",
+        "Score": 13
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-03-14",
+        "Score": 9
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-03-27",
+        "Score": 46
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-04-10",
+        "Score": 57
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-04-24",
+        "Score": 12
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-05-07",
+        "Score": 87
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-05-21",
+        "Score": 57
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-06-04",
+        "Score": 63
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-06-17",
+        "Score": 6
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-07-01",
+        "Score": 80
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-07-15",
+        "Score": 85
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-07-28",
+        "Score": 90
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-08-11",
+        "Score": 40
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-08-25",
+        "Score": 25
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-09-07",
+        "Score": 89
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-09-21",
+        "Score": 52
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-10-05",
+        "Score": 0
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-10-19",
+        "Score": 45
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-11-01",
+        "Score": 31
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-11-15",
+        "Score": 18
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-11-29",
+        "Score": 46
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-12-12",
+        "Score": 12
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2017-12-26",
+        "Score": 10
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-01-09",
+        "Score": 52
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-01-22",
+        "Score": 90
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-02-05",
+        "Score": 28
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-02-19",
+        "Score": 31
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-03-04",
+        "Score": 21
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-03-18",
+        "Score": 57
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-04-01",
+        "Score": 22
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-04-14",
+        "Score": 95
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-04-28",
+        "Score": 16
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-05-12",
+        "Score": 46
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-05-26",
+        "Score": 53
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-06-08",
+        "Score": 77
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-06-22",
+        "Score": 37
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-07-06",
+        "Score": 20
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-07-19",
+        "Score": 75
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-08-02",
+        "Score": 12
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-08-16",
+        "Score": 6
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-08-29",
+        "Score": 5
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-09-12",
+        "Score": 53
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-09-26",
+        "Score": 92
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-10-09",
+        "Score": 68
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-10-23",
+        "Score": 43
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-11-06",
+        "Score": 17
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-11-19",
+        "Score": 50
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-12-03",
+        "Score": 93
+      },
+      {
+        "Product": "Tablet",
+        "Date": "2018-12-17",
+        "Score": 64
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-01-01",
+        "Score": 40
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-01-14",
+        "Score": 79
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-01-28",
+        "Score": 54
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-02-11",
+        "Score": 82
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-02-24",
+        "Score": 82
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-03-09",
+        "Score": 67
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-03-23",
+        "Score": 22
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-04-05",
+        "Score": 32
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-04-19",
+        "Score": 26
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-05-03",
+        "Score": 94
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-05-16",
+        "Score": 38
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-05-30",
+        "Score": 23
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-06-13",
+        "Score": 22
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-06-26",
+        "Score": 44
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-07-10",
+        "Score": 33
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-07-24",
+        "Score": 6
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-08-07",
+        "Score": 33
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-08-20",
+        "Score": 84
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-09-03",
+        "Score": 39
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-09-17",
+        "Score": 83
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-09-30",
+        "Score": 64
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-10-14",
+        "Score": 55
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-10-28",
+        "Score": 80
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-11-10",
+        "Score": 67
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-11-24",
+        "Score": 77
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-12-08",
+        "Score": 79
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2016-12-21",
+        "Score": 97
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-01-04",
+        "Score": 71
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-01-18",
+        "Score": 29
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-01-31",
+        "Score": 0
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-02-14",
+        "Score": 84
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-02-28",
+        "Score": 53
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-03-14",
+        "Score": 82
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-03-27",
+        "Score": 22
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-04-10",
+        "Score": 31
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-04-24",
+        "Score": 5
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-05-07",
+        "Score": 59
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-05-21",
+        "Score": 80
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-06-04",
+        "Score": 80
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-06-17",
+        "Score": 92
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-07-01",
+        "Score": 70
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-07-15",
+        "Score": 96
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-07-28",
+        "Score": 23
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-08-11",
+        "Score": 54
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-08-25",
+        "Score": 47
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-09-07",
+        "Score": 19
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-09-21",
+        "Score": 82
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-10-05",
+        "Score": 31
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-10-19",
+        "Score": 79
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-11-01",
+        "Score": 58
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-11-15",
+        "Score": 51
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-11-29",
+        "Score": 65
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-12-12",
+        "Score": 48
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2017-12-26",
+        "Score": 51
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-01-09",
+        "Score": 58
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-01-22",
+        "Score": 65
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-02-05",
+        "Score": 96
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-02-19",
+        "Score": 73
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-03-04",
+        "Score": 54
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-03-18",
+        "Score": 2
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-04-01",
+        "Score": 97
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-04-14",
+        "Score": 38
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-04-28",
+        "Score": 39
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-05-12",
+        "Score": 92
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-05-26",
+        "Score": 23
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-06-08",
+        "Score": 22
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-06-22",
+        "Score": 63
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-07-06",
+        "Score": 43
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-07-19",
+        "Score": 67
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-08-02",
+        "Score": 73
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-08-16",
+        "Score": 38
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-08-29",
+        "Score": 23
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-09-12",
+        "Score": 89
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-09-26",
+        "Score": 81
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-10-09",
+        "Score": 15
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-10-23",
+        "Score": 88
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-11-06",
+        "Score": 78
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-11-19",
+        "Score": 99
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-12-03",
+        "Score": 5
+      },
+      {
+        "Product": "Desktop",
+        "Date": "2018-12-17",
+        "Score": 74
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-01-01",
+        "Score": 65
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-01-14",
+        "Score": 59
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-01-28",
+        "Score": 61
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-02-11",
+        "Score": 63
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-02-24",
+        "Score": 40
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-03-09",
+        "Score": 99
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-03-23",
+        "Score": 82
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-04-05",
+        "Score": 6
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-04-19",
+        "Score": 93
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-05-03",
+        "Score": 59
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-05-16",
+        "Score": 2
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-05-30",
+        "Score": 7
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-06-13",
+        "Score": 26
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-06-26",
+        "Score": 62
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-07-10",
+        "Score": 27
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-07-24",
+        "Score": 14
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-08-07",
+        "Score": 34
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-08-20",
+        "Score": 33
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-09-03",
+        "Score": 9
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-09-17",
+        "Score": 19
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-09-30",
+        "Score": 22
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-10-14",
+        "Score": 79
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-10-28",
+        "Score": 26
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-11-10",
+        "Score": 7
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-11-24",
+        "Score": 16
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-12-08",
+        "Score": 52
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2016-12-21",
+        "Score": 35
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-01-04",
+        "Score": 50
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-01-18",
+        "Score": 37
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-01-31",
+        "Score": 17
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-02-14",
+        "Score": 75
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-02-28",
+        "Score": 58
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-03-14",
+        "Score": 88
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-03-27",
+        "Score": 6
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-04-10",
+        "Score": 60
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-04-24",
+        "Score": 85
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-05-07",
+        "Score": 40
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-05-21",
+        "Score": 31
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-06-04",
+        "Score": 34
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-06-17",
+        "Score": 54
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-07-01",
+        "Score": 62
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-07-15",
+        "Score": 83
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-07-28",
+        "Score": 77
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-08-11",
+        "Score": 81
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-08-25",
+        "Score": 85
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-09-07",
+        "Score": 57
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-09-21",
+        "Score": 43
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-10-05",
+        "Score": 80
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-10-19",
+        "Score": 30
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-11-01",
+        "Score": 11
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-11-15",
+        "Score": 53
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-11-29",
+        "Score": 35
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-12-12",
+        "Score": 5
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2017-12-26",
+        "Score": 15
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-01-09",
+        "Score": 9
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-01-22",
+        "Score": 46
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-02-05",
+        "Score": 65
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-02-19",
+        "Score": 74
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-03-04",
+        "Score": 85
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-03-18",
+        "Score": 96
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-04-01",
+        "Score": 4
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-04-14",
+        "Score": 79
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-04-28",
+        "Score": 66
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-05-12",
+        "Score": 36
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-05-26",
+        "Score": 97
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-06-08",
+        "Score": 89
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-06-22",
+        "Score": 49
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-07-06",
+        "Score": 100
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-07-19",
+        "Score": 31
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-08-02",
+        "Score": 18
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-08-16",
+        "Score": 32
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-08-29",
+        "Score": 86
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-09-12",
+        "Score": 63
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-09-26",
+        "Score": 41
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-10-09",
+        "Score": 23
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-10-23",
+        "Score": 76
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-11-06",
+        "Score": 89
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-11-19",
+        "Score": 42
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-12-03",
+        "Score": 12
+      },
+      {
+        "Product": "Monitor",
+        "Date": "2018-12-17",
+        "Score": 16
+      }
+    ]
+  }
+}

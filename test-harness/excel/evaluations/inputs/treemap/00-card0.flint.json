@@ -1,0 +1,45 @@
+{
+  "semantic_types": {
+    "Sector": "Category",
+    "MarketCap": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Treemap",
+    "encodings": {
+      "color": "Sector",
+      "size": "MarketCap"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Sector": "Technology",
+        "MarketCap": 560
+      },
+      {
+        "Sector": "Healthcare",
+        "MarketCap": 3264
+      },
+      {
+        "Sector": "Finance",
+        "MarketCap": 2881
+      },
+      {
+        "Sector": "Energy",
+        "MarketCap": 3674
+      },
+      {
+        "Sector": "Consumer",
+        "MarketCap": 3669
+      },
+      {
+        "Sector": "Industrials",
+        "MarketCap": 1538
+      }
+    ]
+  }
+}

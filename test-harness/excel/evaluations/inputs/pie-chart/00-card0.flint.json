@@ -1,0 +1,37 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Pie Chart",
+    "encodings": {
+      "size": "Value",
+      "color": "Category"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Value": 103
+      },
+      {
+        "Category": "Clothing",
+        "Value": 215
+      },
+      {
+        "Category": "Food",
+        "Value": 342
+      },
+      {
+        "Category": "Books",
+        "Value": 560
+      }
+    ]
+  }
+}

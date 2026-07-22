@@ -1,0 +1,141 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Step": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Step"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 0,
+        "Step": "Stage 1"
+      },
+      {
+        "X": 3.4,
+        "Step": "Stage 2"
+      },
+      {
+        "X": 6.9,
+        "Step": "Stage 3"
+      },
+      {
+        "X": 10.3,
+        "Step": "Stage 4"
+      },
+      {
+        "X": 13.8,
+        "Step": "Stage 5"
+      },
+      {
+        "X": 17.2,
+        "Step": "Stage 6"
+      },
+      {
+        "X": 20.7,
+        "Step": "Stage 7"
+      },
+      {
+        "X": 24.1,
+        "Step": "Stage 8"
+      },
+      {
+        "X": 27.6,
+        "Step": "Stage 9"
+      },
+      {
+        "X": 31,
+        "Step": "Stage 10"
+      },
+      {
+        "X": 34.5,
+        "Step": "Stage 11"
+      },
+      {
+        "X": 37.9,
+        "Step": "Stage 12"
+      },
+      {
+        "X": 41.4,
+        "Step": "Stage 13"
+      },
+      {
+        "X": 44.8,
+        "Step": "Stage 14"
+      },
+      {
+        "X": 48.3,
+        "Step": "Stage 15"
+      },
+      {
+        "X": 51.7,
+        "Step": "Stage 16"
+      },
+      {
+        "X": 55.2,
+        "Step": "Stage 17"
+      },
+      {
+        "X": 58.6,
+        "Step": "Stage 18"
+      },
+      {
+        "X": 62.1,
+        "Step": "Stage 19"
+      },
+      {
+        "X": 65.5,
+        "Step": "Stage 20"
+      },
+      {
+        "X": 69,
+        "Step": "Stage 21"
+      },
+      {
+        "X": 72.4,
+        "Step": "Stage 22"
+      },
+      {
+        "X": 75.9,
+        "Step": "Stage 23"
+      },
+      {
+        "X": 79.3,
+        "Step": "Stage 24"
+      },
+      {
+        "X": 82.8,
+        "Step": "Stage 25"
+      },
+      {
+        "X": 86.2,
+        "Step": "Stage 26"
+      },
+      {
+        "X": 89.7,
+        "Step": "Stage 27"
+      },
+      {
+        "X": 93.1,
+        "Step": "Stage 28"
+      },
+      {
+        "X": 96.6,
+        "Step": "Stage 29"
+      },
+      {
+        "X": 100,
+        "Step": "Stage 30"
+      }
+    ]
+  }
+}

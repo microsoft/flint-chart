@@ -1,0 +1,145 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Segment": "Category",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "Segment",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 20.8,
+        "Y": 65.9,
+        "Segment": "Electronics",
+        "Size": 113041463
+      },
+      {
+        "X": 87.1,
+        "Y": 9.9,
+        "Segment": "Clothing",
+        "Size": 489600946
+      },
+      {
+        "X": 70.6,
+        "Y": 84,
+        "Segment": "Food",
+        "Size": 170192509
+      },
+      {
+        "X": 40.9,
+        "Y": 8.8,
+        "Segment": "Books",
+        "Size": 684784271
+      },
+      {
+        "X": 15.2,
+        "Y": 9,
+        "Segment": "Sports",
+        "Size": 272996627
+      },
+      {
+        "X": 23.8,
+        "Y": 88.6,
+        "Segment": "Home",
+        "Size": 73843952
+      },
+      {
+        "X": 7.9,
+        "Y": 40.2,
+        "Segment": "Garden",
+        "Size": 310037319
+      },
+      {
+        "X": 78,
+        "Y": 40.5,
+        "Segment": "Auto",
+        "Size": 636410568
+      },
+      {
+        "X": 13.6,
+        "Y": 17.7,
+        "Segment": "Health",
+        "Size": 916931923
+      },
+      {
+        "X": 85.8,
+        "Y": 84.7,
+        "Segment": "Beauty",
+        "Size": 465975275
+      },
+      {
+        "X": 63,
+        "Y": 42.6,
+        "Segment": "Toys",
+        "Size": 733873108
+      },
+      {
+        "X": 18.9,
+        "Y": 45.2,
+        "Segment": "Music",
+        "Size": 679753166
+      },
+      {
+        "X": 59.5,
+        "Y": 28.4,
+        "Segment": "Movies",
+        "Size": 405646572
+      },
+      {
+        "X": 68.5,
+        "Y": 4.2,
+        "Segment": "Software",
+        "Size": 510611831
+      },
+      {
+        "X": 83.6,
+        "Y": 68.8,
+        "Segment": "Games",
+        "Size": 534058494
+      },
+      {
+        "X": 90.4,
+        "Y": 74,
+        "Segment": "Office",
+        "Size": 439235648
+      },
+      {
+        "X": 21.7,
+        "Y": 59.3,
+        "Segment": "Pet",
+        "Size": 810736068
+      },
+      {
+        "X": 2.4,
+        "Y": 26.2,
+        "Segment": "Baby",
+        "Size": 591643630
+      },
+      {
+        "X": 73.8,
+        "Y": 38.7,
+        "Segment": "Tools",
+        "Size": 671374505
+      },
+      {
+        "X": 77.4,
+        "Y": 99.5,
+        "Segment": "Crafts",
+        "Size": 885994418
+      }
+    ]
+  }
+}

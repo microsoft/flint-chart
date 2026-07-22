@@ -1,0 +1,78 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "ColorVal": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "color": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Group": "USA",
+        "ColorVal": 948
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Japan",
+        "ColorVal": 109
+      },
+      {
+        "Category": "Clothing",
+        "Group": "China",
+        "ColorVal": 459
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Japan",
+        "ColorVal": 385
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Germany",
+        "ColorVal": 901
+      },
+      {
+        "Category": "Books",
+        "Group": "USA",
+        "ColorVal": 974
+      },
+      {
+        "Category": "Books",
+        "Group": "China",
+        "ColorVal": 678
+      },
+      {
+        "Category": "Books",
+        "Group": "Japan",
+        "ColorVal": 193
+      },
+      {
+        "Category": "Books",
+        "Group": "Germany",
+        "ColorVal": 992
+      },
+      {
+        "Category": "Sports",
+        "Group": "USA",
+        "ColorVal": 892
+      },
+      {
+        "Category": "Sports",
+        "Group": "Germany",
+        "ColorVal": 776
+      }
+    ]
+  }
+}

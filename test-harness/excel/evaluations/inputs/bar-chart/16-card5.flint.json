@@ -1,0 +1,89 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Group": "USA"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "Japan"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "UK"
+      },
+      {
+        "Category": "Phone",
+        "Group": "USA"
+      },
+      {
+        "Category": "Phone",
+        "Group": "Japan"
+      },
+      {
+        "Category": "Phone",
+        "Group": "Germany"
+      },
+      {
+        "Category": "Phone",
+        "Group": "UK"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "USA"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "Japan"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "Germany"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "UK"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "China"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "Germany"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "UK"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "USA"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "China"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "Japan"
+      }
+    ]
+  }
+}

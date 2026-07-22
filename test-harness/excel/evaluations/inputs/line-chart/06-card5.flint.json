@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Stage": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "Stage",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Stage": "Stage 1",
+        "Value": 113
+      },
+      {
+        "Stage": "Stage 2",
+        "Value": 126
+      },
+      {
+        "Stage": "Stage 3",
+        "Value": 131
+      },
+      {
+        "Stage": "Stage 4",
+        "Value": 144
+      },
+      {
+        "Stage": "Stage 5",
+        "Value": 138
+      }
+    ]
+  }
+}

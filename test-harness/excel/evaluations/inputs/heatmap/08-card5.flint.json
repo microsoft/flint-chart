@@ -1,0 +1,2023 @@
+{
+  "semantic_types": {
+    "Group": "Category",
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Group",
+      "y": "Category",
+      "color": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Electronics",
+        "Category": "C01",
+        "Value": 97
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C02",
+        "Value": 29
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C03",
+        "Value": 93
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C04",
+        "Value": 93
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C05",
+        "Value": 88
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C06",
+        "Value": 38
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C07",
+        "Value": 99
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C08",
+        "Value": 16
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C09",
+        "Value": 84
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C10",
+        "Value": 56
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C11",
+        "Value": 38
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C12",
+        "Value": 24
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C13",
+        "Value": 85
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C14",
+        "Value": 99
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C15",
+        "Value": 3
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C16",
+        "Value": 33
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C17",
+        "Value": 8
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C18",
+        "Value": 78
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C19",
+        "Value": 31
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C20",
+        "Value": 24
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C21",
+        "Value": 36
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C22",
+        "Value": 48
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C23",
+        "Value": 48
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C24",
+        "Value": 24
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C25",
+        "Value": 15
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C26",
+        "Value": 24
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C27",
+        "Value": 66
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C28",
+        "Value": 62
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C29",
+        "Value": 28
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C30",
+        "Value": 83
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C31",
+        "Value": 91
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C32",
+        "Value": 16
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C33",
+        "Value": 97
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C34",
+        "Value": 15
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C35",
+        "Value": 6
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C36",
+        "Value": 37
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C37",
+        "Value": 4
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C38",
+        "Value": 21
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C39",
+        "Value": 58
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C40",
+        "Value": 81
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C41",
+        "Value": 69
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C42",
+        "Value": 22
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C43",
+        "Value": 48
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C44",
+        "Value": 8
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C45",
+        "Value": 91
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C46",
+        "Value": 93
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C47",
+        "Value": 20
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C48",
+        "Value": 23
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C49",
+        "Value": 28
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C50",
+        "Value": 11
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C51",
+        "Value": 23
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C52",
+        "Value": 19
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C53",
+        "Value": 10
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C54",
+        "Value": 58
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C55",
+        "Value": 50
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C56",
+        "Value": 62
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C57",
+        "Value": 85
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C58",
+        "Value": 48
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C59",
+        "Value": 88
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C60",
+        "Value": 54
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C61",
+        "Value": 70
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C62",
+        "Value": 64
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C63",
+        "Value": 38
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C64",
+        "Value": 64
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C65",
+        "Value": 32
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C66",
+        "Value": 84
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C67",
+        "Value": 11
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C68",
+        "Value": 69
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C69",
+        "Value": 13
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C70",
+        "Value": 68
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C71",
+        "Value": 12
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C72",
+        "Value": 86
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C73",
+        "Value": 17
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C74",
+        "Value": 84
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C75",
+        "Value": 78
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C76",
+        "Value": 28
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C77",
+        "Value": 74
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C78",
+        "Value": 85
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C79",
+        "Value": 3
+      },
+      {
+        "Group": "Electronics",
+        "Category": "C80",
+        "Value": 73
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C01",
+        "Value": 79
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C02",
+        "Value": 41
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C03",
+        "Value": 29
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C04",
+        "Value": 26
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C05",
+        "Value": 74
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C06",
+        "Value": 73
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C07",
+        "Value": 30
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C08",
+        "Value": 12
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C09",
+        "Value": 43
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C10",
+        "Value": 4
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C11",
+        "Value": 62
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C12",
+        "Value": 96
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C13",
+        "Value": 69
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C14",
+        "Value": 15
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C15",
+        "Value": 38
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C16",
+        "Value": 25
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C17",
+        "Value": 65
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C18",
+        "Value": 24
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C19",
+        "Value": 37
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C20",
+        "Value": 56
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C21",
+        "Value": 8
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C22",
+        "Value": 17
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C23",
+        "Value": 4
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C24",
+        "Value": 5
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C25",
+        "Value": 66
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C26",
+        "Value": 94
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C27",
+        "Value": 46
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C28",
+        "Value": 81
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C29",
+        "Value": 25
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C30",
+        "Value": 74
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C31",
+        "Value": 93
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C32",
+        "Value": 15
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C33",
+        "Value": 41
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C34",
+        "Value": 52
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C35",
+        "Value": 89
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C36",
+        "Value": 39
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C37",
+        "Value": 9
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C38",
+        "Value": 52
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C39",
+        "Value": 95
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C40",
+        "Value": 78
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C41",
+        "Value": 84
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C42",
+        "Value": 69
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C43",
+        "Value": 78
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C44",
+        "Value": 57
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C45",
+        "Value": 23
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C46",
+        "Value": 40
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C47",
+        "Value": 93
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C48",
+        "Value": 41
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C49",
+        "Value": 79
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C50",
+        "Value": 89
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C51",
+        "Value": 87
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C52",
+        "Value": 63
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C53",
+        "Value": 77
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C54",
+        "Value": 65
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C55",
+        "Value": 98
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C56",
+        "Value": 86
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C57",
+        "Value": 72
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C58",
+        "Value": 21
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C59",
+        "Value": 6
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C60",
+        "Value": 25
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C61",
+        "Value": 93
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C62",
+        "Value": 79
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C63",
+        "Value": 27
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C64",
+        "Value": 95
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C65",
+        "Value": 78
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C66",
+        "Value": 53
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C67",
+        "Value": 35
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C68",
+        "Value": 70
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C69",
+        "Value": 63
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C70",
+        "Value": 2
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C71",
+        "Value": 95
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C72",
+        "Value": 11
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C73",
+        "Value": 55
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C74",
+        "Value": 99
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C75",
+        "Value": 27
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C76",
+        "Value": 26
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C77",
+        "Value": 33
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C78",
+        "Value": 6
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C79",
+        "Value": 92
+      },
+      {
+        "Group": "Clothing",
+        "Category": "C80",
+        "Value": 64
+      },
+      {
+        "Group": "Food",
+        "Category": "C01",
+        "Value": 94
+      },
+      {
+        "Group": "Food",
+        "Category": "C02",
+        "Value": 66
+      },
+      {
+        "Group": "Food",
+        "Category": "C03",
+        "Value": 33
+      },
+      {
+        "Group": "Food",
+        "Category": "C04",
+        "Value": 80
+      },
+      {
+        "Group": "Food",
+        "Category": "C05",
+        "Value": 97
+      },
+      {
+        "Group": "Food",
+        "Category": "C06",
+        "Value": 90
+      },
+      {
+        "Group": "Food",
+        "Category": "C07",
+        "Value": 75
+      },
+      {
+        "Group": "Food",
+        "Category": "C08",
+        "Value": 22
+      },
+      {
+        "Group": "Food",
+        "Category": "C09",
+        "Value": 18
+      },
+      {
+        "Group": "Food",
+        "Category": "C10",
+        "Value": 69
+      },
+      {
+        "Group": "Food",
+        "Category": "C11",
+        "Value": 97
+      },
+      {
+        "Group": "Food",
+        "Category": "C12",
+        "Value": 44
+      },
+      {
+        "Group": "Food",
+        "Category": "C13",
+        "Value": 68
+      },
+      {
+        "Group": "Food",
+        "Category": "C14",
+        "Value": 31
+      },
+      {
+        "Group": "Food",
+        "Category": "C15",
+        "Value": 96
+      },
+      {
+        "Group": "Food",
+        "Category": "C16",
+        "Value": 3
+      },
+      {
+        "Group": "Food",
+        "Category": "C17",
+        "Value": 16
+      },
+      {
+        "Group": "Food",
+        "Category": "C18",
+        "Value": 2
+      },
+      {
+        "Group": "Food",
+        "Category": "C19",
+        "Value": 68
+      },
+      {
+        "Group": "Food",
+        "Category": "C20",
+        "Value": 62
+      },
+      {
+        "Group": "Food",
+        "Category": "C21",
+        "Value": 37
+      },
+      {
+        "Group": "Food",
+        "Category": "C22",
+        "Value": 29
+      },
+      {
+        "Group": "Food",
+        "Category": "C23",
+        "Value": 72
+      },
+      {
+        "Group": "Food",
+        "Category": "C24",
+        "Value": 3
+      },
+      {
+        "Group": "Food",
+        "Category": "C25",
+        "Value": 20
+      },
+      {
+        "Group": "Food",
+        "Category": "C26",
+        "Value": 82
+      },
+      {
+        "Group": "Food",
+        "Category": "C27",
+        "Value": 54
+      },
+      {
+        "Group": "Food",
+        "Category": "C28",
+        "Value": 39
+      },
+      {
+        "Group": "Food",
+        "Category": "C29",
+        "Value": 59
+      },
+      {
+        "Group": "Food",
+        "Category": "C30",
+        "Value": 83
+      },
+      {
+        "Group": "Food",
+        "Category": "C31",
+        "Value": 40
+      },
+      {
+        "Group": "Food",
+        "Category": "C32",
+        "Value": 51
+      },
+      {
+        "Group": "Food",
+        "Category": "C33",
+        "Value": 95
+      },
+      {
+        "Group": "Food",
+        "Category": "C34",
+        "Value": 40
+      },
+      {
+        "Group": "Food",
+        "Category": "C35",
+        "Value": 94
+      },
+      {
+        "Group": "Food",
+        "Category": "C36",
+        "Value": 15
+      },
+      {
+        "Group": "Food",
+        "Category": "C37",
+        "Value": 26
+      },
+      {
+        "Group": "Food",
+        "Category": "C38",
+        "Value": 68
+      },
+      {
+        "Group": "Food",
+        "Category": "C39",
+        "Value": 92
+      },
+      {
+        "Group": "Food",
+        "Category": "C40",
+        "Value": 53
+      },
+      {
+        "Group": "Food",
+        "Category": "C41",
+        "Value": 86
+      },
+      {
+        "Group": "Food",
+        "Category": "C42",
+        "Value": 61
+      },
+      {
+        "Group": "Food",
+        "Category": "C43",
+        "Value": 87
+      },
+      {
+        "Group": "Food",
+        "Category": "C44",
+        "Value": 35
+      },
+      {
+        "Group": "Food",
+        "Category": "C45",
+        "Value": 30
+      },
+      {
+        "Group": "Food",
+        "Category": "C46",
+        "Value": 43
+      },
+      {
+        "Group": "Food",
+        "Category": "C47",
+        "Value": 30
+      },
+      {
+        "Group": "Food",
+        "Category": "C48",
+        "Value": 75
+      },
+      {
+        "Group": "Food",
+        "Category": "C49",
+        "Value": 97
+      },
+      {
+        "Group": "Food",
+        "Category": "C50",
+        "Value": 82
+      },
+      {
+        "Group": "Food",
+        "Category": "C51",
+        "Value": 3
+      },
+      {
+        "Group": "Food",
+        "Category": "C52",
+        "Value": 46
+      },
+      {
+        "Group": "Food",
+        "Category": "C53",
+        "Value": 97
+      },
+      {
+        "Group": "Food",
+        "Category": "C54",
+        "Value": 57
+      },
+      {
+        "Group": "Food",
+        "Category": "C55",
+        "Value": 44
+      },
+      {
+        "Group": "Food",
+        "Category": "C56",
+        "Value": 51
+      },
+      {
+        "Group": "Food",
+        "Category": "C57",
+        "Value": 98
+      },
+      {
+        "Group": "Food",
+        "Category": "C58",
+        "Value": 63
+      },
+      {
+        "Group": "Food",
+        "Category": "C59",
+        "Value": 25
+      },
+      {
+        "Group": "Food",
+        "Category": "C60",
+        "Value": 23
+      },
+      {
+        "Group": "Food",
+        "Category": "C61",
+        "Value": 43
+      },
+      {
+        "Group": "Food",
+        "Category": "C62",
+        "Value": 99
+      },
+      {
+        "Group": "Food",
+        "Category": "C63",
+        "Value": 53
+      },
+      {
+        "Group": "Food",
+        "Category": "C64",
+        "Value": 33
+      },
+      {
+        "Group": "Food",
+        "Category": "C65",
+        "Value": 74
+      },
+      {
+        "Group": "Food",
+        "Category": "C66",
+        "Value": 35
+      },
+      {
+        "Group": "Food",
+        "Category": "C67",
+        "Value": 85
+      },
+      {
+        "Group": "Food",
+        "Category": "C68",
+        "Value": 83
+      },
+      {
+        "Group": "Food",
+        "Category": "C69",
+        "Value": 77
+      },
+      {
+        "Group": "Food",
+        "Category": "C70",
+        "Value": 46
+      },
+      {
+        "Group": "Food",
+        "Category": "C71",
+        "Value": 47
+      },
+      {
+        "Group": "Food",
+        "Category": "C72",
+        "Value": 74
+      },
+      {
+        "Group": "Food",
+        "Category": "C73",
+        "Value": 12
+      },
+      {
+        "Group": "Food",
+        "Category": "C74",
+        "Value": 97
+      },
+      {
+        "Group": "Food",
+        "Category": "C75",
+        "Value": 64
+      },
+      {
+        "Group": "Food",
+        "Category": "C76",
+        "Value": 87
+      },
+      {
+        "Group": "Food",
+        "Category": "C77",
+        "Value": 27
+      },
+      {
+        "Group": "Food",
+        "Category": "C78",
+        "Value": 98
+      },
+      {
+        "Group": "Food",
+        "Category": "C79",
+        "Value": 85
+      },
+      {
+        "Group": "Food",
+        "Category": "C80",
+        "Value": 59
+      },
+      {
+        "Group": "Books",
+        "Category": "C01",
+        "Value": 23
+      },
+      {
+        "Group": "Books",
+        "Category": "C02",
+        "Value": 42
+      },
+      {
+        "Group": "Books",
+        "Category": "C03",
+        "Value": 30
+      },
+      {
+        "Group": "Books",
+        "Category": "C04",
+        "Value": 59
+      },
+      {
+        "Group": "Books",
+        "Category": "C05",
+        "Value": 45
+      },
+      {
+        "Group": "Books",
+        "Category": "C06",
+        "Value": 24
+      },
+      {
+        "Group": "Books",
+        "Category": "C07",
+        "Value": 24
+      },
+      {
+        "Group": "Books",
+        "Category": "C08",
+        "Value": 50
+      },
+      {
+        "Group": "Books",
+        "Category": "C09",
+        "Value": 36
+      },
+      {
+        "Group": "Books",
+        "Category": "C10",
+        "Value": 62
+      },
+      {
+        "Group": "Books",
+        "Category": "C11",
+        "Value": 34
+      },
+      {
+        "Group": "Books",
+        "Category": "C12",
+        "Value": 8
+      },
+      {
+        "Group": "Books",
+        "Category": "C13",
+        "Value": 89
+      },
+      {
+        "Group": "Books",
+        "Category": "C14",
+        "Value": 3
+      },
+      {
+        "Group": "Books",
+        "Category": "C15",
+        "Value": 3
+      },
+      {
+        "Group": "Books",
+        "Category": "C16",
+        "Value": 75
+      },
+      {
+        "Group": "Books",
+        "Category": "C17",
+        "Value": 88
+      },
+      {
+        "Group": "Books",
+        "Category": "C18",
+        "Value": 16
+      },
+      {
+        "Group": "Books",
+        "Category": "C19",
+        "Value": 30
+      },
+      {
+        "Group": "Books",
+        "Category": "C20",
+        "Value": 63
+      },
+      {
+        "Group": "Books",
+        "Category": "C21",
+        "Value": 36
+      },
+      {
+        "Group": "Books",
+        "Category": "C22",
+        "Value": 83
+      },
+      {
+        "Group": "Books",
+        "Category": "C23",
+        "Value": 52
+      },
+      {
+        "Group": "Books",
+        "Category": "C24",
+        "Value": 13
+      },
+      {
+        "Group": "Books",
+        "Category": "C25",
+        "Value": 87
+      },
+      {
+        "Group": "Books",
+        "Category": "C26",
+        "Value": 90
+      },
+      {
+        "Group": "Books",
+        "Category": "C27",
+        "Value": 12
+      },
+      {
+        "Group": "Books",
+        "Category": "C28",
+        "Value": 27
+      },
+      {
+        "Group": "Books",
+        "Category": "C29",
+        "Value": 76
+      },
+      {
+        "Group": "Books",
+        "Category": "C30",
+        "Value": 71
+      },
+      {
+        "Group": "Books",
+        "Category": "C31",
+        "Value": 14
+      },
+      {
+        "Group": "Books",
+        "Category": "C32",
+        "Value": 94
+      },
+      {
+        "Group": "Books",
+        "Category": "C33",
+        "Value": 42
+      },
+      {
+        "Group": "Books",
+        "Category": "C34",
+        "Value": 45
+      },
+      {
+        "Group": "Books",
+        "Category": "C35",
+        "Value": 9
+      },
+      {
+        "Group": "Books",
+        "Category": "C36",
+        "Value": 22
+      },
+      {
+        "Group": "Books",
+        "Category": "C37",
+        "Value": 0
+      },
+      {
+        "Group": "Books",
+        "Category": "C38",
+        "Value": 54
+      },
+      {
+        "Group": "Books",
+        "Category": "C39",
+        "Value": 43
+      },
+      {
+        "Group": "Books",
+        "Category": "C40",
+        "Value": 25
+      },
+      {
+        "Group": "Books",
+        "Category": "C41",
+        "Value": 71
+      },
+      {
+        "Group": "Books",
+        "Category": "C42",
+        "Value": 56
+      },
+      {
+        "Group": "Books",
+        "Category": "C43",
+        "Value": 76
+      },
+      {
+        "Group": "Books",
+        "Category": "C44",
+        "Value": 25
+      },
+      {
+        "Group": "Books",
+        "Category": "C45",
+        "Value": 42
+      },
+      {
+        "Group": "Books",
+        "Category": "C46",
+        "Value": 78
+      },
+      {
+        "Group": "Books",
+        "Category": "C47",
+        "Value": 72
+      },
+      {
+        "Group": "Books",
+        "Category": "C48",
+        "Value": 44
+      },
+      {
+        "Group": "Books",
+        "Category": "C49",
+        "Value": 70
+      },
+      {
+        "Group": "Books",
+        "Category": "C50",
+        "Value": 81
+      },
+      {
+        "Group": "Books",
+        "Category": "C51",
+        "Value": 44
+      },
+      {
+        "Group": "Books",
+        "Category": "C52",
+        "Value": 29
+      },
+      {
+        "Group": "Books",
+        "Category": "C53",
+        "Value": 26
+      },
+      {
+        "Group": "Books",
+        "Category": "C54",
+        "Value": 74
+      },
+      {
+        "Group": "Books",
+        "Category": "C55",
+        "Value": 60
+      },
+      {
+        "Group": "Books",
+        "Category": "C56",
+        "Value": 7
+      },
+      {
+        "Group": "Books",
+        "Category": "C57",
+        "Value": 60
+      },
+      {
+        "Group": "Books",
+        "Category": "C58",
+        "Value": 67
+      },
+      {
+        "Group": "Books",
+        "Category": "C59",
+        "Value": 64
+      },
+      {
+        "Group": "Books",
+        "Category": "C60",
+        "Value": 98
+      },
+      {
+        "Group": "Books",
+        "Category": "C61",
+        "Value": 25
+      },
+      {
+        "Group": "Books",
+        "Category": "C62",
+        "Value": 76
+      },
+      {
+        "Group": "Books",
+        "Category": "C63",
+        "Value": 84
+      },
+      {
+        "Group": "Books",
+        "Category": "C64",
+        "Value": 100
+      },
+      {
+        "Group": "Books",
+        "Category": "C65",
+        "Value": 35
+      },
+      {
+        "Group": "Books",
+        "Category": "C66",
+        "Value": 25
+      },
+      {
+        "Group": "Books",
+        "Category": "C67",
+        "Value": 89
+      },
+      {
+        "Group": "Books",
+        "Category": "C68",
+        "Value": 9
+      },
+      {
+        "Group": "Books",
+        "Category": "C69",
+        "Value": 57
+      },
+      {
+        "Group": "Books",
+        "Category": "C70",
+        "Value": 74
+      },
+      {
+        "Group": "Books",
+        "Category": "C71",
+        "Value": 27
+      },
+      {
+        "Group": "Books",
+        "Category": "C72",
+        "Value": 56
+      },
+      {
+        "Group": "Books",
+        "Category": "C73",
+        "Value": 28
+      },
+      {
+        "Group": "Books",
+        "Category": "C74",
+        "Value": 16
+      },
+      {
+        "Group": "Books",
+        "Category": "C75",
+        "Value": 73
+      },
+      {
+        "Group": "Books",
+        "Category": "C76",
+        "Value": 82
+      },
+      {
+        "Group": "Books",
+        "Category": "C77",
+        "Value": 77
+      },
+      {
+        "Group": "Books",
+        "Category": "C78",
+        "Value": 54
+      },
+      {
+        "Group": "Books",
+        "Category": "C79",
+        "Value": 83
+      },
+      {
+        "Group": "Books",
+        "Category": "C80",
+        "Value": 98
+      },
+      {
+        "Group": "Sports",
+        "Category": "C01",
+        "Value": 80
+      },
+      {
+        "Group": "Sports",
+        "Category": "C02",
+        "Value": 49
+      },
+      {
+        "Group": "Sports",
+        "Category": "C03",
+        "Value": 37
+      },
+      {
+        "Group": "Sports",
+        "Category": "C04",
+        "Value": 70
+      },
+      {
+        "Group": "Sports",
+        "Category": "C05",
+        "Value": 61
+      },
+      {
+        "Group": "Sports",
+        "Category": "C06",
+        "Value": 87
+      },
+      {
+        "Group": "Sports",
+        "Category": "C07",
+        "Value": 88
+      },
+      {
+        "Group": "Sports",
+        "Category": "C08",
+        "Value": 86
+      },
+      {
+        "Group": "Sports",
+        "Category": "C09",
+        "Value": 52
+      },
+      {
+        "Group": "Sports",
+        "Category": "C10",
+        "Value": 18
+      },
+      {
+        "Group": "Sports",
+        "Category": "C11",
+        "Value": 29
+      },
+      {
+        "Group": "Sports",
+        "Category": "C12",
+        "Value": 31
+      },
+      {
+        "Group": "Sports",
+        "Category": "C13",
+        "Value": 13
+      },
+      {
+        "Group": "Sports",
+        "Category": "C14",
+        "Value": 40
+      },
+      {
+        "Group": "Sports",
+        "Category": "C15",
+        "Value": 2
+      },
+      {
+        "Group": "Sports",
+        "Category": "C16",
+        "Value": 94
+      },
+      {
+        "Group": "Sports",
+        "Category": "C17",
+        "Value": 63
+      },
+      {
+        "Group": "Sports",
+        "Category": "C18",
+        "Value": 69
+      },
+      {
+        "Group": "Sports",
+        "Category": "C19",
+        "Value": 45
+      },
+      {
+        "Group": "Sports",
+        "Category": "C20",
+        "Value": 70
+      },
+      {
+        "Group": "Sports",
+        "Category": "C21",
+        "Value": 85
+      },
+      {
+        "Group": "Sports",
+        "Category": "C22",
+        "Value": 65
+      },
+      {
+        "Group": "Sports",
+        "Category": "C23",
+        "Value": 60
+      },
+      {
+        "Group": "Sports",
+        "Category": "C24",
+        "Value": 10
+      },
+      {
+        "Group": "Sports",
+        "Category": "C25",
+        "Value": 91
+      },
+      {
+        "Group": "Sports",
+        "Category": "C26",
+        "Value": 47
+      },
+      {
+        "Group": "Sports",
+        "Category": "C27",
+        "Value": 37
+      },
+      {
+        "Group": "Sports",
+        "Category": "C28",
+        "Value": 78
+      },
+      {
+        "Group": "Sports",
+        "Category": "C29",
+        "Value": 7
+      },
+      {
+        "Group": "Sports",
+        "Category": "C30",
+        "Value": 80
+      },
+      {
+        "Group": "Sports",
+        "Category": "C31",
+        "Value": 45
+      },
+      {
+        "Group": "Sports",
+        "Category": "C32",
+        "Value": 96
+      },
+      {
+        "Group": "Sports",
+        "Category": "C33",
+        "Value": 23
+      },
+      {
+        "Group": "Sports",
+        "Category": "C34",
+        "Value": 50
+      },
+      {
+        "Group": "Sports",
+        "Category": "C35",
+        "Value": 80
+      },
+      {
+        "Group": "Sports",
+        "Category": "C36",
+        "Value": 30
+      },
+      {
+        "Group": "Sports",
+        "Category": "C37",
+        "Value": 42
+      },
+      {
+        "Group": "Sports",
+        "Category": "C38",
+        "Value": 59
+      },
+      {
+        "Group": "Sports",
+        "Category": "C39",
+        "Value": 22
+      },
+      {
+        "Group": "Sports",
+        "Category": "C40",
+        "Value": 38
+      },
+      {
+        "Group": "Sports",
+        "Category": "C41",
+        "Value": 79
+      },
+      {
+        "Group": "Sports",
+        "Category": "C42",
+        "Value": 6
+      },
+      {
+        "Group": "Sports",
+        "Category": "C43",
+        "Value": 79
+      },
+      {
+        "Group": "Sports",
+        "Category": "C44",
+        "Value": 97
+      },
+      {
+        "Group": "Sports",
+        "Category": "C45",
+        "Value": 52
+      },
+      {
+        "Group": "Sports",
+        "Category": "C46",
+        "Value": 37
+      },
+      {
+        "Group": "Sports",
+        "Category": "C47",
+        "Value": 90
+      },
+      {
+        "Group": "Sports",
+        "Category": "C48",
+        "Value": 59
+      },
+      {
+        "Group": "Sports",
+        "Category": "C49",
+        "Value": 45
+      },
+      {
+        "Group": "Sports",
+        "Category": "C50",
+        "Value": 50
+      },
+      {
+        "Group": "Sports",
+        "Category": "C51",
+        "Value": 97
+      },
+      {
+        "Group": "Sports",
+        "Category": "C52",
+        "Value": 92
+      },
+      {
+        "Group": "Sports",
+        "Category": "C53",
+        "Value": 81
+      },
+      {
+        "Group": "Sports",
+        "Category": "C54",
+        "Value": 3
+      },
+      {
+        "Group": "Sports",
+        "Category": "C55",
+        "Value": 46
+      },
+      {
+        "Group": "Sports",
+        "Category": "C56",
+        "Value": 40
+      },
+      {
+        "Group": "Sports",
+        "Category": "C57",
+        "Value": 18
+      },
+      {
+        "Group": "Sports",
+        "Category": "C58",
+        "Value": 45
+      },
+      {
+        "Group": "Sports",
+        "Category": "C59",
+        "Value": 2
+      },
+      {
+        "Group": "Sports",
+        "Category": "C60",
+        "Value": 37
+      },
+      {
+        "Group": "Sports",
+        "Category": "C61",
+        "Value": 56
+      },
+      {
+        "Group": "Sports",
+        "Category": "C62",
+        "Value": 87
+      },
+      {
+        "Group": "Sports",
+        "Category": "C63",
+        "Value": 21
+      },
+      {
+        "Group": "Sports",
+        "Category": "C64",
+        "Value": 64
+      },
+      {
+        "Group": "Sports",
+        "Category": "C65",
+        "Value": 50
+      },
+      {
+        "Group": "Sports",
+        "Category": "C66",
+        "Value": 87
+      },
+      {
+        "Group": "Sports",
+        "Category": "C67",
+        "Value": 25
+      },
+      {
+        "Group": "Sports",
+        "Category": "C68",
+        "Value": 67
+      },
+      {
+        "Group": "Sports",
+        "Category": "C69",
+        "Value": 60
+      },
+      {
+        "Group": "Sports",
+        "Category": "C70",
+        "Value": 12
+      },
+      {
+        "Group": "Sports",
+        "Category": "C71",
+        "Value": 14
+      },
+      {
+        "Group": "Sports",
+        "Category": "C72",
+        "Value": 39
+      },
+      {
+        "Group": "Sports",
+        "Category": "C73",
+        "Value": 14
+      },
+      {
+        "Group": "Sports",
+        "Category": "C74",
+        "Value": 94
+      },
+      {
+        "Group": "Sports",
+        "Category": "C75",
+        "Value": 69
+      },
+      {
+        "Group": "Sports",
+        "Category": "C76",
+        "Value": 87
+      },
+      {
+        "Group": "Sports",
+        "Category": "C77",
+        "Value": 39
+      },
+      {
+        "Group": "Sports",
+        "Category": "C78",
+        "Value": 55
+      },
+      {
+        "Group": "Sports",
+        "Category": "C79",
+        "Value": 95
+      },
+      {
+        "Group": "Sports",
+        "Category": "C80",
+        "Value": 45
+      }
+    ]
+  }
+}

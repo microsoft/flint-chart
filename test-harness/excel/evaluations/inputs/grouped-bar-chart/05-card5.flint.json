@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Value",
+      "group": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 1,
+        "Value": 39,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 1,
+        "Value": 154,
+        "Segment": "Phone"
+      },
+      {
+        "X": 1,
+        "Value": 518,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 1,
+        "Value": 844,
+        "Segment": "Desktop"
+      },
+      {
+        "X": 2,
+        "Value": 774,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 2,
+        "Value": 490,
+        "Segment": "Phone"
+      },
+      {
+        "X": 2,
+        "Value": 270,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 2,
+        "Value": 895,
+        "Segment": "Desktop"
+      },
+      {
+        "X": 3,
+        "Value": 843,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 3,
+        "Value": 361,
+        "Segment": "Phone"
+      },
+      {
+        "X": 3,
+        "Value": 984,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 3,
+        "Value": 36,
+        "Segment": "Desktop"
+      },
+      {
+        "X": 4,
+        "Value": 30,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 4,
+        "Value": 201,
+        "Segment": "Phone"
+      },
+      {
+        "X": 4,
+        "Value": 215,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 4,
+        "Value": 728,
+        "Segment": "Desktop"
+      },
+      {
+        "X": 5,
+        "Value": 139,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 5,
+        "Value": 629,
+        "Segment": "Phone"
+      },
+      {
+        "X": 5,
+        "Value": 232,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 5,
+        "Value": 94,
+        "Segment": "Desktop"
+      }
+    ]
+  }
+}

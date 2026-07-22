@@ -1,0 +1,621 @@
+{
+  "semantic_types": {
+    "Group": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Group",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Electronics",
+        "Value": 1
+      },
+      {
+        "Group": "Electronics",
+        "Value": 8
+      },
+      {
+        "Group": "Electronics",
+        "Value": 92
+      },
+      {
+        "Group": "Electronics",
+        "Value": 6
+      },
+      {
+        "Group": "Electronics",
+        "Value": 94
+      },
+      {
+        "Group": "Electronics",
+        "Value": 27
+      },
+      {
+        "Group": "Electronics",
+        "Value": 93
+      },
+      {
+        "Group": "Electronics",
+        "Value": 21
+      },
+      {
+        "Group": "Electronics",
+        "Value": 51
+      },
+      {
+        "Group": "Electronics",
+        "Value": 29
+      },
+      {
+        "Group": "Electronics",
+        "Value": 45
+      },
+      {
+        "Group": "Electronics",
+        "Value": 59
+      },
+      {
+        "Group": "Electronics",
+        "Value": 68
+      },
+      {
+        "Group": "Electronics",
+        "Value": 20
+      },
+      {
+        "Group": "Electronics",
+        "Value": 42
+      },
+      {
+        "Group": "Electronics",
+        "Value": 79
+      },
+      {
+        "Group": "Electronics",
+        "Value": 80
+      },
+      {
+        "Group": "Electronics",
+        "Value": 39
+      },
+      {
+        "Group": "Electronics",
+        "Value": 39
+      },
+      {
+        "Group": "Electronics",
+        "Value": 79
+      },
+      {
+        "Group": "Electronics",
+        "Value": 24
+      },
+      {
+        "Group": "Electronics",
+        "Value": 74
+      },
+      {
+        "Group": "Electronics",
+        "Value": 28
+      },
+      {
+        "Group": "Electronics",
+        "Value": 31
+      },
+      {
+        "Group": "Electronics",
+        "Value": 32
+      },
+      {
+        "Group": "Electronics",
+        "Value": 85
+      },
+      {
+        "Group": "Electronics",
+        "Value": 38
+      },
+      {
+        "Group": "Electronics",
+        "Value": 74
+      },
+      {
+        "Group": "Electronics",
+        "Value": 20
+      },
+      {
+        "Group": "Electronics",
+        "Value": 83
+      },
+      {
+        "Group": "Clothing",
+        "Value": 22
+      },
+      {
+        "Group": "Clothing",
+        "Value": 54
+      },
+      {
+        "Group": "Clothing",
+        "Value": 72
+      },
+      {
+        "Group": "Clothing",
+        "Value": 23
+      },
+      {
+        "Group": "Clothing",
+        "Value": 26
+      },
+      {
+        "Group": "Clothing",
+        "Value": 76
+      },
+      {
+        "Group": "Clothing",
+        "Value": 85
+      },
+      {
+        "Group": "Clothing",
+        "Value": 49
+      },
+      {
+        "Group": "Clothing",
+        "Value": 73
+      },
+      {
+        "Group": "Clothing",
+        "Value": 74
+      },
+      {
+        "Group": "Clothing",
+        "Value": 93
+      },
+      {
+        "Group": "Clothing",
+        "Value": 79
+      },
+      {
+        "Group": "Clothing",
+        "Value": 86
+      },
+      {
+        "Group": "Clothing",
+        "Value": 35
+      },
+      {
+        "Group": "Clothing",
+        "Value": 6
+      },
+      {
+        "Group": "Clothing",
+        "Value": 88
+      },
+      {
+        "Group": "Clothing",
+        "Value": 14
+      },
+      {
+        "Group": "Clothing",
+        "Value": 29
+      },
+      {
+        "Group": "Clothing",
+        "Value": 90
+      },
+      {
+        "Group": "Clothing",
+        "Value": 49
+      },
+      {
+        "Group": "Clothing",
+        "Value": 55
+      },
+      {
+        "Group": "Clothing",
+        "Value": 41
+      },
+      {
+        "Group": "Clothing",
+        "Value": 44
+      },
+      {
+        "Group": "Clothing",
+        "Value": 43
+      },
+      {
+        "Group": "Clothing",
+        "Value": 49
+      },
+      {
+        "Group": "Clothing",
+        "Value": 56
+      },
+      {
+        "Group": "Clothing",
+        "Value": 56
+      },
+      {
+        "Group": "Clothing",
+        "Value": 36
+      },
+      {
+        "Group": "Clothing",
+        "Value": 45
+      },
+      {
+        "Group": "Clothing",
+        "Value": 40
+      },
+      {
+        "Group": "Food",
+        "Value": 26
+      },
+      {
+        "Group": "Food",
+        "Value": 17
+      },
+      {
+        "Group": "Food",
+        "Value": 40
+      },
+      {
+        "Group": "Food",
+        "Value": 32
+      },
+      {
+        "Group": "Food",
+        "Value": 65
+      },
+      {
+        "Group": "Food",
+        "Value": 78
+      },
+      {
+        "Group": "Food",
+        "Value": 30
+      },
+      {
+        "Group": "Food",
+        "Value": 51
+      },
+      {
+        "Group": "Food",
+        "Value": 43
+      },
+      {
+        "Group": "Food",
+        "Value": 62
+      },
+      {
+        "Group": "Food",
+        "Value": 49
+      },
+      {
+        "Group": "Food",
+        "Value": 90
+      },
+      {
+        "Group": "Food",
+        "Value": 96
+      },
+      {
+        "Group": "Food",
+        "Value": 67
+      },
+      {
+        "Group": "Food",
+        "Value": 82
+      },
+      {
+        "Group": "Food",
+        "Value": 11
+      },
+      {
+        "Group": "Food",
+        "Value": 69
+      },
+      {
+        "Group": "Food",
+        "Value": 6
+      },
+      {
+        "Group": "Food",
+        "Value": 6
+      },
+      {
+        "Group": "Food",
+        "Value": 14
+      },
+      {
+        "Group": "Food",
+        "Value": 47
+      },
+      {
+        "Group": "Food",
+        "Value": 76
+      },
+      {
+        "Group": "Food",
+        "Value": 11
+      },
+      {
+        "Group": "Food",
+        "Value": 92
+      },
+      {
+        "Group": "Food",
+        "Value": 77
+      },
+      {
+        "Group": "Food",
+        "Value": 68
+      },
+      {
+        "Group": "Food",
+        "Value": 36
+      },
+      {
+        "Group": "Food",
+        "Value": 79
+      },
+      {
+        "Group": "Food",
+        "Value": 62
+      },
+      {
+        "Group": "Food",
+        "Value": 0
+      },
+      {
+        "Group": "Books",
+        "Value": 24
+      },
+      {
+        "Group": "Books",
+        "Value": 43
+      },
+      {
+        "Group": "Books",
+        "Value": 71
+      },
+      {
+        "Group": "Books",
+        "Value": 29
+      },
+      {
+        "Group": "Books",
+        "Value": 78
+      },
+      {
+        "Group": "Books",
+        "Value": 19
+      },
+      {
+        "Group": "Books",
+        "Value": 46
+      },
+      {
+        "Group": "Books",
+        "Value": 6
+      },
+      {
+        "Group": "Books",
+        "Value": 52
+      },
+      {
+        "Group": "Books",
+        "Value": 78
+      },
+      {
+        "Group": "Books",
+        "Value": 11
+      },
+      {
+        "Group": "Books",
+        "Value": 54
+      },
+      {
+        "Group": "Books",
+        "Value": 5
+      },
+      {
+        "Group": "Books",
+        "Value": 83
+      },
+      {
+        "Group": "Books",
+        "Value": 60
+      },
+      {
+        "Group": "Books",
+        "Value": 16
+      },
+      {
+        "Group": "Books",
+        "Value": 68
+      },
+      {
+        "Group": "Books",
+        "Value": 14
+      },
+      {
+        "Group": "Books",
+        "Value": 11
+      },
+      {
+        "Group": "Books",
+        "Value": 94
+      },
+      {
+        "Group": "Books",
+        "Value": 75
+      },
+      {
+        "Group": "Books",
+        "Value": 80
+      },
+      {
+        "Group": "Books",
+        "Value": 21
+      },
+      {
+        "Group": "Books",
+        "Value": 52
+      },
+      {
+        "Group": "Books",
+        "Value": 39
+      },
+      {
+        "Group": "Books",
+        "Value": 43
+      },
+      {
+        "Group": "Books",
+        "Value": 84
+      },
+      {
+        "Group": "Books",
+        "Value": 93
+      },
+      {
+        "Group": "Books",
+        "Value": 30
+      },
+      {
+        "Group": "Books",
+        "Value": 30
+      },
+      {
+        "Group": "Sports",
+        "Value": 69
+      },
+      {
+        "Group": "Sports",
+        "Value": 21
+      },
+      {
+        "Group": "Sports",
+        "Value": 10
+      },
+      {
+        "Group": "Sports",
+        "Value": 1
+      },
+      {
+        "Group": "Sports",
+        "Value": 81
+      },
+      {
+        "Group": "Sports",
+        "Value": 87
+      },
+      {
+        "Group": "Sports",
+        "Value": 53
+      },
+      {
+        "Group": "Sports",
+        "Value": 94
+      },
+      {
+        "Group": "Sports",
+        "Value": 63
+      },
+      {
+        "Group": "Sports",
+        "Value": 28
+      },
+      {
+        "Group": "Sports",
+        "Value": 89
+      },
+      {
+        "Group": "Sports",
+        "Value": 44
+      },
+      {
+        "Group": "Sports",
+        "Value": 23
+      },
+      {
+        "Group": "Sports",
+        "Value": 94
+      },
+      {
+        "Group": "Sports",
+        "Value": 7
+      },
+      {
+        "Group": "Sports",
+        "Value": 41
+      },
+      {
+        "Group": "Sports",
+        "Value": 82
+      },
+      {
+        "Group": "Sports",
+        "Value": 27
+      },
+      {
+        "Group": "Sports",
+        "Value": 3
+      },
+      {
+        "Group": "Sports",
+        "Value": 90
+      },
+      {
+        "Group": "Sports",
+        "Value": 8
+      },
+      {
+        "Group": "Sports",
+        "Value": 79
+      },
+      {
+        "Group": "Sports",
+        "Value": 30
+      },
+      {
+        "Group": "Sports",
+        "Value": 71
+      },
+      {
+        "Group": "Sports",
+        "Value": 31
+      },
+      {
+        "Group": "Sports",
+        "Value": 14
+      },
+      {
+        "Group": "Sports",
+        "Value": 27
+      },
+      {
+        "Group": "Sports",
+        "Value": 43
+      },
+      {
+        "Group": "Sports",
+        "Value": 49
+      },
+      {
+        "Group": "Sports",
+        "Value": 96
+      }
+    ]
+  }
+}

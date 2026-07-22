@@ -52,3 +52,6 @@ export * from './echarts';
 
 // Chart.js backend: assembleChartjs, templates, spec instantiation
 export * from './chartjs';
+
+// Excel backend: assembleExcel + Excel chart spec types
+export * from './excel';
