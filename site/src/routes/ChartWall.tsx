@@ -561,6 +561,7 @@ function BackendIntro({
     vegalite: 'spec',
     echarts: 'option',
     chartjs: 'config',
+    plotly: 'figure',
   };
   const snippet = `import { ${category.fn} } from 'flint-chart';
 

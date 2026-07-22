@@ -6,6 +6,7 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
   assembleExcel,
 } from '../src';
 

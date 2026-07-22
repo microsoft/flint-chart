@@ -318,6 +318,7 @@ const OUTPUT_LANG: Record<Backend, string> = {
   vegalite: 'Vega-Lite JSON',
   echarts: 'ECharts option',
   chartjs: 'Chart.js config',
+  plotly: 'Plotly figure',
 };
 
 /**

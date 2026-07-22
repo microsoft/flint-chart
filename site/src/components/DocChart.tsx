@@ -3,6 +3,7 @@ import { TEST_GENERATORS } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
+import { PlotlyView } from './PlotlyView';
 import { ScaleToFit } from './ScaleToFit';
 import { testCaseToAssemblyInput, type CanvasSize } from '../shared/test-case-utils';
 import { BACKENDS, type PreviewBackend } from '../shared/supported-backends';
@@ -147,6 +148,7 @@ export function DocChart({ source, backend = 'vegalite' }: { source: string; bac
         {result.kind === 'vegalite' && <VegaLiteView spec={result.value} />}
         {result.kind === 'echarts' && <EChartsView option={result.value} constrain={false} />}
         {result.kind === 'chartjs' && <ChartjsView config={result.value} constrain={false} />}
+        {result.kind === 'plotly' && <PlotlyView figure={result.value} constrain={false} />}
       </ScaleToFit>
     </figure>
   );

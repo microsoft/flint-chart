@@ -16,6 +16,7 @@
     "@uiw/react-codemirror": "^4.23.0",
     "chart.js": "^4.5.1",
     "echarts": "^6.0.0",
+    "plotly.js-dist-min": "^2.35.2",
     "flint-chart": "*",
     "i18next": "^26.3.6",
     "katex": "^0.17.0",
