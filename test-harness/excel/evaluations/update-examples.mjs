@@ -8,9 +8,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const examplesDir = join(here, 'examples');
 
 const snapshots = [
-  ['out/gallery/funnel-chart/00-card5.excel.png', 'funnel.png'],
+  ['out/gallery/waterfall-chart/02-card7.excel.png', 'waterfall.png'],
   ['out/gallery/pyramid-chart/00-card18.excel.png', 'pyramid.png'],
-  ['out/gallery/grouped-bar-chart/14-card6.excel.png', 'grouped-bar.png'],
+  ['out/gallery/grouped-bar-chart/00-card4.excel.png', 'grouped-bar.png'],
   ['out/gallery/line-chart/14-card50.excel.png', 'multi-series-line.png'],
   ['out/gallery/area-chart/01-card24.excel.png', 'stacked-area.png'],
   ['out/gallery/radar-chart/05-card8.excel.png', 'radar.png'],
