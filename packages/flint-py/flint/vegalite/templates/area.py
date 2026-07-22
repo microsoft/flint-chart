@@ -59,7 +59,11 @@ area_chart_def = {
             ],
         },
         {"key": "opacity", "label": "Opacity", "type": "continuous",
-         "min": 0.1, "max": 1, "step": 0.05, "defaultValue": 0.7},
+         "min": 0.1, "max": 1, "step": 0.05, "defaultValue": 0.7,
+         "check": lambda ctx: {"applicable": bool(
+             ((ctx.get("encodings") or {}).get("color") or {}).get("field")
+             and (ctx.get("chartProperties") or {}).get("stackMode") == "layered"
+         )}},
         {"key": "stackMode", "label": "Stack", "type": "discrete",
          # A stack mode only does something when a series dimension (color) is
          # present to stack; without it there is a single area band.

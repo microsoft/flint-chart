@@ -1,0 +1,143 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Group": "Category",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Group",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Laptop",
+        "X": 906,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Laptop",
+        "X": 619,
+        "Segment": "China"
+      },
+      {
+        "Group": "Laptop",
+        "X": 389,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Phone",
+        "X": 163,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Phone",
+        "X": 91,
+        "Segment": "China"
+      },
+      {
+        "Group": "Phone",
+        "X": 314,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Tablet",
+        "X": 566,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Tablet",
+        "X": 845,
+        "Segment": "China"
+      },
+      {
+        "Group": "Tablet",
+        "X": 60,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Desktop",
+        "X": 274,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Desktop",
+        "X": 92,
+        "Segment": "China"
+      },
+      {
+        "Group": "Desktop",
+        "X": 223,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Monitor",
+        "X": 725,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Monitor",
+        "X": 14,
+        "Segment": "China"
+      },
+      {
+        "Group": "Monitor",
+        "X": 315,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 757,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 486,
+        "Segment": "China"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 304,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Mouse",
+        "X": 381,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Mouse",
+        "X": 388,
+        "Segment": "China"
+      },
+      {
+        "Group": "Mouse",
+        "X": 906,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Headphones",
+        "X": 441,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Headphones",
+        "X": 695,
+        "Segment": "China"
+      },
+      {
+        "Group": "Headphones",
+        "X": 564,
+        "Segment": "Japan"
+      }
+    ]
+  }
+}

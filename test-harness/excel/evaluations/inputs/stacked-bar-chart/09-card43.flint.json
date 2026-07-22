@@ -1,0 +1,248 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "EndDate": "Date",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "EndDate",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "EndDate": "2020-01-01",
+        "X": 403,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-01-01",
+        "X": 206,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-01-01",
+        "X": 183,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2020-03-14",
+        "X": 265,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-03-14",
+        "X": 151,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-03-14",
+        "X": 231,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2020-05-26",
+        "X": 338,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-05-26",
+        "X": 33,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-05-26",
+        "X": 211,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2020-08-07",
+        "X": 468,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-08-07",
+        "X": 275,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-08-07",
+        "X": 233,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2020-10-19",
+        "X": 474,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-10-19",
+        "X": 742,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-10-19",
+        "X": 470,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2020-12-31",
+        "X": 962,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2020-12-31",
+        "X": 110,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2020-12-31",
+        "X": 940,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2021-03-14",
+        "X": 98,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2021-03-14",
+        "X": 202,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2021-03-14",
+        "X": 259,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2021-05-26",
+        "X": 849,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2021-05-26",
+        "X": 334,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2021-05-26",
+        "X": 770,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2021-08-07",
+        "X": 869,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2021-08-07",
+        "X": 172,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2021-08-07",
+        "X": 291,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2021-10-19",
+        "X": 231,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2021-10-19",
+        "X": 873,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2021-10-19",
+        "X": 654,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2021-12-31",
+        "X": 293,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2021-12-31",
+        "X": 715,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2021-12-31",
+        "X": 416,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2022-03-14",
+        "X": 492,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2022-03-14",
+        "X": 750,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2022-03-14",
+        "X": 156,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2022-05-26",
+        "X": 597,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2022-05-26",
+        "X": 35,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2022-05-26",
+        "X": 323,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2022-08-07",
+        "X": 780,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2022-08-07",
+        "X": 270,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2022-08-07",
+        "X": 251,
+        "Segment": "Tablet"
+      },
+      {
+        "EndDate": "2022-10-19",
+        "X": 460,
+        "Segment": "Laptop"
+      },
+      {
+        "EndDate": "2022-10-19",
+        "X": 280,
+        "Segment": "Phone"
+      },
+      {
+        "EndDate": "2022-10-19",
+        "X": 338,
+        "Segment": "Tablet"
+      }
+    ]
+  }
+}

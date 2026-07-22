@@ -1,0 +1,41 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 11
+      },
+      {
+        "Category": "Phone",
+        "Value": 162
+      },
+      {
+        "Category": "Tablet",
+        "Value": 565
+      },
+      {
+        "Category": "Desktop",
+        "Value": 866
+      },
+      {
+        "Category": "Monitor",
+        "Value": 284
+      }
+    ]
+  }
+}

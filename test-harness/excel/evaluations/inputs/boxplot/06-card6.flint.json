@@ -1,0 +1,742 @@
+{
+  "semantic_types": {
+    "Rating": "Category",
+    "ROI": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Rating",
+      "y": "ROI",
+      "color": "Rating"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Rating": "G",
+        "ROI": 10
+      },
+      {
+        "Rating": "G",
+        "ROI": 233
+      },
+      {
+        "Rating": "G",
+        "ROI": 101
+      },
+      {
+        "Rating": "G",
+        "ROI": 117
+      },
+      {
+        "Rating": "G",
+        "ROI": 279
+      },
+      {
+        "Rating": "G",
+        "ROI": 130
+      },
+      {
+        "Rating": "G",
+        "ROI": 41
+      },
+      {
+        "Rating": "G",
+        "ROI": 0
+      },
+      {
+        "Rating": "G",
+        "ROI": 282
+      },
+      {
+        "Rating": "G",
+        "ROI": 282
+      },
+      {
+        "Rating": "G",
+        "ROI": 179
+      },
+      {
+        "Rating": "G",
+        "ROI": 248
+      },
+      {
+        "Rating": "G",
+        "ROI": 288
+      },
+      {
+        "Rating": "G",
+        "ROI": 97
+      },
+      {
+        "Rating": "G",
+        "ROI": 76
+      },
+      {
+        "Rating": "G",
+        "ROI": 261
+      },
+      {
+        "Rating": "G",
+        "ROI": 174
+      },
+      {
+        "Rating": "G",
+        "ROI": 200
+      },
+      {
+        "Rating": "G",
+        "ROI": 77
+      },
+      {
+        "Rating": "G",
+        "ROI": 87
+      },
+      {
+        "Rating": "G",
+        "ROI": 202
+      },
+      {
+        "Rating": "G",
+        "ROI": 224
+      },
+      {
+        "Rating": "G",
+        "ROI": 22
+      },
+      {
+        "Rating": "G",
+        "ROI": 262
+      },
+      {
+        "Rating": "G",
+        "ROI": 171
+      },
+      {
+        "Rating": "G",
+        "ROI": 197
+      },
+      {
+        "Rating": "G",
+        "ROI": 249
+      },
+      {
+        "Rating": "G",
+        "ROI": 153
+      },
+      {
+        "Rating": "G",
+        "ROI": 143
+      },
+      {
+        "Rating": "G",
+        "ROI": 44
+      },
+      {
+        "Rating": "PG",
+        "ROI": 197
+      },
+      {
+        "Rating": "PG",
+        "ROI": 98
+      },
+      {
+        "Rating": "PG",
+        "ROI": 33
+      },
+      {
+        "Rating": "PG",
+        "ROI": 269
+      },
+      {
+        "Rating": "PG",
+        "ROI": 190
+      },
+      {
+        "Rating": "PG",
+        "ROI": 146
+      },
+      {
+        "Rating": "PG",
+        "ROI": 273
+      },
+      {
+        "Rating": "PG",
+        "ROI": 59
+      },
+      {
+        "Rating": "PG",
+        "ROI": 158
+      },
+      {
+        "Rating": "PG",
+        "ROI": 100
+      },
+      {
+        "Rating": "PG",
+        "ROI": 247
+      },
+      {
+        "Rating": "PG",
+        "ROI": 116
+      },
+      {
+        "Rating": "PG",
+        "ROI": 33
+      },
+      {
+        "Rating": "PG",
+        "ROI": 34
+      },
+      {
+        "Rating": "PG",
+        "ROI": 274
+      },
+      {
+        "Rating": "PG",
+        "ROI": 150
+      },
+      {
+        "Rating": "PG",
+        "ROI": 255
+      },
+      {
+        "Rating": "PG",
+        "ROI": 279
+      },
+      {
+        "Rating": "PG",
+        "ROI": 297
+      },
+      {
+        "Rating": "PG",
+        "ROI": 23
+      },
+      {
+        "Rating": "PG",
+        "ROI": 118
+      },
+      {
+        "Rating": "PG",
+        "ROI": 273
+      },
+      {
+        "Rating": "PG",
+        "ROI": 273
+      },
+      {
+        "Rating": "PG",
+        "ROI": 30
+      },
+      {
+        "Rating": "PG",
+        "ROI": 251
+      },
+      {
+        "Rating": "PG",
+        "ROI": 157
+      },
+      {
+        "Rating": "PG",
+        "ROI": 255
+      },
+      {
+        "Rating": "PG",
+        "ROI": 69
+      },
+      {
+        "Rating": "PG",
+        "ROI": 67
+      },
+      {
+        "Rating": "PG",
+        "ROI": 110
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 283
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 260
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 69
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 243
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 138
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 9
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 141
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 1
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 156
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 182
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 118
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 110
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 285
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 252
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 293
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 149
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 177
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 87
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 113
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 12
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 16
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 169
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 88
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 180
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 98
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 42
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 80
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 165
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 135
+      },
+      {
+        "Rating": "PG-13",
+        "ROI": 190
+      },
+      {
+        "Rating": "R",
+        "ROI": 105
+      },
+      {
+        "Rating": "R",
+        "ROI": 72
+      },
+      {
+        "Rating": "R",
+        "ROI": 193
+      },
+      {
+        "Rating": "R",
+        "ROI": 78
+      },
+      {
+        "Rating": "R",
+        "ROI": 193
+      },
+      {
+        "Rating": "R",
+        "ROI": 63
+      },
+      {
+        "Rating": "R",
+        "ROI": 109
+      },
+      {
+        "Rating": "R",
+        "ROI": 245
+      },
+      {
+        "Rating": "R",
+        "ROI": 231
+      },
+      {
+        "Rating": "R",
+        "ROI": 142
+      },
+      {
+        "Rating": "R",
+        "ROI": 271
+      },
+      {
+        "Rating": "R",
+        "ROI": 230
+      },
+      {
+        "Rating": "R",
+        "ROI": 203
+      },
+      {
+        "Rating": "R",
+        "ROI": 149
+      },
+      {
+        "Rating": "R",
+        "ROI": 36
+      },
+      {
+        "Rating": "R",
+        "ROI": 156
+      },
+      {
+        "Rating": "R",
+        "ROI": 293
+      },
+      {
+        "Rating": "R",
+        "ROI": 214
+      },
+      {
+        "Rating": "R",
+        "ROI": 205
+      },
+      {
+        "Rating": "R",
+        "ROI": 225
+      },
+      {
+        "Rating": "R",
+        "ROI": 77
+      },
+      {
+        "Rating": "R",
+        "ROI": 153
+      },
+      {
+        "Rating": "R",
+        "ROI": 108
+      },
+      {
+        "Rating": "R",
+        "ROI": 80
+      },
+      {
+        "Rating": "R",
+        "ROI": 178
+      },
+      {
+        "Rating": "R",
+        "ROI": 10
+      },
+      {
+        "Rating": "R",
+        "ROI": 29
+      },
+      {
+        "Rating": "R",
+        "ROI": 128
+      },
+      {
+        "Rating": "R",
+        "ROI": 67
+      },
+      {
+        "Rating": "R",
+        "ROI": 151
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 106
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 34
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 291
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 77
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 222
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 197
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 262
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 271
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 274
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 77
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 47
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 274
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 190
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 53
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 148
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 46
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 267
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 51
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 214
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 42
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 81
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 278
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 47
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 294
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 216
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 195
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 61
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 290
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 6
+      },
+      {
+        "Rating": "NC-17",
+        "ROI": 121
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 23
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 264
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 155
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 236
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 200
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 229
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 286
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 15
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 39
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 182
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 70
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 72
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 16
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 72
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 172
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 281
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 159
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 16
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 178
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 190
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 87
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 60
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 94
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 37
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 66
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 14
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 104
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 205
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 277
+      },
+      {
+        "Rating": "Unrated",
+        "ROI": 26
+      }
+    ]
+  }
+}

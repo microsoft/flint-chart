@@ -1,0 +1,103 @@
+{
+  "semantic_types": {
+    "App": "Category",
+    "KPI": "Category",
+    "Rating": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Radar Chart",
+    "encodings": {
+      "x": "KPI",
+      "y": "Rating",
+      "color": "App"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "App": "Frontend",
+        "KPI": "Overall User Experience",
+        "Rating": 56
+      },
+      {
+        "App": "Backend",
+        "KPI": "Overall User Experience",
+        "Rating": 87
+      },
+      {
+        "App": "Frontend",
+        "KPI": "First Contentful Paint",
+        "Rating": 76
+      },
+      {
+        "App": "Backend",
+        "KPI": "First Contentful Paint",
+        "Rating": 50
+      },
+      {
+        "App": "Frontend",
+        "KPI": "Time to Interactive",
+        "Rating": 72
+      },
+      {
+        "App": "Backend",
+        "KPI": "Time to Interactive",
+        "Rating": 100
+      },
+      {
+        "App": "Frontend",
+        "KPI": "Cumulative Layout Shift",
+        "Rating": 99
+      },
+      {
+        "App": "Backend",
+        "KPI": "Cumulative Layout Shift",
+        "Rating": 68
+      },
+      {
+        "App": "Frontend",
+        "KPI": "Server Response Time",
+        "Rating": 53
+      },
+      {
+        "App": "Backend",
+        "KPI": "Server Response Time",
+        "Rating": 87
+      },
+      {
+        "App": "Frontend",
+        "KPI": "Error Rate per Minute",
+        "Rating": 57
+      },
+      {
+        "App": "Backend",
+        "KPI": "Error Rate per Minute",
+        "Rating": 89
+      },
+      {
+        "App": "Frontend",
+        "KPI": "Database Query Latency",
+        "Rating": 51
+      },
+      {
+        "App": "Backend",
+        "KPI": "Database Query Latency",
+        "Rating": 76
+      },
+      {
+        "App": "Frontend",
+        "KPI": "API Throughput",
+        "Rating": 93
+      },
+      {
+        "App": "Backend",
+        "KPI": "API Throughput",
+        "Rating": 53
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Bubble chart: scatter with size-encoded circles -->
+  <!-- Y-axis -->
+  <line x1="48" y1="28" x2="48" y2="220" stroke="#363636" stroke-width="4" stroke-linecap="round"/>
+  <!-- X-axis -->
+  <line x1="44" y1="216" x2="240" y2="216" stroke="#363636" stroke-width="4" stroke-linecap="round"/>
+  <!-- Bubbles (varying radii) -->
+  <circle cx="92"  cy="150" r="26" fill="#76c6ff" stroke="#363636" stroke-width="2" opacity="0.85"/>
+  <circle cx="196" cy="122" r="32" fill="#76c6ff" stroke="#363636" stroke-width="2" opacity="0.75"/>
+  <circle cx="146" cy="170" r="14" fill="#B8B8B8" stroke="#363636" stroke-width="2" opacity="0.9"/>
+  <circle cx="158" cy="92"  r="18" fill="#76c6ff" stroke="#363636" stroke-width="2" opacity="0.85"/>
+  <circle cx="206" cy="186" r="10" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <circle cx="86"  cy="86"  r="11" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+</svg>

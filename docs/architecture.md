@@ -39,10 +39,10 @@ Most design logic lives in Stages 1–2 and is identical across backends.
 |-------|------------|----------------|-------------|
 | **1. Compiler frontend** | Resolve semantic context | Phase 0 — `resolveChannelSemantics()` | `ChannelSemantics` per channel |
 | **2. Optimizer** | Fit layout to canvas | Phase 1 — `computeLayout()`, `filterOverflow()` | `LayoutResult`, truncated data |
-| **3. Code generator** | Emit library-native spec | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS spec |
+| **3. Code generator** | Emit backend-native output | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS spec or Office.js program |
 
 ```text
-assembleVegaLite(input)   // or assembleECharts, assembleChartjs
+assembleVegaLite(input)   // or assembleECharts, assembleChartjs, assembleExcel
        │
        ▼
 ══ STAGE 1 — COMPILER FRONTEND (core/) ═════════════════════════
@@ -150,6 +150,27 @@ Registries: `vlTemplateDefs`, `ecTemplateDefs`, `cjsTemplateDefs`. Lookup: `vlGe
 
 New backends implement Stage 3 only; the frontend and optimizer stay unchanged. See [Extending backends](/documentation/adding-a-backend).
 
+### Excel backend
+
+Excel is a Stage 3 backend in `packages/flint-js`, parallel to Vega-Lite, ECharts, and Chart.js. It is not a separate package or an additional architectural layer.
+
+Office.js is imperative and requires an Excel host, so the backend first builds a typed native-chart artifact (`ExcelNativeChartSpec`) containing the worksheet matrix, native chart type, series bindings, dimensions, axes, labels, legend, and formatting. This versioned artifact is the contract between compilation and execution.
+
+The native-chart plan is an intermediate representation of the Excel backend, not a second user-authored chart specification. Callers continue to author the same semantic Flint input used by every backend:
+
+```text
+semantic Flint input
+       │
+       ▼
+assembleExcel() → ExcelNativeChartSpec
+                      │
+                      ├── renderExcelChart(Excel, artifact) → native Excel chart
+                      │
+                      └── generateOfficeJs(artifact) → standalone Office.js source
+```
+
+The normal add-in path transports the artifact and passes it, with the live Excel host, to `renderExcelChart()`. `generateOfficeJs()` is an optional projection for callers that need portable Office.js source; it is not a second contract or a required step in rendering. Host concerns such as worksheet selection, image capture, and process lifecycle stay outside compilation. Test harnesses may provide those host services, but they do not define Excel chart semantics.
+
 ---
 
 # §6 Inputs
@@ -178,9 +199,11 @@ packages/flint-js/src/
 ├── vegalite/       Stage 3 — Vega-Lite templates + assembleVegaLite
 ├── echarts/        Stage 3 — ECharts templates + assembleECharts
 ├── chartjs/        Stage 3 — Chart.js templates + assembleChartjs
+├── excel/          Stage 3 — native Excel chart planning + Office.js generation
 └── test-data/      gallery fixtures (TEST_GENERATORS)
 
 packages/flint-py/  Python port preview (package planned later)
+test-harness/excel/ Office.js runner + visual evaluations of Excel artifacts
 site/               demo site (gallery, editor, documentation)
 ```
 

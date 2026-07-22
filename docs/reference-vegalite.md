@@ -6,7 +6,7 @@ The Vega-Lite backend serves as Flint's reference implementation and offers the 
 
 ## What this page covers
 
-This reference lists the 34 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
+This reference lists the 35 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -122,7 +122,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center) | — | conditional | Stacking strategy for overlapping series. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
@@ -153,6 +153,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `taskHeight` | number | 40 – 90 (step 5) | `70` | always | Task bar height as a percentage of each row. |
+| `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
+| `intervalLabels` | toggle | on / off | `false` | always | Text shown on task intervals. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
@@ -269,7 +272,6 @@ _No template-specific parameters._
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `baseline` | choice | `mean` (Average), `zero` (Zero), `median` (Median), `none` (None) | `mean` | always | Reference line |
 | `trendWidth` | number | 80 – 600 (step 10) | `240` | always | Sparkline width |
-| `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
 | `includeZero_x` | toggle | on / off | `false` | conditional | Anchor the x-axis at zero. |
@@ -306,7 +308,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
-| `opacity` | number | 0.1 – 1 (step 0.1) | `0.7` | always | Mark opacity. |
+| `opacity` | number | 0.1 – 1 (step 0.1) | `0.7` | conditional | Mark opacity. |
 | `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
@@ -334,6 +336,16 @@ _No template-specific parameters._
 ## Circular
 
 ### ![](chart-icon-pie.svg) Pie Chart
+
+**Encoding channels:** `size`, `color`, `column`, `row`
+
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
+| `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
+| `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+
+### Donut Chart
 
 **Encoding channels:** `size`, `color`, `column`, `row`
 

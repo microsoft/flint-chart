@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Funnel stages (widest at top, narrowest at bottom) -->
+  <polygon points="38,48 218,48 198,98 58,98" fill="#76c6ff" stroke="#363636" stroke-width="2"/>
+  <polygon points="58,104 198,104 182,154 74,154" fill="#B8B8B8" stroke="#363636" stroke-width="2"/>
+  <polygon points="74,160 182,160 166,210 90,210" fill="#76c6ff" stroke="#363636" stroke-width="2" opacity="0.7"/>
+</svg>

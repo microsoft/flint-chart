@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Sunburst: hierarchical concentric rings -->
+  <path d="M 128 38 A 90 90 0 0 0 50.06 83 L 88.16 105 A 46 46 0 0 1 128 82 Z" fill="#3aa6ee" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 50.06 83 A 90 90 0 0 0 50.06 173 L 88.16 151 A 46 46 0 0 1 88.16 105 Z" fill="#9fd6ff" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 50.06 173 A 90 90 0 0 0 128 218 L 128 174 A 46 46 0 0 1 88.16 151 Z" fill="#B8B8B8" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 128 218 A 90 90 0 0 0 205.94 173 L 167.84 151 A 46 46 0 0 1 128 174 Z" fill="#d0d0d0" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 205.94 173 A 90 90 0 0 0 205.94 83 L 167.84 105 A 46 46 0 0 1 167.84 151 Z" fill="#3aa6ee" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 205.94 83 A 90 90 0 0 0 128 38 L 128 82 A 46 46 0 0 1 167.84 105 Z" fill="#a7dbff" stroke="#363636" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 128 128 L 128 82 A 46 46 0 0 0 88.16 151 Z" fill="#76c6ff" stroke="#363636" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 128 128 L 88.16 151 A 46 46 0 0 0 167.84 151 Z" fill="#B8B8B8" stroke="#363636" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 128 128 L 167.84 151 A 46 46 0 0 0 128 82 Z" fill="#cfe9fa" stroke="#363636" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>

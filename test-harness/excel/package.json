@@ -1,0 +1,20 @@
+{
+  "name": "flint-excel-test-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Office.js test harness for rendering and evaluating flint-chart Excel artifacts.",
+  "scripts": {
+    "server": "node office-runner/server.mjs",
+    "render": "node office-runner/server.mjs render",
+    "render:batch": "node office-runner/server.mjs render-batch",
+    "evaluate:inputs": "node evaluations/gen-gallery-inputs.mjs",
+    "evaluate:gallery": "node evaluations/gallery-run.mjs",
+    "evaluate:sheets": "node evaluations/make-audit-sheets.mjs",
+    "evaluate:candlestick": "node evaluations/candlestick-audit.mjs",
+    "evaluate:layout": "node evaluations/layout-facet-audit.mjs",
+    "evaluate:examples": "node evaluations/update-examples.mjs",
+    "test:mock": "cd ../../packages/flint-js && npx vitest run tests/excel-runtime.test.ts tests/excel-codegen.test.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

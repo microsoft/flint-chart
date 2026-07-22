@@ -1,0 +1,96 @@
+{
+  "semantic_types": {
+    "Region": "Category",
+    "Sales": "Quantity",
+    "Channel": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Region",
+      "y": "Sales",
+      "group": "Channel"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "dodge": "global"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Region": "North",
+        "Channel": "Retail",
+        "Sales": 300
+      },
+      {
+        "Region": "North",
+        "Channel": "Online",
+        "Sales": 330
+      },
+      {
+        "Region": "South",
+        "Channel": "Online",
+        "Sales": 340
+      },
+      {
+        "Region": "South",
+        "Channel": "Wholesale",
+        "Sales": 370
+      },
+      {
+        "Region": "South",
+        "Channel": "Direct",
+        "Sales": 400
+      },
+      {
+        "Region": "East",
+        "Channel": "Wholesale",
+        "Sales": 380
+      },
+      {
+        "Region": "East",
+        "Channel": "Direct",
+        "Sales": 410
+      },
+      {
+        "Region": "West",
+        "Channel": "Retail",
+        "Sales": 420
+      },
+      {
+        "Region": "West",
+        "Channel": "Direct",
+        "Sales": 450
+      },
+      {
+        "Region": "Central",
+        "Channel": "Retail",
+        "Sales": 460
+      },
+      {
+        "Region": "Central",
+        "Channel": "Online",
+        "Sales": 490
+      },
+      {
+        "Region": "Central",
+        "Channel": "Wholesale",
+        "Sales": 520
+      },
+      {
+        "Region": "Coast",
+        "Channel": "Online",
+        "Sales": 500
+      },
+      {
+        "Region": "Coast",
+        "Channel": "Direct",
+        "Sales": 530
+      }
+    ]
+  }
+}

@@ -1,0 +1,277 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Sales": "Quantity",
+    "Product": "Category",
+    "Type": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Sales",
+      "color": "Product",
+      "strokeDash": "Type"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2024-01-01",
+        "Sales": 129,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-03-25",
+        "Sales": 133,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-06-17",
+        "Sales": 131,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-09-09",
+        "Sales": 134,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-12-02",
+        "Sales": 132,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-02-25",
+        "Sales": 130,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-05-20",
+        "Sales": 129,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-08-12",
+        "Sales": 133,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-11-04",
+        "Sales": 132,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 135,
+        "Product": "Widget A",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 135,
+        "Product": "Widget A",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-04-22",
+        "Sales": 139,
+        "Product": "Widget A",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-07-15",
+        "Sales": 149,
+        "Product": "Widget A",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-10-07",
+        "Sales": 153,
+        "Product": "Widget A",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2024-01-01",
+        "Sales": 100,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-03-25",
+        "Sales": 97,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-06-17",
+        "Sales": 102,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-09-09",
+        "Sales": 108,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-12-02",
+        "Sales": 109,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-02-25",
+        "Sales": 113,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-05-20",
+        "Sales": 118,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-08-12",
+        "Sales": 126,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-11-04",
+        "Sales": 131,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 137,
+        "Product": "Widget B",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 137,
+        "Product": "Widget B",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-04-22",
+        "Sales": 142,
+        "Product": "Widget B",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-07-15",
+        "Sales": 145,
+        "Product": "Widget B",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-10-07",
+        "Sales": 156,
+        "Product": "Widget B",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2024-01-01",
+        "Sales": 68,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-03-25",
+        "Sales": 68,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-06-17",
+        "Sales": 69,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-09-09",
+        "Sales": 69,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-12-02",
+        "Sales": 69,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-02-25",
+        "Sales": 69,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-05-20",
+        "Sales": 69,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-08-12",
+        "Sales": 70,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-11-04",
+        "Sales": 71,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 70,
+        "Product": "Widget C",
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-28",
+        "Sales": 70,
+        "Product": "Widget C",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-04-22",
+        "Sales": 76,
+        "Product": "Widget C",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-07-15",
+        "Sales": 82,
+        "Product": "Widget C",
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-10-07",
+        "Sales": 87,
+        "Product": "Widget C",
+        "Type": "forecast"
+      }
+    ]
+  }
+}

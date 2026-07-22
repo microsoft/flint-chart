@@ -12,7 +12,7 @@
   --accent: #3a3a3a;
   --warn: #8a6d00;
   --error: #b00020;
-  --font: Arial, Roboto, 'Helvetica Neue', sans-serif;
+  --font: Arial, Roboto, "Helvetica Neue", sans-serif;
   --option-cell-width: 176px;
   --option-readout-width: 44px;
 }
@@ -57,13 +57,23 @@ body {
   background: var(--paper);
   padding: 6px;
   display: flex;
+  width: 100%;
+  max-width: 600px;
+  height: 75vw;
+  max-height: 360px;
+  margin-inline: auto;
   justify-content: center;
+  align-items: center;
   overflow: auto;
 }
 
 .chart svg {
-  max-width: 100%;
+  display: block;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  flex: none;
 }
 
 .placeholder {
@@ -166,6 +176,11 @@ body {
   outline-offset: 0;
 }
 
+.opt-discrete {
+  position: relative;
+  padding: 0;
+}
+
 .opt-label {
   color: var(--muted);
   font-size: 11px;
@@ -223,6 +238,168 @@ body {
   font-size: 11px;
   color: inherit;
   font-variant-numeric: tabular-nums;
+}
+
+/* Combined transform control: chart-type icon dropdown + arrange switcher,
+   fused into one compact pill. */
+.transform-control {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.tc-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 7px 0 0 7px;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tc-type:hover,
+.tc-type[aria-expanded="true"] {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.tc-type-static {
+  cursor: default;
+}
+
+.tc-type-static:hover {
+  background: transparent;
+}
+
+.tc-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tc-caret {
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.tc-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 5px 0;
+  background: var(--hairline);
+}
+
+.tc-arrange {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.tc-arrange-next {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 26px;
+  padding: 0 8px 0 5px;
+  border: none;
+  border-radius: 0 7px 7px 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.tc-arrange:first-child .tc-arrange-next {
+  border-radius: 7px;
+}
+
+.tc-arrange-next:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.tc-arrange-next:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.arrange-state {
+  min-width: 2.5em;
+  max-width: 11em;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tc-arrange-arrow {
+  flex: 0 0 auto;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tc-menu {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.tc-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.tc-opt:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tc-opt-selected {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.tc-opt-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tc-opt span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .control-inline {
@@ -291,7 +468,7 @@ body {
 }
 
 select,
-input[type='range'] {
+input[type="range"] {
   font-family: inherit;
   font-size: 11px;
   color: var(--ink);
@@ -302,14 +479,27 @@ select {
   min-width: 0;
 }
 
-/* Compact dropdown: visible width hugs the current value; a transparent native
-   select overlays the whole control for native picking + keyboard. */
-.select-wrap {
-  position: relative;
+/* Property dropdown: the whole pill is one button; the menu borrows the chart
+  type selector's visual language and opens directly above the widget. */
+.select-trigger {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   min-width: 0;
+  min-height: 19px;
+  padding: 0 5px 0 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.select-trigger:hover,
+.select-trigger[aria-expanded="true"] {
+  background: rgba(0, 0, 0, 0.025);
 }
 
 .select-value {
@@ -328,23 +518,55 @@ select {
   pointer-events: none;
 }
 
-.select-native {
+.select-menu {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  z-index: 60;
   margin: 0;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
+  padding: 4px;
+  min-width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.select-menu-top {
+  bottom: calc(100% + 5px);
+  left: -1px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.select-option {
   appearance: none;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.select-option:hover,
+.select-option:focus-visible {
+  background: rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+
+.select-option-selected {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 /* Slim slider: a 3px track with a filled-progress left half and a small thumb,
    so it reads as compact as the surrounding chips rather than a chunky native
    control. Fill percent comes from --pct (set inline from the current value). */
-input[type='range'] {
+input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
@@ -355,7 +577,7 @@ input[type='range'] {
   cursor: pointer;
 }
 
-input[type='range']::-webkit-slider-runnable-track {
+input[type="range"]::-webkit-slider-runnable-track {
   height: 3px;
   border-radius: 999px;
   background: linear-gradient(
@@ -365,7 +587,7 @@ input[type='range']::-webkit-slider-runnable-track {
   );
 }
 
-input[type='range']::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 9px;
@@ -376,19 +598,19 @@ input[type='range']::-webkit-slider-thumb {
   background: var(--accent);
 }
 
-input[type='range']::-moz-range-track {
+input[type="range"]::-moz-range-track {
   height: 3px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.16);
 }
 
-input[type='range']::-moz-range-progress {
+input[type="range"]::-moz-range-progress {
   height: 3px;
   border-radius: 999px;
   background: var(--accent);
 }
 
-input[type='range']::-moz-range-thumb {
+input[type="range"]::-moz-range-thumb {
   width: 9px;
   height: 9px;
   border: none;
@@ -396,11 +618,35 @@ input[type='range']::-moz-range-thumb {
   background: var(--accent);
 }
 
-input[type='checkbox'] {
+input[type="checkbox"] {
   accent-color: var(--accent);
 }
 
-/* trailing icon action (copy spec) -- shaded to match the control pills */
+/* Trailing actions flow immediately after the controls and wrap as one unit. */
+.bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+}
+
+.action-tip-anchor {
+  display: inline-flex;
+}
+
+.action-tooltip {
+  position: fixed;
+  z-index: 10000;
+  padding: 3px 6px;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .bar-link {
   position: relative;
   font-family: inherit;
@@ -411,14 +657,13 @@ input[type='checkbox'] {
   height: 21px;
   padding: 0;
   color: var(--muted);
-  background: rgba(0, 0, 0, 0.045);
+  background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
   cursor: pointer;
-  /* Anchor the action to the trailing edge so it never strands mid-wrap
-     between control chips. */
-  margin-left: auto;
-  transition: background 120ms ease, color 120ms ease;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
 }
 
 .bar-link svg {
@@ -432,31 +677,12 @@ input[type='checkbox'] {
 }
 
 .bar-link:disabled {
-  background: rgba(0, 0, 0, 0.045);
+  background: transparent;
   color: var(--accent);
   cursor: default;
 }
 
-/* hover hint -- anchored to the button's right edge so it never overflows */
-.bar-link[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
-  padding: 3px 6px;
-  font-size: 11px;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--paper);
-  background: var(--ink);
-  border-radius: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 100ms ease;
+.bar-reset:disabled {
+  color: var(--muted);
+  opacity: 0.4;
 }
-
-.bar-link[data-tip]:hover::after,
-.bar-link[data-tip]:focus-visible::after {
-  opacity: 1;
-}
-

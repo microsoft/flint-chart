@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value",
+      "group": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 12,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 467,
+        "Segment": "China"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 685,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Phone",
+        "Value": 599,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Phone",
+        "Value": 832,
+        "Segment": "China"
+      },
+      {
+        "Category": "Phone",
+        "Value": 691,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 122,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 663,
+        "Segment": "China"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 791,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 414,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 60,
+        "Segment": "China"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 827,
+        "Segment": "Japan"
+      }
+    ]
+  }
+}

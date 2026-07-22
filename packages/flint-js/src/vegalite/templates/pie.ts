@@ -107,3 +107,8 @@ export const pieChartDef: ChartTemplateDef = {
         },
     ] as ChartPropertyDef[],
 };
+
+export const donutChartDef: ChartTemplateDef = {
+    ...pieChartDef,
+    chart: "Donut Chart",
+};

@@ -162,6 +162,24 @@
     "ctaMcp": "使用 MCP 服务器",
     "ctaGithub": "访问 GitHub",
     "ctaDocs": "阅读文档",
+    "news": {
+      "title": "更新",
+      "dynamicWidgets": {
+        "date": "2026 年 7 月 19 日",
+        "dateTime": "2026-07-19",
+        "text": "Flint 0.3.0 新增动态图表组件，支持就地切换图表类型和编辑图表属性。"
+      },
+      "release022": {
+        "date": "2026 年 7 月 15 日",
+        "dateTime": "2026-07-15",
+        "text": "Flint 0.2.2 新增紧凑错列模式和分组小提琴图布局。"
+      },
+      "release021": {
+        "date": "2026 年 7 月 13 日",
+        "dateTime": "2026-07-13",
+        "text": "Flint 0.2.1 改进了图表属性校验和多后端一致性。"
+      }
+    },
     "howItWorks": "Flint 如何工作？",
     "howItWorksBody": "Flint 只需一份精简规范，其中包含数据、语义类型和图表规范。编译器会补全必要的底层细节，生成完整的后端原生规范（此处以 Vega-Lite 为例），再渲染成清晰美观的图表。",
     "overviewAlt": "Flint 工作流：智能体从原始表格推断 dataSpec，编写简短的 chartSpec，Flint 将其编译为按地区展示的折线图；随后在编辑规范时依次得到分组柱状图、瀑布图、热力图与旭日图。",

@@ -1,0 +1,383 @@
+{
+  "semantic_types": {
+    "Month": "Month",
+    "Product": "Product",
+    "Sales": "Amount"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Month",
+      "y": "Product",
+      "color": "Sales"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Jan",
+        "Product": "Laptop",
+        "Sales": 351
+      },
+      {
+        "Month": "Jan",
+        "Product": "Phone",
+        "Sales": 917
+      },
+      {
+        "Month": "Jan",
+        "Product": "Tablet",
+        "Sales": 456
+      },
+      {
+        "Month": "Jan",
+        "Product": "Desktop",
+        "Sales": 803
+      },
+      {
+        "Month": "Jan",
+        "Product": "Monitor",
+        "Sales": 65
+      },
+      {
+        "Month": "Jan",
+        "Product": "Keyboard",
+        "Sales": 442
+      },
+      {
+        "Month": "Feb",
+        "Product": "Laptop",
+        "Sales": 435
+      },
+      {
+        "Month": "Feb",
+        "Product": "Phone",
+        "Sales": 552
+      },
+      {
+        "Month": "Feb",
+        "Product": "Tablet",
+        "Sales": 883
+      },
+      {
+        "Month": "Feb",
+        "Product": "Desktop",
+        "Sales": 602
+      },
+      {
+        "Month": "Feb",
+        "Product": "Monitor",
+        "Sales": 658
+      },
+      {
+        "Month": "Feb",
+        "Product": "Keyboard",
+        "Sales": 898
+      },
+      {
+        "Month": "Mar",
+        "Product": "Laptop",
+        "Sales": 850
+      },
+      {
+        "Month": "Mar",
+        "Product": "Phone",
+        "Sales": 142
+      },
+      {
+        "Month": "Mar",
+        "Product": "Tablet",
+        "Sales": 643
+      },
+      {
+        "Month": "Mar",
+        "Product": "Desktop",
+        "Sales": 349
+      },
+      {
+        "Month": "Mar",
+        "Product": "Monitor",
+        "Sales": 614
+      },
+      {
+        "Month": "Mar",
+        "Product": "Keyboard",
+        "Sales": 375
+      },
+      {
+        "Month": "Apr",
+        "Product": "Laptop",
+        "Sales": 113
+      },
+      {
+        "Month": "Apr",
+        "Product": "Phone",
+        "Sales": 140
+      },
+      {
+        "Month": "Apr",
+        "Product": "Tablet",
+        "Sales": 910
+      },
+      {
+        "Month": "Apr",
+        "Product": "Desktop",
+        "Sales": 589
+      },
+      {
+        "Month": "Apr",
+        "Product": "Monitor",
+        "Sales": 525
+      },
+      {
+        "Month": "Apr",
+        "Product": "Keyboard",
+        "Sales": 197
+      },
+      {
+        "Month": "May",
+        "Product": "Laptop",
+        "Sales": 574
+      },
+      {
+        "Month": "May",
+        "Product": "Phone",
+        "Sales": 731
+      },
+      {
+        "Month": "May",
+        "Product": "Tablet",
+        "Sales": 200
+      },
+      {
+        "Month": "May",
+        "Product": "Desktop",
+        "Sales": 146
+      },
+      {
+        "Month": "May",
+        "Product": "Monitor",
+        "Sales": 91
+      },
+      {
+        "Month": "May",
+        "Product": "Keyboard",
+        "Sales": 152
+      },
+      {
+        "Month": "Jun",
+        "Product": "Laptop",
+        "Sales": 828
+      },
+      {
+        "Month": "Jun",
+        "Product": "Phone",
+        "Sales": 120
+      },
+      {
+        "Month": "Jun",
+        "Product": "Tablet",
+        "Sales": 876
+      },
+      {
+        "Month": "Jun",
+        "Product": "Desktop",
+        "Sales": 979
+      },
+      {
+        "Month": "Jun",
+        "Product": "Monitor",
+        "Sales": 775
+      },
+      {
+        "Month": "Jun",
+        "Product": "Keyboard",
+        "Sales": 19
+      },
+      {
+        "Month": "Jul",
+        "Product": "Laptop",
+        "Sales": 789
+      },
+      {
+        "Month": "Jul",
+        "Product": "Phone",
+        "Sales": 3
+      },
+      {
+        "Month": "Jul",
+        "Product": "Tablet",
+        "Sales": 734
+      },
+      {
+        "Month": "Jul",
+        "Product": "Desktop",
+        "Sales": 964
+      },
+      {
+        "Month": "Jul",
+        "Product": "Monitor",
+        "Sales": 508
+      },
+      {
+        "Month": "Jul",
+        "Product": "Keyboard",
+        "Sales": 519
+      },
+      {
+        "Month": "Aug",
+        "Product": "Laptop",
+        "Sales": 259
+      },
+      {
+        "Month": "Aug",
+        "Product": "Phone",
+        "Sales": 690
+      },
+      {
+        "Month": "Aug",
+        "Product": "Tablet",
+        "Sales": 715
+      },
+      {
+        "Month": "Aug",
+        "Product": "Desktop",
+        "Sales": 466
+      },
+      {
+        "Month": "Aug",
+        "Product": "Monitor",
+        "Sales": 336
+      },
+      {
+        "Month": "Aug",
+        "Product": "Keyboard",
+        "Sales": 554
+      },
+      {
+        "Month": "Sep",
+        "Product": "Laptop",
+        "Sales": 539
+      },
+      {
+        "Month": "Sep",
+        "Product": "Phone",
+        "Sales": 515
+      },
+      {
+        "Month": "Sep",
+        "Product": "Tablet",
+        "Sales": 818
+      },
+      {
+        "Month": "Sep",
+        "Product": "Desktop",
+        "Sales": 572
+      },
+      {
+        "Month": "Sep",
+        "Product": "Monitor",
+        "Sales": 381
+      },
+      {
+        "Month": "Sep",
+        "Product": "Keyboard",
+        "Sales": 691
+      },
+      {
+        "Month": "Oct",
+        "Product": "Laptop",
+        "Sales": 897
+      },
+      {
+        "Month": "Oct",
+        "Product": "Phone",
+        "Sales": 845
+      },
+      {
+        "Month": "Oct",
+        "Product": "Tablet",
+        "Sales": 154
+      },
+      {
+        "Month": "Oct",
+        "Product": "Desktop",
+        "Sales": 293
+      },
+      {
+        "Month": "Oct",
+        "Product": "Monitor",
+        "Sales": 582
+      },
+      {
+        "Month": "Oct",
+        "Product": "Keyboard",
+        "Sales": 810
+      },
+      {
+        "Month": "Nov",
+        "Product": "Laptop",
+        "Sales": 153
+      },
+      {
+        "Month": "Nov",
+        "Product": "Phone",
+        "Sales": 155
+      },
+      {
+        "Month": "Nov",
+        "Product": "Tablet",
+        "Sales": 867
+      },
+      {
+        "Month": "Nov",
+        "Product": "Desktop",
+        "Sales": 835
+      },
+      {
+        "Month": "Nov",
+        "Product": "Monitor",
+        "Sales": 225
+      },
+      {
+        "Month": "Nov",
+        "Product": "Keyboard",
+        "Sales": 77
+      },
+      {
+        "Month": "Dec",
+        "Product": "Laptop",
+        "Sales": 832
+      },
+      {
+        "Month": "Dec",
+        "Product": "Phone",
+        "Sales": 427
+      },
+      {
+        "Month": "Dec",
+        "Product": "Tablet",
+        "Sales": 973
+      },
+      {
+        "Month": "Dec",
+        "Product": "Desktop",
+        "Sales": 478
+      },
+      {
+        "Month": "Dec",
+        "Product": "Monitor",
+        "Sales": 429
+      },
+      {
+        "Month": "Dec",
+        "Product": "Keyboard",
+        "Sales": 627
+      }
+    ]
+  }
+}

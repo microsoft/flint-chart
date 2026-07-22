@@ -1,0 +1,773 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Value": "Quantity",
+    "Series": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Value",
+      "color": "Series"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 0,
+        "Value": 226,
+        "Series": "Electronics"
+      },
+      {
+        "X": 2,
+        "Value": 227,
+        "Series": "Electronics"
+      },
+      {
+        "X": 4.1,
+        "Value": 233,
+        "Series": "Electronics"
+      },
+      {
+        "X": 6.1,
+        "Value": 237,
+        "Series": "Electronics"
+      },
+      {
+        "X": 8.2,
+        "Value": 233,
+        "Series": "Electronics"
+      },
+      {
+        "X": 10.2,
+        "Value": 223,
+        "Series": "Electronics"
+      },
+      {
+        "X": 12.2,
+        "Value": 209,
+        "Series": "Electronics"
+      },
+      {
+        "X": 14.3,
+        "Value": 200,
+        "Series": "Electronics"
+      },
+      {
+        "X": 16.3,
+        "Value": 194,
+        "Series": "Electronics"
+      },
+      {
+        "X": 18.4,
+        "Value": 189,
+        "Series": "Electronics"
+      },
+      {
+        "X": 20.4,
+        "Value": 193,
+        "Series": "Electronics"
+      },
+      {
+        "X": 22.4,
+        "Value": 205,
+        "Series": "Electronics"
+      },
+      {
+        "X": 24.5,
+        "Value": 213,
+        "Series": "Electronics"
+      },
+      {
+        "X": 26.5,
+        "Value": 220,
+        "Series": "Electronics"
+      },
+      {
+        "X": 28.6,
+        "Value": 218,
+        "Series": "Electronics"
+      },
+      {
+        "X": 30.6,
+        "Value": 219,
+        "Series": "Electronics"
+      },
+      {
+        "X": 32.7,
+        "Value": 223,
+        "Series": "Electronics"
+      },
+      {
+        "X": 34.7,
+        "Value": 229,
+        "Series": "Electronics"
+      },
+      {
+        "X": 36.7,
+        "Value": 238,
+        "Series": "Electronics"
+      },
+      {
+        "X": 38.8,
+        "Value": 241,
+        "Series": "Electronics"
+      },
+      {
+        "X": 40.8,
+        "Value": 245,
+        "Series": "Electronics"
+      },
+      {
+        "X": 42.9,
+        "Value": 249,
+        "Series": "Electronics"
+      },
+      {
+        "X": 44.9,
+        "Value": 260,
+        "Series": "Electronics"
+      },
+      {
+        "X": 46.9,
+        "Value": 278,
+        "Series": "Electronics"
+      },
+      {
+        "X": 49,
+        "Value": 285,
+        "Series": "Electronics"
+      },
+      {
+        "X": 51,
+        "Value": 287,
+        "Series": "Electronics"
+      },
+      {
+        "X": 53.1,
+        "Value": 280,
+        "Series": "Electronics"
+      },
+      {
+        "X": 55.1,
+        "Value": 277,
+        "Series": "Electronics"
+      },
+      {
+        "X": 57.1,
+        "Value": 267,
+        "Series": "Electronics"
+      },
+      {
+        "X": 59.2,
+        "Value": 250,
+        "Series": "Electronics"
+      },
+      {
+        "X": 61.2,
+        "Value": 233,
+        "Series": "Electronics"
+      },
+      {
+        "X": 63.3,
+        "Value": 217,
+        "Series": "Electronics"
+      },
+      {
+        "X": 65.3,
+        "Value": 200,
+        "Series": "Electronics"
+      },
+      {
+        "X": 67.3,
+        "Value": 195,
+        "Series": "Electronics"
+      },
+      {
+        "X": 69.4,
+        "Value": 193,
+        "Series": "Electronics"
+      },
+      {
+        "X": 71.4,
+        "Value": 202,
+        "Series": "Electronics"
+      },
+      {
+        "X": 73.5,
+        "Value": 211,
+        "Series": "Electronics"
+      },
+      {
+        "X": 75.5,
+        "Value": 226,
+        "Series": "Electronics"
+      },
+      {
+        "X": 77.6,
+        "Value": 238,
+        "Series": "Electronics"
+      },
+      {
+        "X": 79.6,
+        "Value": 239,
+        "Series": "Electronics"
+      },
+      {
+        "X": 81.6,
+        "Value": 245,
+        "Series": "Electronics"
+      },
+      {
+        "X": 83.7,
+        "Value": 242,
+        "Series": "Electronics"
+      },
+      {
+        "X": 85.7,
+        "Value": 235,
+        "Series": "Electronics"
+      },
+      {
+        "X": 87.8,
+        "Value": 228,
+        "Series": "Electronics"
+      },
+      {
+        "X": 89.8,
+        "Value": 227,
+        "Series": "Electronics"
+      },
+      {
+        "X": 91.8,
+        "Value": 221,
+        "Series": "Electronics"
+      },
+      {
+        "X": 93.9,
+        "Value": 220,
+        "Series": "Electronics"
+      },
+      {
+        "X": 95.9,
+        "Value": 219,
+        "Series": "Electronics"
+      },
+      {
+        "X": 98,
+        "Value": 209,
+        "Series": "Electronics"
+      },
+      {
+        "X": 100,
+        "Value": 203,
+        "Series": "Electronics"
+      },
+      {
+        "X": 0,
+        "Value": 159,
+        "Series": "Clothing"
+      },
+      {
+        "X": 2,
+        "Value": 164,
+        "Series": "Clothing"
+      },
+      {
+        "X": 4.1,
+        "Value": 178,
+        "Series": "Clothing"
+      },
+      {
+        "X": 6.1,
+        "Value": 196,
+        "Series": "Clothing"
+      },
+      {
+        "X": 8.2,
+        "Value": 213,
+        "Series": "Clothing"
+      },
+      {
+        "X": 10.2,
+        "Value": 235,
+        "Series": "Clothing"
+      },
+      {
+        "X": 12.2,
+        "Value": 247,
+        "Series": "Clothing"
+      },
+      {
+        "X": 14.3,
+        "Value": 255,
+        "Series": "Clothing"
+      },
+      {
+        "X": 16.3,
+        "Value": 262,
+        "Series": "Clothing"
+      },
+      {
+        "X": 18.4,
+        "Value": 272,
+        "Series": "Clothing"
+      },
+      {
+        "X": 20.4,
+        "Value": 289,
+        "Series": "Clothing"
+      },
+      {
+        "X": 22.4,
+        "Value": 290,
+        "Series": "Clothing"
+      },
+      {
+        "X": 24.5,
+        "Value": 283,
+        "Series": "Clothing"
+      },
+      {
+        "X": 26.5,
+        "Value": 282,
+        "Series": "Clothing"
+      },
+      {
+        "X": 28.6,
+        "Value": 284,
+        "Series": "Clothing"
+      },
+      {
+        "X": 30.6,
+        "Value": 274,
+        "Series": "Clothing"
+      },
+      {
+        "X": 32.7,
+        "Value": 272,
+        "Series": "Clothing"
+      },
+      {
+        "X": 34.7,
+        "Value": 279,
+        "Series": "Clothing"
+      },
+      {
+        "X": 36.7,
+        "Value": 287,
+        "Series": "Clothing"
+      },
+      {
+        "X": 38.8,
+        "Value": 285,
+        "Series": "Clothing"
+      },
+      {
+        "X": 40.8,
+        "Value": 294,
+        "Series": "Clothing"
+      },
+      {
+        "X": 42.9,
+        "Value": 311,
+        "Series": "Clothing"
+      },
+      {
+        "X": 44.9,
+        "Value": 317,
+        "Series": "Clothing"
+      },
+      {
+        "X": 46.9,
+        "Value": 311,
+        "Series": "Clothing"
+      },
+      {
+        "X": 49,
+        "Value": 307,
+        "Series": "Clothing"
+      },
+      {
+        "X": 51,
+        "Value": 315,
+        "Series": "Clothing"
+      },
+      {
+        "X": 53.1,
+        "Value": 330,
+        "Series": "Clothing"
+      },
+      {
+        "X": 55.1,
+        "Value": 350,
+        "Series": "Clothing"
+      },
+      {
+        "X": 57.1,
+        "Value": 353,
+        "Series": "Clothing"
+      },
+      {
+        "X": 59.2,
+        "Value": 363,
+        "Series": "Clothing"
+      },
+      {
+        "X": 61.2,
+        "Value": 380,
+        "Series": "Clothing"
+      },
+      {
+        "X": 63.3,
+        "Value": 397,
+        "Series": "Clothing"
+      },
+      {
+        "X": 65.3,
+        "Value": 407,
+        "Series": "Clothing"
+      },
+      {
+        "X": 67.3,
+        "Value": 420,
+        "Series": "Clothing"
+      },
+      {
+        "X": 69.4,
+        "Value": 432,
+        "Series": "Clothing"
+      },
+      {
+        "X": 71.4,
+        "Value": 449,
+        "Series": "Clothing"
+      },
+      {
+        "X": 73.5,
+        "Value": 470,
+        "Series": "Clothing"
+      },
+      {
+        "X": 75.5,
+        "Value": 492,
+        "Series": "Clothing"
+      },
+      {
+        "X": 77.6,
+        "Value": 510,
+        "Series": "Clothing"
+      },
+      {
+        "X": 79.6,
+        "Value": 526,
+        "Series": "Clothing"
+      },
+      {
+        "X": 81.6,
+        "Value": 532,
+        "Series": "Clothing"
+      },
+      {
+        "X": 83.7,
+        "Value": 539,
+        "Series": "Clothing"
+      },
+      {
+        "X": 85.7,
+        "Value": 552,
+        "Series": "Clothing"
+      },
+      {
+        "X": 87.8,
+        "Value": 550,
+        "Series": "Clothing"
+      },
+      {
+        "X": 89.8,
+        "Value": 542,
+        "Series": "Clothing"
+      },
+      {
+        "X": 91.8,
+        "Value": 539,
+        "Series": "Clothing"
+      },
+      {
+        "X": 93.9,
+        "Value": 531,
+        "Series": "Clothing"
+      },
+      {
+        "X": 95.9,
+        "Value": 533,
+        "Series": "Clothing"
+      },
+      {
+        "X": 98,
+        "Value": 534,
+        "Series": "Clothing"
+      },
+      {
+        "X": 100,
+        "Value": 529,
+        "Series": "Clothing"
+      },
+      {
+        "X": 0,
+        "Value": 84,
+        "Series": "Food"
+      },
+      {
+        "X": 2,
+        "Value": 88,
+        "Series": "Food"
+      },
+      {
+        "X": 4.1,
+        "Value": 90,
+        "Series": "Food"
+      },
+      {
+        "X": 6.1,
+        "Value": 82,
+        "Series": "Food"
+      },
+      {
+        "X": 8.2,
+        "Value": 90,
+        "Series": "Food"
+      },
+      {
+        "X": 10.2,
+        "Value": 111,
+        "Series": "Food"
+      },
+      {
+        "X": 12.2,
+        "Value": 118,
+        "Series": "Food"
+      },
+      {
+        "X": 14.3,
+        "Value": 119,
+        "Series": "Food"
+      },
+      {
+        "X": 16.3,
+        "Value": 133,
+        "Series": "Food"
+      },
+      {
+        "X": 18.4,
+        "Value": 133,
+        "Series": "Food"
+      },
+      {
+        "X": 20.4,
+        "Value": 131,
+        "Series": "Food"
+      },
+      {
+        "X": 22.4,
+        "Value": 132,
+        "Series": "Food"
+      },
+      {
+        "X": 24.5,
+        "Value": 142,
+        "Series": "Food"
+      },
+      {
+        "X": 26.5,
+        "Value": 153,
+        "Series": "Food"
+      },
+      {
+        "X": 28.6,
+        "Value": 146,
+        "Series": "Food"
+      },
+      {
+        "X": 30.6,
+        "Value": 132,
+        "Series": "Food"
+      },
+      {
+        "X": 32.7,
+        "Value": 123,
+        "Series": "Food"
+      },
+      {
+        "X": 34.7,
+        "Value": 123,
+        "Series": "Food"
+      },
+      {
+        "X": 36.7,
+        "Value": 122,
+        "Series": "Food"
+      },
+      {
+        "X": 38.8,
+        "Value": 133,
+        "Series": "Food"
+      },
+      {
+        "X": 40.8,
+        "Value": 145,
+        "Series": "Food"
+      },
+      {
+        "X": 42.9,
+        "Value": 161,
+        "Series": "Food"
+      },
+      {
+        "X": 44.9,
+        "Value": 158,
+        "Series": "Food"
+      },
+      {
+        "X": 46.9,
+        "Value": 168,
+        "Series": "Food"
+      },
+      {
+        "X": 49,
+        "Value": 187,
+        "Series": "Food"
+      },
+      {
+        "X": 51,
+        "Value": 205,
+        "Series": "Food"
+      },
+      {
+        "X": 53.1,
+        "Value": 223,
+        "Series": "Food"
+      },
+      {
+        "X": 55.1,
+        "Value": 239,
+        "Series": "Food"
+      },
+      {
+        "X": 57.1,
+        "Value": 237,
+        "Series": "Food"
+      },
+      {
+        "X": 59.2,
+        "Value": 246,
+        "Series": "Food"
+      },
+      {
+        "X": 61.2,
+        "Value": 243,
+        "Series": "Food"
+      },
+      {
+        "X": 63.3,
+        "Value": 227,
+        "Series": "Food"
+      },
+      {
+        "X": 65.3,
+        "Value": 218,
+        "Series": "Food"
+      },
+      {
+        "X": 67.3,
+        "Value": 216,
+        "Series": "Food"
+      },
+      {
+        "X": 69.4,
+        "Value": 212,
+        "Series": "Food"
+      },
+      {
+        "X": 71.4,
+        "Value": 197,
+        "Series": "Food"
+      },
+      {
+        "X": 73.5,
+        "Value": 182,
+        "Series": "Food"
+      },
+      {
+        "X": 75.5,
+        "Value": 159,
+        "Series": "Food"
+      },
+      {
+        "X": 77.6,
+        "Value": 128,
+        "Series": "Food"
+      },
+      {
+        "X": 79.6,
+        "Value": 114,
+        "Series": "Food"
+      },
+      {
+        "X": 81.6,
+        "Value": 103,
+        "Series": "Food"
+      },
+      {
+        "X": 83.7,
+        "Value": 108,
+        "Series": "Food"
+      },
+      {
+        "X": 85.7,
+        "Value": 125,
+        "Series": "Food"
+      },
+      {
+        "X": 87.8,
+        "Value": 145,
+        "Series": "Food"
+      },
+      {
+        "X": 89.8,
+        "Value": 156,
+        "Series": "Food"
+      },
+      {
+        "X": 91.8,
+        "Value": 163,
+        "Series": "Food"
+      },
+      {
+        "X": 93.9,
+        "Value": 168,
+        "Series": "Food"
+      },
+      {
+        "X": 95.9,
+        "Value": 159,
+        "Series": "Food"
+      },
+      {
+        "X": 98,
+        "Value": 160,
+        "Series": "Food"
+      },
+      {
+        "X": 100,
+        "Value": 154,
+        "Series": "Food"
+      }
+    ]
+  }
+}

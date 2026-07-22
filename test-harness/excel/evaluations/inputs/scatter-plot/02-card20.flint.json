@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "ColorVal": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 76.8,
+        "Y": 26.5,
+        "ColorVal": 66.6
+      },
+      {
+        "X": 91.5,
+        "Y": 46.6,
+        "ColorVal": 44.1
+      },
+      {
+        "X": 92.1,
+        "Y": 46.7,
+        "ColorVal": 97.7
+      },
+      {
+        "X": 32,
+        "Y": 79.4,
+        "ColorVal": 86.6
+      },
+      {
+        "X": 74.3,
+        "Y": 55.7,
+        "ColorVal": 82.7
+      },
+      {
+        "X": 53.1,
+        "Y": 30.7,
+        "ColorVal": 34.3
+      },
+      {
+        "X": 31.1,
+        "Y": 44.7,
+        "ColorVal": 56.7
+      },
+      {
+        "X": 65.3,
+        "Y": 6.3,
+        "ColorVal": 49
+      },
+      {
+        "X": 45.6,
+        "Y": 1,
+        "ColorVal": 70.1
+      },
+      {
+        "X": 38.8,
+        "Y": 44.7,
+        "ColorVal": 93.6
+      },
+      {
+        "X": 12.5,
+        "Y": 42.8,
+        "ColorVal": 29.3
+      },
+      {
+        "X": 41.1,
+        "Y": 24.4,
+        "ColorVal": 36.6
+      },
+      {
+        "X": 71,
+        "Y": 93.6,
+        "ColorVal": 1.8
+      },
+      {
+        "X": 47.8,
+        "Y": 82.2,
+        "ColorVal": 53.3
+      },
+      {
+        "X": 12.6,
+        "Y": 40,
+        "ColorVal": 12.9
+      },
+      {
+        "X": 81.2,
+        "Y": 39.2,
+        "ColorVal": 7.6
+      },
+      {
+        "X": 59.8,
+        "Y": 33.7,
+        "ColorVal": 25.4
+      },
+      {
+        "X": 38.6,
+        "Y": 31.4,
+        "ColorVal": 61.7
+      },
+      {
+        "X": 20.4,
+        "Y": 28.4,
+        "ColorVal": 98.9
+      },
+      {
+        "X": 19.6,
+        "Y": 66.2,
+        "ColorVal": 51.4
+      }
+    ]
+  }
+}

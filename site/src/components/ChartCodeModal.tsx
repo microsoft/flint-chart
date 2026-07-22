@@ -264,6 +264,8 @@ export function ChartCodeModal({
               <GalleryOptionsBar
                 model={panelModel}
                 chartType={displayInput.chart_spec.chartType}
+                canReset={Object.keys(tempOptions).length > 0}
+                onReset={() => setTempOptions({})}
                 onChange={(key, value) =>
                   setTempOptions((prev) => {
                     const next = { ...prev };

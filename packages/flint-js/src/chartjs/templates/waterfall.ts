@@ -18,7 +18,7 @@
  */
 
 import { ChartTemplateDef } from '../../core/types';
-import { resolveTotalsMode } from '../../core/waterfall';
+import { resolveTotalsMode } from '../../chart-types/waterfall';
 import { extractCategories } from './utils';
 
 const COLOR = {
@@ -46,7 +46,7 @@ export const cjsWaterfallChartDef: ChartTemplateDef = {
             .filter(Boolean) as any[];
         const values = rows.map((r) => Number(r[valField]) || 0);
 
-        // Data-aware totals default (see core/waterfall.ts): first is a start
+        // Data-aware totals default (see chart-types/waterfall.ts): first is a start
         // total, last is a total only when it reconciles with the prior
         // cumulative. The user's `totals` property overrides this; an explicit
         // color/type column is authoritative. Mirror vegalite/echarts templates.

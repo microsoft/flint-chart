@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { assembleVegaLite, assembleECharts, type ChartAssemblyInput } from 'flint-chart';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
@@ -169,6 +169,8 @@ function Slider({ label, value, min, max, step, onChange, suffix }: {
   onChange: (v: number) => void;
   suffix?: string;
 }) {
+  const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: siteTheme.textMuted, minWidth: 0 }}>
       <span style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
@@ -184,7 +186,8 @@ function Slider({ label, value, min, max, step, onChange, suffix }: {
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: '100%', accentColor: siteTheme.accent, boxSizing: 'border-box' }}
+        className="site-range"
+        style={{ '--pct': `${percent}%` } as CSSProperties}
       />
     </label>
   );

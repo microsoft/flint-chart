@@ -111,7 +111,11 @@ _No template-specific parameters._
 
 **Encoding channels:** `y`, `x`, `x2`, `color`, `column`, `row`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `taskHeight` | number | 40 – 90 (step 5) | `70` | always | Task bar height as a percentage of each row. |
+| `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
+| `intervalLabels` | toggle | on / off | `false` | always | Text shown on task intervals. |
 
 ## Line & Area
 
@@ -136,7 +140,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)) | — | always | Line or area interpolation method. |
-| `opacity` | number | 0.1 – 1 (step 0.05) | `0.4` | always | Mark opacity. |
+| `opacity` | number | 0.1 – 1 (step 0.05) | `0.4` | conditional | Mark opacity. |
 | `stackMode` | choice | Stacked (default) _(default)_, `layered` (Layered (overlap)) | — | always | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-range-area.svg) Range Area Chart

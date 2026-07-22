@@ -54,17 +54,8 @@ export const scatterPlotDef: ChartTemplateDef = {
         // Route the discrete grouping field across color / facet channels so a
         // grouped scatter and a faceted scatter are states of one another.
         shift: ['color', 'group', 'column', 'row'],
-        // Chart-type transition: the discrete series field (wherever it sits —
-        // color, column or row) moves onto the `x` category axis, re-rendering
-        // the cloud as a Strip/Jitter plot. The displaced quantitative x spills
-        // to a `color` gradient. Offered whenever a discrete series exists.
-        transitions: [
-            {
-                to: 'Strip Plot',
-                label: 'Jitter',
-                route: { from: 'series', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
+        // θ chart-type transitions (Scatter → Strip / Regression) are declared
+        // centrally in core/chart-transitions.ts, not on the template.
     }),
 };
 
@@ -145,6 +136,15 @@ export const regressionDef: ChartTemplateDef = {
             min: 2, max: 10, step: 1, defaultValue: 3,
         },
     ] as ChartPropertyDef[],
+    // A regression is a scatter with a fitted trend, so it shares the scatter's
+    // local rearrangement group: flip the axes, demote a measure to color/size,
+    // and route a discrete series across color / facet channels. (θ chart-type
+    // transitions are declared centrally in core/chart-transitions.ts.)
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color', 'size']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };
 
 export const rangedDotPlotDef: ChartTemplateDef = {
@@ -244,6 +244,8 @@ export const boxplotDef: ChartTemplateDef = {
         // single-band branch below (one full-width box per category).
         const colorEnc = spec.encoding?.color;
         let subgroups = 1;
+        let localSeparatorAxis: 'x' | 'y' | undefined;
+        let localSeparatorValues: Record<string, unknown>[] = [];
         const colorField = ctx.channelSemantics?.color?.field;
         const axisField = hasDiscreteX
             ? ctx.channelSemantics?.x?.field
@@ -275,6 +277,9 @@ export const boxplotDef: ChartTemplateDef = {
                         { joinaggregate: [{ op: 'distinct', field: colorField, as: '__localCount' }], groupby: [axisField] },
                         { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
                     ];
+                    localSeparatorAxis = hasDiscreteX ? 'x' : 'y';
+                    const categories = [...new Set((ctx.fullTable ?? ctx.table).map((row) => row[axisField]))];
+                    localSeparatorValues = categories.slice(0, -1).map((category) => ({ [axisField]: category }));
                 } else {
                     // Global: a fixed lane per distinct color across all bands.
                     const offsetEnc: Record<string, unknown> = { field: colorEnc.field, type: 'nominal' };
@@ -299,6 +304,29 @@ export const boxplotDef: ChartTemplateDef = {
                 const boxSize = Math.max(4, Math.round(boxStep * BOXPLOT_BAND_FILL));
                 spec.mark = setMarkProp(spec.mark, 'size', boxSize);
             }
+        }
+
+        if (localSeparatorAxis && localSeparatorValues.length > 0) {
+            const boxLayer = { mark: spec.mark, encoding: spec.encoding, transform: spec.transform };
+            const axisEncoding = spec.encoding[localSeparatorAxis];
+            spec.layer = [
+                {
+                    data: { values: localSeparatorValues },
+                    mark: { type: 'rule', stroke: '#c9ced6', strokeDash: [4, 4], strokeWidth: 1, opacity: 0.75 },
+                    encoding: {
+                        [localSeparatorAxis]: {
+                            field: axisField,
+                            type: 'nominal',
+                            sort: axisEncoding.sort,
+                            bandPosition: 1,
+                        },
+                    },
+                },
+                boxLayer,
+            ];
+            delete spec.mark;
+            delete spec.encoding;
+            delete spec.transform;
         }
     },
     properties: [

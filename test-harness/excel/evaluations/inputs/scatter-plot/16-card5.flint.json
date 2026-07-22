@@ -1,0 +1,148 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Y": "Quantity",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Y",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Y": 20.4,
+        "Size": 11.2
+      },
+      {
+        "Category": "Clothing",
+        "Y": 83,
+        "Size": 73.6
+      },
+      {
+        "Category": "Food",
+        "Y": 67.3,
+        "Size": 23.2
+      },
+      {
+        "Category": "Books",
+        "Y": 80.9,
+        "Size": 90.9
+      },
+      {
+        "Category": "Sports",
+        "Y": 55.3,
+        "Size": 44.5
+      },
+      {
+        "Category": "Electronics",
+        "Y": 70.5,
+        "Size": 33.9
+      },
+      {
+        "Category": "Clothing",
+        "Y": 7.4,
+        "Size": 19
+      },
+      {
+        "Category": "Food",
+        "Y": 75.2,
+        "Size": 34.1
+      },
+      {
+        "Category": "Books",
+        "Y": 34.8,
+        "Size": 75.5
+      },
+      {
+        "Category": "Sports",
+        "Y": 4.9,
+        "Size": 59.1
+      },
+      {
+        "Category": "Electronics",
+        "Y": 77.9,
+        "Size": 17.9
+      },
+      {
+        "Category": "Clothing",
+        "Y": 23.3,
+        "Size": 16.2
+      },
+      {
+        "Category": "Food",
+        "Y": 72.8,
+        "Size": 67.3
+      },
+      {
+        "Category": "Books",
+        "Y": 58.3,
+        "Size": 61.7
+      },
+      {
+        "Category": "Sports",
+        "Y": 61,
+        "Size": 84.5
+      },
+      {
+        "Category": "Electronics",
+        "Y": 21.8,
+        "Size": 81.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 27.9,
+        "Size": 99.3
+      },
+      {
+        "Category": "Food",
+        "Y": 38.3,
+        "Size": 5.2
+      },
+      {
+        "Category": "Books",
+        "Y": 95.7,
+        "Size": 86.8
+      },
+      {
+        "Category": "Sports",
+        "Y": 6,
+        "Size": 55.7
+      },
+      {
+        "Category": "Electronics",
+        "Y": 18.4,
+        "Size": 4.9
+      },
+      {
+        "Category": "Clothing",
+        "Y": 38.1,
+        "Size": 51.6
+      },
+      {
+        "Category": "Food",
+        "Y": 19.9,
+        "Size": 31.1
+      },
+      {
+        "Category": "Books",
+        "Y": 49.3,
+        "Size": 54.9
+      },
+      {
+        "Category": "Sports",
+        "Y": 71.3,
+        "Size": 78.1
+      }
+    ]
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Y": "Quantity",
+    "ColorVal": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Y",
+      "color": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Y": 53.3,
+        "ColorVal": 47.7
+      },
+      {
+        "Category": "Clothing",
+        "Y": 86.4,
+        "ColorVal": 91.1
+      },
+      {
+        "Category": "Food",
+        "Y": 12.6,
+        "ColorVal": 86.8
+      },
+      {
+        "Category": "Books",
+        "Y": 26,
+        "ColorVal": 46
+      },
+      {
+        "Category": "Sports",
+        "Y": 18.8,
+        "ColorVal": 26.4
+      },
+      {
+        "Category": "Electronics",
+        "Y": 89.5,
+        "ColorVal": 57.3
+      },
+      {
+        "Category": "Clothing",
+        "Y": 69.2,
+        "ColorVal": 97.1
+      },
+      {
+        "Category": "Food",
+        "Y": 30.8,
+        "ColorVal": 36.6
+      },
+      {
+        "Category": "Books",
+        "Y": 63.9,
+        "ColorVal": 30.1
+      },
+      {
+        "Category": "Sports",
+        "Y": 0.3,
+        "ColorVal": 95.1
+      },
+      {
+        "Category": "Electronics",
+        "Y": 23.7,
+        "ColorVal": 46.1
+      },
+      {
+        "Category": "Clothing",
+        "Y": 1.6,
+        "ColorVal": 88.8
+      },
+      {
+        "Category": "Food",
+        "Y": 44.3,
+        "ColorVal": 49.1
+      },
+      {
+        "Category": "Books",
+        "Y": 26.6,
+        "ColorVal": 83.6
+      },
+      {
+        "Category": "Sports",
+        "Y": 18.4,
+        "ColorVal": 14.6
+      },
+      {
+        "Category": "Electronics",
+        "Y": 11.2,
+        "ColorVal": 86.5
+      },
+      {
+        "Category": "Clothing",
+        "Y": 81.8,
+        "ColorVal": 65.6
+      },
+      {
+        "Category": "Food",
+        "Y": 38.9,
+        "ColorVal": 32.5
+      },
+      {
+        "Category": "Books",
+        "Y": 26.8,
+        "ColorVal": 70.9
+      },
+      {
+        "Category": "Sports",
+        "Y": 2.7,
+        "ColorVal": 39.2
+      },
+      {
+        "Category": "Electronics",
+        "Y": 38.5,
+        "ColorVal": 49.5
+      },
+      {
+        "Category": "Clothing",
+        "Y": 62.6,
+        "ColorVal": 51
+      },
+      {
+        "Category": "Food",
+        "Y": 60.9,
+        "ColorVal": 36
+      },
+      {
+        "Category": "Books",
+        "Y": 55.6,
+        "ColorVal": 3.2
+      },
+      {
+        "Category": "Sports",
+        "Y": 92.3,
+        "ColorVal": 76.8
+      }
+    ]
+  }
+}

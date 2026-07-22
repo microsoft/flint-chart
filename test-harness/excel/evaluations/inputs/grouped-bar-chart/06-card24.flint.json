@@ -1,0 +1,143 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Group": "Category",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Group",
+      "group": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Laptop",
+        "X": 354,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Laptop",
+        "X": 992,
+        "Segment": "China"
+      },
+      {
+        "Group": "Laptop",
+        "X": 729,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Laptop",
+        "X": 518,
+        "Segment": "Germany"
+      },
+      {
+        "Group": "Phone",
+        "X": 465,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Phone",
+        "X": 707,
+        "Segment": "China"
+      },
+      {
+        "Group": "Phone",
+        "X": 855,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Phone",
+        "X": 167,
+        "Segment": "Germany"
+      },
+      {
+        "Group": "Tablet",
+        "X": 360,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Tablet",
+        "X": 283,
+        "Segment": "China"
+      },
+      {
+        "Group": "Tablet",
+        "X": 710,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Tablet",
+        "X": 975,
+        "Segment": "Germany"
+      },
+      {
+        "Group": "Desktop",
+        "X": 925,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Desktop",
+        "X": 990,
+        "Segment": "China"
+      },
+      {
+        "Group": "Desktop",
+        "X": 899,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Desktop",
+        "X": 14,
+        "Segment": "Germany"
+      },
+      {
+        "Group": "Monitor",
+        "X": 928,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Monitor",
+        "X": 903,
+        "Segment": "China"
+      },
+      {
+        "Group": "Monitor",
+        "X": 442,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Monitor",
+        "X": 548,
+        "Segment": "Germany"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 64,
+        "Segment": "USA"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 215,
+        "Segment": "China"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 920,
+        "Segment": "Japan"
+      },
+      {
+        "Group": "Keyboard",
+        "X": 750,
+        "Segment": "Germany"
+      }
+    ]
+  }
+}

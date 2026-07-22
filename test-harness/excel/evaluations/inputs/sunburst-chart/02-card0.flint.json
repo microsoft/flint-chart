@@ -1,0 +1,103 @@
+{
+  "semantic_types": {
+    "Continent": "Category",
+    "Country": "Country",
+    "Population": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Sunburst Chart",
+    "encodings": {
+      "color": "Continent",
+      "group": "Country",
+      "size": "Population"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Continent": "North America",
+        "Country": "USA",
+        "Population": 106
+      },
+      {
+        "Continent": "North America",
+        "Country": "Canada",
+        "Population": 1209
+      },
+      {
+        "Continent": "North America",
+        "Country": "Mexico",
+        "Population": 217
+      },
+      {
+        "Continent": "Europe",
+        "Country": "UK",
+        "Population": 452
+      },
+      {
+        "Continent": "Europe",
+        "Country": "France",
+        "Population": 675
+      },
+      {
+        "Continent": "Europe",
+        "Country": "Germany",
+        "Population": 277
+      },
+      {
+        "Continent": "Europe",
+        "Country": "Spain",
+        "Population": 231
+      },
+      {
+        "Continent": "Europe",
+        "Country": "Italy",
+        "Population": 1110
+      },
+      {
+        "Continent": "Asia",
+        "Country": "China",
+        "Population": 151
+      },
+      {
+        "Continent": "Asia",
+        "Country": "Japan",
+        "Population": 671
+      },
+      {
+        "Continent": "Asia",
+        "Country": "India",
+        "Population": 762
+      },
+      {
+        "Continent": "Asia",
+        "Country": "Korea",
+        "Population": 86
+      },
+      {
+        "Continent": "Asia",
+        "Country": "Thailand",
+        "Population": 1128
+      },
+      {
+        "Continent": "South America",
+        "Country": "Brazil",
+        "Population": 210
+      },
+      {
+        "Continent": "South America",
+        "Country": "Argentina",
+        "Population": 818
+      },
+      {
+        "Continent": "South America",
+        "Country": "Chile",
+        "Population": 1349
+      }
+    ]
+  }
+}

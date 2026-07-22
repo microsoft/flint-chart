@@ -1,0 +1,121 @@
+{
+  "semantic_types": {
+    "Temperature": "Quantity",
+    "Pressure": "Quantity",
+    "Step": "Quantity",
+    "Experiment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Temperature",
+      "y": "Pressure",
+      "order": "Step",
+      "color": "Experiment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Experiment": "Trial A",
+        "Step": 1,
+        "Temperature": 20,
+        "Pressure": 1
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 2,
+        "Temperature": 35,
+        "Pressure": 1.4
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 3,
+        "Temperature": 55,
+        "Pressure": 2.1
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 4,
+        "Temperature": 70,
+        "Pressure": 3
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 5,
+        "Temperature": 60,
+        "Pressure": 2.6
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 6,
+        "Temperature": 45,
+        "Pressure": 1.9
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 7,
+        "Temperature": 30,
+        "Pressure": 1.3
+      },
+      {
+        "Experiment": "Trial A",
+        "Step": 8,
+        "Temperature": 22,
+        "Pressure": 1.05
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 1,
+        "Temperature": 25,
+        "Pressure": 1.1
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 2,
+        "Temperature": 30,
+        "Pressure": 1.2
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 3,
+        "Temperature": 48,
+        "Pressure": 1.8
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 4,
+        "Temperature": 68,
+        "Pressure": 2.7
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 5,
+        "Temperature": 80,
+        "Pressure": 3.4
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 6,
+        "Temperature": 62,
+        "Pressure": 2.4
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 7,
+        "Temperature": 40,
+        "Pressure": 1.5
+      },
+      {
+        "Experiment": "Trial B",
+        "Step": 8,
+        "Temperature": 28,
+        "Pressure": 1.15
+      }
+    ]
+  }
+}

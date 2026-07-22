@@ -1,0 +1,821 @@
+{
+  "semantic_types": {
+    "Height": "Quantity",
+    "Gender": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Histogram",
+    "encodings": {
+      "x": "Height",
+      "color": "Gender"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 169,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 161,
+        "Gender": "Male"
+      },
+      {
+        "Height": 155,
+        "Gender": "Female"
+      },
+      {
+        "Height": 189,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 160,
+        "Gender": "Male"
+      },
+      {
+        "Height": 155,
+        "Gender": "Female"
+      },
+      {
+        "Height": 181,
+        "Gender": "Male"
+      },
+      {
+        "Height": 171,
+        "Gender": "Female"
+      },
+      {
+        "Height": 160,
+        "Gender": "Male"
+      },
+      {
+        "Height": 168,
+        "Gender": "Female"
+      },
+      {
+        "Height": 167,
+        "Gender": "Male"
+      },
+      {
+        "Height": 172,
+        "Gender": "Female"
+      },
+      {
+        "Height": 166,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 158,
+        "Gender": "Male"
+      },
+      {
+        "Height": 168,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 147,
+        "Gender": "Female"
+      },
+      {
+        "Height": 155,
+        "Gender": "Male"
+      },
+      {
+        "Height": 153,
+        "Gender": "Female"
+      },
+      {
+        "Height": 156,
+        "Gender": "Male"
+      },
+      {
+        "Height": 152,
+        "Gender": "Female"
+      },
+      {
+        "Height": 181,
+        "Gender": "Male"
+      },
+      {
+        "Height": 166,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 145,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 174,
+        "Gender": "Male"
+      },
+      {
+        "Height": 152,
+        "Gender": "Female"
+      },
+      {
+        "Height": 160,
+        "Gender": "Male"
+      },
+      {
+        "Height": 164,
+        "Gender": "Female"
+      },
+      {
+        "Height": 169,
+        "Gender": "Male"
+      },
+      {
+        "Height": 157,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 161,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 170,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 154,
+        "Gender": "Female"
+      },
+      {
+        "Height": 174,
+        "Gender": "Male"
+      },
+      {
+        "Height": 169,
+        "Gender": "Female"
+      },
+      {
+        "Height": 174,
+        "Gender": "Male"
+      },
+      {
+        "Height": 156,
+        "Gender": "Female"
+      },
+      {
+        "Height": 168,
+        "Gender": "Male"
+      },
+      {
+        "Height": 155,
+        "Gender": "Female"
+      },
+      {
+        "Height": 173,
+        "Gender": "Male"
+      },
+      {
+        "Height": 140,
+        "Gender": "Female"
+      },
+      {
+        "Height": 173,
+        "Gender": "Male"
+      },
+      {
+        "Height": 161,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 174,
+        "Gender": "Female"
+      },
+      {
+        "Height": 169,
+        "Gender": "Male"
+      },
+      {
+        "Height": 153,
+        "Gender": "Female"
+      },
+      {
+        "Height": 156,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 163,
+        "Gender": "Male"
+      },
+      {
+        "Height": 168,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 168,
+        "Gender": "Female"
+      },
+      {
+        "Height": 168,
+        "Gender": "Male"
+      },
+      {
+        "Height": 157,
+        "Gender": "Female"
+      },
+      {
+        "Height": 163,
+        "Gender": "Male"
+      },
+      {
+        "Height": 152,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 172,
+        "Gender": "Female"
+      },
+      {
+        "Height": 174,
+        "Gender": "Male"
+      },
+      {
+        "Height": 156,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 164,
+        "Gender": "Female"
+      },
+      {
+        "Height": 150,
+        "Gender": "Male"
+      },
+      {
+        "Height": 165,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 167,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 172,
+        "Gender": "Male"
+      },
+      {
+        "Height": 162,
+        "Gender": "Female"
+      },
+      {
+        "Height": 161,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 169,
+        "Gender": "Male"
+      },
+      {
+        "Height": 155,
+        "Gender": "Female"
+      },
+      {
+        "Height": 167,
+        "Gender": "Male"
+      },
+      {
+        "Height": 173,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 153,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 157,
+        "Gender": "Female"
+      },
+      {
+        "Height": 165,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 161,
+        "Gender": "Female"
+      },
+      {
+        "Height": 179,
+        "Gender": "Male"
+      },
+      {
+        "Height": 154,
+        "Gender": "Female"
+      },
+      {
+        "Height": 163,
+        "Gender": "Male"
+      },
+      {
+        "Height": 170,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 164,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 149,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 150,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 174,
+        "Gender": "Female"
+      },
+      {
+        "Height": 161,
+        "Gender": "Male"
+      },
+      {
+        "Height": 154,
+        "Gender": "Female"
+      },
+      {
+        "Height": 184,
+        "Gender": "Male"
+      },
+      {
+        "Height": 156,
+        "Gender": "Female"
+      },
+      {
+        "Height": 165,
+        "Gender": "Male"
+      },
+      {
+        "Height": 146,
+        "Gender": "Female"
+      },
+      {
+        "Height": 158,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 165,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 173,
+        "Gender": "Male"
+      },
+      {
+        "Height": 162,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 161,
+        "Gender": "Female"
+      },
+      {
+        "Height": 197,
+        "Gender": "Male"
+      },
+      {
+        "Height": 144,
+        "Gender": "Female"
+      },
+      {
+        "Height": 165,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 171,
+        "Gender": "Male"
+      },
+      {
+        "Height": 167,
+        "Gender": "Female"
+      },
+      {
+        "Height": 167,
+        "Gender": "Male"
+      },
+      {
+        "Height": 160,
+        "Gender": "Female"
+      },
+      {
+        "Height": 167,
+        "Gender": "Male"
+      },
+      {
+        "Height": 154,
+        "Gender": "Female"
+      },
+      {
+        "Height": 163,
+        "Gender": "Male"
+      },
+      {
+        "Height": 179,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 157,
+        "Gender": "Female"
+      },
+      {
+        "Height": 160,
+        "Gender": "Male"
+      },
+      {
+        "Height": 166,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 164,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 170,
+        "Gender": "Male"
+      },
+      {
+        "Height": 152,
+        "Gender": "Female"
+      },
+      {
+        "Height": 166,
+        "Gender": "Male"
+      },
+      {
+        "Height": 164,
+        "Gender": "Female"
+      },
+      {
+        "Height": 182,
+        "Gender": "Male"
+      },
+      {
+        "Height": 148,
+        "Gender": "Female"
+      },
+      {
+        "Height": 166,
+        "Gender": "Male"
+      },
+      {
+        "Height": 145,
+        "Gender": "Female"
+      },
+      {
+        "Height": 189,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 154,
+        "Gender": "Male"
+      },
+      {
+        "Height": 169,
+        "Gender": "Female"
+      },
+      {
+        "Height": 186,
+        "Gender": "Male"
+      },
+      {
+        "Height": 153,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 157,
+        "Gender": "Female"
+      },
+      {
+        "Height": 168,
+        "Gender": "Male"
+      },
+      {
+        "Height": 167,
+        "Gender": "Female"
+      },
+      {
+        "Height": 176,
+        "Gender": "Male"
+      },
+      {
+        "Height": 167,
+        "Gender": "Female"
+      },
+      {
+        "Height": 175,
+        "Gender": "Male"
+      },
+      {
+        "Height": 163,
+        "Gender": "Female"
+      },
+      {
+        "Height": 161,
+        "Gender": "Male"
+      },
+      {
+        "Height": 162,
+        "Gender": "Female"
+      },
+      {
+        "Height": 169,
+        "Gender": "Male"
+      },
+      {
+        "Height": 165,
+        "Gender": "Female"
+      },
+      {
+        "Height": 161,
+        "Gender": "Male"
+      },
+      {
+        "Height": 153,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 169,
+        "Gender": "Female"
+      },
+      {
+        "Height": 180,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 177,
+        "Gender": "Male"
+      },
+      {
+        "Height": 158,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 150,
+        "Gender": "Female"
+      },
+      {
+        "Height": 162,
+        "Gender": "Male"
+      },
+      {
+        "Height": 169,
+        "Gender": "Female"
+      },
+      {
+        "Height": 171,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      },
+      {
+        "Height": 171,
+        "Gender": "Male"
+      },
+      {
+        "Height": 159,
+        "Gender": "Female"
+      }
+    ]
+  }
+}

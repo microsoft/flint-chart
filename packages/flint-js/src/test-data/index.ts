@@ -100,7 +100,7 @@ import { genAreaTests, genStreamgraphTests } from './area-tests';
 import { genRangeAreaTests, genEChartsRangeAreaTests, genChartJsRangeAreaTests } from './range-area-tests';
 import { genEcdfTests, genEChartsEcdfTests, genChartJsEcdfTests } from './ecdf-tests';
 import {
-    genHeatmapTests, genPieTests, genRangedDotPlotTests, genLollipopTests,
+    genHeatmapTests, genPieTests, genDonutTests, genRangedDotPlotTests, genLollipopTests,
     genWaterfallTests, genBarTableTests, genCandlestickTests, genRadarTests, genPyramidTests,
     genRoseTests,
 } from './specialized-tests';
@@ -158,6 +158,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Boxplot': genBoxplotTests,
     'Violin Plot': genViolinTests,
     'Pie Chart': genPieTests,
+    'Donut Chart': genDonutTests,
     'Ranged Dot Plot': genRangedDotPlotTests,
     'Area Chart': () => [...genAreaTests(), galleryFacetAreaExample()],
     'Streamgraph': genStreamgraphTests,

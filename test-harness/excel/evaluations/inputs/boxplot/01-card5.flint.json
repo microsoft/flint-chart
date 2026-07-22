@@ -1,0 +1,421 @@
+{
+  "semantic_types": {
+    "Level": "Rank",
+    "Score": "Score"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Level",
+      "y": "Score"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Level": 1,
+        "Score": 43
+      },
+      {
+        "Level": 1,
+        "Score": 41
+      },
+      {
+        "Level": 1,
+        "Score": 19
+      },
+      {
+        "Level": 1,
+        "Score": 43
+      },
+      {
+        "Level": 1,
+        "Score": 29
+      },
+      {
+        "Level": 1,
+        "Score": 30
+      },
+      {
+        "Level": 1,
+        "Score": 38
+      },
+      {
+        "Level": 1,
+        "Score": 45
+      },
+      {
+        "Level": 1,
+        "Score": 16
+      },
+      {
+        "Level": 1,
+        "Score": 16
+      },
+      {
+        "Level": 1,
+        "Score": 30
+      },
+      {
+        "Level": 1,
+        "Score": 30
+      },
+      {
+        "Level": 1,
+        "Score": 31
+      },
+      {
+        "Level": 1,
+        "Score": 21
+      },
+      {
+        "Level": 1,
+        "Score": 45
+      },
+      {
+        "Level": 1,
+        "Score": 17
+      },
+      {
+        "Level": 1,
+        "Score": 32
+      },
+      {
+        "Level": 1,
+        "Score": 27
+      },
+      {
+        "Level": 1,
+        "Score": 20
+      },
+      {
+        "Level": 1,
+        "Score": 19
+      },
+      {
+        "Level": 2,
+        "Score": 53
+      },
+      {
+        "Level": 2,
+        "Score": 58
+      },
+      {
+        "Level": 2,
+        "Score": 41
+      },
+      {
+        "Level": 2,
+        "Score": 42
+      },
+      {
+        "Level": 2,
+        "Score": 50
+      },
+      {
+        "Level": 2,
+        "Score": 49
+      },
+      {
+        "Level": 2,
+        "Score": 26
+      },
+      {
+        "Level": 2,
+        "Score": 43
+      },
+      {
+        "Level": 2,
+        "Score": 28
+      },
+      {
+        "Level": 2,
+        "Score": 49
+      },
+      {
+        "Level": 2,
+        "Score": 47
+      },
+      {
+        "Level": 2,
+        "Score": 44
+      },
+      {
+        "Level": 2,
+        "Score": 30
+      },
+      {
+        "Level": 2,
+        "Score": 27
+      },
+      {
+        "Level": 2,
+        "Score": 26
+      },
+      {
+        "Level": 2,
+        "Score": 47
+      },
+      {
+        "Level": 2,
+        "Score": 49
+      },
+      {
+        "Level": 2,
+        "Score": 30
+      },
+      {
+        "Level": 2,
+        "Score": 24
+      },
+      {
+        "Level": 2,
+        "Score": 44
+      },
+      {
+        "Level": 3,
+        "Score": 65
+      },
+      {
+        "Level": 3,
+        "Score": 37
+      },
+      {
+        "Level": 3,
+        "Score": 41
+      },
+      {
+        "Level": 3,
+        "Score": 42
+      },
+      {
+        "Level": 3,
+        "Score": 34
+      },
+      {
+        "Level": 3,
+        "Score": 53
+      },
+      {
+        "Level": 3,
+        "Score": 68
+      },
+      {
+        "Level": 3,
+        "Score": 67
+      },
+      {
+        "Level": 3,
+        "Score": 51
+      },
+      {
+        "Level": 3,
+        "Score": 42
+      },
+      {
+        "Level": 3,
+        "Score": 41
+      },
+      {
+        "Level": 3,
+        "Score": 52
+      },
+      {
+        "Level": 3,
+        "Score": 30
+      },
+      {
+        "Level": 3,
+        "Score": 34
+      },
+      {
+        "Level": 3,
+        "Score": 66
+      },
+      {
+        "Level": 3,
+        "Score": 51
+      },
+      {
+        "Level": 3,
+        "Score": 38
+      },
+      {
+        "Level": 3,
+        "Score": 34
+      },
+      {
+        "Level": 3,
+        "Score": 46
+      },
+      {
+        "Level": 3,
+        "Score": 63
+      },
+      {
+        "Level": 4,
+        "Score": 68
+      },
+      {
+        "Level": 4,
+        "Score": 64
+      },
+      {
+        "Level": 4,
+        "Score": 41
+      },
+      {
+        "Level": 4,
+        "Score": 73
+      },
+      {
+        "Level": 4,
+        "Score": 59
+      },
+      {
+        "Level": 4,
+        "Score": 78
+      },
+      {
+        "Level": 4,
+        "Score": 60
+      },
+      {
+        "Level": 4,
+        "Score": 63
+      },
+      {
+        "Level": 4,
+        "Score": 48
+      },
+      {
+        "Level": 4,
+        "Score": 55
+      },
+      {
+        "Level": 4,
+        "Score": 49
+      },
+      {
+        "Level": 4,
+        "Score": 60
+      },
+      {
+        "Level": 4,
+        "Score": 53
+      },
+      {
+        "Level": 4,
+        "Score": 65
+      },
+      {
+        "Level": 4,
+        "Score": 56
+      },
+      {
+        "Level": 4,
+        "Score": 50
+      },
+      {
+        "Level": 4,
+        "Score": 55
+      },
+      {
+        "Level": 4,
+        "Score": 57
+      },
+      {
+        "Level": 4,
+        "Score": 68
+      },
+      {
+        "Level": 4,
+        "Score": 66
+      },
+      {
+        "Level": 5,
+        "Score": 55
+      },
+      {
+        "Level": 5,
+        "Score": 51
+      },
+      {
+        "Level": 5,
+        "Score": 81
+      },
+      {
+        "Level": 5,
+        "Score": 67
+      },
+      {
+        "Level": 5,
+        "Score": 60
+      },
+      {
+        "Level": 5,
+        "Score": 72
+      },
+      {
+        "Level": 5,
+        "Score": 85
+      },
+      {
+        "Level": 5,
+        "Score": 59
+      },
+      {
+        "Level": 5,
+        "Score": 51
+      },
+      {
+        "Level": 5,
+        "Score": 60
+      },
+      {
+        "Level": 5,
+        "Score": 52
+      },
+      {
+        "Level": 5,
+        "Score": 82
+      },
+      {
+        "Level": 5,
+        "Score": 61
+      },
+      {
+        "Level": 5,
+        "Score": 76
+      },
+      {
+        "Level": 5,
+        "Score": 74
+      },
+      {
+        "Level": 5,
+        "Score": 53
+      },
+      {
+        "Level": 5,
+        "Score": 65
+      },
+      {
+        "Level": 5,
+        "Score": 71
+      },
+      {
+        "Level": 5,
+        "Score": 64
+      },
+      {
+        "Level": 5,
+        "Score": 68
+      }
+    ]
+  }
+}

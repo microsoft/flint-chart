@@ -1,0 +1,45 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Pie Chart",
+    "encodings": {
+      "size": "Value",
+      "color": "Category"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Dominant",
+        "Value": 5000
+      },
+      {
+        "Category": "Small-A",
+        "Value": 200
+      },
+      {
+        "Category": "Small-B",
+        "Value": 180
+      },
+      {
+        "Category": "Small-C",
+        "Value": 150
+      },
+      {
+        "Category": "Tiny-1",
+        "Value": 30
+      },
+      {
+        "Category": "Tiny-2",
+        "Value": 20
+      }
+    ]
+  }
+}

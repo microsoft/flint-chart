@@ -22,6 +22,76 @@
   text-decoration-color: currentColor !important;
 }
 
+/* Shared site slider. The explicit class prevents embedded MCP App styles from
+   changing site controls when documentation examples load their stylesheet. */
+input[type='range'].site-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 12px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type='range'].site-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #0078d4 0 var(--pct, 50%),
+    rgba(0, 0, 0, 0.16) var(--pct, 50%) 100%
+  );
+}
+
+input[type='range'].site-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -3.5px;
+  border: 0;
+  border-radius: 50%;
+  background: #0078d4;
+}
+
+input[type='range'].site-range::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+input[type='range'].site-range::-moz-range-progress {
+  height: 3px;
+  border-radius: 999px;
+  background: #0078d4;
+}
+
+input[type='range'].site-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: #0078d4;
+}
+
+input[type='range'].site-range:focus-visible {
+  outline: 2px solid #0078d4;
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  input[type='range'].site-range::-webkit-slider-runnable-track {
+    background: CanvasText;
+  }
+
+  input[type='range'].site-range::-webkit-slider-thumb,
+  input[type='range'].site-range::-moz-range-thumb {
+    background: Highlight;
+  }
+}
+
 @media (max-width: 640px) {
   .site-nav-bar {
     gap: 14px !important;

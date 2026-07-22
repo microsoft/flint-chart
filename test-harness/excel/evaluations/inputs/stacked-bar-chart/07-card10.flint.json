@@ -1,0 +1,173 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Value",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 1,
+        "Value": 299,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 1,
+        "Value": 927,
+        "Segment": "Phone"
+      },
+      {
+        "X": 1,
+        "Value": 362,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 2,
+        "Value": 321,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 2,
+        "Value": 677,
+        "Segment": "Phone"
+      },
+      {
+        "X": 2,
+        "Value": 138,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 3,
+        "Value": 526,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 3,
+        "Value": 227,
+        "Segment": "Phone"
+      },
+      {
+        "X": 3,
+        "Value": 901,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 4,
+        "Value": 245,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 4,
+        "Value": 453,
+        "Segment": "Phone"
+      },
+      {
+        "X": 4,
+        "Value": 905,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 5,
+        "Value": 850,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 5,
+        "Value": 757,
+        "Segment": "Phone"
+      },
+      {
+        "X": 5,
+        "Value": 334,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 6,
+        "Value": 638,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 6,
+        "Value": 324,
+        "Segment": "Phone"
+      },
+      {
+        "X": 6,
+        "Value": 582,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 7,
+        "Value": 917,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 7,
+        "Value": 421,
+        "Segment": "Phone"
+      },
+      {
+        "X": 7,
+        "Value": 313,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 8,
+        "Value": 132,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 8,
+        "Value": 719,
+        "Segment": "Phone"
+      },
+      {
+        "X": 8,
+        "Value": 470,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 9,
+        "Value": 388,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 9,
+        "Value": 115,
+        "Segment": "Phone"
+      },
+      {
+        "X": 9,
+        "Value": 508,
+        "Segment": "Tablet"
+      },
+      {
+        "X": 10,
+        "Value": 328,
+        "Segment": "Laptop"
+      },
+      {
+        "X": 10,
+        "Value": 681,
+        "Segment": "Phone"
+      },
+      {
+        "X": 10,
+        "Value": 525,
+        "Segment": "Tablet"
+      }
+    ]
+  }
+}

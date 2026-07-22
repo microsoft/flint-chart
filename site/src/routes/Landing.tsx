@@ -143,6 +143,36 @@ export function Landing() {
         {/* ---- Interactive example: spec -> chart --------------------- */}
         <HeroShowcase />
 
+        {/* ---- News ---------------------------------------------------- */}
+        <section className="landing-news" style={newsSectionStyle}>
+          <h2 style={newsHeadingStyle}>{t('landing.news.title')}</h2>
+          <div style={newsListStyle}>
+            {([
+              { key: 'dynamicWidgets', href: `${GITHUB_REPO}/releases/tag/0.3.0`, linkLabel: 'v0.3.0' },
+              { key: 'release022', href: null, linkLabel: null },
+              { key: 'release021', href: `${GITHUB_REPO}/releases/tag/0.2.1`, linkLabel: 'v0.2.1' },
+            ] as const).map((update) => (
+              <article className="landing-news-item" style={newsItemStyle} key={update.key}>
+                <time style={newsDateStyle} dateTime={t(`landing.news.${update.key}.dateTime`)}>
+                  {t(`landing.news.${update.key}.date`)}
+                </time>
+                <p style={newsTextStyle}>{t(`landing.news.${update.key}.text`)}</p>
+                {update.href && (
+                  <a
+                    className="site-text-link"
+                    style={newsLinkStyle}
+                    href={update.href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {update.linkLabel}
+                  </a>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+
         {/* ---- Feature cards (alternating text / visual) -------------- */}
         <section style={howItWorksSectionStyle}>
           <div style={showcaseIntroStyle}>
@@ -1045,6 +1075,59 @@ const howItWorksSectionStyle: CSSProperties = {
   paddingBottom: 48,
 };
 
+const newsSectionStyle: CSSProperties = {
+  ...sectionStyle,
+  display: 'grid',
+  gridTemplateColumns: '140px minmax(0, 1fr)',
+  gap: 32,
+  paddingTop: 28,
+  paddingBottom: 28,
+  borderTop: `1px solid ${HAIRLINE}`,
+  borderBottom: `1px solid ${HAIRLINE}`,
+};
+
+const newsHeadingStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 22,
+  lineHeight: 1.4,
+  fontWeight: 650,
+};
+
+const newsListStyle: CSSProperties = {
+  display: 'grid',
+};
+
+const newsItemStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '118px minmax(0, 1fr) 64px',
+  gap: 18,
+  padding: '5px 0',
+};
+
+const newsDateStyle: CSSProperties = {
+  color: siteTheme.textMuted,
+  fontSize: 13,
+  lineHeight: 1.6,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+const newsTextStyle: CSSProperties = {
+  margin: 0,
+  color: siteTheme.text,
+  fontSize: 14,
+  lineHeight: 1.6,
+};
+
+const newsLinkStyle: CSSProperties = {
+  color: siteTheme.accent,
+  fontSize: 13,
+  lineHeight: 1.6,
+  textAlign: 'right',
+  whiteSpace: 'nowrap',
+  textDecorationColor: 'currentColor',
+  textUnderlineOffset: 3,
+};
+
 const heroTitleStyle: CSSProperties = {
   fontSize: 42,
   lineHeight: 1.18,
@@ -1155,6 +1238,31 @@ const landingInteractiveStyles = `
   }
 
   @media (max-width: 640px) {
+    .landing-news {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+
+    .landing-news-item {
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      gap: 0 16px !important;
+      padding: 7px 0 !important;
+    }
+
+    .landing-news-item time {
+      grid-column: 1;
+    }
+
+    .landing-news-item p {
+      grid-column: 1;
+    }
+
+    .landing-news-item a {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+
     .landing-lead-columns {
       gap: 24px !important;
     }

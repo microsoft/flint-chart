@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { resolveTotalsMode } from '../../core/waterfall';
+import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 /**
  * Waterfall Chart template.
@@ -43,7 +43,7 @@ export const waterfallChartDef: ChartTemplateDef = {
 
         if (!hasTypeCol) {
             // Which bars (if any) are drawn as full "total" bars that touch down to
-            // zero. The default is data-aware (see core/waterfall.ts): the first bar
+            // zero. The default is data-aware (see chart-types/waterfall.ts): the first bar
             // is a start total and the last bar is a total only when its value
             // reconciles with the running cumulative of the prior rows; otherwise it
             // stays a floating delta. The user's `totals` property overrides this.
@@ -279,9 +279,9 @@ export const waterfallChartDef: ChartTemplateDef = {
             // explicit Type column. When the user binds a color/Type field their
             // start/delta/end is authoritative, so the toggle is not offered. The
             // default "auto" resolves to the data-aware recommendation inside the
-            // template (see core/waterfall.ts resolveTotalsMode).
+            // template (see chart-types/waterfall.ts resolveTotalsMode).
             check: (ctx) => ({ applicable: !ctx.encodings?.color?.field }),
         },
-        { key: 'showTextLabels', label: 'Show labels', type: 'binary', defaultValue: false },
+        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
 };

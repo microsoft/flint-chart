@@ -1,0 +1,64 @@
+{
+  "semantic_types": {
+    "Product": "Product",
+    "Revenue": "Amount"
+  },
+  "chart_spec": {
+    "chartType": "Donut Chart",
+    "encodings": {
+      "size": "Revenue",
+      "color": "Product"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "innerRadius": 50
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Product": "Laptop",
+        "Revenue": 2924
+      },
+      {
+        "Product": "Phone",
+        "Revenue": 2506
+      },
+      {
+        "Product": "Tablet",
+        "Revenue": 6721
+      },
+      {
+        "Product": "Desktop",
+        "Revenue": 1826
+      },
+      {
+        "Product": "Monitor",
+        "Revenue": 4934
+      },
+      {
+        "Product": "Keyboard",
+        "Revenue": 7789
+      },
+      {
+        "Product": "Mouse",
+        "Revenue": 8215
+      },
+      {
+        "Product": "Headphones",
+        "Revenue": 5798
+      },
+      {
+        "Product": "Speaker",
+        "Revenue": 7950
+      },
+      {
+        "Product": "Camera",
+        "Revenue": 6919
+      }
+    ]
+  }
+}

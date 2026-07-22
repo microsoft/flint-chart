@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Grade": "Category",
+    "Count": "Count",
+    "Type": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Grade",
+      "x": "Count",
+      "color": "Type"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Grade": "Junior",
+        "Type": "Full-Time",
+        "Count": 203
+      },
+      {
+        "Grade": "Junior",
+        "Type": "Part-Time",
+        "Count": 85
+      },
+      {
+        "Grade": "Mid-level",
+        "Type": "Full-Time",
+        "Count": 97
+      },
+      {
+        "Grade": "Mid-level",
+        "Type": "Part-Time",
+        "Count": 60
+      },
+      {
+        "Grade": "Senior",
+        "Type": "Full-Time",
+        "Count": 147
+      },
+      {
+        "Grade": "Senior",
+        "Type": "Part-Time",
+        "Count": 86
+      },
+      {
+        "Grade": "Lead",
+        "Type": "Full-Time",
+        "Count": 114
+      },
+      {
+        "Grade": "Lead",
+        "Type": "Part-Time",
+        "Count": 44
+      },
+      {
+        "Grade": "Manager",
+        "Type": "Full-Time",
+        "Count": 111
+      },
+      {
+        "Grade": "Manager",
+        "Type": "Part-Time",
+        "Count": 18
+      },
+      {
+        "Grade": "Director",
+        "Type": "Full-Time",
+        "Count": 66
+      },
+      {
+        "Grade": "Director",
+        "Type": "Part-Time",
+        "Count": 76
+      }
+    ]
+  }
+}

@@ -162,6 +162,24 @@
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
     "ctaDocs": "Read the docs",
+    "news": {
+      "title": "Updates",
+      "dynamicWidgets": {
+        "date": "July 19, 2026",
+        "dateTime": "2026-07-19",
+        "text": "Flint 0.3.0 adds dynamic chart widgets that switch chart types and edit chart properties in place."
+      },
+      "release022": {
+        "date": "July 15, 2026",
+        "dateTime": "2026-07-15",
+        "text": "Flint 0.2.2 added compact dodge modes and grouped violin layouts."
+      },
+      "release021": {
+        "date": "July 13, 2026",
+        "dateTime": "2026-07-13",
+        "text": "Flint 0.2.1 improved chart-property validation and backend consistency."
+      }
+    },
     "howItWorks": "How it works?",
     "howItWorksBody": "Flint starts with a compact spec: the data, semantic types, and the chart spec. From there, the compiler produces a complete backend-native spec (shown here in Vega-Lite) filling with the necessary low-level details and renders a good-looking chart.",
     "overviewAlt": "Flint workflow: an agent infers a dataSpec from a raw table, a short chartSpec is written, and Flint compiles it into a faceted line chart, then a grouped bar, waterfall, heatmap, and sunburst as the spec is edited.",

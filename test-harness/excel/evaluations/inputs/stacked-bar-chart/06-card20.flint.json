@@ -1,0 +1,423 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Value",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2020-01-01",
+        "Value": 283,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-01-01",
+        "Value": 509,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-01-01",
+        "Value": 946,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-01-01",
+        "Value": 971,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 992,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 76,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 772,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-02-24",
+        "Value": 275,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 26,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 546,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 47,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-04-19",
+        "Value": 322,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 715,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 780,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 451,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-06-13",
+        "Value": 712,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 362,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 383,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 653,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-08-07",
+        "Value": 326,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 959,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 814,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 58,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-09-30",
+        "Value": 129,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 423,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 902,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 24,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2020-11-24",
+        "Value": 345,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 97,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 621,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 323,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-01-18",
+        "Value": 481,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 954,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 994,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 284,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-03-14",
+        "Value": 410,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 493,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 766,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 731,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-05-07",
+        "Value": 753,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 320,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 735,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 569,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-07-01",
+        "Value": 209,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 953,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 578,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 80,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-08-25",
+        "Value": 276,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 649,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 232,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 938,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-10-19",
+        "Value": 48,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 371,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 698,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 810,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2021-12-12",
+        "Value": 179,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 217,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 239,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 208,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-02-05",
+        "Value": 763,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 503,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 499,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 932,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-04-01",
+        "Value": 176,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 869,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 296,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 888,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-05-26",
+        "Value": 423,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 359,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 77,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 291,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-07-19",
+        "Value": 666,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 419,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 353,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 862,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-09-12",
+        "Value": 832,
+        "Segment": "Desktop"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 112,
+        "Segment": "Laptop"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 913,
+        "Segment": "Phone"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 801,
+        "Segment": "Tablet"
+      },
+      {
+        "Date": "2022-11-06",
+        "Value": 939,
+        "Segment": "Desktop"
+      }
+    ]
+  }
+}

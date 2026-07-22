@@ -1,0 +1,2423 @@
+{
+  "semantic_types": {
+    "Country": "Country",
+    "Revenue": "Amount",
+    "Quarter": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Boxplot",
+    "encodings": {
+      "x": "Country",
+      "y": "Revenue",
+      "color": "Quarter"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 5307
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 526
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 545
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1434
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 5028
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 4161
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1877
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 692
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 5309
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 2401
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 5327
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 2150
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1694
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1988
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1107
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 3206
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 3090
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 4890
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1197
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q1",
+        "Revenue": 1666
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 2051
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 3976
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 727
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4339
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 1005
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 2555
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4573
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 3763
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4758
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 934
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4447
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4969
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 3426
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 3886
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4304
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 2715
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 2774
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 3893
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 4604
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q2",
+        "Revenue": 540
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2818
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2383
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 3439
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 5230
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2178
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 3286
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 3268
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 1968
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 841
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 4237
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 5490
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2439
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2237
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 3269
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 1816
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 5363
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 2862
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 1643
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 1075
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q3",
+        "Revenue": 1098
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 3273
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 1599
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 3374
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 1709
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 2987
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 4249
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 1270
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 3125
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 1651
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 2504
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 2671
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 5231
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 1836
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 4205
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 4126
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 2697
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 3932
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 5347
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 4723
+      },
+      {
+        "Country": "USA",
+        "Quarter": "Q4",
+        "Revenue": 3471
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 984
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 2669
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 2967
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 3152
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 4873
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 4492
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 4069
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 4379
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 3391
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 1353
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 2873
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 1701
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 1117
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 3945
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 3172
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 5021
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 2748
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 789
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 4645
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q1",
+        "Revenue": 2578
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 5442
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 929
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2789
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 4133
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2487
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2743
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 3170
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2712
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2793
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2119
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2877
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 5205
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2034
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 1109
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 5070
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 4313
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 3601
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2549
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 906
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q2",
+        "Revenue": 2415
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2034
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1530
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1890
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2962
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2343
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2702
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1611
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1626
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 5056
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1228
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 3316
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2027
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2019
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1608
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 5361
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 2337
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 3825
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1698
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1852
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q3",
+        "Revenue": 1866
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 1813
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4311
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 5143
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 5328
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4469
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 1118
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 2433
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 5174
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4821
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 1418
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4528
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4628
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 4587
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 1710
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 2751
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 2679
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 3722
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 3544
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 2772
+      },
+      {
+        "Country": "China",
+        "Quarter": "Q4",
+        "Revenue": 3568
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 3028
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 1934
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 3670
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 1135
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 5417
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4279
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 791
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4260
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4786
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4478
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4390
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 2668
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 1008
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 2849
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4680
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 1019
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 4116
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 2746
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 3255
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q1",
+        "Revenue": 3787
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 4053
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 3639
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 1813
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 4518
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 4056
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 864
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 2419
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 1501
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 5146
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 2623
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 3638
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 1636
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 4767
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 2918
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 2374
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 2505
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 800
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 4601
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 3104
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q2",
+        "Revenue": 3599
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1082
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 4576
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 3332
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 2739
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1338
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1008
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 3245
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1546
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1980
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 3053
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 4785
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 1021
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 2833
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 4241
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 658
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 4233
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 3218
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 942
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 2782
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q3",
+        "Revenue": 731
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 5056
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2084
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2647
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2936
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 966
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 4979
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 5183
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2470
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2053
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2974
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 5261
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 4893
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 4264
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 4763
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 1663
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2540
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 2663
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 693
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 3256
+      },
+      {
+        "Country": "Japan",
+        "Quarter": "Q4",
+        "Revenue": 3525
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 5207
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 785
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 585
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 1464
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 2782
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 3010
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 1998
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 3226
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 4169
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 5423
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 3236
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 3507
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 2499
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 4695
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 3027
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 1972
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 4577
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 4861
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 4232
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q1",
+        "Revenue": 2222
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 5500
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 2322
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 1158
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 4739
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3546
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 2002
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3070
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 5386
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 1425
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 1159
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 5184
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3657
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 2453
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3569
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 4223
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 5076
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 2222
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3850
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 5036
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q2",
+        "Revenue": 3746
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2552
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 1194
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 779
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 983
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 3283
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 1742
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2416
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2754
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4401
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4761
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2119
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 5243
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 3096
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4585
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4907
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 1255
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2404
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4241
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 2843
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q3",
+        "Revenue": 4321
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3000
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 2712
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 5084
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 5377
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3031
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3959
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 5032
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 1804
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 4406
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 5253
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 2469
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3620
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 1403
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 4080
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3323
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3918
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 3577
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 4442
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 2048
+      },
+      {
+        "Country": "Germany",
+        "Quarter": "Q4",
+        "Revenue": 2011
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 1383
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 1345
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 4205
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 963
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3126
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3803
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 966
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 830
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 2945
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3215
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3375
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3420
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3788
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 5289
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 619
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 3058
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 5495
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 2639
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 1403
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q1",
+        "Revenue": 710
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2454
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 1676
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2158
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3213
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2648
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2165
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 872
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3347
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3229
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 601
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 5181
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3379
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3837
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3309
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 1377
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 3385
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 1987
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 707
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2180
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q2",
+        "Revenue": 2687
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 5286
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 5086
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 1048
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 2277
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 4452
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 5189
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3647
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3775
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 676
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3864
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 2572
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 4031
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3684
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 4458
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 1083
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 1688
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 2417
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 4886
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3385
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q3",
+        "Revenue": 3253
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2032
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 3423
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2712
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2662
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2435
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 3726
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 3745
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4196
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 1713
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 1761
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4448
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2291
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4673
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4466
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 3937
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4730
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 4013
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 641
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2101
+      },
+      {
+        "Country": "UK",
+        "Quarter": "Q4",
+        "Revenue": 2731
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1782
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1404
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 4516
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 5168
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 966
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 3631
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1222
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1673
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1636
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 2179
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 3593
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 4105
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 873
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1993
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 4077
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 5132
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 2222
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 5364
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 1481
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q1",
+        "Revenue": 2085
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2864
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 1746
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 4188
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 3947
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 864
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 5176
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 1059
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2550
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 4961
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 867
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 3408
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2956
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2261
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 3006
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2888
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 3693
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 2854
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 4210
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 1096
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q2",
+        "Revenue": 5313
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 743
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 3697
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 1631
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 3998
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 693
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 2202
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 4656
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 999
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 3215
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 4509
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 1407
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 2995
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 2415
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 642
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 538
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 3026
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 4038
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 5315
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 3588
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q3",
+        "Revenue": 2390
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3361
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4249
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4601
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4427
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3050
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 5015
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3122
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 649
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 5026
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 1325
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4936
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3544
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4818
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4804
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 2942
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4422
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 4712
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3047
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 2097
+      },
+      {
+        "Country": "France",
+        "Quarter": "Q4",
+        "Revenue": 3846
+      }
+    ]
+  }
+}

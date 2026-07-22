@@ -1,0 +1,53 @@
+{
+  "semantic_types": {
+    "Phase": "Category",
+    "Users": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Funnel Chart",
+    "encodings": {
+      "y": "Phase",
+      "size": "Users"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Phase": "Awareness",
+        "Users": 50603
+      },
+      {
+        "Phase": "Interest",
+        "Users": 33400
+      },
+      {
+        "Phase": "Consideration",
+        "Users": 22767
+      },
+      {
+        "Phase": "Intent",
+        "Users": 15130
+      },
+      {
+        "Phase": "Evaluation",
+        "Users": 10415
+      },
+      {
+        "Phase": "Trial",
+        "Users": 7105
+      },
+      {
+        "Phase": "Purchase",
+        "Users": 5229
+      },
+      {
+        "Phase": "Loyalty",
+        "Users": 3243
+      }
+    ]
+  }
+}

@@ -79,6 +79,76 @@ function findOutliers(values: number[]): number[] {
     return values.filter(v => v < lo || v > hi);
 }
 
+function boxplotLaneOffset(bandWidth: number, laneCount: number, laneIndex: number): number {
+    const availableWidth = bandWidth * 0.8 - 2;
+    const boxGap = availableWidth / laneCount * 0.3;
+    const boxWidth = (availableWidth - boxGap * (laneCount - 1)) / laneCount;
+    return boxWidth / 2 - availableWidth / 2 + laneIndex * (boxGap + boxWidth);
+}
+
+function makeOutlierSeries(
+    name: string,
+    data: any[],
+    laneIndex: number,
+    laneCount: number,
+    horizontal: boolean,
+): any {
+    return {
+        name,
+        type: 'custom',
+        coordinateSystem: 'cartesian2d',
+        data,
+        encode: { tooltip: [0, 1] },
+        z: 3,
+        renderItem: (_params: any, api: any) => {
+            const category = Number(api.value(0));
+            const value = Number(api.value(1));
+            const point = horizontal
+                ? api.coord([value, category])
+                : api.coord([category, value]);
+            const size = api.size(horizontal ? [0, 1] : [1, 0]);
+            const bandWidth = Math.abs(horizontal ? size[1] : size[0]);
+            const offset = boxplotLaneOffset(bandWidth, laneCount, laneIndex);
+            return {
+                type: 'circle',
+                shape: {
+                    cx: point[0] + (horizontal ? 0 : offset),
+                    cy: point[1] + (horizontal ? offset : 0),
+                    r: 2,
+                },
+                style: { fill: api.visual('color') },
+            };
+        },
+    };
+}
+
+function makeGroupSeparatorSeries(categoryCount: number, horizontal: boolean): any {
+    return {
+        name: '__groupSeparators',
+        type: 'custom',
+        coordinateSystem: 'cartesian2d',
+        data: Array.from({ length: Math.max(0, categoryCount - 1) }, (_, index) => [index]),
+        silent: true,
+        tooltip: { show: false },
+        z: 0,
+        renderItem: (params: any, api: any) => {
+            const index = Number(api.value(0));
+            const current = horizontal ? api.coord([0, index]) : api.coord([index, 0]);
+            const next = horizontal ? api.coord([0, index + 1]) : api.coord([index + 1, 0]);
+            const boundary = horizontal
+                ? (current[1] + next[1]) / 2
+                : (current[0] + next[0]) / 2;
+            return {
+                type: 'line',
+                shape: horizontal
+                    ? { x1: params.coordSys.x, y1: boundary, x2: params.coordSys.x + params.coordSys.width, y2: boundary }
+                    : { x1: boundary, y1: params.coordSys.y, x2: boundary, y2: params.coordSys.y + params.coordSys.height },
+                style: { stroke: '#c9ced6', lineWidth: 1, lineDash: [4, 4], opacity: 0.75 },
+            };
+        },
+    };
+}
+
 export const ecBoxplotDef: ChartTemplateDef = {
     chart: 'Boxplot',
     template: { mark: 'boxplot', encoding: {} },
@@ -203,15 +273,15 @@ export const ecBoxplotDef: ChartTemplateDef = {
             // value lookup per (cat, color)
             const catGroups = groupBy(table, catField);
             for (let lane = 0; lane < maxPerBand; lane++) {
-                const boxData: ({ value: [number, number, number, number, number]; itemStyle: any } | null)[] = [];
+                const boxData: ({ value: [number, number, number, number, number]; itemStyle: any } | '-')[] = [];
                 const outlierData: any[] = [];
                 for (let i = 0; i < categories.length; i++) {
                     const cat = categories[i];
                     const g = perBand.get(cat)?.[lane];
-                    if (g === undefined) { boxData.push(null); continue; }
+                    if (g === undefined) { boxData.push('-'); continue; }
                     const rows = (catGroups.get(cat) || []).filter((r: any) => String(r[colorField] ?? '') === g);
                     const values = rows.map((r: any) => Number(r[valField])).filter((v: number) => isFinite(v));
-                    if (!values.length) { boxData.push(null); continue; }
+                    if (!values.length) { boxData.push('-'); continue; }
                     const c = colorFor(g);
                     boxData.push({ value: fiveNumberSummary(values, whiskerMethod), itemStyle: { color: c, borderColor: c } });
                     if (showOutliers) {
@@ -220,9 +290,12 @@ export const ecBoxplotDef: ChartTemplateDef = {
                 }
                 option.series.push({ name: `__lane${lane}`, type: 'boxplot', data: boxData });
                 if (outlierData.length > 0) {
-                    option.series.push({ name: `__lane${lane} (outliers)`, type: 'scatter', data: outlierData, symbolSize: 4 });
+                    option.series.push(makeOutlierSeries(
+                        `__lane${lane} (outliers)`, outlierData, lane, maxPerBand, isHorizontal,
+                    ));
                 }
             }
+            option.series.push(makeGroupSeparatorSeries(categories.length, isHorizontal));
             option.legend = { data: globalColors.map((g) => ({ name: g, itemStyle: { color: colorFor(g) } })) };
             option._legendTitle = colorField;
         } else if (colorIsDiscrete && colorField && dodgeColor) {
@@ -232,7 +305,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
 
             for (let cIdx = 0; cIdx < colorCategories.length; cIdx++) {
                 const colorName = colorCategories[cIdx];
-                const boxData: ([number, number, number, number, number] | null)[] = [];
+                const boxData: ([number, number, number, number, number] | '-')[] = [];
                 const outlierData: [number, number][] = [];
 
                 for (let i = 0; i < categories.length; i++) {
@@ -244,8 +317,9 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     // Empty (category, color) cells must draw NO box. Pushing a
                     // five-number summary of [] yields [0,0,0,0,0] — a degenerate
                     // flat box at 0 in every unoccupied lane (the sparse-dodge
-                    // zero-box bug). `null` leaves the lane blank.
-                    boxData.push(values.length ? fiveNumberSummary(values, whiskerMethod) : null);
+                    // zero-box bug). ECharts boxplot does not accept `null`
+                    // data items; `'-'` is its missing-value sentinel.
+                    boxData.push(values.length ? fiveNumberSummary(values, whiskerMethod) : '-');
 
                     if (showOutliers) {
                         for (const o of findOutliers(values)) {
@@ -261,13 +335,9 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     // itemStyle 由 ecApplyLayoutToSpec 按 colorDecisions 填充
                 });
                 if (outlierData.length > 0) {
-                    option.series.push({
-                        name: colorName + ' (outliers)',
-                        type: 'scatter',
-                        data: outlierData,
-                        symbolSize: 4,
-                        // 颜色由 ecApplyLayoutToSpec 按类别与 box 一致分配
-                    });
+                    option.series.push(makeOutlierSeries(
+                        colorName + ' (outliers)', outlierData, cIdx, colorCategories.length, isHorizontal,
+                    ));
                 }
             }
 
@@ -298,13 +368,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
                 // 单系列颜色由 ecApplyLayoutToSpec 使用 cat10[0] 等统一默认
             });
             if (outlierData.length > 0) {
-                option.series.push({
-                    name: 'Outliers',
-                    type: 'scatter',
-                    data: outlierData,
-                    symbolSize: 4,
-                    // 离群点颜色由 ecApplyLayoutToSpec 分配
-                });
+                option.series.push(makeOutlierSeries('Outliers', outlierData, 0, 1, isHorizontal));
             }
         }
 

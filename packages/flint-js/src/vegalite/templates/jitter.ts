@@ -119,18 +119,7 @@ export const stripPlotDef: ChartTemplateDef = {
         { key: "pointSize", label: "Size", type: "continuous", min: 0, max: 150, step: 5, defaultValue: 0 },
         { key: "opacity", label: "Opacity", type: "continuous", min: 0, max: 1, step: 0.1, defaultValue: 0 },
     ] as ChartPropertyDef[],
-    pivot: makeCartesianPivot({
-        // Reverse of the scatter→Jitter hop: promote the spilled measure on
-        // `color` back onto the `x` axis, and the categorical `x` spills back to
-        // `color` as a discrete series — re-rendering the strip as a scatter
-        // cloud. Inside a scatter's orbit this folds onto Default (θ round-trip);
-        // standalone it gives a Strip Plot its own way back to a scatter.
-        transitions: [
-            {
-                to: 'Scatter Plot',
-                label: 'Scatter',
-                route: { from: 'color', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
-    }),
+    // θ chart-type transition (Strip → Scatter) is declared centrally in
+    // core/chart-transitions.ts; the strip plot has no local τ/σ/γ group.
+    pivot: makeCartesianPivot({}),
 };

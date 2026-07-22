@@ -1,0 +1,523 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 786,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 647,
+        "Segment": "China"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 932,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 332,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 839,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 176,
+        "Segment": "France"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 653,
+        "Segment": "India"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 210,
+        "Segment": "Brazil"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 751,
+        "Segment": "Canada"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 41,
+        "Segment": "Australia"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 128,
+        "Segment": "South Korea"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 569,
+        "Segment": "Mexico"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 225,
+        "Segment": "Italy"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 228,
+        "Segment": "Spain"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 115,
+        "Segment": "Russia"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 539,
+        "Segment": "Netherlands"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 313,
+        "Segment": "Sweden"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 516,
+        "Segment": "Norway"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 322,
+        "Segment": "Denmark"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 535,
+        "Segment": "Finland"
+      },
+      {
+        "Category": "Phone",
+        "Value": 953,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Phone",
+        "Value": 238,
+        "Segment": "China"
+      },
+      {
+        "Category": "Phone",
+        "Value": 896,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Phone",
+        "Value": 176,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Phone",
+        "Value": 173,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Phone",
+        "Value": 530,
+        "Segment": "France"
+      },
+      {
+        "Category": "Phone",
+        "Value": 960,
+        "Segment": "India"
+      },
+      {
+        "Category": "Phone",
+        "Value": 893,
+        "Segment": "Brazil"
+      },
+      {
+        "Category": "Phone",
+        "Value": 22,
+        "Segment": "Canada"
+      },
+      {
+        "Category": "Phone",
+        "Value": 95,
+        "Segment": "Australia"
+      },
+      {
+        "Category": "Phone",
+        "Value": 135,
+        "Segment": "South Korea"
+      },
+      {
+        "Category": "Phone",
+        "Value": 600,
+        "Segment": "Mexico"
+      },
+      {
+        "Category": "Phone",
+        "Value": 49,
+        "Segment": "Italy"
+      },
+      {
+        "Category": "Phone",
+        "Value": 759,
+        "Segment": "Spain"
+      },
+      {
+        "Category": "Phone",
+        "Value": 589,
+        "Segment": "Russia"
+      },
+      {
+        "Category": "Phone",
+        "Value": 232,
+        "Segment": "Netherlands"
+      },
+      {
+        "Category": "Phone",
+        "Value": 145,
+        "Segment": "Sweden"
+      },
+      {
+        "Category": "Phone",
+        "Value": 281,
+        "Segment": "Norway"
+      },
+      {
+        "Category": "Phone",
+        "Value": 934,
+        "Segment": "Denmark"
+      },
+      {
+        "Category": "Phone",
+        "Value": 475,
+        "Segment": "Finland"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 899,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 228,
+        "Segment": "China"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 717,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 447,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 136,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 932,
+        "Segment": "France"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 745,
+        "Segment": "India"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 449,
+        "Segment": "Brazil"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 350,
+        "Segment": "Canada"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 409,
+        "Segment": "Australia"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 675,
+        "Segment": "South Korea"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 660,
+        "Segment": "Mexico"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 14,
+        "Segment": "Italy"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 975,
+        "Segment": "Spain"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 927,
+        "Segment": "Russia"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 569,
+        "Segment": "Netherlands"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 81,
+        "Segment": "Sweden"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 657,
+        "Segment": "Norway"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 180,
+        "Segment": "Denmark"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 910,
+        "Segment": "Finland"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 607,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 504,
+        "Segment": "China"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 339,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 524,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 349,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 895,
+        "Segment": "France"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 770,
+        "Segment": "India"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 213,
+        "Segment": "Brazil"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 956,
+        "Segment": "Canada"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 667,
+        "Segment": "Australia"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 592,
+        "Segment": "South Korea"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 12,
+        "Segment": "Mexico"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 401,
+        "Segment": "Italy"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 920,
+        "Segment": "Spain"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 44,
+        "Segment": "Russia"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 937,
+        "Segment": "Netherlands"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 558,
+        "Segment": "Sweden"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 606,
+        "Segment": "Norway"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 578,
+        "Segment": "Denmark"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 471,
+        "Segment": "Finland"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 159,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 973,
+        "Segment": "China"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 756,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 668,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 521,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 160,
+        "Segment": "France"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 913,
+        "Segment": "India"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 367,
+        "Segment": "Brazil"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 58,
+        "Segment": "Canada"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 639,
+        "Segment": "Australia"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 69,
+        "Segment": "South Korea"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 97,
+        "Segment": "Mexico"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 342,
+        "Segment": "Italy"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 736,
+        "Segment": "Spain"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 919,
+        "Segment": "Russia"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 775,
+        "Segment": "Netherlands"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 257,
+        "Segment": "Sweden"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 66,
+        "Segment": "Norway"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 531,
+        "Segment": "Denmark"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 646,
+        "Segment": "Finland"
+      }
+    ]
+  }
+}

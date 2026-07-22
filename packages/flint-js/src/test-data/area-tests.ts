@@ -41,7 +41,7 @@ interface AreaMatrixEntry {
 }
 
 // ============================================================================
-// AREA CHART MATRIX — one row per test case (23 tests)
+// AREA CHART MATRIX — one row per test case (21 tests)
 //
 // Note: O (ordinal) is used for categorical axes — area charts require
 // a meaningful sequential order.  N (nominal) is used for color groups.
@@ -50,33 +50,33 @@ interface AreaMatrixEntry {
 // ============================================================================
 
 const AREA_MATRIX: AreaMatrixEntry[] = [
-    // ── T × Q (7 tests) — core stacked / layered area ───────────────
+    // ── T × Q (6 tests) — core stacked / layered area ───────────────
     { x: 'T', y: 'Q', n: 30,   desc: 'Simple time-series area — 30 dates' },
     { x: 'T', y: 'Q', n: 96,   color: 'N', colorCard: 4,  desc: '4 stacked series × 24 dates' },
     { x: 'T', y: 'Q', n: 480,  color: 'N', colorCard: 8,  desc: '8 series × 60 dates — large stacked' },
     { x: 'T', y: 'Q', n: 1800, color: 'N', colorCard: 15, desc: '15 series × 120 dates — stress', extraTags: ['stress'] },
     { x: 'T', y: 'Q', n: 120,  color: 'N', colorCard: 3,  desc: '3 layered/overlapping series' },
     { x: 'T', y: 'Q', n: 180,  color: 'N', colorCard: 3,  sparse: true, desc: '3 series, ~20% missing values' },
-    { x: 'T', y: 'Q', n: 30,   color: 'Q', desc: 'Continuous color gradient on area' },
 
-    // ── O × Q (4 tests) — ordered categories on x ───────────────────
+    // ── O × Q (3 tests) — ordered categories on x ───────────────────
     //    Area charts with ordinal x make sense when categories have an
     //    inherent sequence (e.g. stages, ranked items, ordered groups).
     { x: 'O', y: 'Q', n: 5,  xCard: 5,  desc: 'Ordinal area — 5 ordered categories' },
     { x: 'O', y: 'Q', n: 48, xCard: 12, color: 'N', colorCard: 4, desc: '12 ordinal × 4 stacked series' },
     { x: 'O', y: 'Q', n: 30, xCard: 30, desc: '30 ordinal categories — label overflow', extraTags: ['overflow'] },
-    { x: 'O', y: 'Q', n: 5,  xCard: 5,  color: 'Q', desc: 'Ordinal + continuous color gradient' },
-
-    // ── Q × O (3 tests) — mirror ────────────────────────────────────
-    { x: 'Q', y: 'O', n: 5,  yCard: 5,  desc: 'Horizontal ordinal — 5 ordered cats on y' },
-    { x: 'Q', y: 'O', n: 48, yCard: 12, color: 'N', colorCard: 4, desc: 'Horizontal 12 ordinal × 4 series' },
-    { x: 'Q', y: 'O', n: 30, yCard: 30, desc: 'Horizontal 30 ordinal overflow', extraTags: ['overflow'] },
 
     // ── Q × Q (3 tests) — quantitative both axes ────────────────────
     { x: 'Q', y: 'Q', n: 30,  desc: 'Quantitative x area — 30 pts' },
     { x: 'Q', y: 'Q', n: 150, color: 'N', colorCard: 3, desc: '3 stacked curves × 50 pts' },
     { x: 'Q', y: 'Q', n: 200, desc: 'Dense single-series area — 200 pts' },
 
+    // Excluded: continuous (Q) COLOR on an area — Vega-Lite fills the region
+    // with a per-vertex gradient that collapses each segment to the baseline
+    // (meaningless overlapping wedges). An area's fill can't carry a continuous
+    // third variable; use a line chart (neutral line + gradient points) instead.
+    // Excluded: Q×O (horizontal area on an ordinal/discrete y) — an area fill
+    // across discrete categories reads as a meaningless polygon; use a bar,
+    // lollipop or funnel there instead.
     // Excluded: T×T, Q×T — date-pair data doesn't suit area charts.
     // Area fills imply sequential progression; T×T/Q×T lack monotonic relationships.
     // Excluded: N×N, T×N, N×T — purely nominal axes don't suit area charts.

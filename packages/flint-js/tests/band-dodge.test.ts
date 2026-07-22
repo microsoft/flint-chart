@@ -31,6 +31,7 @@ describe('planBandDodge — mode recommendation', () => {
     expect(plan.mode).toBe('global');
     expect(plan.maxPerBand).toBe(2);
     expect(plan.global).toBe(2);
+    expect(plan.ambiguous).toBe(false);
   });
 
   it('sparse cross-product (1 < maxPerBand < global) → local', () => {
@@ -64,9 +65,11 @@ describe('planBandDodge — mode recommendation', () => {
     expect(plan.maxPerBand).toBe(2);
   });
 
-  it('ambiguous flag is set whenever a real dodge choice exists (maxPerBand > 1)', () => {
+  it('ambiguous flag is set only when local and global layouts can differ', () => {
     const sparse = planBandDodge(rows({ A: ['x', 'y'], B: ['y', 'z'] }), 'cat', 'sub');
     expect(sparse.ambiguous).toBe(true);
+    const complete = planBandDodge(rows({ A: ['x', 'y'], B: ['x', 'y'] }), 'cat', 'sub');
+    expect(complete.ambiguous).toBe(false);
     const none = planBandDodge(rows({ A: ['A'], B: ['B'] }), 'cat', 'sub');
     expect(none.ambiguous).toBe(false);
   });

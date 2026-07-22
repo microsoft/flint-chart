@@ -1,0 +1,44 @@
+{
+  "semantic_types": {
+    "Step": "Category",
+    "Candidates": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Funnel Chart",
+    "encodings": {
+      "y": "Step",
+      "size": "Candidates"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    },
+    "chartProperties": {
+      "sort": "ascending"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Step": "Applied",
+        "Candidates": 510
+      },
+      {
+        "Step": "Screened",
+        "Candidates": 286
+      },
+      {
+        "Step": "Interviewed",
+        "Candidates": 160
+      },
+      {
+        "Step": "Offered",
+        "Candidates": 112
+      },
+      {
+        "Step": "Hired",
+        "Candidates": 63
+      }
+    ]
+  }
+}

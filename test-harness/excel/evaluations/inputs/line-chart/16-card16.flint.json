@@ -1,0 +1,108 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Revenue": "Quantity",
+    "Type": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Line Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Revenue",
+      "strokeDash": "Type"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2024-01-01",
+        "Revenue": 94,
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-03-09",
+        "Revenue": 89,
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-05-16",
+        "Revenue": 97,
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-07-24",
+        "Revenue": 92,
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-09-30",
+        "Revenue": 100,
+        "Type": "actual"
+      },
+      {
+        "Date": "2024-12-08",
+        "Revenue": 98,
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-02-14",
+        "Revenue": 106,
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-04-24",
+        "Revenue": 103,
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-07-01",
+        "Revenue": 105,
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-09-07",
+        "Revenue": 103,
+        "Type": "actual"
+      },
+      {
+        "Date": "2025-11-15",
+        "Revenue": 104,
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-22",
+        "Revenue": 107,
+        "Type": "actual"
+      },
+      {
+        "Date": "2026-01-22",
+        "Revenue": 107,
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-04-01",
+        "Revenue": 118,
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-06-08",
+        "Revenue": 123,
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-08-16",
+        "Revenue": 131,
+        "Type": "forecast"
+      },
+      {
+        "Date": "2026-10-23",
+        "Revenue": 143,
+        "Type": "forecast"
+      }
+    ]
+  }
+}

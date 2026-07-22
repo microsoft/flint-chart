@@ -1,0 +1,58 @@
+{
+  "semantic_types": {
+    "Step": "Category",
+    "Value": "Quantity",
+    "Type": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Waterfall Chart",
+    "encodings": {
+      "x": "Step",
+      "y": "Value",
+      "color": "Type"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Step": "Starting Balance",
+        "Value": 5000,
+        "Type": "start"
+      },
+      {
+        "Step": "Sales",
+        "Value": 2200,
+        "Type": "delta"
+      },
+      {
+        "Step": "Returns",
+        "Value": -350,
+        "Type": "delta"
+      },
+      {
+        "Step": "Payroll",
+        "Value": -1800,
+        "Type": "delta"
+      },
+      {
+        "Step": "Rent",
+        "Value": -600,
+        "Type": "delta"
+      },
+      {
+        "Step": "Marketing",
+        "Value": -400,
+        "Type": "delta"
+      },
+      {
+        "Step": "Ending Balance",
+        "Value": 4050,
+        "Type": "end"
+      }
+    ]
+  }
+}

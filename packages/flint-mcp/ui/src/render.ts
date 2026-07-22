@@ -16,6 +16,10 @@ import { expressionInterpreter } from 'vega-interpreter';
 export interface FlintRenderResult {
   /** Rendered SVG markup. */
   svg: string;
+  /** High-resolution PNG rendered by the same Vega view, ready for clipboard/export. */
+  png: Blob;
+  /** Encoded PNG dimensions in physical pixels. */
+  pngSize: { width: number; height: number };
   /** The assembled Vega-Lite spec (Flint annotations left in place). */
   vlSpec: Record<string, unknown>;
   /** Assembler warnings, if any. */
@@ -23,10 +27,18 @@ export interface FlintRenderResult {
 }
 
 const DEFAULT_BACKGROUND = '#ffffff';
-const APP_PREVIEW_BASE_SIZE = { width: 360, height: 360 } as const;
-const APP_PREVIEW_CANVAS_SIZE = { width: 720, height: 720 } as const;
+const APP_PREVIEW_BASE_SIZE = { width: 360, height: 270 } as const;
+const APP_PREVIEW_CANVAS_SIZE = { width: 720, height: 540 } as const;
 const APP_PREVIEW_MIN_STEP_PLOT_SIZE = { width: 220, height: 160 } as const;
 const APP_PREVIEW_MAX_AUTO_STEP = 96;
+const COPY_PNG_TARGET_LONG_EDGE = 1920;
+const COPY_PNG_MAX_SCALE = 4;
+
+function copyPngScale(width: number, height: number): number {
+  const longEdge = Math.max(width, height);
+  if (!Number.isFinite(longEdge) || longEdge <= 0) return 2;
+  return Math.min(COPY_PNG_MAX_SCALE, Math.max(1, COPY_PNG_TARGET_LONG_EDGE / longEdge));
+}
 
 function usesAutoPreviewSize(input: ChartAssemblyInput): boolean {
   return !input.chart_spec.baseSize && !input.chart_spec.canvasSize;
@@ -116,8 +128,21 @@ export async function renderFlintSvg(
   const view = new View(runtime, { renderer: 'none', expr: expressionInterpreter });
   view.logLevel(VegaError);
   await view.runAsync();
-  const svg = await view.toSVG();
+  const pngScale = copyPngScale(view.width(), view.height());
+  const [svg, canvas] = await Promise.all([view.toSVG(), view.toCanvas(pngScale)]);
+  const png = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => blob ? resolve(blob) : reject(new Error('Could not encode chart PNG')),
+      'image/png',
+    );
+  });
   view.finalize();
 
-  return { svg, vlSpec, warnings };
+  return {
+    svg,
+    png,
+    pngSize: { width: canvas.width, height: canvas.height },
+    vlSpec,
+    warnings,
+  };
 }

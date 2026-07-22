@@ -333,6 +333,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           uri: CHART_VIEW_RESOURCE_URI,
           mimeType: RESOURCE_MIME_TYPE,
           text: readChartViewHtml(),
+          _meta: { ui: { permissions: { clipboardWrite: {} } } },
         },
       ],
     }),

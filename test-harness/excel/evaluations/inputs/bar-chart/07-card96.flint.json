@@ -1,0 +1,421 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "James Walker",
+        "X": 224
+      },
+      {
+        "Group": "Paul Wilson",
+        "X": 757
+      },
+      {
+        "Group": "Jessica Martin",
+        "X": 986
+      },
+      {
+        "Group": "Christopher Moore",
+        "X": 922
+      },
+      {
+        "Group": "Betty Wilson",
+        "X": 225
+      },
+      {
+        "Group": "Steven Lewis",
+        "X": 409
+      },
+      {
+        "Group": "Karen Lopez",
+        "X": 690
+      },
+      {
+        "Group": "Sandra Wright",
+        "X": 393
+      },
+      {
+        "Group": "Daniel King",
+        "X": 254
+      },
+      {
+        "Group": "Mark Taylor",
+        "X": 223
+      },
+      {
+        "Group": "Sandra Thomas",
+        "X": 403
+      },
+      {
+        "Group": "Karen Rodriguez",
+        "X": 140
+      },
+      {
+        "Group": "Patricia Jackson",
+        "X": 191
+      },
+      {
+        "Group": "Donna Hill",
+        "X": 330
+      },
+      {
+        "Group": "Donna White",
+        "X": 411
+      },
+      {
+        "Group": "Michael Brown",
+        "X": 973
+      },
+      {
+        "Group": "Elizabeth Robinson",
+        "X": 649
+      },
+      {
+        "Group": "Mary Jones",
+        "X": 816
+      },
+      {
+        "Group": "Richard Rodriguez",
+        "X": 110
+      },
+      {
+        "Group": "Christopher Clark",
+        "X": 691
+      },
+      {
+        "Group": "Christopher Lopez",
+        "X": 837
+      },
+      {
+        "Group": "Susan Ramirez",
+        "X": 775
+      },
+      {
+        "Group": "Steven Wilson",
+        "X": 796
+      },
+      {
+        "Group": "Paul Anderson",
+        "X": 720
+      },
+      {
+        "Group": "Joseph Rodriguez",
+        "X": 366
+      },
+      {
+        "Group": "Elizabeth Wright",
+        "X": 172
+      },
+      {
+        "Group": "Kimberly Jackson",
+        "X": 942
+      },
+      {
+        "Group": "Betty Hernandez",
+        "X": 477
+      },
+      {
+        "Group": "David King",
+        "X": 605
+      },
+      {
+        "Group": "Matthew Lopez",
+        "X": 482
+      },
+      {
+        "Group": "Susan Hernandez",
+        "X": 628
+      },
+      {
+        "Group": "Jennifer Lee",
+        "X": 301
+      },
+      {
+        "Group": "Richard Flores",
+        "X": 953
+      },
+      {
+        "Group": "John Anderson",
+        "X": 350
+      },
+      {
+        "Group": "Kimberly Wright",
+        "X": 648
+      },
+      {
+        "Group": "Joseph Williams",
+        "X": 823
+      },
+      {
+        "Group": "Lisa Torres",
+        "X": 704
+      },
+      {
+        "Group": "Andrew Rodriguez",
+        "X": 879
+      },
+      {
+        "Group": "Karen Johnson",
+        "X": 984
+      },
+      {
+        "Group": "Steven Jones",
+        "X": 746
+      },
+      {
+        "Group": "Joshua Ramirez",
+        "X": 265
+      },
+      {
+        "Group": "Emily Martinez",
+        "X": 616
+      },
+      {
+        "Group": "Robert Walker",
+        "X": 397
+      },
+      {
+        "Group": "Robert Lewis",
+        "X": 801
+      },
+      {
+        "Group": "Sandra Lopez",
+        "X": 967
+      },
+      {
+        "Group": "Nancy Miller",
+        "X": 306
+      },
+      {
+        "Group": "Christopher Sanchez",
+        "X": 311
+      },
+      {
+        "Group": "Daniel Flores",
+        "X": 177
+      },
+      {
+        "Group": "Mary Walker",
+        "X": 537
+      },
+      {
+        "Group": "Anthony Ramirez",
+        "X": 32
+      },
+      {
+        "Group": "Anthony Hill",
+        "X": 333
+      },
+      {
+        "Group": "Matthew Miller",
+        "X": 687
+      },
+      {
+        "Group": "Andrew King",
+        "X": 901
+      },
+      {
+        "Group": "William Perez",
+        "X": 605
+      },
+      {
+        "Group": "William Martinez",
+        "X": 538
+      },
+      {
+        "Group": "Margaret Garcia",
+        "X": 856
+      },
+      {
+        "Group": "Barbara Anderson",
+        "X": 83
+      },
+      {
+        "Group": "Thomas Smith",
+        "X": 814
+      },
+      {
+        "Group": "Kimberly Thomas",
+        "X": 810
+      },
+      {
+        "Group": "Karen Garcia",
+        "X": 94
+      },
+      {
+        "Group": "Sarah Torres",
+        "X": 885
+      },
+      {
+        "Group": "Emily Hill",
+        "X": 32
+      },
+      {
+        "Group": "Sarah Walker",
+        "X": 309
+      },
+      {
+        "Group": "Michael Clark",
+        "X": 690
+      },
+      {
+        "Group": "Joshua Wright",
+        "X": 594
+      },
+      {
+        "Group": "Andrew Walker",
+        "X": 785
+      },
+      {
+        "Group": "Nancy Young",
+        "X": 930
+      },
+      {
+        "Group": "John Lewis",
+        "X": 828
+      },
+      {
+        "Group": "John Brown",
+        "X": 974
+      },
+      {
+        "Group": "Anthony Thomas",
+        "X": 398
+      },
+      {
+        "Group": "Joshua Moore",
+        "X": 187
+      },
+      {
+        "Group": "John Hernandez",
+        "X": 627
+      },
+      {
+        "Group": "James Perez",
+        "X": 400
+      },
+      {
+        "Group": "James Scott",
+        "X": 862
+      },
+      {
+        "Group": "Matthew Sanchez",
+        "X": 86
+      },
+      {
+        "Group": "Joseph Sanchez",
+        "X": 481
+      },
+      {
+        "Group": "Paul Perez",
+        "X": 79
+      },
+      {
+        "Group": "Joshua Rodriguez",
+        "X": 26
+      },
+      {
+        "Group": "Anthony Sanchez",
+        "X": 164
+      },
+      {
+        "Group": "Linda King",
+        "X": 53
+      },
+      {
+        "Group": "Elizabeth Smith",
+        "X": 717
+      },
+      {
+        "Group": "Sandra Miller",
+        "X": 144
+      },
+      {
+        "Group": "Nancy Allen",
+        "X": 191
+      },
+      {
+        "Group": "Patricia Brown",
+        "X": 568
+      },
+      {
+        "Group": "Lisa Clark",
+        "X": 654
+      },
+      {
+        "Group": "Lisa Thompson",
+        "X": 49
+      },
+      {
+        "Group": "Nancy Clark",
+        "X": 20
+      },
+      {
+        "Group": "Steven Miller",
+        "X": 388
+      },
+      {
+        "Group": "Charles King",
+        "X": 179
+      },
+      {
+        "Group": "Paul Harris",
+        "X": 288
+      },
+      {
+        "Group": "Ashley Jackson",
+        "X": 925
+      },
+      {
+        "Group": "John Moore",
+        "X": 500
+      },
+      {
+        "Group": "Betty Flores",
+        "X": 427
+      },
+      {
+        "Group": "Linda Young",
+        "X": 305
+      },
+      {
+        "Group": "Joshua Jones",
+        "X": 618
+      },
+      {
+        "Group": "Margaret Anderson",
+        "X": 787
+      },
+      {
+        "Group": "Anthony Wilson",
+        "X": 665
+      },
+      {
+        "Group": "Karen Jones",
+        "X": 19
+      },
+      {
+        "Group": "Daniel Rodriguez",
+        "X": 677
+      },
+      {
+        "Group": "Betty Clark",
+        "X": 404
+      }
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 897
+      },
+      {
+        "Category": "Phone",
+        "Value": 707
+      },
+      {
+        "Category": "Tablet",
+        "Value": 888
+      },
+      {
+        "Category": "Desktop",
+        "Value": 930
+      },
+      {
+        "Category": "Monitor",
+        "Value": 475
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 357
+      },
+      {
+        "Category": "Mouse",
+        "Value": 942
+      },
+      {
+        "Category": "Headphones",
+        "Value": 106
+      },
+      {
+        "Category": "Speaker",
+        "Value": 463
+      },
+      {
+        "Category": "Camera",
+        "Value": 353
+      },
+      {
+        "Category": "TV",
+        "Value": 970
+      },
+      {
+        "Category": "Router",
+        "Value": 124
+      },
+      {
+        "Category": "Printer",
+        "Value": 772
+      },
+      {
+        "Category": "Scanner",
+        "Value": 348
+      },
+      {
+        "Category": "SSD",
+        "Value": 687
+      },
+      {
+        "Category": "HDD",
+        "Value": 751
+      },
+      {
+        "Category": "RAM",
+        "Value": 680
+      },
+      {
+        "Category": "GPU",
+        "Value": 899
+      },
+      {
+        "Category": "CPU",
+        "Value": 53
+      },
+      {
+        "Category": "Motherboard",
+        "Value": 621
+      }
+    ]
+  }
+}

@@ -69,6 +69,26 @@ describe('ECharts Gantt chart', () => {
     expect(Number.isFinite(baseVal)).toBe(true);
     expect(taskVal).toBeGreaterThan(0);
   });
+
+  it('applies task height, corners, and interval labels while retaining start order', () => {
+    const input = toInput(tc) as any;
+    input.chart_spec.chartProperties = {
+      taskHeight: 55,
+      cornerRadius: 6,
+      intervalLabels: true,
+    };
+    const configured = assembleECharts(input) as any;
+    const configuredTask = configured.series.find((s: any) => s.name === 'Task');
+    const starts = configured.series.find((s: any) => s.name === '_base').data;
+
+    expect(configuredTask.barWidth).toBe('55%');
+    expect(configuredTask.itemStyle.borderRadius).toBe(6);
+    expect(configuredTask.label.show).toBe(true);
+    expect(configuredTask.label.position).toBe('right');
+    expect(configuredTask.label.formatter({ dataIndex: 0 })).toMatch(/d$/);
+    expect(configured.grid.right).toBeGreaterThanOrEqual(40);
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+  });
 });
 
 describe('ECharts Bullet chart', () => {
@@ -131,6 +151,24 @@ describe('Chart.js Gantt chart', () => {
     const starts = ds.data.map((d: [number, number]) => d[0]);
     const sorted = [...starts].sort((a, b) => a - b);
     expect(starts).toEqual(sorted);
+  });
+
+  it('applies task height, corners, and interval labels while retaining start order', () => {
+    const input = toInput(tc) as any;
+    input.chart_spec.chartProperties = {
+      taskHeight: 55,
+      cornerRadius: 6,
+      intervalLabels: true,
+    };
+    const configured = assembleChartjs(input) as any;
+    const configuredDataset = configured.data.datasets[0];
+
+    expect(configuredDataset.barPercentage).toBe(0.55);
+    expect(configuredDataset.borderRadius).toBe(6);
+    const starts = configuredDataset.data.map((value: [number, number]) => value[0]);
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+    expect(configured.plugins[0].id).toBe('ganttLabels');
+    expect(configured.options.layout.padding.right).toBeGreaterThanOrEqual(40);
   });
 });
 

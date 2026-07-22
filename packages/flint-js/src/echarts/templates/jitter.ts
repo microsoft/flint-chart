@@ -199,12 +199,6 @@ export const ecStripPlotDef: ChartTemplateDef = {
         delete spec.encoding;
     },
     pivot: makeCartesianPivot({
-        transitions: [
-            {
-                to: 'Scatter Plot',
-                label: 'Scatter',
-                route: { from: 'color', to: 'x', mode: 'swap', spill: 'color' },
-            },
-        ],
+        // θ (Strip → Scatter) declared centrally in core/chart-transitions.ts.
     }),
 };

@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Team": "Category",
+    "Metric": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Radar Chart",
+    "encodings": {
+      "x": "Metric",
+      "y": "Value",
+      "color": "Team"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Team": "Team A",
+        "Metric": "Attack",
+        "Value": 85
+      },
+      {
+        "Team": "Team A",
+        "Metric": "Defense",
+        "Value": 70
+      },
+      {
+        "Team": "Team A",
+        "Metric": "Midfield",
+        "Value": 78
+      },
+      {
+        "Team": "Team A",
+        "Metric": "Speed",
+        "Value": 90
+      },
+      {
+        "Team": "Team A",
+        "Metric": "Stamina",
+        "Value": 65
+      },
+      {
+        "Team": "Team A",
+        "Metric": "Tactics",
+        "Value": 80
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Attack",
+        "Value": 72
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Defense",
+        "Value": 88
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Midfield",
+        "Value": 82
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Speed",
+        "Value": 68
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Stamina",
+        "Value": 85
+      },
+      {
+        "Team": "Team B",
+        "Metric": "Tactics",
+        "Value": 75
+      }
+    ]
+  }
+}

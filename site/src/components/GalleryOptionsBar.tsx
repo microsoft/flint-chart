@@ -10,248 +10,366 @@
  * JSON but never change any underlying state. There is no "Copy spec to chat"
  * button.
  */
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChartOption } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
+import { chartIconFor } from '../shared/chart-categories';
 import type { ControlSpec, PanelModel, ResolvedAction } from '../shared/chart-options';
+import './gallery-options-bar.css';
 
 /** Stable string key for an arbitrary option value (handles undefined/objects). */
 function valueKey(value: unknown): string {
   return JSON.stringify(value ?? null);
 }
 
-const labelStyle: CSSProperties = {
-  color: siteTheme.textMuted,
-  fontSize: 12,
-  minWidth: 0,
-  maxWidth: 160,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-};
-
-const READOUT_WIDTH = 44;
-
-// Best-effort sizing: measure each option by its label length + the intrinsic
-// width of its widget, then snap to a small set of tiers. This keeps the strip
-// looking grid-like (only a few distinct widths) while letting compact controls
-// (toggles) stay narrow and roomy ones (sliders/selects) get the space they need.
-const LABEL_CHAR_PX = 6.6;
-const LABEL_MAX_PX = 132;
-const LABEL_GAP = 8;
-const WIDGET_PX: Record<string, number> = {
-  continuous: 72 + 6 + READOUT_WIDTH, // slider track + gap + readout
-  discrete: 128, // select
-  binary: 30, // toggle
-  pivot: 96, // stepper
-};
-const WIDTH_TIERS = [140, 168, 200, 232, 264, 296];
-
-function optionWidth(label: string, kind: string): number {
-  const labelPx = Math.min(LABEL_MAX_PX, Math.ceil(label.length * LABEL_CHAR_PX));
-  const needed = labelPx + LABEL_GAP + (WIDGET_PX[kind] ?? 120);
-  return WIDTH_TIERS.find((t) => t >= needed) ?? WIDTH_TIERS[WIDTH_TIERS.length - 1];
+/** Trim a trailing "(hint)" and clip long labels for the compact select. */
+function compactSelectLabel(label: string): string {
+  const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();
+  if (withoutHint.length <= 16) return withoutHint;
+  return `${withoutHint.slice(0, 13).trimEnd()}...`;
 }
 
-function optStyleFor(_width: number): CSSProperties {
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 14,
-    margin: 0,
-    minWidth: 0,
-    // Each cell hugs its own label + widget and left-aligns (no fixed tier width):
-    // the label sits immediately left of the control with a single gap, and the
-    // flex-wrap strip flows cells left-to-right, wrapping when they overflow.
-    flex: '0 0 auto',
-  };
-}
+function DiscreteControl(props: {
+  label: string;
+  options: { value: unknown; label: string }[];
+  selectedIndex: number;
+  onChange: (value: unknown) => void;
+}) {
+  const { label, options, selectedIndex, onChange } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = options[selectedIndex];
 
-const controlInlineStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: `72px auto`,
-  alignItems: 'center',
-  gap: 6,
-  minWidth: 0,
-};
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      className="gopt gopt-discrete"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="gopt-select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${label}: ${selected?.label ?? ''}`}
+        title={selected?.label}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="gopt-label" title={label}>{label}</span>
+        <span className="gopt-select-value">{compactSelectLabel(selected?.label ?? '')}</span>
+        <svg className="gopt-select-chev" width="9" height="9" viewBox="0 0 10 10" aria-hidden="true">
+          <path d="M2.5 4 5 6.5 7.5 4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="gopt-select-menu gopt-select-menu-top" role="listbox" aria-label={label}>
+          {options.map((option, index) => {
+            const isSelected = index === selectedIndex;
+            return (
+              <li key={index} role="option" aria-selected={isSelected}>
+                <button
+                  type="button"
+                  className={isSelected ? 'gopt-select-option gopt-select-option-selected' : 'gopt-select-option'}
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function ControlRow(props: {
   label: string;
   spec: ControlSpec;
   value: unknown;
-  width: number;
   onChange: (value: unknown) => void;
 }) {
-  const { label, spec, value, width, onChange } = props;
+  const { label, spec, value, onChange } = props;
+
+  if (spec.type === 'discrete') {
+    const current = valueKey(value);
+    const index = spec.options.findIndex((option) => valueKey(option.value) === current);
+    return (
+      <DiscreteControl
+        label={label}
+        options={spec.options}
+        selectedIndex={index < 0 ? 0 : index}
+        onChange={onChange}
+      />
+    );
+  }
 
   let control: React.ReactNode = null;
   if (spec.type === 'continuous') {
     const step = spec.step ?? ((spec.max - spec.min) / 100 || 1);
     const num = typeof value === 'number' ? value : spec.min;
+    const pct = spec.max > spec.min ? ((num - spec.min) / (spec.max - spec.min)) * 100 : 0;
     control = (
-      <span style={controlInlineStyle}>
+      <span className="gopt-inline">
         <input
           type="range"
+          className="site-range"
           min={spec.min}
           max={spec.max}
           step={step}
           value={num}
+          style={{ ['--pct' as string]: `${pct}%` } as CSSProperties}
           onChange={(e) => onChange(Number(e.target.value))}
-          style={{ width: '100%', minWidth: 0, accentColor: siteTheme.accent }}
         />
-        <span style={{ ...labelStyle, fontVariantNumeric: 'tabular-nums', textAlign: 'left' }}>
-          {Number(num).toLocaleString()}
-        </span>
+        <span className="gopt-readout">{Number(num).toLocaleString()}</span>
       </span>
     );
-  } else if (spec.type === 'discrete') {
-    const current = valueKey(value);
-    const idx = spec.options.findIndex((o) => valueKey(o.value) === current);
-    control = (
-      <select
-        value={idx < 0 ? '0' : String(idx)}
-        onChange={(e) => onChange(spec.options[Number(e.target.value)]?.value)}
-        style={{
-          width: 128,
-          minWidth: 0,
-          padding: '3px 6px',
-          border: `1px solid ${siteTheme.border}`,
-          borderRadius: 4,
-          background: siteTheme.surface,
-          color: siteTheme.text,
-          fontSize: 12,
-          justifySelf: 'end',
-        }}
-      >
-        {spec.options.map((o, i) => (
-          <option key={i} value={String(i)}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    );
   } else {
-    const on = Boolean(value);
     control = (
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={() => onChange(!on)}
-        style={{
-          position: 'relative',
-          width: 30,
-          height: 16,
-          padding: 0,
-          border: 0,
-          borderRadius: 999,
-          cursor: 'pointer',
-          background: on ? siteTheme.accent : 'rgba(0, 0, 0, 0.22)',
-          transition: 'background 120ms ease',
-          justifySelf: 'end',
-        }}
-      >
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 2,
-            left: 2,
-            width: 12,
-            height: 12,
-            borderRadius: 999,
-            background: '#fff',
-            transform: on ? 'translateX(14px)' : 'translateX(0)',
-            transition: 'transform 120ms ease',
-          }}
+      <span className="gopt-switch">
+        <input
+          type="checkbox"
+          aria-label={label}
+          checked={Boolean(value)}
+          onChange={(e) => onChange(e.target.checked)}
         />
-      </button>
+        <span className="gopt-switch-track" aria-hidden="true">
+          <span className="gopt-switch-thumb" />
+        </span>
+      </span>
     );
   }
 
   return (
-    <label style={optStyleFor(width)}>
-      <span style={labelStyle} title={label}>{label}</span>
+    <label className="gopt">
+      <span className="gopt-label" title={label}>{label}</span>
       {control}
     </label>
   );
 }
 
-function PivotControl(props: {
-  pivot: NonNullable<PanelModel['pivot']>;
-  width: number;
-  onSelect: (id: string | undefined) => void;
-}) {
-  const { pivot, width, onSelect } = props;
-  const { t } = useTranslation();
-  const { ids, labels, index, length, label } = pivot;
-  const go = (delta: number) => {
-    const nextIndex = (index + delta + length) % length;
-    // Identity (index 0) is the absent override — clear it so the chart returns
-    // to the authored view rather than storing a redundant id.
-    onSelect(nextIndex === 0 ? undefined : ids[nextIndex]);
-  };
-  const btnStyle: CSSProperties = {
-    width: 22,
-    height: 22,
-    padding: 0,
-    border: 'none',
-    borderRadius: 6,
-    background: 'transparent',
-    color: siteTheme.text,
-    cursor: 'pointer',
-    fontSize: 14,
-    lineHeight: 1,
-  };
-  const stepperStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 2,
-    padding: 2,
-    border: `1px solid ${siteTheme.border}`,
-    borderRadius: 8,
-    background: siteTheme.surface,
-    minWidth: 0,
-    width: 96,
-    justifySelf: 'end',
-  };
+function Chevron({ color }: { color: string }) {
   return (
-    <div role="group" aria-label={label} style={optStyleFor(width)}>
-      <span style={labelStyle} title={label}>{label}</span>
-      <div style={stepperStyle}>
-        <button type="button" aria-label={t('options.prevView')} onClick={() => go(-1)} style={btnStyle}>
-          ‹
-        </button>
-        <span
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 4.5 L6 7.5 L9 4.5" />
+    </svg>
+  );
+}
+
+/**
+ * Combined transform control: the chart-type switch (an icon dropdown listing
+ * sibling chart types) and the arrange cycle button (name ›) fused into ONE compact
+ * pill. When a chart has no sibling types the chart-type part is a static,
+ * non-clickable chip; when it has no arrangements the arrange part is omitted.
+ */
+function TransformControl(props: {
+  chartType?: PanelModel['chartType'];
+  arrange?: PanelModel['arrange'];
+  onChartType: (id: string | undefined) => void;
+  onArrange: (id: string | undefined) => void;
+}) {
+  const { chartType, arrange, onChartType, onArrange } = props;
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [hoverType, setHoverType] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const canSwitchType = !!chartType && chartType.length > 1;
+  const hasArrange = !!arrange && arrange.length > 1;
+  const curName = chartType ? chartType.labels[chartType.index] : undefined;
+  const curIcon = curName ? chartIconFor(curName) : undefined;
+  const arrangeLabel = hasArrange ? arrange!.labels[arrange!.index] : '';
+
+  const iconStyle: CSSProperties = { width: 15, height: 15, display: 'block', flex: '0 0 auto' };
+  const segStyle: CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    padding: '5px 8px',
+    border: 'none',
+    color: siteTheme.text,
+  };
+  const goArrange = (delta: number) => {
+    if (!arrange) return;
+    const n = (arrange.index + delta + arrange.length) % arrange.length;
+    onArrange(n === 0 ? undefined : arrange.ids[n]);
+  };
+
+  return (
+    <div
+      ref={rootRef}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'stretch',
+        gap: 0,
+        borderRadius: 8,
+        background: 'rgba(0, 0, 0, 0.05)',
+        overflow: 'visible',
+      }}
+    >
+      {chartType &&
+        (canSwitchType ? (
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-label={`${chartType.label}: ${curName}`}
+            title={curName}
+            onClick={() => setOpen((o) => !o)}
+            onMouseEnter={() => setHoverType(true)}
+            onMouseLeave={() => setHoverType(false)}
+            style={{
+              ...segStyle,
+              cursor: 'pointer',
+              outline: 'none',
+              borderRadius: hasArrange ? '8px 0 0 8px' : 8,
+              background: open || hoverType ? 'rgba(0, 0, 0, 0.07)' : 'transparent',
+            }}
+          >
+            {curIcon && <img src={curIcon} alt="" style={iconStyle} />}
+            <Chevron color={siteTheme.textMuted} />
+          </button>
+        ) : (
+          <span
+            style={{ ...segStyle, borderRadius: hasArrange ? '8px 0 0 8px' : 8, background: 'transparent' }}
+            title={curName}
+          >
+            {curIcon && <img src={curIcon} alt="" style={iconStyle} />}
+          </span>
+        ))}
+
+      {chartType && hasArrange && (
+        <span style={{ width: 1, alignSelf: 'stretch', margin: '5px 0', background: siteTheme.border }} />
+      )}
+
+      {hasArrange && (
+        <div className="gopt-transform-arrange" role="group" aria-label={arrange!.label}>
+          <button
+            type="button"
+            className="gopt-transform-next"
+            aria-label={`${t('options.nextView')}; ${arrangeLabel}`}
+            title={arrangeLabel}
+            onClick={() => goArrange(1)}
+          >
+            <span className="gopt-transform-state">
+              {arrangeLabel}
+            </span>
+            <span className="gopt-transform-arrow" aria-hidden="true">›</span>
+          </button>
+        </div>
+      )}
+
+      {open && canSwitchType && chartType && (
+        <ul
+          role="listbox"
+          aria-label={chartType.label}
           style={{
-            ...labelStyle,
-            flex: '1 1 auto',
-            minWidth: 36,
-            textAlign: 'center',
-            fontVariantNumeric: 'tabular-nums',
+            position: 'absolute',
+            bottom: 'calc(100% + 5px)',
+            left: 0,
+            zIndex: 60,
+            margin: 0,
+            padding: 4,
+            listStyle: 'none',
+            minWidth: 190,
+            maxHeight: 320,
+            overflowY: 'auto',
+            border: `1px solid ${siteTheme.border}`,
+            borderRadius: 10,
+            background: siteTheme.surface,
+            boxShadow: '0 -8px 24px rgba(0,0,0,0.14)',
           }}
-          title={labels[index]}
         >
-          {index + 1} / {length}
-        </span>
-        <button type="button" aria-label={t('options.nextView')} onClick={() => go(1)} style={btnStyle}>
-          ›
-        </button>
-      </div>
+          {chartType.labels.map((lbl, i) => {
+            const ic = chartIconFor(lbl);
+            const selected = i === chartType.index;
+            return (
+              <li
+                key={i}
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onChartType(i === 0 ? undefined : chartType.ids[i]);
+                  setOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 8px',
+                  borderRadius: 7,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  color: siteTheme.text,
+                  background: selected ? 'rgba(0,0,0,0.06)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!selected) (e.currentTarget as HTMLLIElement).style.background = 'rgba(0,0,0,0.04)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!selected) (e.currentTarget as HTMLLIElement).style.background = 'transparent';
+                }}
+              >
+                {ic && <img src={ic} alt="" style={{ width: 16, height: 16, display: 'block', flex: '0 0 auto' }} />}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lbl}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
 
+
 export function GalleryOptionsBar(props: {
   model: PanelModel;
   onChange: (key: string, value: unknown) => void;
+  onReset: () => void;
+  canReset: boolean;
   chartType: string;
   style?: CSSProperties;
 }) {
-  const { model, onChange, chartType, style } = props;
+  const { model, onChange, onReset, canReset, chartType, style } = props;
 
   const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
     ...model.properties.map((option: ChartOption) => ({
@@ -269,34 +387,21 @@ export function GalleryOptionsBar(props: {
   ];
 
   return (
-    <div
-      role="toolbar"
-      aria-label={`${chartType} options`}
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '12px 28px',
-        padding: '10px 14px',
-        background: 'rgba(0, 0, 0, 0.035)',
-        borderRadius: 10,
-        color: siteTheme.textMuted,
-        ...style,
-      }}
-    >
-      {model.pivot && model.pivot.length > 1 && (
-        <PivotControl
-          pivot={model.pivot}
-          width={optionWidth(model.pivot.label, 'pivot')}
-          onSelect={(id) => onChange(model.pivot!.key, id)}
+    <div role="toolbar" aria-label={`${chartType} options`} className="gopt-bar" style={style}>
+      {((model.chartType && model.chartType.length > 1) ||
+        (model.arrange && model.arrange.length > 1)) && (
+        <TransformControl
+          chartType={model.chartType}
+          arrange={model.arrange}
+          onChartType={(id) => onChange(model.chartType!.key, id)}
+          onArrange={(id) => onChange(model.arrange!.key, id)}
         />
       )}
       {controls.length === 0 ? (
-        !(model.pivot && model.pivot.length > 1) && (
-          <span style={{ ...labelStyle, fontStyle: 'italic' }}>
-            No adjustable options for this chart.
-          </span>
-        )
+        !(
+          (model.chartType && model.chartType.length > 1) ||
+          (model.arrange && model.arrange.length > 1)
+        ) && <span className="gopt-empty">No adjustable options for this chart.</span>
       ) : (
         controls.map((control) => (
           <ControlRow
@@ -304,11 +409,23 @@ export function GalleryOptionsBar(props: {
             label={control.label}
             spec={control.spec}
             value={control.value}
-            width={optionWidth(control.label, control.spec.type)}
             onChange={(v) => onChange(control.key, v)}
           />
         ))
       )}
+      <button
+        type="button"
+        className="gopt-reset"
+        onClick={onReset}
+        disabled={!canReset}
+        title="Reset chart"
+        aria-label="Reset chart"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4 5.5H1.5V3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 5.5A6 6 0 1 1 2.8 11" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+      </button>
     </div>
   );
 }

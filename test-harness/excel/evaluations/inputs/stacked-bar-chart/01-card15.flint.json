@@ -1,0 +1,398 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 201,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 915,
+        "Segment": "China"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 695,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 941,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Laptop",
+        "Value": 238,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Phone",
+        "Value": 544,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Phone",
+        "Value": 686,
+        "Segment": "China"
+      },
+      {
+        "Category": "Phone",
+        "Value": 375,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Phone",
+        "Value": 502,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Phone",
+        "Value": 361,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 797,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 96,
+        "Segment": "China"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 241,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 392,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Tablet",
+        "Value": 399,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 786,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 208,
+        "Segment": "China"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 246,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 74,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Desktop",
+        "Value": 445,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 496,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 498,
+        "Segment": "China"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 224,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 650,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Monitor",
+        "Value": 532,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 289,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 215,
+        "Segment": "China"
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 77,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 414,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 515,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Mouse",
+        "Value": 537,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Mouse",
+        "Value": 674,
+        "Segment": "China"
+      },
+      {
+        "Category": "Mouse",
+        "Value": 311,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Mouse",
+        "Value": 542,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Mouse",
+        "Value": 334,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Headphones",
+        "Value": 942,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Headphones",
+        "Value": 547,
+        "Segment": "China"
+      },
+      {
+        "Category": "Headphones",
+        "Value": 289,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Headphones",
+        "Value": 306,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Headphones",
+        "Value": 551,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Speaker",
+        "Value": 559,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Speaker",
+        "Value": 982,
+        "Segment": "China"
+      },
+      {
+        "Category": "Speaker",
+        "Value": 854,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Speaker",
+        "Value": 308,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Speaker",
+        "Value": 310,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Camera",
+        "Value": 536,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Camera",
+        "Value": 843,
+        "Segment": "China"
+      },
+      {
+        "Category": "Camera",
+        "Value": 122,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Camera",
+        "Value": 931,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Camera",
+        "Value": 906,
+        "Segment": "UK"
+      },
+      {
+        "Category": "TV",
+        "Value": 266,
+        "Segment": "USA"
+      },
+      {
+        "Category": "TV",
+        "Value": 809,
+        "Segment": "China"
+      },
+      {
+        "Category": "TV",
+        "Value": 335,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "TV",
+        "Value": 797,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "TV",
+        "Value": 237,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Router",
+        "Value": 155,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Router",
+        "Value": 557,
+        "Segment": "China"
+      },
+      {
+        "Category": "Router",
+        "Value": 752,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Router",
+        "Value": 150,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Router",
+        "Value": 830,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Printer",
+        "Value": 422,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Printer",
+        "Value": 766,
+        "Segment": "China"
+      },
+      {
+        "Category": "Printer",
+        "Value": 950,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Printer",
+        "Value": 890,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Printer",
+        "Value": 204,
+        "Segment": "UK"
+      },
+      {
+        "Category": "Scanner",
+        "Value": 27,
+        "Segment": "USA"
+      },
+      {
+        "Category": "Scanner",
+        "Value": 310,
+        "Segment": "China"
+      },
+      {
+        "Category": "Scanner",
+        "Value": 51,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "Scanner",
+        "Value": 568,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "Scanner",
+        "Value": 82,
+        "Segment": "UK"
+      },
+      {
+        "Category": "SSD",
+        "Value": 182,
+        "Segment": "USA"
+      },
+      {
+        "Category": "SSD",
+        "Value": 694,
+        "Segment": "China"
+      },
+      {
+        "Category": "SSD",
+        "Value": 653,
+        "Segment": "Japan"
+      },
+      {
+        "Category": "SSD",
+        "Value": 910,
+        "Segment": "Germany"
+      },
+      {
+        "Category": "SSD",
+        "Value": 252,
+        "Segment": "UK"
+      }
+    ]
+  }
+}

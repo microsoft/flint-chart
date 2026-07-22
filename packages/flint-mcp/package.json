@@ -1,6 +1,6 @@
 {
   "name": "flint-chart-mcp",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Model Context Protocol server for Flint — compile, validate, and render semantic chart specs to Vega-Lite, ECharts, or Chart.js artifacts (PNG/SVG) in-process.",
   "keywords": [
     "mcp",
@@ -68,7 +68,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "chart.js": "^4.4.0",
     "echarts": "^6.0.0",
-    "flint-chart": "^0.2.2",
+    "flint-chart": "^0.3.0",
     "vega": "^6.0.0",
     "vega-interpreter": "^2.2.1",
     "vega-lite": "^6.0.0",
