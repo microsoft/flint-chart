@@ -113,7 +113,7 @@ function CaseCard({ c }: { c: PreviewCase }) {
     );
 }
 
-export function NewCasePreview() {
+export function DemoWall() {
     const groups = useMemo(() => {
         const byFamily = new Map<string, { c: PreviewCase; index: number }[]>();
         PREVIEW_CASES.forEach((c, index) => {
@@ -129,11 +129,11 @@ export function NewCasePreview() {
     return (
         <div className="dev-page">
             <header className="dev-page-heading">
-                <h1>New-case preview <span style={{ fontSize: 14, fontWeight: 400, color: siteTheme.navInactive }}>({PREVIEW_CASES.length} candidates)</span></h1>
+                <h1>Demo wall <span style={{ fontSize: 14, fontWeight: 400, color: siteTheme.navInactive }}>({PREVIEW_CASES.length} candidates)</span></h1>
                 <p style={{ color: siteTheme.textMuted, maxWidth: 760, fontSize: 13 }}>
                     Candidate real-world datasets, grouped by family. Rendered with Vega-Lite by
-                    default, Plotly where the chart type isn't in Vega-Lite. Nothing here is wired
-                    into the test-data generators yet — staging for review.
+                    default, Plotly where the chart type isn't in Vega-Lite. Hover a tile for its
+                    source, license and row count.
                 </p>
             </header>
             {groups.map(({ fam, items }) => (

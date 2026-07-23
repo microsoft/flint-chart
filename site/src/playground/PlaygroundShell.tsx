@@ -6,7 +6,8 @@ const pages = [
   { to: 'illustrations', label: 'Illustrations' },
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },
-  { to: 'new-case-preview', label: 'New-case preview' },
+  { to: 'demo-wall', label: 'Demo wall' },
+  { to: 'full-test-cases', label: 'Full test cases' },
 ];
 
 export function PlaygroundShell() {
