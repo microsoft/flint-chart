@@ -34,7 +34,7 @@ import {
     LayoutDeclaration,
     InstantiateContext,
 } from '../core/types';
-import type { ChartWarning } from '../core/types';
+import type { ChartWarning, ChartEncoding } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
 import { plGetTemplateDef } from './templates';
@@ -43,7 +43,7 @@ import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
-import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';
+import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plApplyAxisProperties } from './instantiate-spec';
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
@@ -94,7 +94,20 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;
 
-    const encodings = applyEncodingOverrides(chartTemplate, normalized.encodings, chartProperties);
+    // Enrich raw encodings with their resolved semantic `type` BEFORE applying
+    // encoding actions (Sort, …) — an action like Sort must know which position
+    // channel is the measure (quantitative), which lives in the resolved
+    // semantics, not the bare field binding. Mirrors the VL assembler's
+    // `typedRawEncodings` step (a cheap preliminary semantics pass).
+    const prelimConverted = convertTemporalData(data, semanticTypes);
+    const prelimSemantics = resolveChannelSemantics(
+        normalized.encodings, data, semanticTypes, prelimConverted,
+    );
+    const typedRawEncodings: Record<string, ChartEncoding> = {};
+    for (const [ch, enc] of Object.entries(normalized.encodings)) {
+        typedRawEncodings[ch] = enc.type ? enc : { ...enc, type: prelimSemantics[ch]?.type };
+    }
+    const encodings = applyEncodingOverrides(chartTemplate, typedRawEncodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
     data = applyAggregation(encodings, data);
@@ -360,11 +373,13 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
             }
         }
         plApplyCartesianAxisSpacing(figure);
+        plApplyAxisProperties(figure, instantiateContext);
         if (addTooltipsOpt) plApplyTooltips(figure);
     } else {
         figure = structuredClone(chartTemplate.template);
         chartTemplate.instantiate(figure, instantiateContext);
         plApplyLayoutToSpec(figure, instantiateContext, warnings);
+        plApplyAxisProperties(figure, instantiateContext);
         if (addTooltipsOpt) plApplyTooltips(figure);
         if (chartTemplate.postProcess) chartTemplate.postProcess(figure, instantiateContext);
     }

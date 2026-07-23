@@ -57,22 +57,44 @@ export const plWaterfallChartDef: ChartTemplateDef = {
 
         const showLabels = !!chartProperties?.showTextLabels;
 
+        // Value labels sit OUTSIDE the bars (above a rise, below a fall). Plotly's
+        // auto-range only fits the bar extents, not the outside text, so the
+        // labels on the tallest/deepest bars get clipped at the plot edge. When
+        // labels are on, pad the y-range past the running-total envelope so the
+        // callouts have room, and set `cliponaxis: false` so a label that still
+        // reaches the edge is drawn into the margin rather than cut off.
+        let yRange: [number, number] | undefined;
+        if (showLabels) {
+            const extents = [0];
+            let run = 0;
+            for (const v of values) { run += v; extents.push(run); }
+            const lo = Math.min(...extents);
+            const hi = Math.max(...extents);
+            const pad = (hi - lo || Math.abs(hi) || 1) * 0.15;
+            yRange = [lo - pad, hi + pad];
+        }
+
         Object.assign(spec, {
             data: [{
                 type: 'waterfall',
                 x: categories,
                 y: values,
                 measure,
-                connector: { line: { color: '#9ca3af', width: 1 } },
-                increasing: { marker: { color: '#91cc75' } },
-                decreasing: { marker: { color: '#ee6666' } },
-                totals: { marker: { color: '#5470c6' } },
+                // Plotly's native waterfall palette (its default template):
+                // teal-green rises, red falls, blue totals, dark-grey
+                // connectors — rather than borrowing the ECharts hues, so the
+                // Plotly output looks native.
+                connector: { line: { color: '#444', width: 1 } },
+                increasing: { marker: { color: '#3D9970' } },
+                decreasing: { marker: { color: '#FF4136' } },
+                totals: { marker: { color: '#4499FF' } },
                 text: showLabels ? values.map(v => (v > 0 ? '+' : '') + v) : undefined,
                 textposition: showLabels ? 'outside' as const : undefined,
+                ...(showLabels ? { cliponaxis: false } : {}),
             }],
             layout: {
                 xaxis: { type: 'category', categoryorder: 'array', categoryarray: categories, title: { text: xField } },
-                yaxis: { title: { text: yField } },
+                yaxis: { title: { text: yField }, ...(yRange ? { range: yRange } : {}) },
                 showlegend: false,
             },
         });

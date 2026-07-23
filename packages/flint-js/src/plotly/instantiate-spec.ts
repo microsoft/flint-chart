@@ -85,6 +85,41 @@ export function plApplyCartesianAxisSpacing(figure: any): void {
 }
 
 /**
+ * Apply the cross-cutting per-axis chart properties (`logScale_x/y`,
+ * `includeZero_x/y`) to every cartesian axis of the figure. These are surfaced
+ * on many charts by the shared VL option set; implementing them here lets ALL
+ * Plotly cartesian charts honor them natively (`axis.type: 'log'`,
+ * `axis.rangemode: 'tozero'`). A category axis is skipped (log/zero are
+ * meaningless there); a log axis never also forces zero (log 0 is undefined).
+ */
+export function plApplyAxisProperties(figure: any, context: InstantiateContext): void {
+    const cp = context.chartProperties;
+    if (!cp || !figure.layout) return;
+    const applyAxis = (re: RegExp, logKey: string, zeroKey: string) => {
+        const log = cp[logKey];
+        const zero = cp[zeroKey];
+        if (log == null && zero == null) return;
+        for (const [k, ax] of Object.entries(figure.layout)) {
+            if (!re.test(k) || !ax || typeof ax !== 'object') continue;
+            const a = ax as any;
+            if (a.type === 'category') continue;
+            if (log === true) {
+                a.type = 'log';
+                if (a.rangemode === 'tozero') delete a.rangemode;
+            } else if (log === false && a.type === 'log') {
+                delete a.type;
+            }
+            if (a.type !== 'log') {
+                if (zero === true) a.rangemode = 'tozero';
+                else if (zero === false && a.rangemode === 'tozero') a.rangemode = 'normal';
+            }
+        }
+    };
+    applyAxis(/^xaxis\d*$/, 'logScale_x', 'includeZero_x');
+    applyAxis(/^yaxis\d*$/, 'logScale_y', 'includeZero_y');
+}
+
+/**
  * Phase 2: Apply layout and semantic decisions to the Plotly figure.
  *
  * Handles common Plotly plumbing across all templates:

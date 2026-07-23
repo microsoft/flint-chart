@@ -8,9 +8,10 @@
  * (the dot) sharing the same category axis — mirrors `ecLollipopChartDef`.
  */
 
-import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { extractCategories, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
+import { extractCategories, resolveCategoryOrder, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
+import { makeSortAction } from '../../core/encoding-actions';
 
 const STEM_COLOR = '#9aa0a6';
 
@@ -34,7 +35,12 @@ export const plLollipopChartDef: ChartTemplateDef = {
         const colorField = channelSemantics.color?.field;
         if (!catField || !valField) return;
 
-        const categories = extractCategories(table, catField, channelSemantics[categoryAxis]?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: channelSemantics[categoryAxis]?.ordinalSortOrder,
+            sortBy: sortByField, sortOrder: catEnc?.sortOrder,
+        });
         const values = buildCategoryAlignedData(table, catField, valField, categories);
         const isHorizontal = categoryAxis === 'y';
         const dotSize = Number(chartProperties?.dotSize ?? 80);
@@ -91,4 +97,5 @@ export const plLollipopChartDef: ChartTemplateDef = {
     properties: [
         { key: 'dotSize', label: 'Dot Size', type: 'continuous', min: 20, max: 300, step: 10, defaultValue: 80 } as ChartPropertyDef,
     ],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
 };

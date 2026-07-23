@@ -11,10 +11,17 @@
  *   PL:  { data: [{ type: 'bar', x, y, orientation }], layout: { xaxis, yaxis } }
  */
 
-import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { extractCategories, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
+import { extractCategories, resolveCategoryOrder, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 import { planBandDodge } from '../../core/band-dodge';
+import { makeSortAction } from '../../core/encoding-actions';
+
+/** Corner-radius property shared by the Plotly bar templates (px, matches VL). */
+const BAR_CORNER_RADIUS: ChartPropertyDef = {
+    key: 'cornerRadius', label: 'Corners', type: 'continuous',
+    min: 0, max: 15, step: 1, defaultValue: 0,
+};
 
 export const plBarChartDef: ChartTemplateDef = {
     chart: 'Bar Chart',
@@ -29,7 +36,7 @@ export const plBarChartDef: ChartTemplateDef = {
         };
     },
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table } = ctx;
+        const { channelSemantics, table, chartProperties } = ctx;
         const { categoryAxis, valueAxis } = detectAxes(channelSemantics);
 
         const catField = channelSemantics[categoryAxis]?.field;
@@ -37,11 +44,20 @@ export const plBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        // `sortBy` from the Sort action is the measure CHANNEL ('x'|'y'); map it
+        // to its field so we can order categories by that measure.
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder,
+            sortBy: sortByField,
+            sortOrder: catEnc?.sortOrder,
+        });
         const values = buildCategoryAlignedData(table, catField, valField, categories);
 
         const isHorizontal = categoryAxis === 'y';
         const palette = getPlotlyPalette(ctx);
+        const cornerRadius = Number(chartProperties?.cornerRadius ?? 0);
 
         const catAxisSpec = {
             type: 'category' as const,
@@ -64,7 +80,10 @@ export const plBarChartDef: ChartTemplateDef = {
                 ...(isHorizontal
                     ? { x: values, y: categories, orientation: 'h' }
                     : { x: categories, y: values }),
-                marker: { color: getSeriesColor(palette, 0) },
+                marker: {
+                    color: getSeriesColor(palette, 0),
+                    ...(cornerRadius > 0 ? { cornerradius: cornerRadius } : {}),
+                },
             }],
             layout: {
                 bargap: 0.2,
@@ -79,7 +98,8 @@ export const plBarChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
-    properties: [] as ChartPropertyDef[],
+    properties: [BAR_CORNER_RADIUS],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
 };
 
 // ─── Stacked Bar Chart ──────────────────────────────────────────────────────
@@ -103,7 +123,7 @@ export const plStackedBarChartDef: ChartTemplateDef = {
         };
     },
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table } = ctx;
+        const { channelSemantics, table, chartProperties } = ctx;
         const { categoryAxis, valueAxis } = detectAxes(channelSemantics);
         const colorField = channelSemantics.color?.field;
 
@@ -112,9 +132,16 @@ export const plStackedBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder, sortBy: sortByField, sortOrder: catEnc?.sortOrder,
+        });
         const isHorizontal = categoryAxis === 'y';
         const palette = getPlotlyPalette(ctx, 'color');
+        // 100%-stacked toggle (Stack property): Plotly normalizes each band to
+        // 100% via `barnorm: 'percent'`; the value-axis title then reflects %.
+        const normalize = colorField && chartProperties?.stackMode === 'normalize';
 
         const traces: any[] = [];
         if (colorField) {
@@ -148,6 +175,7 @@ export const plStackedBarChartDef: ChartTemplateDef = {
             data: traces,
             layout: {
                 barmode: 'stack',
+                ...(normalize ? { barnorm: 'percent' } : {}),
                 bargap: 0.2,
                 ...(isHorizontal ? { xaxis: valAxisSpec, yaxis: catAxisSpec } : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
                 showlegend: !!colorField,
@@ -156,6 +184,15 @@ export const plStackedBarChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    properties: [
+        { key: 'stackMode', label: 'Stack', type: 'discrete',
+          check: (ctx) => ({ applicable: !!ctx.encodings.color?.field }),
+          options: [
+            { value: undefined, label: 'Stacked (default)' },
+            { value: 'normalize', label: 'Normalize (100%)' },
+          ] } as ChartPropertyDef,
+    ],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
 };
 
 // ─── Grouped Bar Chart ──────────────────────────────────────────────────────
@@ -189,7 +226,11 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder, sortBy: sortByField, sortOrder: catEnc?.sortOrder,
+        });
         const isHorizontal = categoryAxis === 'y';
         const palette = getPlotlyPalette(ctx, 'group');
 
@@ -241,6 +282,7 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
 };
 
 // ─── Pyramid Chart ──────────────────────────────────────────────────────────

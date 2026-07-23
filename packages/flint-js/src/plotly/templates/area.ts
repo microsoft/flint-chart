@@ -96,6 +96,12 @@ export const plAreaChartDef: ChartTemplateDef = {
             traces.push(makeTrace(yField, table, 0));
         }
 
+        // 100%-stacked: Plotly normalizes a stackgroup when the FIRST trace in
+        // the group carries `groupnorm: 'percent'`.
+        if (colorField && stacked && stackMode === 'normalize' && traces.length > 0) {
+            traces[0].groupnorm = 'percent';
+        }
+
         const xAxisSpec: any = { title: { text: xField } };
         if (xIsDiscrete) {
             xAxisSpec.type = 'category';
@@ -133,8 +139,11 @@ export const plAreaChartDef: ChartTemplateDef = {
         } as ChartPropertyDef,
         { key: 'opacity', label: 'Opacity', type: 'continuous', min: 0.1, max: 1, step: 0.05, defaultValue: 0.4 } as ChartPropertyDef,
         {
-            key: 'stackMode', label: 'Stack', type: 'discrete', options: [
+            key: 'stackMode', label: 'Stack', type: 'discrete',
+            check: (ctx) => ({ applicable: !!ctx.encodings.color?.field }),
+            options: [
                 { value: undefined, label: 'Stacked (default)' },
+                { value: 'normalize', label: 'Normalize (100%)' },
                 { value: 'layered', label: 'Layered (overlap)' },
             ],
         } as ChartPropertyDef,
