@@ -50,15 +50,21 @@ export const plGaugeChartDef: ChartTemplateDef = {
         const n = items.length;
         const cols = Math.ceil(Math.sqrt(n));
         const gridRows = Math.ceil(n / cols);
-        const gapFrac = 0.04;
-        const cellW = (1 - gapFrac * (cols - 1)) / cols;
-        const cellH = (1 - gapFrac * (gridRows - 1)) / gridRows;
+        // A gauge's semicircular dial carries axis end-labels ("0"/"max") just
+        // beyond its left/right tips and a title above it. With a tiny gap the
+        // neighbouring dials' end-labels collide horizontally and a lower row's
+        // title crowds the row above. Reserve a generous gap on each axis —
+        // wider horizontally (end-labels) and taller vertically (title band).
+        const gapX = cols > 1 ? 0.14 : 0;
+        const gapY = gridRows > 1 ? 0.18 : 0;
+        const cellW = (1 - gapX * (cols - 1)) / cols;
+        const cellH = (1 - gapY * (gridRows - 1)) / gridRows;
 
         const traces = items.map((item, i) => {
             const col = i % cols;
             const row = Math.floor(i / cols);
-            const x0 = col * (cellW + gapFrac);
-            const y1 = 1 - row * (cellH + gapFrac);
+            const x0 = col * (cellW + gapX);
+            const y1 = 1 - row * (cellH + gapY);
             const y0 = y1 - cellH;
             const color = getSeriesColor(palette, i);
             return {
@@ -81,8 +87,8 @@ export const plGaugeChartDef: ChartTemplateDef = {
         Object.assign(spec, {
             data: traces,
             layout: {},
-            _width: Math.max(canvas.width, cols * 220),
-            _height: Math.max(canvas.height, gridRows * 220),
+            _width: Math.max(canvas.width, cols * 240),
+            _height: Math.max(canvas.height, gridRows * 230),
         });
         delete spec.mark;
         delete spec.encoding;

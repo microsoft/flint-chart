@@ -85,13 +85,29 @@ interface FamilyGroup {
  * under their gallery family so related chart types stay together while each
  * type keeps its own heading and sidebar entry.
  */
-function buildGroups(charts: ChartEntry[], locale: Locale): FamilyGroup[] {
+function buildGroups(
+  charts: ChartEntry[],
+  locale: Locale,
+  backend: PreviewBackend,
+): FamilyGroup[] {
   const sectionsByFamily = new Map<string, ChartSection[]>();
 
   for (const chart of charts) {
     const full = loadTests(chart.generator);
-    const variants = selectVariants(full, MAX_VARIANTS);
+    // Global vs. local dodge only produces a visibly distinct layout in
+    // Vega-Lite (centered lanes). Plotly reuses the generic generators, so
+    // drop the `dodge-*` demo cases everywhere except the Vega-Lite gallery.
+    const visible =
+      backend === 'vegalite'
+        ? full
+        : full.filter(
+            (tc) =>
+              !tc.tags?.some((t) => t === 'dodge-global' || t === 'dodge-local'),
+          );
+    const variants = selectVariants(visible, MAX_VARIANTS);
     if (variants.length === 0) continue;
+    // Indices must point into the FULL generator output (the editor resolves
+    // TEST_GENERATORS[generator][index]), not the filtered subset.
     const indices = variants.map((v) => full.indexOf(v));
     const titles = humanizeVariants(variants, locale);
     const tiles = variants.map((testCase, pos) => ({
@@ -150,7 +166,7 @@ export function ChartWall() {
     }
   }, [backendParam, category.id, navigate, lp]);
 
-  const groups = useMemo(() => buildGroups(category.charts, locale), [category, locale]);
+  const groups = useMemo(() => buildGroups(category.charts, locale, category.id), [category, locale]);
   const sectionIds = useMemo(
     () => groups.flatMap((g) => g.sections.map((s) => s.chart.id)),
     [groups],

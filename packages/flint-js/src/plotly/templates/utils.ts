@@ -95,13 +95,25 @@ export function buildCategoryAlignedData(
 
 /**
  * Detect which axis is the category (banded) axis and which is the value axis.
+ *
+ * A bar's length is encoded on the **quantitative** axis; the band axis is the
+ * other one — which may be discrete (nominal/ordinal) *or* temporal (a bar over
+ * time is banded per period). Checking only for discreteness misses the temporal
+ * case and leaves dates on the value axis (→ empty bars).
  */
 export function detectAxes(
     channelSemantics: Record<string, ChannelSemantics>,
 ): { categoryAxis: 'x' | 'y'; valueAxis: 'x' | 'y' } {
     const xCS = channelSemantics.x;
     const yCS = channelSemantics.y;
+    const xQuant = !!xCS && xCS.type === 'quantitative';
+    const yQuant = !!yCS && yCS.type === 'quantitative';
 
+    // Bar length lives on the quantitative axis; the band is the other axis.
+    if (yQuant && !xQuant) return { categoryAxis: 'x', valueAxis: 'y' }; // vertical
+    if (xQuant && !yQuant) return { categoryAxis: 'y', valueAxis: 'x' }; // horizontal
+
+    // Fallbacks (both discrete, both quantitative, or missing): discrete-first.
     if (xCS && isDiscrete(xCS.type)) {
         return { categoryAxis: 'x', valueAxis: 'y' };
     }

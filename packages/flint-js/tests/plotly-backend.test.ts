@@ -75,6 +75,8 @@ describe('Plotly backend', () => {
     expect(fig.data[0].y).toEqual([168, 167, 145]);
     expect(fig.layout.xaxis.type).toBe('category');
     expect(fig.layout.yaxis.rangemode).toBe('tozero');
+    expect(fig.layout.bargap).toBe(0.2);
+    expect(fig.layout.xaxis.tickangle).toBe(0);
     expect(fig.layout.width).toBeGreaterThan(0);
     expect(fig.layout.height).toBeGreaterThan(0);
   });
@@ -84,6 +86,21 @@ describe('Plotly backend', () => {
     expect(fig.data[0].orientation).toBe('h');
     expect(fig.data[0].y).toEqual(['East', 'South', 'North']);
     expect(fig.layout.xaxis.rangemode).toBe('tozero');
+  });
+
+  it('bar: horizontal over time — quantitative x on the value axis, temporal y as the band', () => {
+    // Regression: a temporal y-axis is a band (bars per period), not the value
+    // axis. detectAxes must put the quantity on x, the dates on y — else the
+    // bars are null (empty chart).
+    const rows = [
+      { amount: 166, when: '2024-01-15' },
+      { amount: 268, when: '2024-02-15' },
+      { amount: 128, when: '2024-03-15' },
+    ];
+    const fig = assemblePlotly(input('Bar Chart', { x: { field: 'amount' }, y: { field: 'when' } }, rows, { amount: 'Amount', when: 'Date' }));
+    expect(fig.data[0].orientation).toBe('h');
+    expect(fig.data[0].x).toEqual([166, 268, 128]);
+    expect(fig.data[0].y.every((v: unknown) => v != null)).toBe(true);
   });
 
   it('line: one trace per color group with legend on', () => {

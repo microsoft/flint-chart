@@ -66,7 +66,7 @@ import { ecGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { ecApplyLayoutToSpec, ecApplyTooltips } from './instantiate-spec';
 import { ecCombineFacetPanels } from './facet';
 import { DEFAULT_COLORS } from './templates/utils';
@@ -199,6 +199,13 @@ export function assembleECharts(input: ChartAssemblyInput): any {
         // but adds ~120-160px grid margins on top.  A 24px base band gives
         // bars close to ECharts's native auto-sizing at typical category counts.
         defaultBandSize: 24,
+        // ECharts fills its grid natively (bars sized by barCategoryGap), so
+        // sparse categories spread out. Allow bands to expand past the base to
+        // match that, capped so a couple of bars don't span the whole canvas.
+        maxBandSize: 100,
+        // ECharts native font defaults (labels, titles, legend all 12).
+        baseLabelFontSize: 12,
+        baseTitleFontSize: 12,
         ...options,
         ...(declaration.paramOverrides || {}),
     };
@@ -218,6 +225,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // (βx, βy) so the entire layout — single plot OR facet grid — stays within
     // the same budget. Falls back to maxStretch when no ceiling is set.
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     // Default true so that _encodingTooltip is applied and all charts get encoding-style tooltips
     const {

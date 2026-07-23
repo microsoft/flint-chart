@@ -42,10 +42,10 @@ cp office-runner/officejs/manifest.xml ~/Library/Containers/com.microsoft.Excel/
 Start the HTTPS transport from this directory:
 
 ```bash
-npm run server
+npm run server:supervised
 ```
 
-The server builds `packages/flint-js`, serves its Excel backend to the taskpane, and listens at `https://localhost:3000`. In Excel, open Home > Add-ins > My Add-ins > Flint Render once.
+Run the supervised server in a dedicated terminal. It builds `packages/flint-js`, serves its Excel backend to the taskpane, listens at `https://localhost:3000`, and restarts after an unexpected process exit. In Excel, open Home > Add-ins > My Add-ins > Flint Render once. Use `npm run server` only when debugging the server process without automatic restart.
 
 Active evaluations compile semantic Flint inputs with `assembleExcel` and submit this envelope:
 

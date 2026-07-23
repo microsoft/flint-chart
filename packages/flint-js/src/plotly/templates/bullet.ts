@@ -78,15 +78,26 @@ export const plBulletChartDef: ChartTemplateDef = {
         const traces: any[] = [...zoneTraces, valueTrace];
 
         if (goalField) {
+            // Target tick scales with the band height (yStep) so it stays
+            // proportional to the bars across canvas sizes, instead of a fixed
+            // 22px that looks tiny on a tall chart and huge on a short one.
+            const bandPx = ctx.layout.yStep || 30;
+            const tickSize = Math.max(14, Math.min(48, Math.round(bandPx * 0.4)));
             traces.push({
                 type: 'scatter',
                 mode: 'markers',
                 name: 'Target',
                 x: categories.map(cat => goalOf(cat)),
                 y: categories,
-                marker: { symbol: 'line-ns', size: 22, line: { color: '#1a1a1a', width: 2.5 } },
+                showlegend: false,
+                marker: { symbol: 'line-ns', size: tickSize, line: { color: '#1a1a1a', width: 2.5 } },
                 hovertemplate: `%{y}<br />${goalField}: %{x}<extra></extra>`,
             });
+            // No legend entry for the target tick: the mark itself is the
+            // universally understood bullet-chart target line, and its
+            // `line-ns` glyph renders as an oversized black bar in the legend
+            // regardless of marker size. Only the attainment colors below
+            // need explaining.
             // Legend-only swatches for the value bar's attainment colors
             // (the bar itself carries a per-point color array, which Plotly's
             // legend cannot summarize on its own). A single zero-width,
@@ -110,7 +121,7 @@ export const plBulletChartDef: ChartTemplateDef = {
                 // a horizontal legend below the plot fits these 3 longer
                 // labels ("Target" / "Meets target" / "Below target") more
                 // reliably than trying to widen a narrow side gutter.
-                legend: { orientation: 'h', font: { size: 11 }, x: 0.5, xanchor: 'center', y: -0.18, yanchor: 'top' },
+                legend: { orientation: 'h', font: { size: 11 }, x: 0.5, xanchor: 'center', y: -0.32, yanchor: 'top' },
             },
         });
         delete spec.mark;
@@ -126,10 +137,10 @@ export const plBulletChartDef: ChartTemplateDef = {
                 figure.layout.width = figure._width;
             }
             if (typeof figure._height === 'number') {
-                figure._height += 40;
+                figure._height += 72;
                 figure.layout.height = figure._height;
             }
-            if (figure.layout.margin) figure.layout.margin.b = (figure.layout.margin.b ?? 0) + 40;
+            if (figure.layout.margin) figure.layout.margin.b = (figure.layout.margin.b ?? 0) + 72;
         }
     },
 };

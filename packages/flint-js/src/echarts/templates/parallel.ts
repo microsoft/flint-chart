@@ -95,7 +95,7 @@ export const ecParallelCoordinatesDef: ChartTemplateDef = {
             return {
                 dim: i,
                 name,
-                nameTextStyle: { fontSize: 11 },
+                nameTextStyle: { fontSize: ctx.layout.titleFontSize },
                 nameGap: 8,
                 axisLabel: { fontSize: 10 },
                 ...(bounds ? { min: bounds[0], max: bounds[1] } : {}),
@@ -178,7 +178,7 @@ export const ecParallelCoordinatesDef: ChartTemplateDef = {
                 left: 'center',
                 orient: 'horizontal',
                 itemWidth: 18,
-                textStyle: { fontSize: 11 },
+                textStyle: { fontSize: ctx.layout.legendFontSize },
                 ...(legendData.length > 10 ? { type: 'scroll' } : {}),
             };
         }

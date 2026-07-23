@@ -25,6 +25,65 @@ import type {
     ChartWarning,
 } from '../core/types';
 
+const AXIS_TITLE_STANDOFF = 16;
+// Plotly places tick labels ~1px from the axis by default — much tighter than
+// the other renderers (ECharts axisLabel.margin 8, Vega-Lite labelPadding+tick
+// ~7). Nudge them out to a comparable, comfortable gap. `ticklabelstandoff` is
+// the purpose-built property (Plotly ≥ 2.34 / 3.x); harmlessly ignored on older
+// builds, which keeps the current behavior rather than regressing.
+const TICK_LABEL_STANDOFF = 7;
+
+function reserveCartesianMargins(figure: any, context: InstantiateContext): void {
+    const { layout } = context;
+    const hasXAxis = !!figure.layout.xaxis;
+    const hasYAxis = !!figure.layout.yaxis;
+    if (!hasXAxis && !hasYAxis) return;
+
+    const xCategories = figure.layout.xaxis?.categoryarray;
+    const xFontSize = layout.xLabel?.fontSize ?? 10;
+    const maxXLabelWidth = Array.isArray(xCategories)
+        ? Math.min(layout.xLabel?.labelLimit ?? 100, Math.max(0, ...xCategories.map((value: unknown) => String(value).length * xFontSize * 0.6)))
+        : 0;
+    const xBandWidth = Array.isArray(xCategories) && xCategories.length > 0
+        ? layout.subplotWidth / xCategories.length
+        : Number.POSITIVE_INFINITY;
+    if (figure.layout.xaxis && Array.isArray(xCategories) && xCategories.length <= 6) {
+        figure.layout.xaxis.tickangle = 0;
+        const desiredPlotWidth = xCategories.length * Math.max(48, maxXLabelWidth + 16);
+        figure._width += Math.max(0, desiredPlotWidth - layout.subplotWidth);
+    } else if (figure.layout.xaxis && figure.layout.xaxis.tickangle == null && maxXLabelWidth > xBandWidth) {
+        figure.layout.xaxis.tickangle = 45;
+    }
+    const xAngle = Math.abs(figure.layout.xaxis?.tickangle ?? layout.xLabel?.labelAngle ?? 0) * Math.PI / 180;
+    const rotatedXDepth = Math.ceil(maxXLabelWidth * Math.sin(xAngle));
+    const bottom = hasXAxis ? Math.max(xAngle > 0 ? 96 : 56, 40 + rotatedXDepth) : 24;
+
+    const yCategories = figure.layout.yaxis?.categoryarray;
+    const yFontSize = layout.yLabel?.fontSize ?? 10;
+    const maxYLabelWidth = Array.isArray(yCategories)
+        ? Math.min(layout.yLabel?.labelLimit ?? 100, Math.max(0, ...yCategories.map((value: unknown) => String(value).length * yFontSize * 0.6)))
+        : 28;
+    const left = hasYAxis ? Math.max(64, 36 + maxYLabelWidth) : 24;
+    const hasColorbar = (figure.data ?? []).some((trace: any) => trace.colorbar || trace.marker?.colorbar);
+    const right = hasColorbar ? 96 : 32;
+
+    figure.layout.margin = { t: 24, r: right, b: bottom, l: left };
+}
+
+export function plApplyCartesianAxisSpacing(figure: any): void {
+    for (const [key, axis] of Object.entries(figure.layout ?? {})) {
+        if (!/^[xy]axis\d*$/.test(key) || !axis || typeof axis !== 'object') continue;
+        const cartesianAxis = axis as any;
+        cartesianAxis.automargin = true;
+        if (cartesianAxis.ticklabelstandoff == null) {
+            cartesianAxis.ticklabelstandoff = TICK_LABEL_STANDOFF;
+        }
+        if (cartesianAxis.title?.text) {
+            cartesianAxis.title = { ...cartesianAxis.title, standoff: AXIS_TITLE_STANDOFF };
+        }
+    }
+}
+
 /**
  * Phase 2: Apply layout and semantic decisions to the Plotly figure.
  *
@@ -43,7 +102,9 @@ export function plApplyLayoutToSpec(
     if (!figure.layout) figure.layout = {};
 
     // ── Figure dimensions ────────────────────────────────────────────────
+    let usedDefaultDimensions = false;
     if (!figure._width) {
+        usedDefaultDimensions = true;
         const PADDING = 80; // approximate space for axes, labels
 
         const xIsDiscrete = layout.xNominalCount > 0 || layout.xContinuousAsDiscrete > 0;
@@ -71,10 +132,6 @@ export function plApplyLayoutToSpec(
         figure._height = plotHeight + PADDING;
     }
 
-    figure.layout.width = figure._width;
-    figure.layout.height = figure._height;
-    figure.layout.margin = figure.layout.margin ?? { t: 24 };
-
     // ── X-axis label rotation and font sizing ────────────────────────────
     if (layout.xLabel) {
         if (!figure.layout.xaxis) figure.layout.xaxis = {};
@@ -97,6 +154,34 @@ export function plApplyLayoutToSpec(
             size: layout.yLabel.fontSize,
         };
     }
+
+    // ── Axis title + legend fonts — canvas-adaptive header sizes ─────────
+    for (const key of Object.keys(figure.layout)) {
+        if (!/^[xy]axis\d*$/.test(key)) continue;
+        const axis = figure.layout[key];
+        if (axis?.title) {
+            axis.title = typeof axis.title === 'string' ? { text: axis.title } : axis.title;
+            axis.title.font = { ...(axis.title.font || {}), size: layout.titleFontSize };
+        }
+    }
+    if (figure.layout.legend) {
+        figure.layout.legend.font = {
+            ...(figure.layout.legend.font || {}),
+            size: layout.legendFontSize,
+        };
+    }
+
+    if (figure.layout.margin == null) {
+        reserveCartesianMargins(figure, context);
+        if (usedDefaultDimensions) {
+            const margin = figure.layout.margin;
+            figure._width += Math.max(0, margin.l + margin.r - 80);
+            figure._height += Math.max(0, margin.t + margin.b - 80);
+        }
+    }
+    plApplyCartesianAxisSpacing(figure);
+    figure.layout.width = figure._width;
+    figure.layout.height = figure._height;
 
     // ── Overflow truncation warnings ─────────────────────────────────────
     if (layout.truncations && layout.truncations.length > 0) {

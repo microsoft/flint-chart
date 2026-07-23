@@ -465,35 +465,6 @@ export function genChartJsAreaTests(): TestCase[] {
         });
     }
 
-    // Global vs local dodge (sparse region × channel).
-    {
-        const regions = ['North', 'South', 'East', 'West', 'Central', 'Coast'];
-        const channels = ['Retail', 'Online', 'Wholesale', 'Direct'];
-        const subset: Record<string, string[]> = {
-            North: ['Retail', 'Online'], South: ['Online', 'Wholesale', 'Direct'], East: ['Wholesale', 'Direct'],
-            West: ['Retail', 'Direct'], Central: ['Retail', 'Online', 'Wholesale'], Coast: ['Online', 'Direct'],
-        };
-        for (const mode of ['global', 'local'] as const) {
-            const data: any[] = [];
-            regions.forEach((r, ri) => subset[r].forEach((ch, ci) => data.push({ Region: r, Channel: ch, Sales: Math.round(300 + ri * 40 + ci * 30) })));
-            tests.push({
-                title: mode === 'global' ? 'CJS: Grouped Bar — Dodge Global' : 'CJS: Grouped Bar — Dodge Local',
-                description: mode === 'global' ? 'fixed lane per channel (gaps where absent)' : 'compact maxPerBand lanes, left-aligned',
-                tags: ['chartjs', 'grouped-bar', 'sparse', `dodge-${mode}`],
-                chartType: 'Grouped Bar Chart',
-                data,
-                fields: [makeField('Region'), makeField('Sales'), makeField('Channel')],
-                metadata: {
-                    Region: { type: Type.String, semanticType: 'Category', levels: regions },
-                    Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
-                    Channel: { type: Type.String, semanticType: 'Category', levels: channels },
-                },
-                chartProperties: { dodge: mode },
-                encodingMap: { x: makeEncodingItem('Region'), y: makeEncodingItem('Sales'), group: makeEncodingItem('Channel') },
-            });
-        }
-    }
-
     return tests;
 }
 

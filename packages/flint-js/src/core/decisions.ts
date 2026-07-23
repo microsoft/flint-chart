@@ -710,41 +710,99 @@ export interface LabelSizingDecision {
  * Compute label sizing for a discrete axis based on the effective step size.
  * Pure decision — returns sizing params without modifying any spec.
  *
+ * The font descends the **shrink → rotate → cap** ladder from a backend-native
+ * base font (`baseFont`), never exceeding it and never dropping below `minFont`:
+ *   1. Wide band  → horizontal label at (up to) `baseFont`.
+ *   2. Medium band → shrink a little and rotate -45°.
+ *   3. Narrow band → shrink more and rotate -90°.
+ * `labelLimit` caps the label width so long text is truncated (…) rather than
+ * overflowing arbitrarily.
+ *
  * @param effectiveStep      Pixels per discrete item
  * @param hasDiscreteItems   Whether the axis has discrete items
+ * @param opts               `baseFont` (native ceiling) and `minFont` (floor)
  */
 export function computeLabelSizing(
     effectiveStep: number,
     hasDiscreteItems: boolean,
+    opts?: { baseFont?: number; minFont?: number },
 ): LabelSizingDecision {
-    const defaultFontSize = 10;
+    const baseFont = opts?.baseFont ?? 10;
+    const minFont = opts?.minFont ?? 6;
     const defaultLimit = 100;
 
     if (!hasDiscreteItems) {
-        return { fontSize: defaultFontSize, labelLimit: defaultLimit };
+        return { fontSize: baseFont, labelLimit: defaultLimit };
     }
 
-    let fontSize = Math.max(6, Math.min(10, effectiveStep - 1));
+    // Shrink lever: font tracks the band step but is bounded by [minFont, baseFont].
+    let fontSize = Math.max(minFont, Math.min(baseFont, effectiveStep - 1));
     let labelLimit = Math.max(30, Math.min(100, effectiveStep * 8));
     let labelAngle: number | undefined;
     let labelAlign: string | undefined;
     let labelBaseline: string | undefined;
 
     if (effectiveStep < 10) {
+        // Narrow band → rotate vertical, shrink harder (but keep the ceiling
+        // one notch below base so a 12-native backend still reads ~10 here).
         labelAngle = -90;
-        fontSize = Math.max(6, Math.min(8, effectiveStep));
+        fontSize = Math.max(minFont, Math.min(baseFont - 2, effectiveStep));
         labelLimit = 40;
         labelAlign = 'right';
         labelBaseline = 'middle';
     } else if (effectiveStep < 16) {
+        // Medium band → rotate 45°, shrink slightly.
         labelAngle = -45;
-        fontSize = Math.max(7, Math.min(9, effectiveStep));
+        fontSize = Math.max(minFont, Math.min(baseFont - 1, effectiveStep));
         labelLimit = 60;
         labelAlign = 'right';
         labelBaseline = 'top';
     }
 
     return { fontSize, labelLimit, labelAngle, labelAlign, labelBaseline };
+}
+
+/**
+ * Canvas-adaptive font sizes for headers (axis titles, legend, chart title) and
+ * the base for axis tick labels.
+ *
+ * The per-backend base fonts are the preferred (native) sizes. Fonts render at
+ * that base and only **shrink** for genuinely small small-multiple subplots
+ * (so dense facets don't overflow); they are never grown above native, matching
+ * how the underlying renderers keep fonts constant across canvas sizes.
+ *
+ * @param minPlotDimension  The smaller of the (sub)plot width/height in px
+ * @param opts              Backend-native base font sizes
+ */
+export interface FontSizingDecision {
+    /** Ceiling for axis tick labels (feeds computeLabelSizing `baseFont`). */
+    tickBase: number;
+    /** Header font for axis titles and chart title. */
+    titleFontSize: number;
+    /** Legend entry font (one notch below the title). */
+    legendFontSize: number;
+}
+
+export function computeFontSizing(
+    minPlotDimension: number,
+    opts?: { baseLabelFontSize?: number; baseTitleFontSize?: number },
+): FontSizingDecision {
+    const baseLabel = opts?.baseLabelFontSize ?? 10;
+    const baseTitle = opts?.baseTitleFontSize ?? 11;
+    // The per-backend base fonts ARE the preferred (native) sizes: native
+    // renderers (Plotly/VL/ECharts) keep tick/title/legend fonts CONSTANT at
+    // every canvas size. So we do NOT grow above base — growth made large
+    // charts render heavy, oversized text. Fonts only SHRINK for genuinely
+    // small small-multiple subplots (minDim < 220) so dense facets don't
+    // overflow; otherwise they render at native base.
+    const minDim = minPlotDimension || 320;
+    const ratio = minDim >= 220 ? 1 : Math.max(0.7, minDim / 220);
+    const atMostNative = (base: number) =>
+        Math.round(Math.max(base - 2, Math.min(base, base * ratio)));
+    const tickBase = atMostNative(baseLabel);
+    const titleFontSize = atMostNative(baseTitle);
+    const legendFontSize = Math.max(baseTitle - 2, titleFontSize - 1);
+    return { tickBase, titleFontSize, legendFontSize };
 }
 
 // ---------------------------------------------------------------------------

@@ -153,11 +153,11 @@
 }
 
 .gopt-readout {
+  flex: none;
   text-align: left;
   color: #4b525a;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  overflow: hidden;
   white-space: nowrap;
 }
 

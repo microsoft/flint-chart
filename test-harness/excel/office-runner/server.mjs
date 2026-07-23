@@ -30,12 +30,16 @@ const flintJsRoot = resolve(here, '../../../packages/flint-js');
 const excelBackendBundle = join(flintJsRoot, 'dist/excel/index.js');
 
 /** In-memory job queue + results. */
-/** @type {Array<{ id: number, artifact: any, renderOptions: any, enqueuedAt: number }>} */
+/** @type {Array<{ id: number, kind: 'artifact' | 'program', artifact?: any, data?: any[], renderOptions: any, enqueuedAt: number }>} */
 const queue = [];
 const results = new Map(); // id -> { name, pngBase64 }
+const programSources = new Map(); // id -> validated evaluation-only Office.js source
 let nextId = 1;
 let workerSeen = false; // has the task pane ever contacted us?
+let workerLastSeenAt = 0;
 const JOB_TTL_MS = 120_000;
+const WORKER_STALE_MS = 5_000;
+const SERVER_INSTANCE_ID = `${process.pid}-${Date.now()}`;
 const BLOCKED_CHART_TYPES = new Map([
   ['pareto', 'Native Pareto rendering is disabled because Excel for Mac exits while creating the chart.'],
 ]);
@@ -101,8 +105,19 @@ async function startServer() {
 
     if (req.method === 'OPTIONS') return send(res, 204, '');
 
+    if (req.method === 'GET' && path === '/health') {
+      const workerReady = workerLastSeenAt > 0 && Date.now() - workerLastSeenAt <= WORKER_STALE_MS;
+      return send(res, 200, JSON.stringify({
+        status: 'ok',
+        instance_id: SERVER_INSTANCE_ID,
+        worker_ready: workerReady,
+        worker_last_seen_at: workerLastSeenAt > 0 ? new Date(workerLastSeenAt).toISOString() : null,
+      }));
+    }
+
     // --- code version (for the pane's auto-reload) ---
     if (req.method === 'GET' && path === '/version') {
+      workerLastSeenAt = Date.now();
       let v = 0;
       for (const f of ['officejs/taskpane.js', 'officejs/taskpane.html']) {
         try { v = Math.max(v, statSync(join(here, f)).mtimeMs); } catch { /* ignore */ }
@@ -116,6 +131,7 @@ async function startServer() {
       const body = await readBody(req).catch(() => '');
       console.log(`[worker] task pane connected: ${body || '(no info)'}`);
       workerSeen = true;
+      workerLastSeenAt = Date.now();
       return send(res, 200, JSON.stringify({ ok: true }));
     }
 
@@ -134,9 +150,16 @@ async function startServer() {
       }
       return send(res, 404, 'not found', 'text/plain');
     }
+    if (req.method === 'GET' && path.startsWith('/generated-program/')) {
+      const id = Number(path.match(/^\/generated-program\/(\d+)\.mjs$/)?.[1]);
+      const source = programSources.get(id);
+      if (!source) return send(res, 404, 'not found', 'text/plain');
+      return send(res, 200, `${source}\nexport { renderChart };\n`, MIME['.mjs']);
+    }
 
     // --- worker long-poll for next job ---
     if (req.method === 'GET' && path === '/next-job') {
+      workerLastSeenAt = Date.now();
       if (!workerSeen) {
         workerSeen = true;
         console.log('[worker] task pane is polling for jobs');
@@ -148,7 +171,8 @@ async function startServer() {
       }
       const job = queue.shift();
       if (!job) return send(res, 204, '');
-      console.log(`[job ${job.id}] dispatched to task pane (${job.artifact.chartType})`);
+      const description = job.kind === 'artifact' ? job.artifact?.chartType : 'generated Office.js';
+      console.log(`[job ${job.id}] dispatched to task pane (${description})`);
       return send(res, 200, JSON.stringify(job));
     }
 
@@ -161,6 +185,7 @@ async function startServer() {
         inspection: body.inspection,
         error: body.error,
       });
+      programSources.delete(body.id);
       if (body.error) console.log(`[job ${body.id}] ERROR from task pane: ${body.error}`);
       else console.log(`[job ${body.id}] received PNG (${(body.pngBase64 || '').length} b64 chars)`);
       return send(res, 200, JSON.stringify({ ok: true }));
@@ -186,7 +211,36 @@ async function startServer() {
         return send(res, 422, JSON.stringify({ error: blockedReason }));
       }
       const id = nextId++;
-      queue.push({ id, artifact, renderOptions, enqueuedAt: Date.now() });
+      queue.push({ id, kind: 'artifact', artifact, renderOptions, enqueuedAt: Date.now() });
+      return send(res, 200, JSON.stringify({ id }));
+    }
+
+    // --- evaluation-only generated Office.js jobs ---
+    if (req.method === 'POST' && path === '/enqueue-program') {
+      const payload = JSON.parse(await readBody(req));
+      if (!payload || typeof payload !== 'object' || typeof payload.officejsCode !== 'string') {
+        return send(res, 400, JSON.stringify({ error: 'Expected { officejsCode, data, renderOptions? }.' }));
+      }
+      if (!Array.isArray(payload.data) || payload.data.length === 0) {
+        return send(res, 422, JSON.stringify({ error: 'Generated Office.js jobs require transformed data rows.' }));
+      }
+      if (payload.data.length > 10_000 || payload.officejsCode.length > 200_000) {
+        return send(res, 413, JSON.stringify({ error: 'Generated Office.js job exceeds evaluation limits.' }));
+      }
+      const renderOptions = {
+        scale: payload.renderOptions?.scale ?? 2,
+        cleanWorksheet: payload.renderOptions?.cleanWorksheet ?? true,
+        inspectNativeChart: payload.renderOptions?.inspectNativeChart ?? false,
+      };
+      const id = nextId++;
+      programSources.set(id, payload.officejsCode);
+      queue.push({
+        id,
+        kind: 'program',
+        data: payload.data,
+        renderOptions,
+        enqueuedAt: Date.now(),
+      });
       return send(res, 200, JSON.stringify({ id }));
     }
 
@@ -196,6 +250,7 @@ async function startServer() {
       const index = queue.findIndex((job) => job.id === id);
       if (index >= 0) queue.splice(index, 1);
       results.delete(id);
+      programSources.delete(id);
       return send(res, 200, JSON.stringify({ cancelled: index >= 0 }));
     }
 

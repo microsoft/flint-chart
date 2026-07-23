@@ -62,7 +62,7 @@ import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
@@ -340,6 +340,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     // Merge paramOverrides into effective options
     const effectiveOptions: AssembleOptions = {
+        // Vega-Lite native font defaults (labels 10, titles 11).
+        baseLabelFontSize: 10,
+        baseTitleFontSize: 11,
         ...options,
         ...(declaration.paramOverrides || {}),
     };
@@ -370,6 +373,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const caps = deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions);
     effectiveOptions.maxStretchX = caps.maxStretchX;
     effectiveOptions.maxStretchY = caps.maxStretchY;
+    effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
     const facetFixW = effectiveOptions.facetFixedPadding.width;
     const facetFixH = effectiveOptions.facetFixedPadding.height;
 
@@ -698,6 +702,28 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const { check, ...rest } = def;
         return { ...rest, applicable, value };
     });
+    // Layout-level facet-wrap control: offered whenever a column facet has
+    // enough panels to wrap. It's not a per-template MARK property, so it's
+    // injected centrally rather than declared on every faceted template. The
+    // value seeds from the raw user override, else the auto-computed grid
+    // column count (facetGridResult), else all panels in one row.
+    const colFacetField = channelSemantics.column?.field;
+    if (colFacetField) {
+        const colCount = new Set(data.map((r: any) => r[colFacetField])).size;
+        if (colCount > 2) {
+            const rawFacetCols = input.chart_spec.chartProperties?.facetColumns;
+            result._options.push({
+                key: 'facetColumns',
+                label: 'Columns',
+                type: 'continuous',
+                min: 1,
+                max: colCount,
+                step: 1,
+                applicable: true,
+                value: rawFacetCols ?? facetGridResult?.columns ?? colCount,
+            } as ChartOption);
+        }
+    }
     // Pivot surface: the resolved set of alternative views (state ids + labels +
     // active index) for the current encodings + data. Hosts read this to render
     // a cyclic prev/next control and write the chosen id back to

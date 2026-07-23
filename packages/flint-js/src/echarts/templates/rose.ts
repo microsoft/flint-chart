@@ -249,7 +249,7 @@ export const ecRoseChartDef: ChartTemplateDef = {
                 orient: 'vertical',
                 right: 10,
                 top: 'middle',
-                textStyle: { fontSize: 11 },
+                textStyle: { fontSize: ctx.layout.legendFontSize },
             };
         }
 

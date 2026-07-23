@@ -61,33 +61,30 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
 
     const palette = getPlotlyPalette(ctx, 'color');
 
+    // Canvas sizing: a native Plotly pie fills the largest circle that fits
+    // in the canvas AND auto-reserves horizontal room for the legend on the
+    // right — so we deliberately DON'T pin an explicit `domain`. The previous
+    // centered domain (with an 80px radius margin) shrank the circle to ~half
+    // its natural size and wasted matching space on the left. We keep only the
+    // circumference-pressure model to GROW the canvas when a dense pie (many
+    // thin slices) needs a bigger circle to give each slice its minimum arc.
     const effectiveCount = computeEffectiveBarCount(sortedValues);
-    const { radius, canvasW, canvasH } = computeCircumferencePressure(effectiveCount, ctx.canvasSize, {
+    const { canvasW, canvasH } = computeCircumferencePressure(effectiveCount, ctx.canvasSize, {
         minArcPx: 45,
         minRadius: 60,
         maxStretch: ctx.assembleOptions?.maxStretch,
         maxStretchX: ctx.assembleOptions?.maxStretchX,
         maxStretchY: ctx.assembleOptions?.maxStretchY,
-        margin: 80,
+        margin: 24,
     });
 
-    // A dense pie/donut needs MORE vertical room than the base circumference
-    // sizing budgets for: outside slice labels (drawn above/below the ring
-    // for thin slices, with connector lines) and a legend whose list grows
-    // with slice count — Plotly does not auto-grow the canvas for either, so
-    // an unadjusted figure clips both at the top/bottom for a busy pie.
+    // Symmetric margin leaves room for the outside slice callouts (thin slices
+    // draw their label + connector just beyond the ring); Plotly grows the
+    // legend within its own reserved right gutter, so no vertical padding hack
+    // is needed.
     const n = sortedLabels.length;
     const hasOutsideLabels = labelType !== 'none';
-    const outsideLabelPad = hasOutsideLabels ? Math.min(70, 30 + n * 1.5) : 10;
-    const legendHeightPx = Math.max(60, n * 20 + 40);
-    const figHeight = Math.max(canvasH + 2 * outsideLabelPad, legendHeightPx);
-    const figWidth = canvasW;
-
-    // Keep the circle's own pixel radius constant; recompute its fractional
-    // domain against the (possibly taller) final canvas so growing the
-    // canvas for labels/legend doesn't also shrink the pie itself.
-    const domainFracX = Math.min(0.9, (2 * radius) / figWidth);
-    const domainFracY = Math.min(0.9, (2 * radius) / figHeight);
+    const labelMargin = hasOutsideLabels ? Math.min(48, 20 + n) : 12;
 
     Object.assign(spec, {
         data: [{
@@ -96,18 +93,18 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
             values: sortedValues,
             hole,
             textinfo: textinfo[labelType] ?? 'label+percent',
+            // Let outside slice labels push the margins so a cluster of thin
+            // slices (many tiny wedges crowded together) doesn't clip its
+            // stacked callouts against the canvas edge.
+            automargin: true,
             marker: { colors: palette, line: { color: '#ffffff', width: 1 } },
-            domain: {
-                x: [0.5 - domainFracX / 2, 0.5 + domainFracX / 2],
-                y: [0.5 - domainFracY / 2, 0.5 + domainFracY / 2],
-            },
         }],
         layout: {
             showlegend: true,
-            margin: { t: outsideLabelPad, b: outsideLabelPad },
+            margin: { t: labelMargin, b: labelMargin, l: 12, r: 12 },
         },
-        _width: figWidth,
-        _height: figHeight,
+        _width: canvasW,
+        _height: canvasH,
     });
     delete spec.mark;
     delete spec.encoding;

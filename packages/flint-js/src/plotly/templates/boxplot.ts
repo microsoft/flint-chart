@@ -22,6 +22,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { isDiscreteType, extractCategories, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
+import { planBandDodge } from '../../core/band-dodge';
 
 export const plBoxplotDef: ChartTemplateDef = {
     chart: 'Boxplot',
@@ -79,15 +80,28 @@ export const plBoxplotDef: ChartTemplateDef = {
             traces.push(makeTrace(undefined, table, 0));
         }
 
+        // Degenerate color (color re-encodes the category axis, or a 1:1 /
+        // sparse mapping where every band holds at most one colour) must NOT
+        // dodge into per-lane slivers with a redundant legend — collapse to
+        // one full-width box per band. `boxmode: 'group'` reserves a lane per
+        // trace, so drop it (default overlay) and hide the redundant legend;
+        // the boxes stay colour-coded but sit one per band. Genuine sub-group
+        // colour (maxPerBand > 1) keeps the native grouped dodge.
+        const redundantColor = !!colorField
+            && planBandDodge(table, catField, colorField).maxPerBand <= 1;
+        // Collapsed boxes sit one per band, so widen them to fill the band
+        // (Plotly's default overlay box is only ~40% of the band).
+        if (redundantColor) for (const t of traces) t.width = 0.8;
+
         const catAxisSpec = { type: 'category' as const, categoryorder: 'array' as const, categoryarray: categories, title: { text: catField } };
         const valAxisSpec = { title: { text: valField }, zeroline: false };
 
         Object.assign(spec, {
             data: traces,
             layout: {
-                boxmode: colorField ? 'group' : undefined,
+                boxmode: (colorField && !redundantColor) ? 'group' : undefined,
                 ...(isHorizontal ? { yaxis: catAxisSpec, xaxis: valAxisSpec } : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
-                showlegend: !!colorField,
+                showlegend: !!colorField && !redundantColor,
             },
         });
         delete spec.mark;

@@ -39,7 +39,7 @@ import { cjsGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
 import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -163,6 +163,13 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         // Chart.js fills its canvas natively — a wider default band size
         // matches its generous category spacing behavior.
         defaultBandSize: 30,
+        // Chart.js has no default maxBarThickness, so sparse bars fill the
+        // canvas. Allow bands to expand past the base to match, capped so a
+        // couple of bars don't span the whole canvas.
+        maxBandSize: 100,
+        // Chart.js native font default (12 for ticks, legend, and title).
+        baseLabelFontSize: 12,
+        baseTitleFontSize: 12,
         ...options,
         ...(declaration.paramOverrides || {}),
     };
@@ -170,6 +177,7 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     // Resolve the optional canvasSize ceiling into per-dimension stretch caps
     // (βx, βy). Falls back to maxStretch when no ceiling is set.
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     const {
         addTooltips: addTooltipsOpt = false,

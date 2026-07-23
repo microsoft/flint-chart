@@ -41,9 +41,15 @@ export const plKpiCardDef: ChartTemplateDef = {
         const cellW = (1 - gapFrac * (cols - 1)) / cols;
         const cellH = (1 - gapFrac * (gridRows - 1)) / gridRows;
 
-        const canvas = ctx.canvasSize ?? { width: 480, height: 320 };
-        const figWidth = Math.max(canvas.width, cols * 160);
-        const figHeight = Math.max(canvas.height * 0.5, gridRows * 140);
+        // KPI cards are content-sized tiles, NOT full-canvas charts — stretching
+        // a single card to the whole requested canvas width (e.g. 480px) strands
+        // the caption + number in a sea of whitespace. Size each tile to a
+        // compact fixed footprint and let the grid grow with the tile COUNT
+        // instead of filling the canvas.
+        const TILE_W = 220;
+        const TILE_H = 150;
+        const figWidth = Math.round(cols * TILE_W + gapFrac * (cols - 1) * TILE_W);
+        const figHeight = Math.round(gridRows * TILE_H + gapFrac * (gridRows - 1) * TILE_H);
         // Font sizes scale with each cell's actual pixel height so a dense
         // grid of many tiles doesn't overflow its row with fixed-size text.
         const captionFontPx = Math.max(10, Math.min(14, cellH * figHeight * 0.16));

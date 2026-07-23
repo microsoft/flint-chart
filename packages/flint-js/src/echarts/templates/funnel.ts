@@ -133,7 +133,7 @@ export const ecFunnelChartDef: ChartTemplateDef = {
                 orient: 'vertical',
                 right: 10,
                 top: 'middle',
-                textStyle: { fontSize: 11 },
+                textStyle: { fontSize: layout.legendFontSize },
             },
             series: [{
                 type: 'funnel',

@@ -14,6 +14,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete } from '../../core/axis-detection';
+import { planBandDodge } from '../../core/band-dodge';
 
 export const plBarChartDef: ChartTemplateDef = {
     chart: 'Bar Chart',
@@ -66,6 +67,7 @@ export const plBarChartDef: ChartTemplateDef = {
                 marker: { color: getSeriesColor(palette, 0) },
             }],
             layout: {
+                bargap: 0.2,
                 ...(isHorizontal
                     ? { xaxis: valAxisSpec, yaxis: catAxisSpec }
                     : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
@@ -146,6 +148,7 @@ export const plStackedBarChartDef: ChartTemplateDef = {
             data: traces,
             layout: {
                 barmode: 'stack',
+                bargap: 0.2,
                 ...(isHorizontal ? { xaxis: valAxisSpec, yaxis: catAxisSpec } : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
                 showlegend: !!colorField,
             },
@@ -190,6 +193,14 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         const isHorizontal = categoryAxis === 'y';
         const palette = getPlotlyPalette(ctx, 'group');
 
+        // When the group is redundant/nested with the category axis (group == x,
+        // or a 1:1 pairing), no band holds more than one group value — there is
+        // nothing to dodge. Plotly's native `barmode: 'group'` would still
+        // reserve a lane per group and leave each real bar as a shifted sliver.
+        // Fall back to `barmode: 'overlay'` so each band shows one centered,
+        // full-width colored bar (like a colored bar chart), keeping the legend.
+        const degenerateGroup = !!groupField && planBandDodge(table, catField, groupField).maxPerBand <= 1;
+
         const traces: any[] = [];
         if (groupField) {
             let i = 0;
@@ -221,7 +232,8 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         Object.assign(spec, {
             data: traces,
             layout: {
-                barmode: 'group',
+                barmode: degenerateGroup ? 'overlay' : 'group',
+                bargap: 0.2,
                 ...(isHorizontal ? { xaxis: valAxisSpec, yaxis: catAxisSpec } : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
                 showlegend: !!groupField,
             },

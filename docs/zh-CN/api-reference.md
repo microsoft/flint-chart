@@ -151,8 +151,16 @@ interface AssembleOptions {
   maxColorValues?: number;     // color cardinality before truncation (default 24)
   stepPadding?: number;        // band inner padding fraction (default 0.1)
   defaultBandSize?: number;    // baseline px per category (backend-tuned)
+  maxBandSize?: number;        // max px per category when sparse (backend-tuned)
+  baseLabelFontSize?: number;  // axis tick font at the reference canvas (VL 10, EC/CJS/Plotly 12)
+  baseTitleFontSize?: number;  // header font — axis title / legend / chart title (VL 11, EC/CJS 12, Plotly 14)
 }
 ```
+
+字体会围绕这些各后端基准值随画布尺寸自适应：默认画布下每个后端渲染其原生字号，
+在更大画布上略微增大（最多 base + 4），在小型分面子图中缩小；坐标轴刻度标签还会
+缩小/旋转/截断以避免重叠。设置 `baseLabelFontSize` / `baseTitleFontSize` 可整体
+放大或缩小全部文字。
 
 完整列表：`packages/flint-js/src/core/types.ts`（`AssembleOptions`）。行为见[自动布局算法](/documentation/layout-model)。
 

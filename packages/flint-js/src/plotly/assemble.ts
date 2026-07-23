@@ -41,9 +41,9 @@ import { plGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { computeZeroDecision } from '../core/semantic-types';
 import { filterOverflow } from '../core/filter-overflow';
-import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
+import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { decideColorMaps } from '../core/color-decisions';
-import { plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';
+import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
@@ -134,11 +134,20 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         : {};
 
     const effectiveOptions: AssembleOptions = {
+        // Plotly fills its plot area natively (bars sized by `bargap`), so sparse
+        // categories spread out. Allow bands to expand well past the base size,
+        // matching Plotly's official low-cardinality bar style, but cap it so one
+        // or two bars don't span the whole canvas.
+        maxBandSize: 100,
+        // Plotly native font defaults (ticks/legend 12, axis titles 14).
+        baseLabelFontSize: 12,
+        baseTitleFontSize: 14,
         ...options,
         ...(declaration.paramOverrides || {}),
     };
 
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     const {
         addTooltips: addTooltipsOpt = false,
@@ -350,6 +359,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
                 }
             }
         }
+        plApplyCartesianAxisSpacing(figure);
         if (addTooltipsOpt) plApplyTooltips(figure);
     } else {
         figure = structuredClone(chartTemplate.template);

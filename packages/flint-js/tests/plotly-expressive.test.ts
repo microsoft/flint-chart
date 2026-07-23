@@ -117,6 +117,24 @@ describe('Plotly expressive templates — native trace shapes', () => {
     expect(Array.isArray(fig.data[0].z)).toBe(true);
   });
 
+  it('heatmap reserves margins for rotated labels, axis titles, and its colorbar', () => {
+    const rows = Array.from({ length: 24 }, (_, index) => ({
+      start: `2020-${String(index % 12 + 1).padStart(2, '0')}-${String(index % 27 + 1).padStart(2, '0')}`,
+      end: `2022-${String(index % 12 + 1).padStart(2, '0')}-${String(index % 27 + 1).padStart(2, '0')}`,
+      correlation: index / 12 - 1,
+    }));
+    const fig = assemblePlotly(input('Heatmap', { x: { field: 'start' }, y: { field: 'end' }, color: { field: 'correlation' } }, rows,
+      { start: 'Date', end: 'Date', correlation: 'Correlation' }));
+    expect(fig.layout.xaxis.automargin).toBe(true);
+    expect(fig.layout.yaxis.automargin).toBe(true);
+    expect(fig.layout.xaxis.tickangle).toBe(45);
+    expect(fig.layout.xaxis.title.standoff).toBeGreaterThan(0);
+    expect(fig.layout.yaxis.title.standoff).toBeGreaterThan(0);
+    expect(fig.layout.margin.b).toBeGreaterThanOrEqual(90);
+    expect(fig.layout.margin.l).toBeGreaterThanOrEqual(90);
+    expect(fig.layout.margin.r).toBeGreaterThanOrEqual(90);
+  });
+
   it('pie/donut use a native pie trace; donut sets a non-zero hole', () => {
     const pie = assemblePlotly(input('Pie Chart', { color: { field: 'region' }, size: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }));
     expect(pie.data[0].type).toBe('pie');
@@ -148,6 +166,19 @@ describe('Plotly expressive templates — grouping & stacking', () => {
     const fig = assemblePlotly(input('Grouped Bar Chart', { x: { field: 'region' }, y: { field: 'revenue' }, color: { field: 'year' } }, SALES, { region: 'Region', revenue: 'Amount', year: 'Year' }));
     expect(fig.layout.barmode).toBe('group');
     expect(fig.data).toHaveLength(2);
+  });
+
+  it('grouped bar collapses to one bar per band (barmode "overlay") when the group is redundant with x', () => {
+    // group == x: no band holds >1 group value → nothing to dodge. Must render
+    // one centered, full-width colored bar per band (like a colored bar chart),
+    // not shifted slivers in reserved lanes.
+    const rows = [
+      { region: 'Electronics', amount: 300, seg: 'Electronics' },
+      { region: 'Clothing', amount: 530, seg: 'Clothing' },
+      { region: 'Food', amount: 975, seg: 'Food' },
+    ];
+    const fig = assemblePlotly(input('Grouped Bar Chart', { x: { field: 'region' }, y: { field: 'amount' }, group: { field: 'seg' } }, rows, { region: 'Region', amount: 'Amount', seg: 'Category' }));
+    expect(fig.layout.barmode).toBe('overlay');
   });
 
   it('stacked bar chart uses barmode "stack" with one trace per group', () => {
@@ -226,6 +257,8 @@ describe('Plotly expressive templates — regression fixes', () => {
     expect(names).toContain('Target');
     expect(names).toContain('Meets target');
     expect(names).toContain('Below target');
+    expect(fig.layout.legend.y).toBeLessThanOrEqual(-0.3);
+    expect(fig.layout.margin.b).toBeGreaterThanOrEqual(72);
   });
 
   it('scatter plot uses a continuous colorscale (not a legend per distinct value) for quantitative color', () => {

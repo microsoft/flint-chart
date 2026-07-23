@@ -408,14 +408,14 @@ export function ecApplyLayoutToSpec(
         if (option.xAxis.name) {
             option.xAxis.nameLocation = option.xAxis.nameLocation || 'middle';
             option.xAxis.nameGap = option.xAxis.nameGap || 25;
-            option.xAxis.nameTextStyle = { fontSize: 12, ...(option.xAxis.nameTextStyle || {}) };
+            option.xAxis.nameTextStyle = { fontSize: layout.titleFontSize, ...(option.xAxis.nameTextStyle || {}) };
         }
     }
     if (option.yAxis) {
         if (option.yAxis.name) {
             option.yAxis.nameLocation = option.yAxis.nameLocation || 'middle';
             option.yAxis.nameGap = option.yAxis.nameGap || 45;
-            option.yAxis.nameTextStyle = { fontSize: 12, ...(option.yAxis.nameTextStyle || {}) };
+            option.yAxis.nameTextStyle = { fontSize: layout.titleFontSize, ...(option.yAxis.nameTextStyle || {}) };
         }
     }
 
@@ -424,10 +424,10 @@ export function ecApplyLayoutToSpec(
         if (option.singleAxis.name) {
             option.singleAxis.nameLocation = option.singleAxis.nameLocation || 'middle';
             option.singleAxis.nameGap = option.singleAxis.nameGap || 25;
-            option.singleAxis.nameTextStyle = { fontSize: 12, ...(option.singleAxis.nameTextStyle || {}) };
+            option.singleAxis.nameTextStyle = { fontSize: layout.titleFontSize, ...(option.singleAxis.nameTextStyle || {}) };
         }
         if (!option.singleAxis.axisLabel) option.singleAxis.axisLabel = {};
-        option.singleAxis.axisLabel.fontSize = option.singleAxis.axisLabel.fontSize || 11;
+        option.singleAxis.axisLabel.fontSize = option.singleAxis.axisLabel.fontSize || layout.xLabel.fontSize;
     }
 
     // ── Legend positioning ────────────────────────────────────────────────
@@ -462,7 +462,7 @@ export function ecApplyLayoutToSpec(
                     left: 'center',
                     orient: 'horizontal',
                     textStyle: {
-                        fontSize: highCardinality ? 8 : 11,
+                        fontSize: highCardinality ? 8 : layout.legendFontSize,
                         ...(option.legend.textStyle || {}),
                     },
                     ...(legendLabels.length > 10 ? { type: 'scroll' } : {}),
@@ -476,7 +476,7 @@ export function ecApplyLayoutToSpec(
                         z: 100,
                         style: {
                             text: legendTitle,
-                            fontSize: 11,
+                            fontSize: layout.legendFontSize,
                             fontWeight: 'bold',
                             fill: '#333',
                             textAlign: 'center',
@@ -524,7 +524,7 @@ export function ecApplyLayoutToSpec(
                     orient: option.legend.orient || 'vertical',
                     align: 'left', // icon on left, text on right
                     textStyle: {
-                        fontSize: highCardinality ? 8 : 11,
+                        fontSize: highCardinality ? 8 : layout.legendFontSize,
                         ...(option.legend.textStyle || {}),
                     },
                     ...(legendLabels.length > 10 ? { type: 'scroll' } : {}),
@@ -538,7 +538,7 @@ export function ecApplyLayoutToSpec(
                         z: 100,
                         style: {
                             text: legendTitle,
-                            fontSize: 11,
+                            fontSize: layout.legendFontSize,
                             fontWeight: 'bold',
                             fill: '#333',
                             textAlign: 'left',

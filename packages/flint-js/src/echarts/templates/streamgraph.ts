@@ -148,7 +148,7 @@ export const ecStreamgraphDef: ChartTemplateDef = {
                 name: xField,
                 nameLocation: 'middle',
                 nameGap: 25,
-                nameTextStyle: { fontSize: 12 },
+                nameTextStyle: { fontSize: ctx.layout.titleFontSize },
                 ...(xIsTemporal ? { axisLabel: { fontSize: 11 } } : {}),
             },
             series: [{

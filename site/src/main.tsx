@@ -3,16 +3,16 @@ import ReactDOM from 'react-dom/client';
 import '@fontsource-variable/inter/index.css';
 import './global.css';
 import './i18n';
-import { HashRouter, Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Landing } from './routes/Landing';
 import { ChartWall } from './routes/ChartWall';
 import { Editor } from './routes/Editor';
 import { McpServer } from './routes/McpServer';
 import { DocSectionPage } from './routes/DocSectionPage';
-import { DevShell } from './routes/dev/DevShell';
-import { DevIllustrations } from './routes/dev/DevIllustrations';
-import { DevMcpUi } from './routes/dev/DevMcpUi';
-import { DevLabs } from './routes/dev/DevLabs';
+import { PlaygroundShell } from './playground/PlaygroundShell';
+import { Illustrations } from './playground/Illustrations';
+import { McpUi } from './playground/McpUi';
+import { Labs } from './playground/Labs';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -39,14 +39,14 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="wall/:backend" element={<WallRedirect />} />
         <Route path="editor" element={<Editor />} />
         <Route path="mcp" element={<McpServer />} />
-        <Route path="dev-playground" element={<Navigate to={localePath('/dev/illustrations', locale)} replace />} />
-        <Route path="dev" element={<DevOnlyRoute />}>
-          <Route element={<DevShell />}>
-            <Route index element={<Navigate to="illustrations" replace />} />
-            <Route path="illustrations" element={<DevIllustrations />} />
-            <Route path="mcp-ui" element={<DevMcpUi />} />
-            <Route path="labs" element={<DevLabs />} />
-          </Route>
+        {/* Playground is public — poke around and play with the widgets. */}
+        <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
+        <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
+        <Route path="playground" element={<PlaygroundShell />}>
+          <Route index element={<Navigate to="illustrations" replace />} />
+          <Route path="illustrations" element={<Illustrations />} />
+          <Route path="mcp-ui" element={<McpUi />} />
+          <Route path="labs" element={<Labs />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}
         <Route
@@ -60,13 +60,6 @@ function AppRoutes({ locale }: { locale: Locale }) {
       </Routes>
     </LocaleProvider>
   );
-}
-
-function DevOnlyRoute() {
-  const { locale } = useLocale();
-  return import.meta.env.DEV
-    ? <Outlet />
-    : <Navigate to={localePath('/', locale)} replace />;
 }
 
 /** Preserve old /tutorials/:slug links by redirecting into /documentation. */

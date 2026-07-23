@@ -160,8 +160,18 @@ interface AssembleOptions {
   maxColorValues?: number;     // color cardinality before truncation (default 24)
   stepPadding?: number;        // band inner padding fraction (default 0.1)
   defaultBandSize?: number;    // baseline px per category (backend-tuned)
+  maxBandSize?: number;        // max px per category when sparse (backend-tuned)
+  baseLabelFontSize?: number;  // axis tick font at the reference canvas (VL 10, EC/CJS/Plotly 12)
+  baseTitleFontSize?: number;  // header font — axis title / legend / chart title (VL 11, EC/CJS 12, Plotly 14)
 }
 ```
+
+Fonts adapt to canvas size around these per-backend bases: at the default
+canvas each backend renders its native size, growing subtly on larger canvases
+(up to base + 4) and shrinking in small-multiple subplots; axis tick labels also
+shrink/rotate/truncate to avoid overlap. Set `baseLabelFontSize` /
+`baseTitleFontSize` to scale all text up or down — e.g. `baseLabelFontSize: 14`
+for larger tick labels across the whole chart.
 
 Full list: `packages/flint-js/src/core/types.ts` (`AssembleOptions`). Behavior: [Auto Layout Algorithm](/documentation/layout-model).
 

@@ -55,6 +55,7 @@ import {
     computeAxisStep,
     computeGasPressure,
     computeLabelSizing,
+    computeFontSizing,
     DEFAULT_GAS_PRESSURE_PARAMS,
     type ElasticStretchParams,
     type GasPressureParams,
@@ -193,6 +194,22 @@ export function resolveBaseSize(
 }
 
 /**
+ * Read the user's `facetColumns` chart property (the interactive facet-wrap
+ * control) off the RAW chart_spec.chartProperties, returning a clamped integer
+ * column count or undefined for auto. Read raw (pre-normalization) because
+ * `facetColumns` is a layout-level option, not a per-template mark property, so
+ * `normalizeChartProperties` would otherwise drop it as an unknown key.
+ */
+export function resolveFacetColumnsOption(
+    chartProperties: Record<string, any> | undefined,
+): number | undefined {
+    const raw = chartProperties?.facetColumns;
+    if (raw == null) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 1 ? Math.floor(n) : undefined;
+}
+
+/**
  * Derive per-dimension stretch ceilings (βx, βy) for an assembler.
  *
  * When the spec supplies a hard `canvasSize` ceiling, the caps are the ratio
@@ -280,6 +297,11 @@ export function computeLayout(
     const sizeRatio = Math.max(defaultChartWidth, defaultChartHeight) / baseRefSize;
     const baseBandSize = options.defaultBandSize ?? 20;
     const defaultStepSize = Math.round(baseBandSize * Math.max(1, sizeRatio));
+    // Sparse-expansion ceiling: a band may grow past its base size to fill a
+    // wide plot, but never past maxStepSize. Defaults to the base band, so a
+    // backend that doesn't opt in keeps the old "cap at base" behavior.
+    const maxBandSize = Math.max(baseBandSize, options.maxBandSize ?? baseBandSize);
+    const maxStepSize = Math.round(maxBandSize * Math.max(1, sizeRatio));
 
     const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
@@ -795,32 +817,32 @@ export function computeLayout(
 
     if (xIsDiscrete && xHasGrouping) {
         const itemsPerGroup = nominalCount.group;
-        const defaultGroupStep = itemsPerGroup * defaultStepSize;
+        const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
         const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, elasticParamsX);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         xStepSize = groupStep;
         xStepUnit = 'group';
     } else if (xIsDiscrete) {
-        xStepSize = Math.max(minStepVal, Math.min(defaultStepSize, xAxis.step));
+        xStepSize = Math.max(minStepVal, Math.min(maxStepSize, xAxis.step));
     } else if (xContinuousAsDiscrete > 0) {
-        xStepSize = Math.max(minStepVal, Math.min(defaultStepSize, xAxis.step));
+        xStepSize = Math.max(minStepVal, Math.min(maxStepSize, xAxis.step));
     } else {
         xStepSize = defaultStepSize;
     }
 
     if (yIsDiscrete && yHasGrouping) {
         const itemsPerGroup = nominalCount.group;
-        const defaultGroupStep = itemsPerGroup * defaultStepSize;
+        const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
         const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, elasticParamsY);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         yStepSize = groupStep;
         yStepUnit = 'group';
     } else if (yIsDiscrete) {
-        yStepSize = Math.max(minStepVal, Math.min(defaultStepSize, yAxis.step));
+        yStepSize = Math.max(minStepVal, Math.min(maxStepSize, yAxis.step));
     } else if (yContinuousAsDiscrete > 0) {
-        yStepSize = Math.max(minStepVal, Math.min(defaultStepSize, yAxis.step));
+        yStepSize = Math.max(minStepVal, Math.min(maxStepSize, yAxis.step));
     } else {
         yStepSize = defaultStepSize;
     }
@@ -928,10 +950,24 @@ export function computeLayout(
     }
 
     // --- Label sizing ---
-    const xHasDiscreteItems = xTotalNominalCount > 0;
-    const yHasDiscreteItems = yTotalNominalCount > 0;
-    let xLabel = computeLabelSizing(xStepSize, xHasDiscreteItems);
-    let yLabel = computeLabelSizing(yStepSize, yHasDiscreteItems);
+    // A temporal/numeric field used as a BANDED axis (one bar per value) is
+    // "continuous-as-discrete": its tick labels sit one-per-band exactly like a
+    // nominal axis, so they must follow the same discrete sizing ladder (shrink
+    // — and rotate when bands are narrow) rather than staying at the full
+    // continuous base font. Otherwise dense date/number bands render oversized
+    // labels that feel too large for their band and crowd together.
+    const xHasDiscreteItems = xTotalNominalCount > 0 || xContinuousAsDiscrete > 0;
+    const yHasDiscreteItems = yTotalNominalCount > 0 || yContinuousAsDiscrete > 0;
+    // Canvas-adaptive fonts: descend the tick ladder from the backend's native
+    // base, and derive header/legend sizes. Scaled by the (sub)plot's smaller
+    // dimension so small multiples shrink and large single views grow subtly.
+    const fontSizing = computeFontSizing(Math.min(subplotWidth, subplotHeight), {
+        baseLabelFontSize: options.baseLabelFontSize,
+        baseTitleFontSize: options.baseTitleFontSize,
+    });
+    const labelOpts = { baseFont: fontSizing.tickBase, minFont: 6 };
+    let xLabel = computeLabelSizing(xStepSize, xHasDiscreteItems, labelOpts);
+    let yLabel = computeLabelSizing(yStepSize, yHasDiscreteItems, labelOpts);
 
     if (xHasDiscreteItems) {
         const xf = channelSemantics.x?.field;
@@ -963,7 +999,7 @@ export function computeLayout(
                     const cap = Math.max(minStepVal, Math.floor(maxSubplotW / stats.count));
                     if (desiredStep <= cap) {
                         xStepSize = Math.max(xStepSize, desiredStep);
-                        xLabel = computeLabelSizing(xStepSize, xHasDiscreteItems);
+                        xLabel = computeLabelSizing(xStepSize, xHasDiscreteItems, labelOpts);
                         labelPx = stats.maxLen * xLabel.fontSize * APPROX_CHAR_WIDTH_RATIO;
                     }
                 }
@@ -1014,6 +1050,14 @@ export function computeLayout(
         }
     }
 
+    // Keep tick labels consistent across axes. A continuous value axis stays at
+    // the base font, but a banded axis shrinks its labels as bands tighten — so
+    // the value "numbers" can end up visibly larger than the category "text".
+    // Unify both tick fonts to the smaller of the two so they read as one size.
+    const unifiedTickFont = Math.min(xLabel.fontSize, yLabel.fontSize);
+    if (xLabel.fontSize !== unifiedTickFont) xLabel = { ...xLabel, fontSize: unifiedTickFont };
+    if (yLabel.fontSize !== unifiedTickFont) yLabel = { ...yLabel, fontSize: unifiedTickFont };
+
     return {
         subplotWidth,
         subplotHeight,
@@ -1027,6 +1071,8 @@ export function computeLayout(
         yNominalCount: yTotalNominalCount,
         xLabel,
         yLabel,
+        titleFontSize: fontSizing.titleFontSize,
+        legendFontSize: fontSizing.legendFontSize,
         stepPadding: stepPaddingVal,
         facet: (facetCols > 1 || facetRows > 1) ? {
             columns: facetCols,
@@ -1630,7 +1676,23 @@ export function computeFacetGrid(
 
     if (colCount === 0 && rowCount === 0) return undefined;
 
+    // Explicit user override: force a specific column count for a column-wrapped
+    // facet (the `facetColumns` chart property). Clamped to [1, colCount]; the
+    // remaining panels wrap into as many rows as needed (all kept, canvas grows).
+    const forcedCols = options.facetColumns != null && options.facetColumns >= 1
+        ? Math.min(Math.max(1, Math.floor(options.facetColumns)), Math.max(1, colCount))
+        : undefined;
+
     if (colCount > 0 && rowCount === 0) {
+        if (forcedCols != null) {
+            const nRows = Math.ceil(colCount / forcedCols);
+            return {
+                columns: forcedCols,
+                rows: nRows,
+                maxColumnValues: forcedCols * nRows,
+                maxRowValues: Math.max(maxFacetRows, nRows),
+            };
+        }
         // Column-only.  If all panels fit in one row, use a single row.
         // Otherwise wrap into a balanced grid: pick the number of rows
         // that makes the grid as square as possible (cols ≈ rows) while
