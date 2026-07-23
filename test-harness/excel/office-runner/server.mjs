@@ -383,14 +383,12 @@ async function renderBatchViaServer(args) {
 
 const [cmd, a, b] = process.argv.slice(2);
 if (cmd === 'render') {
-  // NB: uses self-signed dev cert; set NODE_TLS_REJECT_UNAUTHORIZED=0 or trust the CA.
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED ?? '0';
+  // NB: uses self-signed dev cert; trust the office-addin-dev-certs CA.
   renderViaServer(a, b ?? 'evaluations/out/chart.png').catch((e) => {
     console.error(e.message);
     process.exit(1);
   });
 } else if (cmd === 'render-batch') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED ?? '0';
   renderBatchViaServer(process.argv.slice(3)).catch((e) => {
     console.error(e.message);
     process.exit(1);
