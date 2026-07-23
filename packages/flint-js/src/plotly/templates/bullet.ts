@@ -17,7 +17,10 @@ import { ChartTemplateDef } from '../../core/types';
 import { extractCategories } from './utils';
 
 const ZONE_GRAYS = ['#e2e2e2', '#ececec', '#f5f5f5'];
-const STATUS_COLORS = { below: '#c44e52', met: '#2f855a' };
+// Plotly's native "good/bad" semantics: the indicator delta uses #3D9970
+// (positive) and #FF4136 (negative). Reusing that pair for bullet attainment
+// keeps the value bar consistent with Plotly's own palette (and the waterfall).
+const STATUS_COLORS = { below: '#FF4136', met: '#3D9970' };
 
 export const plBulletChartDef: ChartTemplateDef = {
     chart: 'Bullet Chart',

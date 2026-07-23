@@ -21,6 +21,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realEcdfCases } from './real-world-tests';
 import { seededRandom } from './generators';
 
 /** Standard-normal sample via Box–Muller. */
@@ -232,7 +233,7 @@ export function genEcdfTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realEcdfCases()];
 }
 
 /**

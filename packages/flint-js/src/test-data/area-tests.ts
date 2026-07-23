@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realAreaCases, realStreamgraphCases } from './real-world-tests';
 import { seededRandom, genDates, genCategories, genOrdinalLabels, ORDINAL_PREFIXES } from './generators';
 
 // ============================================================================
@@ -92,11 +93,8 @@ const AREA_MATRIX: AreaMatrixEntry[] = [
 
 const STREAMGRAPH_MATRIX: AreaMatrixEntry[] = [
     { x: 'T', y: 'Q', n: 200,  color: 'N', colorCard: 5,  desc: '5 genres × 40 dates — basic streamgraph' },
-    { x: 'T', y: 'Q', n: 800,  color: 'N', colorCard: 10, desc: '10 industries × 80 dates — large' },
     { x: 'T', y: 'Q', n: 3000, color: 'N', colorCard: 20, desc: '20 series × 150 dates — stress', extraTags: ['stress'] },
     { x: 'T', y: 'Q', n: 200,  color: 'N', colorCard: 5,  sparse: true, desc: '5 series ~20% missing' },
-    { x: 'O', y: 'Q', n: 60,   xCard: 12, color: 'N', colorCard: 5, desc: 'Ordinal streamgraph — 12 cats × 5 series' },
-    { x: 'Q', y: 'Q', n: 150,  color: 'N', colorCard: 3, desc: 'Quant-x streamgraph — 3 series × 50 pts' },
 ];
 
 // ============================================================================
@@ -394,10 +392,10 @@ function areaMatrixToTestCase(
 
 export function genAreaTests(): TestCase[] {
     const rand = seededRandom(910);
-    return AREA_MATRIX.map(entry => areaMatrixToTestCase(entry, 'Area Chart', rand));
+    return [...AREA_MATRIX.map(entry => areaMatrixToTestCase(entry, 'Area Chart', rand)), ...realAreaCases()];
 }
 
 export function genStreamgraphTests(): TestCase[] {
     const rand = seededRandom(920);
-    return STREAMGRAPH_MATRIX.map(entry => areaMatrixToTestCase(entry, 'Streamgraph', rand));
+    return [...STREAMGRAPH_MATRIX.map(entry => areaMatrixToTestCase(entry, 'Streamgraph', rand)), ...realStreamgraphCases()];
 }

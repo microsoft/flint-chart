@@ -292,7 +292,16 @@ function cardQualifierKey(variants: TestCase[], idxs: number[]): CardKey {
  * are *always* annotated with that concrete count, collision or not.
  */
 export function humanizeVariants(variants: TestCase[], locale: Locale = 'en'): string[] {
-  const out = variants.map(baseTitle);
+  // Real-world cases carry a descriptive, scenario-based title authored for the
+  // gallery (e.g. "Palmer Penguins — flipper length vs body mass"). Use it
+  // directly (dropping a trailing parenthetical qualifier for brevity) rather
+  // than the derived encoding caption. Their titles are unique, so the
+  // disambiguation passes below leave them untouched.
+  const realCaption = (t: TestCase): string => {
+    const raw = (localizeVariantTitle(t.title, locale) || t.title || '').trim();
+    return raw.replace(/\s*\([^)]*\)\s*$/, '').trim() || raw;
+  };
+  const out = variants.map((t) => ((t.tags ?? []).includes('real') ? realCaption(t) : baseTitle(t)));
   const hasParen = (s: string) => s.includes('(');
 
   const groupsOf = (): number[][] => {

@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realBarCases, realStackedBarCases, realGroupedBarCases } from './real-world-tests';
 import { seededRandom, genDates, genCategories, genRandomNames } from './generators';
 
 // ============================================================================
@@ -415,12 +416,12 @@ function barMatrixToTestCase(
 
 export function genBarTests(): TestCase[] {
     const rand = seededRandom(100);
-    return BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Bar Chart', 'color', rand));
+    return [...BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Bar Chart', 'color', rand)), ...realBarCases()];
 }
 
 export function genStackedBarTests(): TestCase[] {
     const rand = seededRandom(200);
-    return STACKED_BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Stacked Bar Chart', 'color', rand));
+    return [...STACKED_BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Stacked Bar Chart', 'color', rand)), ...realStackedBarCases()];
 }
 
 export function genGroupedBarTests(): TestCase[] {
@@ -530,5 +531,5 @@ export function genGroupedBarTests(): TestCase[] {
         }
     }
 
-    return tests;
+    return [...tests, ...realGroupedBarCases()];
 }

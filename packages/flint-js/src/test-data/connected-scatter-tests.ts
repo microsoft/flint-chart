@@ -22,6 +22,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realConnectedScatterCases } from './real-world-tests';
 import { seededRandom, genCategories, genYears } from './generators';
 
 export function genConnectedScatterTests(): TestCase[] {
@@ -196,7 +197,7 @@ export function genConnectedScatterTests(): TestCase[] {
         tests.push({
             title: 'Temperature vs Pressure × 2 trials + Color (index order)',
             description: 'Two experiment trajectories ordered by a numeric step index, grouped by color',
-            tags: ['quantitative', 'index-order', 'color', 'multi-series', 'small'],
+            tags: ['quantitative', 'index-order', 'color', 'multi-series', 'small', 'edge-case'],
             chartType: 'Connected Scatter Plot',
             data,
             fields: [makeField('Temperature'), makeField('Pressure'), makeField('Step'), makeField('Experiment')],
@@ -226,7 +227,7 @@ export function genConnectedScatterTests(): TestCase[] {
         tests.push({
             title: 'Cost vs Revenue over 4 quarters (low count)',
             description: 'A minimal 4-point trajectory ordered by quarter index — lowest useful connected scatter',
-            tags: ['quantitative', 'index-order', 'single', 'small'],
+            tags: ['quantitative', 'index-order', 'single', 'small', 'edge-case'],
             chartType: 'Connected Scatter Plot',
             data,
             fields: [makeField('Cost'), makeField('Revenue'), makeField('Quarter')],
@@ -262,7 +263,7 @@ export function genConnectedScatterTests(): TestCase[] {
         tests.push({
             title: 'Winding spiral × 36 steps (higher count)',
             description: 'A 36-point spiral trajectory ordered by step index — higher point count / density',
-            tags: ['quantitative', 'index-order', 'looping', 'single', 'large'],
+            tags: ['quantitative', 'index-order', 'looping', 'single', 'large', 'edge-case'],
             chartType: 'Connected Scatter Plot',
             data,
             fields: [makeField('X Position'), makeField('Y Position'), makeField('Step')],
@@ -316,7 +317,7 @@ export function genConnectedScatterTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realConnectedScatterCases()];
 }
 
 /**
@@ -348,6 +349,6 @@ export function genChartJsConnectedScatterTests(): TestCase[] {
         pick('Unemployment vs Inflation over 10 years (basic)'),
         pick('GDP growth vs Inflation × 3 countries + Color (trajectories)'),
         pick('Self-crossing sensor loop × 24 steps (figure-eight)'),
-        pick('Temperature vs Pressure × 2 trials + Color (index order)'),
+        pick('Driving Shifts Into Reverse — miles vs gas price (US, 1956–2010)'),
     ];
 }

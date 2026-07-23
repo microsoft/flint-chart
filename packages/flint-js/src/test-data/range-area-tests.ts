@@ -19,6 +19,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realRangeAreaCases } from './real-world-tests';
 import { seededRandom, genYears } from './generators';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -318,7 +319,7 @@ export function genRangeAreaTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realRangeAreaCases()];
 }
 
 /**

@@ -88,13 +88,14 @@ export const connectedScatterDef: ChartTemplateDef = {
             delete spec.encoding.order;
         }
 
-        // Both position axes fit the data (a trajectory reads the shape, not the
-        // distance from zero), matching the Scatter Plot convention. The zero
-        // decision the engine attached to each axis still wins when it is set.
-        // A few pixels of scale padding keep the extreme points (and their
-        // markers) clear of the plot edges so a point that lands exactly on an
-        // axis bound is not clipped.
-        xEnc.scale = { ...xEnc.scale, nice: true, padding: 10 };
-        yEnc.scale = { ...yEnc.scale, nice: true, padding: 10 };
+        // Clean, data-fitting bounds via Vega-Lite's native `nice`. The
+        // zero-baseline is left to the engine (computeZeroDecision), same as any
+        // other position chart. IMPORTANT: no pixel `scale.padding` here —
+        // padding expands the domain symmetrically and, combined with `nice`,
+        // can round a zero-anchored axis *below* zero on strictly-positive data
+        // (e.g. gas price rounding to -0.5). `nice` alone gives clean,
+        // non-negative bounds.
+        xEnc.scale = { ...xEnc.scale, nice: true };
+        yEnc.scale = { ...yEnc.scale, nice: true };
     },
 };

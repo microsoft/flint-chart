@@ -13,6 +13,7 @@ import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
+import { NewCasePreview } from './playground/NewCasePreview';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -47,6 +48,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="illustrations" element={<Illustrations />} />
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
+          <Route path="new-case-preview" element={<NewCasePreview />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}
         <Route

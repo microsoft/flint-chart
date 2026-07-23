@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem, buildMetadata } from './types';
+import { realHistogramCases, realDensityCases, realBoxplotCases, realStripCases } from './real-world-tests';
 import { seededRandom, genCategories } from './generators';
 
 // ------ Histogram ------
@@ -74,7 +75,7 @@ export function genHistogramTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realHistogramCases()];
 }
 
 // ------ Boxplot ------
@@ -308,7 +309,7 @@ export function genBoxplotTests(): TestCase[] {
         }
     }
 
-    return tests;
+    return [...tests, ...realBoxplotCases()];
 }
 
 // ------ Density Plot ------
@@ -418,7 +419,7 @@ export function genDensityTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realDensityCases()];
 }
 
 // ------ Strip Plot (Jitter) ------
@@ -439,7 +440,7 @@ export function genStripPlotTests(): TestCase[] {
         tests.push({
             title: 'Iris Petal Length (3 species, 60 pts)',
             description: 'Categorical x, quantitative y with jitter',
-            tags: ['jitter', 'nominal', 'small'],
+            tags: ['jitter', 'nominal', 'small', 'edge-case'],
             chartType: 'Strip Plot',
             data,
             fields: [makeField('Species'), makeField('PetalLength')],
@@ -469,7 +470,7 @@ export function genStripPlotTests(): TestCase[] {
         tests.push({
             title: 'Clinical Trial Scores (color = Gender)',
             description: 'Strip plot with color grouping',
-            tags: ['jitter', 'nominal', 'color'],
+            tags: ['jitter', 'nominal', 'color', 'edge-case'],
             chartType: 'Strip Plot',
             data,
             fields: [makeField('Group'), makeField('Score'), makeField('Gender')],
@@ -503,5 +504,5 @@ export function genStripPlotTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realStripCases()];
 }

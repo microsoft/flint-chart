@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem, buildMetadata } from './types';
+import { realLollipopCases, realPieCases, realDonutCases, realRoseCases, realRadarCases, realWaterfallCases, realCandlestickCases, realHeatmapCases, realPyramidCases, realBarTableCases, realRangedDotCases } from './real-world-tests';
 import { seededRandom, genDates, genMonths, genCategories, genRandomNames } from './generators';
 
 // ------ Heatmap ------
@@ -212,7 +213,7 @@ export function genHeatmapTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realHeatmapCases()];
 }
 
 // ------ Pie Chart ------
@@ -297,17 +298,20 @@ export function genPieTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realPieCases()];
 }
 
 export function genDonutTests(): TestCase[] {
-    return genPieTests().map(test => ({
-        ...test,
-        title: test.title.replace('Pie', 'Donut'),
-        description: test.description.replace('Pie', 'Donut'),
-        chartType: 'Donut Chart',
-        chartProperties: { ...test.chartProperties, innerRadius: 50 },
-    }));
+    return [
+        ...genPieTests().filter(t => !(t.tags ?? []).includes('real')).map(test => ({
+            ...test,
+            title: test.title.replace('Pie', 'Donut'),
+            description: test.description.replace('Pie', 'Donut'),
+            chartType: 'Donut Chart',
+            chartProperties: { ...test.chartProperties, innerRadius: 50 },
+        })),
+        ...realDonutCases(),
+    ];
 }
 
 // ------ Ranged Dot Plot ------
@@ -338,7 +342,7 @@ export function genRangedDotPlotTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realRangedDotCases()];
 }
 
 // ------ Lollipop Chart ------
@@ -445,7 +449,7 @@ export function genLollipopTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realLollipopCases()];
 }
 
 // ------ Waterfall Chart ------
@@ -590,7 +594,7 @@ export function genWaterfallTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realWaterfallCases()];
 }
 
 // ------ Bar Table ------
@@ -1131,7 +1135,7 @@ export function genBarTableTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realBarTableCases()];
 }
 
 // ------ Candlestick Chart ------
@@ -1288,7 +1292,7 @@ export function genCandlestickTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realCandlestickCases()];
 }
 
 // ------ Radar Chart ------
@@ -1479,7 +1483,7 @@ export function genRadarTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realRadarCases()];
 }
 
 // ------ Pyramid Chart ------
@@ -1694,7 +1698,7 @@ export function genPyramidTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realPyramidCases()];
 }
 
 // ------ Rose Chart (Nightingale / Coxcomb) ------
@@ -1921,5 +1925,5 @@ export function genRoseTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realRoseCases()];
 }
