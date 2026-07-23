@@ -1,7 +1,5 @@
 // @ts-check
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED ?? '0';
-
 const DEFAULT_SERVER = 'https://localhost:3000';
 const HEALTH_CHECK_INTERVAL_MS = 2_000;
 
