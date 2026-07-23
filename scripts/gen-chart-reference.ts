@@ -21,6 +21,7 @@ import type { ChartTemplateDef, ChartPropertyDef } from '../packages/flint-js/sr
 import { vlTemplateDefs } from '../packages/flint-js/src/vegalite/templates/index';
 import { ecTemplateDefs } from '../packages/flint-js/src/echarts/templates/index';
 import { cjsTemplateDefs } from '../packages/flint-js/src/chartjs/templates/index';
+import { plTemplateDefs } from '../packages/flint-js/src/plotly/templates/index';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DOCS_DIR = resolve(__dirname, '../docs');
@@ -63,6 +64,19 @@ const BACKENDS: BackendSpec[] = [
         blurb:
             'The Chart.js backend is the lightweight embedding target for common chart families. It keeps the ' +
             'parameter surface intentionally small.',
+    },
+    {
+        name: 'Plotly',
+        file: 'reference-plotly.md',
+        defs: plTemplateDefs,
+        blurb:
+            'The Plotly backend compiles to a Plotly.js figure (`{ data, layout }`) and leans on Plotly-native ' +
+            'trace types wherever one exists (candlestick, box, violin, heatmap, waterfall, `scatterpolar`/`barpolar`, ' +
+            '`indicator`, `scattergeo`/`choropleth`) instead of hand-building the mark. Funnel and Gauge have no ' +
+            'Vega-Lite equivalent and showcase Plotly-specific native primitives. Map and Choropleth use Plotly\'s ' +
+            'own built-in geo atlas (no external TopoJSON fetch/join needed). Sparkline and Bar Table are ' +
+            'composite, self-contained figures (their own multi-axis-pair grid + annotations) rather than the ' +
+            'generic column/row facet combiner.',
     },
 ];
 
@@ -151,6 +165,7 @@ const ICON_BY_CHART: Record<string, string> = {
     'Range Area Chart': 'chart-icon-range-area.svg',
     'Pie Chart': 'chart-icon-pie.svg',
     'Doughnut Chart': 'chart-icon-doughnut.svg',
+    'Donut Chart': 'chart-icon-doughnut.svg',
     'Scatter Pie Chart': 'chart-icon-pie.svg',
     'Rose Chart': 'chart-icon-rose.svg',
     'Radar Chart': 'chart-icon-radar.svg',

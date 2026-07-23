@@ -194,5 +194,6 @@ Open it with create_chart_view if this client supports MCP Apps; otherwise rende
 - [智能体工作流](/documentation/agent-workflows) 说明如何将 Flint 的语义图表契约嵌入自定义智能体或智能体产品。
 - [入门指南](/documentation/getting-started) 用一张小图解释 `DataSpec` 与 `ChartSpec` 的结构。
 - [Vega-Lite 图表](/documentation/reference-vegalite)、
-  [ECharts 图表](/documentation/reference-echarts) 和
-  [Chart.js 图表](/documentation/reference-chartjs) 按后端列出支持的图表类型。
+  [ECharts 图表](/documentation/reference-echarts)、
+  [Chart.js 图表](/documentation/reference-chartjs) 和
+  [Plotly 图表](/documentation/reference-plotly) 按后端列出支持的图表类型。

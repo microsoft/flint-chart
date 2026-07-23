@@ -219,7 +219,19 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
 
     const colField = channelSemantics.column?.field;
     const rowField = channelSemantics.row?.field;
-    const hasFacet = !!(colField || rowField);
+    // Multi-panel faceting only applies to axis-based (cartesian) templates.
+    // Axis-less charts (Pie, Donut, Radar, Rose, Gauge, Funnel, KPI Card) use
+    // `column` (when they declare it at all) for their own internal grouping
+    // — e.g. one gauge dial per column value — and lay that out themselves,
+    // exactly mirroring the ECharts backend's `hasAxes` gate.
+    const hasAxes = chartTemplate.channels.includes('x') || chartTemplate.channels.includes('y');
+    // A template can also opt out explicitly (`selfManagesFacets`) even though
+    // it DOES declare x/y — composite multi-panel layouts (Sparkline, Bar
+    // Table) already span several internal axis pairs of their own, so the
+    // generic single-axis-pair-per-panel combiner (`facet.ts`) cannot safely
+    // recombine N pre-split instantiations of them. These templates read
+    // `column`/`row` straight off `channelSemantics` themselves instead.
+    const hasFacet = !!(colField || rowField) && hasAxes && !chartTemplate.selfManagesFacets;
 
     let figure: any;
     if (hasFacet) {

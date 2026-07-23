@@ -135,7 +135,7 @@ data  +  semantic_types  +  chart_spec  →  assemble*()  →  后端配置
 | 章节 | 页面 |
 |---------|-------|
 | **语言设计** | [架构](/documentation/architecture)、[语义类型](/documentation/semantic-types)、[自动布局算法](/documentation/layout-model)、[API 参考](/documentation/api-reference) |
-| **图表参考** | [Vega-Lite 图表](/documentation/reference-vegalite)、[ECharts 图表](/documentation/reference-echarts)、[Chart.js 图表](/documentation/reference-chartjs) |
+| **图表参考** | [Vega-Lite 图表](/documentation/reference-vegalite)、[ECharts 图表](/documentation/reference-echarts)、[Chart.js 图表](/documentation/reference-chartjs)、[Plotly 图表](/documentation/reference-plotly) |
 | **开发** | [开发指南](/documentation/development)、[扩展语义类型](/documentation/adding-a-semantic-type)、[扩展后端](/documentation/adding-a-backend)、[扩展图表模板](/documentation/adding-a-chart-template) |
 
 ---

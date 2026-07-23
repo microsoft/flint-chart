@@ -11,6 +11,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Plotly backend: expanded from the four original acceptance templates (Bar,
+  Line, Area, Scatter) to 33 chart types — grouped/stacked bar, pyramid,
+  histogram, boxplot, violin, density, ECDF, strip plot, connected scatter,
+  range area, streamgraph, slope, bump, waterfall, candlestick, heatmap,
+  lollipop, bullet, Gantt, ranged dot plot, regression, pie, donut, radar,
+  rose, KPI card, and the Plotly-native opportunity charts Funnel and Gauge —
+  leaning on Plotly's own native trace types (`box`, `violin`, `candlestick`,
+  `waterfall`, `heatmap`, `scatterpolar`, `barpolar`, `indicator`, `funnel`)
+  wherever one exists.
+- Plotly backend: closed the four remaining registry gaps, now 37 chart
+  types.
+  - Map, Choropleth — native `scattergeo`/`choropleth` traces with Plotly's
+    own built-in geo atlas (no TopoJSON fetch/join). Share the Vega-Lite
+    Map/Choropleth's region-name/code gazetteer (`chart-types/geo.ts`, moved
+    out of `vegalite/templates/` to be backend-shared), extended with USPS/
+    ISO-alpha-3 code resolvers for Plotly's native `locations` binding.
+  - Sparkline, Bar Table — composite, self-contained Plotly figures (their
+    own multi-axis-pair grid + paper-anchored annotations) rather than the
+    generic column/row facet combiner, which only supports one cartesian
+    axis pair per panel. A new `ChartTemplateDef.selfManagesFacets` flag lets
+    a template opt out of the assembler's generic facet-splitting pass even
+    though it declares `x`/`y` channels.
+- Plotly scatter/strip plots now use a native continuous colorscale +
+  colorbar for quantitative/temporal `color` fields instead of grouping them
+  like a categorical legend.
+- `docs/reference-plotly.md` — generated chart reference for the Plotly
+  backend (`npm run gen:reference`).
+- `test-harness/plotly/` — a headless-Chromium render/audit harness for the
+  Plotly backend (spec → PNG, contact sheets, VLM review script, and a
+  per-chart-type inspection list), mirroring the role of
+  `test-harness/excel/` for that backend.
+
+### Fixed
+
+- Plotly: a shared column/row facet-splitting pass ran for every template,
+  including axis-less ones (Pie, Donut, Radar, Rose, Gauge, KPI Card, Funnel)
+  that use the `column` channel for their own internal per-item grouping —
+  this collapsed multi-item Gauge/KPI grids onto identical, fully-overlapping
+  domains. Faceting is now gated on the template declaring `x`/`y` channels,
+  mirroring the ECharts backend's own guard.
+- Plotly Choropleth: Plotly's own built-in `'Blues'` colorscale runs
+  dark→light as the value increases — the opposite of the light→dark
+  sequential convention used everywhere else, which made the *highest*-value
+  region read as the palest. Replaced with an explicit light→dark stop array.
+- Plotly Bar Table (faceted): each facet cell's per-cell `xaxis{n}`/
+  `yaxis{n}` pair needs an explicit `anchor` to each other — without it every
+  cell's category tick labels rendered at the same horizontal position
+  (overlapping across cells). Also fixed: long category names now truncate
+  with an ellipsis instead of overflowing past the figure's own edge; a
+  column-only facet with more panels than fit is now actually wrapped (using
+  this template's own minimum panel-width estimate, not the shared layout
+  engine's narrower default); sub-1 magnitude values no longer round away to
+  "0"; a single-row table no longer collapses to an unreadably short figure.
+
 ## [0.3.0] - 2026-07-19
 
 ### Added

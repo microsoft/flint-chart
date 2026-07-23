@@ -2,15 +2,23 @@
 // Licensed under the MIT License.
 
 /**
- * Geographic gazetteer for choropleth maps.
+ * Geographic gazetteer for choropleth maps — shared across backends.
  *
  * Real-world datasets identify regions by *name* ("California", "United
  * States") or by a familiar short code (USPS "CA", ISO alpha-2 "US", alpha-3
  * "USA") — almost never by the numeric ids that TopoJSON feature geometries
  * actually carry (FIPS state codes, ISO 3166-1 *numeric* country codes). This
- * module crosswalks any of those user-facing forms to the numeric id that
- * matches Vega's `us-10m.json` (states) and `world-110m.json` (countries)
- * feature ids, so a choropleth can join on whatever the user happens to have.
+ * module crosswalks any of those user-facing forms to whatever key a given
+ * backend's geo rendering needs:
+ *
+ *   - `resolveUsState` / `resolveCountry` — numeric feature id, for the
+ *     Vega-Lite backend's TopoJSON join (`us-10m.json` / `world-110m.json`).
+ *   - `resolveUsStateCode` / `resolveCountryCode` — USPS / ISO alpha-3 code,
+ *     for the Plotly backend's native `choropleth`/`scattergeo` `locations`.
+ *
+ * Living in `chart-types/` (rather than under one backend's `templates/`)
+ * follows the same cross-backend-shared-logic convention as
+ * `chart-types/gantt.ts` / `chart-types/waterfall.ts`.
  *
  * Lookups are case- and punctuation-insensitive. A value that is already the
  * numeric id passes through unchanged.
@@ -199,3 +207,121 @@ export const resolveUsState: GeoResolver = (value) => resolveWith(US_STATE_LOOKU
 
 /** Resolve a country name / ISO alpha-2 / alpha-3 / numeric to its ISO numeric id. */
 export const resolveCountry: GeoResolver = (value) => resolveWith(COUNTRY_LOOKUP, value);
+
+// ---------------------------------------------------------------------------
+// Code resolvers — for backends (Plotly) whose native geo traces key on a
+// short code rather than a TopoJSON numeric feature id.
+//
+// Plotly's `choropleth`/`scattergeo` traces resolve `locations` through a
+// built-in atlas (no user-supplied TopoJSON needed) keyed on:
+//   - `locationmode: 'USA-states'`  → 2-letter USPS codes ("CA")
+//   - default (`locationmode: 'ISO-3'`) → 3-letter ISO alpha-3 codes ("USA")
+//
+// These resolvers share the same gazetteer/alias tables as the numeric-id
+// resolvers above (`resolveUsState` / `resolveCountry`), so a value that
+// resolves for the Vega-Lite choropleth (name, USPS/ISO code, or a bare
+// numeric id) resolves the same way here — same data contract, different
+// output shape.
+// ---------------------------------------------------------------------------
+
+/** A code resolver: user value → the short code a native geo trace expects. */
+export type GeoCodeResolver = (value: unknown) => string | undefined;
+
+function resolveCodeWith(
+    lookup: Map<string, number>, codeById: Map<number, string>, value: unknown,
+): string | undefined {
+    if (value == null) return undefined;
+    // A bare numeric id (or numeric string) is resolved through the same
+    // id → code table used to build the gazetteer.
+    if (typeof value === 'number' && Number.isFinite(value)) return codeById.get(value);
+    const s = String(value).trim();
+    if (/^\d+$/.test(s)) return codeById.get(parseInt(s, 10));
+    const id = resolveWith(lookup, value);
+    return id !== undefined ? codeById.get(id) : undefined;
+}
+
+const US_STATE_USPS_BY_ID = new Map(US_STATES.map(([id, , usps]) => [id, usps]));
+const COUNTRY_ALPHA3_BY_ID = new Map(COUNTRIES.map(([id, , , a3]) => [id, a3]));
+
+/** Resolve a US state name / USPS code / FIPS id to its 2-letter USPS code. */
+export const resolveUsStateCode: GeoCodeResolver = (value) =>
+    resolveCodeWith(US_STATE_LOOKUP, US_STATE_USPS_BY_ID, value);
+
+/** Resolve a country name / ISO alpha-2 / alpha-3 / numeric to its ISO alpha-3 code. */
+export const resolveCountryCode: GeoCodeResolver = (value) =>
+    resolveCodeWith(COUNTRY_LOOKUP, COUNTRY_ALPHA3_BY_ID, value);
+
+// ---------------------------------------------------------------------------
+// Map scope inference (US vs World) — shared by every backend's Map /
+// Choropleth templates so "which base geography do we draw" is decided the
+// same way regardless of which renderer draws it.
+// ---------------------------------------------------------------------------
+
+export type MapScope = 'us' | 'world';
+
+// Generous bounding box for the United States (contiguous states + Alaska +
+// Hawaii). Used only to *infer* scope: a dataset whose every point falls
+// inside is treated as a US map; anything outside flips the whole map to world.
+const US_LON: readonly [number, number] = [-170, -66];
+const US_LAT: readonly [number, number] = [18, 72];
+
+function inUsBox(lon: number, lat: number): boolean {
+    return lon >= US_LON[0] && lon <= US_LON[1] && lat >= US_LAT[0] && lat <= US_LAT[1];
+}
+
+/** Infer scope for a bubble map from its longitude/latitude points. */
+export function inferBubbleScope(rows: any[], lonField?: string, latField?: string): MapScope {
+    if (!lonField || !latField) return 'us';
+    for (const r of rows) {
+        const lon = Number(r[lonField]);
+        const lat = Number(r[latField]);
+        if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+        if (!inUsBox(lon, lat)) return 'world';
+    }
+    return 'us';
+}
+
+/** Infer scope for a choropleth from its region keys (names / codes / ids). */
+export function inferChoroplethScope(rows: any[], idField?: string): MapScope {
+    if (!idField) return 'us';
+    for (const r of rows) {
+        const v = r[idField];
+        if (v == null || v === '') continue;
+        // A value that resolves as a US state (by name, USPS code, FIPS id, or a
+        // bare numeric that passes straight through) keeps us in the US; the
+        // first value that doesn't flips the whole map to world.
+        if (resolveUsState(v) === undefined) return 'world';
+    }
+    return 'us';
+}
+
+/**
+ * Map the id field's *semantic type* to a map scope. This is the most reliable
+ * signal we have: a field declared 'State' should use the US states map and the
+ * US-state resolver, a field declared 'Country' the world map and country
+ * resolver. It disambiguates the codes that collide between the two namespaces
+ * — "CA" (California vs Canada), "IN" (Indiana vs India), "Georgia" (US state
+ * vs the country) — which value inference alone cannot. Geographic types that
+ * neither base layer can render (City, Region, Address, ZipCode) return
+ * undefined so callers fall back to value inference.
+ */
+const SEMANTIC_SCOPE: Record<string, MapScope> = { State: 'us', Country: 'world' };
+
+export function semanticScope(semType: string | undefined): MapScope | undefined {
+    if (!semType) return undefined;
+    return Object.prototype.hasOwnProperty.call(SEMANTIC_SCOPE, semType)
+        ? SEMANTIC_SCOPE[semType]
+        : undefined;
+}
+
+/** Honor an explicit `region` choice, else the id field's semantic type, else inference. */
+export function pickMapScope(
+    chartProperties: any,
+    semScope: MapScope | undefined,
+    infer: () => MapScope,
+): MapScope {
+    const choice = chartProperties?.region;
+    if (choice === 'us' || choice === 'world') return choice;
+    if (semScope) return semScope;
+    return infer();
+}

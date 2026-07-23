@@ -11,6 +11,20 @@ import { pickPlotlyPalette } from '../colormap';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
 
+/** Exported alias so templates can share the same discrete-type predicate. */
+export const isDiscreteType = isDiscrete;
+
+/** True if every category label parses as a number (used to decide label rotation). */
+export function areCategoriesNumeric(cats: string[]): boolean {
+    if (cats.length === 0) return true;
+    return cats.every((c) => {
+        const s = String(c).trim();
+        if (s === '') return false;
+        const n = Number(s);
+        return !isNaN(n) && isFinite(n);
+    });
+}
+
 /**
  * Extract unique category values from data for a given field, preserving order.
  * If `ordinalSortOrder` is provided, returns values sorted in that canonical order.
@@ -157,4 +171,128 @@ export function getSeriesColor(palette: string[], index: number): string {
         return PLOTLY_COLORS[index % PLOTLY_COLORS.length];
     }
     return palette[index % palette.length];
+}
+
+/** Hex → rgba with alpha, for translucent fills (area/violin/density/range-area). */
+export function fillColor(hex: string, alpha: number): string {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex ?? '').trim());
+    if (!m) return hex;
+    const v = parseInt(m[1], 16);
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}, ${a})`;
+}
+
+/**
+ * Bandwidth for Gaussian KDE — matches vega-statistics (bandwidth.js), shared
+ * with the equivalent Vega-Lite/ECharts density templates so curves line up.
+ */
+export function estimateBandwidth(values: number[]): number {
+    const n = values.length;
+    if (n < 2) return 1;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+    const d = Math.sqrt(variance);
+    const q1 = sorted[Math.floor((n - 1) * 0.25)];
+    const q3 = sorted[Math.floor((n - 1) * 0.75)];
+    const iqr = (q3 != null && q1 != null) ? q3 - q1 : 0;
+    const h = iqr / 1.34;
+    const v = Math.min(d, h || d) || d || 1;
+    return 1.06 * v * Math.pow(n, -0.2);
+}
+
+/** One-dimensional Gaussian KDE over an extent. */
+export function kde(
+    values: number[], steps: number, bandwidthMultiplier: number,
+    extent?: { min: number; max: number },
+): { x: number[]; y: number[] } {
+    if (values.length === 0) return { x: [], y: [] };
+    const lo = extent ? extent.min : Math.min(...values);
+    const hi = extent ? extent.max : Math.max(...values);
+    const range = hi - lo || 1;
+    const h = estimateBandwidth(values) * bandwidthMultiplier;
+    const n = values.length;
+    const x: number[] = [];
+    const y: number[] = [];
+    for (let i = 0; i <= steps; i++) {
+        const t = lo + (i / steps) * (hi - lo || range);
+        let sum = 0;
+        for (const v of values) {
+            const z = (t - v) / h;
+            sum += Math.exp(-0.5 * z * z);
+        }
+        const density = sum / (n * h * Math.sqrt(2 * Math.PI));
+        x.push(t);
+        y.push(density);
+    }
+    return { x, y };
+}
+
+/**
+ * Sorted distinct (value, cumulative-proportion) pairs for an ECDF, using the
+ * "≤ x" convention (ties collapse to the last occurrence's proportion).
+ */
+export function ecdfPairs(values: number[]): [number, number][] {
+    const sorted = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
+    const n = sorted.length;
+    const pairs: [number, number][] = [];
+    if (n === 0) return pairs;
+    let i = 0;
+    while (i < n) {
+        let j = i;
+        while (j + 1 < n && sorted[j + 1] === sorted[i]) j++;
+        pairs.push([sorted[i], (j + 1) / n]);
+        i = j + 1;
+    }
+    return pairs;
+}
+
+/** Deterministic pseudo-random generator (LCG) for reproducible jitter. */
+export function seededJitter(seed: number): () => number {
+    let s = seed;
+    return () => {
+        s = (s * 1103515245 + 12345) & 0x7fffffff;
+        return (s / 0x7fffffff) * 2 - 1;
+    };
+}
+
+/** Round up to a "nice" ceiling (radar/gauge axis maxima). */
+export function niceMax(v: number): number {
+    if (v <= 0) return 1;
+    const pow = Math.pow(10, Math.floor(Math.log10(v)));
+    const mantissa = v / pow;
+    const nice = mantissa <= 1 ? 1
+        : mantissa <= 2 ? 2
+        : mantissa <= 2.5 ? 2.5
+        : mantissa <= 5 ? 5
+        : 10;
+    return nice * pow;
+}
+
+/**
+ * Stable sort of `rows` by a sequence field: numeric when every present value
+ * parses as a number, chronological when every value parses as a date,
+ * lexical otherwise. Ties keep their original row order.
+ */
+export function sortByOrder(rows: any[], field: string | undefined): any[] {
+    if (!field) return rows;
+    const tagged = rows.map((row, idx) => ({ row, idx, key: row[field] }));
+    const present = tagged.filter(t => t.key != null && t.key !== '');
+    const allNumeric = present.length > 0 &&
+        present.every(t => typeof t.key === 'number' ||
+            (typeof t.key === 'string' && t.key.trim() !== '' && !isNaN(Number(t.key))));
+    const allDates = !allNumeric && present.length > 0 &&
+        present.every(t => !isNaN(Date.parse(String(t.key))));
+    const rank = (k: any): number | string => {
+        if (allNumeric) return Number(k);
+        if (allDates) return Date.parse(String(k));
+        return String(k);
+    };
+    return [...tagged].sort((a, b) => {
+        const ra = rank(a.key);
+        const rb = rank(b.key);
+        if (ra < rb) return -1;
+        if (ra > rb) return 1;
+        return a.idx - b.idx;
+    }).map(t => t.row);
 }

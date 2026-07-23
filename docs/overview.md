@@ -135,7 +135,7 @@ Pipeline detail: [Architecture](/documentation/architecture).
 | Section | Pages |
 |---------|-------|
 | **Language design** | [Architecture](/documentation/architecture), [Semantic Type](/documentation/semantic-types), [Auto Layout Algorithm](/documentation/layout-model), [API reference](/documentation/api-reference) |
-| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs) |
+| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs), [Plotly charts](/documentation/reference-plotly) |
 | **Development** | [Development guide](/documentation/development), [Extending semantic types](/documentation/adding-a-semantic-type), [Extending backends](/documentation/adding-a-backend), [Extending chart templates](/documentation/adding-a-chart-template) |
 
 ---

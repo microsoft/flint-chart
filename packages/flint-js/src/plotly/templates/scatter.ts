@@ -27,38 +27,72 @@ export const plScatterPlotDef: ChartTemplateDef = {
     channels: ['x', 'y', 'color', 'size', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'position',
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table, chartProperties } = ctx;
+        const { channelSemantics, table, chartProperties, colorDecisions } = ctx;
         const xField = channelSemantics.x?.field;
         const yField = channelSemantics.y?.field;
         const colorField = channelSemantics.color?.field;
+        const colorType = channelSemantics.color?.type;
+        const isTemporalColor = colorType === 'temporal';
+        const isContinuousColor = !!colorField && (colorType === 'quantitative' || isTemporalColor);
 
         if (!xField || !yField) return;
 
         const opacity = Number(chartProperties?.opacity ?? 1);
-
-        const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
-        const makeTrace = (name: string | undefined, rows: any[], colorIndex: number) => ({
-            type: 'scatter',
-            mode: 'markers',
-            ...(name != null ? { name } : {}),
-            x: rows.map(r => r[xField]),
-            y: rows.map(r => r[yField]),
-            marker: {
-                color: getSeriesColor(palette, colorIndex),
-                opacity,
-                line: { color: '#ffffff', width: 0.5 },
-            },
-        });
 
-        if (colorField) {
-            let i = 0;
-            for (const [name, rows] of groupBy(table, colorField)) {
-                traces.push(makeTrace(name, rows, i));
-                i++;
-            }
+        if (isContinuousColor && colorField) {
+            // A quantitative/temporal color channel is a numeric scale, not a
+            // set of legend groups — one trace with `marker.color` as a
+            // per-point array plus a native colorscale/colorbar (Plotly's
+            // built-in continuous-color support), not a group-by split.
+            const toColorVal = isTemporalColor
+                ? (v: any) => (v != null ? new Date(v).getTime() : NaN)
+                : (v: any) => (v != null ? Number(v) : NaN);
+            const colorVals = table.map((r: any) => toColorVal(r[colorField])).filter((v: number) => !isNaN(v));
+            const cmin = colorVals.length ? Math.min(...colorVals) : 0;
+            const cmax = colorVals.length ? Math.max(...colorVals) : 1;
+            const decision = colorDecisions?.color ?? colorDecisions?.group;
+            const diverging = decision?.schemeType === 'diverging';
+            traces.push({
+                type: 'scatter',
+                mode: 'markers',
+                name: colorField,
+                x: table.map((r: any) => r[xField]),
+                y: table.map((r: any) => r[yField]),
+                marker: {
+                    color: table.map((r: any) => toColorVal(r[colorField])),
+                    colorscale: diverging ? 'RdBu' : 'Viridis',
+                    cmin, cmax,
+                    showscale: true,
+                    colorbar: { title: { text: colorField } },
+                    opacity,
+                    line: { color: '#ffffff', width: 0.5 },
+                },
+            });
         } else {
-            traces.push(makeTrace(undefined, table, 0));
+            const palette = getPlotlyPalette(ctx, 'color');
+            const makeTrace = (name: string | undefined, rows: any[], colorIndex: number) => ({
+                type: 'scatter',
+                mode: 'markers',
+                ...(name != null ? { name } : {}),
+                x: rows.map(r => r[xField]),
+                y: rows.map(r => r[yField]),
+                marker: {
+                    color: getSeriesColor(palette, colorIndex),
+                    opacity,
+                    line: { color: '#ffffff', width: 0.5 },
+                },
+            });
+
+            if (colorField) {
+                let i = 0;
+                for (const [name, rows] of groupBy(table, colorField)) {
+                    traces.push(makeTrace(name, rows, i));
+                    i++;
+                }
+            } else {
+                traces.push(makeTrace(undefined, table, 0));
+            }
         }
 
         const xAxisSpec: any = { title: { text: xField } };
@@ -75,7 +109,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
             layout: {
                 xaxis: xAxisSpec,
                 yaxis: yAxisSpec,
-                showlegend: !!colorField,
+                showlegend: !!colorField && !isContinuousColor,
             },
         };
 

@@ -234,6 +234,7 @@ support MCP Apps; ask the agent to use `render_chart` instead.
 - [Getting started](/documentation/getting-started) explains the `DataSpec` and
   `ChartSpec` shape with a tiny first chart.
 - [Vega-Lite charts](/documentation/reference-vegalite),
-  [ECharts charts](/documentation/reference-echarts), and
-  [Chart.js charts](/documentation/reference-chartjs) list supported chart
+  [ECharts charts](/documentation/reference-echarts),
+  [Chart.js charts](/documentation/reference-chartjs), and
+  [Plotly charts](/documentation/reference-plotly) list supported chart
   types by backend.

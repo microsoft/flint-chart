@@ -931,6 +931,23 @@ export interface ChartTemplateDef {
     properties?: ChartPropertyDef[];
 
     /**
+     * Opt out of a backend's *generic* column/row facet-splitting pass, even
+     * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
+     * alone would not exempt it).
+     *
+     * Set by templates that build their own composite, self-contained figure
+     * — one that already spans multiple internal axis pairs / sub-panels
+     * (e.g. a Sparkline table's one-row-per-series strips, a Bar Table's
+     * bar+%+value columns) — and so handle `column`/`row` themselves inside
+     * `instantiate` rather than being pre-split into N single-facet calls
+     * whose per-panel output a generic single-axis-pair combiner (e.g. the
+     * Plotly backend's `facet.ts`) cannot correctly recombine.
+     *
+     * Currently honored by the Plotly assembler only.
+     */
+    selfManagesFacets?: boolean;
+
+    /**
      * Optional encoding-level quick actions (Category B). Clicking one of these
      * mutates the encodings map (the same state the encoding shelf edits),
      * rather than chart-native config. See EncodingActionDef.

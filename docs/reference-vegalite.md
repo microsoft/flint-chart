@@ -345,7 +345,7 @@ _No template-specific parameters._
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
-### Donut Chart
+### ![](chart-icon-doughnut.svg) Donut Chart
 
 **Encoding channels:** `size`, `color`, `column`, `row`
 

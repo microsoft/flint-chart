@@ -51,16 +51,19 @@ function assertNoFunctions(node: any, path = '$'): void {
 }
 
 describe('Plotly backend', () => {
-  it('registers exactly the four acceptance templates', () => {
-    expect(plAllTemplateDefs.map(t => t.chart).sort()).toEqual(
-      ['Area Chart', 'Bar Chart', 'Line Chart', 'Scatter Plot'],
-    );
+  it('registers the acceptance templates plus the expressive tranche', () => {
+    const charts = plAllTemplateDefs.map(t => t.chart).sort();
+    expect(charts).toEqual([...new Set(charts)]); // no duplicate registrations
+    for (const acceptance of ['Area Chart', 'Bar Chart', 'Line Chart', 'Scatter Plot']) {
+      expect(charts).toContain(acceptance);
+    }
+    expect(charts.length).toBeGreaterThanOrEqual(30);
     expect(plGetTemplateDef('Bar Chart')).toBeDefined();
   });
 
   it('throws on an unregistered chart type', () => {
     expect(() =>
-      assemblePlotly(input('Heatmap', { x: { field: 'region' }, y: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' })),
+      assemblePlotly(input('Sankey Diagram *', { x: { field: 'region' }, y: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' })),
     ).toThrow(/Unknown Plotly chart type/);
   });
 

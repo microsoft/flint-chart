@@ -391,8 +391,9 @@ intent and production rendering.
 - [Set up Flint MCP](/documentation/setup-flint-mcp) explains how to expose
   Flint as an MCP server when you want a ready-made agent tool surface.
 - [Vega-Lite charts](/documentation/reference-vegalite),
-  [ECharts charts](/documentation/reference-echarts), and
-  [Chart.js charts](/documentation/reference-chartjs) list supported chart
+  [ECharts charts](/documentation/reference-echarts),
+  [Chart.js charts](/documentation/reference-chartjs), and
+  [Plotly charts](/documentation/reference-plotly) list supported chart
   types by backend.
 - [Semantic Type](/documentation/semantic-types) lists the labels the agent can
   use for fields.

@@ -265,6 +265,76 @@ const config = assembleChartjs(input);`,
       createChart('chartjs', 'chartjs-gantt', 'Gantt Chart', 'Gantt Chart', ganttIcon),
     ],
   },
+  {
+    id: 'plotly',
+    label: BACKEND_LABELS.plotly,
+    description:
+      'Compiles a Flint spec into a Plotly.js figure (`{ data, layout }`) — ideal for ' +
+      'analytics-native charts (candlesticks, box/violin, waterfalls, gauges) that keep ' +
+      "Plotly's own interactive hover, zoom, and legend behavior for free.",
+    fn: 'assemblePlotly',
+    snippet: `import { assemblePlotly } from 'flint-chart';
+
+const input = {
+  data: {
+    values: [
+      { weight: 2.6, mpg: 33, origin: 'Asia' },
+      { weight: 3.4, mpg: 26, origin: 'Europe' },
+      { weight: 4.1, mpg: 17, origin: 'USA' },
+    ],
+  },
+  semantic_types: { weight: 'Quantity', mpg: 'Quantity', origin: 'Region' },
+  chart_spec: {
+    chartType: 'Scatter Plot',
+    encodings: {
+      x: { field: 'weight' },
+      y: { field: 'mpg' },
+      color: { field: 'origin' },
+    },
+  },
+};
+
+const figure = assemblePlotly(input);`,
+    charts: [
+      createChart('plotly', 'plotly-scatter', 'Scatter Plot', 'Scatter Plot', scatterIcon),
+      createChart('plotly', 'plotly-regression', 'Regression', 'Regression', regressionIcon),
+      createChart('plotly', 'plotly-connected-scatter', 'Connected Scatter Plot', 'Connected Scatter Plot', connectedScatterIcon),
+      createChart('plotly', 'plotly-ranged-dot-plot', 'Ranged Dot Plot', 'Ranged Dot Plot', rangedDotPlotIcon),
+      createChart('plotly', 'plotly-strip-plot', 'Strip Plot', 'Strip Plot', stripPlotIcon),
+      createChart('plotly', 'plotly-bar', 'Bar Chart', 'Bar Chart', barIcon),
+      createChart('plotly', 'plotly-grouped-bar', 'Grouped Bar Chart', 'Grouped Bar Chart', groupedBarIcon),
+      createChart('plotly', 'plotly-stacked-bar', 'Stacked Bar Chart', 'Stacked Bar Chart', stackedBarIcon),
+      createChart('plotly', 'plotly-lollipop', 'Lollipop Chart', 'Lollipop Chart', lollipopIcon),
+      createChart('plotly', 'plotly-pyramid', 'Pyramid Chart', 'Pyramid Chart', pyramidIcon),
+      createChart('plotly', 'plotly-waterfall', 'Waterfall Chart', 'Waterfall Chart', waterfallIcon),
+      createChart('plotly', 'plotly-histogram', 'Histogram', 'Histogram', histogramIcon),
+      createChart('plotly', 'plotly-boxplot', 'Boxplot', 'Boxplot', boxplotIcon),
+      createChart('plotly', 'plotly-violin', 'Violin Plot', 'Violin Plot', violinIcon),
+      createChart('plotly', 'plotly-density', 'Density Plot', 'Density Plot', densityIcon),
+      createChart('plotly', 'plotly-ecdf', 'ECDF Plot', 'ECDF Plot', ecdfIcon),
+      createChart('plotly', 'plotly-candlestick', 'Candlestick Chart', 'Candlestick Chart', candlestickIcon),
+      createChart('plotly', 'plotly-line', 'Line Chart', 'Line Chart', lineIcon),
+      createChart('plotly', 'plotly-area', 'Area Chart', 'Area Chart', areaIcon),
+      createChart('plotly', 'plotly-range-area', 'Range Area Chart', 'Range Area Chart', rangeAreaIcon),
+      createChart('plotly', 'plotly-streamgraph', 'Streamgraph', 'Streamgraph', streamgraphIcon),
+      createChart('plotly', 'plotly-slope', 'Slope Chart', 'Slope Chart', slopeIcon),
+      createChart('plotly', 'plotly-bump', 'Bump Chart', 'Bump Chart', bumpIcon),
+      createChart('plotly', 'plotly-pie', 'Pie Chart', 'Pie Chart', pieIcon),
+      createChart('plotly', 'plotly-donut', 'Donut Chart', 'Donut Chart', doughnutIcon),
+      createChart('plotly', 'plotly-radar', 'Radar Chart', 'Radar Chart', radarIcon),
+      createChart('plotly', 'plotly-rose', 'Rose Chart', 'Rose Chart', roseIcon),
+      createChart('plotly', 'plotly-heatmap', 'Heatmap', 'Heatmap', heatmapIcon),
+      createChart('plotly', 'plotly-gantt', 'Gantt Chart', 'Gantt Chart', ganttIcon),
+      createChart('plotly', 'plotly-bullet', 'Bullet Chart', 'Bullet Chart', bulletIcon),
+      createChart('plotly', 'plotly-kpi-card', 'KPI Card', 'Gallery: KPI Card', kpiCardIcon),
+      createChart('plotly', 'plotly-sparkline', 'Sparkline', 'Sparkline', sparklineIcon),
+      createChart('plotly', 'plotly-bar-table', 'Bar Table', 'Bar Table', barTableIcon),
+      createChart('plotly', 'plotly-map', 'Map', 'Map', worldMapIcon),
+      createChart('plotly', 'plotly-choropleth', 'Choropleth', 'Choropleth', usMapIcon),
+      createChart('plotly', 'plotly-funnel', 'Funnel Chart *', 'ECharts: Funnel', funnelIcon),
+      createChart('plotly', 'plotly-gauge', 'Gauge Chart *', 'ECharts: Gauge', gaugeIcon),
+    ],
+  },
 ];
 
 export const DEFAULT_CHART_ID = CHART_CATEGORIES[0]?.charts[0]?.id ?? 'scatter-plot';
