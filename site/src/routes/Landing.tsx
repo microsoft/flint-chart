@@ -51,7 +51,10 @@ export function Landing() {
                 <LeadHighlight>{t('landing.leadHighlight1')}</LeadHighlight>
                 {t('landing.leadMiddle')}{' '}
                 <LeadHighlight>
-                  {t('landing.leadHighlight2', { chartTypes: CHART_FAMILY_COUNT })}
+                  {t('landing.leadHighlight2', {
+                    chartTypes: CHART_FAMILY_COUNT,
+                    backends: BACKEND_ROSTER_LINKS.length,
+                  })}
                 </LeadHighlight>
                 .
               </p>

@@ -191,7 +191,7 @@
     "leadBefore": "Flint 是一种可视化中间语言，帮助",
     "leadHighlight1": "AI 智能体从简洁、可人工编辑的图表规范出发，稳定生成表现力强、观感出色的图表",
     "leadMiddle": "。你不必手动编写比例尺、坐标轴、间距、布局等繁琐的底层参数；Flint 编译器会结合数据、语义类型、图表类型和编码，自动推导出更合适的图表配置。",
-    "leadHighlight2": "Flint 目前通过统一接口支持 {{chartTypes}} 种图表类型",
+    "leadHighlight2": "Flint 目前通过统一接口，在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型",
     "backendRosterLabel": "渲染后端",
     "flintSpec": "Flint 规范",
     "compiledChart": "编译结果",

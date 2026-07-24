@@ -191,7 +191,7 @@
     "leadBefore": "Flint is a visualization intermediate language that lets",
     "leadHighlight1": "AI agents reliably create expressive, good-looking charts from simple, human-editable chart specs",
     "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
-    "leadHighlight2": "Flint supports {{chartTypes}} chart types through one unified interface",
+    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface",
     "backendRosterLabel": "Backends",
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
