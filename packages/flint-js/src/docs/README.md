@@ -49,44 +49,14 @@ step differs per backend.
 
 ---
 
-## The Problem
+## Template Catalog
 
-### What you deal with today
+Flint currently ships **149 backend template registrations** across five
+backends: 35 Vega-Lite, 37 ECharts, 21 Chart.js, 38 Plotly, and 18 Excel. Chart
+names overlap because the same semantic input can target multiple renderers.
 
-You're building an agent that needs to create charts. Maybe it's a data
-analysis copilot, a dashboard generator, or an automated reporting
-pipeline. At some point your agent has to produce a visualization — and
-that's where the brittleness starts.
-
-The typical approach: your agent generates Vega-Lite (or ECharts options,
-or Plotly traces) directly. You write prompt templates with examples,
-add post-processing logic for edge cases, build retry loops for malformed
-output. It works for your demo. Then real users arrive with real data,
-and the charts break in ways you didn't anticipate.
-
-Here is what goes wrong:
-
-1. **Inconsistency across runs.** Your agent produces variable output
-   quality — incorrect encodings, broken layouts, poor aesthetic defaults.
-   You tune prompts for one chart type and break another. Even with
-   detailed prompts specifying exact sizing rules, formatting conventions,
-   and encoding guidelines, **your agent may or may not follow them** —
-   and the degree of compliance varies across models, prompt versions,
-   context length, and even individual runs. Weaker models (the ones you
-   want to use for cost) struggle with anything beyond basic charts; even
-   frontier models fail on composition, faceting, and layered designs.
-   Design knowledge encoded in prompts is inherently unreliable.
-
-2. **The quality–editability trap.** If your agent generates simple code,
-   users can edit it (swap a field, change chart type) — but the chart
-   looks mediocre. If your agent generates polished code, the chart looks
-   great — but every user edit breaks it, forcing another round-trip to
-   your agent. You can't have both, and neither option makes users happy.
-
-3. **Expensive and slow for what it does.** Only frontier models
-   *sometimes* produce correct specs for non-trivial charts, because the
-   parameter space (axis types, domain settings, sizing, formatting, mark
-   config) is large and inter-dependent. Even then, compliance with your
+The generated references under the repository-level `docs/` directory are the
+source of truth. Run `npm run gen:reference` after changing a template registry.
    design guidelines is probabilistic — you're paying frontier-model
    prices for output that still needs validation and retry. Your agent is
    spending its most expensive tokens on visualization plumbing instead of
@@ -917,42 +887,12 @@ visualization decisions:
 
 ## Template Catalog
 
-### Vega-Lite (29 chart types)
+Flint currently ships **149 backend template registrations** across five
+backends: 35 Vega-Lite, 37 ECharts, 21 Chart.js, 38 Plotly, and 18 Excel. Chart
+names overlap because the same semantic input can target multiple renderers.
 
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Rose Chart, Waterfall Chart |
-| **Statistical** | Density Plot, Candlestick Chart, Radar Chart |
-| **Map** | US Map, World Map |
-
-### ECharts (27 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Funnel Chart, Treemap, Sunburst Chart |
-| **Polar** | Radar Chart, Rose Chart |
-| **Financial** | Candlestick Chart |
-| **Indicator** | Gauge Chart |
-| **Flow** | Sankey Diagram |
-| **Other** | Waterfall Chart, Density Plot |
-
-### Chart.js (10 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram |
-| **Line & Area** | Line Chart, Area Chart |
-| **Part-to-Whole** | Pie Chart |
-| **Polar** | Radar Chart, Rose Chart |
-
-**68 template definitions** across 3 backends.
+The generated references under the repository-level `docs/` directory are the
+source of truth. Run `npm run gen:reference` after changing a template registry.
 
 Each template defines:
 1. **`template`** — spec skeleton (mark + encoding structure)

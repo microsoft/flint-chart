@@ -57,11 +57,15 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
+  assembleExcel,
 } from 'flint-chart';
 
 const vlSpec  = assembleVegaLite(input);
 const ecSpec  = assembleECharts(input);
 const cjsSpec = assembleChartjs(input);
+const plFig   = assemblePlotly(input);
+const xlSpec  = assembleExcel(input);
 ```
 
 | 导出 | 返回 |
@@ -69,8 +73,32 @@ const cjsSpec = assembleChartjs(input);
 | `assembleVegaLite` | Vega-Lite JSON spec |
 | `assembleECharts` | ECharts `option` object |
 | `assembleChartjs` | Chart.js configuration |
+| `assemblePlotly` | Plotly.js `{ data, layout }` figure |
+| `assembleExcel` | 供 Office.js 使用的原生 Excel 图表工件 |
 
-若某后端不支持某 `chartType`，assembler 会在渲染前抛出。可用 `vlGetTemplateDef`、`ecGetTemplateDef` 或 `cjsGetTemplateDef` 检查支持情况。
+若某后端不支持某 `chartType`，assembler 会在渲染前抛出。可用 `vlGetTemplateDef`、`ecGetTemplateDef`、`cjsGetTemplateDef`、`plGetTemplateDef` 或 `excelGetTemplateDef` 检查支持情况。
+
+## Excel 运行时与代码生成
+
+`assembleExcel` 返回可序列化的 `flint.excel.chart/v1` 工件。可在 Office.js Excel 宿主中渲染它，或生成独立的 Office.js 源码：
+
+```ts
+import { assembleExcel, generateOfficeJs, renderExcelChart } from 'flint-chart';
+
+const artifact = assembleExcel(input);
+const { pngBase64, inspection } = await renderExcelChart(Excel, artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  inspectNativeChart: false,
+});
+const { code, meta } = generateOfficeJs(artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  functionName: 'renderFlintChart',
+});
+```
+
+`renderExcelChart` 需要包含 `run` 和 `ImageFittingMode.fit` 的 Excel API 对象。它会在活动工作表中创建原生图表，并返回 PNG 捕获结果及可选的检查数据。`generateOfficeJs` 不执行 Excel；它返回可移植源码以及生成的数据区域和图表元数据。
 
 ---
 

@@ -6,6 +6,7 @@ import './i18n';
 import { HashRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Landing } from './routes/Landing';
 import { ChartWall } from './routes/ChartWall';
+import { ExcelGallery } from './routes/ExcelGallery';
 import { Editor } from './routes/Editor';
 import { McpServer } from './routes/McpServer';
 import { DocSectionPage } from './routes/DocSectionPage';
@@ -35,6 +36,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
     <LocaleProvider locale={locale}>
       <Routes>
         <Route index element={<Landing />} />
+        <Route path="gallery/excel" element={<ExcelGallery />} />
         <Route path="gallery/:backend?" element={<ChartWall />} />
         {/* Keep old /wall links working; /gallery is canonical. */}
         <Route path="wall" element={<WallRedirect />} />

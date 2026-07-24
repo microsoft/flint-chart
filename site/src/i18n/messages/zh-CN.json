@@ -164,6 +164,11 @@
     "ctaDocs": "阅读文档",
     "news": {
       "title": "更新",
+      "release040": {
+        "date": "2026 年 7 月 24 日",
+        "dateTime": "2026-07-24",
+        "text": "Flint 0.4.0 新增 38 种 Plotly 图表和 18 种可编辑的原生 Excel 图表模板。"
+      },
       "dynamicWidgets": {
         "date": "2026 年 7 月 19 日",
         "dateTime": "2026-07-19",
@@ -186,7 +191,8 @@
     "leadBefore": "Flint 是一种可视化中间语言，帮助",
     "leadHighlight1": "AI 智能体从简洁、可人工编辑的图表规范出发，稳定生成表现力强、观感出色的图表",
     "leadMiddle": "。你不必手动编写比例尺、坐标轴、间距、布局等繁琐的底层参数；Flint 编译器会结合数据、语义类型、图表类型和编码，自动推导出更合适的图表配置。",
-    "leadHighlight2": "Flint 目前支持 {{chartTypes}} 种图表类型，可输出为 Vega-Lite、ECharts 和 Chart.js",
+    "leadHighlight2": "Flint 目前通过统一接口支持 {{chartTypes}} 种图表类型",
+    "backendRosterLabel": "渲染后端",
     "flintSpec": "Flint 规范",
     "compiledChart": "编译结果",
     "backendAria": "渲染后端",
@@ -217,8 +223,8 @@
       },
       "backends": {
         "title": "一份规范，多种渲染后端",
-        "body": "Flint 支持通过 Vega-Lite、ECharts 和 Chart.js 渲染 {{chartTypes}} 种图表，图表示例中还收录了 {{examples}} 个针对不同后端的示例。三者的 API 和编程模型各不相同，Flint 则用统一接口抹平差异，让你可以按需切换后端、发挥各自所长。",
-        "example": "Vega-Lite 没有原生旭日图，但可以轻松切换到 ECharts。对于 region × gameType × game 这样的层级结构，旭日图通常比分组柱状图更合适。"
+        "body": "Flint 支持通过 Vega-Lite、ECharts、Chart.js 和 Plotly 渲染 {{chartTypes}} 种图表，图表示例中收录了 {{examples}} 个后端专属示例，还可通过 Office.js 生成原生 Excel 图表。不同后端的 API 和编程模型各不相同，Flint 则以统一接口抹平差异。",
+        "example": "按需切换后端以发挥其原生优势：ECharts 适合层级旭日图，Plotly 擅长统计和分析图表，Excel 则可生成工作簿中可继续编辑的原生图表。"
       }
     },
     "examples": {
@@ -259,6 +265,10 @@
     "leadAfter": "服务器后，智能体便能创建图表，并以交互式 MCP App 呈现结果。Flint 默认打开可交互的图表视图；需要导出结果时，也可以返回静态图片，或生成可供 Vega-Lite、ECharts 和 Chart.js 直接使用的规范。",
     "quickStart": "让 AI 智能体帮你配置：",
     "quickStartBody": "把下面这段请求发给智能体即可。若想手动配置，请参阅",
+    "localSetupTitle": "本地服务器",
+    "localSetupBody": "推荐：客户端支持本地 MCP 时使用",
+    "remoteSetupTitle": "远程服务器",
+    "remoteSetupBody": "客户端仅支持远程 MCP 时使用",
     "installConfigure": "安装与配置",
     "orThe": "或",
     "githubReadme": "GitHub README",

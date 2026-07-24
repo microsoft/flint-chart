@@ -21,6 +21,7 @@ export function ScaleToFit({
   padding = 0,
   adaptiveHeight = false,
   minHeight = 0,
+  fill = false,
   children,
 }: {
   /** Bounding-box height in px. With `adaptiveHeight` this is the *max* height. */
@@ -31,6 +32,14 @@ export function ScaleToFit({
   adaptiveHeight?: boolean;
   /** Floor for the box height when `adaptiveHeight` is set. */
   minHeight?: number;
+  /**
+   * Fill the parent (which must be `position: relative`) and shrink-to-fit its
+   * *measured* width AND height, instead of the fixed `height` prop. Use this
+   * when the available box is driven by a flex/grid container (e.g. a modal
+   * pane) so an oversized chart never overflows a container shorter than
+   * `height`.
+   */
+  fill?: boolean;
   children: ReactNode;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +57,7 @@ export function ScaleToFit({
       const natH = inner.offsetHeight;
       if (!natW || !natH) return;
       const boxW = outer.clientWidth - padding * 2;
-      const boxH = height - padding * 2;
+      const boxH = (fill ? outer.clientHeight : height) - padding * 2;
       const next = Math.min(boxW / natW, boxH / natH, 1);
       if (Number.isFinite(next) && next > 0) {
         setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev));
@@ -64,15 +73,14 @@ export function ScaleToFit({
     ro.observe(inner);
     ro.observe(outer);
     return () => ro.disconnect();
-  }, [height, padding, adaptiveHeight, minHeight]);
+  }, [height, padding, adaptiveHeight, minHeight, fill]);
 
   return (
     <div
       ref={outerRef}
       style={{
-        position: 'relative',
-        width: '100%',
-        height: adaptiveHeight ? boxHeight : height,
+        position: fill ? 'absolute' : 'relative',
+        ...(fill ? { inset: 0 } : { width: '100%', height: adaptiveHeight ? boxHeight : height }),
         overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',

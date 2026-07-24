@@ -161,8 +161,10 @@
   white-space: nowrap;
 }
 
-.gopt-bar .site-range {
-  width: 60px;
+.gopt-bar input[type='range'].site-range {
+  flex: 0 0 48px;
+  width: 48px;
+  max-width: 48px;
 }
 
 /* Discrete property dropdown, matching the chart-type selector menu. */

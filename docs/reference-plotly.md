@@ -6,7 +6,7 @@ The Plotly backend compiles to a Plotly.js figure (`{ data, layout }`) and leans
 
 ## What this page covers
 
-This reference lists the 37 chart types currently supported by the Plotly backend, grouped into 8 categories. Each chart entry shows:
+This reference lists the 38 chart types currently supported by the Plotly backend, grouped into 8 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -71,7 +71,9 @@ _No template-specific parameters._
 
 **Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `cornerRadius` | number | 0 – 15 (step 1) | `0` | always | Corner radius for supported marks. |
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
@@ -83,7 +85,9 @@ _No template-specific parameters._
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)) | — | conditional | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
 
@@ -160,6 +164,15 @@ _No template-specific parameters._
 | `showMA` | toggle | on / off | `false` | always | Show a moving-average overlay. |
 | `maWindow` | number | 3 – 30 (step 1) | `5` | always | Moving-average window size. |
 
+### Density Contour
+
+**Encoding channels:** `x`, `y`, `column`, `row`
+
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `binCount` | number | 5 – 50 (step 1) | `20` | always | Maximum bin cap; Auto lets the backend choose. |
+| `showPoints` | toggle | on / off | `true` | always | Overlay point markers on the line. |
+
 ## Line & Area
 
 ### ![](chart-icon-line.svg) Line Chart
@@ -179,7 +192,7 @@ _No template-specific parameters._
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)) | — | always | Line or area interpolation method. |
 | `opacity` | number | 0.1 – 1 (step 0.05) | `0.4` | always | Mark opacity. |
-| `stackMode` | choice | Stacked (default) _(default)_, `layered` (Layered (overlap)) | — | always | Stacking strategy for overlapping series. |
+| `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `layered` (Layered (overlap)) | — | conditional | Stacking strategy for overlapping series. |
 
 ### ![](chart-icon-bump.svg) Bump Chart
 
@@ -230,7 +243,7 @@ _No template-specific parameters._
 
 ### ![](chart-icon-radar.svg) Radar Chart
 
-**Encoding channels:** `x`, `y`, `color`
+**Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

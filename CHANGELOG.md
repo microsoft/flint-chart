@@ -4,15 +4,24 @@ Starting with version 0.2.1, all notable changes to `flint-chart` and
 `flint-chart-mcp` are documented in this file. The two npm packages are
 versioned and released together, so each release entry covers both packages.
 Versions 0.2.1 and 0.2.2 were development milestones and were not published to
-npm; 0.3.0 is the next public release after 0.2.0.
+npm; 0.3.0 resumed public releases after 0.2.0.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-24
+
 ### Added
 
+- Excel backend: 18 chart templates compile the same semantic Flint input into
+  native, editable Office.js charts — Bar, Grouped/Stacked Bar, Pyramid, Line,
+  Area, Scatter, Connected Scatter, Pie, Donut, Histogram, Boxplot,
+  Candlestick, Waterfall, Radar, Funnel, Treemap, and Sunburst. The backend
+  emits a rectangular data range plus native chart/axis/legend/series metadata,
+  includes Office.js code generation and runtime helpers, and was visually
+  audited across 117 cases with `test-harness/excel/`.
 - Plotly backend: expanded from the four original acceptance templates (Bar,
   Line, Area, Scatter) to 33 chart types — grouped/stacked bar, pyramid,
   histogram, boxplot, violin, density, ECDF, strip plot, connected scatter,
@@ -22,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   leaning on Plotly's own native trace types (`box`, `violin`, `candlestick`,
   `waterfall`, `heatmap`, `scatterpolar`, `barpolar`, `indicator`, `funnel`)
   wherever one exists.
-- Plotly backend: closed the four remaining registry gaps, now 37 chart
-  types.
+- Plotly backend: closed the four remaining registry gaps and added the
+  Plotly-native Density Contour statistical chart, now 38 chart types.
   - Map, Choropleth — native `scattergeo`/`choropleth` traces with Plotly's
     own built-in geo atlas (no TopoJSON fetch/join). Share the Vega-Lite
     Map/Choropleth's region-name/code gazetteer (`chart-types/geo.ts`, moved
@@ -42,8 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backend (`npm run gen:reference`).
 - `test-harness/plotly/` — a headless-Chromium render/audit harness for the
   Plotly backend (spec → PNG, contact sheets, VLM review script, and a
-  per-chart-type inspection list), mirroring the role of
-  `test-harness/excel/` for that backend.
+  per-chart-type inspection list), mirroring the Excel backend's visual audit
+  harness.
 
 ### Fixed
 
@@ -161,7 +170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/microsoft/flint-chart/compare/88fbeb5ebf07f18a1cf661ebef71cc570b7425d6...0.3.0
 [0.2.2]: https://github.com/microsoft/flint-chart/compare/0.2.1...6a9d4e4155e3d9e2bed3fa9adf5316914f791478
 [0.2.1]: https://github.com/microsoft/flint-chart/compare/c8e20b052ad9ddad29ba3ecfc825948c424e5ba5...0.2.1

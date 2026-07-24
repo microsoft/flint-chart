@@ -1,7 +1,7 @@
 {
   "name": "flint-chart",
-  "version": "0.3.0",
-  "description": "Semantic-level visualization library that compiles data + semantic types into chart specs for Vega-Lite, ECharts, and Chart.js.",
+  "version": "0.4.0",
+  "description": "Semantic-level visualization library that compiles data + semantic types for Vega-Lite, ECharts, Chart.js, Plotly, and Excel.",
   "keywords": [
     "visualization",
     "charts",

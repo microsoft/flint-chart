@@ -39,10 +39,10 @@ Most design logic lives in Stages 1–2 and is identical across backends.
 |-------|------------|----------------|-------------|
 | **1. Compiler frontend** | Resolve semantic context | Phase 0 — `resolveChannelSemantics()` | `ChannelSemantics` per channel |
 | **2. Optimizer** | Fit layout to canvas | Phase 1 — `computeLayout()`, `filterOverflow()` | `LayoutResult`, truncated data |
-| **3. Code generator** | Emit backend-native output | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS spec or Office.js program |
+| **3. Code generator** | Emit backend-native output | Phase 2 — `build*Encodings()`, `template.instantiate()` | VL / EC / CJS / Plotly spec or Excel artifact |
 
 ```text
-assembleVegaLite(input)   // or assembleECharts, assembleChartjs, assembleExcel
+assembleVegaLite(input)   // or assembleECharts, assembleChartjs, assemblePlotly, assembleExcel
        │
        ▼
 ══ STAGE 1 — COMPILER FRONTEND (core/) ═════════════════════════
@@ -108,7 +108,7 @@ The model is group-theoretic but deliberately practical. Start from the authored
 
 The visible View control is the finite orbit after validity checks and deduplication. Deduplication is the stabilizer quotient in concrete form: flip twice returns to `Default`, faceting then jittering can collapse to the same Strip Plot as jittering directly, and a chart-type round trip such as Scatter → Strip Plot → Scatter folds back onto the authored scatter. Compatibility checks are also typed: `σ` only swaps within the same field profile (measure with measure, category with category), while `τ` is allowed to cross profiles because it flips axis slots, not field roles. Line charts omit `τ`, so Flint never offers a vertical line chart.
 
-Because the orbit is computed over Flint's backend-neutral encoding IR, the same View state ids apply across Vega-Lite, ECharts, and Chart.js. Each backend receives the already-transformed encoding map; only `θ` requires backend-specific template lookup so the sibling chart's own instantiation logic takes over.
+Because the orbit is computed over Flint's backend-neutral encoding IR, the same View state ids apply across Vega-Lite, ECharts, Chart.js, and Plotly. Each backend receives the already-transformed encoding map; only `θ` requires backend-specific template lookup so the sibling chart's own instantiation logic takes over.
 
 ---
 
@@ -152,7 +152,7 @@ New backends implement Stage 3 only; the frontend and optimizer stay unchanged. 
 
 ### Excel backend
 
-Excel is a Stage 3 backend in `packages/flint-js`, parallel to Vega-Lite, ECharts, and Chart.js. It is not a separate package or an additional architectural layer.
+Excel is a Stage 3 backend in `packages/flint-js`, parallel to Vega-Lite, ECharts, Chart.js, and Plotly. It is not a separate package or an additional architectural layer.
 
 Office.js is imperative and requires an Excel host, so the backend first builds a typed native-chart artifact (`ExcelNativeChartSpec`) containing the worksheet matrix, native chart type, series bindings, dimensions, axes, labels, legend, and formatting. This versioned artifact is the contract between compilation and execution.
 

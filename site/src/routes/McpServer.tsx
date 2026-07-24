@@ -6,6 +6,8 @@ import { LocaleLink } from '../i18n/LocaleLink';
 import { GITHUB_REPO, siteTheme } from '../shared/theme';
 import chartPreview from '../assets/mcp-chart-preview.svg';
 
+const HOSTED_MCP_URL = 'https://flint.data-formulator.ai/mcp';
+
 const SURFACE_ITEMS = [
   { tagKey: 'toolPreferred', name: 'create_chart_view', descKey: 'create_chart_view', highlight: true },
   { tagKey: 'tool', name: 'render_chart', descKey: 'render_chart' },
@@ -58,7 +60,25 @@ export function McpServer() {
             .
           </p>
 
-          <CodeBlock copyable>{setupPrompt}</CodeBlock>
+          <div className="mcp-setup-grid" style={setupGridStyle}>
+            <div style={setupOptionStyle}>
+              <div className="mcp-setup-option-header" style={setupOptionHeaderStyle}>
+                <strong style={setupOptionTitleStyle}>{t('mcp.localSetupTitle')}</strong>
+                <span className="mcp-setup-option-desc" style={setupOptionDescStyle}>
+                  <span aria-hidden="true" style={recommendedStarStyle}>★</span>{' '}
+                  {t('mcp.localSetupBody')}
+                </span>
+              </div>
+              <CodeBlock copyable>{setupPrompt}</CodeBlock>
+            </div>
+            <div style={setupOptionStyle}>
+              <div className="mcp-setup-option-header" style={setupOptionHeaderStyle}>
+                <strong style={setupOptionTitleStyle}>{t('mcp.remoteSetupTitle')}</strong>
+                <span className="mcp-setup-option-desc" style={setupOptionDescStyle}>{t('mcp.remoteSetupBody')}</span>
+              </div>
+              <CodeBlock copyable>{remoteSetupPrompt}</CodeBlock>
+            </div>
+          </div>
 
           <p style={skillNoteStyle}>
             <Trans
@@ -169,8 +189,6 @@ export function McpServer() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Mockup chat showing the interactive MCP App in context.            */
 /* ------------------------------------------------------------------ */
 
 export function ChatMockup() {
@@ -318,6 +336,12 @@ const setupPrompt = `Help me set up Flint as an MCP server!
      npx -y flint-chart-mcp
 2. Verify the setup by asking the server to list the available Flint chart types.`;
 
+const remoteSetupPrompt = `Help me connect to the hosted Flint MCP server!
+
+1. Add a remote HTTP MCP server named "flint" with this URL:
+  ${HOSTED_MCP_URL}
+2. Verify the connection by asking the server to list the available Flint chart types.`;
+
 const clientConfig = `{
   "mcpServers": {
     "flint": {
@@ -343,9 +367,56 @@ const disableFileReferenceConfig = `{
 const PAPER = '#ffffff';
 const HAIRLINE = 'rgba(0, 0, 0, 0.10)';
 const GRID_LINE = 'rgba(0, 0, 0, 0.02)';
+
+const setupGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gap: 22,
+};
+
+const setupOptionStyle: CSSProperties = {
+  minWidth: 0,
+};
+
+const setupOptionHeaderStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  justifyContent: 'space-between',
+  gap: 12,
+  marginBottom: 8,
+};
+
+const setupOptionTitleStyle: CSSProperties = {
+  color: siteTheme.text,
+  fontSize: 14,
+  fontWeight: 650,
+};
+
+const setupOptionDescStyle: CSSProperties = {
+  color: siteTheme.textMuted,
+  fontSize: 12,
+  textAlign: 'right',
+};
+
+const recommendedStarStyle: CSSProperties = {
+  color: '#b26a00',
+  fontSize: 10,
+};
 const READING_WIDTH = 880;
 
-const interactiveStyles = ``;
+const interactiveStyles = `
+  @media (max-width: 520px) {
+    .mcp-setup-option-header {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 2px !important;
+    }
+
+    .mcp-setup-option-desc {
+      text-align: left !important;
+    }
+  }
+`;
 
 const pageStyle: CSSProperties = {
   minHeight: '100vh',

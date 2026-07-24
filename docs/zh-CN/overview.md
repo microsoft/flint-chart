@@ -1,6 +1,6 @@
 # 概览
 
-**Flint** 是一种可视化中间语言。你只需说明每个字段的*含义*和想要的图表；编译器会自动设置比例尺、坐标轴、聚合、格式、布局和颜色，再生成 Vega-Lite、ECharts 或 Chart.js 配置。
+**Flint** 是一种可视化中间语言。你只需说明每个字段的*含义*和想要的图表；编译器会自动设置比例尺、坐标轴、聚合、格式、布局和颜色，再生成 Vega-Lite、ECharts、Chart.js、Plotly 配置或原生 Excel 图表工件。
 
 如果你是 Flint 新手，请从[入门指南](/documentation/getting-started)开始，然后再回到这里了解架构与 API 地图。
 
@@ -135,7 +135,7 @@ data  +  semantic_types  +  chart_spec  →  assemble*()  →  后端配置
 | 章节 | 页面 |
 |---------|-------|
 | **语言设计** | [架构](/documentation/architecture)、[语义类型](/documentation/semantic-types)、[自动布局算法](/documentation/layout-model)、[API 参考](/documentation/api-reference) |
-| **图表参考** | [Vega-Lite 图表](/documentation/reference-vegalite)、[ECharts 图表](/documentation/reference-echarts)、[Chart.js 图表](/documentation/reference-chartjs)、[Plotly 图表](/documentation/reference-plotly) |
+| **图表参考** | [Vega-Lite 图表](/documentation/reference-vegalite)、[ECharts 图表](/documentation/reference-echarts)、[Chart.js 图表](/documentation/reference-chartjs)、[Plotly 图表](/documentation/reference-plotly)、[Excel 图表](/documentation/reference-excel) |
 | **开发** | [开发指南](/documentation/development)、[扩展语义类型](/documentation/adding-a-semantic-type)、[扩展后端](/documentation/adding-a-backend)、[扩展图表模板](/documentation/adding-a-chart-template) |
 
 ---

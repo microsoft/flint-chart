@@ -159,6 +159,7 @@ export function realRegressionCases(): TestCase[] {
             tags: ['quantitative', 'facet', 'teaching'],
             semantic: { Dataset: 'Category', X: 'Quantity', Y: 'Quantity' },
             encodings: { x: 'X', y: 'Y', column: 'Dataset' },
+            chartProperties: { facetColumns: 2 },
             data: (() => {
                 const x1 = [10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5];
                 const sets: Record<string, { x: number[]; y: number[] }> = {

@@ -58,11 +58,15 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
+  assembleExcel,
 } from 'flint-chart';
 
 const vlSpec  = assembleVegaLite(input);
 const ecSpec  = assembleECharts(input);
 const cjsSpec = assembleChartjs(input);
+const plFig   = assemblePlotly(input);
+const xlSpec  = assembleExcel(input);
 ```
 
 | Export | Returns |
@@ -70,8 +74,37 @@ const cjsSpec = assembleChartjs(input);
 | `assembleVegaLite` | Vega-Lite JSON spec |
 | `assembleECharts` | ECharts `option` object |
 | `assembleChartjs` | Chart.js configuration |
+| `assemblePlotly` | Plotly.js `{ data, layout }` figure |
+| `assembleExcel` | Native Excel chart artifact for Office.js |
 
-If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, or `cjsGetTemplateDef`.
+If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, `cjsGetTemplateDef`, `plGetTemplateDef`, or `excelGetTemplateDef`.
+
+## Excel runtime and code generation
+
+`assembleExcel` returns a serializable `flint.excel.chart/v1` artifact. Render it
+inside an Office.js Excel host, or turn it into standalone Office.js source:
+
+```ts
+import { assembleExcel, generateOfficeJs, renderExcelChart } from 'flint-chart';
+
+const artifact = assembleExcel(input);
+const { pngBase64, inspection } = await renderExcelChart(Excel, artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  inspectNativeChart: false,
+});
+const { code, meta } = generateOfficeJs(artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  functionName: 'renderFlintChart',
+});
+```
+
+`renderExcelChart` requires an Excel API object with `run` and
+`ImageFittingMode.fit`. It creates the native chart on the active worksheet and
+returns a PNG capture plus optional inspection data. `generateOfficeJs` does not
+execute Excel; it returns portable source and metadata about the generated data
+range and chart.
 
 ---
 

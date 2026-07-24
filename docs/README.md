@@ -917,42 +917,20 @@ visualization decisions:
 
 ## Template Catalog
 
-### Vega-Lite (30 chart types)
+Flint currently ships **149 backend template registrations** across five
+backends. Chart names overlap because the same semantic input can target more
+than one renderer.
 
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Dotted Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Rose Chart, Waterfall Chart |
-| **Statistical** | Density Plot, Candlestick Chart, Radar Chart |
-| **Map** | US Map, World Map |
+| Backend | Registered chart types | Generated reference |
+|---|---:|---|
+| Vega-Lite | 35 | [Vega-Lite charts](reference-vegalite.md) |
+| ECharts | 37 | [ECharts charts](reference-echarts.md) |
+| Chart.js | 21 | [Chart.js charts](reference-chartjs.md) |
+| Plotly | 38 | [Plotly charts](reference-plotly.md) |
+| Excel | 18 | [Excel charts](reference-excel.md) |
 
-### ECharts (28 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Dotted Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Funnel Chart, Treemap, Sunburst Chart |
-| **Polar** | Radar Chart, Rose Chart |
-| **Financial** | Candlestick Chart |
-| **Indicator** | Gauge Chart |
-| **Flow** | Sankey Diagram |
-| **Other** | Waterfall Chart, Density Plot |
-
-### Chart.js (10 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram |
-| **Line & Area** | Line Chart, Area Chart |
-| **Part-to-Whole** | Pie Chart |
-| **Polar** | Radar Chart, Rose Chart |
-
-**68 template definitions** across 3 backends.
+Run `npm run gen:reference` after changing a template registry. The generated
+pages are the source of truth for chart names, channels, and exposed options.
 
 Each template defines:
 1. **`template`** — spec skeleton (mark + encoding structure)

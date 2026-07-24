@@ -2,6 +2,7 @@
 
 [![npm: flint-chart](https://img.shields.io/npm/v/flint-chart.svg?label=npm%3A%20flint-chart)](https://www.npmjs.com/package/flint-chart)
 [![npm: flint-chart-mcp](https://img.shields.io/npm/v/flint-chart-mcp.svg?label=npm%3A%20flint-chart-mcp)](https://www.npmjs.com/package/flint-chart-mcp)
+[![arXiv: 2607.20775](https://img.shields.io/badge/arXiv-2607.20775-b31b1b.svg)](https://arxiv.org/abs/2607.20775)
 [![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -15,18 +16,19 @@ derives optimized chart settings from the data, semantic types, chart type, and
 encodings. The result is a compact chart specification that agents can produce
 reliably, people can edit directly, and multiple backends can render as native
 [Vega-Lite](https://vega.github.io/vega-lite/),
-[ECharts](https://echarts.apache.org/), or
-[Chart.js](https://www.chartjs.org/) specs.
+[ECharts](https://echarts.apache.org/),
+[Chart.js](https://www.chartjs.org/), or
+[Plotly](https://plotly.com/javascript/) specs, and native Excel charts through Office.js.
 
 This repo contains two main components:
 
 - **`flint-chart`**: a JavaScript/TypeScript library that compiles the same
-  Flint input into Vega-Lite, ECharts, or Chart.js specs.
+  Flint input into Vega-Lite, ECharts, Chart.js, Plotly, or Excel-native output.
 - **`flint-chart-mcp`**: an MCP server that lets agents create, validate, and
   render charts directly from a chat or coding environment.
 
 <p align="center">
-  <img src="docs/figs/chartwall.png" alt="A wall of charts produced by Flint: bar, line, scatter, heatmap, donut, radar, streamgraph, boxplot, grouped bar, rose, Sankey, and treemap, rendered across Vega-Lite, ECharts, and Chart.js." width="100%">
+  <img src="docs/figs/chartwall.png" alt="A wall of charts produced by Flint across its supported visualization backends." width="100%">
 </p>
 
 ## Features
@@ -36,16 +38,19 @@ This repo contains two main components:
   semantic types such as `Rank`, `Temperature`, `Price`, or `Country`.
 - **Automatic layout.** Flint adapts sizing, spacing, labels, marks, and legends
   to the data cardinality, chart design, and canvas constraints.
-- **Multiple backends.** Compile one input to 30+ chart types across
+- **Multiple backends.** Compile one input to backend-native output across
   [Vega-Lite](https://vega.github.io/vega-lite/),
-  [ECharts](https://echarts.apache.org/), and
-  [Chart.js](https://www.chartjs.org/), with more to come soon.
+  [ECharts](https://echarts.apache.org/),
+  [Chart.js](https://www.chartjs.org/),
+  [Plotly](https://plotly.com/javascript/), and native Excel charts.
 - **Agent-ready chart authoring.** The MCP server gives agents Flint tools and
   chart guidance so they can choose a template, validate it, and open an
   interactive chart view in MCP-capable clients.
 
 ## Updates
 
+- **July 24, 2026** — Flint 0.4.0 adds 38 Plotly chart types and 18 native,
+  editable Excel chart templates. ([v0.4.0](https://github.com/microsoft/flint-chart/releases/tag/0.4.0))
 - **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart
   types and edit chart properties in place. ([v0.3.0](https://github.com/microsoft/flint-chart/releases/tag/0.3.0))
 - **July 15, 2026** — Flint 0.2.2 added compact dodge modes and grouped violin
@@ -97,15 +102,19 @@ const spec = assembleVegaLite({
 Swap the backend without changing the input shape:
 
 ```ts
-import { assembleECharts, assembleChartjs } from 'flint-chart';
+import { assembleECharts, assembleChartjs, assemblePlotly, assembleExcel } from 'flint-chart';
 
 const echartsOption = assembleECharts(input);
 const chartjsConfig = assembleChartjs(input);
+const plotlyFigure = assemblePlotly(input);
+const excelArtifact = assembleExcel(input);
 ```
 
-See the [API reference](docs/api-reference.md), [backend references](docs/reference-vegalite.md),
-and [live editor](https://microsoft.github.io/flint-chart/#/editor) for more
-library examples.
+See the [API reference](docs/api-reference.md), backend references for
+[Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
+[Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
+[Excel](docs/reference-excel.md), plus the
+[live editor](https://microsoft.github.io/flint-chart/#/editor) for more library examples.
 
 ## Use Flint As An MCP Server
 
