@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realLineCases } from './real-world-tests';
 import { seededRandom, genDates, genCategories, genOrdinalLabels, ORDINAL_PREFIXES } from './generators';
 
 // ============================================================================
@@ -452,5 +453,5 @@ export function genLineTests(): TestCase[] {
         genForecastTestMultiSeries(forecastRand),
     ];
 
-    return [...matrixTests, ...forecastTests];
+    return [...matrixTests, ...forecastTests, ...realLineCases()];
 }

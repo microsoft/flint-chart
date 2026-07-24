@@ -1,6 +1,6 @@
 # 入门指南
 
-Flint 的思路很简单：先描述**数据代表什么**，再说明**你想要什么图表**。Flint 会据此生成 Vega-Lite、ECharts 或 Chart.js 可以直接使用的规范。
+Flint 的思路很简单：先描述**数据代表什么**，再说明**你想要什么图表**。Flint 会据此生成 Vega-Lite、ECharts、Chart.js 或 Plotly 可以直接使用的规范，也可为 Office.js 宿主生成原生 Excel 图表工件。
 
 本页只介绍最基本的流程：安装 Flint、阅读一份完整规范，再将它编译成图表。
 
@@ -132,11 +132,15 @@ await embed('#chart', spec);
 同一份 Flint 输入也可以编译为其他后端的配置：
 
 ```ts
-import { assembleChartjs, assembleECharts } from 'flint-chart';
+import { assembleChartjs, assembleECharts, assembleExcel, assemblePlotly } from 'flint-chart';
 
 const chartjsConfig = assembleChartjs(input);
 const echartsOption = assembleECharts(input);
+const plotlyFigure = assemblePlotly(input);
+const excelArtifact = assembleExcel(input);
 ```
+
+Plotly 返回 `{ data, layout }` 图形。Excel 返回带版本的原生图表工件，Office.js 宿主可将其传给 `renderExcelChart`。
 
 Python 支持将使用相同的输入结构，计划在后续版本发布。
 
@@ -146,5 +150,5 @@ Python 支持将使用相同的输入结构，计划在后续版本发布。
 - [配置 Flint MCP](/documentation/setup-flint-mcp)：在聊天工具或 IDE 中连接 Flint MCP。
 - [智能体工作流](/documentation/agent-workflows)：将 Flint 集成到自己的智能体产品中。
 - [语义类型](/documentation/semantic-types)：了解 `YearMonth`、`Quantity`、`Category` 和 `Profit` 等语义标签。
-- [图表示例](/gallery)：浏览 Vega-Lite、ECharts 和 Chart.js 支持的图表模板。
+- [图表示例](/gallery)：浏览 Vega-Lite、ECharts、Chart.js 和 Plotly 支持的图表模板；[Excel 图表示例](/gallery/excel)展示在 Excel 中捕获的原生可编辑图表。
 - [概览](/documentation/overview)：进一步了解 Flint 的整体设计和架构。

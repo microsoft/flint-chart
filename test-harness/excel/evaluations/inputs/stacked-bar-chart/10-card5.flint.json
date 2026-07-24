@@ -1,0 +1,93 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Stacked Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Group": "USA",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "UK",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Phone",
+        "Group": "USA",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Phone",
+        "Group": "Germany",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Phone",
+        "Group": "UK",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "USA",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "China",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "Germany",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "China",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "Japan",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "Germany",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "UK",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "Japan",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "Germany",
+        "Segment": "Marketing"
+      }
+    ]
+  }
+}

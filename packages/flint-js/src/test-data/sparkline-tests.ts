@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realSparklineCases } from './real-world-tests';
 import { seededRandom, genDates, genCategories } from './generators';
 
 // ============================================================================
@@ -135,5 +136,5 @@ function sparkMatrixToTestCase(e: SparkMatrixEntry, rand: () => number): TestCas
 
 export function genSparklineTests(): TestCase[] {
     const rand = seededRandom(0x5A8C);
-    return SPARK_MATRIX.map(e => sparkMatrixToTestCase(e, rand));
+    return [...SPARK_MATRIX.map(e => sparkMatrixToTestCase(e, rand)), ...realSparklineCases()];
 }

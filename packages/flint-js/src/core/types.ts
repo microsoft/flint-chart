@@ -419,6 +419,18 @@ export interface LayoutResult {
     xLabel: LabelSizingDecision;
     yLabel: LabelSizingDecision;
 
+    /**
+     * Canvas-adaptive header font size (px) for axis titles and chart title.
+     * Derived from the backend's `baseTitleFontSize`, scaled subtly with the
+     * (sub)plot size. Backends should use this instead of hardcoded constants.
+     */
+    titleFontSize: number;
+    /**
+     * Canvas-adaptive font size (px) for legend entries. Slightly smaller than
+     * {@link titleFontSize}. Backends should use this for legend text.
+     */
+    legendFontSize: number;
+
     /** Facet layout (if applicable) */
     facet?: {
         columns: number;
@@ -931,6 +943,23 @@ export interface ChartTemplateDef {
     properties?: ChartPropertyDef[];
 
     /**
+     * Opt out of a backend's *generic* column/row facet-splitting pass, even
+     * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
+     * alone would not exempt it).
+     *
+     * Set by templates that build their own composite, self-contained figure
+     * — one that already spans multiple internal axis pairs / sub-panels
+     * (e.g. a Sparkline table's one-row-per-series strips, a Bar Table's
+     * bar+%+value columns) — and so handle `column`/`row` themselves inside
+     * `instantiate` rather than being pre-split into N single-facet calls
+     * whose per-panel output a generic single-axis-pair combiner (e.g. the
+     * Plotly backend's `facet.ts`) cannot correctly recombine.
+     *
+     * Currently honored by the Plotly assembler only.
+     */
+    selfManagesFacets?: boolean;
+
+    /**
      * Optional encoding-level quick actions (Category B). Clicking one of these
      * mutates the encodings map (the same state the encoding shelf edits),
      * rather than chart-native config. See EncodingActionDef.
@@ -1149,6 +1178,15 @@ export interface AssembleOptions {
      */
     facetGap?: number;
     /**
+     * Explicit number of facet COLUMNS for a column-wrapped facet, overriding
+     * the auto-computed wrap. When set (≥ 1) the layout uses this many columns
+     * (clamped to the distinct column count) and wraps the remaining panels
+     * into as many rows as needed. Surfaced to hosts as the `facetColumns`
+     * chart property so users can dial the wrap in interactively; undefined =
+     * auto (fill the width).
+     */
+    facetColumns?: number;
+    /**
      * Base pixels per discrete category at a 300px baseline canvas.
      * Scaled proportionally with canvas size by the core layout engine.
      * The final default step size is:
@@ -1166,6 +1204,48 @@ export interface AssembleOptions {
      * Default: 20.
      */
     defaultBandSize?: number;
+    /**
+     * Maximum pixels per discrete category at a 300px baseline canvas,
+     * scaled proportionally with canvas size (like {@link defaultBandSize}).
+     *
+     * This is the **sparse-expansion ceiling**. When few categories share a
+     * wide plot, each band grows to fill the available width but never past
+     * `maxBandSize`, so one or two bars can't balloon to the whole canvas.
+     * The band is thus clamped to `[minStep, maxBandSize]`:
+     *
+     *   step = clamp(availableWidth / N, minStep, maxBandSize)
+     *
+     * Backends set this to match their native sparse-bar rendering:
+     *   - VL:  = defaultBandSize (VL's step-based sizing doesn't fill a container)
+     *   - EC / CJS / Plotly: much larger (these fill their plot area natively)
+     *
+     * Defaults to {@link defaultBandSize} (no expansion beyond the base band).
+     */
+    maxBandSize?: number;
+    /**
+     * Backend-native base font size (px) for axis **tick labels**, at a 300px
+     * reference canvas. The core scales it subtly with canvas size and uses it
+     * as the ceiling of the shrink→rotate→cap ladder, so a chart never renders
+     * ticks below its backend's native scale on a comfortable canvas.
+     *
+     * Learned from each renderer's defaults:
+     *   - Vega-Lite: 10   - ECharts: 12   - Chart.js: 12   - Plotly: 12
+     *
+     * Default: 10.
+     */
+    baseLabelFontSize?: number;
+    /**
+     * Backend-native base font size (px) for **headers** (axis titles, legend,
+     * chart title), at a 300px reference canvas. Scaled subtly with canvas size
+     * (grows up to +4 on large canvases, shrinks toward the base in small
+     * multiples) so headers stay proportionate to the chart.
+     *
+     * Learned from each renderer's defaults:
+     *   - Vega-Lite: 11   - ECharts: 12   - Chart.js: 12   - Plotly: 14
+     *
+     * Default: 11.
+     */
+    baseTitleFontSize?: number;
     /**
      * When true, continuous X and Y axes stretch together using the
      * larger of the two per-axis stretch factors. This preserves the

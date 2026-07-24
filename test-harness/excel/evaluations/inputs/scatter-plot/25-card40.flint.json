@@ -1,0 +1,223 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "shape": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 77.2,
+        "Y": 46.1,
+        "Group": "Electronics"
+      },
+      {
+        "X": 71,
+        "Y": 32.1,
+        "Group": "Clothing"
+      },
+      {
+        "X": 92.6,
+        "Y": 10.1,
+        "Group": "Food"
+      },
+      {
+        "X": 0.5,
+        "Y": 1.9,
+        "Group": "Books"
+      },
+      {
+        "X": 66.1,
+        "Y": 66.1,
+        "Group": "Electronics"
+      },
+      {
+        "X": 6.4,
+        "Y": 60,
+        "Group": "Clothing"
+      },
+      {
+        "X": 15.8,
+        "Y": 69.4,
+        "Group": "Food"
+      },
+      {
+        "X": 2.1,
+        "Y": 21.6,
+        "Group": "Books"
+      },
+      {
+        "X": 66.5,
+        "Y": 60.8,
+        "Group": "Electronics"
+      },
+      {
+        "X": 61.3,
+        "Y": 61.1,
+        "Group": "Clothing"
+      },
+      {
+        "X": 1.9,
+        "Y": 3,
+        "Group": "Food"
+      },
+      {
+        "X": 54.3,
+        "Y": 65.6,
+        "Group": "Books"
+      },
+      {
+        "X": 48,
+        "Y": 82.6,
+        "Group": "Electronics"
+      },
+      {
+        "X": 45.7,
+        "Y": 7.7,
+        "Group": "Clothing"
+      },
+      {
+        "X": 8,
+        "Y": 95,
+        "Group": "Food"
+      },
+      {
+        "X": 35.3,
+        "Y": 90.8,
+        "Group": "Books"
+      },
+      {
+        "X": 40.1,
+        "Y": 16.6,
+        "Group": "Electronics"
+      },
+      {
+        "X": 78.6,
+        "Y": 59.4,
+        "Group": "Clothing"
+      },
+      {
+        "X": 58.1,
+        "Y": 91,
+        "Group": "Food"
+      },
+      {
+        "X": 74.3,
+        "Y": 19.9,
+        "Group": "Books"
+      },
+      {
+        "X": 81,
+        "Y": 33.7,
+        "Group": "Electronics"
+      },
+      {
+        "X": 91.1,
+        "Y": 32.1,
+        "Group": "Clothing"
+      },
+      {
+        "X": 53.7,
+        "Y": 93.8,
+        "Group": "Food"
+      },
+      {
+        "X": 98.2,
+        "Y": 10.6,
+        "Group": "Books"
+      },
+      {
+        "X": 96.2,
+        "Y": 25.6,
+        "Group": "Electronics"
+      },
+      {
+        "X": 94.2,
+        "Y": 37.3,
+        "Group": "Clothing"
+      },
+      {
+        "X": 66.2,
+        "Y": 85.8,
+        "Group": "Food"
+      },
+      {
+        "X": 33.9,
+        "Y": 33.4,
+        "Group": "Books"
+      },
+      {
+        "X": 97.3,
+        "Y": 93.5,
+        "Group": "Electronics"
+      },
+      {
+        "X": 89.1,
+        "Y": 26.5,
+        "Group": "Clothing"
+      },
+      {
+        "X": 94.7,
+        "Y": 53.5,
+        "Group": "Food"
+      },
+      {
+        "X": 10.8,
+        "Y": 44.1,
+        "Group": "Books"
+      },
+      {
+        "X": 16.4,
+        "Y": 49.8,
+        "Group": "Electronics"
+      },
+      {
+        "X": 73.6,
+        "Y": 66.3,
+        "Group": "Clothing"
+      },
+      {
+        "X": 17.6,
+        "Y": 5.7,
+        "Group": "Food"
+      },
+      {
+        "X": 12.2,
+        "Y": 52,
+        "Group": "Books"
+      },
+      {
+        "X": 92.7,
+        "Y": 39.5,
+        "Group": "Electronics"
+      },
+      {
+        "X": 61.5,
+        "Y": 70,
+        "Group": "Clothing"
+      },
+      {
+        "X": 60.8,
+        "Y": 59.7,
+        "Group": "Food"
+      },
+      {
+        "X": 23.7,
+        "Y": 10.9,
+        "Group": "Books"
+      }
+    ]
+  }
+}

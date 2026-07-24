@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Trade Volume": "Quantity",
+    "Share Price": "Quantity",
+    "Date": "Date"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Trade Volume",
+      "y": "Share Price",
+      "order": "Date"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2023-01-03",
+        "Trade Volume": 58,
+        "Share Price": 142
+      },
+      {
+        "Date": "2023-02-01",
+        "Trade Volume": 47,
+        "Share Price": 151
+      },
+      {
+        "Date": "2023-03-01",
+        "Trade Volume": 63,
+        "Share Price": 148
+      },
+      {
+        "Date": "2023-04-03",
+        "Trade Volume": 41,
+        "Share Price": 165
+      },
+      {
+        "Date": "2023-05-01",
+        "Trade Volume": 38,
+        "Share Price": 172
+      },
+      {
+        "Date": "2023-06-01",
+        "Trade Volume": 52,
+        "Share Price": 180
+      },
+      {
+        "Date": "2023-07-03",
+        "Trade Volume": 35,
+        "Share Price": 193
+      },
+      {
+        "Date": "2023-08-01",
+        "Trade Volume": 44,
+        "Share Price": 188
+      },
+      {
+        "Date": "2023-09-01",
+        "Trade Volume": 71,
+        "Share Price": 171
+      },
+      {
+        "Date": "2023-10-02",
+        "Trade Volume": 66,
+        "Share Price": 170
+      },
+      {
+        "Date": "2023-11-01",
+        "Trade Volume": 49,
+        "Share Price": 189
+      },
+      {
+        "Date": "2023-12-01",
+        "Trade Volume": 40,
+        "Share Price": 192
+      }
+    ]
+  }
+}

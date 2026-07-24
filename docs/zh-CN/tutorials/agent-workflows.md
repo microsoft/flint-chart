@@ -321,6 +321,7 @@ execute the code, inspect the derived table, and bind data.values afterward.
 - [示例：数据故事](/documentation/data-story) 展示同一份源数据视图如何仅通过更改 ChartSpec 变成多种图表设计。
 - [配置 Flint MCP](/documentation/setup-flint-mcp) 说明如何通过 MCP 服务器为智能体提供 Flint 图表工具。
 - [Vega-Lite charts](/documentation/reference-vegalite)、
-  [ECharts charts](/documentation/reference-echarts) 与
-  [Chart.js charts](/documentation/reference-chartjs) 按后端列出支持的图表类型。
+  [ECharts charts](/documentation/reference-echarts)、
+  [Chart.js charts](/documentation/reference-chartjs) 与
+  [Plotly charts](/documentation/reference-plotly) 按后端列出支持的图表类型。
 - [语义类型](/documentation/semantic-types) 列出智能体可用于字段的标签。

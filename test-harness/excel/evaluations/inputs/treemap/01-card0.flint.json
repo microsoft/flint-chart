@@ -1,0 +1,83 @@
+{
+  "semantic_types": {
+    "Region": "Category",
+    "Country": "Country",
+    "Revenue": "Amount"
+  },
+  "chart_spec": {
+    "chartType": "Treemap",
+    "encodings": {
+      "color": "Region",
+      "detail": "Country",
+      "size": "Revenue"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Region": "Americas",
+        "Country": "USA",
+        "Revenue": 2052
+      },
+      {
+        "Region": "Americas",
+        "Country": "Canada",
+        "Revenue": 240
+      },
+      {
+        "Region": "Americas",
+        "Country": "Brazil",
+        "Revenue": 1708
+      },
+      {
+        "Region": "Americas",
+        "Country": "Mexico",
+        "Revenue": 2056
+      },
+      {
+        "Region": "Europe",
+        "Country": "UK",
+        "Revenue": 2007
+      },
+      {
+        "Region": "Europe",
+        "Country": "Germany",
+        "Revenue": 116
+      },
+      {
+        "Region": "Europe",
+        "Country": "France",
+        "Revenue": 1382
+      },
+      {
+        "Region": "Europe",
+        "Country": "Italy",
+        "Revenue": 1645
+      },
+      {
+        "Region": "Asia",
+        "Country": "China",
+        "Revenue": 1870
+      },
+      {
+        "Region": "Asia",
+        "Country": "Japan",
+        "Revenue": 1081
+      },
+      {
+        "Region": "Asia",
+        "Country": "India",
+        "Revenue": 2008
+      },
+      {
+        "Region": "Asia",
+        "Country": "Korea",
+        "Revenue": 274
+      }
+    ]
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Value": "Quantity",
+    "ColorVal": "Rank"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Value",
+      "group": "ColorVal"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Value": 511,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Laptop",
+        "Value": 326,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Laptop",
+        "Value": 387,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Laptop",
+        "Value": 159,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Laptop",
+        "Value": 89,
+        "ColorVal": 5
+      },
+      {
+        "Category": "Phone",
+        "Value": 496,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Phone",
+        "Value": 825,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Phone",
+        "Value": 421,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Phone",
+        "Value": 804,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Phone",
+        "Value": 437,
+        "ColorVal": 5
+      },
+      {
+        "Category": "Tablet",
+        "Value": 874,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Tablet",
+        "Value": 883,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Tablet",
+        "Value": 858,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Tablet",
+        "Value": 39,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Tablet",
+        "Value": 933,
+        "ColorVal": 5
+      },
+      {
+        "Category": "Desktop",
+        "Value": 470,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Desktop",
+        "Value": 111,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Desktop",
+        "Value": 637,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Desktop",
+        "Value": 951,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Desktop",
+        "Value": 239,
+        "ColorVal": 5
+      },
+      {
+        "Category": "Monitor",
+        "Value": 774,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Monitor",
+        "Value": 839,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Monitor",
+        "Value": 182,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Monitor",
+        "Value": 403,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Monitor",
+        "Value": 901,
+        "ColorVal": 5
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 898,
+        "ColorVal": 1
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 914,
+        "ColorVal": 2
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 511,
+        "ColorVal": 3
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 602,
+        "ColorVal": 4
+      },
+      {
+        "Category": "Keyboard",
+        "Value": 77,
+        "ColorVal": 5
+      }
+    ]
+  }
+}

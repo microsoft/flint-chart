@@ -1,0 +1,223 @@
+{
+  "semantic_types": {
+    "Age Band": "Category",
+    "Population": "Quantity",
+    "Gender": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Age Band",
+      "x": "Population",
+      "color": "Gender"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Age Band": "0-4",
+        "Gender": "Male",
+        "Population": 2562
+      },
+      {
+        "Age Band": "0-4",
+        "Gender": "Female",
+        "Population": 2821
+      },
+      {
+        "Age Band": "5-9",
+        "Gender": "Male",
+        "Population": 1694
+      },
+      {
+        "Age Band": "5-9",
+        "Gender": "Female",
+        "Population": 7030
+      },
+      {
+        "Age Band": "10-14",
+        "Gender": "Male",
+        "Population": 2276
+      },
+      {
+        "Age Band": "10-14",
+        "Gender": "Female",
+        "Population": 6293
+      },
+      {
+        "Age Band": "15-19",
+        "Gender": "Male",
+        "Population": 4082
+      },
+      {
+        "Age Band": "15-19",
+        "Gender": "Female",
+        "Population": 4774
+      },
+      {
+        "Age Band": "20-24",
+        "Gender": "Male",
+        "Population": 1512
+      },
+      {
+        "Age Band": "20-24",
+        "Gender": "Female",
+        "Population": 4685
+      },
+      {
+        "Age Band": "25-29",
+        "Gender": "Male",
+        "Population": 3723
+      },
+      {
+        "Age Band": "25-29",
+        "Gender": "Female",
+        "Population": 1606
+      },
+      {
+        "Age Band": "30-34",
+        "Gender": "Male",
+        "Population": 3954
+      },
+      {
+        "Age Band": "30-34",
+        "Gender": "Female",
+        "Population": 5662
+      },
+      {
+        "Age Band": "35-39",
+        "Gender": "Male",
+        "Population": 2340
+      },
+      {
+        "Age Band": "35-39",
+        "Gender": "Female",
+        "Population": 2752
+      },
+      {
+        "Age Band": "40-44",
+        "Gender": "Male",
+        "Population": 2722
+      },
+      {
+        "Age Band": "40-44",
+        "Gender": "Female",
+        "Population": 3587
+      },
+      {
+        "Age Band": "45-49",
+        "Gender": "Male",
+        "Population": 7493
+      },
+      {
+        "Age Band": "45-49",
+        "Gender": "Female",
+        "Population": 1024
+      },
+      {
+        "Age Band": "50-54",
+        "Gender": "Male",
+        "Population": 4263
+      },
+      {
+        "Age Band": "50-54",
+        "Gender": "Female",
+        "Population": 2318
+      },
+      {
+        "Age Band": "55-59",
+        "Gender": "Male",
+        "Population": 1315
+      },
+      {
+        "Age Band": "55-59",
+        "Gender": "Female",
+        "Population": 2663
+      },
+      {
+        "Age Band": "60-64",
+        "Gender": "Male",
+        "Population": 2837
+      },
+      {
+        "Age Band": "60-64",
+        "Gender": "Female",
+        "Population": 2936
+      },
+      {
+        "Age Band": "65-69",
+        "Gender": "Male",
+        "Population": 5796
+      },
+      {
+        "Age Band": "65-69",
+        "Gender": "Female",
+        "Population": 3040
+      },
+      {
+        "Age Band": "70-74",
+        "Gender": "Male",
+        "Population": 2846
+      },
+      {
+        "Age Band": "70-74",
+        "Gender": "Female",
+        "Population": 7447
+      },
+      {
+        "Age Band": "75-79",
+        "Gender": "Male",
+        "Population": 7263
+      },
+      {
+        "Age Band": "75-79",
+        "Gender": "Female",
+        "Population": 4439
+      },
+      {
+        "Age Band": "80-84",
+        "Gender": "Male",
+        "Population": 6170
+      },
+      {
+        "Age Band": "80-84",
+        "Gender": "Female",
+        "Population": 3486
+      },
+      {
+        "Age Band": "85-89",
+        "Gender": "Male",
+        "Population": 4649
+      },
+      {
+        "Age Band": "85-89",
+        "Gender": "Female",
+        "Population": 6026
+      },
+      {
+        "Age Band": "90-94",
+        "Gender": "Male",
+        "Population": 1734
+      },
+      {
+        "Age Band": "90-94",
+        "Gender": "Female",
+        "Population": 5397
+      },
+      {
+        "Age Band": "95-99",
+        "Gender": "Male",
+        "Population": 6683
+      },
+      {
+        "Age Band": "95-99",
+        "Gender": "Female",
+        "Population": 3448
+      }
+    ]
+  }
+}

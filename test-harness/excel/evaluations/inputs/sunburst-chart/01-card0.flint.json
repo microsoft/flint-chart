@@ -1,0 +1,73 @@
+{
+  "semantic_types": {
+    "Department": "Category",
+    "Team": "Category",
+    "Headcount": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Sunburst Chart",
+    "encodings": {
+      "color": "Department",
+      "group": "Team",
+      "size": "Headcount"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Department": "Engineering",
+        "Team": "Frontend",
+        "Headcount": 39
+      },
+      {
+        "Department": "Engineering",
+        "Team": "Backend",
+        "Headcount": 53
+      },
+      {
+        "Department": "Engineering",
+        "Team": "Infra",
+        "Headcount": 42
+      },
+      {
+        "Department": "Engineering",
+        "Team": "QA",
+        "Headcount": 27
+      },
+      {
+        "Department": "Product",
+        "Team": "Design",
+        "Headcount": 20
+      },
+      {
+        "Department": "Product",
+        "Team": "PM",
+        "Headcount": 52
+      },
+      {
+        "Department": "Product",
+        "Team": "Research",
+        "Headcount": 42
+      },
+      {
+        "Department": "Operations",
+        "Team": "HR",
+        "Headcount": 16
+      },
+      {
+        "Department": "Operations",
+        "Team": "Finance",
+        "Headcount": 17
+      },
+      {
+        "Department": "Operations",
+        "Team": "Legal",
+        "Headcount": 28
+      }
+    ]
+  }
+}

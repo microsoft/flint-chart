@@ -99,7 +99,7 @@ export const ecPyramidChartDef: ChartTemplateDef = {
             name: catField,
             nameLocation: 'middle' as const,
             nameGap: 40,
-            nameTextStyle: { fontSize: 12, color: '#333' },
+            nameTextStyle: { fontSize: ctx.layout.titleFontSize, color: '#333' },
             boundaryGap: true,
             axisLine: { show: true, onZero: false, lineStyle: axisLineStyle },
             axisTick: {
@@ -120,7 +120,7 @@ export const ecPyramidChartDef: ChartTemplateDef = {
                 name: valField,
                 nameLocation: 'middle',
                 nameGap: 28,
-                nameTextStyle: { fontSize: 12, color: '#333' },
+                nameTextStyle: { fontSize: ctx.layout.titleFontSize, color: '#333' },
                 axisLine: { show: true, lineStyle: axisLineStyle },
                 axisTick: { show: true, length: 6, lineStyle: tickLineStyle },
                 axisLabel: {

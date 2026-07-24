@@ -102,4 +102,26 @@ area
 }
 ```
 
+## 字体大小
+
+文字（坐标轴刻度标签、轴标题、图例、图表标题）会围绕各后端的原生字号随画布自适应，
+因此小图不会拥挤、大图也不会过小。要整体放大或缩小文字，可在 `options` 中设置两个基准字号：
+
+```json
+{
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": { "x": { "field": "category" }, "y": { "field": "value" } }
+  },
+  "options": {
+    "baseLabelFontSize": 14,
+    "baseTitleFontSize": 16
+  }
+}
+```
+
+`baseLabelFontSize` 设置坐标轴刻度字号；`baseTitleFontSize` 设置标题类字号（轴标题、图例、
+图表标题）。默认取各后端原生字号（Vega-Lite 10 / 11；ECharts 与 Chart.js 12 / 12；Plotly 12 / 14）。
+密集坐标轴仍会在此基准上缩小、旋转并截断刻度标签以避免重叠。
+
 要了解多面板布局和这些控件背后的模型，请继续阅读[自动布局算法](/documentation/layout-model)。

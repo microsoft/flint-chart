@@ -59,6 +59,18 @@ npx -y flint-chart-mcp
 That command starts a stdio MCP server. In practice, you usually put it in your
 client's MCP configuration instead of running it by hand.
 
+## Use the hosted server
+
+If your client only supports remote HTTP MCP servers, connect to the public
+Flint endpoint:
+
+```text
+https://flint.data-formulator.ai/mcp
+```
+
+Prefer the local stdio server when your client supports it, especially when
+charting local files. The hosted server accepts data embedded in tool calls.
+
 ## Configure VS Code
 
 For VS Code, add a server entry in `.vscode/mcp.json`:
@@ -234,6 +246,7 @@ support MCP Apps; ask the agent to use `render_chart` instead.
 - [Getting started](/documentation/getting-started) explains the `DataSpec` and
   `ChartSpec` shape with a tiny first chart.
 - [Vega-Lite charts](/documentation/reference-vegalite),
-  [ECharts charts](/documentation/reference-echarts), and
-  [Chart.js charts](/documentation/reference-chartjs) list supported chart
+  [ECharts charts](/documentation/reference-echarts),
+  [Chart.js charts](/documentation/reference-chartjs), and
+  [Plotly charts](/documentation/reference-plotly) list supported chart
   types by backend.

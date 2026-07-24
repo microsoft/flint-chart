@@ -217,13 +217,17 @@ export function vlApplyLayoutToSpec(
     const axisXConfig: Record<string, any> = {
         labelLimit: layout.xLabel.labelLimit,
         labelFontSize: layout.xLabel.fontSize,
+        titleFontSize: layout.titleFontSize,
     };
     if (layout.xLabel.labelAngle !== undefined) {
         axisXConfig.labelAngle = layout.xLabel.labelAngle;
         axisXConfig.labelAlign = layout.xLabel.labelAlign;
         axisXConfig.labelBaseline = layout.xLabel.labelBaseline;
     }
-    const axisYConfig: Record<string, any> = { labelFontSize: layout.yLabel.fontSize };
+    const axisYConfig: Record<string, any> = {
+        labelFontSize: layout.yLabel.fontSize,
+        titleFontSize: layout.titleFontSize,
+    };
 
     vgObj.config = {
         view: {
@@ -233,6 +237,10 @@ export function vlApplyLayoutToSpec(
         },
         axisX: axisXConfig,
         axisY: axisYConfig,
+        legend: {
+            labelFontSize: layout.legendFontSize,
+            titleFontSize: layout.titleFontSize,
+        },
     };
 
     // --- Step-based sizing for discrete axes ---

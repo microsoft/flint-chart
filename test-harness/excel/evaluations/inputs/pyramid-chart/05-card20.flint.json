@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "Country": "Country",
+    "Value": "Amount",
+    "Direction": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Pyramid Chart",
+    "encodings": {
+      "y": "Country",
+      "x": "Value",
+      "color": "Direction"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "USA",
+        "Direction": "Import",
+        "Value": 31686
+      },
+      {
+        "Country": "USA",
+        "Direction": "Export",
+        "Value": 44720
+      },
+      {
+        "Country": "China",
+        "Direction": "Import",
+        "Value": 8071
+      },
+      {
+        "Country": "China",
+        "Direction": "Export",
+        "Value": 46763
+      },
+      {
+        "Country": "Japan",
+        "Direction": "Import",
+        "Value": 35829
+      },
+      {
+        "Country": "Japan",
+        "Direction": "Export",
+        "Value": 23447
+      },
+      {
+        "Country": "Germany",
+        "Direction": "Import",
+        "Value": 11702
+      },
+      {
+        "Country": "Germany",
+        "Direction": "Export",
+        "Value": 21445
+      },
+      {
+        "Country": "UK",
+        "Direction": "Import",
+        "Value": 17460
+      },
+      {
+        "Country": "UK",
+        "Direction": "Export",
+        "Value": 47488
+      },
+      {
+        "Country": "France",
+        "Direction": "Import",
+        "Value": 32401
+      },
+      {
+        "Country": "France",
+        "Direction": "Export",
+        "Value": 8762
+      },
+      {
+        "Country": "India",
+        "Direction": "Import",
+        "Value": 3322
+      },
+      {
+        "Country": "India",
+        "Direction": "Export",
+        "Value": 33256
+      },
+      {
+        "Country": "Brazil",
+        "Direction": "Import",
+        "Value": 29939
+      },
+      {
+        "Country": "Brazil",
+        "Direction": "Export",
+        "Value": 22031
+      },
+      {
+        "Country": "Canada",
+        "Direction": "Import",
+        "Value": 10621
+      },
+      {
+        "Country": "Canada",
+        "Direction": "Export",
+        "Value": 1603
+      },
+      {
+        "Country": "Australia",
+        "Direction": "Import",
+        "Value": 37942
+      },
+      {
+        "Country": "Australia",
+        "Direction": "Export",
+        "Value": 41683
+      }
+    ]
+  }
+}

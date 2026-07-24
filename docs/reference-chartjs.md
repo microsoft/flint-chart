@@ -6,7 +6,7 @@ The Chart.js backend is the lightweight embedding target for common chart famili
 
 ## What this page covers
 
-This reference lists the 20 chart types currently supported by the Chart.js backend, grouped into 5 categories. Each chart entry shows:
+This reference lists the 21 chart types currently supported by the Chart.js backend, grouped into 5 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -126,6 +126,12 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | Line or area interpolation method. |
+
+### ![](chart-icon-bump.svg) Bump Chart
+
+**Encoding channels:** `x`, `y`, `color`, `detail`, `column`, `row`
+
+_No template-specific parameters._
 
 ### ![](chart-icon-slope.svg) Slope Chart
 

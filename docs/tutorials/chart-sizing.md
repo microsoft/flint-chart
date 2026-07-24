@@ -114,4 +114,30 @@ treats it as a box the chart fills and shrinks to fit, never overflowing:
 }
 ```
 
+## Font size
+
+Text (axis tick labels, axis titles, legend, chart title) adapts to the canvas
+around each backend's native font, so a small chart isn't cramped and a large
+one isn't tiny. To scale all text up or down, set the two base sizes in
+`options`:
+
+```json
+{
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": { "x": { "field": "category" }, "y": { "field": "value" } }
+  },
+  "options": {
+    "baseLabelFontSize": 14,
+    "baseTitleFontSize": 16
+  }
+}
+```
+
+`baseLabelFontSize` sets the axis tick font; `baseTitleFontSize` sets the header
+font (axis titles, legend, chart title). They default to each backend's native
+size (Vega-Lite 10 / 11; ECharts and Chart.js 12 / 12; Plotly 12 / 14). Dense
+axes still shrink, rotate, and truncate tick labels from that base to avoid
+overlap.
+
 For facets and the model details behind these controls, continue to [Auto Layout Algorithm](/documentation/layout-model).

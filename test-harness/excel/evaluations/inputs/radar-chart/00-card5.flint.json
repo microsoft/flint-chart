@@ -1,0 +1,48 @@
+{
+  "semantic_types": {
+    "Player": "Category",
+    "Metric": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Radar Chart",
+    "encodings": {
+      "x": "Metric",
+      "y": "Value",
+      "color": "Player"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Player": "Player A",
+        "Metric": "Speed",
+        "Value": 85
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Shooting",
+        "Value": 70
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Passing",
+        "Value": 90
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Dribbling",
+        "Value": 80
+      },
+      {
+        "Player": "Player A",
+        "Metric": "Defense",
+        "Value": 60
+      }
+    ]
+  }
+}

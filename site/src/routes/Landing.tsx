@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
@@ -8,9 +8,11 @@ import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestC
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { testCaseToFlintSummary, testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { buildGalleryEditorHref, openEditorWithPayload } from '../shared/editor-payload';
+import { buildPanelModel } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
 import {
@@ -49,10 +51,27 @@ export function Landing() {
                 <LeadHighlight>{t('landing.leadHighlight1')}</LeadHighlight>
                 {t('landing.leadMiddle')}{' '}
                 <LeadHighlight>
-                  {t('landing.leadHighlight2', { chartTypes: CHART_FAMILY_COUNT })}
+                  {t('landing.leadHighlight2', {
+                    chartTypes: CHART_FAMILY_COUNT,
+                    backends: BACKEND_ROSTER_LINKS.length,
+                  })}
                 </LeadHighlight>
                 .
               </p>
+
+              <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
+                <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                  {t('landing.backendRosterLabel')}
+                </span>
+                {BACKEND_ROSTER_LINKS.map((backend, index) => (
+                  <span key={backend.label} style={backendRosterItemStyle}>
+                    {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                    <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
+                      {backend.label}
+                    </LocaleLink>
+                  </span>
+                ))}
+              </div>
 
               <div style={installLinesStyle}>
                 <div style={installLineStyle}>
@@ -148,9 +167,9 @@ export function Landing() {
           <h2 style={newsHeadingStyle}>{t('landing.news.title')}</h2>
           <div style={newsListStyle}>
             {([
+              { key: 'release040', href: `${GITHUB_REPO}/releases/tag/0.4.0`, linkLabel: 'v0.4.0' },
               { key: 'dynamicWidgets', href: `${GITHUB_REPO}/releases/tag/0.3.0`, linkLabel: 'v0.3.0' },
               { key: 'release022', href: null, linkLabel: null },
-              { key: 'release021', href: `${GITHUB_REPO}/releases/tag/0.2.1`, linkLabel: 'v0.2.1' },
             ] as const).map((update) => (
               <article className="landing-news-item" style={newsItemStyle} key={update.key}>
                 <time style={newsDateStyle} dateTime={t(`landing.news.${update.key}.dateTime`)}>
@@ -289,6 +308,8 @@ interface ShowcaseExample {
   testCase?: TestCase;
   /** Optional canvas override; narrower widths force facet panels to wrap. */
   canvasSize?: { width: number; height: number };
+  /** Showcase-only defaults applied without changing the underlying gallery case. */
+  defaultChartProperties?: Record<string, unknown>;
 }
 
 /* ---- Chart-property examples (real data-formulator "movies" dataset) ---- */
@@ -379,7 +400,8 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     exampleKey: 'facetedLine',
     generator: 'Omni: Line',
     index: 0,
-    canvasSize: { width: 300, height: 600 },
+    canvasSize: { width: 800, height: 400 },
+    defaultChartProperties: { facetColumns: 2 },
   },
   {
     id: 'heatmap',
@@ -463,6 +485,7 @@ function HeroShowcase() {
   const { locale } = useLocale();
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
+  const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
   const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
@@ -476,6 +499,29 @@ function HeroShowcase() {
   // Keep the chosen backend when the new example supports it; otherwise fall
   // back to that example's first available backend.
   const backend = supported.includes(selectedBackend) ? selectedBackend : supported[0] ?? 'vegalite';
+  const effectiveOptions = useMemo(
+    () => ({ ...example.defaultChartProperties, ...tempOptions }),
+    [example.defaultChartProperties, tempOptions],
+  );
+
+  useEffect(() => setTempOptions({}), [exampleIdx, backend]);
+
+  const displayInput = useMemo(() => {
+    if (!testCase) return null;
+    const base = testCaseToAssemblyInput(testCase);
+    return {
+      ...base,
+      chart_spec: {
+        ...base.chart_spec,
+        chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
+      },
+    };
+  }, [testCase, effectiveOptions]);
+
+  const panelModel = useMemo(
+    () => (displayInput ? buildPanelModel(displayInput, backend) : null),
+    [displayInput, backend],
+  );
 
   if (!testCase) return null;
 
@@ -498,7 +544,7 @@ function HeroShowcase() {
         </button>
 
         <div className="landing-showcase-card" style={{ ...showcaseCardStyle, flex: 1, minWidth: 0 }}>
-          <div style={showcasePaneStyle}>
+          <div className="landing-spec-pane" style={{ ...showcasePaneStyle, ...specPaneStyle }}>
             <div style={paneHeaderRowStyle}>
               <span style={paneLabelStyle}>{t('landing.flintSpec')}</span>
               <OpenEditorButton
@@ -514,7 +560,11 @@ function HeroShowcase() {
                 }
               />
             </div>
-            <FlintSpecCode testCase={testCase} canvasSize={example.canvasSize} />
+            <FlintSpecCode
+              testCase={testCase}
+              canvasSize={example.canvasSize}
+              chartPropertyOverrides={effectiveOptions}
+            />
           </div>
 
           <div className="landing-chart-pane" style={{ ...showcasePaneStyle, ...chartPaneStyle, borderLeft: `1px solid ${HAIRLINE}` }}>
@@ -541,10 +591,35 @@ function HeroShowcase() {
                 })}
               </div>
             </div>
-            <div style={{ padding: '4px 12px 14px' }}>
-              <ScaleToFit height={360} minHeight={236} padding={6} adaptiveHeight>
-                <WallChart testCase={testCase} backend={backend} canvasSize={example.canvasSize} />
-              </ScaleToFit>
+            <div className="landing-chart-canvas" style={chartCanvasStyle}>
+              <div style={chartViewportStyle}>
+                <ScaleToFit fill height={410} padding={8}>
+                  <WallChart
+                    testCase={testCase}
+                    backend={backend}
+                    canvasSize={example.canvasSize}
+                    chartPropertyOverrides={effectiveOptions}
+                  />
+                </ScaleToFit>
+              </div>
+              {panelModel && displayInput && (
+                <div className="landing-canvas-options" style={canvasOptionsStyle}>
+                  <GalleryOptionsBar
+                    model={panelModel}
+                    chartType={displayInput.chart_spec.chartType}
+                    canReset={Object.keys(tempOptions).length > 0}
+                    onReset={() => setTempOptions({})}
+                    onChange={(key, value) =>
+                      setTempOptions((current) => {
+                        const next = { ...current };
+                        if (value === undefined) delete next[key];
+                        else next[key] = value;
+                        return next;
+                      })
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -638,15 +713,33 @@ function OpenEditorButton({
   );
 }
 
-function FlintSpecCode({ testCase, canvasSize }: { testCase: TestCase; canvasSize?: { width: number; height: number } }) {
+function FlintSpecCode({
+  testCase,
+  canvasSize,
+  chartPropertyOverrides,
+}: {
+  testCase: TestCase;
+  canvasSize?: { width: number; height: number };
+  chartPropertyOverrides?: Record<string, unknown>;
+}) {
   const text = useMemo(() => {
     const summary = testCaseToFlintSummary(testCase);
-    const withCanvas = canvasSize
-      ? { ...summary, chart_spec: { ...summary.chart_spec, baseSize: canvasSize } }
-      : summary;
+    const chartSpec = {
+      ...summary.chart_spec,
+      ...(canvasSize ? { baseSize: canvasSize } : {}),
+      ...(chartPropertyOverrides && Object.keys(chartPropertyOverrides).length > 0
+        ? {
+            chartProperties: {
+              ...summary.chart_spec.chartProperties,
+              ...chartPropertyOverrides,
+            },
+          }
+        : {}),
+    };
+    const withCanvas = { ...summary, chart_spec: chartSpec };
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
-  }, [testCase, canvasSize]);
+  }, [testCase, canvasSize, chartPropertyOverrides]);
   return <pre style={specPreStyle}>{text}</pre>;
 }
 
@@ -688,6 +781,14 @@ const CHART_FAMILY_COUNT = new Set(
     category.charts.map((chart) => chart.label.replace(/\s+\*$/u, '')),
   ),
 ).size;
+
+const BACKEND_ROSTER_LINKS = [
+  { label: 'Vega-Lite', to: '/documentation/reference-vegalite' },
+  { label: 'ECharts', to: '/documentation/reference-echarts' },
+  { label: 'Chart.js', to: '/documentation/reference-chartjs' },
+  { label: 'Plotly', to: '/documentation/reference-plotly' },
+  { label: 'Excel', to: '/gallery/excel' },
+] as const;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,
   0,
@@ -1187,6 +1288,54 @@ const leadHighlightStyle: CSSProperties = {
   color: 'inherit',
 };
 
+const backendRosterStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  flexWrap: 'wrap',
+  gap: '5px 0',
+  marginTop: 13,
+  color: siteTheme.textMuted,
+  minHeight: 18,
+  lineHeight: '18px',
+};
+
+const backendRosterLabelStyle: CSSProperties = {
+  marginRight: 10,
+  color: siteTheme.textMuted,
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: '0.05em',
+  lineHeight: '18px',
+  textTransform: 'uppercase',
+};
+
+const backendRosterItemStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  whiteSpace: 'nowrap',
+};
+
+const backendRosterLinkStyle: CSSProperties = {
+  color: siteTheme.text,
+  fontSize: 14,
+  fontWeight: 550,
+  lineHeight: '18px',
+  textDecorationLine: 'underline',
+  textDecorationColor: 'transparent',
+  textDecorationThickness: '1px',
+  textUnderlineOffset: '3px',
+  transition: 'color 120ms ease, text-decoration-color 120ms ease',
+};
+
+const backendRosterSeparatorStyle: CSSProperties = {
+  alignSelf: 'center',
+  flex: '0 0 auto',
+  width: 1,
+  height: 13,
+  margin: '0 9px',
+  background: HAIRLINE,
+};
+
 const installLinesStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -1219,6 +1368,17 @@ const landingInteractiveStyles = `
     outline-offset: 2px;
   }
 
+  .landing-backend-link:hover,
+  .landing-backend-link:focus-visible {
+    text-decoration-color: ${siteTheme.textMuted} !important;
+  }
+
+  .landing-backend-link:focus-visible {
+    outline: 2px solid ${siteTheme.accent};
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
   .landing-showcase-row {
     width: calc(100% + 96px);
     margin-left: -48px;
@@ -1229,15 +1389,68 @@ const landingInteractiveStyles = `
     display: none;
   }
 
+  @media (min-width: 901px) {
+    .landing-showcase-card {
+      grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.7fr);
+      height: 460px;
+    }
+
+    .landing-showcase-card > .landing-spec-pane,
+    .landing-showcase-card > .landing-chart-pane {
+      height: 100%;
+      min-width: 0 !important;
+      overflow: hidden;
+    }
+  }
+
+  .landing-spec-pane pre {
+    scrollbar-width: none;
+  }
+
+  .landing-spec-pane pre::-webkit-scrollbar {
+    display: none;
+  }
+
+  .landing-canvas-options .gopt-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 8px;
+    max-width: 100%;
+    overflow: visible;
+  }
+
   @media (max-width: 900px) {
     .landing-showcase-row {
       width: 100%;
       margin-left: 0;
       margin-right: 0;
     }
+
+    .landing-showcase-card {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: 300px 430px;
+      height: 730px;
+    }
+
+    .landing-showcase-card > .landing-spec-pane,
+    .landing-showcase-card > .landing-chart-pane {
+      width: 100%;
+      min-width: 0 !important;
+      overflow: hidden;
+    }
+
+    .landing-chart-pane {
+      border-left: 0 !important;
+      border-top: 1px solid ${HAIRLINE} !important;
+    }
   }
 
   @media (max-width: 640px) {
+    .landing-backend-roster-label {
+      flex-basis: 100%;
+      margin-right: 0 !important;
+    }
+
     .landing-news {
       grid-template-columns: 1fr !important;
       gap: 12px !important;
@@ -1308,9 +1521,8 @@ const landingInteractiveStyles = `
       order: 2;
     }
 
-    .landing-chart-pane {
-      border-left: 0 !important;
-      border-top: 1px solid ${HAIRLINE} !important;
+    .landing-canvas-options {
+      max-width: calc(100% - 20px) !important;
     }
 
     .landing-pane-header {
@@ -1391,8 +1603,7 @@ const overviewCaptionStyle: CSSProperties = {
 };
 
 const showcaseCardStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
+  display: 'grid',
   border: `1px solid ${HAIRLINE}`,
   borderRadius: siteTheme.radius,
   background: PAPER,
@@ -1402,13 +1613,46 @@ const showcaseCardStyle: CSSProperties = {
 const showcasePaneStyle: CSSProperties = {
   flex: '1 1 360px',
   minWidth: 300,
+  minHeight: 0,
   display: 'flex',
   flexDirection: 'column',
 };
 
+const specPaneStyle: CSSProperties = {
+  flex: '0.72 1 300px',
+  minWidth: 280,
+};
+
 /** The compiled-chart pane gets extra width so wide charts render larger. */
 const chartPaneStyle: CSSProperties = {
-  flex: '1.35 1 440px',
+  flex: '1.7 1 520px',
+};
+
+const chartCanvasStyle: CSSProperties = {
+  position: 'relative',
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '4px 12px 10px',
+  boxSizing: 'border-box',
+};
+
+const chartViewportStyle: CSSProperties = {
+  position: 'relative',
+  flex: 1,
+  minHeight: 0,
+  width: '100%',
+};
+
+const canvasOptionsStyle: CSSProperties = {
+  flex: '0 0 auto',
+  width: '100%',
+  minHeight: 34,
+  padding: '4px 2px 2px',
+  background: 'transparent',
+  boxSizing: 'border-box',
+  overflow: 'visible',
 };
 
 const paneHeaderRowStyle: CSSProperties = {
@@ -1567,8 +1811,12 @@ const specPreStyle: CSSProperties = {
   lineHeight: 1.55,
   color: siteTheme.text,
   background: PAPER,
-  overflowX: 'auto',
+  whiteSpace: 'pre-wrap',
+  overflowWrap: 'anywhere',
+  overflowX: 'hidden',
+  overflowY: 'auto',
   flex: 1,
+  minHeight: 0,
 };
 
 const pipelineFigureStyle: CSSProperties = {

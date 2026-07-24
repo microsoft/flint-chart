@@ -1,6 +1,6 @@
 # Overview
 
-**Flint** is a semantics-driven intermediate language (IL) for data visualization. You declare what each field *means* and the chart you want; the compiler derives scales, axes, aggregation, formatting, layout, and color, then emits Vega-Lite, ECharts, or Chart.js.
+**Flint** is a semantics-driven intermediate language (IL) for data visualization. You declare what each field *means* and the chart you want; the compiler derives scales, axes, aggregation, formatting, layout, and color, then emits Vega-Lite, ECharts, Chart.js, Plotly, or a native Excel chart artifact.
 
 If you're new to Flint, start with [Getting started](/documentation/getting-started), then come back here for the architecture and API map.
 
@@ -135,7 +135,7 @@ Pipeline detail: [Architecture](/documentation/architecture).
 | Section | Pages |
 |---------|-------|
 | **Language design** | [Architecture](/documentation/architecture), [Semantic Type](/documentation/semantic-types), [Auto Layout Algorithm](/documentation/layout-model), [API reference](/documentation/api-reference) |
-| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs) |
+| **Chart reference** | [Vega-Lite charts](/documentation/reference-vegalite), [ECharts charts](/documentation/reference-echarts), [Chart.js charts](/documentation/reference-chartjs), [Plotly charts](/documentation/reference-plotly), [Excel charts](/documentation/reference-excel) |
 | **Development** | [Development guide](/documentation/development), [Extending semantic types](/documentation/adding-a-semantic-type), [Extending backends](/documentation/adding-a-backend), [Extending chart templates](/documentation/adding-a-chart-template) |
 
 ---

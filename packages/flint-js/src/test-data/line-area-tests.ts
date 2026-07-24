@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realBumpCases } from './real-world-tests';
 import { seededRandom, genDates, genYears, genMonths, genCategories } from './generators';
 
 // Line Chart tests have been moved to line-tests.ts (matrix-driven).
@@ -163,5 +164,5 @@ export function genBumpChartTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realBumpCases()];
 }

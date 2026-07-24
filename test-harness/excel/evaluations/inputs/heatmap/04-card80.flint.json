@@ -1,0 +1,2023 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Category": "Category",
+    "Intensity": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Date",
+      "y": "Category",
+      "color": "Intensity"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2016-01-01",
+        "Category": "Electronics",
+        "Intensity": 41
+      },
+      {
+        "Date": "2016-01-01",
+        "Category": "Clothing",
+        "Intensity": 12
+      },
+      {
+        "Date": "2016-01-01",
+        "Category": "Food",
+        "Intensity": 15
+      },
+      {
+        "Date": "2016-01-01",
+        "Category": "Books",
+        "Intensity": 56
+      },
+      {
+        "Date": "2016-01-01",
+        "Category": "Sports",
+        "Intensity": 90
+      },
+      {
+        "Date": "2016-01-14",
+        "Category": "Electronics",
+        "Intensity": 7
+      },
+      {
+        "Date": "2016-01-14",
+        "Category": "Clothing",
+        "Intensity": 97
+      },
+      {
+        "Date": "2016-01-14",
+        "Category": "Food",
+        "Intensity": 58
+      },
+      {
+        "Date": "2016-01-14",
+        "Category": "Books",
+        "Intensity": 81
+      },
+      {
+        "Date": "2016-01-14",
+        "Category": "Sports",
+        "Intensity": 8
+      },
+      {
+        "Date": "2016-01-28",
+        "Category": "Electronics",
+        "Intensity": 61
+      },
+      {
+        "Date": "2016-01-28",
+        "Category": "Clothing",
+        "Intensity": 32
+      },
+      {
+        "Date": "2016-01-28",
+        "Category": "Food",
+        "Intensity": 96
+      },
+      {
+        "Date": "2016-01-28",
+        "Category": "Books",
+        "Intensity": 62
+      },
+      {
+        "Date": "2016-01-28",
+        "Category": "Sports",
+        "Intensity": 27
+      },
+      {
+        "Date": "2016-02-11",
+        "Category": "Electronics",
+        "Intensity": 92
+      },
+      {
+        "Date": "2016-02-11",
+        "Category": "Clothing",
+        "Intensity": 82
+      },
+      {
+        "Date": "2016-02-11",
+        "Category": "Food",
+        "Intensity": 30
+      },
+      {
+        "Date": "2016-02-11",
+        "Category": "Books",
+        "Intensity": 53
+      },
+      {
+        "Date": "2016-02-11",
+        "Category": "Sports",
+        "Intensity": 46
+      },
+      {
+        "Date": "2016-02-24",
+        "Category": "Electronics",
+        "Intensity": 61
+      },
+      {
+        "Date": "2016-02-24",
+        "Category": "Clothing",
+        "Intensity": 31
+      },
+      {
+        "Date": "2016-02-24",
+        "Category": "Food",
+        "Intensity": 18
+      },
+      {
+        "Date": "2016-02-24",
+        "Category": "Books",
+        "Intensity": 34
+      },
+      {
+        "Date": "2016-02-24",
+        "Category": "Sports",
+        "Intensity": 25
+      },
+      {
+        "Date": "2016-03-09",
+        "Category": "Electronics",
+        "Intensity": 71
+      },
+      {
+        "Date": "2016-03-09",
+        "Category": "Clothing",
+        "Intensity": 68
+      },
+      {
+        "Date": "2016-03-09",
+        "Category": "Food",
+        "Intensity": 58
+      },
+      {
+        "Date": "2016-03-09",
+        "Category": "Books",
+        "Intensity": 10
+      },
+      {
+        "Date": "2016-03-09",
+        "Category": "Sports",
+        "Intensity": 37
+      },
+      {
+        "Date": "2016-03-23",
+        "Category": "Electronics",
+        "Intensity": 4
+      },
+      {
+        "Date": "2016-03-23",
+        "Category": "Clothing",
+        "Intensity": 91
+      },
+      {
+        "Date": "2016-03-23",
+        "Category": "Food",
+        "Intensity": 45
+      },
+      {
+        "Date": "2016-03-23",
+        "Category": "Books",
+        "Intensity": 65
+      },
+      {
+        "Date": "2016-03-23",
+        "Category": "Sports",
+        "Intensity": 24
+      },
+      {
+        "Date": "2016-04-05",
+        "Category": "Electronics",
+        "Intensity": 93
+      },
+      {
+        "Date": "2016-04-05",
+        "Category": "Clothing",
+        "Intensity": 24
+      },
+      {
+        "Date": "2016-04-05",
+        "Category": "Food",
+        "Intensity": 11
+      },
+      {
+        "Date": "2016-04-05",
+        "Category": "Books",
+        "Intensity": 20
+      },
+      {
+        "Date": "2016-04-05",
+        "Category": "Sports",
+        "Intensity": 84
+      },
+      {
+        "Date": "2016-04-19",
+        "Category": "Electronics",
+        "Intensity": 76
+      },
+      {
+        "Date": "2016-04-19",
+        "Category": "Clothing",
+        "Intensity": 32
+      },
+      {
+        "Date": "2016-04-19",
+        "Category": "Food",
+        "Intensity": 94
+      },
+      {
+        "Date": "2016-04-19",
+        "Category": "Books",
+        "Intensity": 26
+      },
+      {
+        "Date": "2016-04-19",
+        "Category": "Sports",
+        "Intensity": 83
+      },
+      {
+        "Date": "2016-05-03",
+        "Category": "Electronics",
+        "Intensity": 18
+      },
+      {
+        "Date": "2016-05-03",
+        "Category": "Clothing",
+        "Intensity": 11
+      },
+      {
+        "Date": "2016-05-03",
+        "Category": "Food",
+        "Intensity": 70
+      },
+      {
+        "Date": "2016-05-03",
+        "Category": "Books",
+        "Intensity": 72
+      },
+      {
+        "Date": "2016-05-03",
+        "Category": "Sports",
+        "Intensity": 5
+      },
+      {
+        "Date": "2016-05-16",
+        "Category": "Electronics",
+        "Intensity": 35
+      },
+      {
+        "Date": "2016-05-16",
+        "Category": "Clothing",
+        "Intensity": 61
+      },
+      {
+        "Date": "2016-05-16",
+        "Category": "Food",
+        "Intensity": 67
+      },
+      {
+        "Date": "2016-05-16",
+        "Category": "Books",
+        "Intensity": 60
+      },
+      {
+        "Date": "2016-05-16",
+        "Category": "Sports",
+        "Intensity": 93
+      },
+      {
+        "Date": "2016-05-30",
+        "Category": "Electronics",
+        "Intensity": 34
+      },
+      {
+        "Date": "2016-05-30",
+        "Category": "Clothing",
+        "Intensity": 44
+      },
+      {
+        "Date": "2016-05-30",
+        "Category": "Food",
+        "Intensity": 3
+      },
+      {
+        "Date": "2016-05-30",
+        "Category": "Books",
+        "Intensity": 99
+      },
+      {
+        "Date": "2016-05-30",
+        "Category": "Sports",
+        "Intensity": 46
+      },
+      {
+        "Date": "2016-06-13",
+        "Category": "Electronics",
+        "Intensity": 85
+      },
+      {
+        "Date": "2016-06-13",
+        "Category": "Clothing",
+        "Intensity": 43
+      },
+      {
+        "Date": "2016-06-13",
+        "Category": "Food",
+        "Intensity": 79
+      },
+      {
+        "Date": "2016-06-13",
+        "Category": "Books",
+        "Intensity": 20
+      },
+      {
+        "Date": "2016-06-13",
+        "Category": "Sports",
+        "Intensity": 87
+      },
+      {
+        "Date": "2016-06-26",
+        "Category": "Electronics",
+        "Intensity": 83
+      },
+      {
+        "Date": "2016-06-26",
+        "Category": "Clothing",
+        "Intensity": 38
+      },
+      {
+        "Date": "2016-06-26",
+        "Category": "Food",
+        "Intensity": 8
+      },
+      {
+        "Date": "2016-06-26",
+        "Category": "Books",
+        "Intensity": 20
+      },
+      {
+        "Date": "2016-06-26",
+        "Category": "Sports",
+        "Intensity": 97
+      },
+      {
+        "Date": "2016-07-10",
+        "Category": "Electronics",
+        "Intensity": 39
+      },
+      {
+        "Date": "2016-07-10",
+        "Category": "Clothing",
+        "Intensity": 73
+      },
+      {
+        "Date": "2016-07-10",
+        "Category": "Food",
+        "Intensity": 53
+      },
+      {
+        "Date": "2016-07-10",
+        "Category": "Books",
+        "Intensity": 91
+      },
+      {
+        "Date": "2016-07-10",
+        "Category": "Sports",
+        "Intensity": 60
+      },
+      {
+        "Date": "2016-07-24",
+        "Category": "Electronics",
+        "Intensity": 37
+      },
+      {
+        "Date": "2016-07-24",
+        "Category": "Clothing",
+        "Intensity": 0
+      },
+      {
+        "Date": "2016-07-24",
+        "Category": "Food",
+        "Intensity": 51
+      },
+      {
+        "Date": "2016-07-24",
+        "Category": "Books",
+        "Intensity": 72
+      },
+      {
+        "Date": "2016-07-24",
+        "Category": "Sports",
+        "Intensity": 53
+      },
+      {
+        "Date": "2016-08-07",
+        "Category": "Electronics",
+        "Intensity": 90
+      },
+      {
+        "Date": "2016-08-07",
+        "Category": "Clothing",
+        "Intensity": 100
+      },
+      {
+        "Date": "2016-08-07",
+        "Category": "Food",
+        "Intensity": 35
+      },
+      {
+        "Date": "2016-08-07",
+        "Category": "Books",
+        "Intensity": 35
+      },
+      {
+        "Date": "2016-08-07",
+        "Category": "Sports",
+        "Intensity": 10
+      },
+      {
+        "Date": "2016-08-20",
+        "Category": "Electronics",
+        "Intensity": 36
+      },
+      {
+        "Date": "2016-08-20",
+        "Category": "Clothing",
+        "Intensity": 18
+      },
+      {
+        "Date": "2016-08-20",
+        "Category": "Food",
+        "Intensity": 40
+      },
+      {
+        "Date": "2016-08-20",
+        "Category": "Books",
+        "Intensity": 52
+      },
+      {
+        "Date": "2016-08-20",
+        "Category": "Sports",
+        "Intensity": 22
+      },
+      {
+        "Date": "2016-09-03",
+        "Category": "Electronics",
+        "Intensity": 97
+      },
+      {
+        "Date": "2016-09-03",
+        "Category": "Clothing",
+        "Intensity": 100
+      },
+      {
+        "Date": "2016-09-03",
+        "Category": "Food",
+        "Intensity": 20
+      },
+      {
+        "Date": "2016-09-03",
+        "Category": "Books",
+        "Intensity": 33
+      },
+      {
+        "Date": "2016-09-03",
+        "Category": "Sports",
+        "Intensity": 63
+      },
+      {
+        "Date": "2016-09-17",
+        "Category": "Electronics",
+        "Intensity": 3
+      },
+      {
+        "Date": "2016-09-17",
+        "Category": "Clothing",
+        "Intensity": 80
+      },
+      {
+        "Date": "2016-09-17",
+        "Category": "Food",
+        "Intensity": 88
+      },
+      {
+        "Date": "2016-09-17",
+        "Category": "Books",
+        "Intensity": 39
+      },
+      {
+        "Date": "2016-09-17",
+        "Category": "Sports",
+        "Intensity": 81
+      },
+      {
+        "Date": "2016-09-30",
+        "Category": "Electronics",
+        "Intensity": 46
+      },
+      {
+        "Date": "2016-09-30",
+        "Category": "Clothing",
+        "Intensity": 40
+      },
+      {
+        "Date": "2016-09-30",
+        "Category": "Food",
+        "Intensity": 49
+      },
+      {
+        "Date": "2016-09-30",
+        "Category": "Books",
+        "Intensity": 16
+      },
+      {
+        "Date": "2016-09-30",
+        "Category": "Sports",
+        "Intensity": 32
+      },
+      {
+        "Date": "2016-10-14",
+        "Category": "Electronics",
+        "Intensity": 62
+      },
+      {
+        "Date": "2016-10-14",
+        "Category": "Clothing",
+        "Intensity": 96
+      },
+      {
+        "Date": "2016-10-14",
+        "Category": "Food",
+        "Intensity": 2
+      },
+      {
+        "Date": "2016-10-14",
+        "Category": "Books",
+        "Intensity": 2
+      },
+      {
+        "Date": "2016-10-14",
+        "Category": "Sports",
+        "Intensity": 3
+      },
+      {
+        "Date": "2016-10-28",
+        "Category": "Electronics",
+        "Intensity": 92
+      },
+      {
+        "Date": "2016-10-28",
+        "Category": "Clothing",
+        "Intensity": 15
+      },
+      {
+        "Date": "2016-10-28",
+        "Category": "Food",
+        "Intensity": 52
+      },
+      {
+        "Date": "2016-10-28",
+        "Category": "Books",
+        "Intensity": 81
+      },
+      {
+        "Date": "2016-10-28",
+        "Category": "Sports",
+        "Intensity": 63
+      },
+      {
+        "Date": "2016-11-10",
+        "Category": "Electronics",
+        "Intensity": 23
+      },
+      {
+        "Date": "2016-11-10",
+        "Category": "Clothing",
+        "Intensity": 99
+      },
+      {
+        "Date": "2016-11-10",
+        "Category": "Food",
+        "Intensity": 85
+      },
+      {
+        "Date": "2016-11-10",
+        "Category": "Books",
+        "Intensity": 38
+      },
+      {
+        "Date": "2016-11-10",
+        "Category": "Sports",
+        "Intensity": 59
+      },
+      {
+        "Date": "2016-11-24",
+        "Category": "Electronics",
+        "Intensity": 41
+      },
+      {
+        "Date": "2016-11-24",
+        "Category": "Clothing",
+        "Intensity": 60
+      },
+      {
+        "Date": "2016-11-24",
+        "Category": "Food",
+        "Intensity": 38
+      },
+      {
+        "Date": "2016-11-24",
+        "Category": "Books",
+        "Intensity": 33
+      },
+      {
+        "Date": "2016-11-24",
+        "Category": "Sports",
+        "Intensity": 68
+      },
+      {
+        "Date": "2016-12-08",
+        "Category": "Electronics",
+        "Intensity": 83
+      },
+      {
+        "Date": "2016-12-08",
+        "Category": "Clothing",
+        "Intensity": 30
+      },
+      {
+        "Date": "2016-12-08",
+        "Category": "Food",
+        "Intensity": 8
+      },
+      {
+        "Date": "2016-12-08",
+        "Category": "Books",
+        "Intensity": 93
+      },
+      {
+        "Date": "2016-12-08",
+        "Category": "Sports",
+        "Intensity": 60
+      },
+      {
+        "Date": "2016-12-21",
+        "Category": "Electronics",
+        "Intensity": 99
+      },
+      {
+        "Date": "2016-12-21",
+        "Category": "Clothing",
+        "Intensity": 53
+      },
+      {
+        "Date": "2016-12-21",
+        "Category": "Food",
+        "Intensity": 89
+      },
+      {
+        "Date": "2016-12-21",
+        "Category": "Books",
+        "Intensity": 33
+      },
+      {
+        "Date": "2016-12-21",
+        "Category": "Sports",
+        "Intensity": 20
+      },
+      {
+        "Date": "2017-01-04",
+        "Category": "Electronics",
+        "Intensity": 95
+      },
+      {
+        "Date": "2017-01-04",
+        "Category": "Clothing",
+        "Intensity": 5
+      },
+      {
+        "Date": "2017-01-04",
+        "Category": "Food",
+        "Intensity": 96
+      },
+      {
+        "Date": "2017-01-04",
+        "Category": "Books",
+        "Intensity": 38
+      },
+      {
+        "Date": "2017-01-04",
+        "Category": "Sports",
+        "Intensity": 20
+      },
+      {
+        "Date": "2017-01-18",
+        "Category": "Electronics",
+        "Intensity": 89
+      },
+      {
+        "Date": "2017-01-18",
+        "Category": "Clothing",
+        "Intensity": 53
+      },
+      {
+        "Date": "2017-01-18",
+        "Category": "Food",
+        "Intensity": 35
+      },
+      {
+        "Date": "2017-01-18",
+        "Category": "Books",
+        "Intensity": 55
+      },
+      {
+        "Date": "2017-01-18",
+        "Category": "Sports",
+        "Intensity": 22
+      },
+      {
+        "Date": "2017-01-31",
+        "Category": "Electronics",
+        "Intensity": 35
+      },
+      {
+        "Date": "2017-01-31",
+        "Category": "Clothing",
+        "Intensity": 45
+      },
+      {
+        "Date": "2017-01-31",
+        "Category": "Food",
+        "Intensity": 24
+      },
+      {
+        "Date": "2017-01-31",
+        "Category": "Books",
+        "Intensity": 73
+      },
+      {
+        "Date": "2017-01-31",
+        "Category": "Sports",
+        "Intensity": 31
+      },
+      {
+        "Date": "2017-02-14",
+        "Category": "Electronics",
+        "Intensity": 86
+      },
+      {
+        "Date": "2017-02-14",
+        "Category": "Clothing",
+        "Intensity": 24
+      },
+      {
+        "Date": "2017-02-14",
+        "Category": "Food",
+        "Intensity": 34
+      },
+      {
+        "Date": "2017-02-14",
+        "Category": "Books",
+        "Intensity": 16
+      },
+      {
+        "Date": "2017-02-14",
+        "Category": "Sports",
+        "Intensity": 55
+      },
+      {
+        "Date": "2017-02-28",
+        "Category": "Electronics",
+        "Intensity": 0
+      },
+      {
+        "Date": "2017-02-28",
+        "Category": "Clothing",
+        "Intensity": 75
+      },
+      {
+        "Date": "2017-02-28",
+        "Category": "Food",
+        "Intensity": 7
+      },
+      {
+        "Date": "2017-02-28",
+        "Category": "Books",
+        "Intensity": 11
+      },
+      {
+        "Date": "2017-02-28",
+        "Category": "Sports",
+        "Intensity": 20
+      },
+      {
+        "Date": "2017-03-14",
+        "Category": "Electronics",
+        "Intensity": 100
+      },
+      {
+        "Date": "2017-03-14",
+        "Category": "Clothing",
+        "Intensity": 85
+      },
+      {
+        "Date": "2017-03-14",
+        "Category": "Food",
+        "Intensity": 93
+      },
+      {
+        "Date": "2017-03-14",
+        "Category": "Books",
+        "Intensity": 63
+      },
+      {
+        "Date": "2017-03-14",
+        "Category": "Sports",
+        "Intensity": 47
+      },
+      {
+        "Date": "2017-03-27",
+        "Category": "Electronics",
+        "Intensity": 56
+      },
+      {
+        "Date": "2017-03-27",
+        "Category": "Clothing",
+        "Intensity": 77
+      },
+      {
+        "Date": "2017-03-27",
+        "Category": "Food",
+        "Intensity": 41
+      },
+      {
+        "Date": "2017-03-27",
+        "Category": "Books",
+        "Intensity": 18
+      },
+      {
+        "Date": "2017-03-27",
+        "Category": "Sports",
+        "Intensity": 98
+      },
+      {
+        "Date": "2017-04-10",
+        "Category": "Electronics",
+        "Intensity": 28
+      },
+      {
+        "Date": "2017-04-10",
+        "Category": "Clothing",
+        "Intensity": 59
+      },
+      {
+        "Date": "2017-04-10",
+        "Category": "Food",
+        "Intensity": 40
+      },
+      {
+        "Date": "2017-04-10",
+        "Category": "Books",
+        "Intensity": 35
+      },
+      {
+        "Date": "2017-04-10",
+        "Category": "Sports",
+        "Intensity": 80
+      },
+      {
+        "Date": "2017-04-24",
+        "Category": "Electronics",
+        "Intensity": 30
+      },
+      {
+        "Date": "2017-04-24",
+        "Category": "Clothing",
+        "Intensity": 0
+      },
+      {
+        "Date": "2017-04-24",
+        "Category": "Food",
+        "Intensity": 71
+      },
+      {
+        "Date": "2017-04-24",
+        "Category": "Books",
+        "Intensity": 75
+      },
+      {
+        "Date": "2017-04-24",
+        "Category": "Sports",
+        "Intensity": 33
+      },
+      {
+        "Date": "2017-05-07",
+        "Category": "Electronics",
+        "Intensity": 12
+      },
+      {
+        "Date": "2017-05-07",
+        "Category": "Clothing",
+        "Intensity": 51
+      },
+      {
+        "Date": "2017-05-07",
+        "Category": "Food",
+        "Intensity": 99
+      },
+      {
+        "Date": "2017-05-07",
+        "Category": "Books",
+        "Intensity": 5
+      },
+      {
+        "Date": "2017-05-07",
+        "Category": "Sports",
+        "Intensity": 15
+      },
+      {
+        "Date": "2017-05-21",
+        "Category": "Electronics",
+        "Intensity": 73
+      },
+      {
+        "Date": "2017-05-21",
+        "Category": "Clothing",
+        "Intensity": 80
+      },
+      {
+        "Date": "2017-05-21",
+        "Category": "Food",
+        "Intensity": 85
+      },
+      {
+        "Date": "2017-05-21",
+        "Category": "Books",
+        "Intensity": 45
+      },
+      {
+        "Date": "2017-05-21",
+        "Category": "Sports",
+        "Intensity": 3
+      },
+      {
+        "Date": "2017-06-04",
+        "Category": "Electronics",
+        "Intensity": 44
+      },
+      {
+        "Date": "2017-06-04",
+        "Category": "Clothing",
+        "Intensity": 96
+      },
+      {
+        "Date": "2017-06-04",
+        "Category": "Food",
+        "Intensity": 55
+      },
+      {
+        "Date": "2017-06-04",
+        "Category": "Books",
+        "Intensity": 79
+      },
+      {
+        "Date": "2017-06-04",
+        "Category": "Sports",
+        "Intensity": 60
+      },
+      {
+        "Date": "2017-06-17",
+        "Category": "Electronics",
+        "Intensity": 92
+      },
+      {
+        "Date": "2017-06-17",
+        "Category": "Clothing",
+        "Intensity": 53
+      },
+      {
+        "Date": "2017-06-17",
+        "Category": "Food",
+        "Intensity": 42
+      },
+      {
+        "Date": "2017-06-17",
+        "Category": "Books",
+        "Intensity": 72
+      },
+      {
+        "Date": "2017-06-17",
+        "Category": "Sports",
+        "Intensity": 48
+      },
+      {
+        "Date": "2017-07-01",
+        "Category": "Electronics",
+        "Intensity": 26
+      },
+      {
+        "Date": "2017-07-01",
+        "Category": "Clothing",
+        "Intensity": 55
+      },
+      {
+        "Date": "2017-07-01",
+        "Category": "Food",
+        "Intensity": 35
+      },
+      {
+        "Date": "2017-07-01",
+        "Category": "Books",
+        "Intensity": 68
+      },
+      {
+        "Date": "2017-07-01",
+        "Category": "Sports",
+        "Intensity": 76
+      },
+      {
+        "Date": "2017-07-15",
+        "Category": "Electronics",
+        "Intensity": 72
+      },
+      {
+        "Date": "2017-07-15",
+        "Category": "Clothing",
+        "Intensity": 55
+      },
+      {
+        "Date": "2017-07-15",
+        "Category": "Food",
+        "Intensity": 10
+      },
+      {
+        "Date": "2017-07-15",
+        "Category": "Books",
+        "Intensity": 73
+      },
+      {
+        "Date": "2017-07-15",
+        "Category": "Sports",
+        "Intensity": 9
+      },
+      {
+        "Date": "2017-07-28",
+        "Category": "Electronics",
+        "Intensity": 5
+      },
+      {
+        "Date": "2017-07-28",
+        "Category": "Clothing",
+        "Intensity": 92
+      },
+      {
+        "Date": "2017-07-28",
+        "Category": "Food",
+        "Intensity": 16
+      },
+      {
+        "Date": "2017-07-28",
+        "Category": "Books",
+        "Intensity": 42
+      },
+      {
+        "Date": "2017-07-28",
+        "Category": "Sports",
+        "Intensity": 73
+      },
+      {
+        "Date": "2017-08-11",
+        "Category": "Electronics",
+        "Intensity": 37
+      },
+      {
+        "Date": "2017-08-11",
+        "Category": "Clothing",
+        "Intensity": 41
+      },
+      {
+        "Date": "2017-08-11",
+        "Category": "Food",
+        "Intensity": 100
+      },
+      {
+        "Date": "2017-08-11",
+        "Category": "Books",
+        "Intensity": 92
+      },
+      {
+        "Date": "2017-08-11",
+        "Category": "Sports",
+        "Intensity": 39
+      },
+      {
+        "Date": "2017-08-25",
+        "Category": "Electronics",
+        "Intensity": 48
+      },
+      {
+        "Date": "2017-08-25",
+        "Category": "Clothing",
+        "Intensity": 86
+      },
+      {
+        "Date": "2017-08-25",
+        "Category": "Food",
+        "Intensity": 82
+      },
+      {
+        "Date": "2017-08-25",
+        "Category": "Books",
+        "Intensity": 48
+      },
+      {
+        "Date": "2017-08-25",
+        "Category": "Sports",
+        "Intensity": 37
+      },
+      {
+        "Date": "2017-09-07",
+        "Category": "Electronics",
+        "Intensity": 30
+      },
+      {
+        "Date": "2017-09-07",
+        "Category": "Clothing",
+        "Intensity": 81
+      },
+      {
+        "Date": "2017-09-07",
+        "Category": "Food",
+        "Intensity": 11
+      },
+      {
+        "Date": "2017-09-07",
+        "Category": "Books",
+        "Intensity": 73
+      },
+      {
+        "Date": "2017-09-07",
+        "Category": "Sports",
+        "Intensity": 24
+      },
+      {
+        "Date": "2017-09-21",
+        "Category": "Electronics",
+        "Intensity": 61
+      },
+      {
+        "Date": "2017-09-21",
+        "Category": "Clothing",
+        "Intensity": 72
+      },
+      {
+        "Date": "2017-09-21",
+        "Category": "Food",
+        "Intensity": 23
+      },
+      {
+        "Date": "2017-09-21",
+        "Category": "Books",
+        "Intensity": 58
+      },
+      {
+        "Date": "2017-09-21",
+        "Category": "Sports",
+        "Intensity": 41
+      },
+      {
+        "Date": "2017-10-05",
+        "Category": "Electronics",
+        "Intensity": 31
+      },
+      {
+        "Date": "2017-10-05",
+        "Category": "Clothing",
+        "Intensity": 10
+      },
+      {
+        "Date": "2017-10-05",
+        "Category": "Food",
+        "Intensity": 35
+      },
+      {
+        "Date": "2017-10-05",
+        "Category": "Books",
+        "Intensity": 43
+      },
+      {
+        "Date": "2017-10-05",
+        "Category": "Sports",
+        "Intensity": 92
+      },
+      {
+        "Date": "2017-10-19",
+        "Category": "Electronics",
+        "Intensity": 25
+      },
+      {
+        "Date": "2017-10-19",
+        "Category": "Clothing",
+        "Intensity": 41
+      },
+      {
+        "Date": "2017-10-19",
+        "Category": "Food",
+        "Intensity": 85
+      },
+      {
+        "Date": "2017-10-19",
+        "Category": "Books",
+        "Intensity": 87
+      },
+      {
+        "Date": "2017-10-19",
+        "Category": "Sports",
+        "Intensity": 76
+      },
+      {
+        "Date": "2017-11-01",
+        "Category": "Electronics",
+        "Intensity": 62
+      },
+      {
+        "Date": "2017-11-01",
+        "Category": "Clothing",
+        "Intensity": 76
+      },
+      {
+        "Date": "2017-11-01",
+        "Category": "Food",
+        "Intensity": 42
+      },
+      {
+        "Date": "2017-11-01",
+        "Category": "Books",
+        "Intensity": 9
+      },
+      {
+        "Date": "2017-11-01",
+        "Category": "Sports",
+        "Intensity": 13
+      },
+      {
+        "Date": "2017-11-15",
+        "Category": "Electronics",
+        "Intensity": 18
+      },
+      {
+        "Date": "2017-11-15",
+        "Category": "Clothing",
+        "Intensity": 89
+      },
+      {
+        "Date": "2017-11-15",
+        "Category": "Food",
+        "Intensity": 90
+      },
+      {
+        "Date": "2017-11-15",
+        "Category": "Books",
+        "Intensity": 24
+      },
+      {
+        "Date": "2017-11-15",
+        "Category": "Sports",
+        "Intensity": 95
+      },
+      {
+        "Date": "2017-11-29",
+        "Category": "Electronics",
+        "Intensity": 92
+      },
+      {
+        "Date": "2017-11-29",
+        "Category": "Clothing",
+        "Intensity": 88
+      },
+      {
+        "Date": "2017-11-29",
+        "Category": "Food",
+        "Intensity": 32
+      },
+      {
+        "Date": "2017-11-29",
+        "Category": "Books",
+        "Intensity": 43
+      },
+      {
+        "Date": "2017-11-29",
+        "Category": "Sports",
+        "Intensity": 47
+      },
+      {
+        "Date": "2017-12-12",
+        "Category": "Electronics",
+        "Intensity": 36
+      },
+      {
+        "Date": "2017-12-12",
+        "Category": "Clothing",
+        "Intensity": 13
+      },
+      {
+        "Date": "2017-12-12",
+        "Category": "Food",
+        "Intensity": 30
+      },
+      {
+        "Date": "2017-12-12",
+        "Category": "Books",
+        "Intensity": 17
+      },
+      {
+        "Date": "2017-12-12",
+        "Category": "Sports",
+        "Intensity": 24
+      },
+      {
+        "Date": "2017-12-26",
+        "Category": "Electronics",
+        "Intensity": 23
+      },
+      {
+        "Date": "2017-12-26",
+        "Category": "Clothing",
+        "Intensity": 17
+      },
+      {
+        "Date": "2017-12-26",
+        "Category": "Food",
+        "Intensity": 90
+      },
+      {
+        "Date": "2017-12-26",
+        "Category": "Books",
+        "Intensity": 36
+      },
+      {
+        "Date": "2017-12-26",
+        "Category": "Sports",
+        "Intensity": 28
+      },
+      {
+        "Date": "2018-01-09",
+        "Category": "Electronics",
+        "Intensity": 65
+      },
+      {
+        "Date": "2018-01-09",
+        "Category": "Clothing",
+        "Intensity": 67
+      },
+      {
+        "Date": "2018-01-09",
+        "Category": "Food",
+        "Intensity": 95
+      },
+      {
+        "Date": "2018-01-09",
+        "Category": "Books",
+        "Intensity": 19
+      },
+      {
+        "Date": "2018-01-09",
+        "Category": "Sports",
+        "Intensity": 41
+      },
+      {
+        "Date": "2018-01-22",
+        "Category": "Electronics",
+        "Intensity": 99
+      },
+      {
+        "Date": "2018-01-22",
+        "Category": "Clothing",
+        "Intensity": 22
+      },
+      {
+        "Date": "2018-01-22",
+        "Category": "Food",
+        "Intensity": 47
+      },
+      {
+        "Date": "2018-01-22",
+        "Category": "Books",
+        "Intensity": 48
+      },
+      {
+        "Date": "2018-01-22",
+        "Category": "Sports",
+        "Intensity": 65
+      },
+      {
+        "Date": "2018-02-05",
+        "Category": "Electronics",
+        "Intensity": 99
+      },
+      {
+        "Date": "2018-02-05",
+        "Category": "Clothing",
+        "Intensity": 66
+      },
+      {
+        "Date": "2018-02-05",
+        "Category": "Food",
+        "Intensity": 42
+      },
+      {
+        "Date": "2018-02-05",
+        "Category": "Books",
+        "Intensity": 87
+      },
+      {
+        "Date": "2018-02-05",
+        "Category": "Sports",
+        "Intensity": 78
+      },
+      {
+        "Date": "2018-02-19",
+        "Category": "Electronics",
+        "Intensity": 15
+      },
+      {
+        "Date": "2018-02-19",
+        "Category": "Clothing",
+        "Intensity": 51
+      },
+      {
+        "Date": "2018-02-19",
+        "Category": "Food",
+        "Intensity": 94
+      },
+      {
+        "Date": "2018-02-19",
+        "Category": "Books",
+        "Intensity": 19
+      },
+      {
+        "Date": "2018-02-19",
+        "Category": "Sports",
+        "Intensity": 33
+      },
+      {
+        "Date": "2018-03-04",
+        "Category": "Electronics",
+        "Intensity": 57
+      },
+      {
+        "Date": "2018-03-04",
+        "Category": "Clothing",
+        "Intensity": 86
+      },
+      {
+        "Date": "2018-03-04",
+        "Category": "Food",
+        "Intensity": 30
+      },
+      {
+        "Date": "2018-03-04",
+        "Category": "Books",
+        "Intensity": 63
+      },
+      {
+        "Date": "2018-03-04",
+        "Category": "Sports",
+        "Intensity": 94
+      },
+      {
+        "Date": "2018-03-18",
+        "Category": "Electronics",
+        "Intensity": 52
+      },
+      {
+        "Date": "2018-03-18",
+        "Category": "Clothing",
+        "Intensity": 44
+      },
+      {
+        "Date": "2018-03-18",
+        "Category": "Food",
+        "Intensity": 16
+      },
+      {
+        "Date": "2018-03-18",
+        "Category": "Books",
+        "Intensity": 79
+      },
+      {
+        "Date": "2018-03-18",
+        "Category": "Sports",
+        "Intensity": 19
+      },
+      {
+        "Date": "2018-04-01",
+        "Category": "Electronics",
+        "Intensity": 93
+      },
+      {
+        "Date": "2018-04-01",
+        "Category": "Clothing",
+        "Intensity": 35
+      },
+      {
+        "Date": "2018-04-01",
+        "Category": "Food",
+        "Intensity": 8
+      },
+      {
+        "Date": "2018-04-01",
+        "Category": "Books",
+        "Intensity": 86
+      },
+      {
+        "Date": "2018-04-01",
+        "Category": "Sports",
+        "Intensity": 30
+      },
+      {
+        "Date": "2018-04-14",
+        "Category": "Electronics",
+        "Intensity": 67
+      },
+      {
+        "Date": "2018-04-14",
+        "Category": "Clothing",
+        "Intensity": 5
+      },
+      {
+        "Date": "2018-04-14",
+        "Category": "Food",
+        "Intensity": 67
+      },
+      {
+        "Date": "2018-04-14",
+        "Category": "Books",
+        "Intensity": 19
+      },
+      {
+        "Date": "2018-04-14",
+        "Category": "Sports",
+        "Intensity": 6
+      },
+      {
+        "Date": "2018-04-28",
+        "Category": "Electronics",
+        "Intensity": 82
+      },
+      {
+        "Date": "2018-04-28",
+        "Category": "Clothing",
+        "Intensity": 53
+      },
+      {
+        "Date": "2018-04-28",
+        "Category": "Food",
+        "Intensity": 13
+      },
+      {
+        "Date": "2018-04-28",
+        "Category": "Books",
+        "Intensity": 76
+      },
+      {
+        "Date": "2018-04-28",
+        "Category": "Sports",
+        "Intensity": 15
+      },
+      {
+        "Date": "2018-05-12",
+        "Category": "Electronics",
+        "Intensity": 30
+      },
+      {
+        "Date": "2018-05-12",
+        "Category": "Clothing",
+        "Intensity": 2
+      },
+      {
+        "Date": "2018-05-12",
+        "Category": "Food",
+        "Intensity": 49
+      },
+      {
+        "Date": "2018-05-12",
+        "Category": "Books",
+        "Intensity": 48
+      },
+      {
+        "Date": "2018-05-12",
+        "Category": "Sports",
+        "Intensity": 61
+      },
+      {
+        "Date": "2018-05-26",
+        "Category": "Electronics",
+        "Intensity": 67
+      },
+      {
+        "Date": "2018-05-26",
+        "Category": "Clothing",
+        "Intensity": 30
+      },
+      {
+        "Date": "2018-05-26",
+        "Category": "Food",
+        "Intensity": 10
+      },
+      {
+        "Date": "2018-05-26",
+        "Category": "Books",
+        "Intensity": 44
+      },
+      {
+        "Date": "2018-05-26",
+        "Category": "Sports",
+        "Intensity": 22
+      },
+      {
+        "Date": "2018-06-08",
+        "Category": "Electronics",
+        "Intensity": 63
+      },
+      {
+        "Date": "2018-06-08",
+        "Category": "Clothing",
+        "Intensity": 14
+      },
+      {
+        "Date": "2018-06-08",
+        "Category": "Food",
+        "Intensity": 91
+      },
+      {
+        "Date": "2018-06-08",
+        "Category": "Books",
+        "Intensity": 30
+      },
+      {
+        "Date": "2018-06-08",
+        "Category": "Sports",
+        "Intensity": 22
+      },
+      {
+        "Date": "2018-06-22",
+        "Category": "Electronics",
+        "Intensity": 0
+      },
+      {
+        "Date": "2018-06-22",
+        "Category": "Clothing",
+        "Intensity": 73
+      },
+      {
+        "Date": "2018-06-22",
+        "Category": "Food",
+        "Intensity": 21
+      },
+      {
+        "Date": "2018-06-22",
+        "Category": "Books",
+        "Intensity": 49
+      },
+      {
+        "Date": "2018-06-22",
+        "Category": "Sports",
+        "Intensity": 83
+      },
+      {
+        "Date": "2018-07-06",
+        "Category": "Electronics",
+        "Intensity": 42
+      },
+      {
+        "Date": "2018-07-06",
+        "Category": "Clothing",
+        "Intensity": 7
+      },
+      {
+        "Date": "2018-07-06",
+        "Category": "Food",
+        "Intensity": 90
+      },
+      {
+        "Date": "2018-07-06",
+        "Category": "Books",
+        "Intensity": 92
+      },
+      {
+        "Date": "2018-07-06",
+        "Category": "Sports",
+        "Intensity": 23
+      },
+      {
+        "Date": "2018-07-19",
+        "Category": "Electronics",
+        "Intensity": 32
+      },
+      {
+        "Date": "2018-07-19",
+        "Category": "Clothing",
+        "Intensity": 75
+      },
+      {
+        "Date": "2018-07-19",
+        "Category": "Food",
+        "Intensity": 55
+      },
+      {
+        "Date": "2018-07-19",
+        "Category": "Books",
+        "Intensity": 74
+      },
+      {
+        "Date": "2018-07-19",
+        "Category": "Sports",
+        "Intensity": 53
+      },
+      {
+        "Date": "2018-08-02",
+        "Category": "Electronics",
+        "Intensity": 83
+      },
+      {
+        "Date": "2018-08-02",
+        "Category": "Clothing",
+        "Intensity": 89
+      },
+      {
+        "Date": "2018-08-02",
+        "Category": "Food",
+        "Intensity": 23
+      },
+      {
+        "Date": "2018-08-02",
+        "Category": "Books",
+        "Intensity": 59
+      },
+      {
+        "Date": "2018-08-02",
+        "Category": "Sports",
+        "Intensity": 41
+      },
+      {
+        "Date": "2018-08-16",
+        "Category": "Electronics",
+        "Intensity": 24
+      },
+      {
+        "Date": "2018-08-16",
+        "Category": "Clothing",
+        "Intensity": 39
+      },
+      {
+        "Date": "2018-08-16",
+        "Category": "Food",
+        "Intensity": 49
+      },
+      {
+        "Date": "2018-08-16",
+        "Category": "Books",
+        "Intensity": 59
+      },
+      {
+        "Date": "2018-08-16",
+        "Category": "Sports",
+        "Intensity": 25
+      },
+      {
+        "Date": "2018-08-29",
+        "Category": "Electronics",
+        "Intensity": 81
+      },
+      {
+        "Date": "2018-08-29",
+        "Category": "Clothing",
+        "Intensity": 73
+      },
+      {
+        "Date": "2018-08-29",
+        "Category": "Food",
+        "Intensity": 59
+      },
+      {
+        "Date": "2018-08-29",
+        "Category": "Books",
+        "Intensity": 90
+      },
+      {
+        "Date": "2018-08-29",
+        "Category": "Sports",
+        "Intensity": 48
+      },
+      {
+        "Date": "2018-09-12",
+        "Category": "Electronics",
+        "Intensity": 48
+      },
+      {
+        "Date": "2018-09-12",
+        "Category": "Clothing",
+        "Intensity": 79
+      },
+      {
+        "Date": "2018-09-12",
+        "Category": "Food",
+        "Intensity": 98
+      },
+      {
+        "Date": "2018-09-12",
+        "Category": "Books",
+        "Intensity": 57
+      },
+      {
+        "Date": "2018-09-12",
+        "Category": "Sports",
+        "Intensity": 60
+      },
+      {
+        "Date": "2018-09-26",
+        "Category": "Electronics",
+        "Intensity": 27
+      },
+      {
+        "Date": "2018-09-26",
+        "Category": "Clothing",
+        "Intensity": 64
+      },
+      {
+        "Date": "2018-09-26",
+        "Category": "Food",
+        "Intensity": 33
+      },
+      {
+        "Date": "2018-09-26",
+        "Category": "Books",
+        "Intensity": 38
+      },
+      {
+        "Date": "2018-09-26",
+        "Category": "Sports",
+        "Intensity": 86
+      },
+      {
+        "Date": "2018-10-09",
+        "Category": "Electronics",
+        "Intensity": 36
+      },
+      {
+        "Date": "2018-10-09",
+        "Category": "Clothing",
+        "Intensity": 52
+      },
+      {
+        "Date": "2018-10-09",
+        "Category": "Food",
+        "Intensity": 71
+      },
+      {
+        "Date": "2018-10-09",
+        "Category": "Books",
+        "Intensity": 5
+      },
+      {
+        "Date": "2018-10-09",
+        "Category": "Sports",
+        "Intensity": 35
+      },
+      {
+        "Date": "2018-10-23",
+        "Category": "Electronics",
+        "Intensity": 32
+      },
+      {
+        "Date": "2018-10-23",
+        "Category": "Clothing",
+        "Intensity": 78
+      },
+      {
+        "Date": "2018-10-23",
+        "Category": "Food",
+        "Intensity": 52
+      },
+      {
+        "Date": "2018-10-23",
+        "Category": "Books",
+        "Intensity": 16
+      },
+      {
+        "Date": "2018-10-23",
+        "Category": "Sports",
+        "Intensity": 69
+      },
+      {
+        "Date": "2018-11-06",
+        "Category": "Electronics",
+        "Intensity": 72
+      },
+      {
+        "Date": "2018-11-06",
+        "Category": "Clothing",
+        "Intensity": 52
+      },
+      {
+        "Date": "2018-11-06",
+        "Category": "Food",
+        "Intensity": 58
+      },
+      {
+        "Date": "2018-11-06",
+        "Category": "Books",
+        "Intensity": 14
+      },
+      {
+        "Date": "2018-11-06",
+        "Category": "Sports",
+        "Intensity": 1
+      },
+      {
+        "Date": "2018-11-19",
+        "Category": "Electronics",
+        "Intensity": 44
+      },
+      {
+        "Date": "2018-11-19",
+        "Category": "Clothing",
+        "Intensity": 91
+      },
+      {
+        "Date": "2018-11-19",
+        "Category": "Food",
+        "Intensity": 43
+      },
+      {
+        "Date": "2018-11-19",
+        "Category": "Books",
+        "Intensity": 66
+      },
+      {
+        "Date": "2018-11-19",
+        "Category": "Sports",
+        "Intensity": 51
+      },
+      {
+        "Date": "2018-12-03",
+        "Category": "Electronics",
+        "Intensity": 15
+      },
+      {
+        "Date": "2018-12-03",
+        "Category": "Clothing",
+        "Intensity": 86
+      },
+      {
+        "Date": "2018-12-03",
+        "Category": "Food",
+        "Intensity": 79
+      },
+      {
+        "Date": "2018-12-03",
+        "Category": "Books",
+        "Intensity": 62
+      },
+      {
+        "Date": "2018-12-03",
+        "Category": "Sports",
+        "Intensity": 56
+      },
+      {
+        "Date": "2018-12-17",
+        "Category": "Electronics",
+        "Intensity": 28
+      },
+      {
+        "Date": "2018-12-17",
+        "Category": "Clothing",
+        "Intensity": 97
+      },
+      {
+        "Date": "2018-12-17",
+        "Category": "Food",
+        "Intensity": 44
+      },
+      {
+        "Date": "2018-12-17",
+        "Category": "Books",
+        "Intensity": 2
+      },
+      {
+        "Date": "2018-12-17",
+        "Category": "Sports",
+        "Intensity": 84
+      }
+    ]
+  }
+}

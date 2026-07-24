@@ -1,0 +1,1023 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Y": "Quantity",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "X",
+      "y": "Y",
+      "color": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "X": 52.7,
+        "Y": 60.1,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 72.4,
+        "Y": 66,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 90.5,
+        "Y": 76.8,
+        "Segment": "Food"
+      },
+      {
+        "X": 26.8,
+        "Y": 70.6,
+        "Segment": "Books"
+      },
+      {
+        "X": 7.3,
+        "Y": 26.6,
+        "Segment": "Sports"
+      },
+      {
+        "X": 87,
+        "Y": 57.4,
+        "Segment": "Home"
+      },
+      {
+        "X": 24.6,
+        "Y": 4.1,
+        "Segment": "Garden"
+      },
+      {
+        "X": 65.2,
+        "Y": 40.1,
+        "Segment": "Auto"
+      },
+      {
+        "X": 36.6,
+        "Y": 58,
+        "Segment": "Health"
+      },
+      {
+        "X": 8.8,
+        "Y": 58.4,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 72.5,
+        "Y": 17.8,
+        "Segment": "Toys"
+      },
+      {
+        "X": 16.4,
+        "Y": 83.9,
+        "Segment": "Music"
+      },
+      {
+        "X": 43,
+        "Y": 76.9,
+        "Segment": "Movies"
+      },
+      {
+        "X": 57.7,
+        "Y": 4,
+        "Segment": "Software"
+      },
+      {
+        "X": 8.4,
+        "Y": 65.8,
+        "Segment": "Games"
+      },
+      {
+        "X": 24.5,
+        "Y": 84.7,
+        "Segment": "Office"
+      },
+      {
+        "X": 32.7,
+        "Y": 60.9,
+        "Segment": "Pet"
+      },
+      {
+        "X": 68.2,
+        "Y": 7.5,
+        "Segment": "Baby"
+      },
+      {
+        "X": 73,
+        "Y": 53.9,
+        "Segment": "Tools"
+      },
+      {
+        "X": 84.2,
+        "Y": 36.5,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 80.6,
+        "Y": 74.7,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 60.1,
+        "Y": 94.8,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 18,
+        "Y": 82.7,
+        "Segment": "Food"
+      },
+      {
+        "X": 9.5,
+        "Y": 61.8,
+        "Segment": "Books"
+      },
+      {
+        "X": 49.9,
+        "Y": 50.3,
+        "Segment": "Sports"
+      },
+      {
+        "X": 50.4,
+        "Y": 92.9,
+        "Segment": "Home"
+      },
+      {
+        "X": 53.3,
+        "Y": 88.7,
+        "Segment": "Garden"
+      },
+      {
+        "X": 95.6,
+        "Y": 57.4,
+        "Segment": "Auto"
+      },
+      {
+        "X": 20.6,
+        "Y": 6.9,
+        "Segment": "Health"
+      },
+      {
+        "X": 56.5,
+        "Y": 25.8,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 59,
+        "Y": 76.7,
+        "Segment": "Toys"
+      },
+      {
+        "X": 56.5,
+        "Y": 31.7,
+        "Segment": "Music"
+      },
+      {
+        "X": 50.7,
+        "Y": 33.3,
+        "Segment": "Movies"
+      },
+      {
+        "X": 44.8,
+        "Y": 25.8,
+        "Segment": "Software"
+      },
+      {
+        "X": 43.4,
+        "Y": 89.4,
+        "Segment": "Games"
+      },
+      {
+        "X": 34.1,
+        "Y": 3.6,
+        "Segment": "Office"
+      },
+      {
+        "X": 47.2,
+        "Y": 4.2,
+        "Segment": "Pet"
+      },
+      {
+        "X": 17.6,
+        "Y": 26.9,
+        "Segment": "Baby"
+      },
+      {
+        "X": 46.7,
+        "Y": 63.6,
+        "Segment": "Tools"
+      },
+      {
+        "X": 46.9,
+        "Y": 79,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 94.7,
+        "Y": 96.1,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 59.1,
+        "Y": 87.1,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 13.2,
+        "Y": 56.2,
+        "Segment": "Food"
+      },
+      {
+        "X": 14.9,
+        "Y": 2.1,
+        "Segment": "Books"
+      },
+      {
+        "X": 9.6,
+        "Y": 94.5,
+        "Segment": "Sports"
+      },
+      {
+        "X": 52.4,
+        "Y": 10.3,
+        "Segment": "Home"
+      },
+      {
+        "X": 76.9,
+        "Y": 99.6,
+        "Segment": "Garden"
+      },
+      {
+        "X": 24.5,
+        "Y": 4.9,
+        "Segment": "Auto"
+      },
+      {
+        "X": 10,
+        "Y": 20,
+        "Segment": "Health"
+      },
+      {
+        "X": 4.9,
+        "Y": 85.9,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 24.5,
+        "Y": 95.5,
+        "Segment": "Toys"
+      },
+      {
+        "X": 18.2,
+        "Y": 64.8,
+        "Segment": "Music"
+      },
+      {
+        "X": 36.9,
+        "Y": 42.8,
+        "Segment": "Movies"
+      },
+      {
+        "X": 10.5,
+        "Y": 12.1,
+        "Segment": "Software"
+      },
+      {
+        "X": 15.8,
+        "Y": 61.5,
+        "Segment": "Games"
+      },
+      {
+        "X": 22.5,
+        "Y": 60,
+        "Segment": "Office"
+      },
+      {
+        "X": 46,
+        "Y": 73.6,
+        "Segment": "Pet"
+      },
+      {
+        "X": 33.9,
+        "Y": 60.3,
+        "Segment": "Baby"
+      },
+      {
+        "X": 29.5,
+        "Y": 89.5,
+        "Segment": "Tools"
+      },
+      {
+        "X": 30.2,
+        "Y": 16.8,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 18.4,
+        "Y": 85.6,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 53.7,
+        "Y": 78.2,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 87.5,
+        "Y": 29.2,
+        "Segment": "Food"
+      },
+      {
+        "X": 31.6,
+        "Y": 3.4,
+        "Segment": "Books"
+      },
+      {
+        "X": 2.7,
+        "Y": 75.3,
+        "Segment": "Sports"
+      },
+      {
+        "X": 75.4,
+        "Y": 21.6,
+        "Segment": "Home"
+      },
+      {
+        "X": 21.5,
+        "Y": 47.1,
+        "Segment": "Garden"
+      },
+      {
+        "X": 86,
+        "Y": 4.2,
+        "Segment": "Auto"
+      },
+      {
+        "X": 70,
+        "Y": 24.2,
+        "Segment": "Health"
+      },
+      {
+        "X": 54,
+        "Y": 71.1,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 55.6,
+        "Y": 33.8,
+        "Segment": "Toys"
+      },
+      {
+        "X": 64.3,
+        "Y": 28.7,
+        "Segment": "Music"
+      },
+      {
+        "X": 29.9,
+        "Y": 74.1,
+        "Segment": "Movies"
+      },
+      {
+        "X": 46.2,
+        "Y": 82.4,
+        "Segment": "Software"
+      },
+      {
+        "X": 88.4,
+        "Y": 91.6,
+        "Segment": "Games"
+      },
+      {
+        "X": 98.5,
+        "Y": 66.6,
+        "Segment": "Office"
+      },
+      {
+        "X": 53.7,
+        "Y": 84.3,
+        "Segment": "Pet"
+      },
+      {
+        "X": 45.1,
+        "Y": 30,
+        "Segment": "Baby"
+      },
+      {
+        "X": 62.4,
+        "Y": 71.6,
+        "Segment": "Tools"
+      },
+      {
+        "X": 48.4,
+        "Y": 10.1,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 92.1,
+        "Y": 65.5,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 93.2,
+        "Y": 91.3,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 3.4,
+        "Y": 45.9,
+        "Segment": "Food"
+      },
+      {
+        "X": 31.6,
+        "Y": 9,
+        "Segment": "Books"
+      },
+      {
+        "X": 8.2,
+        "Y": 93.1,
+        "Segment": "Sports"
+      },
+      {
+        "X": 85.2,
+        "Y": 67.3,
+        "Segment": "Home"
+      },
+      {
+        "X": 83.2,
+        "Y": 86.1,
+        "Segment": "Garden"
+      },
+      {
+        "X": 87.6,
+        "Y": 27.6,
+        "Segment": "Auto"
+      },
+      {
+        "X": 44.9,
+        "Y": 94.9,
+        "Segment": "Health"
+      },
+      {
+        "X": 51.2,
+        "Y": 86.7,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 91.6,
+        "Y": 12.1,
+        "Segment": "Toys"
+      },
+      {
+        "X": 48.2,
+        "Y": 82.1,
+        "Segment": "Music"
+      },
+      {
+        "X": 46.9,
+        "Y": 79.2,
+        "Segment": "Movies"
+      },
+      {
+        "X": 74,
+        "Y": 56.5,
+        "Segment": "Software"
+      },
+      {
+        "X": 36.5,
+        "Y": 71.7,
+        "Segment": "Games"
+      },
+      {
+        "X": 72.1,
+        "Y": 88.6,
+        "Segment": "Office"
+      },
+      {
+        "X": 62.5,
+        "Y": 13.6,
+        "Segment": "Pet"
+      },
+      {
+        "X": 30.9,
+        "Y": 55.7,
+        "Segment": "Baby"
+      },
+      {
+        "X": 48.6,
+        "Y": 67.2,
+        "Segment": "Tools"
+      },
+      {
+        "X": 74.9,
+        "Y": 25,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 93.7,
+        "Y": 92.2,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 27.1,
+        "Y": 91.8,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 79.5,
+        "Y": 76.9,
+        "Segment": "Food"
+      },
+      {
+        "X": 52.3,
+        "Y": 50.7,
+        "Segment": "Books"
+      },
+      {
+        "X": 83.1,
+        "Y": 19,
+        "Segment": "Sports"
+      },
+      {
+        "X": 66.7,
+        "Y": 81.7,
+        "Segment": "Home"
+      },
+      {
+        "X": 17.7,
+        "Y": 48.7,
+        "Segment": "Garden"
+      },
+      {
+        "X": 59.5,
+        "Y": 66.9,
+        "Segment": "Auto"
+      },
+      {
+        "X": 45.5,
+        "Y": 66.8,
+        "Segment": "Health"
+      },
+      {
+        "X": 94.1,
+        "Y": 88.9,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 57.8,
+        "Y": 23.7,
+        "Segment": "Toys"
+      },
+      {
+        "X": 47.6,
+        "Y": 6.9,
+        "Segment": "Music"
+      },
+      {
+        "X": 49.8,
+        "Y": 68.7,
+        "Segment": "Movies"
+      },
+      {
+        "X": 38.4,
+        "Y": 17.6,
+        "Segment": "Software"
+      },
+      {
+        "X": 81.8,
+        "Y": 33.5,
+        "Segment": "Games"
+      },
+      {
+        "X": 18.4,
+        "Y": 45.5,
+        "Segment": "Office"
+      },
+      {
+        "X": 82.6,
+        "Y": 11.8,
+        "Segment": "Pet"
+      },
+      {
+        "X": 45.6,
+        "Y": 9.6,
+        "Segment": "Baby"
+      },
+      {
+        "X": 21.3,
+        "Y": 53,
+        "Segment": "Tools"
+      },
+      {
+        "X": 77.5,
+        "Y": 22.4,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 44.4,
+        "Y": 12.6,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 97.1,
+        "Y": 53.3,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 7.1,
+        "Y": 82.1,
+        "Segment": "Food"
+      },
+      {
+        "X": 53.8,
+        "Y": 12,
+        "Segment": "Books"
+      },
+      {
+        "X": 48,
+        "Y": 9.2,
+        "Segment": "Sports"
+      },
+      {
+        "X": 6,
+        "Y": 75.6,
+        "Segment": "Home"
+      },
+      {
+        "X": 77.3,
+        "Y": 98.9,
+        "Segment": "Garden"
+      },
+      {
+        "X": 93.2,
+        "Y": 55.9,
+        "Segment": "Auto"
+      },
+      {
+        "X": 41.5,
+        "Y": 9.7,
+        "Segment": "Health"
+      },
+      {
+        "X": 19.6,
+        "Y": 45.5,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 15.6,
+        "Y": 22.3,
+        "Segment": "Toys"
+      },
+      {
+        "X": 70.3,
+        "Y": 87,
+        "Segment": "Music"
+      },
+      {
+        "X": 78.1,
+        "Y": 54.5,
+        "Segment": "Movies"
+      },
+      {
+        "X": 8.7,
+        "Y": 45.3,
+        "Segment": "Software"
+      },
+      {
+        "X": 68.6,
+        "Y": 50.8,
+        "Segment": "Games"
+      },
+      {
+        "X": 28,
+        "Y": 97.7,
+        "Segment": "Office"
+      },
+      {
+        "X": 62.3,
+        "Y": 75.2,
+        "Segment": "Pet"
+      },
+      {
+        "X": 5.2,
+        "Y": 46.7,
+        "Segment": "Baby"
+      },
+      {
+        "X": 74.3,
+        "Y": 52.7,
+        "Segment": "Tools"
+      },
+      {
+        "X": 77.4,
+        "Y": 84.7,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 41,
+        "Y": 67.6,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 59.1,
+        "Y": 62.1,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 52.8,
+        "Y": 89.3,
+        "Segment": "Food"
+      },
+      {
+        "X": 82.8,
+        "Y": 98.6,
+        "Segment": "Books"
+      },
+      {
+        "X": 16.3,
+        "Y": 61.6,
+        "Segment": "Sports"
+      },
+      {
+        "X": 23.5,
+        "Y": 26.6,
+        "Segment": "Home"
+      },
+      {
+        "X": 33.4,
+        "Y": 88.1,
+        "Segment": "Garden"
+      },
+      {
+        "X": 6.3,
+        "Y": 0.1,
+        "Segment": "Auto"
+      },
+      {
+        "X": 47.9,
+        "Y": 77,
+        "Segment": "Health"
+      },
+      {
+        "X": 17.9,
+        "Y": 49.1,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 82.5,
+        "Y": 80.8,
+        "Segment": "Toys"
+      },
+      {
+        "X": 95.5,
+        "Y": 44.6,
+        "Segment": "Music"
+      },
+      {
+        "X": 93.5,
+        "Y": 94.6,
+        "Segment": "Movies"
+      },
+      {
+        "X": 57.5,
+        "Y": 91,
+        "Segment": "Software"
+      },
+      {
+        "X": 16.5,
+        "Y": 82,
+        "Segment": "Games"
+      },
+      {
+        "X": 85.1,
+        "Y": 51.9,
+        "Segment": "Office"
+      },
+      {
+        "X": 49,
+        "Y": 42.4,
+        "Segment": "Pet"
+      },
+      {
+        "X": 72.4,
+        "Y": 98.2,
+        "Segment": "Baby"
+      },
+      {
+        "X": 32.7,
+        "Y": 22,
+        "Segment": "Tools"
+      },
+      {
+        "X": 10.3,
+        "Y": 23.6,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 46.6,
+        "Y": 36.8,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 20,
+        "Y": 89.6,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 95.6,
+        "Y": 83.6,
+        "Segment": "Food"
+      },
+      {
+        "X": 45,
+        "Y": 67.8,
+        "Segment": "Books"
+      },
+      {
+        "X": 27.9,
+        "Y": 13.5,
+        "Segment": "Sports"
+      },
+      {
+        "X": 37.2,
+        "Y": 91.5,
+        "Segment": "Home"
+      },
+      {
+        "X": 12,
+        "Y": 89.5,
+        "Segment": "Garden"
+      },
+      {
+        "X": 87.7,
+        "Y": 12,
+        "Segment": "Auto"
+      },
+      {
+        "X": 88.5,
+        "Y": 72.4,
+        "Segment": "Health"
+      },
+      {
+        "X": 83.2,
+        "Y": 93.4,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 75.9,
+        "Y": 37,
+        "Segment": "Toys"
+      },
+      {
+        "X": 21.1,
+        "Y": 50.9,
+        "Segment": "Music"
+      },
+      {
+        "X": 64.9,
+        "Y": 19.9,
+        "Segment": "Movies"
+      },
+      {
+        "X": 86,
+        "Y": 38.7,
+        "Segment": "Software"
+      },
+      {
+        "X": 91.4,
+        "Y": 27.8,
+        "Segment": "Games"
+      },
+      {
+        "X": 52.9,
+        "Y": 85.5,
+        "Segment": "Office"
+      },
+      {
+        "X": 67.2,
+        "Y": 57.2,
+        "Segment": "Pet"
+      },
+      {
+        "X": 2,
+        "Y": 66.9,
+        "Segment": "Baby"
+      },
+      {
+        "X": 2.3,
+        "Y": 18.7,
+        "Segment": "Tools"
+      },
+      {
+        "X": 80.7,
+        "Y": 73.5,
+        "Segment": "Crafts"
+      },
+      {
+        "X": 99,
+        "Y": 67.1,
+        "Segment": "Electronics"
+      },
+      {
+        "X": 9.6,
+        "Y": 35.9,
+        "Segment": "Clothing"
+      },
+      {
+        "X": 46.5,
+        "Y": 48.4,
+        "Segment": "Food"
+      },
+      {
+        "X": 31.5,
+        "Y": 95.5,
+        "Segment": "Books"
+      },
+      {
+        "X": 16.6,
+        "Y": 59,
+        "Segment": "Sports"
+      },
+      {
+        "X": 81.1,
+        "Y": 29.1,
+        "Segment": "Home"
+      },
+      {
+        "X": 1.4,
+        "Y": 59.3,
+        "Segment": "Garden"
+      },
+      {
+        "X": 2.2,
+        "Y": 11.7,
+        "Segment": "Auto"
+      },
+      {
+        "X": 35.2,
+        "Y": 15.4,
+        "Segment": "Health"
+      },
+      {
+        "X": 60.9,
+        "Y": 10.8,
+        "Segment": "Beauty"
+      },
+      {
+        "X": 80.2,
+        "Y": 40.8,
+        "Segment": "Toys"
+      },
+      {
+        "X": 2,
+        "Y": 85.1,
+        "Segment": "Music"
+      },
+      {
+        "X": 31.6,
+        "Y": 26.4,
+        "Segment": "Movies"
+      },
+      {
+        "X": 64.2,
+        "Y": 65.7,
+        "Segment": "Software"
+      },
+      {
+        "X": 19,
+        "Y": 51.9,
+        "Segment": "Games"
+      },
+      {
+        "X": 51,
+        "Y": 27.5,
+        "Segment": "Office"
+      },
+      {
+        "X": 5.7,
+        "Y": 10.3,
+        "Segment": "Pet"
+      },
+      {
+        "X": 48.2,
+        "Y": 42.3,
+        "Segment": "Baby"
+      },
+      {
+        "X": 35.4,
+        "Y": 25.8,
+        "Segment": "Tools"
+      },
+      {
+        "X": 83.6,
+        "Y": 6,
+        "Segment": "Crafts"
+      }
+    ]
+  }
+}

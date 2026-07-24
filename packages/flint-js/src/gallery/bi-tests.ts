@@ -22,6 +22,7 @@
 
 import { Type } from '../test-data/df-types';
 import { TestCase, makeField, makeEncodingItem } from '../test-data/types';
+import { realKpiCases } from '../test-data/real-world-tests';
 
 export function genGalleryKpiCardTests(): TestCase[] {
     return [
@@ -190,5 +191,6 @@ export function genGalleryKpiCardTests(): TestCase[] {
             },
             chartProperties: { layout: 'vertical' },
         },
+        ...realKpiCases(),
     ];
 }

@@ -145,7 +145,7 @@ export const ecRadarChartDef: ChartTemplateDef = {
                 shape: chartProperties?.shape === 'circle' ? 'circle' : 'polygon',
                 center: ['50%', '46%'],
                 radius: '38%',
-                axisName: { fontSize: 11 },
+                axisName: { fontSize: ctx.layout.titleFontSize },
             },
             series: [{
                 type: 'radar',

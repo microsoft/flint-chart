@@ -164,6 +164,11 @@
     "ctaDocs": "Read the docs",
     "news": {
       "title": "Updates",
+      "release040": {
+        "date": "July 24, 2026",
+        "dateTime": "2026-07-24",
+        "text": "Flint 0.4.0 adds 38 Plotly chart types and 18 native, editable Excel chart templates."
+      },
       "dynamicWidgets": {
         "date": "July 19, 2026",
         "dateTime": "2026-07-19",
@@ -186,7 +191,8 @@
     "leadBefore": "Flint is a visualization intermediate language that lets",
     "leadHighlight1": "AI agents reliably create expressive, good-looking charts from simple, human-editable chart specs",
     "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
-    "leadHighlight2": "Flint supports {{chartTypes}} chart types, and it supports rendering in Vega-Lite, ECharts, and Chart.js",
+    "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface",
+    "backendRosterLabel": "Backends",
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
     "backendAria": "Rendering backend",
@@ -217,8 +223,8 @@
       },
       "backends": {
         "title": "Render with different backends",
-        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, and Chart.js, with {{examples}} backend-specific examples in the gallery. Despite their different APIs and programming models, Flint hides them behind a unified interface. The user can easily switch to different backends and leverage their unique features.",
-        "example": "Vega-Lite has no native sunburst, but the user can easily switch to ECharts. The sunburst chart is a better alternative than the grouped bar chart for visualizing the hierarchy of region × gameType × game."
+        "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface.",
+        "example": "Switch backends to use their native strengths: ECharts for hierarchical sunbursts, Plotly for statistical and analytical traces, or Excel for editable charts embedded in a workbook."
       }
     },
     "examples": {
@@ -259,6 +265,10 @@
     "leadAfter": "server and your agent can create charts as an interactive MCP app. By default it opens an interactive Flint chart view; when you need artifacts, it can also return static images or backend-native specs.",
     "quickStart": "Quick start:",
     "quickStartBody": "paste this setup request into your agent and let it configure Flint for the current project. For manual setup, see",
+    "localSetupTitle": "Local server",
+    "localSetupBody": "Recommended if your client supports local MCP",
+    "remoteSetupTitle": "Remote server",
+    "remoteSetupBody": "Use if your client only supports remote MCP",
     "installConfigure": "install & configure",
     "orThe": "or the",
     "githubReadme": "GitHub README",

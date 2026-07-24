@@ -1,0 +1,45 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Amount": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Sunburst Chart",
+    "encodings": {
+      "color": "Category",
+      "size": "Amount"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Housing",
+        "Amount": 228
+      },
+      {
+        "Category": "Food",
+        "Amount": 1736
+      },
+      {
+        "Category": "Transport",
+        "Amount": 379
+      },
+      {
+        "Category": "Entertainment",
+        "Amount": 1340
+      },
+      {
+        "Category": "Savings",
+        "Amount": 2162
+      },
+      {
+        "Category": "Healthcare",
+        "Amount": 453
+      }
+    ]
+  }
+}

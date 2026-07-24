@@ -3,6 +3,7 @@ import type { TestCase } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
+import { PlotlyView } from './PlotlyView';
 import { testCaseToAssemblyInput, thumbnailCanvasSize, type CanvasSize } from '../shared/test-case-utils';
 import { BACKENDS, type PreviewBackend } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
@@ -68,5 +69,6 @@ export function WallChart({
 
   if (backend === 'vegalite') return <VegaLiteView spec={compiled.value} />;
   if (backend === 'echarts') return <EChartsView option={compiled.value} constrain={false} />;
+  if (backend === 'plotly') return <PlotlyView figure={compiled.value} constrain={false} />;
   return <ChartjsView config={compiled.value} constrain={false} />;
 }

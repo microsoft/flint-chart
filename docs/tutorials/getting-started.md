@@ -2,7 +2,8 @@
 
 Flint starts from a simple idea: describe **what your data means**, then say
 **what picture you want**. Flint turns that into a render-ready chart spec for
-Vega-Lite, ECharts, or Chart.js.
+Vega-Lite, ECharts, Chart.js, or Plotly, and can emit a native Excel chart
+artifact for Office.js hosts.
 
 This page keeps the first pass intentionally small. You will install the
 package, look at one complete Flint spec, and compile it into a chart.
@@ -146,11 +147,16 @@ await embed('#chart', spec);
 The same Flint input can also target other backends in JavaScript:
 
 ```ts
-import { assembleChartjs, assembleECharts } from 'flint-chart';
+import { assembleChartjs, assembleECharts, assembleExcel, assemblePlotly } from 'flint-chart';
 
 const chartjsConfig = assembleChartjs(input);
 const echartsOption = assembleECharts(input);
+const plotlyFigure = assemblePlotly(input);
+const excelArtifact = assembleExcel(input);
 ```
+
+Plotly returns a `{ data, layout }` figure. Excel returns a versioned native-chart
+artifact that an Office.js host can pass to `renderExcelChart`.
 
 Python support will use the same input shape and is planned for a later release.
 
@@ -165,6 +171,7 @@ Python support will use the same input shape and is planned for a later release.
 - [Semantic Type](/documentation/semantic-types) explains the semantic labels
   Flint understands, such as `YearMonth`, `Quantity`, `Category`, and `Profit`.
 - [Gallery](/gallery) lists the chart templates available across Vega-Lite,
-  ECharts, and Chart.js.
+  ECharts, Chart.js, and Plotly; the [Excel gallery](/gallery/excel) shows native
+  editable charts captured from Excel.
 - [Overview](/documentation/overview) gives the deeper architecture when you
   are ready for the full model.

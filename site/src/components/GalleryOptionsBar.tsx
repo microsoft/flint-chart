@@ -128,10 +128,18 @@ function ControlRow(props: {
     const step = spec.step ?? ((spec.max - spec.min) / 100 || 1);
     const num = typeof value === 'number' ? value : spec.min;
     const pct = spec.max > spec.min ? ((num - spec.min) / (spec.max - spec.min)) * 100 : 0;
+    // Reserve enough width for the widest value the slider can show so the
+    // readout never clips (e.g. "50") or reflows as digits change.
+    const readoutCh = Math.max(
+      2,
+      spec.min.toLocaleString().length,
+      spec.max.toLocaleString().length,
+    );
     control = (
       <span className="gopt-inline">
         <input
           type="range"
+          className="site-range"
           min={spec.min}
           max={spec.max}
           step={step}
@@ -139,7 +147,9 @@ function ControlRow(props: {
           style={{ ['--pct' as string]: `${pct}%` } as CSSProperties}
           onChange={(e) => onChange(Number(e.target.value))}
         />
-        <span className="gopt-readout">{Number(num).toLocaleString()}</span>
+        <span className="gopt-readout" style={{ minWidth: `${readoutCh}ch` }}>
+          {Number(num).toLocaleString()}
+        </span>
       </span>
     );
   } else {

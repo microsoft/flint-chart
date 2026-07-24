@@ -1,0 +1,169 @@
+{
+  "semantic_types": {
+    "Drift": "Quantity",
+    "Noise": "Quantity",
+    "Step": "Quantity",
+    "Sensor": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Drift",
+      "y": "Noise",
+      "order": "Step",
+      "detail": "Sensor"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Sensor": "Laptop",
+        "Step": 1,
+        "Drift": 19.5,
+        "Noise": 37.6
+      },
+      {
+        "Sensor": "Laptop",
+        "Step": 2,
+        "Drift": 29.7,
+        "Noise": 36.4
+      },
+      {
+        "Sensor": "Laptop",
+        "Step": 3,
+        "Drift": 36.8,
+        "Noise": 25.4
+      },
+      {
+        "Sensor": "Laptop",
+        "Step": 4,
+        "Drift": 38.4,
+        "Noise": 14.2
+      },
+      {
+        "Sensor": "Laptop",
+        "Step": 5,
+        "Drift": 29.2,
+        "Noise": 7.4
+      },
+      {
+        "Sensor": "Laptop",
+        "Step": 6,
+        "Drift": 18.6,
+        "Noise": 3.2
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 1,
+        "Drift": 30.3,
+        "Noise": 49.8
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 2,
+        "Drift": 42.9,
+        "Noise": 47.3
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 3,
+        "Drift": 50.7,
+        "Noise": 36.6
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 4,
+        "Drift": 48.9,
+        "Noise": 26.9
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 5,
+        "Drift": 41.2,
+        "Noise": 19
+      },
+      {
+        "Sensor": "Phone",
+        "Step": 6,
+        "Drift": 32.4,
+        "Noise": 15.8
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 1,
+        "Drift": 45.5,
+        "Noise": 63.6
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 2,
+        "Drift": 55.1,
+        "Noise": 58.9
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 3,
+        "Drift": 61.4,
+        "Noise": 47.6
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 4,
+        "Drift": 62.7,
+        "Noise": 37.6
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 5,
+        "Drift": 54.3,
+        "Noise": 28.1
+      },
+      {
+        "Sensor": "Tablet",
+        "Step": 6,
+        "Drift": 44.7,
+        "Noise": 27.9
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 1,
+        "Drift": 57.2,
+        "Noise": 75.7
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 2,
+        "Drift": 66.8,
+        "Noise": 68.7
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 3,
+        "Drift": 73.5,
+        "Noise": 62.1
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 4,
+        "Drift": 74.9,
+        "Noise": 52.3
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 5,
+        "Drift": 67.3,
+        "Noise": 39.6
+      },
+      {
+        "Sensor": "Desktop",
+        "Step": 6,
+        "Drift": 54,
+        "Noise": 37
+      }
+    ]
+  }
+}

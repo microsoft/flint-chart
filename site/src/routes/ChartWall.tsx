@@ -41,6 +41,7 @@ const MAX_VARIANTS = 4;
 const TILE_CHART_HEIGHT = 190;
 const SCROLL_SPY_ACTIVATION_RATIO = 0.45;
 const SCROLL_SPY_VISIBLE_MARGIN = 24;
+type GalleryBackend = PreviewBackend | 'excel';
 
 function loadTests(generator: string): TestCase[] {
   const gen = TEST_GENERATORS[generator];
@@ -85,13 +86,29 @@ interface FamilyGroup {
  * under their gallery family so related chart types stay together while each
  * type keeps its own heading and sidebar entry.
  */
-function buildGroups(charts: ChartEntry[], locale: Locale): FamilyGroup[] {
+function buildGroups(
+  charts: ChartEntry[],
+  locale: Locale,
+  backend: PreviewBackend,
+): FamilyGroup[] {
   const sectionsByFamily = new Map<string, ChartSection[]>();
 
   for (const chart of charts) {
     const full = loadTests(chart.generator);
-    const variants = selectVariants(full, MAX_VARIANTS);
+    // Global vs. local dodge only produces a visibly distinct layout in
+    // Vega-Lite (centered lanes). Plotly reuses the generic generators, so
+    // drop the `dodge-*` demo cases everywhere except the Vega-Lite gallery.
+    const visible =
+      backend === 'vegalite'
+        ? full
+        : full.filter(
+            (tc) =>
+              !tc.tags?.some((t) => t === 'dodge-global' || t === 'dodge-local'),
+          );
+    const variants = selectVariants(visible, MAX_VARIANTS);
     if (variants.length === 0) continue;
+    // Indices must point into the FULL generator output (the editor resolves
+    // TEST_GENERATORS[generator][index]), not the filtered subset.
     const indices = variants.map((v) => full.indexOf(v));
     const titles = humanizeVariants(variants, locale);
     const tiles = variants.map((testCase, pos) => ({
@@ -150,7 +167,7 @@ export function ChartWall() {
     }
   }, [backendParam, category.id, navigate, lp]);
 
-  const groups = useMemo(() => buildGroups(category.charts, locale), [category, locale]);
+  const groups = useMemo(() => buildGroups(category.charts, locale, category.id), [category, locale]);
   const sectionIds = useMemo(
     () => groups.flatMap((g) => g.sections.map((s) => s.chart.id)),
     [groups],
@@ -213,7 +230,7 @@ export function ChartWall() {
     };
   }, [sectionIds]);
 
-  const scrollToGallery = useCallback((id: PreviewBackend) => {
+  const scrollToGallery = useCallback((id: GalleryBackend) => {
     if (id !== category.id) {
       navigate(lp(`/gallery/${id}`));
       return;
@@ -298,9 +315,9 @@ export function ChartWall() {
           <main style={{ flex: 1, minWidth: 0 }}>
             <div className="gallery-content" style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 40px 96px' }}>
               <header className="gallery-header" style={{ marginBottom: 18 }}>
-                <h1 className="gallery-title" style={{ margin: 0, fontSize: 28, fontWeight: 600, letterSpacing: -0.4 }}>
+                <h1 className="gallery-title" style={{ margin: 0, fontSize: 28, fontWeight: 600, letterSpacing: 0 }}>
                   {t('gallery.title')}
-                  <span className="gallery-title-backend">
+                  <span className="gallery-title-backend" style={{ color: siteTheme.textMuted, fontWeight: 400 }}>
                     {' '}
                     {t('gallery.titleBackend', { backend: category.label })}
                   </span>
@@ -402,7 +419,7 @@ function WallSidebar({
   groups: FamilyGroup[];
   activeChartId: string | null;
   onNavigate: (id: string) => void;
-  onSelectBackend: (id: PreviewBackend) => void;
+  onSelectBackend: (id: GalleryBackend) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -417,6 +434,12 @@ function WallSidebar({
             onClick={() => onSelectBackend(c.id)}
           />
         ))}
+        <BackendNavItem
+          label="Excel"
+          active={false}
+          dataAttr={{ 'data-gallery-nav': 'excel' }}
+          onClick={() => onSelectBackend('excel')}
+        />
       </SidebarNavSection>
 
       <SidebarNavSection label={t('gallery.sidebars.chartTypes')}>
@@ -503,7 +526,7 @@ function MobileBackendTabs({
   onSelectBackend,
 }: {
   category: ChartCategory;
-  onSelectBackend: (id: PreviewBackend) => void;
+  onSelectBackend: (id: GalleryBackend) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -527,6 +550,13 @@ function MobileBackendTabs({
           </button>
         );
       })}
+      <button
+        type="button"
+        onClick={() => onSelectBackend('excel')}
+        style={mobileBackendTabStyle}
+      >
+        Excel
+      </button>
     </div>
   );
 }
@@ -561,6 +591,7 @@ function BackendIntro({
     vegalite: 'spec',
     echarts: 'option',
     chartjs: 'config',
+    plotly: 'figure',
   };
   const snippet = `import { ${category.fn} } from 'flint-chart';
 

@@ -125,6 +125,18 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         description: 'Every Chart.js chart type, its channels, and configurable parameters.',
         file: '../../../docs/reference-chartjs.md',
       },
+      {
+        slug: 'reference-plotly',
+        title: 'Plotly charts',
+        description: 'Every Plotly chart type, its channels, and configurable parameters.',
+        file: '../../../docs/reference-plotly.md',
+      },
+      {
+        slug: 'reference-excel',
+        title: 'Excel charts',
+        description: 'Every native Excel chart type, its channels, and Office.js mapping.',
+        file: '../../../docs/reference-excel.md',
+      },
     ],
   },
   {

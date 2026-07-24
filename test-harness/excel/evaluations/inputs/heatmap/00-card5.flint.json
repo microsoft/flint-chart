@@ -1,0 +1,173 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Month": "Month",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Category",
+      "y": "Month",
+      "color": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Month": "Jan",
+        "Value": 0
+      },
+      {
+        "Category": "Electronics",
+        "Month": "Feb",
+        "Value": 77
+      },
+      {
+        "Category": "Electronics",
+        "Month": "Mar",
+        "Value": 80
+      },
+      {
+        "Category": "Electronics",
+        "Month": "Apr",
+        "Value": 33
+      },
+      {
+        "Category": "Electronics",
+        "Month": "May",
+        "Value": 38
+      },
+      {
+        "Category": "Electronics",
+        "Month": "Jun",
+        "Value": 48
+      },
+      {
+        "Category": "Clothing",
+        "Month": "Jan",
+        "Value": 52
+      },
+      {
+        "Category": "Clothing",
+        "Month": "Feb",
+        "Value": 43
+      },
+      {
+        "Category": "Clothing",
+        "Month": "Mar",
+        "Value": 65
+      },
+      {
+        "Category": "Clothing",
+        "Month": "Apr",
+        "Value": 35
+      },
+      {
+        "Category": "Clothing",
+        "Month": "May",
+        "Value": 75
+      },
+      {
+        "Category": "Clothing",
+        "Month": "Jun",
+        "Value": 71
+      },
+      {
+        "Category": "Food",
+        "Month": "Jan",
+        "Value": 48
+      },
+      {
+        "Category": "Food",
+        "Month": "Feb",
+        "Value": 29
+      },
+      {
+        "Category": "Food",
+        "Month": "Mar",
+        "Value": 73
+      },
+      {
+        "Category": "Food",
+        "Month": "Apr",
+        "Value": 85
+      },
+      {
+        "Category": "Food",
+        "Month": "May",
+        "Value": 57
+      },
+      {
+        "Category": "Food",
+        "Month": "Jun",
+        "Value": 85
+      },
+      {
+        "Category": "Books",
+        "Month": "Jan",
+        "Value": 71
+      },
+      {
+        "Category": "Books",
+        "Month": "Feb",
+        "Value": 42
+      },
+      {
+        "Category": "Books",
+        "Month": "Mar",
+        "Value": 74
+      },
+      {
+        "Category": "Books",
+        "Month": "Apr",
+        "Value": 39
+      },
+      {
+        "Category": "Books",
+        "Month": "May",
+        "Value": 49
+      },
+      {
+        "Category": "Books",
+        "Month": "Jun",
+        "Value": 22
+      },
+      {
+        "Category": "Sports",
+        "Month": "Jan",
+        "Value": 8
+      },
+      {
+        "Category": "Sports",
+        "Month": "Feb",
+        "Value": 46
+      },
+      {
+        "Category": "Sports",
+        "Month": "Mar",
+        "Value": 98
+      },
+      {
+        "Category": "Sports",
+        "Month": "Apr",
+        "Value": 96
+      },
+      {
+        "Category": "Sports",
+        "Month": "May",
+        "Value": 100
+      },
+      {
+        "Category": "Sports",
+        "Month": "Jun",
+        "Value": 60
+      }
+    ]
+  }
+}

@@ -1,0 +1,2023 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Heatmap",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "color": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "C01",
+        "Group": "Electronics",
+        "Value": 84
+      },
+      {
+        "Category": "C01",
+        "Group": "Clothing",
+        "Value": 87
+      },
+      {
+        "Category": "C01",
+        "Group": "Food",
+        "Value": 66
+      },
+      {
+        "Category": "C01",
+        "Group": "Books",
+        "Value": 17
+      },
+      {
+        "Category": "C01",
+        "Group": "Sports",
+        "Value": 3
+      },
+      {
+        "Category": "C02",
+        "Group": "Electronics",
+        "Value": 35
+      },
+      {
+        "Category": "C02",
+        "Group": "Clothing",
+        "Value": 43
+      },
+      {
+        "Category": "C02",
+        "Group": "Food",
+        "Value": 39
+      },
+      {
+        "Category": "C02",
+        "Group": "Books",
+        "Value": 8
+      },
+      {
+        "Category": "C02",
+        "Group": "Sports",
+        "Value": 20
+      },
+      {
+        "Category": "C03",
+        "Group": "Electronics",
+        "Value": 26
+      },
+      {
+        "Category": "C03",
+        "Group": "Clothing",
+        "Value": 41
+      },
+      {
+        "Category": "C03",
+        "Group": "Food",
+        "Value": 43
+      },
+      {
+        "Category": "C03",
+        "Group": "Books",
+        "Value": 42
+      },
+      {
+        "Category": "C03",
+        "Group": "Sports",
+        "Value": 86
+      },
+      {
+        "Category": "C04",
+        "Group": "Electronics",
+        "Value": 9
+      },
+      {
+        "Category": "C04",
+        "Group": "Clothing",
+        "Value": 6
+      },
+      {
+        "Category": "C04",
+        "Group": "Food",
+        "Value": 34
+      },
+      {
+        "Category": "C04",
+        "Group": "Books",
+        "Value": 52
+      },
+      {
+        "Category": "C04",
+        "Group": "Sports",
+        "Value": 46
+      },
+      {
+        "Category": "C05",
+        "Group": "Electronics",
+        "Value": 35
+      },
+      {
+        "Category": "C05",
+        "Group": "Clothing",
+        "Value": 83
+      },
+      {
+        "Category": "C05",
+        "Group": "Food",
+        "Value": 57
+      },
+      {
+        "Category": "C05",
+        "Group": "Books",
+        "Value": 94
+      },
+      {
+        "Category": "C05",
+        "Group": "Sports",
+        "Value": 53
+      },
+      {
+        "Category": "C06",
+        "Group": "Electronics",
+        "Value": 80
+      },
+      {
+        "Category": "C06",
+        "Group": "Clothing",
+        "Value": 54
+      },
+      {
+        "Category": "C06",
+        "Group": "Food",
+        "Value": 31
+      },
+      {
+        "Category": "C06",
+        "Group": "Books",
+        "Value": 2
+      },
+      {
+        "Category": "C06",
+        "Group": "Sports",
+        "Value": 20
+      },
+      {
+        "Category": "C07",
+        "Group": "Electronics",
+        "Value": 15
+      },
+      {
+        "Category": "C07",
+        "Group": "Clothing",
+        "Value": 82
+      },
+      {
+        "Category": "C07",
+        "Group": "Food",
+        "Value": 25
+      },
+      {
+        "Category": "C07",
+        "Group": "Books",
+        "Value": 26
+      },
+      {
+        "Category": "C07",
+        "Group": "Sports",
+        "Value": 38
+      },
+      {
+        "Category": "C08",
+        "Group": "Electronics",
+        "Value": 83
+      },
+      {
+        "Category": "C08",
+        "Group": "Clothing",
+        "Value": 54
+      },
+      {
+        "Category": "C08",
+        "Group": "Food",
+        "Value": 74
+      },
+      {
+        "Category": "C08",
+        "Group": "Books",
+        "Value": 77
+      },
+      {
+        "Category": "C08",
+        "Group": "Sports",
+        "Value": 59
+      },
+      {
+        "Category": "C09",
+        "Group": "Electronics",
+        "Value": 40
+      },
+      {
+        "Category": "C09",
+        "Group": "Clothing",
+        "Value": 51
+      },
+      {
+        "Category": "C09",
+        "Group": "Food",
+        "Value": 67
+      },
+      {
+        "Category": "C09",
+        "Group": "Books",
+        "Value": 76
+      },
+      {
+        "Category": "C09",
+        "Group": "Sports",
+        "Value": 81
+      },
+      {
+        "Category": "C10",
+        "Group": "Electronics",
+        "Value": 82
+      },
+      {
+        "Category": "C10",
+        "Group": "Clothing",
+        "Value": 96
+      },
+      {
+        "Category": "C10",
+        "Group": "Food",
+        "Value": 76
+      },
+      {
+        "Category": "C10",
+        "Group": "Books",
+        "Value": 6
+      },
+      {
+        "Category": "C10",
+        "Group": "Sports",
+        "Value": 12
+      },
+      {
+        "Category": "C11",
+        "Group": "Electronics",
+        "Value": 26
+      },
+      {
+        "Category": "C11",
+        "Group": "Clothing",
+        "Value": 9
+      },
+      {
+        "Category": "C11",
+        "Group": "Food",
+        "Value": 63
+      },
+      {
+        "Category": "C11",
+        "Group": "Books",
+        "Value": 94
+      },
+      {
+        "Category": "C11",
+        "Group": "Sports",
+        "Value": 41
+      },
+      {
+        "Category": "C12",
+        "Group": "Electronics",
+        "Value": 50
+      },
+      {
+        "Category": "C12",
+        "Group": "Clothing",
+        "Value": 20
+      },
+      {
+        "Category": "C12",
+        "Group": "Food",
+        "Value": 44
+      },
+      {
+        "Category": "C12",
+        "Group": "Books",
+        "Value": 98
+      },
+      {
+        "Category": "C12",
+        "Group": "Sports",
+        "Value": 76
+      },
+      {
+        "Category": "C13",
+        "Group": "Electronics",
+        "Value": 36
+      },
+      {
+        "Category": "C13",
+        "Group": "Clothing",
+        "Value": 58
+      },
+      {
+        "Category": "C13",
+        "Group": "Food",
+        "Value": 63
+      },
+      {
+        "Category": "C13",
+        "Group": "Books",
+        "Value": 22
+      },
+      {
+        "Category": "C13",
+        "Group": "Sports",
+        "Value": 65
+      },
+      {
+        "Category": "C14",
+        "Group": "Electronics",
+        "Value": 62
+      },
+      {
+        "Category": "C14",
+        "Group": "Clothing",
+        "Value": 24
+      },
+      {
+        "Category": "C14",
+        "Group": "Food",
+        "Value": 31
+      },
+      {
+        "Category": "C14",
+        "Group": "Books",
+        "Value": 29
+      },
+      {
+        "Category": "C14",
+        "Group": "Sports",
+        "Value": 10
+      },
+      {
+        "Category": "C15",
+        "Group": "Electronics",
+        "Value": 49
+      },
+      {
+        "Category": "C15",
+        "Group": "Clothing",
+        "Value": 23
+      },
+      {
+        "Category": "C15",
+        "Group": "Food",
+        "Value": 50
+      },
+      {
+        "Category": "C15",
+        "Group": "Books",
+        "Value": 17
+      },
+      {
+        "Category": "C15",
+        "Group": "Sports",
+        "Value": 41
+      },
+      {
+        "Category": "C16",
+        "Group": "Electronics",
+        "Value": 84
+      },
+      {
+        "Category": "C16",
+        "Group": "Clothing",
+        "Value": 85
+      },
+      {
+        "Category": "C16",
+        "Group": "Food",
+        "Value": 25
+      },
+      {
+        "Category": "C16",
+        "Group": "Books",
+        "Value": 91
+      },
+      {
+        "Category": "C16",
+        "Group": "Sports",
+        "Value": 21
+      },
+      {
+        "Category": "C17",
+        "Group": "Electronics",
+        "Value": 95
+      },
+      {
+        "Category": "C17",
+        "Group": "Clothing",
+        "Value": 50
+      },
+      {
+        "Category": "C17",
+        "Group": "Food",
+        "Value": 86
+      },
+      {
+        "Category": "C17",
+        "Group": "Books",
+        "Value": 56
+      },
+      {
+        "Category": "C17",
+        "Group": "Sports",
+        "Value": 71
+      },
+      {
+        "Category": "C18",
+        "Group": "Electronics",
+        "Value": 59
+      },
+      {
+        "Category": "C18",
+        "Group": "Clothing",
+        "Value": 83
+      },
+      {
+        "Category": "C18",
+        "Group": "Food",
+        "Value": 2
+      },
+      {
+        "Category": "C18",
+        "Group": "Books",
+        "Value": 44
+      },
+      {
+        "Category": "C18",
+        "Group": "Sports",
+        "Value": 45
+      },
+      {
+        "Category": "C19",
+        "Group": "Electronics",
+        "Value": 57
+      },
+      {
+        "Category": "C19",
+        "Group": "Clothing",
+        "Value": 31
+      },
+      {
+        "Category": "C19",
+        "Group": "Food",
+        "Value": 14
+      },
+      {
+        "Category": "C19",
+        "Group": "Books",
+        "Value": 42
+      },
+      {
+        "Category": "C19",
+        "Group": "Sports",
+        "Value": 9
+      },
+      {
+        "Category": "C20",
+        "Group": "Electronics",
+        "Value": 99
+      },
+      {
+        "Category": "C20",
+        "Group": "Clothing",
+        "Value": 10
+      },
+      {
+        "Category": "C20",
+        "Group": "Food",
+        "Value": 74
+      },
+      {
+        "Category": "C20",
+        "Group": "Books",
+        "Value": 76
+      },
+      {
+        "Category": "C20",
+        "Group": "Sports",
+        "Value": 71
+      },
+      {
+        "Category": "C21",
+        "Group": "Electronics",
+        "Value": 87
+      },
+      {
+        "Category": "C21",
+        "Group": "Clothing",
+        "Value": 12
+      },
+      {
+        "Category": "C21",
+        "Group": "Food",
+        "Value": 69
+      },
+      {
+        "Category": "C21",
+        "Group": "Books",
+        "Value": 81
+      },
+      {
+        "Category": "C21",
+        "Group": "Sports",
+        "Value": 22
+      },
+      {
+        "Category": "C22",
+        "Group": "Electronics",
+        "Value": 99
+      },
+      {
+        "Category": "C22",
+        "Group": "Clothing",
+        "Value": 8
+      },
+      {
+        "Category": "C22",
+        "Group": "Food",
+        "Value": 22
+      },
+      {
+        "Category": "C22",
+        "Group": "Books",
+        "Value": 18
+      },
+      {
+        "Category": "C22",
+        "Group": "Sports",
+        "Value": 41
+      },
+      {
+        "Category": "C23",
+        "Group": "Electronics",
+        "Value": 87
+      },
+      {
+        "Category": "C23",
+        "Group": "Clothing",
+        "Value": 66
+      },
+      {
+        "Category": "C23",
+        "Group": "Food",
+        "Value": 62
+      },
+      {
+        "Category": "C23",
+        "Group": "Books",
+        "Value": 13
+      },
+      {
+        "Category": "C23",
+        "Group": "Sports",
+        "Value": 63
+      },
+      {
+        "Category": "C24",
+        "Group": "Electronics",
+        "Value": 78
+      },
+      {
+        "Category": "C24",
+        "Group": "Clothing",
+        "Value": 93
+      },
+      {
+        "Category": "C24",
+        "Group": "Food",
+        "Value": 10
+      },
+      {
+        "Category": "C24",
+        "Group": "Books",
+        "Value": 94
+      },
+      {
+        "Category": "C24",
+        "Group": "Sports",
+        "Value": 21
+      },
+      {
+        "Category": "C25",
+        "Group": "Electronics",
+        "Value": 83
+      },
+      {
+        "Category": "C25",
+        "Group": "Clothing",
+        "Value": 94
+      },
+      {
+        "Category": "C25",
+        "Group": "Food",
+        "Value": 79
+      },
+      {
+        "Category": "C25",
+        "Group": "Books",
+        "Value": 24
+      },
+      {
+        "Category": "C25",
+        "Group": "Sports",
+        "Value": 18
+      },
+      {
+        "Category": "C26",
+        "Group": "Electronics",
+        "Value": 78
+      },
+      {
+        "Category": "C26",
+        "Group": "Clothing",
+        "Value": 98
+      },
+      {
+        "Category": "C26",
+        "Group": "Food",
+        "Value": 80
+      },
+      {
+        "Category": "C26",
+        "Group": "Books",
+        "Value": 54
+      },
+      {
+        "Category": "C26",
+        "Group": "Sports",
+        "Value": 64
+      },
+      {
+        "Category": "C27",
+        "Group": "Electronics",
+        "Value": 35
+      },
+      {
+        "Category": "C27",
+        "Group": "Clothing",
+        "Value": 88
+      },
+      {
+        "Category": "C27",
+        "Group": "Food",
+        "Value": 51
+      },
+      {
+        "Category": "C27",
+        "Group": "Books",
+        "Value": 25
+      },
+      {
+        "Category": "C27",
+        "Group": "Sports",
+        "Value": 29
+      },
+      {
+        "Category": "C28",
+        "Group": "Electronics",
+        "Value": 96
+      },
+      {
+        "Category": "C28",
+        "Group": "Clothing",
+        "Value": 68
+      },
+      {
+        "Category": "C28",
+        "Group": "Food",
+        "Value": 22
+      },
+      {
+        "Category": "C28",
+        "Group": "Books",
+        "Value": 91
+      },
+      {
+        "Category": "C28",
+        "Group": "Sports",
+        "Value": 76
+      },
+      {
+        "Category": "C29",
+        "Group": "Electronics",
+        "Value": 52
+      },
+      {
+        "Category": "C29",
+        "Group": "Clothing",
+        "Value": 18
+      },
+      {
+        "Category": "C29",
+        "Group": "Food",
+        "Value": 61
+      },
+      {
+        "Category": "C29",
+        "Group": "Books",
+        "Value": 41
+      },
+      {
+        "Category": "C29",
+        "Group": "Sports",
+        "Value": 67
+      },
+      {
+        "Category": "C30",
+        "Group": "Electronics",
+        "Value": 63
+      },
+      {
+        "Category": "C30",
+        "Group": "Clothing",
+        "Value": 55
+      },
+      {
+        "Category": "C30",
+        "Group": "Food",
+        "Value": 93
+      },
+      {
+        "Category": "C30",
+        "Group": "Books",
+        "Value": 41
+      },
+      {
+        "Category": "C30",
+        "Group": "Sports",
+        "Value": 33
+      },
+      {
+        "Category": "C31",
+        "Group": "Electronics",
+        "Value": 97
+      },
+      {
+        "Category": "C31",
+        "Group": "Clothing",
+        "Value": 59
+      },
+      {
+        "Category": "C31",
+        "Group": "Food",
+        "Value": 44
+      },
+      {
+        "Category": "C31",
+        "Group": "Books",
+        "Value": 32
+      },
+      {
+        "Category": "C31",
+        "Group": "Sports",
+        "Value": 84
+      },
+      {
+        "Category": "C32",
+        "Group": "Electronics",
+        "Value": 85
+      },
+      {
+        "Category": "C32",
+        "Group": "Clothing",
+        "Value": 67
+      },
+      {
+        "Category": "C32",
+        "Group": "Food",
+        "Value": 74
+      },
+      {
+        "Category": "C32",
+        "Group": "Books",
+        "Value": 25
+      },
+      {
+        "Category": "C32",
+        "Group": "Sports",
+        "Value": 72
+      },
+      {
+        "Category": "C33",
+        "Group": "Electronics",
+        "Value": 87
+      },
+      {
+        "Category": "C33",
+        "Group": "Clothing",
+        "Value": 1
+      },
+      {
+        "Category": "C33",
+        "Group": "Food",
+        "Value": 57
+      },
+      {
+        "Category": "C33",
+        "Group": "Books",
+        "Value": 87
+      },
+      {
+        "Category": "C33",
+        "Group": "Sports",
+        "Value": 74
+      },
+      {
+        "Category": "C34",
+        "Group": "Electronics",
+        "Value": 63
+      },
+      {
+        "Category": "C34",
+        "Group": "Clothing",
+        "Value": 66
+      },
+      {
+        "Category": "C34",
+        "Group": "Food",
+        "Value": 29
+      },
+      {
+        "Category": "C34",
+        "Group": "Books",
+        "Value": 89
+      },
+      {
+        "Category": "C34",
+        "Group": "Sports",
+        "Value": 10
+      },
+      {
+        "Category": "C35",
+        "Group": "Electronics",
+        "Value": 75
+      },
+      {
+        "Category": "C35",
+        "Group": "Clothing",
+        "Value": 21
+      },
+      {
+        "Category": "C35",
+        "Group": "Food",
+        "Value": 82
+      },
+      {
+        "Category": "C35",
+        "Group": "Books",
+        "Value": 54
+      },
+      {
+        "Category": "C35",
+        "Group": "Sports",
+        "Value": 65
+      },
+      {
+        "Category": "C36",
+        "Group": "Electronics",
+        "Value": 30
+      },
+      {
+        "Category": "C36",
+        "Group": "Clothing",
+        "Value": 51
+      },
+      {
+        "Category": "C36",
+        "Group": "Food",
+        "Value": 33
+      },
+      {
+        "Category": "C36",
+        "Group": "Books",
+        "Value": 58
+      },
+      {
+        "Category": "C36",
+        "Group": "Sports",
+        "Value": 32
+      },
+      {
+        "Category": "C37",
+        "Group": "Electronics",
+        "Value": 58
+      },
+      {
+        "Category": "C37",
+        "Group": "Clothing",
+        "Value": 75
+      },
+      {
+        "Category": "C37",
+        "Group": "Food",
+        "Value": 11
+      },
+      {
+        "Category": "C37",
+        "Group": "Books",
+        "Value": 63
+      },
+      {
+        "Category": "C37",
+        "Group": "Sports",
+        "Value": 85
+      },
+      {
+        "Category": "C38",
+        "Group": "Electronics",
+        "Value": 93
+      },
+      {
+        "Category": "C38",
+        "Group": "Clothing",
+        "Value": 32
+      },
+      {
+        "Category": "C38",
+        "Group": "Food",
+        "Value": 48
+      },
+      {
+        "Category": "C38",
+        "Group": "Books",
+        "Value": 11
+      },
+      {
+        "Category": "C38",
+        "Group": "Sports",
+        "Value": 95
+      },
+      {
+        "Category": "C39",
+        "Group": "Electronics",
+        "Value": 57
+      },
+      {
+        "Category": "C39",
+        "Group": "Clothing",
+        "Value": 13
+      },
+      {
+        "Category": "C39",
+        "Group": "Food",
+        "Value": 60
+      },
+      {
+        "Category": "C39",
+        "Group": "Books",
+        "Value": 86
+      },
+      {
+        "Category": "C39",
+        "Group": "Sports",
+        "Value": 21
+      },
+      {
+        "Category": "C40",
+        "Group": "Electronics",
+        "Value": 41
+      },
+      {
+        "Category": "C40",
+        "Group": "Clothing",
+        "Value": 68
+      },
+      {
+        "Category": "C40",
+        "Group": "Food",
+        "Value": 34
+      },
+      {
+        "Category": "C40",
+        "Group": "Books",
+        "Value": 33
+      },
+      {
+        "Category": "C40",
+        "Group": "Sports",
+        "Value": 40
+      },
+      {
+        "Category": "C41",
+        "Group": "Electronics",
+        "Value": 16
+      },
+      {
+        "Category": "C41",
+        "Group": "Clothing",
+        "Value": 3
+      },
+      {
+        "Category": "C41",
+        "Group": "Food",
+        "Value": 66
+      },
+      {
+        "Category": "C41",
+        "Group": "Books",
+        "Value": 14
+      },
+      {
+        "Category": "C41",
+        "Group": "Sports",
+        "Value": 76
+      },
+      {
+        "Category": "C42",
+        "Group": "Electronics",
+        "Value": 8
+      },
+      {
+        "Category": "C42",
+        "Group": "Clothing",
+        "Value": 99
+      },
+      {
+        "Category": "C42",
+        "Group": "Food",
+        "Value": 50
+      },
+      {
+        "Category": "C42",
+        "Group": "Books",
+        "Value": 71
+      },
+      {
+        "Category": "C42",
+        "Group": "Sports",
+        "Value": 3
+      },
+      {
+        "Category": "C43",
+        "Group": "Electronics",
+        "Value": 54
+      },
+      {
+        "Category": "C43",
+        "Group": "Clothing",
+        "Value": 54
+      },
+      {
+        "Category": "C43",
+        "Group": "Food",
+        "Value": 79
+      },
+      {
+        "Category": "C43",
+        "Group": "Books",
+        "Value": 66
+      },
+      {
+        "Category": "C43",
+        "Group": "Sports",
+        "Value": 66
+      },
+      {
+        "Category": "C44",
+        "Group": "Electronics",
+        "Value": 26
+      },
+      {
+        "Category": "C44",
+        "Group": "Clothing",
+        "Value": 24
+      },
+      {
+        "Category": "C44",
+        "Group": "Food",
+        "Value": 3
+      },
+      {
+        "Category": "C44",
+        "Group": "Books",
+        "Value": 84
+      },
+      {
+        "Category": "C44",
+        "Group": "Sports",
+        "Value": 23
+      },
+      {
+        "Category": "C45",
+        "Group": "Electronics",
+        "Value": 19
+      },
+      {
+        "Category": "C45",
+        "Group": "Clothing",
+        "Value": 31
+      },
+      {
+        "Category": "C45",
+        "Group": "Food",
+        "Value": 43
+      },
+      {
+        "Category": "C45",
+        "Group": "Books",
+        "Value": 3
+      },
+      {
+        "Category": "C45",
+        "Group": "Sports",
+        "Value": 13
+      },
+      {
+        "Category": "C46",
+        "Group": "Electronics",
+        "Value": 11
+      },
+      {
+        "Category": "C46",
+        "Group": "Clothing",
+        "Value": 18
+      },
+      {
+        "Category": "C46",
+        "Group": "Food",
+        "Value": 61
+      },
+      {
+        "Category": "C46",
+        "Group": "Books",
+        "Value": 93
+      },
+      {
+        "Category": "C46",
+        "Group": "Sports",
+        "Value": 52
+      },
+      {
+        "Category": "C47",
+        "Group": "Electronics",
+        "Value": 85
+      },
+      {
+        "Category": "C47",
+        "Group": "Clothing",
+        "Value": 41
+      },
+      {
+        "Category": "C47",
+        "Group": "Food",
+        "Value": 0
+      },
+      {
+        "Category": "C47",
+        "Group": "Books",
+        "Value": 59
+      },
+      {
+        "Category": "C47",
+        "Group": "Sports",
+        "Value": 38
+      },
+      {
+        "Category": "C48",
+        "Group": "Electronics",
+        "Value": 25
+      },
+      {
+        "Category": "C48",
+        "Group": "Clothing",
+        "Value": 33
+      },
+      {
+        "Category": "C48",
+        "Group": "Food",
+        "Value": 28
+      },
+      {
+        "Category": "C48",
+        "Group": "Books",
+        "Value": 73
+      },
+      {
+        "Category": "C48",
+        "Group": "Sports",
+        "Value": 52
+      },
+      {
+        "Category": "C49",
+        "Group": "Electronics",
+        "Value": 68
+      },
+      {
+        "Category": "C49",
+        "Group": "Clothing",
+        "Value": 8
+      },
+      {
+        "Category": "C49",
+        "Group": "Food",
+        "Value": 19
+      },
+      {
+        "Category": "C49",
+        "Group": "Books",
+        "Value": 29
+      },
+      {
+        "Category": "C49",
+        "Group": "Sports",
+        "Value": 65
+      },
+      {
+        "Category": "C50",
+        "Group": "Electronics",
+        "Value": 2
+      },
+      {
+        "Category": "C50",
+        "Group": "Clothing",
+        "Value": 9
+      },
+      {
+        "Category": "C50",
+        "Group": "Food",
+        "Value": 97
+      },
+      {
+        "Category": "C50",
+        "Group": "Books",
+        "Value": 86
+      },
+      {
+        "Category": "C50",
+        "Group": "Sports",
+        "Value": 96
+      },
+      {
+        "Category": "C51",
+        "Group": "Electronics",
+        "Value": 63
+      },
+      {
+        "Category": "C51",
+        "Group": "Clothing",
+        "Value": 84
+      },
+      {
+        "Category": "C51",
+        "Group": "Food",
+        "Value": 44
+      },
+      {
+        "Category": "C51",
+        "Group": "Books",
+        "Value": 11
+      },
+      {
+        "Category": "C51",
+        "Group": "Sports",
+        "Value": 38
+      },
+      {
+        "Category": "C52",
+        "Group": "Electronics",
+        "Value": 17
+      },
+      {
+        "Category": "C52",
+        "Group": "Clothing",
+        "Value": 54
+      },
+      {
+        "Category": "C52",
+        "Group": "Food",
+        "Value": 58
+      },
+      {
+        "Category": "C52",
+        "Group": "Books",
+        "Value": 72
+      },
+      {
+        "Category": "C52",
+        "Group": "Sports",
+        "Value": 54
+      },
+      {
+        "Category": "C53",
+        "Group": "Electronics",
+        "Value": 41
+      },
+      {
+        "Category": "C53",
+        "Group": "Clothing",
+        "Value": 50
+      },
+      {
+        "Category": "C53",
+        "Group": "Food",
+        "Value": 62
+      },
+      {
+        "Category": "C53",
+        "Group": "Books",
+        "Value": 76
+      },
+      {
+        "Category": "C53",
+        "Group": "Sports",
+        "Value": 17
+      },
+      {
+        "Category": "C54",
+        "Group": "Electronics",
+        "Value": 65
+      },
+      {
+        "Category": "C54",
+        "Group": "Clothing",
+        "Value": 8
+      },
+      {
+        "Category": "C54",
+        "Group": "Food",
+        "Value": 40
+      },
+      {
+        "Category": "C54",
+        "Group": "Books",
+        "Value": 41
+      },
+      {
+        "Category": "C54",
+        "Group": "Sports",
+        "Value": 9
+      },
+      {
+        "Category": "C55",
+        "Group": "Electronics",
+        "Value": 28
+      },
+      {
+        "Category": "C55",
+        "Group": "Clothing",
+        "Value": 77
+      },
+      {
+        "Category": "C55",
+        "Group": "Food",
+        "Value": 74
+      },
+      {
+        "Category": "C55",
+        "Group": "Books",
+        "Value": 22
+      },
+      {
+        "Category": "C55",
+        "Group": "Sports",
+        "Value": 47
+      },
+      {
+        "Category": "C56",
+        "Group": "Electronics",
+        "Value": 85
+      },
+      {
+        "Category": "C56",
+        "Group": "Clothing",
+        "Value": 90
+      },
+      {
+        "Category": "C56",
+        "Group": "Food",
+        "Value": 76
+      },
+      {
+        "Category": "C56",
+        "Group": "Books",
+        "Value": 78
+      },
+      {
+        "Category": "C56",
+        "Group": "Sports",
+        "Value": 5
+      },
+      {
+        "Category": "C57",
+        "Group": "Electronics",
+        "Value": 57
+      },
+      {
+        "Category": "C57",
+        "Group": "Clothing",
+        "Value": 99
+      },
+      {
+        "Category": "C57",
+        "Group": "Food",
+        "Value": 10
+      },
+      {
+        "Category": "C57",
+        "Group": "Books",
+        "Value": 20
+      },
+      {
+        "Category": "C57",
+        "Group": "Sports",
+        "Value": 41
+      },
+      {
+        "Category": "C58",
+        "Group": "Electronics",
+        "Value": 9
+      },
+      {
+        "Category": "C58",
+        "Group": "Clothing",
+        "Value": 92
+      },
+      {
+        "Category": "C58",
+        "Group": "Food",
+        "Value": 54
+      },
+      {
+        "Category": "C58",
+        "Group": "Books",
+        "Value": 89
+      },
+      {
+        "Category": "C58",
+        "Group": "Sports",
+        "Value": 95
+      },
+      {
+        "Category": "C59",
+        "Group": "Electronics",
+        "Value": 74
+      },
+      {
+        "Category": "C59",
+        "Group": "Clothing",
+        "Value": 35
+      },
+      {
+        "Category": "C59",
+        "Group": "Food",
+        "Value": 44
+      },
+      {
+        "Category": "C59",
+        "Group": "Books",
+        "Value": 69
+      },
+      {
+        "Category": "C59",
+        "Group": "Sports",
+        "Value": 80
+      },
+      {
+        "Category": "C60",
+        "Group": "Electronics",
+        "Value": 78
+      },
+      {
+        "Category": "C60",
+        "Group": "Clothing",
+        "Value": 83
+      },
+      {
+        "Category": "C60",
+        "Group": "Food",
+        "Value": 71
+      },
+      {
+        "Category": "C60",
+        "Group": "Books",
+        "Value": 39
+      },
+      {
+        "Category": "C60",
+        "Group": "Sports",
+        "Value": 48
+      },
+      {
+        "Category": "C61",
+        "Group": "Electronics",
+        "Value": 5
+      },
+      {
+        "Category": "C61",
+        "Group": "Clothing",
+        "Value": 74
+      },
+      {
+        "Category": "C61",
+        "Group": "Food",
+        "Value": 35
+      },
+      {
+        "Category": "C61",
+        "Group": "Books",
+        "Value": 53
+      },
+      {
+        "Category": "C61",
+        "Group": "Sports",
+        "Value": 45
+      },
+      {
+        "Category": "C62",
+        "Group": "Electronics",
+        "Value": 60
+      },
+      {
+        "Category": "C62",
+        "Group": "Clothing",
+        "Value": 26
+      },
+      {
+        "Category": "C62",
+        "Group": "Food",
+        "Value": 52
+      },
+      {
+        "Category": "C62",
+        "Group": "Books",
+        "Value": 52
+      },
+      {
+        "Category": "C62",
+        "Group": "Sports",
+        "Value": 20
+      },
+      {
+        "Category": "C63",
+        "Group": "Electronics",
+        "Value": 90
+      },
+      {
+        "Category": "C63",
+        "Group": "Clothing",
+        "Value": 53
+      },
+      {
+        "Category": "C63",
+        "Group": "Food",
+        "Value": 70
+      },
+      {
+        "Category": "C63",
+        "Group": "Books",
+        "Value": 1
+      },
+      {
+        "Category": "C63",
+        "Group": "Sports",
+        "Value": 55
+      },
+      {
+        "Category": "C64",
+        "Group": "Electronics",
+        "Value": 2
+      },
+      {
+        "Category": "C64",
+        "Group": "Clothing",
+        "Value": 55
+      },
+      {
+        "Category": "C64",
+        "Group": "Food",
+        "Value": 1
+      },
+      {
+        "Category": "C64",
+        "Group": "Books",
+        "Value": 93
+      },
+      {
+        "Category": "C64",
+        "Group": "Sports",
+        "Value": 26
+      },
+      {
+        "Category": "C65",
+        "Group": "Electronics",
+        "Value": 82
+      },
+      {
+        "Category": "C65",
+        "Group": "Clothing",
+        "Value": 81
+      },
+      {
+        "Category": "C65",
+        "Group": "Food",
+        "Value": 50
+      },
+      {
+        "Category": "C65",
+        "Group": "Books",
+        "Value": 43
+      },
+      {
+        "Category": "C65",
+        "Group": "Sports",
+        "Value": 63
+      },
+      {
+        "Category": "C66",
+        "Group": "Electronics",
+        "Value": 34
+      },
+      {
+        "Category": "C66",
+        "Group": "Clothing",
+        "Value": 69
+      },
+      {
+        "Category": "C66",
+        "Group": "Food",
+        "Value": 47
+      },
+      {
+        "Category": "C66",
+        "Group": "Books",
+        "Value": 92
+      },
+      {
+        "Category": "C66",
+        "Group": "Sports",
+        "Value": 49
+      },
+      {
+        "Category": "C67",
+        "Group": "Electronics",
+        "Value": 52
+      },
+      {
+        "Category": "C67",
+        "Group": "Clothing",
+        "Value": 99
+      },
+      {
+        "Category": "C67",
+        "Group": "Food",
+        "Value": 48
+      },
+      {
+        "Category": "C67",
+        "Group": "Books",
+        "Value": 14
+      },
+      {
+        "Category": "C67",
+        "Group": "Sports",
+        "Value": 52
+      },
+      {
+        "Category": "C68",
+        "Group": "Electronics",
+        "Value": 23
+      },
+      {
+        "Category": "C68",
+        "Group": "Clothing",
+        "Value": 11
+      },
+      {
+        "Category": "C68",
+        "Group": "Food",
+        "Value": 31
+      },
+      {
+        "Category": "C68",
+        "Group": "Books",
+        "Value": 13
+      },
+      {
+        "Category": "C68",
+        "Group": "Sports",
+        "Value": 56
+      },
+      {
+        "Category": "C69",
+        "Group": "Electronics",
+        "Value": 37
+      },
+      {
+        "Category": "C69",
+        "Group": "Clothing",
+        "Value": 58
+      },
+      {
+        "Category": "C69",
+        "Group": "Food",
+        "Value": 61
+      },
+      {
+        "Category": "C69",
+        "Group": "Books",
+        "Value": 21
+      },
+      {
+        "Category": "C69",
+        "Group": "Sports",
+        "Value": 23
+      },
+      {
+        "Category": "C70",
+        "Group": "Electronics",
+        "Value": 79
+      },
+      {
+        "Category": "C70",
+        "Group": "Clothing",
+        "Value": 46
+      },
+      {
+        "Category": "C70",
+        "Group": "Food",
+        "Value": 74
+      },
+      {
+        "Category": "C70",
+        "Group": "Books",
+        "Value": 15
+      },
+      {
+        "Category": "C70",
+        "Group": "Sports",
+        "Value": 70
+      },
+      {
+        "Category": "C71",
+        "Group": "Electronics",
+        "Value": 37
+      },
+      {
+        "Category": "C71",
+        "Group": "Clothing",
+        "Value": 62
+      },
+      {
+        "Category": "C71",
+        "Group": "Food",
+        "Value": 0
+      },
+      {
+        "Category": "C71",
+        "Group": "Books",
+        "Value": 52
+      },
+      {
+        "Category": "C71",
+        "Group": "Sports",
+        "Value": 44
+      },
+      {
+        "Category": "C72",
+        "Group": "Electronics",
+        "Value": 93
+      },
+      {
+        "Category": "C72",
+        "Group": "Clothing",
+        "Value": 33
+      },
+      {
+        "Category": "C72",
+        "Group": "Food",
+        "Value": 91
+      },
+      {
+        "Category": "C72",
+        "Group": "Books",
+        "Value": 47
+      },
+      {
+        "Category": "C72",
+        "Group": "Sports",
+        "Value": 95
+      },
+      {
+        "Category": "C73",
+        "Group": "Electronics",
+        "Value": 48
+      },
+      {
+        "Category": "C73",
+        "Group": "Clothing",
+        "Value": 16
+      },
+      {
+        "Category": "C73",
+        "Group": "Food",
+        "Value": 61
+      },
+      {
+        "Category": "C73",
+        "Group": "Books",
+        "Value": 97
+      },
+      {
+        "Category": "C73",
+        "Group": "Sports",
+        "Value": 59
+      },
+      {
+        "Category": "C74",
+        "Group": "Electronics",
+        "Value": 49
+      },
+      {
+        "Category": "C74",
+        "Group": "Clothing",
+        "Value": 85
+      },
+      {
+        "Category": "C74",
+        "Group": "Food",
+        "Value": 96
+      },
+      {
+        "Category": "C74",
+        "Group": "Books",
+        "Value": 70
+      },
+      {
+        "Category": "C74",
+        "Group": "Sports",
+        "Value": 85
+      },
+      {
+        "Category": "C75",
+        "Group": "Electronics",
+        "Value": 72
+      },
+      {
+        "Category": "C75",
+        "Group": "Clothing",
+        "Value": 14
+      },
+      {
+        "Category": "C75",
+        "Group": "Food",
+        "Value": 25
+      },
+      {
+        "Category": "C75",
+        "Group": "Books",
+        "Value": 73
+      },
+      {
+        "Category": "C75",
+        "Group": "Sports",
+        "Value": 35
+      },
+      {
+        "Category": "C76",
+        "Group": "Electronics",
+        "Value": 96
+      },
+      {
+        "Category": "C76",
+        "Group": "Clothing",
+        "Value": 8
+      },
+      {
+        "Category": "C76",
+        "Group": "Food",
+        "Value": 61
+      },
+      {
+        "Category": "C76",
+        "Group": "Books",
+        "Value": 50
+      },
+      {
+        "Category": "C76",
+        "Group": "Sports",
+        "Value": 73
+      },
+      {
+        "Category": "C77",
+        "Group": "Electronics",
+        "Value": 84
+      },
+      {
+        "Category": "C77",
+        "Group": "Clothing",
+        "Value": 8
+      },
+      {
+        "Category": "C77",
+        "Group": "Food",
+        "Value": 6
+      },
+      {
+        "Category": "C77",
+        "Group": "Books",
+        "Value": 69
+      },
+      {
+        "Category": "C77",
+        "Group": "Sports",
+        "Value": 86
+      },
+      {
+        "Category": "C78",
+        "Group": "Electronics",
+        "Value": 73
+      },
+      {
+        "Category": "C78",
+        "Group": "Clothing",
+        "Value": 18
+      },
+      {
+        "Category": "C78",
+        "Group": "Food",
+        "Value": 71
+      },
+      {
+        "Category": "C78",
+        "Group": "Books",
+        "Value": 19
+      },
+      {
+        "Category": "C78",
+        "Group": "Sports",
+        "Value": 43
+      },
+      {
+        "Category": "C79",
+        "Group": "Electronics",
+        "Value": 45
+      },
+      {
+        "Category": "C79",
+        "Group": "Clothing",
+        "Value": 16
+      },
+      {
+        "Category": "C79",
+        "Group": "Food",
+        "Value": 62
+      },
+      {
+        "Category": "C79",
+        "Group": "Books",
+        "Value": 47
+      },
+      {
+        "Category": "C79",
+        "Group": "Sports",
+        "Value": 91
+      },
+      {
+        "Category": "C80",
+        "Group": "Electronics",
+        "Value": 12
+      },
+      {
+        "Category": "C80",
+        "Group": "Clothing",
+        "Value": 66
+      },
+      {
+        "Category": "C80",
+        "Group": "Food",
+        "Value": 51
+      },
+      {
+        "Category": "C80",
+        "Group": "Books",
+        "Value": 56
+      },
+      {
+        "Category": "C80",
+        "Group": "Sports",
+        "Value": 2
+      }
+    ]
+  }
+}

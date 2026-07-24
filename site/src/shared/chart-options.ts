@@ -161,10 +161,12 @@ export function buildPanelModel(
 
   // Non-Vega-Lite backends only honor a subset of the VL properties; drop the
   // controls the selected backend's template doesn't implement so the options
-  // bar never shows a knob that does nothing.
+  // bar never shows a knob that does nothing. `facetColumns` is exempt: it is a
+  // LAYOUT-level control (facet wrap) honored by every backend's assembler, not
+  // a per-template mark property, so it never appears in a template's own list.
   const supported = backendSupportedPropertyKeys(input.chart_spec.chartType, backend);
   if (supported) {
-    properties = properties.filter((o) => supported.has(o.key));
+    properties = properties.filter((o) => o.key === 'facetColumns' || supported.has(o.key));
   }
 
   const encodings = normalizeEncodings(input);

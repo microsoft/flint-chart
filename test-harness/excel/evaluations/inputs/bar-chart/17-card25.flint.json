@@ -1,0 +1,121 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "Date",
+      "y": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2020-01-01",
+        "Group": "Laptop"
+      },
+      {
+        "Date": "2020-02-13",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2020-03-28",
+        "Group": "Laptop"
+      },
+      {
+        "Date": "2020-05-11",
+        "Group": "Phone"
+      },
+      {
+        "Date": "2020-06-24",
+        "Group": "Monitor"
+      },
+      {
+        "Date": "2020-08-07",
+        "Group": "Laptop"
+      },
+      {
+        "Date": "2020-09-19",
+        "Group": "Laptop"
+      },
+      {
+        "Date": "2020-11-02",
+        "Group": "Tablet"
+      },
+      {
+        "Date": "2020-12-16",
+        "Group": "Tablet"
+      },
+      {
+        "Date": "2021-01-29",
+        "Group": "Tablet"
+      },
+      {
+        "Date": "2021-03-14",
+        "Group": "Monitor"
+      },
+      {
+        "Date": "2021-04-26",
+        "Group": "Monitor"
+      },
+      {
+        "Date": "2021-06-09",
+        "Group": "Phone"
+      },
+      {
+        "Date": "2021-07-23",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2021-09-05",
+        "Group": "Phone"
+      },
+      {
+        "Date": "2021-10-19",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2021-12-01",
+        "Group": "Phone"
+      },
+      {
+        "Date": "2022-01-14",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2022-02-27",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2022-04-12",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2022-05-26",
+        "Group": "Monitor"
+      },
+      {
+        "Date": "2022-07-08",
+        "Group": "Laptop"
+      },
+      {
+        "Date": "2022-08-21",
+        "Group": "Tablet"
+      },
+      {
+        "Date": "2022-10-04",
+        "Group": "Desktop"
+      },
+      {
+        "Date": "2022-11-17",
+        "Group": "Desktop"
+      }
+    ]
+  }
+}

@@ -436,36 +436,6 @@ export function genEChartsGroupedBarTests(): TestCase[] {
         });
     }
 
-    // Global vs local dodge (sparse region × channel). EC local = compact
-    // maxPerBand lane-series (left-aligned).
-    {
-        const regions = ['North', 'South', 'East', 'West', 'Central', 'Coast'];
-        const channels = ['Retail', 'Online', 'Wholesale', 'Direct'];
-        const subset: Record<string, string[]> = {
-            North: ['Retail', 'Online'], South: ['Online', 'Wholesale', 'Direct'], East: ['Wholesale', 'Direct'],
-            West: ['Retail', 'Direct'], Central: ['Retail', 'Online', 'Wholesale'], Coast: ['Online', 'Direct'],
-        };
-        for (const mode of ['global', 'local'] as const) {
-            const data: any[] = [];
-            regions.forEach((r, ri) => subset[r].forEach((ch, ci) => data.push({ Region: r, Channel: ch, Sales: Math.round(300 + ri * 40 + ci * 30) })));
-            tests.push({
-                title: mode === 'global' ? 'EC: Grouped Bar — Dodge Global' : 'EC: Grouped Bar — Dodge Local',
-                description: mode === 'global' ? 'fixed lane per channel (gaps where absent)' : 'compact maxPerBand lanes, left-aligned',
-                tags: ['echarts', 'grouped-bar', 'sparse', `dodge-${mode}`],
-                chartType: 'Grouped Bar Chart',
-                data,
-                fields: [makeField('Region'), makeField('Sales'), makeField('Channel')],
-                metadata: {
-                    Region: { type: Type.String, semanticType: 'Category', levels: regions },
-                    Sales: { type: Type.Number, semanticType: 'Quantity', levels: [] },
-                    Channel: { type: Type.String, semanticType: 'Category', levels: channels },
-                },
-                chartProperties: { dodge: mode },
-                encodingMap: { x: makeEncodingItem('Region'), y: makeEncodingItem('Sales'), group: makeEncodingItem('Channel') },
-            });
-        }
-    }
-
     return tests;
 }
 
@@ -944,37 +914,6 @@ export function genEChartsBoxplotTests(): TestCase[] {
             },
             encodingMap: { x: makeEncodingItem('City'), y: makeEncodingItem('Salary') },
         });
-    }
-
-    // Global vs local dodge (sparse dept × level).
-    {
-        const depts = ['Eng', 'Sales', 'HR', 'Ops', 'Legal', 'Finance'];
-        const levels = ['L1', 'L2', 'L3', 'L4', 'L5'];
-        const subset: Record<string, string[]> = {
-            Eng: ['L1', 'L2'], Sales: ['L2', 'L3'], HR: ['L3', 'L4'], Ops: ['L4', 'L5'], Legal: ['L5', 'L1'], Finance: ['L1', 'L3'],
-        };
-        const rand = seededRandom(880);
-        for (const mode of ['global', 'local'] as const) {
-            const data: any[] = [];
-            for (const dp of depts) for (const l of subset[dp]) for (let i = 0; i < 18; i++) {
-                data.push({ Department: dp, Level: l, Comp: Math.round(30000 + (l.charCodeAt(1) % 5) * 15000 + rand() * 90000) });
-            }
-            tests.push({
-                title: mode === 'global' ? 'EC: Boxplot — Dodge Global' : 'EC: Boxplot — Dodge Local',
-                description: mode === 'global' ? 'fixed lane per level (gaps where absent)' : 'compact maxPerBand lanes, left-aligned',
-                tags: ['echarts', 'boxplot', 'sparse', `dodge-${mode}`],
-                chartType: 'Boxplot',
-                data,
-                fields: [makeField('Department'), makeField('Comp'), makeField('Level')],
-                metadata: {
-                    Department: { type: Type.String, semanticType: 'Category', levels: depts },
-                    Comp: { type: Type.Number, semanticType: 'Amount', levels: [] },
-                    Level: { type: Type.String, semanticType: 'Category', levels: levels },
-                },
-                chartProperties: { dodge: mode },
-                encodingMap: { x: makeEncodingItem('Department'), y: makeEncodingItem('Comp'), color: makeEncodingItem('Level') },
-            });
-        }
     }
 
     return tests;

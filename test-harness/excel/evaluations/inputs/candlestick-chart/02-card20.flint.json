@@ -1,0 +1,167 @@
+{
+  "semantic_types": {
+    "Date": "Date",
+    "Open": "Quantity",
+    "High": "Quantity",
+    "Low": "Quantity",
+    "Close": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Candlestick Chart",
+    "encodings": {
+      "x": "Date",
+      "open": "Open",
+      "high": "High",
+      "low": "Low",
+      "close": "Close"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2024-01-02",
+        "Open": 3,
+        "High": 4.6,
+        "Low": 2,
+        "Close": 4.19
+      },
+      {
+        "Date": "2024-01-03",
+        "Open": 4.19,
+        "High": 7.25,
+        "Low": 2.28,
+        "Close": 5.59
+      },
+      {
+        "Date": "2024-01-04",
+        "Open": 5.59,
+        "High": 6.75,
+        "Low": 4.01,
+        "Close": 4.8
+      },
+      {
+        "Date": "2024-01-05",
+        "Open": 4.8,
+        "High": 6.63,
+        "Low": 2.87,
+        "Close": 5.99
+      },
+      {
+        "Date": "2024-01-06",
+        "Open": 5.99,
+        "High": 7.95,
+        "Low": 3.64,
+        "Close": 5.06
+      },
+      {
+        "Date": "2024-01-07",
+        "Open": 5.06,
+        "High": 6.42,
+        "Low": 3.45,
+        "Close": 5.55
+      },
+      {
+        "Date": "2024-01-08",
+        "Open": 5.55,
+        "High": 5.8,
+        "Low": 2.92,
+        "Close": 4.83
+      },
+      {
+        "Date": "2024-01-09",
+        "Open": 4.83,
+        "High": 7.56,
+        "Low": 4.49,
+        "Close": 6.49
+      },
+      {
+        "Date": "2024-01-10",
+        "Open": 6.49,
+        "High": 7.13,
+        "Low": 4.68,
+        "Close": 7.05
+      },
+      {
+        "Date": "2024-01-11",
+        "Open": 7.05,
+        "High": 10.66,
+        "Low": 6.78,
+        "Close": 8.81
+      },
+      {
+        "Date": "2024-01-12",
+        "Open": 8.81,
+        "High": 10.95,
+        "Low": 7.6,
+        "Close": 10.26
+      },
+      {
+        "Date": "2024-01-13",
+        "Open": 10.26,
+        "High": 11.36,
+        "Low": 7.33,
+        "Close": 8.44
+      },
+      {
+        "Date": "2024-01-14",
+        "Open": 8.44,
+        "High": 10.19,
+        "Low": 7.95,
+        "Close": 8.55
+      },
+      {
+        "Date": "2024-01-15",
+        "Open": 8.55,
+        "High": 9.51,
+        "Low": 5.73,
+        "Close": 6.77
+      },
+      {
+        "Date": "2024-01-16",
+        "Open": 6.77,
+        "High": 8.48,
+        "Low": 3.79,
+        "Close": 5.25
+      },
+      {
+        "Date": "2024-01-17",
+        "Open": 5.25,
+        "High": 5.52,
+        "Low": 3.8,
+        "Close": 4.43
+      },
+      {
+        "Date": "2024-01-18",
+        "Open": 4.43,
+        "High": 7.02,
+        "Low": 2.67,
+        "Close": 5.7
+      },
+      {
+        "Date": "2024-01-19",
+        "Open": 5.7,
+        "High": 8.03,
+        "Low": 5.53,
+        "Close": 6.21
+      },
+      {
+        "Date": "2024-01-20",
+        "Open": 6.21,
+        "High": 7.92,
+        "Low": 6,
+        "Close": 6.89
+      },
+      {
+        "Date": "2024-01-21",
+        "Open": 6.89,
+        "High": 8.04,
+        "Low": 5.67,
+        "Close": 6.01
+      }
+    ]
+  }
+}

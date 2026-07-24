@@ -7,6 +7,8 @@ export default defineConfig({
     'vegalite/index': 'src/vegalite/index.ts',
     'echarts/index': 'src/echarts/index.ts',
     'chartjs/index': 'src/chartjs/index.ts',
+    'plotly/index': 'src/plotly/index.ts',
+    'excel/index': 'src/excel/index.ts',
     'test-data/index': 'src/test-data/index.ts',
     'gallery/index': 'src/gallery/index.ts',
   },
@@ -17,5 +19,5 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   target: 'es2020',
-  external: ['vega', 'vega-lite', 'echarts', 'chart.js'],
+  external: ['vega', 'vega-lite', 'echarts', 'chart.js', 'plotly.js'],
 });

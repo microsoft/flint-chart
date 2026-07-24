@@ -188,12 +188,18 @@ The `detectBandedAxis` function in `templates/utils.ts` handles this decision.
 
 ## §1.1 Problem
 
-A discrete axis displays $N$ banded items (categories, bins, groups) along a 1D segment of length $L_0$ pixels. Each item ideally occupies $\ell_0$ pixels (the natural length). When $N \cdot \ell_0 > L_0$, the items overflow.
+A discrete axis displays $N$ banded items (categories, bins, groups) along a 1D
+segment of length $L_0$ pixels. Each band has a **natural size** $\ell_0$ and is
+kept within a **minimum** $\ell_{\min}$ and a **maximum** $\ell_{\max}$.
 
-Two competing goals must be balanced:
+The layout balances two directions:
 
-1. **Items resist compression** — each item pushes outward to maintain $\ell_0$, and cannot shrink below $\ell_{\min}$.
-2. **The axis resists expansion** — the axis can stretch beyond $L_0$ but has a hard maximum $L_{\max}$.
+1. **Too sparse.** When a few items share a wide plot, each band grows to fill
+   the space — but never past $\ell_{\max}$, so one or two bars don't balloon to
+   the whole canvas.
+2. **Too dense.** When many items crowd the axis, bands compress toward
+   $\ell_{\min}$, and the axis itself may stretch up to $L_{\max}$. Beyond that,
+   extra items overflow.
 
 ## §1.2 Parameters
 
@@ -202,40 +208,70 @@ Two competing goals must be balanced:
 | $L_0$ | Natural axis length | `width` / `height` (canvas size) | 400 px |
 | $L_{\max}$ | Maximum axis length | `width × maxStretch` | 800 px |
 | $N$ | Number of banded items | Field cardinality | data-dependent |
-| $\ell_0$ | Natural length per item | `defaultStepSize` | ~20 px |
-| $\ell_{\min}$ | Minimum length per item | `minStep` option | 6 px |
+| $\ell_0$ | Natural (base) size per band | `defaultBandSize` | ~20 px |
+| $\ell_{\min}$ | Minimum size per band | `minStep` option | 6 px |
+| $\ell_{\max}$ | Maximum size per band | `maxBandSize` option | = $\ell_0$ |
 | $\alpha$ | Elasticity exponent | `elasticity` option | 0.5 |
 | $\beta$ | Maximum stretch multiplier | `maxStretch` option | 1.5 |
 
-> **Code defaults:** `ElasticStretchParams` in `core/decisions.ts` — `elasticity: 0.5`, `maxStretch: 1.5`, `minStep: 6`. The `defaultStepSize` is computed dynamically based on canvas size: `round(20 × max(1, sizeRatio) × defaultStepMultiplier)`.
+> **Code defaults:** `ElasticStretchParams` in `core/decisions.ts` — `elasticity: 0.5`, `maxStretch: 1.5`, `minStep: 6`. $\ell_0$ (`defaultBandSize`) and $\ell_{\max}$ (`maxBandSize`) are given at a 300px reference and scaled with size: `round(bandSize × max(1, sizeRatio))`.
+
+### §1.2.1 Band size bounds — min, base, max
+
+Every banded chart resolves one number, the **band step** $\ell$: the pixels per
+category slot. It is a clamp of the available width per item between the minimum
+and maximum band size:
+
+$$\ell = \operatorname{clamp}\!\left(\frac{L}{N},\; \ell_{\min},\; \ell_{\max}\right)$$
+
+- $\ell_0$ (**base**) is the natural band size *and* the density threshold.
+- $\ell_{\min}$ (**min**) is the tightest a band may compress before overflow.
+- $\ell_{\max}$ (**max**) is the widest a band may expand when sparse.
+
+The three bounds are **backend-specific**. Vega-Lite sizes a plot as `N × step`,
+so its bands never grow past the base ($\ell_{\max} = \ell_0$). ECharts, Chart.js,
+and Plotly fill their plot area natively, so their bands expand up to a larger
+$\ell_{\max}$ before compressing.
+
+| Backend | Native sizing | $\ell_{\min}$ | $\ell_0$ (base) | $\ell_{\max}$ |
+|---|---|---:|---:|---:|
+| Vega-Lite | `width: { step }` → plot is `N × step` | 6 | 20 | 20 |
+| ECharts | fills the grid (`barCategoryGap`) | 6 | 24 | 100 |
+| Chart.js | fills the canvas (`categoryPercentage`) | 6 | 30 | 100 |
+| Plotly | fills the plot area (`bargap`) | 6 | 20 | 100 |
 
 ## §1.3 Three Regimes
 
-### Regime 1: No compression needed
+### Regime 1: Sparse — expand to fill
 
 **Condition:** $N \cdot \ell_0 \leq L_0$
 
-All items fit at their natural length:
+Each band grows to fill the base axis, capped at the maximum:
 
-$$\ell = \ell_0, \quad L = N \cdot \ell_0$$
+$$\ell = \min\!\left(\ell_{\max},\; \frac{L_0}{N}\right), \quad L = N \cdot \ell$$
 
-### Regime 2: Overflow beyond recovery
+Expansion happens *inside* the base width; the axis does not grow past $L_0$
+here. When $\ell_{\max} = \ell_0$ (Vega-Lite), bands stay at the base size.
 
-**Condition:** $N \cdot \ell_{\min} \geq L_{\max}$
-
-Even at minimum item length and maximum stretch, not all items fit. Excess items are truncated:
-
-$$N' = \left\lfloor \frac{L_{\max}}{\ell_{\min}} \right\rfloor, \quad \ell = \ell_{\min}, \quad L = L_{\max}$$
-
-### Regime 3: Elastic equilibrium
+### Regime 2: Dense — compress and stretch
 
 **Condition:** $N \cdot \ell_0 > L_0$ and $N \cdot \ell_{\min} < L_{\max}$
 
-Items overflow but can be accommodated by compressing items and/or stretching the axis. This is where the elastic model applies.
+Items overflow the base axis. Bands compress and the axis stretches up to
+$L_{\max}$, governed by the elastic budget in §1.4.
+
+### Regime 3: Overflow beyond recovery
+
+**Condition:** $N \cdot \ell_{\min} \geq L_{\max}$
+
+Even at minimum band size and maximum stretch, not all items fit. Excess items are truncated:
+
+$$N' = \left\lfloor \frac{L_{\max}}{\ell_{\min}} \right\rfloor, \quad \ell = \ell_{\min}, \quad L = L_{\max}$$
 
 ## §1.4 Power-Law Elastic Budget
 
-This is the **implemented model**. The axis stretches using a power-law of the pressure ratio:
+This is the **implemented model** for the dense regime. The axis budget stretches
+using a power-law of the pressure ratio:
 
 **Pressure:**
 
@@ -243,17 +279,20 @@ $$p = \frac{N \cdot \ell_0}{L_0}$$
 
 **Stretch factor:**
 
-$$s = \min(\beta,\; p^{\alpha})$$
+$$s = \min(\beta,\; \max(1, p)^{\alpha})$$
 
-**Resulting step size:**
+**Axis budget and step size:**
 
-$$\ell = \frac{L_0 \cdot s}{N} = \frac{L_0 \cdot p^{\alpha}}{N}$$
+$$L = L_0 \cdot s, \qquad \ell = \operatorname{clamp}\!\left(\frac{L}{N},\; \ell_{\min},\; \ell_{\max}\right)$$
 
-With $\alpha = 0.5$, doubling the overflow only increases the stretch by $\sqrt{2} \approx 1.41\times$ — a naturally progressive response.
+For sparse charts $p \le 1$, so $s = 1$ and the step reduces to the Regime 1 fill,
+$\min(\ell_{\max}, L_0/N)$. For dense charts $p > 1$, the budget grows and bands
+compress. With $\alpha = 0.5$, doubling the overflow only increases the stretch
+by $\sqrt{2} \approx 1.41\times$.
 
-**Clamping:** The step is clamped to $[\ell_{\min},\; \ell_0]$ and the axis length to $[L_0,\; L_{\max}]$.
+**Clamping:** The step is clamped to $[\ell_{\min},\; \ell_{\max}]$ and the axis length to $[L_0,\; L_{\max}]$.
 
-> **Implementation:** `computeElasticBudget()` in `core/decisions.ts` (lines ~549–569). Called by `computeAxisStep()` which handles both nominal and continuous-as-discrete cases.
+> **Implementation:** `computeElasticBudget()` in `core/decisions.ts` produces the axis budget; `computeLayout()` in `core/compute-layout.ts` clamps the step to $[\ell_{\min}, \ell_{\max}]$ using `minStep` / `defaultBandSize` / `maxBandSize`.
 
 ## §1.5 Linear Spring Model (Theoretical Foundation)
 

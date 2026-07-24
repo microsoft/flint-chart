@@ -153,64 +153,18 @@
 }
 
 .gopt-readout {
+  flex: none;
   text-align: left;
   color: #4b525a;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  overflow: hidden;
   white-space: nowrap;
 }
 
-.gopt-bar input[type='range'] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 60px;
-  min-width: 0;
-  height: 12px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.gopt-bar input[type='range']::-webkit-slider-runnable-track {
-  height: 3px;
-  border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    #0078d4 0 var(--pct, 50%),
-    rgba(0, 0, 0, 0.16) var(--pct, 50%) 100%
-  );
-}
-
-.gopt-bar input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 10px;
-  height: 10px;
-  margin-top: -3.5px;
-  border: none;
-  border-radius: 50%;
-  background: #0078d4;
-}
-
-.gopt-bar input[type='range']::-moz-range-track {
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.16);
-}
-
-.gopt-bar input[type='range']::-moz-range-progress {
-  height: 3px;
-  border-radius: 999px;
-  background: #0078d4;
-}
-
-.gopt-bar input[type='range']::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
-  border: none;
-  border-radius: 50%;
-  background: #0078d4;
+.gopt-bar input[type='range'].site-range {
+  flex: 0 0 48px;
+  width: 48px;
+  max-width: 48px;
 }
 
 /* Discrete property dropdown, matching the chart-type selector menu. */

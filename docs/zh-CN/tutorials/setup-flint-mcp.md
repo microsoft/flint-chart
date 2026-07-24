@@ -45,6 +45,16 @@ npx -y flint-chart-mcp
 
 该命令会启动 stdio MCP 服务器。通常只需把它写入 MCP 客户端配置，无需手动运行。
 
+## 使用托管服务器
+
+如果客户端仅支持远程 HTTP MCP 服务器，可连接 Flint 公共端点：
+
+```text
+https://flint.data-formulator.ai/mcp
+```
+
+客户端支持本地 stdio 时建议优先使用本地服务器，尤其是需要读取本地图表数据文件时。托管服务器接受直接嵌入工具调用的数据。
+
 ## 配置 VS Code
 
 在 VS Code 中，于 `.vscode/mcp.json` 添加服务器条目：
@@ -194,5 +204,6 @@ Open it with create_chart_view if this client supports MCP Apps; otherwise rende
 - [智能体工作流](/documentation/agent-workflows) 说明如何将 Flint 的语义图表契约嵌入自定义智能体或智能体产品。
 - [入门指南](/documentation/getting-started) 用一张小图解释 `DataSpec` 与 `ChartSpec` 的结构。
 - [Vega-Lite 图表](/documentation/reference-vegalite)、
-  [ECharts 图表](/documentation/reference-echarts) 和
-  [Chart.js 图表](/documentation/reference-chartjs) 按后端列出支持的图表类型。
+  [ECharts 图表](/documentation/reference-echarts)、
+  [Chart.js 图表](/documentation/reference-chartjs) 和
+  [Plotly 图表](/documentation/reference-plotly) 按后端列出支持的图表类型。

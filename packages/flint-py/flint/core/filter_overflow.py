@@ -90,13 +90,13 @@ def filter_overflow(
 
             warnings.append({
                 "severity": "warning", "code": "overflow",
-                "message": f"{omitted_count} of {len(unique_values)} values in '{field_name}' were omitted (showing top {len(values_to_keep)}).",
+                "message": f"{omitted_count} of {len(unique_values)} values in '{field_name}' were omitted (showing first {len(values_to_keep)} in sort order).",
                 "channel": channel, "field": field_name,
             })
 
             truncations.append({
                 "severity": "warning", "code": "overflow",
-                "message": f"{omitted_count} of {len(unique_values)} values in '{field_name}' were omitted (showing top {len(values_to_keep)}).",
+                "message": f"{omitted_count} of {len(unique_values)} values in '{field_name}' were omitted (showing first {len(values_to_keep)} in sort order).",
                 "channel": channel, "field": field_name,
                 "keptValues": values_to_keep, "omittedCount": omitted_count,
                 "placeholder": placeholder,
@@ -133,15 +133,13 @@ def _default_overflow_strategy(
     encodings = context["encodings"]
     all_mark_types = context["allMarkTypes"]
 
-    has_connected_mark = ("line" in all_mark_types) or ("area" in all_mark_types) or ("trail" in all_mark_types)
-
     encoding = encodings.get(channel) or {}
     sort_by = encoding.get("sortBy")
     sort_order = encoding.get("sortOrder")
 
     sort_field: Optional[str] = None
     sort_field_type: Optional[str] = None
-    is_descending = True
+    is_descending = False
 
     if sort_by:
         if sort_by in ("x", "y", "color"):
@@ -158,20 +156,36 @@ def _default_overflow_strategy(
             except Exception:
                 pass
             is_descending = sort_order == "descending"
-    else:
-        opposite_channel = "y" if channel == "x" else ("x" if channel == "y" else None)
-        color_cs = channel_semantics.get("color")
-        opposite_cs = channel_semantics.get(opposite_channel) if opposite_channel else None
-
-        mark_type = "rect" if "rect" in all_mark_types else None
-        if mark_type != "rect" and color_cs and color_cs.get("type") == "quantitative":
-            sort_field = color_cs.get("field")
-            sort_field_type = color_cs.get("type")
-        elif opposite_cs and opposite_cs.get("type") == "quantitative":
-            sort_field = opposite_cs.get("field")
-            sort_field_type = opposite_cs.get("type")
+    if sort_field and sort_field_type == "quantitative":
+        is_bar = ("bar" in all_mark_types) and (
+            sort_field != (channel_semantics.get("color", {}) or {}).get("field")
+        )
+        if is_bar:
+            aggregate_op = lambda x, y: x + y  # noqa: E731
+            initial_value = 0
         else:
-            is_descending = False
+            aggregate_op = max
+            initial_value = float("-inf")
+
+        value_aggregates: dict[Any, float] = {}
+        for row in data:
+            field_value = row.get(field_name)
+            sort_value = row.get(sort_field) or 0
+            if field_value in value_aggregates:
+                value_aggregates[field_value] = aggregate_op(value_aggregates[field_value], sort_value)
+            else:
+                value_aggregates[field_value] = aggregate_op(initial_value, sort_value)
+
+        entries = [(v, a) for v, a in value_aggregates.items()]
+        entries.sort(key=lambda e: -e[1] if is_descending else e[1])
+        return [e[0] for e in entries[:max_to_keep]]
+
+    canonical_order = (channel_semantics.get(channel) or {}).get("ordinalSortOrder")
+    if not sort_by and not sort_order and canonical_order:
+        ordered = [value for value in canonical_order if value in unique_values]
+        ordered_set = set(ordered)
+        ordered.extend(value for value in unique_values if value not in ordered_set)
+        return ordered[:max_to_keep]
 
     field_original_type = infer_vis_category([r.get(field_name) for r in data])
     if field_original_type == "quantitative" or channel == "color":
@@ -187,36 +201,10 @@ def _default_overflow_strategy(
     if channel in ("column", "row"):
         return unique_values[:max_to_keep]
 
-    if has_connected_mark:
-        return unique_values[:max_to_keep]
-
-    if sort_field and sort_field_type == "quantitative":
-        # Bar charts: sum aggregate. Others: max.
-        is_bar = ("bar" in all_mark_types) and (
-            sort_field != (channel_semantics.get("color", {}) or {}).get("field")
-        )
-        if is_bar:
-            aggregate_op = lambda x, y: x + y  # noqa: E731
-            initial_value = 0
-        else:
-            aggregate_op = max
-            initial_value = float("-inf")
-
-        value_aggregates: dict[Any, float] = {}
-        seen_first: dict[Any, bool] = {}
-        for row in data:
-            field_value = row.get(field_name)
-            sort_value = row.get(sort_field) or 0
-            if field_value in value_aggregates:
-                value_aggregates[field_value] = aggregate_op(value_aggregates[field_value], sort_value)
-            else:
-                value_aggregates[field_value] = aggregate_op(initial_value, sort_value)
-
-        entries = [(v, a) for v, a in value_aggregates.items()]
-        entries.sort(key=lambda e: -e[1] if is_descending else e[1])
-        return [e[0] for e in entries[:max_to_keep]]
-
     if sort_order == "descending":
-        return list(reversed(unique_values))[:max_to_keep]
+        return sorted(unique_values, key=_js_sort_key, reverse=True)[:max_to_keep]
+
+    if sort_order == "ascending":
+        return sorted(unique_values, key=_js_sort_key)[:max_to_keep]
 
     return unique_values[:max_to_keep]

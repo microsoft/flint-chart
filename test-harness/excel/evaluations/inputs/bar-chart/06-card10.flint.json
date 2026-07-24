@@ -1,0 +1,61 @@
+{
+  "semantic_types": {
+    "X": "Quantity",
+    "Group": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Bar Chart",
+    "encodings": {
+      "x": "X",
+      "y": "Group"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Group": "Laptop",
+        "X": 893
+      },
+      {
+        "Group": "Phone",
+        "X": 872
+      },
+      {
+        "Group": "Tablet",
+        "X": 460
+      },
+      {
+        "Group": "Desktop",
+        "X": 182
+      },
+      {
+        "Group": "Monitor",
+        "X": 406
+      },
+      {
+        "Group": "Keyboard",
+        "X": 958
+      },
+      {
+        "Group": "Mouse",
+        "X": 391
+      },
+      {
+        "Group": "Headphones",
+        "X": 361
+      },
+      {
+        "Group": "Speaker",
+        "X": 115
+      },
+      {
+        "Group": "Camera",
+        "X": 884
+      }
+    ]
+  }
+}

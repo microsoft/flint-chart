@@ -113,6 +113,13 @@ export function cjsApplyLayoutToSpec(
                 size: layout.xLabel.fontSize,
             };
         }
+        // Axis title (scale title) font — canvas-adaptive header size.
+        if (config.options.scales.x.title?.display) {
+            config.options.scales.x.title.font = {
+                ...(config.options.scales.x.title.font || {}),
+                size: layout.titleFontSize,
+            };
+        }
     }
 
     // ── Y-axis label sizing ──────────────────────────────────────────────
@@ -125,6 +132,25 @@ export function cjsApplyLayoutToSpec(
                 size: layout.yLabel.fontSize,
             };
         }
+        if (config.options.scales.y.title?.display) {
+            config.options.scales.y.title.font = {
+                ...(config.options.scales.y.title.font || {}),
+                size: layout.titleFontSize,
+            };
+        }
+    }
+
+    // ── Legend / chart title font — canvas-adaptive header sizes ──────────
+    if (config.options?.plugins?.legend) {
+        const legend = config.options.plugins.legend;
+        if (!legend.labels) legend.labels = {};
+        legend.labels.font = { ...(legend.labels.font || {}), size: layout.legendFontSize };
+    }
+    if (config.options?.plugins?.title?.display) {
+        config.options.plugins.title.font = {
+            ...(config.options.plugins.title.font || {}),
+            size: layout.titleFontSize,
+        };
     }
 
     // ── Overflow truncation warnings ─────────────────────────────────────

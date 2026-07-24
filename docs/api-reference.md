@@ -58,11 +58,15 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
+  assembleExcel,
 } from 'flint-chart';
 
 const vlSpec  = assembleVegaLite(input);
 const ecSpec  = assembleECharts(input);
 const cjsSpec = assembleChartjs(input);
+const plFig   = assemblePlotly(input);
+const xlSpec  = assembleExcel(input);
 ```
 
 | Export | Returns |
@@ -70,8 +74,37 @@ const cjsSpec = assembleChartjs(input);
 | `assembleVegaLite` | Vega-Lite JSON spec |
 | `assembleECharts` | ECharts `option` object |
 | `assembleChartjs` | Chart.js configuration |
+| `assemblePlotly` | Plotly.js `{ data, layout }` figure |
+| `assembleExcel` | Native Excel chart artifact for Office.js |
 
-If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, or `cjsGetTemplateDef`.
+If a backend does not support a `chartType`, the assembler throws before render. Check support with `vlGetTemplateDef`, `ecGetTemplateDef`, `cjsGetTemplateDef`, `plGetTemplateDef`, or `excelGetTemplateDef`.
+
+## Excel runtime and code generation
+
+`assembleExcel` returns a serializable `flint.excel.chart/v1` artifact. Render it
+inside an Office.js Excel host, or turn it into standalone Office.js source:
+
+```ts
+import { assembleExcel, generateOfficeJs, renderExcelChart } from 'flint-chart';
+
+const artifact = assembleExcel(input);
+const { pngBase64, inspection } = await renderExcelChart(Excel, artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  inspectNativeChart: false,
+});
+const { code, meta } = generateOfficeJs(artifact, {
+  scale: 3,
+  cleanWorksheet: true,
+  functionName: 'renderFlintChart',
+});
+```
+
+`renderExcelChart` requires an Excel API object with `run` and
+`ImageFittingMode.fit`. It creates the native chart on the active worksheet and
+returns a PNG capture plus optional inspection data. `generateOfficeJs` does not
+execute Excel; it returns portable source and metadata about the generated data
+range and chart.
 
 ---
 
@@ -160,8 +193,18 @@ interface AssembleOptions {
   maxColorValues?: number;     // color cardinality before truncation (default 24)
   stepPadding?: number;        // band inner padding fraction (default 0.1)
   defaultBandSize?: number;    // baseline px per category (backend-tuned)
+  maxBandSize?: number;        // max px per category when sparse (backend-tuned)
+  baseLabelFontSize?: number;  // axis tick font at the reference canvas (VL 10, EC/CJS/Plotly 12)
+  baseTitleFontSize?: number;  // header font — axis title / legend / chart title (VL 11, EC/CJS 12, Plotly 14)
 }
 ```
+
+Fonts adapt to canvas size around these per-backend bases: at the default
+canvas each backend renders its native size, growing subtly on larger canvases
+(up to base + 4) and shrinking in small-multiple subplots; axis tick labels also
+shrink/rotate/truncate to avoid overlap. Set `baseLabelFontSize` /
+`baseTitleFontSize` to scale all text up or down — e.g. `baseLabelFontSize: 14`
+for larger tick labels across the whole chart.
 
 Full list: `packages/flint-js/src/core/types.ts` (`AssembleOptions`). Behavior: [Auto Layout Algorithm](/documentation/layout-model).
 

@@ -1,0 +1,141 @@
+{
+  "semantic_types": {
+    "Stage": "Category",
+    "Value": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Area Chart",
+    "encodings": {
+      "x": "Stage",
+      "y": "Value"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Stage": "Stage 1",
+        "Value": 159
+      },
+      {
+        "Stage": "Stage 2",
+        "Value": 163
+      },
+      {
+        "Stage": "Stage 3",
+        "Value": 167
+      },
+      {
+        "Stage": "Stage 4",
+        "Value": 167
+      },
+      {
+        "Stage": "Stage 5",
+        "Value": 168
+      },
+      {
+        "Stage": "Stage 6",
+        "Value": 175
+      },
+      {
+        "Stage": "Stage 7",
+        "Value": 175
+      },
+      {
+        "Stage": "Stage 8",
+        "Value": 187
+      },
+      {
+        "Stage": "Stage 9",
+        "Value": 200
+      },
+      {
+        "Stage": "Stage 10",
+        "Value": 216
+      },
+      {
+        "Stage": "Stage 11",
+        "Value": 223
+      },
+      {
+        "Stage": "Stage 12",
+        "Value": 221
+      },
+      {
+        "Stage": "Stage 13",
+        "Value": 218
+      },
+      {
+        "Stage": "Stage 14",
+        "Value": 209
+      },
+      {
+        "Stage": "Stage 15",
+        "Value": 209
+      },
+      {
+        "Stage": "Stage 16",
+        "Value": 206
+      },
+      {
+        "Stage": "Stage 17",
+        "Value": 209
+      },
+      {
+        "Stage": "Stage 18",
+        "Value": 220
+      },
+      {
+        "Stage": "Stage 19",
+        "Value": 231
+      },
+      {
+        "Stage": "Stage 20",
+        "Value": 234
+      },
+      {
+        "Stage": "Stage 21",
+        "Value": 243
+      },
+      {
+        "Stage": "Stage 22",
+        "Value": 261
+      },
+      {
+        "Stage": "Stage 23",
+        "Value": 282
+      },
+      {
+        "Stage": "Stage 24",
+        "Value": 303
+      },
+      {
+        "Stage": "Stage 25",
+        "Value": 324
+      },
+      {
+        "Stage": "Stage 26",
+        "Value": 332
+      },
+      {
+        "Stage": "Stage 27",
+        "Value": 334
+      },
+      {
+        "Stage": "Stage 28",
+        "Value": 328
+      },
+      {
+        "Stage": "Stage 29",
+        "Value": 332
+      },
+      {
+        "Stage": "Stage 30",
+        "Value": 328
+      }
+    ]
+  }
+}

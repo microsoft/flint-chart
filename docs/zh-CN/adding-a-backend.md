@@ -1,6 +1,6 @@
 # 扩展后端
 
-当 Flint 需要面向新的渲染库或 spec 格式时，添加后端。后端是 `assemble<Backend>(input)` 编排器加上 `templates/` 注册表；二者共同将共享编译器输出转换为原生图表 spec。现有参考实现位于 `packages/flint-js/src/` 下的 `vegalite/`、`echarts/` 和 `chartjs/`。
+当 Flint 需要面向新的渲染库或 spec 格式时，添加后端。后端是 `assemble<Backend>(input)` 编排器加上 `templates/` 注册表；二者共同将共享编译器输出转换为原生图表 spec 或工件。现有参考实现位于 `packages/flint-js/src/` 下的 `vegalite/`、`echarts/`、`chartjs/`、`plotly/` 和 `excel/`。
 
 流水线阶段与仓库结构见 [Architecture](/documentation/architecture)。
 

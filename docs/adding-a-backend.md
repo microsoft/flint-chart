@@ -1,6 +1,6 @@
 # Extending backends
 
-Add a backend when Flint needs to target a new rendering library or spec format. A backend is an `assemble<Backend>(input)` orchestrator plus a `templates/` registry; together they turn shared compiler output into a native chart spec. Existing references live under `packages/flint-js/src/`: `vegalite/`, `echarts/`, and `chartjs/`.
+Add a backend when Flint needs to target a new rendering library or spec format. A backend is an `assemble<Backend>(input)` orchestrator plus a `templates/` registry; together they turn shared compiler output into a native chart spec or artifact. Existing references live under `packages/flint-js/src/`: `vegalite/`, `echarts/`, `chartjs/`, `plotly/`, and `excel/`.
 
 For pipeline stages and repo layout, see [Architecture](/documentation/architecture).
 

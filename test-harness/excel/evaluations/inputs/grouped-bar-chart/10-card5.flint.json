@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "Segment": "Category"
+  },
+  "chart_spec": {
+    "chartType": "Grouped Bar Chart",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "group": "Segment"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Laptop",
+        "Group": "USA",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "China",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "Japan",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Laptop",
+        "Group": "Germany",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Phone",
+        "Group": "China",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Phone",
+        "Group": "Japan",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Phone",
+        "Group": "Germany",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Phone",
+        "Group": "UK",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "China",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "Japan",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Tablet",
+        "Group": "Germany",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "USA",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "China",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "Japan",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "Germany",
+        "Segment": "Engineering"
+      },
+      {
+        "Category": "Desktop",
+        "Group": "UK",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "USA",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "China",
+        "Segment": "Sales"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "Japan",
+        "Segment": "Marketing"
+      },
+      {
+        "Category": "Monitor",
+        "Group": "Germany",
+        "Segment": "Marketing"
+      }
+    ]
+  }
+}

@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef, OptionEvalContext } from '../../core/types';
-import { resolveUsState, resolveCountry, GeoResolver } from './geo-lookup';
+import {
+    resolveUsState, resolveCountry, GeoResolver,
+    type MapScope, inferBubbleScope, inferChoroplethScope, semanticScope, pickMapScope,
+} from '../../chart-types/geo';
 import { toTypeString } from '../../core/field-semantics';
 
 const mapProjections = [
@@ -44,9 +47,11 @@ const projectionCenterPresets: { label: string; center: [number, number] }[] = [
 // Both map templates are generic: the geography (which base TopoJSON,
 // projection and frame size) is chosen by the `region` property, defaulting to
 // 'auto' — infer from the data, preferring the US whenever the data fits it.
+// Scope *inference* (`MapScope`, `inferBubbleScope`, `inferChoroplethScope`,
+// `semanticScope`, `pickMapScope`) is shared with the Plotly backend's Map /
+// Choropleth templates via `chart-types/geo.ts`; only the base-layer geometry
+// below (TopoJSON URLs/projections) is Vega-Lite-specific.
 // ---------------------------------------------------------------------------
-
-type MapScope = 'us' | 'world';
 
 interface ScopeGeo {
     url: string;
@@ -75,73 +80,6 @@ const SCOPE_GEO: Record<MapScope, ScopeGeo> = {
         strokeWidth: 0.4,
     },
 };
-
-// Generous bounding box for the United States (contiguous states + Alaska +
-// Hawaii). Used only to *infer* scope: a dataset whose every point falls inside
-// is treated as a US map; anything outside flips the whole map to world.
-const US_LON: readonly [number, number] = [-170, -66];
-const US_LAT: readonly [number, number] = [18, 72];
-
-function inUsBox(lon: number, lat: number): boolean {
-    return lon >= US_LON[0] && lon <= US_LON[1] && lat >= US_LAT[0] && lat <= US_LAT[1];
-}
-
-/** Infer scope for a bubble map from its longitude/latitude points. */
-function inferBubbleScope(rows: any[], lonField?: string, latField?: string): MapScope {
-    if (!lonField || !latField) return 'us';
-    for (const r of rows) {
-        const lon = Number(r[lonField]);
-        const lat = Number(r[latField]);
-        if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
-        if (!inUsBox(lon, lat)) return 'world';
-    }
-    return 'us';
-}
-
-/** Infer scope for a choropleth from its region keys (names / codes / ids). */
-function inferChoroplethScope(rows: any[], idField?: string): MapScope {
-    if (!idField) return 'us';
-    for (const r of rows) {
-        const v = r[idField];
-        if (v == null || v === '') continue;
-        // A value that resolves as a US state (by name, USPS code, FIPS id, or a
-        // bare numeric that passes straight through) keeps us in the US; the
-        // first value that doesn't flips the whole map to world.
-        if (resolveUsState(v) === undefined) return 'world';
-    }
-    return 'us';
-}
-
-/**
- * Map the id field's *semantic type* to a map scope. This is the most reliable
- * signal we have: a field declared 'State' should use the US states map and the
- * US-state resolver, a field declared 'Country' the world map and country
- * resolver. It disambiguates the codes that collide between the two namespaces
- * — "CA" (California vs Canada), "IN" (Indiana vs India), "Georgia" (US state
- * vs the country) — which value inference alone cannot. Geographic types that
- * neither base layer can render (City, Region, Address, ZipCode) return
- * undefined so we fall back to value inference.
- */
-const SEMANTIC_SCOPE: Record<string, MapScope> = { State: 'us', Country: 'world' };
-
-function semanticScope(semType: string | undefined): MapScope | undefined {
-    if (!semType) return undefined;
-    return Object.prototype.hasOwnProperty.call(SEMANTIC_SCOPE, semType)
-        ? SEMANTIC_SCOPE[semType]
-        : undefined;
-}
-
-/** Honor an explicit `region` choice, else the id field's semantic type, else inference. */
-function pickScope(
-    chartProperties: any,
-    semScope: MapScope | undefined,
-    infer: () => MapScope,
-): MapScope {
-    const choice = chartProperties?.region;
-    if (choice === 'us' || choice === 'world') return choice;
-    if (semScope) return semScope;
-    return infer();
-}
 
 /** Would this spec render as a world map? (Drives world-only property gating.) */
 function wouldBeWorld(ctx: OptionEvalContext): boolean {
@@ -224,7 +162,7 @@ export const mapDef: ChartTemplateDef = {
         const rows = ctx.fullTable ?? ctx.table ?? [];
         const lonField = ctx.resolvedEncodings.longitude?.field;
         const latField = ctx.resolvedEncodings.latitude?.field;
-        const scope = pickScope(ctx.chartProperties, undefined, () => inferBubbleScope(rows, lonField, latField));
+        const scope = pickMapScope(ctx.chartProperties, undefined, () => inferBubbleScope(rows, lonField, latField));
 
         configureBubble(spec, scope);
         applyPointEncodings(spec.layer[1], ctx.resolvedEncodings);
@@ -343,7 +281,7 @@ export const choroplethDef: ChartTemplateDef = {
         const idField = ctx.resolvedEncodings.id?.field;
         const semType = idField ? toTypeString(ctx.semanticTypes?.[idField]) : '';
         const semScope = semanticScope(semType);
-        const scope = pickScope(
+        const scope = pickMapScope(
             ctx.chartProperties,
             semScope,
             () => inferChoroplethScope(rows, idField),

@@ -202,9 +202,12 @@ interface AssembleOptions {
   elasticity?: number;         // axis stretch exponent    (default 0.5)
   maxStretch?: number;         // axis stretch cap         (default 1.5)
   facetElasticity?: number;    // facet stretch exponent   (default 0.3)
-  maxStretch?: number;         // unified stretch cap     (default 1.5)
   minStep?: number;            // min px per discrete tick (default 6)
   minSubplotSize?: number;     // min facet subplot px     (default 60)
+  defaultBandSize?: number;    // baseline px per category (backend-tuned)
+  maxBandSize?: number;        // max px per category when sparse (backend-tuned)
+  baseLabelFontSize?: number;  // axis tick font, backend-native (VL 10, others 12)
+  baseTitleFontSize?: number;  // header font, backend-native (VL 11, EC/CJS 12, Plotly 14)
 }
 ```
 

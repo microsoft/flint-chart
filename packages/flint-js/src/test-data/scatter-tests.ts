@@ -3,6 +3,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realScatterCases, realRegressionCases } from './real-world-tests';
 import { seededRandom, genDates, genCategories, genRandomNames } from './generators';
 
 // ============================================================================
@@ -362,7 +363,7 @@ export function genScatterTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realScatterCases()];
 }
 
 // ============================================================================
@@ -668,5 +669,5 @@ export function genRegressionTests(): TestCase[] {
         });
     }
 
-    return tests;
+    return [...tests, ...realRegressionCases()];
 }

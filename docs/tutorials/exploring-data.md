@@ -191,6 +191,8 @@ The same `ChartAssemblyInput` compiles to every supported backend:
 | `assembleVegaLite(input)` | Vega-Lite v6 spec |
 | `assembleECharts(input)` | ECharts `option` object |
 | `assembleChartjs(input)` | Chart.js config |
+| `assemblePlotly(input)` | Plotly.js `{ data, layout }` figure |
+| `assembleExcel(input)` | Native Excel chart artifact for Office.js |
 
 Not every `chartType` exists in every backend. The
 [gallery](/gallery) shows only tabs for supported engines — e.g. **Sankey** is
@@ -201,11 +203,15 @@ import {
   vlGetTemplateDef,
   ecGetTemplateDef,
   cjsGetTemplateDef,
+  plGetTemplateDef,
+  excelGetTemplateDef,
 } from 'flint-chart';
 
 vlGetTemplateDef('Bar Chart');   // defined
 ecGetTemplateDef('Bar Chart');   // defined
 cjsGetTemplateDef('Sankey Diagram'); // undefined
+plGetTemplateDef('Density Contour'); // defined
+excelGetTemplateDef('Treemap'); // defined
 ```
 
 When a template is missing, the assembler throws a clear error before your

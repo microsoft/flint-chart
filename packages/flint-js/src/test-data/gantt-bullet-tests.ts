@@ -13,6 +13,7 @@
 
 import { Type } from './df-types';
 import { TestCase, makeField, makeEncodingItem } from './types';
+import { realGanttCases, realBulletCases } from './real-world-tests';
 
 // ---------------------------------------------------------------------------
 // Gantt — a software release schedule
@@ -100,6 +101,7 @@ export function genGanttTests(): TestCase[] {
                 color: makeEncodingItem('group'),
             },
         },
+        ...realGanttCases(),
     ];
 }
 
@@ -185,5 +187,6 @@ export function genBulletTests(): TestCase[] {
                 goal: makeEncodingItem('target'),
             },
         },
+        ...realBulletCases(),
     ];
 }

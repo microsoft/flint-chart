@@ -124,6 +124,13 @@ const FAMILY_DENSITY: ChannelRoleMap = {
     column: 'facetCol', row: 'facetRow',
 };
 
+/** 2-D density (Density Contour): both axes are measures, binned into a joint
+ *  distribution — no series channel (colour encodes count). */
+const FAMILY_DENSITY_2D: ChannelRoleMap = {
+    x: 'measure', y: 'measure2',
+    column: 'facetCol', row: 'facetRow',
+};
+
 /** Heatmap: x=category, y=category, color=measure */
 const FAMILY_HEATMAP: ChannelRoleMap = {
     x: 'category', y: 'category', color: 'measure',
@@ -195,6 +202,7 @@ const CHART_ROLE_MAP: Record<string, ChannelRoleMap> = {
     // Histogram / Density
     'Histogram': FAMILY_HISTOGRAM,
     'Density Plot': FAMILY_DENSITY,
+    'Density Contour': FAMILY_DENSITY_2D,
     // Geographic
     'Map': FAMILY_MAP,
     'Choropleth': FAMILY_CHOROPLETH,

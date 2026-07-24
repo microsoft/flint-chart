@@ -1,0 +1,43 @@
+{
+  "semantic_types": {
+    "Cost": "Quantity",
+    "Revenue": "Quantity",
+    "Quarter": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Connected Scatter Plot",
+    "encodings": {
+      "x": "Cost",
+      "y": "Revenue",
+      "order": "Quarter"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Quarter": 1,
+        "Cost": 12,
+        "Revenue": 18
+      },
+      {
+        "Quarter": 2,
+        "Cost": 20,
+        "Revenue": 26
+      },
+      {
+        "Quarter": 3,
+        "Cost": 17,
+        "Revenue": 35
+      },
+      {
+        "Quarter": 4,
+        "Cost": 24,
+        "Revenue": 30
+      }
+    ]
+  }
+}

@@ -851,9 +851,9 @@ interface ChartTemplateDef {
 
 ### `OverflowStrategy`
 
-Customizable per-template. The default strategy in `filter-overflow.ts` handles:
-connected marks (keep all for continuity), user sorts, auto-sorts,
-bar sum-aggregate, numeric sort, first-N.
+Customizable per-template. The default strategy in `filter-overflow.ts` keeps
+the first values in the selected display order: explicit user sort, canonical
+semantic order, numeric order, then data encounter order.
 
 ```typescript
 type OverflowStrategy = (
@@ -917,42 +917,20 @@ visualization decisions:
 
 ## Template Catalog
 
-### Vega-Lite (30 chart types)
+Flint currently ships **149 backend template registrations** across five
+backends. Chart names overlap because the same semantic input can target more
+than one renderer.
 
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Dotted Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Rose Chart, Waterfall Chart |
-| **Statistical** | Density Plot, Candlestick Chart, Radar Chart |
-| **Map** | US Map, World Map |
+| Backend | Registered chart types | Generated reference |
+|---|---:|---|
+| Vega-Lite | 35 | [Vega-Lite charts](reference-vegalite.md) |
+| ECharts | 37 | [ECharts charts](reference-echarts.md) |
+| Chart.js | 21 | [Chart.js charts](reference-chartjs.md) |
+| Plotly | 38 | [Plotly charts](reference-plotly.md) |
+| Excel | 18 | [Excel charts](reference-excel.md) |
 
-### ECharts (28 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot, Regression, Ranged Dot Plot, Boxplot, Strip Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram, Heatmap, Lollipop Chart, Pyramid Chart |
-| **Line & Area** | Line Chart, Dotted Line Chart, Bump Chart, Area Chart, Streamgraph |
-| **Part-to-Whole** | Pie Chart, Funnel Chart, Treemap, Sunburst Chart |
-| **Polar** | Radar Chart, Rose Chart |
-| **Financial** | Candlestick Chart |
-| **Indicator** | Gauge Chart |
-| **Flow** | Sankey Diagram |
-| **Other** | Waterfall Chart, Density Plot |
-
-### Chart.js (10 chart types)
-
-| Category | Charts |
-|----------|--------|
-| **Scatter & Point** | Scatter Plot |
-| **Bar** | Bar Chart, Grouped Bar Chart, Stacked Bar Chart, Histogram |
-| **Line & Area** | Line Chart, Area Chart |
-| **Part-to-Whole** | Pie Chart |
-| **Polar** | Radar Chart, Rose Chart |
-
-**68 template definitions** across 3 backends.
+Run `npm run gen:reference` after changing a template registry. The generated
+pages are the source of truth for chart names, channels, and exposed options.
 
 Each template defines:
 1. **`template`** — spec skeleton (mark + encoding structure)
@@ -1009,13 +987,14 @@ When discrete channels overflow the canvas budget, the library:
    count, placeholder string
 5. Emits `ChartWarning` for the UI
 
-The default overflow strategy priority:
-1. Connected marks (line, area) → keep all (truncation breaks continuity)
-2. User-specified sort → keep top/bottom N by sort order
-3. Quantitative opposite axis → sort by opposite, keep top N
-4. Bar with count aggregate → sum-aggregate and keep top N
-5. Numeric field → numeric sort, keep first N
-6. Fallback → keep first N in data order
+The default overflow strategy follows the chart's display order:
+1. User-specified sort → keep the first N values in that order
+2. Canonical semantic order (months, ranks, quarters, etc.) → keep the first N
+3. Numeric discrete field → numeric ascending, keep the first N
+4. Fallback → keep the first N in data encounter order
+
+Overflow does not introduce a measure-based top-N ranking. Select an explicit
+value sort when the largest or smallest categories should be retained.
 
 ---
 

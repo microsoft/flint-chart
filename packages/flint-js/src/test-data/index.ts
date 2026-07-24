@@ -19,6 +19,7 @@ export { seededRandom, genDates, genMonths, genYears, genNaturalDates, genCatego
 export { genScatterTests, genRegressionTests } from './scatter-tests';
 export { genBarTests, genStackedBarTests, genGroupedBarTests } from './bar-tests';
 export { genHistogramTests, genBoxplotTests, genDensityTests, genStripPlotTests } from './distribution-tests';
+export { genDensityContourTests } from './density-2d-tests';
 export { genViolinTests } from './violin-tests';
 export { genLineTests } from './line-tests';
 export { genSparklineTests } from './sparkline-tests';
@@ -39,6 +40,7 @@ export { genGasPressureTests } from './gas-pressure-tests';
 export { genLineAreaStretchTests } from './line-area-stretch-tests';
 export { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 export { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
+export { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
 export { genDiscreteAxisTests } from './discrete-axis-tests';
 export { genDateTests, genDateYearTests, genDateMonthTests, genDateYearMonthTests, genDateDecadeTests, genDateDateTimeTests, genDateHoursTests } from './date-tests';
 export { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
@@ -85,8 +87,9 @@ export {
 import { TestCase } from './types';
 
 import { genScatterTests, genRegressionTests } from './scatter-tests';
-import { genBarTests, genStackedBarTests, genGroupedBarTests } from './bar-tests';
+import { genBarTests, genStackedBarTests, genGroupedBarTests, galleryBarSizingShowcase } from './bar-tests';
 import { genHistogramTests, genBoxplotTests, genDensityTests, genStripPlotTests } from './distribution-tests';
+import { genDensityContourTests } from './density-2d-tests';
 import { genViolinTests } from './violin-tests';
 import { genMapTests, genChoroplethTests } from './map-tests';
 import { genGanttTests, genBulletTests } from './gantt-bullet-tests';
@@ -99,7 +102,7 @@ import { genAreaTests, genStreamgraphTests } from './area-tests';
 import { genRangeAreaTests, genEChartsRangeAreaTests, genChartJsRangeAreaTests } from './range-area-tests';
 import { genEcdfTests, genEChartsEcdfTests, genChartJsEcdfTests } from './ecdf-tests';
 import {
-    genHeatmapTests, genPieTests, genRangedDotPlotTests, genLollipopTests,
+    genHeatmapTests, genPieTests, genDonutTests, genRangedDotPlotTests, genLollipopTests,
     genWaterfallTests, genBarTableTests, genCandlestickTests, genRadarTests, genPyramidTests,
     genRoseTests,
 } from './specialized-tests';
@@ -112,6 +115,7 @@ import { genDateYearTests, genDateMonthTests, genDateYearMonthTests, genDateDeca
 import { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
 import { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 import { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
+import { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
 import {
     genGalleryRegionalSurveyScatterTests,
     genGalleryRegionalSurveyLineTests,
@@ -143,7 +147,7 @@ import {
 export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Scatter Plot': () => [...genScatterTests(), galleryFacetScatterExample()],
     'Regression': genRegressionTests,
-    'Bar Chart': () => [...genBarTests(), galleryFacetBarExample()],
+    'Bar Chart': () => [...genBarTests(), galleryBarSizingShowcase(), galleryFacetBarExample()],
     'Stacked Bar Chart': genStackedBarTests,
     'Grouped Bar Chart': genGroupedBarTests,
     'Histogram': genHistogramTests,
@@ -156,6 +160,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Boxplot': genBoxplotTests,
     'Violin Plot': genViolinTests,
     'Pie Chart': genPieTests,
+    'Donut Chart': genDonutTests,
     'Ranged Dot Plot': genRangedDotPlotTests,
     'Area Chart': () => [...genAreaTests(), galleryFacetAreaExample()],
     'Streamgraph': genStreamgraphTests,
@@ -163,6 +168,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'ECDF Plot': genEcdfTests,
     'Lollipop Chart': genLollipopTests,
     'Density Plot': genDensityTests,
+    'Density Contour': genDensityContourTests,
     'Candlestick Chart': genCandlestickTests,
     'Waterfall Chart': genWaterfallTests,
     'Bar Table': genBarTableTests,
@@ -247,6 +253,8 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Chart.js: Doughnut *': genChartJsDoughnutTests,
     'Chart.js: Combo *': genChartJsComboTests,
     'Chart.js: Stress Tests': genChartJsStressTests,
+    'Plotly: Core Templates': genPlotlyCoreTests,
+    'Plotly: Facets': genPlotlyFacetTests,
     'Gallery: Scatter': genGalleryRegionalSurveyScatterTests,
     'Gallery: Line': genGalleryRegionalSurveyLineTests,
     'Gallery: Bar': genGalleryRegionalSurveyBarTests,

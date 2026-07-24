@@ -1,0 +1,123 @@
+{
+  "semantic_types": {
+    "Category": "Category",
+    "Group": "Category",
+    "Size": "Quantity"
+  },
+  "chart_spec": {
+    "chartType": "Scatter Plot",
+    "encodings": {
+      "x": "Category",
+      "y": "Group",
+      "size": "Size"
+    },
+    "baseSize": {
+      "width": 560,
+      "height": 360
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Category": "Electronics",
+        "Group": "China",
+        "Size": 681
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Japan",
+        "Size": 802
+      },
+      {
+        "Category": "Electronics",
+        "Group": "Germany",
+        "Size": 852
+      },
+      {
+        "Category": "Electronics",
+        "Group": "UK",
+        "Size": 860
+      },
+      {
+        "Category": "Clothing",
+        "Group": "USA",
+        "Size": 510
+      },
+      {
+        "Category": "Clothing",
+        "Group": "China",
+        "Size": 508
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Japan",
+        "Size": 778
+      },
+      {
+        "Category": "Clothing",
+        "Group": "Germany",
+        "Size": 908
+      },
+      {
+        "Category": "Clothing",
+        "Group": "UK",
+        "Size": 189
+      },
+      {
+        "Category": "Clothing",
+        "Group": "France",
+        "Size": 744
+      },
+      {
+        "Category": "Food",
+        "Group": "Japan",
+        "Size": 728
+      },
+      {
+        "Category": "Food",
+        "Group": "Germany",
+        "Size": 472
+      },
+      {
+        "Category": "Food",
+        "Group": "UK",
+        "Size": 343
+      },
+      {
+        "Category": "Books",
+        "Group": "USA",
+        "Size": 296
+      },
+      {
+        "Category": "Books",
+        "Group": "Germany",
+        "Size": 324
+      },
+      {
+        "Category": "Books",
+        "Group": "UK",
+        "Size": 510
+      },
+      {
+        "Category": "Books",
+        "Group": "France",
+        "Size": 898
+      },
+      {
+        "Category": "Sports",
+        "Group": "China",
+        "Size": 238
+      },
+      {
+        "Category": "Sports",
+        "Group": "Japan",
+        "Size": 160
+      },
+      {
+        "Category": "Sports",
+        "Group": "France",
+        "Size": 996
+      }
+    ]
+  }
+}

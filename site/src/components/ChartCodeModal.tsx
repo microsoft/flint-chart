@@ -227,7 +227,7 @@ export function ChartCodeModal({
               }}
             >
               {testCase && (
-                <ScaleToFit key={`${chart.id}-${index}`} height={420} padding={16}>
+                <ScaleToFit key={`${chart.id}-${index}`} fill height={420} padding={16}>
                   <WallChart
                     testCase={testCase}
                     backend={chart.backend}
