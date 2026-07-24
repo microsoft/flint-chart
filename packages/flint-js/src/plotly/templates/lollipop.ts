@@ -9,7 +9,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
-import { extractCategories, resolveCategoryOrder, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
+import { resolveCategoryOrder, buildCategoryAlignedData, detectAxes, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
 import { makeSortAction } from '../../core/encoding-actions';
 
