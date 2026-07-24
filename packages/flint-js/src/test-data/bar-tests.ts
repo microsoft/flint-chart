@@ -419,6 +419,37 @@ export function genBarTests(): TestCase[] {
     return [...BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Bar Chart', 'color', rand)), ...realBarCases()];
 }
 
+/**
+ * A curated synthetic gallery *showcase* (tagged `gallery-showcase`) — a dense
+ * single-series bar chart with many categories, so the wall demonstrates how
+ * Flint auto-sizes / shrinks bars to fit. Kept out of `genBarTests` (test suite)
+ * and appended only in the gallery generator, so it never shifts test indices.
+ */
+export function galleryBarSizingShowcase(): TestCase {
+    const rand = seededRandom(4210);
+    const hours = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
+    let level = 40;
+    const data = hours.map((Hour, i) => {
+        // Diurnal shape: low overnight, peaks late morning + evening.
+        const shape = 60 + 55 * Math.sin(((i - 6) / 24) * Math.PI * 2) + 30 * Math.sin(((i - 3) / 12) * Math.PI * 2);
+        level = Math.max(15, Math.round(shape + (rand() - 0.5) * 24));
+        return { Hour, Views: level };
+    });
+    return {
+        title: 'Page views by hour of day (24 bars)',
+        description: 'A dense single-series bar chart — Flint shrinks the bars to fit all 24 hours.',
+        tags: ['bar', 'gallery-showcase', 'nominal', 'many-bars'],
+        chartType: 'Bar Chart',
+        data,
+        fields: [makeField('Hour'), makeField('Views')],
+        metadata: {
+            Hour: { type: Type.String, semanticType: 'Category', levels: hours },
+            Views: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+        },
+        encodingMap: { x: makeEncodingItem('Hour'), y: makeEncodingItem('Views') },
+    };
+}
+
 export function genStackedBarTests(): TestCase[] {
     const rand = seededRandom(200);
     return [...STACKED_BAR_MATRIX.map(entry => barMatrixToTestCase(entry, 'Stacked Bar Chart', 'color', rand)), ...realStackedBarCases()];

@@ -55,6 +55,7 @@ describe('Plotly expressive templates — registration', () => {
       'Waterfall Chart': input('Waterfall Chart', { x: { field: 'region' }, y: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }),
       'Candlestick Chart': input('Candlestick Chart', { x: { field: 'region' }, open: { field: 'revenue' }, close: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }),
       'Heatmap': input('Heatmap', { x: { field: 'region' }, y: { field: 'year' }, color: { field: 'revenue' } }, SALES, { region: 'Region', year: 'Year', revenue: 'Amount' }),
+      'Density Contour': input('Density Contour', { x: { field: 'revenue' }, y: { field: 'revenue' } }, SALES, { revenue: 'Amount' }),
       'Lollipop Chart': input('Lollipop Chart', { x: { field: 'region' }, y: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }),
       'Bullet Chart': input('Bullet Chart', { y: { field: 'region' }, x: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }),
       'Gantt Chart': input('Gantt Chart', { y: { field: 'region' }, x: { field: 'revenue' }, x2: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }),

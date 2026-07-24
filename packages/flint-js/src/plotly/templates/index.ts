@@ -55,6 +55,7 @@ import { plMapDef } from './map';
 import { plChoroplethDef } from './choropleth';
 import { plSparklineDef } from './sparkline';
 import { plBarTableDef } from './bar-table';
+import { plDensityContourDef } from './density-contour';
 
 /**
  * Plotly chart template definitions, grouped by category.
@@ -62,7 +63,7 @@ import { plBarTableDef } from './bar-table';
 export const plTemplateDefs: { [key: string]: ChartTemplateDef[] } = {
     'Scatter & Point': [plScatterPlotDef, plRegressionDef, plConnectedScatterDef, plRangedDotPlotDef, plStripPlotDef],
     'Bar':             [plBarChartDef, plGroupedBarChartDef, plStackedBarChartDef, plLollipopChartDef, plWaterfallChartDef, plPyramidChartDef],
-    'Distributions':   [plHistogramDef, plBoxplotDef, plViolinPlotDef, plDensityPlotDef, plEcdfPlotDef, plCandlestickChartDef],
+    'Distributions':   [plHistogramDef, plBoxplotDef, plViolinPlotDef, plDensityPlotDef, plEcdfPlotDef, plCandlestickChartDef, plDensityContourDef],
     'Line & Area':     [plLineChartDef, plAreaChartDef, plBumpChartDef, plSlopeChartDef, plStreamgraphDef, plRangeAreaChartDef],
     'Circular':        [plPieChartDef, plDonutChartDef, plRadarChartDef, plRoseChartDef],
     'Tables & KPIs':   [plHeatmapDef, plGanttChartDef, plBulletChartDef, plKpiCardDef, plSparklineDef, plBarTableDef],

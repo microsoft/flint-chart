@@ -25,11 +25,13 @@ function meta(type: Type, semanticType: string, levels: any[] = []) {
 
 /**
  * Column-faceted bar — sales by segment, one small panel per region.
- * 3 panels × 4 bars: comfortably fits side-by-side as small multiples.
+ * Six regions laid out in a fixed 2-column grid (`facetColumns: 2`) → a 2×3
+ * small-multiples grid, so the gallery advertises faceting *and* how Flint
+ * shrinks each sub-panel to fit.
  */
 export function galleryFacetBarExample(): TestCase {
     const rand = seededRandom(4201);
-    const regions = ['North', 'Central', 'South'];
+    const regions = ['North', 'Central', 'South', 'East', 'West', 'Pacific'];
     const segments = ['Consumer', 'Corporate', 'Home Office', 'Reseller'];
     const data: any[] = [];
     for (const region of regions) {
@@ -44,7 +46,7 @@ export function galleryFacetBarExample(): TestCase {
     };
     return {
         title: 'Sales by segment, faceted by region',
-        description: 'Small-multiples bar chart — one panel per region (column facet).',
+        description: 'Small-multiples bar chart — one panel per region in a 2-column grid (column facet).',
         tags: [...FACET_TAGS, 'bar'],
         chartType: 'Bar Chart',
         data,
@@ -55,6 +57,7 @@ export function galleryFacetBarExample(): TestCase {
             Region: meta(Type.String, 'Category', regions),
         },
         encodingMap,
+        chartProperties: { facetColumns: 2 },
     };
 }
 

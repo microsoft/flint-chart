@@ -19,6 +19,7 @@ export { seededRandom, genDates, genMonths, genYears, genNaturalDates, genCatego
 export { genScatterTests, genRegressionTests } from './scatter-tests';
 export { genBarTests, genStackedBarTests, genGroupedBarTests } from './bar-tests';
 export { genHistogramTests, genBoxplotTests, genDensityTests, genStripPlotTests } from './distribution-tests';
+export { genDensityContourTests } from './density-2d-tests';
 export { genViolinTests } from './violin-tests';
 export { genLineTests } from './line-tests';
 export { genSparklineTests } from './sparkline-tests';
@@ -86,8 +87,9 @@ export {
 import { TestCase } from './types';
 
 import { genScatterTests, genRegressionTests } from './scatter-tests';
-import { genBarTests, genStackedBarTests, genGroupedBarTests } from './bar-tests';
+import { genBarTests, genStackedBarTests, genGroupedBarTests, galleryBarSizingShowcase } from './bar-tests';
 import { genHistogramTests, genBoxplotTests, genDensityTests, genStripPlotTests } from './distribution-tests';
+import { genDensityContourTests } from './density-2d-tests';
 import { genViolinTests } from './violin-tests';
 import { genMapTests, genChoroplethTests } from './map-tests';
 import { genGanttTests, genBulletTests } from './gantt-bullet-tests';
@@ -145,7 +147,7 @@ import {
 export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Scatter Plot': () => [...genScatterTests(), galleryFacetScatterExample()],
     'Regression': genRegressionTests,
-    'Bar Chart': () => [...genBarTests(), galleryFacetBarExample()],
+    'Bar Chart': () => [...genBarTests(), galleryBarSizingShowcase(), galleryFacetBarExample()],
     'Stacked Bar Chart': genStackedBarTests,
     'Grouped Bar Chart': genGroupedBarTests,
     'Histogram': genHistogramTests,
@@ -166,6 +168,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'ECDF Plot': genEcdfTests,
     'Lollipop Chart': genLollipopTests,
     'Density Plot': genDensityTests,
+    'Density Contour': genDensityContourTests,
     'Candlestick Chart': genCandlestickTests,
     'Waterfall Chart': genWaterfallTests,
     'Bar Table': genBarTableTests,

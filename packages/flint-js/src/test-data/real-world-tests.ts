@@ -218,9 +218,9 @@ export function realBarCases(): TestCase[] {
             chartType: 'Bar Chart',
             title: 'Most populous countries, 2023 (millions)',
             description: 'The year India overtook China (UN World Population Prospects / World Bank).',
-            tags: ['nominal', 'single'],
+            tags: ['nominal', 'single', 'horizontal'],
             semantic: { Country: 'Country', Population: 'Quantity' },
-            encodings: { x: 'Country', y: 'Population' },
+            encodings: { y: 'Country', x: 'Population' },
             data: [['India', 1428.6], ['China', 1425.7], ['United States', 339.9], ['Indonesia', 277.5], ['Pakistan', 240.5], ['Nigeria', 223.8], ['Brazil', 216.4], ['Bangladesh', 173.0], ['Russia', 144.4], ['Mexico', 128.5]].map(([Country, Population]) => ({ Country, Population })),
         }),
         realCase({
