@@ -6,10 +6,14 @@ import {
   assembleVegaLite,
   assembleECharts,
   assembleChartjs,
+  assemblePlotly,
   getChartPivot,
   getChartTransform,
   getEChartsPivot,
+  getEChartsTransform,
   getChartjsPivot,
+  getChartjsTransform,
+  getPlotlyTransform,
 } from '../src';
 import {
   computePivot,
@@ -1053,6 +1057,77 @@ describe('applyTransform — two independent overrides', () => {
       scatterPlotDef, SCATTER_ENC, SCATTER_DATA, { pivot: 'type:Strip Plot' }, vlGetTemplateDef,
     );
     expect(theta.chartType).toBe('Strip Plot');
+  });
+});
+
+describe('backend transform parity — chartType/arrange overrides', () => {
+  const scatterProps = (props?: Record<string, unknown>) => ({
+    data: {
+      values: [
+        { a: 1, b: 2, c: 'X' }, { a: 3, b: 1, c: 'Y' },
+        { a: 2, b: 4, c: 'X' }, { a: 5, b: 3, c: 'Y' },
+      ],
+    },
+    semantic_types: { a: 'Quantity', b: 'Quantity', c: 'Category' },
+    chart_spec: {
+      chartType: 'Scatter Plot',
+      encodings: { x: 'a', y: 'b', color: 'c' },
+      baseSize: { width: 400, height: 300 },
+      ...(props ? { chartProperties: props } : {}),
+    },
+  });
+
+  const barProps = (props?: Record<string, unknown>) => ({
+    data: { values: BAR_DATA },
+    semantic_types: BAR_SEMANTIC,
+    chart_spec: {
+      chartType: 'Bar Chart',
+      encodings: { x: 'region', y: 'sales', color: 'segment' },
+      baseSize: { width: 400, height: 300 },
+      ...(props ? { chartProperties: props } : {}),
+    },
+  });
+
+  it('ECharts honors chartProperties.chartType (gallery two-control model)', () => {
+    const surface = getEChartsTransform(scatterProps())!;
+    expect(surface.chartType!.ids).toContain('type:Strip Plot');
+
+    const option = assembleECharts(scatterProps({ chartType: 'type:Strip Plot' })) as any;
+    expect(option._transform.chartType.index).toBe(
+      option._transform.chartType.ids.indexOf('type:Strip Plot'),
+    );
+    expect(Array.isArray(option.xAxis)).toBe(true);
+    expect(option.xAxis[0].name).toBe('c');
+  });
+
+  it('Chart.js honors chartProperties.chartType (gallery two-control model)', () => {
+    const surface = getChartjsTransform(scatterProps())!;
+    expect(surface.chartType!.ids).toContain('type:Strip Plot');
+
+    const config = assembleChartjs(scatterProps({ chartType: 'type:Strip Plot' })) as any;
+    expect(config._transform.chartType.index).toBe(
+      config._transform.chartType.ids.indexOf('type:Strip Plot'),
+    );
+    expect(config.options.scales.x.title.text).toBe('c');
+  });
+
+  it('Plotly honors chartProperties.chartType and arrange (gallery two-control model)', () => {
+    const typeSurface = getPlotlyTransform(scatterProps())!;
+    expect(typeSurface.chartType!.ids).toContain('type:Strip Plot');
+
+    const strip = assemblePlotly(scatterProps({ chartType: 'type:Strip Plot' })) as any;
+    expect(strip._transform.chartType.index).toBe(
+      strip._transform.chartType.ids.indexOf('type:Strip Plot'),
+    );
+
+    const arrangeSurface = getPlotlyTransform(barProps())!;
+    expect(arrangeSurface.arrange!.ids).toContain('flip:x-y');
+
+    const flipped = assemblePlotly(barProps({ arrange: 'flip:x-y' })) as any;
+    expect(flipped._transform.arrange.index).toBe(
+      flipped._transform.arrange.ids.indexOf('flip:x-y'),
+    );
+    expect(flipped.data?.[0]?.orientation).toBe('h');
   });
 });
 

@@ -18,8 +18,28 @@ import {
     getPlotlyPalette,
     getSeriesColor,
 } from './utils';
+import { makeCartesianPivot } from '../../core/pivot';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
+
+/** Map the shared `interpolate` property onto Plotly's `line.shape`. */
+function lineShape(interpolate: unknown): 'linear' | 'spline' | 'hv' | 'vh' | 'hvh' {
+    switch (interpolate) {
+        case 'monotone':
+        case 'basis':
+        case 'cardinal':
+        case 'catmull-rom':
+            return 'spline';
+        case 'step':
+            return 'hvh';
+        case 'step-before':
+            return 'vh';
+        case 'step-after':
+            return 'hv';
+        default:
+            return 'linear';
+    }
+}
 
 /** Hex → rgba with alpha, for translucent area fills. */
 function fillColor(hex: string, alpha: number): string {
@@ -59,7 +79,7 @@ export const plAreaChartDef: ChartTemplateDef = {
         const opacity = Number(chartProperties?.opacity ?? 0.4);
         const stackMode = chartProperties?.stackMode;
         const stacked = stackMode !== 'layered';
-        const smooth = chartProperties?.interpolate === 'monotone';
+        const shape = lineShape(chartProperties?.interpolate);
 
         const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
@@ -75,7 +95,7 @@ export const plAreaChartDef: ChartTemplateDef = {
                 name,
                 x: xVals,
                 y: yVals,
-                line: { color, shape: smooth ? 'spline' : 'linear' },
+                line: { color, shape },
                 fillcolor: fillColor(color, opacity),
             };
             if (colorField && stacked) {
@@ -135,6 +155,12 @@ export const plAreaChartDef: ChartTemplateDef = {
                 { value: undefined, label: 'Default (linear)' },
                 { value: 'linear', label: 'Linear' },
                 { value: 'monotone', label: 'Monotone (smooth)' },
+                { value: 'step', label: 'Step' },
+                { value: 'step-before', label: 'Step Before' },
+                { value: 'step-after', label: 'Step After' },
+                { value: 'basis', label: 'Basis (smooth)' },
+                { value: 'cardinal', label: 'Cardinal' },
+                { value: 'catmull-rom', label: 'Catmull-Rom' },
             ],
         } as ChartPropertyDef,
         { key: 'opacity', label: 'Opacity', type: 'continuous', min: 0.1, max: 1, step: 0.05, defaultValue: 0.4 } as ChartPropertyDef,
@@ -148,4 +174,8 @@ export const plAreaChartDef: ChartTemplateDef = {
             ],
         } as ChartPropertyDef,
     ],
+    pivot: makeCartesianPivot({
+        permute: [['y', 'color']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };

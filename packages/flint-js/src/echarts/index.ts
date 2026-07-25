@@ -17,7 +17,7 @@
  */
 
 // EC assembly function
-export { assembleECharts, getEChartsPivot } from './assemble';
+export { assembleECharts, getEChartsPivot, getEChartsTransform } from './assemble';
 
 // EC spec instantiation (Phase 2)
 export { ecApplyLayoutToSpec, ecApplyTooltips } from './instantiate-spec';

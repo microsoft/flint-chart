@@ -34,7 +34,7 @@ import {
 import type { ChartWarning } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
-import { applyPivot, PivotSurface } from '../core/pivot';
+import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { cjsGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { computeZeroDecision } from '../core/semantic-types';
@@ -109,17 +109,22 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
             : { ...enc, type: prelimSemantics[ch]?.type };
     }
 
-    const pivoted = applyPivot(chartTemplate, typedRawEncodings, data, chartProperties, cjsGetTemplateDef);
-    if (pivoted.chartType && pivoted.chartType !== chartType) {
-        const swapped = cjsGetTemplateDef(pivoted.chartType) as ChartTemplateDef | undefined;
+    // Transform (derived Category-B operator): same two-control model as VL —
+    // chartProperties.chartType (θ) + chartProperties.arrange (τ/σ/γ). Legacy
+    // composed `pivot` ids are migrated inside applyTransform. See
+    // design-docs/chart-transform-two-axes.md.
+    const authoredTemplate = chartTemplate;
+    const transformed = applyTransform(chartTemplate, typedRawEncodings, data, chartProperties, cjsGetTemplateDef);
+    if (transformed.chartType && transformed.chartType !== chartType) {
+        const swapped = cjsGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
 
     // Compose Category-B encoding-action overrides (stored by the host in
-    // chartProperties, keyed by action key) onto the post-pivot encodings before
-    // any pipeline phase runs. Flint owns the transform; the host only stores
-    // the override value. See applyEncodingOverrides / EncodingActionDef.
-    const encodings = applyEncodingOverrides(chartTemplate, pivoted.encodings, chartProperties);
+    // chartProperties, keyed by action key) onto the post-transform encodings
+    // before any pipeline phase runs. Flint owns the transform; the host only
+    // stores the override value. See applyEncodingOverrides / EncodingActionDef.
+    const encodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
     data = applyAggregation(encodings, data);
@@ -429,17 +434,29 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
 
     cjsConfig._dataLength = values.length;
 
-    if (pivoted.surface) {
-        cjsConfig._pivot = pivoted.surface;
+    if (transformed.surface) {
+        cjsConfig._transform = transformed.surface;
+    }
+    // Legacy single-control surface for getChartjsPivot — enumerated from the
+    // authored template so ids/labels match the pre-split contract.
+    const legacyPivot = applyPivot(authoredTemplate, typedRawEncodings, data, chartProperties, cjsGetTemplateDef);
+    if (legacyPivot.surface) {
+        cjsConfig._pivot = legacyPivot.surface;
     }
 
     return cjsConfig;
 }
 
-/** Inspect the Chart.js view transformation surface for an input. */
+/** Inspect the Chart.js legacy (composed) view transformation surface for an input. */
 export function getChartjsPivot(input: ChartAssemblyInput): PivotSurface | undefined {
     const spec = assembleChartjs(input);
     return spec && spec._pivot ? (spec._pivot as PivotSurface) : undefined;
+}
+
+/** Inspect the Chart.js two-control transform surface for an input. */
+export function getChartjsTransform(input: ChartAssemblyInput): TransformSurface | undefined {
+    const spec = assembleChartjs(input);
+    return spec && spec._transform ? (spec._transform as TransformSurface) : undefined;
 }
 
 /**

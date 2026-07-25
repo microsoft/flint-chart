@@ -11,6 +11,7 @@
 
 import { ChartTemplateDef, EncodingActionDef } from '../../core/types';
 import { extractCategories } from './utils';
+import { makeCartesianPivot } from '../../core/pivot';
 
 const SCHEME_COLORSCALES: Record<string, string> = {
     viridis: 'Viridis', inferno: 'Hot', magma: 'Magma', plasma: 'Plasma', turbo: 'Turbo',
@@ -98,4 +99,5 @@ export const plHeatmapDef: ChartTemplateDef = {
             set: (enc, value) => ({ ...enc, color: { ...(enc.color as any), scheme: value } }),
         },
     ] as EncodingActionDef[],
+    pivot: makeCartesianPivot({ transpose: [['x', 'y']] }),
 };

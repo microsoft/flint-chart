@@ -6,10 +6,11 @@
  * Vega-Lite: rule strokeWidth 1.5、圆 size 80；茎黑色，圆点用图例色。
  */
 
-import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 import { extractCategories, groupBy, DEFAULT_COLORS, getCategoryOrder } from './utils';
 import { detectAxes } from './utils';
 import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
+import { makeSortAction } from '../../core/encoding-actions';
 
 /** Vega-Lite 风格：茎（rule）黑色、细线，圆点与 color 图例一致 */
 const STEM_COLOR = '#000000';
@@ -178,4 +179,5 @@ export const ecLollipopChartDef: ChartTemplateDef = {
     properties: [
         { key: 'dotSize', label: 'Dot Size', type: 'continuous', min: 20, max: 300, step: 10, defaultValue: 80 },
     ] as ChartPropertyDef[],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
 };

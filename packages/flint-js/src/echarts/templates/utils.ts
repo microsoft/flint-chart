@@ -11,10 +11,61 @@ import type { ChannelSemantics, InstantiateContext } from '../../core/types';
 /**
  * Get canonical category order for a channel (from buildECEncodings or channelSemantics).
  * Use when calling extractCategories so sort order is consistent across templates.
+ *
+ * Honors the shared Sort encoding action (`encodings[channel].sortBy` =
+ * measure channel + `sortOrder`) by aggregating the measure per category —
+ * same contract as Plotly's `resolveCategoryOrder`.
  */
 export function getCategoryOrder(ctx: InstantiateContext, channel: string): string[] | undefined {
-    return (ctx.resolvedEncodings as any)?.[channel]?.ordinalSortOrder
+    const resolved = (ctx.resolvedEncodings as any)?.[channel];
+    if (Array.isArray(resolved?.sortValues) && resolved.sortValues.length > 0) {
+        return resolved.sortValues.map(String);
+    }
+
+    const ordinal = resolved?.ordinalSortOrder
         ?? ctx.channelSemantics?.[channel]?.ordinalSortOrder;
+
+    const enc = ctx.encodings?.[channel];
+    const sortByChannel = enc?.sortBy;
+    if (
+        typeof sortByChannel === 'string'
+        && (sortByChannel === 'x' || sortByChannel === 'y' || sortByChannel === 'color'
+            || sortByChannel === 'size' || sortByChannel === 'group')
+    ) {
+        const catField = ctx.channelSemantics?.[channel]?.field ?? enc?.field;
+        const sortByField = ctx.channelSemantics?.[sortByChannel]?.field
+            ?? ctx.encodings?.[sortByChannel]?.field;
+        if (catField && sortByField && ctx.table) {
+            return resolveCategoryOrder(ctx.table, catField, {
+                ordinalSortOrder: ordinal,
+                sortBy: sortByField,
+                sortOrder: enc?.sortOrder,
+            });
+        }
+    }
+
+    return ordinal;
+}
+
+/**
+ * Resolve the display order of a categorical axis, honoring either a canonical
+ * `ordinalSortOrder` or a sort-by-measure request (`sortBy` + `sortOrder`).
+ */
+export function resolveCategoryOrder(
+    data: any[],
+    catField: string,
+    opts?: { ordinalSortOrder?: string[]; sortBy?: string; sortOrder?: 'ascending' | 'descending' },
+): string[] {
+    const base = extractCategories(data, catField, opts?.ordinalSortOrder);
+    if (!opts?.sortBy) return base;
+    const agg = new Map<string, number>();
+    for (const row of data) {
+        const cat = String(row[catField] ?? '');
+        const v = Number(row[opts.sortBy]);
+        if (Number.isFinite(v)) agg.set(cat, (agg.get(cat) ?? 0) + v);
+    }
+    const dir = opts.sortOrder === 'ascending' ? 1 : -1;
+    return [...base].sort((a, b) => dir * ((agg.get(a) ?? 0) - (agg.get(b) ?? 0)));
 }
 
 // Re-export circumference-pressure functions from core (shared with VL backend)

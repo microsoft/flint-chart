@@ -37,6 +37,7 @@ import {
 import type { ChartWarning, ChartEncoding } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
+import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { plGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { computeZeroDecision } from '../core/semantic-types';
@@ -71,7 +72,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
     const canvasSize = baseSize;
     const options = input.options ?? {};
-    const chartTemplate = plGetTemplateDef(chartType) as ChartTemplateDef;
+    let chartTemplate = plGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
         throw new Error(`Unknown Plotly chart type: ${chartType}. Use plAllTemplateDefs to see available types.`);
     }
@@ -107,7 +108,18 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     for (const [ch, enc] of Object.entries(normalized.encodings)) {
         typedRawEncodings[ch] = enc.type ? enc : { ...enc, type: prelimSemantics[ch]?.type };
     }
-    const encodings = applyEncodingOverrides(chartTemplate, typedRawEncodings, chartProperties);
+
+    // Transform (derived Category-B operator): same two-control model as VL —
+    // chartProperties.chartType (θ) + chartProperties.arrange (τ/σ/γ). Legacy
+    // composed `pivot` ids are migrated inside applyTransform. See
+    // design-docs/chart-transform-two-axes.md.
+    const authoredTemplate = chartTemplate;
+    const transformed = applyTransform(chartTemplate, typedRawEncodings, data, chartProperties, plGetTemplateDef);
+    if (transformed.chartType && transformed.chartType !== chartType) {
+        const swapped = plGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
+        if (swapped) chartTemplate = swapped;
+    }
+    const encodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
     data = applyAggregation(encodings, data);
@@ -394,5 +406,27 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
 
     figure._dataLength = values.length;
 
+    if (transformed.surface) {
+        figure._transform = transformed.surface;
+    }
+    // Legacy single-control surface for getPlotlyPivot — enumerated from the
+    // authored template so ids/labels match the pre-split contract.
+    const legacyPivot = applyPivot(authoredTemplate, typedRawEncodings, data, chartProperties, plGetTemplateDef);
+    if (legacyPivot.surface) {
+        figure._pivot = legacyPivot.surface;
+    }
+
     return figure;
+}
+
+/** Inspect the Plotly legacy (composed) view transformation surface for an input. */
+export function getPlotlyPivot(input: ChartAssemblyInput): PivotSurface | undefined {
+    const spec = assemblePlotly(input);
+    return spec && spec._pivot ? (spec._pivot as PivotSurface) : undefined;
+}
+
+/** Inspect the Plotly two-control transform surface for an input. */
+export function getPlotlyTransform(input: ChartAssemblyInput): TransformSurface | undefined {
+    const spec = assemblePlotly(input);
+    return spec && spec._transform ? (spec._transform as TransformSurface) : undefined;
 }

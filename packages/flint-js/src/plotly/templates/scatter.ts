@@ -11,6 +11,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { groupBy, getPlotlyPalette, getSeriesColor } from './utils';
+import { makeCartesianPivot } from '../../core/pivot';
 
 /** Compute a reasonable marker diameter based on canvas area and point count. */
 function computeMarkerSize(width: number, height: number, pointCount: number): number {
@@ -120,6 +121,11 @@ export const plScatterPlotDef: ChartTemplateDef = {
     properties: [
         { key: 'opacity', label: 'Opacity', type: 'continuous', min: 0.1, max: 1, step: 0.05, defaultValue: 1 } as ChartPropertyDef,
     ],
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color', 'size']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
     postProcess: (figure, ctx) => {
         if (!Array.isArray(figure.data)) return;
         const w = figure._width || ctx.canvasSize.width;

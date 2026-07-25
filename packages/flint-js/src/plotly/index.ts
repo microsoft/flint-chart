@@ -20,7 +20,7 @@
  */
 
 // PL assembly function
-export { assemblePlotly } from './assemble';
+export { assemblePlotly, getPlotlyPivot, getPlotlyTransform } from './assemble';
 
 // PL spec instantiation (Phase 2)
 export { plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';

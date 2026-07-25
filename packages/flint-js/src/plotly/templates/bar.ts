@@ -16,6 +16,7 @@ import { extractCategories, resolveCategoryOrder, buildCategoryAlignedData, dete
 import { detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 import { planBandDodge } from '../../core/band-dodge';
 import { makeSortAction } from '../../core/encoding-actions';
+import { makeCartesianPivot } from '../../core/pivot';
 
 /** Corner-radius property shared by the Plotly bar templates (px, matches VL). */
 const BAR_CORNER_RADIUS: ChartPropertyDef = {
@@ -100,6 +101,11 @@ export const plBarChartDef: ChartTemplateDef = {
     },
     properties: [BAR_CORNER_RADIUS],
     encodingActions: [makeSortAction()] as EncodingActionDef[],
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color']],
+        shift: ['color', 'column', 'row'],
+    }),
 };
 
 // ─── Stacked Bar Chart ──────────────────────────────────────────────────────
@@ -193,6 +199,11 @@ export const plStackedBarChartDef: ChartTemplateDef = {
           ] } as ChartPropertyDef,
     ],
     encodingActions: [makeSortAction()] as EncodingActionDef[],
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };
 
 // ─── Grouped Bar Chart ──────────────────────────────────────────────────────
@@ -283,9 +294,12 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         delete spec.encoding;
     },
     encodingActions: [makeSortAction()] as EncodingActionDef[],
+    pivot: makeCartesianPivot({
+        transpose: [['x', 'y']],
+        permute: [['x', 'y', 'color']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };
-
-// ─── Pyramid Chart ──────────────────────────────────────────────────────────
 
 /**
  * Plotly Pyramid Chart (population pyramid) — two mirrored horizontal bar

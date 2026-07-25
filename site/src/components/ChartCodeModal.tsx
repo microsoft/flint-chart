@@ -83,13 +83,15 @@ export function ChartCodeModal({
   );
 
   const outputText = useMemo(() => {
-    if (!testCase) return '';
+    if (!displayInput) return '';
     try {
-      const input = testCaseToAssemblyInput(testCase);
-      const spec = BACKENDS[chart.backend].assemble(input);
-      // Drop Flint's private `_`-prefixed annotations (`_pivot`, `_warnings`,
-      // `_width`, `_height`): they are internal metadata for the host/runtime,
-      // not part of the actual backend spec a user would render or copy.
+      // Compile the same overridden input the chart/Input tab show, so Output
+      // tracks gallery option-bar edits (chart type, arrange, properties, …).
+      const spec = BACKENDS[chart.backend].assemble(displayInput);
+      // Drop Flint's private `_`-prefixed annotations (`_pivot`, `_transform`,
+      // `_warnings`, `_width`, `_height`): they are internal metadata for the
+      // host/runtime, not part of the actual backend spec a user would render
+      // or copy.
       const clean = spec && typeof spec === 'object' ? { ...(spec as Record<string, unknown>) } : spec;
       if (clean && typeof clean === 'object') {
         for (const key of Object.keys(clean)) {
@@ -102,7 +104,7 @@ export function ChartCodeModal({
         (err as Error)?.message ?? err,
       )}`;
     }
-  }, [testCase, chart.backend]);
+  }, [displayInput, chart.backend]);
 
   const codeText = tab === 'input' ? inputText : outputText;
 
