@@ -14,6 +14,9 @@ build/
 coverage/
 .nyc_output/
 
+# Experiment outputs (source, inputs, and manifests stay tracked)
+experiments/*
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

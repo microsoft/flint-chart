@@ -22,7 +22,7 @@ import {
   type PreviewBackend,
 } from '../shared/supported-backends';
 import { GITHUB_REPO, siteTheme } from '../shared/theme';
-import overviewImg from '../assets/flint-overview.png';
+import flintLogo from '../assets/flint-logo.svg';
 
 /**
  * Front page: flat "paper" look inspired by Microsoft data-formulator. A
@@ -41,8 +41,13 @@ export function Landing() {
       <main style={mainStyle}>
         {/* ---- Hero ------------------------------------------------------ */}
         <section style={{ ...sectionStyle, paddingTop: 88, paddingBottom: 36 }}>
-          <h1 style={heroTitleStyle}>{t('landing.heroTitle')}</h1>
-          <div style={heroAttributionStyle}>{t('landing.attribution')}</div>
+          <div style={heroLockupStyle}>
+            <img src={flintLogo} alt="" aria-hidden="true" style={heroLogoStyle} />
+            <div style={heroHeadingBlockStyle}>
+              <h1 style={heroTitleStyle}>{t('landing.heroTitle')}</h1>
+              <div style={heroAttributionStyle}>{t('landing.attribution')}</div>
+            </div>
+          </div>
 
           <div className="landing-lead-columns" style={leadColumnsStyle}>
             <div style={leadTextColStyle}>
@@ -1232,14 +1237,33 @@ const newsLinkStyle: CSSProperties = {
 const heroTitleStyle: CSSProperties = {
   fontSize: 42,
   lineHeight: 1.18,
-  margin: '0 0 14px',
+  margin: 0,
   maxWidth: 960,
   fontWeight: 700,
   letterSpacing: '-0.02em',
 };
 
-const heroAttributionStyle: CSSProperties = {
+const heroLockupStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 12,
   margin: '0 0 46px',
+};
+
+const heroHeadingBlockStyle: CSSProperties = {
+  minWidth: 0,
+};
+
+const heroLogoStyle: CSSProperties = {
+  display: 'block',
+  flex: '0 0 auto',
+  width: 40,
+  height: 40,
+  marginTop: 7,
+};
+
+const heroAttributionStyle: CSSProperties = {
+  margin: '14px 0 0',
   color: siteTheme.textMuted,
   fontSize: 13,
   fontWeight: 500,

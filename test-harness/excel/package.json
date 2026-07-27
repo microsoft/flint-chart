@@ -15,15 +15,6 @@
     "evaluate:candlestick": "node evaluations/candlestick-audit.mjs",
     "evaluate:layout": "node evaluations/layout-facet-audit.mjs",
     "evaluate:examples": "node evaluations/update-examples.mjs",
-    "paired:corpus": "python3 evaluations/paired-agent/data/select-corpus.py",
-    "paired:generate": "python3 evaluations/paired-agent/generation/generate.py",
-    "paired:build": "python3 evaluations/paired-agent/generation/build.py",
-    "paired:summarize": "python3 evaluations/paired-agent/generation/summarize.py",
-    "paired:render": "node evaluations/paired-agent/rendering/render.mjs",
-    "paired:grade": "python3 evaluations/paired-agent/grading/grade.py",
-    "paired:export-packet": "python3 evaluations/paired-agent/grading/export-grading-packet.py",
-    "paired:ingest-grades": "python3 evaluations/paired-agent/grading/ingest-grades.py",
-    "paired:analyze": "python3 evaluations/paired-agent/analysis/analyze-grades.py",
     "test:mock": "cd ../../packages/flint-js && npx vitest run tests/excel-runtime.test.ts tests/excel-codegen.test.ts",
     "typecheck": "tsc -p tsconfig.json"
   }

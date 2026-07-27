@@ -177,7 +177,7 @@ _无模板专用参数。_
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
-| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After) | — | always | 线或区域的插值方式。 |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | 线或区域的插值方式。 |
 | `showPoints` | toggle | on / off | `false` | always | 在线上叠加点标记。 |
 
 ### ![](chart-icon-area.svg) Area Chart
@@ -186,7 +186,7 @@ _无模板专用参数。_
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
-| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)) | — | always | 线或区域的插值方式。 |
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | 线或区域的插值方式。 |
 | `opacity` | number | 0.1 – 1 (step 0.05) | `0.4` | always | 标记不透明度。 |
 | `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `layered` (Layered (overlap)) | — | conditional | 重叠系列的堆叠策略。 |
 
