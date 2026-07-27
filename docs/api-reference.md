@@ -137,6 +137,23 @@ interface ChartAssemblyInput {
 
 Maps column name → semantic type. This drives encoding type, formatting, aggregation defaults, color class, and layout. See [Semantic Type](/documentation/semantic-types).
 
+### `field_display_names`
+
+Maps raw column names to readable presentation labels used for axis titles and
+legend headers. Keep encodings bound to the original field names:
+
+```ts
+{
+  field_display_names: {
+    percentageOfCountries: 'Percentage of countries'
+  },
+  chart_spec: {
+    chartType: 'Bar Chart',
+    encodings: { x: 'country', y: 'percentageOfCountries' }
+  }
+}
+```
+
 ### `chart_spec`
 
 | Field | Description |

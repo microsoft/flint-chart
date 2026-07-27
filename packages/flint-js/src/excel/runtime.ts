@@ -1,4 +1,11 @@
 import { prepareExcelArtifact, type PreparedExcelArtifact } from './artifact';
+import {
+    EXCEL_AXIS_TITLE_FONT_SIZE,
+    EXCEL_CHART_TITLE_FONT_SIZE,
+    EXCEL_DATA_LABEL_FONT_SIZE,
+    EXCEL_LABEL_FONT_SIZE,
+    EXCEL_LEGEND_FONT_SIZE,
+} from './typography';
 
 export interface OfficeJsExcelApi {
     run<T>(callback: (context: any) => Promise<T>): Promise<T>;
@@ -16,11 +23,12 @@ export interface ExcelRenderResult {
     inspection: unknown | null;
 }
 
-function applyChartFormat(chart: any, prepared: PreparedExcelArtifact): void {
+function applyChartFormat(chart: any, prepared: PreparedExcelArtifact, nativeSeriesCount: number): void {
     const { spec } = prepared;
     if (spec.legend) {
         chart.legend.visible = spec.legend.visible;
         if (spec.legend.visible && spec.legend.position) chart.legend.position = spec.legend.position;
+        if (spec.legend.visible) chart.legend.format.font.size = EXCEL_LEGEND_FONT_SIZE;
     }
     if (prepared.hasAxes) {
         const axes = [
@@ -29,12 +37,16 @@ function applyChartFormat(chart: any, prepared: PreparedExcelArtifact): void {
         ] as const;
         for (const [axis, format] of axes) {
             if (!format) continue;
+            if (format.categoryType) axis.categoryType = format.categoryType;
+            if (format.baseTimeUnit) axis.baseTimeUnit = format.baseTimeUnit;
+            if (format.majorTimeUnitScale) axis.majorTimeUnitScale = format.majorTimeUnitScale;
             if (format.title) {
                 axis.title.text = format.title;
                 axis.title.visible = true;
+                axis.title.format.font.size = EXCEL_AXIS_TITLE_FONT_SIZE;
             }
             if (format.numberFormat) axis.numberFormat = format.numberFormat;
-            if (format.labelFontSize !== undefined) axis.format.font.size = format.labelFontSize;
+            axis.format.font.size = format.labelFontSize ?? EXCEL_LABEL_FONT_SIZE;
             if (format.tickLabelSpacing !== undefined) axis.tickLabelSpacing = format.tickLabelSpacing;
             if (format.reversePlotOrder !== undefined) axis.reversePlotOrder = format.reversePlotOrder;
             if (format.minimumScale !== undefined) axis.minimum = format.minimumScale;
@@ -47,9 +59,9 @@ function applyChartFormat(chart: any, prepared: PreparedExcelArtifact): void {
         if (spec.dataLabels.position) chart.dataLabels.position = spec.dataLabels.position;
         if (spec.dataLabels.numberFormat) chart.dataLabels.numberFormat = spec.dataLabels.numberFormat;
         if (spec.dataLabels.fontColor) chart.dataLabels.format.font.color = spec.dataLabels.fontColor;
-        if (spec.dataLabels.fontSize !== undefined) chart.dataLabels.format.font.size = spec.dataLabels.fontSize;
+        chart.dataLabels.format.font.size = spec.dataLabels.fontSize ?? EXCEL_DATA_LABEL_FONT_SIZE;
     }
-    for (let index = 0; index < prepared.seriesCount; index += 1) {
+    for (let index = 0; index < Math.min(prepared.seriesCount, nativeSeriesCount); index += 1) {
         const series = chart.series.getItemAt(index);
         const format = spec.seriesFormats?.[index];
         if (format?.color) {
@@ -77,15 +89,14 @@ async function inspectChart(context: any, sheet: any, dataRange: any, chart: any
         for (const series of chart.series.items) {
             series.binOptions.load('type,count,width,allowOverflow,overflowValue,allowUnderflow,underflowValue');
         }
-        const primaryCategoryAxis = chart.axes.getItemOrNullObject('Category', 'Primary');
-        const primaryValueAxis = chart.axes.getItemOrNullObject('Value', 'Primary');
-        const secondaryValueAxis = chart.axes.getItemOrNullObject('Value', 'Secondary');
-        for (const axis of [primaryCategoryAxis, primaryValueAxis, secondaryValueAxis]) {
-            axis.load('isNullObject,axisType,axisGroup,visible,minimum,maximum,numberFormat');
+        const primaryCategoryAxis = chart.axes.categoryAxis;
+        const primaryValueAxis = chart.axes.valueAxis;
+        for (const axis of [primaryCategoryAxis, primaryValueAxis]) {
+            axis.load('axisType,axisGroup,visible,minimum,maximum,numberFormat');
             axis.title.load('text,visible');
         }
         await context.sync();
-        const describeAxis = (axis: any) => axis.isNullObject ? null : { ...axis.toJSON(), title: axis.title.toJSON() };
+        const describeAxis = (axis: any) => ({ ...axis.toJSON(), title: axis.title.toJSON() });
         return {
             sourceRange: {
                 address: dataRange.address,
@@ -106,7 +117,6 @@ async function inspectChart(context: any, sheet: any, dataRange: any, chart: any
                 axes: {
                     primaryCategory: describeAxis(primaryCategoryAxis),
                     primaryValue: describeAxis(primaryValueAxis),
-                    secondaryValue: describeAxis(secondaryValueAxis),
                 },
             },
         };
@@ -153,21 +163,16 @@ export async function renderExcelChart(
         if (spec.series?.length) {
             chart.series.load('items');
             await context.sync();
-            if (chart.series.items.length < spec.series.length) {
-                throw new Error(`Excel inferred ${chart.series.items.length} series; ${spec.series.length} required.`);
-            }
+                chart.series.items.forEach((series: any) => series.delete());
+            await context.sync();
             for (const [index, binding] of spec.series.entries()) {
-                const series = chart.series.items[index];
-                series.name = binding.name;
-                series.setXAxisValues(sheet.getRangeByIndexes(1, binding.xColumn, binding.rowCount, 1));
-                series.setValues(sheet.getRangeByIndexes(1, binding.yColumn, binding.rowCount, 1));
+                    const series = chart.series.add(binding.name, index);
+                const columnCount = binding.columnCount ?? 1;
+                series.setXAxisValues(sheet.getRangeByIndexes(binding.xRow ?? 1, binding.xColumn, binding.rowCount, columnCount));
+                series.setValues(sheet.getRangeByIndexes(binding.yRow ?? 1, binding.yColumn, binding.rowCount, columnCount));
                 if (binding.bubbleSizeColumn !== undefined) {
                     series.setBubbleSizes(sheet.getRangeByIndexes(1, binding.bubbleSizeColumn, binding.rowCount, 1));
                 }
-            }
-            for (let index = chart.series.items.length - 1; index >= spec.series.length; index -= 1) {
-                chart.series.getItemAt(index).delete();
-                await context.sync();
             }
         }
 
@@ -178,8 +183,11 @@ export async function renderExcelChart(
         if (spec.title) {
             chart.title.text = spec.title;
             chart.title.visible = true;
+            chart.title.format.font.size = EXCEL_CHART_TITLE_FONT_SIZE;
         }
-        applyChartFormat(chart, prepared);
+        chart.series.load?.('items');
+        await context.sync();
+        applyChartFormat(chart, prepared, chart.series.items?.length ?? prepared.seriesCount);
         await context.sync();
         const image = chart.getImage(
             Math.round(width * (96 / 72) * scale),

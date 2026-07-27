@@ -38,6 +38,7 @@ import type {
     ExcelNativeSeriesSpec,
     ExcelSeriesBy,
 } from './types';
+import { excelDateAxis, excelDateSerial } from './date-axis';
 
 type Cell = string | number | null;
 
@@ -84,11 +85,6 @@ function focusedNumericAxis(values: number[]): Partial<Pick<ExcelAxisSpec, 'mini
     };
 }
 
-function temporalLabelSpacing(categoryCount: number, width: number): number | undefined {
-    const labelBudget = Math.max(12, Math.floor((width - 90) / 14));
-    return categoryCount > labelBudget ? Math.ceil(categoryCount / labelBudget) : undefined;
-}
-
 /** Normalize shorthand (`"x": "field"`) to `{ field }`. */
 function normalizeEncodings(
     raw: Record<string, unknown>,
@@ -99,6 +95,22 @@ function normalizeEncodings(
         out[ch] = typeof v === 'string' ? { field: v } : (v as ChartEncoding);
     }
     return out;
+}
+
+function applyFieldDisplayNames(
+    spec: ExcelChartSpec,
+    fieldDisplayNames: Record<string, string> | undefined,
+): ExcelChartSpec {
+    if (!fieldDisplayNames) return spec;
+    const displayName = (value: string | number | null) =>
+        typeof value === 'string' ? fieldDisplayNames[value] ?? value : value;
+    if (spec.categoryAxis?.title) spec.categoryAxis.title = String(displayName(spec.categoryAxis.title));
+    if (spec.valueAxis?.title) spec.valueAxis.title = String(displayName(spec.valueAxis.title));
+    if (spec.data.length > 0) spec.data[0] = spec.data[0].map(displayName);
+    if (spec.series) {
+        for (const series of spec.series) series.name = String(displayName(series.name));
+    }
+    return spec;
 }
 
 /** Distinct values of a field, first-seen order. */
@@ -204,7 +216,10 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     }
 
     if (chartTemplate.instantiate) {
-        return chartTemplate.instantiate(templateContext);
+        return applyFieldDisplayNames(
+            chartTemplate.instantiate(templateContext),
+            input.field_display_names,
+        );
     }
 
     if (flintType === 'Bar Chart' || flintType === 'Grouped Bar Chart' || flintType === 'Stacked Bar Chart') {
@@ -486,7 +501,9 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         data.push([catField, ...seriesDescriptors.map((descriptor) => descriptor.label)]);
         for (let categoryIndex = 0; categoryIndex < categories.length; categoryIndex += 1) {
             data.push([
-                String(categories[categoryIndex]),
+                typeOf(catCh!) === 'temporal'
+                    ? excelDateSerial(categories[categoryIndex])
+                    : String(categories[categoryIndex]),
                 ...seriesValues.map((values) => values[categoryIndex]),
             ]);
         }
@@ -544,11 +561,11 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
             : {};
         spec.categoryAxis = {
             title: catField,
+            ...(orientation === 'vertical' && typeOf(catCh!) === 'temporal'
+                ? excelDateAxis(convertedData.map((row) => row[catField]), base.width)
+                : {}),
             labelFontSize: orientation === 'horizontal' && data.length > 25
-                ? Math.max(5, Math.min(10, ((base.height - 80) / (data.length - 1)) * 0.72))
-                : undefined,
-            tickLabelSpacing: orientation === 'vertical' && typeOf(catCh!) === 'temporal'
-                ? temporalLabelSpacing(data.length - 1, base.width)
+                ? Math.max(8, Math.min(13, ((base.height - 80) / (data.length - 1)) * 0.9))
                 : undefined,
             reversePlotOrder: orientation === 'horizontal' && typeOf(catCh!) !== 'temporal',
             ...numericXScale,
@@ -572,5 +589,5 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         spec.overlap = 0;
     }
 
-    return spec;
+    return applyFieldDisplayNames(spec, input.field_display_names);
 }

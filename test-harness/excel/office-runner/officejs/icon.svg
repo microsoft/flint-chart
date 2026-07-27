@@ -1,8 +1,9 @@
-<svg width="256" height="256" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 1H14V5H8V7H13V11H8V15H2V1Z" fill="#202A33"/>
-      <path d="M3 2H7V14H3V2Z" fill="#0078D4"/>
-      <path d="M7 2H13V4H7V2Z" fill="#29B6F6"/>
-      <path d="M7 8H12V10H7V8Z" fill="#29B6F6"/>
-      <path d="M3 11H5V14H3V11Z" fill="#005A9E"/>
-      <path d="M5 2H7V4H5V2Z" fill="#48C5FF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+      <title id="title">Flint</title>
+      <path d="m7 48 8-27 18-11 14 13-3 22-18 13L7 48Z" fill="#202a33"/>
+      <path d="m15 21 18-11-5 19-13 19H7l8-27Z" fill="#34424e"/>
+      <path d="m28 29 5-19 14 13-11 9-8-3Z" fill="#52606b"/>
+      <path d="m28 29 8 3 8 13-18 13 2-29Z" fill="#111820"/>
+      <path d="m47 11 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#f4b41a"/>
+      <path d="m57 8 .8 2.2L60 11l-2.2.8L57 14l-.8-2.2L54 11l2.2-.8L57 8ZM54 26l.7 1.8 1.8.7-1.8.7L54 31l-.7-1.8-1.8-.7 1.8-.7L54 26Z" fill="#e4572e"/>
 </svg>

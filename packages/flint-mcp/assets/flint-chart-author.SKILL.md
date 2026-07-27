@@ -92,6 +92,7 @@ interface ChartAssemblyInput {
     chartProperties?: Record<string, any>;    // per-chart tuning (optional)
   };
   options?: Record<string, any>;              // global layout options (rarely needed)
+  field_display_names?: Record<string, string>; // field → readable axis/legend title
 }
 ```
 
@@ -395,6 +396,8 @@ default:
 - **Sort a category axis by its measure:** `encodings.x = { field: "name", sortBy: "y", sortOrder: "descending" }`.
 - **Pick a color scheme:** `encodings.color = { field: "region", scheme: "tableau10" }`.
 - **Override an inferred type:** `encodings.x = { field: "year", type: "ordinal" }` (e.g. treat a year as discrete bands).
+- **Use readable field titles:** `field_display_names = { percentageOfCountries: "Percentage of countries" }`.
+  Keep encodings bound to the real column name; Flint uses the display name for axis titles and legend headers.
 - **Resize the chart:** Flint sizes from two numbers — `baseSize` (the *target*
   it aims for, default 400×320) and `canvasSize` (a *hard ceiling* it may never
   exceed). With dense data the chart stretches from base toward the ceiling.
