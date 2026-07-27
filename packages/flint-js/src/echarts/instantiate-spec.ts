@@ -300,7 +300,7 @@ function placePyramidChannelHeaders(option: any): void {
     const gw = Math.max(0, cw - gl - gr);
     const centerX = gl + gw / 2;
     const dx = gw / 4;
-    const topY = Math.max(4, gt - 10);
+    const topY = Math.max(4, gt - 24);
 
     const L = estimatePyramidYCategoryInsetPx(option, gw);
     const innerW = Math.max(gw - L, 1);
