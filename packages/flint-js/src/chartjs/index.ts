@@ -18,7 +18,7 @@
  */
 
 // CJS assembly function
-export { assembleChartjs, getChartjsPivot } from './assemble';
+export { assembleChartjs, getChartjsPivot, getChartjsTransform } from './assemble';
 
 // CJS spec instantiation (Phase 2)
 export { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';

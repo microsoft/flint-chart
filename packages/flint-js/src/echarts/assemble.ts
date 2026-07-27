@@ -61,7 +61,7 @@ import {
 import type { ChartWarning } from '../core/types';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
-import { applyPivot, PivotSurface } from '../core/pivot';
+import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { ecGetTemplateDef } from './templates';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
@@ -141,17 +141,22 @@ export function assembleECharts(input: ChartAssemblyInput): any {
             : { ...enc, type: prelimSemantics[ch]?.type };
     }
 
-    const pivoted = applyPivot(chartTemplate, typedRawEncodings, data, chartProperties, ecGetTemplateDef);
-    if (pivoted.chartType && pivoted.chartType !== chartType) {
-        const swapped = ecGetTemplateDef(pivoted.chartType) as ChartTemplateDef | undefined;
+    // Transform (derived Category-B operator): same two-control model as VL —
+    // chartProperties.chartType (θ) + chartProperties.arrange (τ/σ/γ). Legacy
+    // composed `pivot` ids are migrated inside applyTransform. See
+    // design-docs/chart-transform-two-axes.md.
+    const authoredTemplate = chartTemplate;
+    const transformed = applyTransform(chartTemplate, typedRawEncodings, data, chartProperties, ecGetTemplateDef);
+    if (transformed.chartType && transformed.chartType !== chartType) {
+        const swapped = ecGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
 
     // Compose Category-B encoding-action overrides (stored by the host in
-    // chartProperties, keyed by action key) onto the post-pivot encodings before
-    // any pipeline phase runs. Flint owns the transform; the host only stores
-    // the override value. See applyEncodingOverrides / EncodingActionDef.
-    const encodings = applyEncodingOverrides(chartTemplate, pivoted.encodings, chartProperties);
+    // chartProperties, keyed by action key) onto the post-transform encodings
+    // before any pipeline phase runs. Flint owns the transform; the host only
+    // stores the override value. See applyEncodingOverrides / EncodingActionDef.
+    const encodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.
     data = applyAggregation(encodings, data);
@@ -516,8 +521,14 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // ECharts data is embedded directly in series[].data)
     ecOption._dataLength = values.length;
 
-    if (pivoted.surface) {
-        ecOption._pivot = pivoted.surface;
+    if (transformed.surface) {
+        ecOption._transform = transformed.surface;
+    }
+    // Legacy single-control surface for getEChartsPivot — enumerated from the
+    // authored template so ids/labels match the pre-split contract.
+    const legacyPivot = applyPivot(authoredTemplate, typedRawEncodings, data, chartProperties, ecGetTemplateDef);
+    if (legacyPivot.surface) {
+        ecOption._pivot = legacyPivot.surface;
     }
 
     // Clean internal-only props
@@ -526,10 +537,16 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     return ecOption;
 }
 
-/** Inspect the ECharts view transformation surface for an input. */
+/** Inspect the ECharts legacy (composed) view transformation surface for an input. */
 export function getEChartsPivot(input: ChartAssemblyInput): PivotSurface | undefined {
     const spec = assembleECharts(input);
     return spec && spec._pivot ? (spec._pivot as PivotSurface) : undefined;
+}
+
+/** Inspect the ECharts two-control transform surface for an input. */
+export function getEChartsTransform(input: ChartAssemblyInput): TransformSurface | undefined {
+    const spec = assembleECharts(input);
+    return spec && spec._transform ? (spec._transform as TransformSurface) : undefined;
 }
 
 // ===========================================================================

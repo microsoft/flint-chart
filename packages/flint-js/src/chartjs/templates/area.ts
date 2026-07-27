@@ -58,6 +58,10 @@ export const cjsAreaChartDef: ChartTemplateDef = {
         const tension = (interpolate === 'monotone' || interpolate === 'basis' ||
                          interpolate === 'cardinal' || interpolate === 'catmull-rom')
             ? 0.4 : 0;
+        const stepped = interpolate === 'step' ? 'middle' as const
+                      : interpolate === 'step-before' ? 'before' as const
+                      : interpolate === 'step-after' ? 'after' as const
+                      : false;
 
         const palette = getChartJsPalette(ctx, 'color');
 
@@ -133,6 +137,7 @@ export const cjsAreaChartDef: ChartTemplateDef = {
                     borderColor,
                     backgroundColor: bgColor,
                     tension,
+                    stepped,
                     fill: stacked ? 'stack' : 'origin',
                     pointRadius: 2,
                 });
@@ -154,6 +159,7 @@ export const cjsAreaChartDef: ChartTemplateDef = {
                 borderColor: getSeriesBorderColor(palette, 0),
                 backgroundColor: getSeriesBackgroundColor(palette, 0, opacity),
                 tension,
+                stepped,
                 fill: 'origin',
                 pointRadius: 2,
             });
@@ -170,6 +176,12 @@ export const cjsAreaChartDef: ChartTemplateDef = {
                 { value: undefined, label: 'Default (linear)' },
                 { value: 'linear', label: 'Linear' },
                 { value: 'monotone', label: 'Monotone (smooth)' },
+                { value: 'step', label: 'Step' },
+                { value: 'step-before', label: 'Step Before' },
+                { value: 'step-after', label: 'Step After' },
+                { value: 'basis', label: 'Basis (smooth)' },
+                { value: 'cardinal', label: 'Cardinal' },
+                { value: 'catmull-rom', label: 'Catmull-Rom' },
             ],
         } as ChartPropertyDef,
         {

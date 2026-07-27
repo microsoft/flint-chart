@@ -19,6 +19,7 @@ import {
     getPlotlyPalette,
     getSeriesColor,
 } from './utils';
+import { makeCartesianPivot } from '../../core/pivot';
 
 const isDiscrete = (type: string | undefined) => type === 'nominal' || type === 'ordinal';
 
@@ -137,8 +138,15 @@ export const plLineChartDef: ChartTemplateDef = {
                 { value: 'step', label: 'Step' },
                 { value: 'step-before', label: 'Step Before' },
                 { value: 'step-after', label: 'Step After' },
+                { value: 'basis', label: 'Basis (smooth)' },
+                { value: 'cardinal', label: 'Cardinal' },
+                { value: 'catmull-rom', label: 'Catmull-Rom' },
             ],
         } as ChartPropertyDef,
         { key: 'showPoints', label: 'Show points', type: 'binary', defaultValue: false } as ChartPropertyDef,
     ],
+    pivot: makeCartesianPivot({
+        permute: [['y', 'color']],
+        shift: ['color', 'group', 'column', 'row'],
+    }),
 };

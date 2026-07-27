@@ -300,6 +300,9 @@ export const ecAreaChartDef: ChartTemplateDef = {
                 { value: 'step', label: 'Step' },
                 { value: 'step-before', label: 'Step Before' },
                 { value: 'step-after', label: 'Step After' },
+                { value: 'basis', label: 'Basis (smooth)' },
+                { value: 'cardinal', label: 'Cardinal' },
+                { value: 'catmull-rom', label: 'Catmull-Rom' },
             ],
         } as ChartPropertyDef,
         {

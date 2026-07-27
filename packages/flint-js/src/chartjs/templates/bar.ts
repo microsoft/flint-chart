@@ -9,21 +9,22 @@
  *   CJS: explicit datasets[] with stacked option on scales
  */
 
-import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 import {
-    extractCategories,
-    groupBy,
-    detectAxes,
-    buildCategoryAlignedData,
-    getChartJsPalette,
-    getSeriesBorderColor,
-    getSeriesBackgroundColor,
+  resolveCategoryOrder,
+  groupBy,
+  detectAxes,
+  buildCategoryAlignedData,
+  getChartJsPalette,
+  getSeriesBorderColor,
+  getSeriesBackgroundColor,
 } from './utils';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
 import { planBandDodge, resolveDodge } from '../../core/band-dodge';
 import { makeCartesianPivot } from '../../core/pivot';
+import { makeSortAction } from '../../core/encoding-actions';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,7 +55,13 @@ export const cjsBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder,
+            sortBy: sortByField,
+            sortOrder: catEnc?.sortOrder,
+        });
         const values = buildCategoryAlignedData(table, catField, valField, categories);
 
         const isHorizontal = categoryAxis === 'y';
@@ -111,6 +118,7 @@ export const cjsBarChartDef: ChartTemplateDef = {
     properties: [
         { key: 'cornerRadius', label: 'Corners', type: 'continuous', min: 0, max: 15, step: 1, defaultValue: 0 },
     ] as ChartPropertyDef[],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
@@ -144,7 +152,13 @@ export const cjsStackedBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder,
+            sortBy: sortByField,
+            sortOrder: catEnc?.sortOrder,
+        });
         const isHorizontal = categoryAxis === 'y';
 
         const palette = getChartJsPalette(ctx, 'color');
@@ -214,6 +228,7 @@ export const cjsStackedBarChartDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
@@ -255,7 +270,13 @@ export const cjsGroupedBarChartDef: ChartTemplateDef = {
         if (!catField || !valField) return;
 
         const catCS = channelSemantics[categoryAxis];
-        const categories = extractCategories(table, catField, catCS?.ordinalSortOrder);
+        const catEnc = ctx.encodings?.[categoryAxis];
+        const sortByField = catEnc?.sortBy ? channelSemantics[catEnc.sortBy]?.field : undefined;
+        const categories = resolveCategoryOrder(table, catField, {
+            ordinalSortOrder: catCS?.ordinalSortOrder,
+            sortBy: sortByField,
+            sortOrder: catEnc?.sortOrder,
+        });
         const isHorizontal = categoryAxis === 'y';
 
         const palette = getChartJsPalette(ctx, 'group');
@@ -414,6 +435,7 @@ export const cjsGroupedBarChartDef: ChartTemplateDef = {
             },
         },
     ] as ChartPropertyDef[],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],

@@ -12,7 +12,7 @@
  *       and barGap/barCategoryGap for grouped layout
  */
 
-import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 import {
     extractCategories, groupBy, detectAxes, getCategoryOrder,
 } from './utils';
@@ -23,6 +23,7 @@ import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
 import { makeCartesianPivot } from '../../core/pivot';
+import { makeSortAction } from '../../core/encoding-actions';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -445,6 +446,7 @@ export const ecBarChartDef: ChartTemplateDef = {
     properties: [
         { key: 'cornerRadius', label: 'Corners', type: 'continuous', min: 0, max: 15, step: 1, defaultValue: 0 },
     ] as ChartPropertyDef[],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
@@ -667,6 +669,7 @@ export const ecStackedBarChartDef: ChartTemplateDef = {
             check: (ctx) => ({ applicable: !!ctx.encodings.color?.field }),
         },
     ] as ChartPropertyDef[],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],
@@ -975,6 +978,7 @@ export const ecGroupedBarChartDef: ChartTemplateDef = {
             },
         } as ChartPropertyDef,
     ],
+    encodingActions: [makeSortAction()] as EncodingActionDef[],
     pivot: makeCartesianPivot({
         transpose: [['x', 'y']],
         permute: [['x', 'y', 'color']],

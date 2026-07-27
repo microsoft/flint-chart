@@ -18,12 +18,13 @@ import {
   getChartPivot,
   getChartTransform,
   resolveEncodingType,
-  vlGetTemplateDef,
+  TRANSFORM_CHART_TYPE_KEY,
 } from 'flint-chart';
 import type {
   ChartAssemblyInput,
   ChartEncoding,
   ChartOption,
+  ChartPropertyDef,
   EncodingActionDef,
   PivotSurface,
   RawEncodingValue,
@@ -71,6 +72,19 @@ function semanticTypeOf(input: ChartAssemblyInput, field: string): string {
   const st = input.semantic_types?.[field];
   if (!st) return '';
   return typeof st === 'string' ? st : ((st as { type?: string }).type ?? '');
+}
+
+/**
+ * Effective chart type for controls: honor a gallery chart-type override
+ * (`chartProperties.chartType = 'type:Strip Plot'`) so properties/actions match
+ * what assemble will actually render after applyTransform.
+ */
+function effectiveChartType(input: ChartAssemblyInput): string {
+  const raw = input.chart_spec.chartProperties?.[TRANSFORM_CHART_TYPE_KEY];
+  if (typeof raw === 'string' && raw.startsWith('type:') && raw.length > 5) {
+    return raw.slice('type:'.length);
+  }
+  return input.chart_spec.chartType;
 }
 
 /**
@@ -145,12 +159,38 @@ function backendSupportedPropertyKeys(
   return new Set(props.map((p) => p.key));
 }
 
+/**
+ * Narrow a discrete ChartOption's value list to what the selected backend
+ * template actually accepts. Without this, VL-only Curve tokens (e.g. `basis`)
+ * appear in the gallery for ECharts/Chart.js/Plotly, then
+ * `normalizeChartProperties` silently drops them and the chart never changes.
+ */
+function alignDiscreteOptionsToBackend(
+  option: ChartOption,
+  backendProps: ChartPropertyDef[] | undefined,
+): ChartOption {
+  if (option.type !== 'discrete' || !backendProps) return option;
+  const def = backendProps.find((p) => p.key === option.key);
+  if (!def || def.type !== 'discrete' || !def.options?.length) return option;
+  return {
+    ...option,
+    options: def.options.map((o) => ({
+      value: o.value,
+      label: o.label ?? (o.value == null ? 'Default' : String(o.value)),
+    })),
+  };
+}
+
 /** Build the option model (properties + encoding actions) for the input. */
 export function buildPanelModel(
   input: ChartAssemblyInput,
   backend: PreviewBackend = 'vegalite',
 ): PanelModel {
-  const def = vlGetTemplateDef(input.chart_spec.chartType);
+  const chartType = effectiveChartType(input);
+  const backendDef = BACKENDS[backend].getTemplateDef(chartType);
+  // Fall back to VL actions only when the selected backend has no template for
+  // this type (shouldn't happen for gallery tiles, but keeps the bar usable).
+  const actionSource = backendDef ?? BACKENDS.vegalite.getTemplateDef(chartType);
 
   let properties: ChartOption[] = [];
   try {
@@ -164,9 +204,15 @@ export function buildPanelModel(
   // bar never shows a knob that does nothing. `facetColumns` is exempt: it is a
   // LAYOUT-level control (facet wrap) honored by every backend's assembler, not
   // a per-template mark property, so it never appears in a template's own list.
-  const supported = backendSupportedPropertyKeys(input.chart_spec.chartType, backend);
+  const supported = backendSupportedPropertyKeys(chartType, backend);
   if (supported) {
     properties = properties.filter((o) => o.key === 'facetColumns' || supported.has(o.key));
+  }
+  // Also replace discrete option lists with the backend's accepted values so
+  // Curve / stackMode / etc. can't offer tokens normalizeChartProperties drops.
+  const backendProps = backendDef?.properties;
+  if (backend !== 'vegalite' && backendProps) {
+    properties = properties.map((o) => alignDiscreteOptionsToBackend(o, backendProps));
   }
 
   const encodings = normalizeEncodings(input);
@@ -175,7 +221,7 @@ export function buildPanelModel(
     data: input.data?.values ?? [],
     chartProperties: input.chart_spec.chartProperties,
   };
-  const actions: ResolvedAction[] = (def?.encodingActions ?? [])
+  const actions: ResolvedAction[] = (actionSource?.encodingActions ?? [])
     .filter((a) => (a.isApplicable ? a.isApplicable(ctx) : true))
     .map((a) => ({
       key: a.key,
@@ -192,16 +238,16 @@ export function buildPanelModel(
   }
 
   // Factored two-control transform surfaces (chart type = θ, arrange = τ/σ/γ).
-  let chartType: PivotSurface | undefined;
+  let chartTypeSurface: PivotSurface | undefined;
   let arrange: PivotSurface | undefined;
   try {
     const transform = getChartTransform(input);
-    chartType = transform?.chartType;
+    chartTypeSurface = transform?.chartType;
     arrange = transform?.arrange;
   } catch {
-    chartType = undefined;
+    chartTypeSurface = undefined;
     arrange = undefined;
   }
 
-  return { properties, actions, pivot, chartType, arrange };
+  return { properties, actions, pivot, chartType: chartTypeSurface, arrange };
 }

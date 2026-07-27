@@ -1,7 +1,49 @@
 // @ts-check
 
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { request } from 'node:https';
+
 const DEFAULT_SERVER = 'https://localhost:3000';
 const HEALTH_CHECK_INTERVAL_MS = 2_000;
+const DEV_CA_PATH = join(homedir(), '.office-addin-dev-certs', 'ca.crt');
+
+/**
+ * Fetch from the local Office runner while trusting its development CA.
+ * @param {string} url
+ * @param {{ method?: string, headers?: Record<string, string>, body?: string }} [options]
+ * @returns {Promise<Response>}
+ */
+function runnerFetch(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const req = request(url, {
+      method: options.method,
+      headers: options.headers,
+      ca: existsSync(DEV_CA_PATH) ? readFileSync(DEV_CA_PATH) : undefined,
+    }, (response) => {
+      /** @type {Buffer[]} */
+      const chunks = [];
+      response.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+      response.on('end', () => {
+        const status = response.statusCode ?? 500;
+        const body = status === 204 ? null : Buffer.concat(chunks);
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (Array.isArray(value)) {
+            for (const item of value) headers.append(name, item);
+          } else if (value !== undefined) {
+            headers.set(name, value);
+          }
+        }
+        resolve(new Response(body, { status, headers }));
+      });
+    });
+    req.on('error', reject);
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
 
 /** @param {number} milliseconds */
 function wait(milliseconds) {
@@ -13,7 +55,7 @@ function wait(milliseconds) {
  * @returns {Promise<{ instance_id: string, worker_ready: boolean }>}
  */
 async function readHealth(server) {
-  const response = await fetch(`${server}/health`);
+  const response = await runnerFetch(`${server}/health`);
   if (!response.ok) throw new Error(`Office runner health check failed with HTTP ${response.status}.`);
   const health = /** @type {{ instance_id?: unknown, worker_ready?: unknown }} */ (await response.json());
   if (typeof health.instance_id !== 'string' || typeof health.worker_ready !== 'boolean') {
@@ -46,7 +88,7 @@ async function enqueueAndCollect(path, body, options) {
 
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
-      enqueue = await fetch(`${server}${path}`, {
+      enqueue = await runnerFetch(`${server}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -72,7 +114,7 @@ async function enqueueAndCollect(path, body, options) {
   while (Date.now() < deadline) {
     let response;
     try {
-      response = await fetch(`${server}/result?id=${id}`);
+      response = await runnerFetch(`${server}/result?id=${id}`);
     } catch (error) {
       if (Date.now() + 500 >= deadline) throw error;
       await wait(300);
@@ -98,7 +140,7 @@ async function enqueueAndCollect(path, body, options) {
         throw new Error('Office runner restarted while rendering; the queued job was lost and must be retried.');
       }
       if (!health.worker_ready) {
-        await fetch(`${server}/cancel?id=${id}`, { method: 'POST' }).catch(() => {});
+        await runnerFetch(`${server}/cancel?id=${id}`, { method: 'POST' }).catch(() => {});
         throw new Error('Excel task pane disconnected while rendering.');
       }
       nextHealthCheckAt = Date.now() + HEALTH_CHECK_INTERVAL_MS;
@@ -106,7 +148,7 @@ async function enqueueAndCollect(path, body, options) {
     await wait(300);
   }
 
-  await fetch(`${server}/cancel?id=${id}`, { method: 'POST' }).catch(() => {});
+  await runnerFetch(`${server}/cancel?id=${id}`, { method: 'POST' }).catch(() => {});
   throw new Error('Timed out waiting for the Excel Office.js worker.');
 }
 

@@ -12,6 +12,7 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import { isDiscreteType, extractCategories, groupBy, getPlotlyPalette, getSeriesColor, seededJitter } from './utils';
+import { makeCartesianPivot } from '../../core/pivot';
 
 export const plStripPlotDef: ChartTemplateDef = {
     chart: 'Strip Plot',
@@ -120,4 +121,5 @@ export const plStripPlotDef: ChartTemplateDef = {
         delete spec.mark;
         delete spec.encoding;
     },
+    pivot: makeCartesianPivot({}),
 };

@@ -60,6 +60,28 @@ export function extractCategories(data: any[], field: string, ordinalSortOrder?:
 }
 
 /**
+ * Resolve the display order of a categorical axis, honoring either a canonical
+ * `ordinalSortOrder` or a sort-by-measure request (`sortBy` + `sortOrder` from
+ * the shared Sort encoding action).
+ */
+export function resolveCategoryOrder(
+    data: any[],
+    catField: string,
+    opts?: { ordinalSortOrder?: string[]; sortBy?: string; sortOrder?: 'ascending' | 'descending' },
+): string[] {
+    const base = extractCategories(data, catField, opts?.ordinalSortOrder);
+    if (!opts?.sortBy) return base;
+    const agg = new Map<string, number>();
+    for (const row of data) {
+        const cat = String(row[catField] ?? '');
+        const v = Number(row[opts.sortBy]);
+        if (Number.isFinite(v)) agg.set(cat, (agg.get(cat) ?? 0) + v);
+    }
+    const dir = opts.sortOrder === 'ascending' ? 1 : -1;
+    return [...base].sort((a, b) => dir * ((agg.get(a) ?? 0) - (agg.get(b) ?? 0)));
+}
+
+/**
  * Group data by a categorical field.
  * Returns a map: seriesName → rows[].
  */
