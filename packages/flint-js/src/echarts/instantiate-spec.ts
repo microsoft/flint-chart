@@ -1098,7 +1098,7 @@ export function ecApplyLayoutToSpec(
             // ECharts default palette: first = blue (#5470c6), fourth = red (#ee6666) — not adjacent greens.
             const pal = effectivePalette && effectivePalette.length > 0 ? effectivePalette : DEFAULT_COLORS;
             const cLeft = pal[0];
-            const cRight = pal.length > 3 ? pal[3] : pal[Math.min(1, pal.length - 1)];
+            const cRight = pal.length > 3 ? pal[3] : pal[Math.max(0, pal.length - 1)];
             let barIdx = 0;
             for (const s of option.series) {
                 if (!s || s.type !== 'bar') continue;
