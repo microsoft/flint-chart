@@ -2,12 +2,33 @@
 
 ## Overview
 
-Test data lives in `test-data/` as fixture generators (not executable test suites).
-Each file exports generator functions that produce `TestCase[]` arrays. The gallery
-UI (`ChartGallery.tsx`) uses `TEST_GENERATORS` and `GALLERY_SECTIONS` from
-`test-data/index.ts` to render all tests interactively.
+Visual test data lives in `packages/flint-js/src/test-data/` as fixture generators
+(not executable test suites). Each case module exports generator functions that
+produce `TestCase[]` arrays. The master `TEST_GENERATORS` registry in
+`packages/flint-js/src/test-data/index.ts` exposes those cases to the gallery,
+editor examples, documentation figures, and the dev playground.
 
-**20 test-data files**, **~11,100 lines**, **53 named test generators**.
+The current registry contains **31 case modules**, **126 generator groups**, and
+**931 generated cases**. Open the site at `/playground/full-test-cases` to inspect
+the complete reference set interactively. Each section renders lazily and selects
+the first backend that supports its chart type.
+
+### Backend bring-up workflow
+
+When adding a backend or porting a chart template:
+
+1. Add or reuse cases in `packages/flint-js/src/test-data/` that cover the chart's
+	normal shape, semantic variants, density/cardinality limits, and edge cases.
+2. Export the generator and register it in `TEST_GENERATORS` in `test-data/index.ts`.
+3. Run `npm run site`, then inspect `/playground/full-test-cases` for broad visual
+	coverage and `/gallery` for curated product-facing examples.
+4. Add focused executable assertions under `packages/flint-js/tests/` for artifact
+	shape and backend-specific behavior.
+5. Run `npm run typecheck` and `npm run test` from the repository root.
+
+The playground is a visual regression surface, not a replacement for executable
+tests. A backend is ready only when both the shared cases render correctly and its
+focused test suite passes.
 
 ### Test categories
 

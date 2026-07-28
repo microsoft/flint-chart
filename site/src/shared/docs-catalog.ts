@@ -150,6 +150,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/DEVELOPMENT.md',
       },
       {
+        slug: 'test-plan',
+        title: 'Chart engine test plan',
+        description: 'Shared visual cases, coverage matrices, and backend bring-up workflow.',
+        file: '../../../docs/test_plan.md',
+      },
+      {
         slug: 'adding-a-semantic-type',
         title: 'Extending semantic types',
         description: 'Decide when a new field meaning is needed, then register and verify it.',
