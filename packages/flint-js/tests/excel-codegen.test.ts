@@ -48,6 +48,7 @@ describe('Excel Office.js artifacts', () => {
         });
         expect(generated.code).toContain('sheet.charts.add("Funnel", dataRange, "Columns")');
         expect(generated.code).toContain('chart.dataLabels.format.font.color = "#FFFFFF"');
+        expect(generated.code).toContain('chart.title.format.font.size = 18');
         expect(generated.code).toContain('chart.series.getItemAt(index)');
         expect(generated.code).toContain('chart.getImage(1280, 853, Excel.ImageFittingMode.fit)');
         expect(() => new Function('Excel', `${generated.code}\nreturn main;`)).not.toThrow();
@@ -57,5 +58,25 @@ describe('Excel Office.js artifacts', () => {
         generateOfficeJs(funnelArtifact, { scale: 4, cleanWorksheet: true });
         expect(funnelArtifact).not.toHaveProperty('scale');
         expect(funnelArtifact).not.toHaveProperty('cleanWorksheet');
+    });
+
+    it('generates deterministic explicit series bindings', () => {
+        const generated = generateOfficeJs({
+            ...funnelArtifact,
+            chartType: 'ColumnStacked',
+            data: [['Bin', 'Male', 'Female'], ['150-160', 7, 40]],
+            series: [
+                { name: 'Male', xColumn: 0, yColumn: 1, rowCount: 1 },
+                { name: 'Female', xColumn: 0, yColumn: 2, rowCount: 1 },
+            ],
+        });
+
+        expect(generated.code).toContain('for (let index = chart.series.items.length - 1; index >= 0; index -= 1)');
+        expect(generated.code).toContain('chart.series.getItemAt(index).delete()');
+        expect(generated.code).toContain('chart.series.add("Male", 0)');
+        expect(generated.code).toContain('chart.series.add("Female", 1)');
+        expect(generated.code).toContain('boundSeries1.setXAxisValues(sheet.getRangeByIndexes(1, 0, 1, 1))');
+        expect(generated.code).toContain('boundSeries1.setValues(sheet.getRangeByIndexes(1, 2, 1, 1))');
+        expect(() => new Function('Excel', `${generated.code}\nreturn main;`)).not.toThrow();
     });
 });

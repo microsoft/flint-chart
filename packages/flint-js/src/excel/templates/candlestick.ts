@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 
 import { formatSpecToExcel } from '../chart-types';
+import { excelDateAxis, excelDateSerial } from '../date-axis';
 import type { ExcelTemplateDef } from './types';
 
 const PRICE_CHANNELS = ['open', 'high', 'low', 'close'] as const;
-const EXCEL_EPOCH = Date.UTC(1899, 11, 30);
-const DAY_MILLISECONDS = 24 * 60 * 60 * 1000;
-
-function excelDateSerial(value: unknown): number {
-    return (new Date(value as string | number | Date).getTime() - EXCEL_EPOCH) / DAY_MILLISECONDS;
-}
 
 function niceStep(span: number): number {
     const rough = span / 5;
@@ -66,8 +61,6 @@ export const excelCandlestickDef: ExcelTemplateDef = {
         const xField = fieldOf('x')!;
         const fields = PRICE_CHANNELS.map((channel) => fieldOf(channel)!);
         const base = input.chart_spec.baseSize ?? { width: 480, height: 320 };
-        const labelBudget = Math.max(12, Math.floor((base.width - 90) / 14));
-        const tickLabelSpacing = table.length > labelBudget ? Math.ceil(table.length / labelBudget) : undefined;
         const lows = table.map((row) => Number(row[fields[2]]));
         const highs = table.map((row) => Number(row[fields[1]]));
         const minimum = Math.min(...lows);
@@ -89,7 +82,10 @@ export const excelCandlestickDef: ExcelTemplateDef = {
                     ...fields.map((field) => Number(row[field])),
                 ]),
             ],
-            categoryAxis: { title: xField, numberFormat: 'yyyy-mm-dd', tickLabelSpacing },
+            categoryAxis: {
+                title: xField,
+                ...excelDateAxis(table.map((row) => row[xField]), base.width),
+            },
             valueAxis: {
                 title: 'Price',
                 numberFormat: formatSpecToExcel(semantics.close?.format),

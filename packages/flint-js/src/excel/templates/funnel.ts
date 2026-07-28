@@ -51,7 +51,7 @@ export const excelFunnelChartDef: ExcelTemplateDef = {
                 visible: true,
                 numberFormat: formatSpecToExcel(semantics.size?.format),
                 fontColor: '#FFFFFF',
-                fontSize: 11,
+                fontSize: 13,
             },
             seriesFormats: [{ color: '#4472C4' }],
             width: base.width,

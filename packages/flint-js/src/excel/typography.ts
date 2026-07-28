@@ -1,0 +1,5 @@
+export const EXCEL_CHART_TITLE_FONT_SIZE = 18;
+export const EXCEL_AXIS_TITLE_FONT_SIZE = 15;
+export const EXCEL_LABEL_FONT_SIZE = 13;
+export const EXCEL_LEGEND_FONT_SIZE = 13;
+export const EXCEL_DATA_LABEL_FONT_SIZE = 13;

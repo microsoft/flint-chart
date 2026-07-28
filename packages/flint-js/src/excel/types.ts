@@ -24,6 +24,12 @@ export type ExcelLegendPosition = 'Top' | 'Bottom' | 'Left' | 'Right';
 export interface ExcelAxisSpec {
     /** Axis title text (from the field display name). */
     title?: string;
+    /** Native Excel category-axis interpretation. */
+    categoryType?: 'DateAxis' | 'TextAxis';
+    /** Base unit used by a native Excel date axis. */
+    baseTimeUnit?: 'Days' | 'Months' | 'Years';
+    /** Unit associated with `majorUnit` on a native Excel date axis. */
+    majorTimeUnitScale?: 'Days' | 'Months' | 'Years';
     /** Axis-label font size in points, used when dense categories need explicit sizing. */
     labelFontSize?: number;
     /** Number of categories between displayed labels; underlying data stays intact. */
