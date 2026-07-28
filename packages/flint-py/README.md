@@ -58,6 +58,6 @@ and asserts deep equality against the recorded JS spec.
 ```bash
 # Run the Python compatibility tests
 cd packages/flint-py
-uv pip install -e .[test]
+uv pip install -e '.[test]'
 uv run pytest -q
 ```
