@@ -68,12 +68,6 @@ export interface ExcelNativeSeriesSpec {
     yColumn: number;
     /** Number of populated worksheet rows in this series. */
     rowCount: number;
-    /** Optional zero-based worksheet row containing X values. Defaults to the first data row. */
-    xRow?: number;
-    /** Optional zero-based worksheet row containing Y values. Defaults to the first data row. */
-    yRow?: number;
-    /** Number of populated worksheet columns for a horizontal series. Defaults to one. */
-    columnCount?: number;
     /** Optional zero-based worksheet column containing bubble sizes. */
     bubbleSizeColumn?: number;
 }

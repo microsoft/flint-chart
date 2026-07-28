@@ -93,15 +93,16 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
         lines.push(
             "  chart.series.load('items');",
             '  await context.sync();',
-            '  chart.series.items.forEach((series) => series.delete());',
+            '  for (let index = chart.series.items.length - 1; index >= 0; index -= 1) {',
+            '    chart.series.getItemAt(index).delete();',
+            '  }',
             '  await context.sync();',
         );
         spec.series.forEach((binding, index) => {
-            const columnCount = binding.columnCount ?? 1;
             lines.push(
                 `  const boundSeries${index} = chart.series.add(${JSON.stringify(binding.name)}, ${index});`,
-                `  boundSeries${index}.setXAxisValues(sheet.getRangeByIndexes(${binding.xRow ?? 1}, ${binding.xColumn}, ${binding.rowCount}, ${columnCount}));`,
-                `  boundSeries${index}.setValues(sheet.getRangeByIndexes(${binding.yRow ?? 1}, ${binding.yColumn}, ${binding.rowCount}, ${columnCount}));`,
+                `  boundSeries${index}.setXAxisValues(sheet.getRangeByIndexes(1, ${binding.xColumn}, ${binding.rowCount}, 1));`,
+                `  boundSeries${index}.setValues(sheet.getRangeByIndexes(1, ${binding.yColumn}, ${binding.rowCount}, 1));`,
             );
             if (binding.bubbleSizeColumn !== undefined) {
                 lines.push(`  boundSeries${index}.setBubbleSizes(sheet.getRangeByIndexes(1, ${binding.bubbleSizeColumn}, ${binding.rowCount}, 1));`);

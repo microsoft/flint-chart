@@ -59,31 +59,24 @@ export const excelHistogramDef: ExcelTemplateDef = {
         const base = input.chart_spec.baseSize ?? { width: 480, height: 320 };
         const data = colorField
             ? [
-                [valueField, ...labels],
-                ...seriesKeys.map((name, seriesIndex) => [name, ...seriesCounts[seriesIndex]]),
+                [valueField, labels[0], '', ...labels.slice(1)],
+                ...seriesKeys.map((name, seriesIndex) => [
+                    name,
+                    seriesCounts[seriesIndex][0],
+                    0,
+                    ...seriesCounts[seriesIndex].slice(1),
+                ]),
             ]
             : [
                 [valueField, ...seriesKeys],
                 ...labels.map((label, index) => [label, seriesCounts[0][index]]),
             ];
-        const series = colorField
-            ? seriesKeys.map((name, index) => ({
-                name,
-                xRow: 0,
-                xColumn: 1,
-                yRow: index + 1,
-                yColumn: 1,
-                rowCount: 1,
-                columnCount: binCount,
-            }))
-            : undefined;
         return {
             schema: 'flint.excel.chart/v1',
             kind: 'chart',
             chartType: colorField ? 'ColumnStacked' : 'ColumnClustered',
             title: `Distribution of ${valueField}`,
             seriesBy: colorField ? 'Rows' : 'Columns',
-            series,
             data,
             categoryAxis: { title: valueField },
             valueAxis: { title: 'Count', numberFormat: '0' },

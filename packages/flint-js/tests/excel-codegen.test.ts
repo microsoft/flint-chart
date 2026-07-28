@@ -66,16 +66,17 @@ describe('Excel Office.js artifacts', () => {
             chartType: 'ColumnStacked',
             data: [['Bin', 'Male', 'Female'], ['150-160', 7, 40]],
             series: [
-                { name: 'Male', xRow: 0, xColumn: 1, yRow: 1, yColumn: 1, rowCount: 1, columnCount: 2 },
-                { name: 'Female', xRow: 0, xColumn: 1, yRow: 2, yColumn: 1, rowCount: 1, columnCount: 2 },
+                { name: 'Male', xColumn: 0, yColumn: 1, rowCount: 1 },
+                { name: 'Female', xColumn: 0, yColumn: 2, rowCount: 1 },
             ],
         });
 
-        expect(generated.code).toContain('chart.series.items.forEach((series) => series.delete())');
+        expect(generated.code).toContain('for (let index = chart.series.items.length - 1; index >= 0; index -= 1)');
+        expect(generated.code).toContain('chart.series.getItemAt(index).delete()');
         expect(generated.code).toContain('chart.series.add("Male", 0)');
         expect(generated.code).toContain('chart.series.add("Female", 1)');
-        expect(generated.code).toContain('boundSeries1.setXAxisValues(sheet.getRangeByIndexes(0, 1, 1, 2))');
-        expect(generated.code).toContain('boundSeries1.setValues(sheet.getRangeByIndexes(2, 1, 1, 2))');
+        expect(generated.code).toContain('boundSeries1.setXAxisValues(sheet.getRangeByIndexes(1, 0, 1, 1))');
+        expect(generated.code).toContain('boundSeries1.setValues(sheet.getRangeByIndexes(1, 2, 1, 1))');
         expect(() => new Function('Excel', `${generated.code}\nreturn main;`)).not.toThrow();
     });
 });

@@ -172,14 +172,11 @@ describe('public API smoke', () => {
 
     expect(spec.chartType).toBe('ColumnStacked');
     expect(spec.seriesBy).toBe('Rows');
-    expect(spec.series).toEqual([
-      { name: 'Male', xRow: 0, xColumn: 1, yRow: 1, yColumn: 1, rowCount: 1, columnCount: 5 },
-      { name: 'Female', xRow: 0, xColumn: 1, yRow: 2, yColumn: 1, rowCount: 1, columnCount: 5 },
-    ]);
+    expect(spec.series).toBeUndefined();
     expect(spec.data).toEqual([
-      ['Height', '160-162', '162-164', '164-166', '166-168', '168-170'],
-      ['Male', 1, 0, 0, 0, 0],
-      ['Female', 0, 0, 0, 0, 1],
+      ['Height', '160-162', '', '162-164', '164-166', '166-168', '168-170'],
+      ['Male', 1, 0, 0, 0, 0, 0],
+      ['Female', 0, 0, 0, 0, 0, 1],
     ]);
     expect(spec.gapWidth).toBe(20);
   });

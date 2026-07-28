@@ -152,8 +152,8 @@ describe('renderExcelChart', () => {
             chartType: 'ColumnStacked',
             data: [['Bin', 'Male', 'Female'], ['150-160', 7, 40]],
             series: [
-                { name: 'Male', xRow: 0, xColumn: 1, yRow: 1, yColumn: 1, rowCount: 1, columnCount: 2 },
-                { name: 'Female', xRow: 0, xColumn: 1, yRow: 2, yColumn: 1, rowCount: 1, columnCount: 2 },
+                { name: 'Male', xColumn: 0, yColumn: 1, rowCount: 1 },
+                { name: 'Female', xColumn: 0, yColumn: 2, rowCount: 1 },
             ],
         });
 
@@ -163,12 +163,12 @@ describe('renderExcelChart', () => {
             { name: 'Female', index: 1 },
         ]);
         expect(calls.xBindings).toEqual([
-            { row: 0, column: 1, rowCount: 1, columnCount: 2 },
-            { row: 0, column: 1, rowCount: 1, columnCount: 2 },
+            { row: 1, column: 0, rowCount: 1, columnCount: 1 },
+            { row: 1, column: 0, rowCount: 1, columnCount: 1 },
         ]);
         expect(calls.valueBindings).toEqual([
-            { row: 1, column: 1, rowCount: 1, columnCount: 2 },
-            { row: 2, column: 1, rowCount: 1, columnCount: 2 },
+            { row: 1, column: 1, rowCount: 1, columnCount: 1 },
+            { row: 1, column: 2, rowCount: 1, columnCount: 1 },
         ]);
     });
 });

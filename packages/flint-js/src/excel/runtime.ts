@@ -163,13 +163,14 @@ export async function renderExcelChart(
         if (spec.series?.length) {
             chart.series.load('items');
             await context.sync();
-                chart.series.items.forEach((series: any) => series.delete());
+            for (let index = chart.series.items.length - 1; index >= 0; index -= 1) {
+                chart.series.getItemAt(index).delete();
+            }
             await context.sync();
             for (const [index, binding] of spec.series.entries()) {
-                    const series = chart.series.add(binding.name, index);
-                const columnCount = binding.columnCount ?? 1;
-                series.setXAxisValues(sheet.getRangeByIndexes(binding.xRow ?? 1, binding.xColumn, binding.rowCount, columnCount));
-                series.setValues(sheet.getRangeByIndexes(binding.yRow ?? 1, binding.yColumn, binding.rowCount, columnCount));
+                const series = chart.series.add(binding.name, index);
+                series.setXAxisValues(sheet.getRangeByIndexes(1, binding.xColumn, binding.rowCount, 1));
+                series.setValues(sheet.getRangeByIndexes(1, binding.yColumn, binding.rowCount, 1));
                 if (binding.bubbleSizeColumn !== undefined) {
                     series.setBubbleSizes(sheet.getRangeByIndexes(1, binding.bubbleSizeColumn, binding.rowCount, 1));
                 }
