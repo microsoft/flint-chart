@@ -1,0 +1,165 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "Log-scale ticks pinned to the decades and labelled as money ($1k / $10k / $100k). Flint's ',.12~g' format on a log axis prints whatever values d3 happens to pick, which is how a log axis ends up labelled 2,000 · 5,000 · 20,000 and stops looking logarithmic at all.",
+    "Both legends moved to a single row above the plot: continents as small filled circles, and the size key as three named population steps. A size ramp with no stated values is decoration — the reader can see that one bubble is bigger without being able to say by how much.",
+    "Size range narrowed from 9–361 to 12–260 and fill opacity dropped to 0.75 with a white hairline. At 15 bubbles the baseline's largest circles swallowed their neighbours; the halo is what keeps China and India separable where they overlap.",
+    "Palette switched from tableau10 to four house hues, bound to the continents by name so a continent keeps the same colour in every chart in the section instead of taking whatever tableau10 hands it by row position. The order the legend lists them in still follows the baseline.",
+    "Gridlines kept on both axes but pushed to #dfe6ea, because a scatter is read by position in two dimensions and removing the vertical rules would leave the log axis unusable.",
+    "Y axis given a bare 'years' unit and the x axis title deleted — the tick labels already carry dollar signs, so naming the axis 'GDP per capita' twice adds nothing.",
+    "Red masthead rule, 13.5pt bold headline over a grey deck, 9.5pt labels throughout."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 14, "bottom": 6 },
+  "title": {
+    "text": "Money buys years, up to a point",
+    "subtitle": ["Life expectancy against GDP per capita, 2018; bubble area is population"]
+  },
+  "spacing": 8,
+  "resolve": { "legend": { "color": "independent", "size": "independent" } },
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 290,
+      "height": 200,
+      "data": {
+        "values": [
+          { "Country": "Norway", "GDP per capita": 64800, "Life expectancy": 82.3, "Population (M)": 5.3, "Continent": "Europe" },
+          { "Country": "United States", "GDP per capita": 62600, "Life expectancy": 78.6, "Population (M)": 327, "Continent": "Americas" },
+          { "Country": "Japan", "GDP per capita": 39300, "Life expectancy": 84.2, "Population (M)": 127, "Continent": "Asia" },
+          { "Country": "China", "GDP per capita": 16800, "Life expectancy": 76.7, "Population (M)": 1393, "Continent": "Asia" },
+          { "Country": "India", "GDP per capita": 6900, "Life expectancy": 69.4, "Population (M)": 1353, "Continent": "Asia" },
+          { "Country": "Nigeria", "GDP per capita": 5300, "Life expectancy": 54.3, "Population (M)": 196, "Continent": "Africa" },
+          { "Country": "Brazil", "GDP per capita": 15600, "Life expectancy": 75.7, "Population (M)": 209, "Continent": "Americas" },
+          { "Country": "Germany", "GDP per capita": 50900, "Life expectancy": 81, "Population (M)": 83, "Continent": "Europe" },
+          { "Country": "Ethiopia", "GDP per capita": 2000, "Life expectancy": 66.2, "Population (M)": 109, "Continent": "Africa" },
+          { "Country": "Russia", "GDP per capita": 25800, "Life expectancy": 72.4, "Population (M)": 145, "Continent": "Europe" },
+          { "Country": "Mexico", "GDP per capita": 19800, "Life expectancy": 75, "Population (M)": 126, "Continent": "Americas" },
+          { "Country": "Indonesia", "GDP per capita": 12400, "Life expectancy": 71.5, "Population (M)": 268, "Continent": "Asia" },
+          { "Country": "Qatar", "GDP per capita": 116900, "Life expectancy": 80.1, "Population (M)": 2.8, "Continent": "Asia" },
+          { "Country": "South Africa", "GDP per capita": 13000, "Life expectancy": 63.9, "Population (M)": 57, "Continent": "Africa" },
+          { "Country": "Bangladesh", "GDP per capita": 4200, "Life expectancy": 72.3, "Population (M)": 161, "Continent": "Asia" }
+        ]
+      },
+      "mark": {
+        "type": "circle",
+        "opacity": 0.75,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.8
+      },
+      "encoding": {
+        "x": {
+          "field": "GDP per capita",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "type": "log", "domain": [1500, 160000], "nice": false },
+          "axis": {
+            "values": [2000, 5000, 10000, 20000, 50000, 100000],
+            "labelExpr": "datum.value >= 1000 ? '$' + (datum.value / 1000) + 'k' : '$' + datum.value",
+            "grid": true,
+            "gridColor": "#dfe6ea",
+            "labelPadding": 4
+          }
+        },
+        "y": {
+          "field": "Life expectancy",
+          "type": "quantitative",
+          "title": "years",
+          "scale": { "zero": false, "nice": false, "domain": [50, 88] },
+          "axis": {
+            "tickCount": 4,
+            "format": ".0f",
+            "grid": true,
+            "gridColor": "#dfe6ea",
+            "labelPadding": 4,
+            "titleAngle": 0,
+            "titleAlign": "left",
+            "titleAnchor": "start",
+            "titleBaseline": "bottom",
+            "titleY": -8,
+            "titlePadding": 0
+          }
+        },
+        "size": {
+          "field": "Population (M)",
+          "type": "quantitative",
+          "title": "population, m",
+          "scale": { "type": "sqrt", "zero": true, "range": [12, 260] },
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "values": [100, 500, 1400],
+            "format": ",.0f",
+            "symbolFillColor": "#b8c4cc",
+            "symbolStrokeColor": "#8fa0ab",
+            "titleFontSize": 9,
+            "titleFontWeight": 400,
+            "titleColor": "#54585a",
+            "labelFontSize": 9,
+            "offset": 4,
+            "padding": 0
+          }
+        },
+        "color": {
+          "field": "Continent",
+          "type": "nominal",
+          "title": null,
+          "scale": {
+            "domain": ["Europe", "Americas", "Asia", "Africa"],
+            "range": ["#379a8b", "#ebb434", "#006ba2", "#e3120b"]
+          },
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "symbolType": "circle",
+            "symbolSize": 70,
+            "columnPadding": 8,
+            "labelFontSize": 9.5,
+            "offset": 4,
+            "padding": 0
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9.5,
+      "titleFontWeight": 400,
+      "titleColor": "#54585a",
+      "domain": false,
+      "ticks": false
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif"
+    }
+  }
+}

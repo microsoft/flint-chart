@@ -1,0 +1,149 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "interpolate": "linear",
+    "strokeWidth": 2
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "ordinal",
+      "sort": [
+        "2000",
+        "2021"
+      ],
+      "scale": {
+        "padding": 0.4
+      }
+    },
+    "y": {
+      "field": "Life expectancy",
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true,
+        "padding": 12
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "set2"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11,
+      "labelAngle": 0,
+      "labelAlign": "center",
+      "labelBaseline": "top"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 136
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "China",
+        "Year": "2000",
+        "Life expectancy": 72
+      },
+      {
+        "Country": "China",
+        "Year": "2021",
+        "Life expectancy": 78.2
+      },
+      {
+        "Country": "India",
+        "Year": "2000",
+        "Life expectancy": 62.5
+      },
+      {
+        "Country": "India",
+        "Year": "2021",
+        "Life expectancy": 67.2
+      },
+      {
+        "Country": "United States",
+        "Year": "2000",
+        "Life expectancy": 76.6
+      },
+      {
+        "Country": "United States",
+        "Year": "2021",
+        "Life expectancy": 76.3
+      },
+      {
+        "Country": "Nigeria",
+        "Year": "2000",
+        "Life expectancy": 46.6
+      },
+      {
+        "Country": "Nigeria",
+        "Year": "2021",
+        "Life expectancy": 52.7
+      },
+      {
+        "Country": "Japan",
+        "Year": "2000",
+        "Life expectancy": 81.1
+      },
+      {
+        "Country": "Japan",
+        "Year": "2021",
+        "Life expectancy": 84.5
+      },
+      {
+        "Country": "Russia",
+        "Year": "2000",
+        "Life expectancy": 65.5
+      },
+      {
+        "Country": "Russia",
+        "Year": "2021",
+        "Life expectancy": 70.1
+      },
+      {
+        "Country": "Brazil",
+        "Year": "2000",
+        "Life expectancy": 70.1
+      },
+      {
+        "Country": "Brazil",
+        "Year": "2021",
+        "Life expectancy": 72.8
+      }
+    ]
+  },
+  "title": {
+    "text": "Two decades of longer lives",
+    "subtitle": [
+      "Life expectancy at birth, years, 2000 and 2021"
+    ]
+  }
+}

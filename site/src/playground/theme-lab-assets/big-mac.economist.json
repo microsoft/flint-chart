@@ -1,0 +1,116 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "Masthead furniture added above the plot with a vconcat: a 26×3 red rect (#E3120B) that is pure brand identity, carrying no data. Vega-Lite has no header slot, so it has to be its own concat row.",
+    "Category order pinned explicitly rather than left as data order (Flint emits sort: null), so the ranking is a stated property of the chart instead of an accident of row order.",
+    "Value axis moved to the top (axis.orient) with gridlines only, and its title deleted — the deck already says the unit. The category axis loses its domain, ticks and title entirely.",
+    "House palette applied as a fixed colour, not a scheme: Economist blue #006BA2 for every bar, with red #E3120B held in reserve as the highlight hue.",
+    "Bar height narrowed to 0.68 of the band — the house style runs thinner bars with more gutter than Flint's default.",
+    "Type tightened to 9.5pt labels / 13.5pt bold headline with a grey deck: the same chart has to survive a two-column print grid."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 12, "bottom": 6 },
+  "title": {
+    "text": "The price of a Big Mac",
+    "subtitle": ["2023, converted to US dollars at market exchange rates"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 280,
+      "height": 210,
+      "data": {
+        "values": [
+          { "Country": "Switzerland", "Price (USD)": 8.1 },
+          { "Country": "Norway", "Price (USD)": 6.9 },
+          { "Country": "United States", "Price (USD)": 5.7 },
+          { "Country": "Euro area", "Price (USD)": 5.5 },
+          { "Country": "UK", "Price (USD)": 4.9 },
+          { "Country": "Brazil", "Price (USD)": 4.5 },
+          { "Country": "Mexico", "Price (USD)": 3.9 },
+          { "Country": "China", "Price (USD)": 3.5 },
+          { "Country": "Japan", "Price (USD)": 3.2 },
+          { "Country": "Egypt", "Price (USD)": 2.7 },
+          { "Country": "South Africa", "Price (USD)": 2.6 },
+          { "Country": "India", "Price (USD)": 2.5 }
+        ]
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": [
+            "Switzerland",
+            "Norway",
+            "United States",
+            "Euro area",
+            "UK",
+            "Brazil",
+            "Mexico",
+            "China",
+            "Japan",
+            "Egypt",
+            "South Africa",
+            "India"
+          ],
+          "title": null,
+          "axis": { "domain": false, "ticks": false, "labelPadding": 4 }
+        },
+        "x": {
+          "field": "Price (USD)",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true },
+          "axis": {
+            "orient": "top",
+            "grid": true,
+            "gridColor": "#c9d3da",
+            "domain": false,
+            "ticks": false,
+            "tickCount": 5,
+            "format": "$.0f",
+            "labelPadding": 2
+          }
+        }
+      },
+      "mark": { "type": "bar", "height": { "band": 0.68 }, "color": "#006ba2" }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9.5,
+      "titleFontWeight": 400,
+      "titleColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

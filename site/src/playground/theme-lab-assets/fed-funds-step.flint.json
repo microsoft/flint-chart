@@ -1,0 +1,94 @@
+{
+  "mark": {
+    "type": "line",
+    "interpolate": "step"
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Target rate (%)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 317,
+      "continuousHeight": 247
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2015",
+        "Target rate (%)": 0.5
+      },
+      {
+        "Year": "2016",
+        "Target rate (%)": 0.75
+      },
+      {
+        "Year": "2017",
+        "Target rate (%)": 1.5
+      },
+      {
+        "Year": "2018",
+        "Target rate (%)": 2.5
+      },
+      {
+        "Year": "2019",
+        "Target rate (%)": 1.75
+      },
+      {
+        "Year": "2020",
+        "Target rate (%)": 0.25
+      },
+      {
+        "Year": "2021",
+        "Target rate (%)": 0.25
+      },
+      {
+        "Year": "2022",
+        "Target rate (%)": 4.5
+      },
+      {
+        "Year": "2023",
+        "Target rate (%)": 5.5
+      },
+      {
+        "Year": "2024",
+        "Target rate (%)": 4.75
+      }
+    ]
+  },
+  "title": {
+    "text": "Federal funds target rate",
+    "subtitle": [
+      "Upper bound at year end, %"
+    ]
+  }
+}

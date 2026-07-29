@@ -1,0 +1,208 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#ffffff",
+        "stroke": "#e6e9ef",
+        "strokeWidth": 1,
+        "cornerRadius": 8,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 13
+        },
+        "x2": {
+          "value": 327
+        },
+        "y": {
+          "value": 14
+        },
+        "y2": {
+          "value": 229
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 22,
+        "fontWeight": 500,
+        "fill": "#4a4a4a",
+        "align": "center",
+        "baseline": "top",
+        "text": "Renewable share",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 45
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 68,
+        "fontWeight": "bold",
+        "fill": "#1a1a1a",
+        "align": "center",
+        "baseline": "middle",
+        "text": "30.3",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 113
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 18,
+        "fontWeight": 400,
+        "fill": "#666",
+        "align": "center",
+        "baseline": "top",
+        "text": "67% of 45",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 165
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#e6e9ef",
+        "cornerRadius": 3.5,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 34
+        },
+        "x2": {
+          "value": 306
+        },
+        "y": {
+          "value": 192
+        },
+        "y2": {
+          "value": 199
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#5b8def",
+        "cornerRadius": 3.5,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 34
+        },
+        "x2": {
+          "value": 217.14666666666668
+        },
+        "y": {
+          "value": 192
+        },
+        "y2": {
+          "value": 199
+        }
+      }
+    }
+  ],
+  "width": 340,
+  "height": 243,
+  "resolve": {
+    "scale": {
+      "x": "independent",
+      "y": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 243,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Metric": "Renewable share",
+        "Share (%)": 30.3,
+        "Target": 45
+      }
+    ]
+  },
+  "title": {
+    "text": "Renewables supply 30% of the world's electricity",
+    "subtitle": [
+      "Share of global electricity generation, 2023, against a 45% target"
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "The category gutter is uncapped rather than widened by hand. Flint reserves a fixed gutter and clips five of the ten names to fit it — 'Cerebrovascular disea…', 'Nephritis, nephrotic …', 'Intentional self-harm…'. Setting 'labelLimit: 0' lets the axis claim what the strings actually need; the bars give up about a third of the frame to pay for it, which on a list whose longest name runs forty-three characters is the correct trade.",
+    "Value axis moved to the top over a #C9D3DA grid, the same treatment this language uses on every other bar chart here. The reader meets the scale before the bars rather than after them, and on a ranked list the eye is travelling downward, so a bottom axis is read last or not at all.",
+    "No number printed on any bar. This chart therefore cannot separate chronic liver disease at 55 from self-harm at 49 — six thousand deaths, about a pixel of bar. That is a real loss, taken deliberately: the ranking is what the chart is for, and ten numbers would double the type on a page that is already mostly type.",
+    "One measure, one ink: every bar in #006BA2. The house red is spent on the masthead tab and nothing else, so it never competes with the data.",
+    "Row order left exactly as the baseline has it — the source arrived ranked, so the bars descend without a theme touching the sort.",
+    "Red 26×3 masthead tab above the title, 9.5pt labels, no frame, no axis titles: the subtitle already states the unit, so repeating it under an axis would be the same words twice."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 16, "bottom": 8 },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": ["Leading causes of death, United States, 2022, thousands of deaths"]
+  },
+  "spacing": 7,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 260,
+      "height": 235,
+      "mark": { "type": "bar", "color": "#006ba2", "height": { "band": 0.68 } },
+      "data": {
+        "values": [
+          { "Cause": "Diseases of heart", "Deaths (thousands)": 703 },
+          { "Cause": "Malignant neoplasms", "Deaths (thousands)": 608 },
+          { "Cause": "Unintentional injuries", "Deaths (thousands)": 227 },
+          { "Cause": "Cerebrovascular diseases", "Deaths (thousands)": 165 },
+          { "Cause": "Chronic lower respiratory diseases", "Deaths (thousands)": 148 },
+          { "Cause": "Alzheimer disease", "Deaths (thousands)": 120 },
+          { "Cause": "Diabetes mellitus", "Deaths (thousands)": 102 },
+          { "Cause": "Nephritis, nephrotic syndrome and nephrosis", "Deaths (thousands)": 58 },
+          { "Cause": "Chronic liver disease and cirrhosis", "Deaths (thousands)": 55 },
+          { "Cause": "Intentional self-harm (suicide)", "Deaths (thousands)": 49 }
+        ]
+      },
+      "encoding": {
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "title": null,
+          "sort": null,
+          "axis": {
+            "labelLimit": 0,
+            "labelFontSize": 9.5,
+            "labelColor": "#121317",
+            "labelPadding": 4,
+            "domain": false,
+            "ticks": false,
+            "grid": false
+          }
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true, "nice": false, "domain": [0, 760] },
+          "axis": {
+            "orient": "top",
+            "values": [0, 200, 400, 600],
+            "format": "d",
+            "grid": true,
+            "gridColor": "#c9d3da",
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 2
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

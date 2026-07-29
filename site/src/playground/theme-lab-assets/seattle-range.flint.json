@@ -1,0 +1,138 @@
+{
+  "mark": {
+    "type": "area",
+    "opacity": 0.5,
+    "line": {
+      "strokeWidth": 1
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": "Month",
+      "type": "nominal",
+      "sort": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ]
+    },
+    "y": {
+      "field": "Low",
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y2": {
+      "field": "High"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Jan",
+        "Low": 37,
+        "High": 47
+      },
+      {
+        "Month": "Feb",
+        "Low": 37,
+        "High": 50
+      },
+      {
+        "Month": "Mar",
+        "Low": 40,
+        "High": 54
+      },
+      {
+        "Month": "Apr",
+        "Low": 43,
+        "High": 59
+      },
+      {
+        "Month": "May",
+        "Low": 48,
+        "High": 65
+      },
+      {
+        "Month": "Jun",
+        "Low": 53,
+        "High": 70
+      },
+      {
+        "Month": "Jul",
+        "Low": 56,
+        "High": 76
+      },
+      {
+        "Month": "Aug",
+        "Low": 57,
+        "High": 77
+      },
+      {
+        "Month": "Sep",
+        "Low": 53,
+        "High": 71
+      },
+      {
+        "Month": "Oct",
+        "Low": 46,
+        "High": 60
+      },
+      {
+        "Month": "Nov",
+        "Low": 40,
+        "High": 51
+      },
+      {
+        "Month": "Dec",
+        "Low": 36,
+        "High": 46
+      }
+    ]
+  },
+  "title": {
+    "text": "Seattle, month by month",
+    "subtitle": [
+      "Average daily high and low temperature, °F, 1991–2020 normals"
+    ]
+  }
+}

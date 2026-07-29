@@ -1,0 +1,106 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Axis and data labels both kept — the only row here that does not choose. Every other language on this data picks one: NYT and Nature trust the axis, the Economist and McKinsey trust the printed number. A dashboard tile is read twice, once across a room and once with a cursor on it, so it has to answer at both distances. The cost is admitted: this is the busiest of the six.",
+    "Dark ground #1B1A19 and a #118DFF fill. On a light page a saturated blue bar is the heaviest thing on it; on a dark ground the bar is the lightest, so the same ranking reads as emitted rather than printed. The grid drops to #33312F — barely above the ground, because on dark a mid-grey grid glows louder than the bars.",
+    "The category gutter is uncapped. Flint clips five of the ten names to a fixed width — 'Cerebrovascular disea…', 'Nephritis, nephrotic …', 'Intentional self-harm…'. A tile that truncates is a tile that needs a tooltip to be usable, and a tooltip is not a chart.",
+    "Labels at 9.5pt in #C8C6C4 rather than white. Pure white type on near-black is the one combination that blooms at low brightness; stepping down to a light grey holds the contrast without the halo.",
+    "Row order left exactly as the baseline has it — the source arrived ranked, so the bars descend without a theme touching the sort."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 8, "right": 16, "bottom": 8 },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": ["Leading causes of death, United States, 2022, thousands of deaths"]
+  },
+  "width": 250,
+  "height": 240,
+  "data": {
+    "values": [
+      { "Cause": "Diseases of heart", "Deaths (thousands)": 703 },
+      { "Cause": "Malignant neoplasms", "Deaths (thousands)": 608 },
+      { "Cause": "Unintentional injuries", "Deaths (thousands)": 227 },
+      { "Cause": "Cerebrovascular diseases", "Deaths (thousands)": 165 },
+      { "Cause": "Chronic lower respiratory diseases", "Deaths (thousands)": 148 },
+      { "Cause": "Alzheimer disease", "Deaths (thousands)": 120 },
+      { "Cause": "Diabetes mellitus", "Deaths (thousands)": 102 },
+      { "Cause": "Nephritis, nephrotic syndrome and nephrosis", "Deaths (thousands)": 58 },
+      { "Cause": "Chronic liver disease and cirrhosis", "Deaths (thousands)": 55 },
+      { "Cause": "Intentional self-harm (suicide)", "Deaths (thousands)": 49 }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "Cause",
+      "type": "nominal",
+      "title": null,
+      "sort": null,
+      "axis": {
+        "labelLimit": 0,
+        "labelFontSize": 9.5,
+        "labelColor": "#c8c6c4",
+        "labelPadding": 6,
+        "domain": false,
+        "ticks": false,
+        "grid": false
+      }
+    },
+    "x": {
+      "field": "Deaths (thousands)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 810] },
+      "axis": {
+        "values": [0, 200, 400, 600, 800],
+        "grid": true,
+        "gridColor": "#3b3a39",
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 9.5,
+        "labelColor": "#a19f9d",
+        "labelPadding": 4
+      }
+    }
+  },
+  "layer": [
+    { "mark": { "type": "bar", "color": "#118dff", "height": { "band": 0.6 } } },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "fontSize": 9,
+        "color": "#c8c6c4"
+      },
+      "encoding": {
+        "text": { "field": "Deaths (thousands)", "type": "quantitative", "format": "d" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Segoe UI Variable', system-ui, -apple-system, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#a19f9d",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "titleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    }
+  }
+}

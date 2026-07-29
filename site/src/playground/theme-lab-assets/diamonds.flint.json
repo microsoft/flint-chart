@@ -1,0 +1,134 @@
+{
+  "mark": "circle",
+  "encoding": {
+    "x": {
+      "field": "Carat",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Price (USD)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 309,
+      "continuousHeight": 253
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Carat": 0.23,
+        "Price (USD)": 326
+      },
+      {
+        "Carat": 0.21,
+        "Price (USD)": 326
+      },
+      {
+        "Carat": 0.29,
+        "Price (USD)": 334
+      },
+      {
+        "Carat": 0.31,
+        "Price (USD)": 335
+      },
+      {
+        "Carat": 0.24,
+        "Price (USD)": 336
+      },
+      {
+        "Carat": 0.4,
+        "Price (USD)": 900
+      },
+      {
+        "Carat": 0.5,
+        "Price (USD)": 1500
+      },
+      {
+        "Carat": 0.6,
+        "Price (USD)": 1800
+      },
+      {
+        "Carat": 0.7,
+        "Price (USD)": 2500
+      },
+      {
+        "Carat": 0.8,
+        "Price (USD)": 3000
+      },
+      {
+        "Carat": 0.9,
+        "Price (USD)": 3900
+      },
+      {
+        "Carat": 1,
+        "Price (USD)": 5000
+      },
+      {
+        "Carat": 1.01,
+        "Price (USD)": 5200
+      },
+      {
+        "Carat": 1.1,
+        "Price (USD)": 6000
+      },
+      {
+        "Carat": 1.2,
+        "Price (USD)": 7200
+      },
+      {
+        "Carat": 1.3,
+        "Price (USD)": 8200
+      },
+      {
+        "Carat": 1.5,
+        "Price (USD)": 10000
+      },
+      {
+        "Carat": 1.7,
+        "Price (USD)": 13000
+      },
+      {
+        "Carat": 2,
+        "Price (USD)": 18000
+      },
+      {
+        "Carat": 2.5,
+        "Price (USD)": 25000
+      }
+    ]
+  },
+  "title": {
+    "text": "Diamonds — carat vs price"
+  }
+}

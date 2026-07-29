@@ -1,0 +1,157 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Row order left exactly as the baseline has it — Japan, United States, India, Brazil, Nigeria, Germany. Sorting by the gap would make the chart answer its own headline, which is exactly why a theme may not do it: which country follows which is a statement about the data, not a house style.",
+    "The gap is stated as a number at the end of each row. It is the subject of the chart and Flint asks the reader to measure it off a shared axis by eye.",
+    "tableau10 replaced by two colours from the house palette: deep navy #051C2C for men, brand blue #2251FF for women. Neither is greyed out — the comparison is symmetric and this is one of the rare cases where the 'one series in blue, the rest in grey' rule would assert something the data does not.",
+    "Legend deleted and each dot named inline, in the colour it names, on the first row only. This is a label attached to a mark, not a legend moved to a new place: it sits at its own dot's position and the reader picks the name up while reading the row. Two dots do not justify a lookup table. The exact offset above the dot is implementation — the decision is inline-at-the-mark.",
+    "The connecting line demoted to a 3px #D3DCE1 bar behind the dots. Flint draws it as a default-blue line at the same visual weight as the markers, so the connector competes with the endpoints it exists to join.",
+    "The value axis kept, against house rule, and reduced to five unlabelled-title ticks. A dumbbell means nothing without absolute position — 51 to 54 and 81.5 to 87.6 are different facts. This is the one chart in the McKinsey set where deleting the axis would destroy the reading, and the numbers on the marks carry the gap instead.",
+    "Flint's ',.12~g' axis format dropped for plain integers."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 20, "bottom": 8 },
+  "title": {
+    "text": "Women outlive men everywhere, but not by the same margin",
+    "subtitle": ["Life expectancy at birth by sex, 2021, years"]
+  },
+  "width": 250,
+  "height": 178,
+  "data": {
+    "values": [
+      { "Country": "Japan", "Sex": "Male", "Life expectancy": 81.5 },
+      { "Country": "Japan", "Sex": "Female", "Life expectancy": 87.6 },
+      { "Country": "United States", "Sex": "Male", "Life expectancy": 73.5 },
+      { "Country": "United States", "Sex": "Female", "Life expectancy": 79.3 },
+      { "Country": "India", "Sex": "Male", "Life expectancy": 66 },
+      { "Country": "India", "Sex": "Female", "Life expectancy": 69 },
+      { "Country": "Brazil", "Sex": "Male", "Life expectancy": 69 },
+      { "Country": "Brazil", "Sex": "Female", "Life expectancy": 76 },
+      { "Country": "Nigeria", "Sex": "Male", "Life expectancy": 51 },
+      { "Country": "Nigeria", "Sex": "Female", "Life expectancy": 54 },
+      { "Country": "Germany", "Sex": "Male", "Life expectancy": 78.5 },
+      { "Country": "Germany", "Sex": "Female", "Life expectancy": 83.4 }
+    ]
+  },
+  "transform": [
+    {
+      "joinaggregate": [
+        { "op": "min", "field": "Life expectancy", "as": "__lo" },
+        { "op": "max", "field": "Life expectancy", "as": "__hi" }
+      ],
+      "groupby": ["Country"]
+    },
+    { "calculate": "datum.__hi - datum.__lo", "as": "__gap" },
+    { "calculate": "'+' + format(datum.__gap, '.1f')", "as": "__gapLabel" }
+  ],
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "title": null,
+      "sort": null,
+      "scale": { "paddingInner": 0.6, "paddingOuter": 0.55 },
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 6 }
+    },
+    "x": {
+      "field": "Life expectancy",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": false, "nice": false, "domain": [46, 94] },
+      "axis": {
+        "values": [50, 60, 70, 80, 90],
+        "format": "d",
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelColor": "#8fa0ab",
+        "labelPadding": 6
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "height": 3, "color": "#d3dce1" },
+      "encoding": {
+        "x": { "field": "__lo", "type": "quantitative" },
+        "x2": { "field": "__hi" }
+      }
+    },
+    {
+      "mark": { "type": "point", "filled": true, "size": 90, "stroke": "#ffffff", "strokeWidth": 1.2 },
+      "encoding": {
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "scale": { "domain": ["Male", "Female"], "range": ["#051c2c", "#2251ff"] },
+          "legend": null
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 9,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "x": { "field": "__hi", "type": "quantitative" },
+        "text": { "field": "__gapLabel", "type": "nominal" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.Country === 'Japan'" }],
+      "mark": {
+        "type": "text",
+        "baseline": "bottom",
+        "dy": -12,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "text": { "field": "Sex", "type": "nominal" },
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "scale": { "domain": ["Male", "Female"], "range": ["#051c2c", "#2251ff"] },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#5c6b75",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#8fa0ab",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

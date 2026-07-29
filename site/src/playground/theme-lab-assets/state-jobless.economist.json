@@ -1,0 +1,148 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "State names turned 90° and given no label limit. This is the whole problem with fifty categories on one axis: Flint's default clips nineteen of them, and four of those clip into pairs that cannot be told apart — 'North C…' against 'North D…', 'South C…' against 'South D…'. A truncated label that is still unique costs the reader a guess; a truncated label that is not unique is simply wrong, and the chart has no way to say which Carolina it means.",
+    "Order left exactly as the baseline has it. Sorting these bars by rate would make a far better chart, and that is precisely why it does not belong here — what to sort by is a statement about the data, decided upstream of any house style. A design language governs how a chart looks, not what it says.",
+    "Value axis moved to the right-hand edge and labelled in per cent, house style — at fifty bars the scale is a reference the reader returns to, not an introduction, so it sits where the eye ends up rather than in front of the tallest bar.",
+    "Both axis titles dropped. 'State' sits under fifty state names, and 'Unemployment (%)' repeats a subtitle that already says 'unemployment rate … per cent'. Neither adds a word the reader does not already have.",
+    "Frame and vertical gridlines removed, horizontals kept in pale blue-grey behind the bars. At this density every rule that is not carrying a value is competing with a bar for the same few pixels.",
+    "House blue #006BA2, red masthead rule, 9.5pt labels dropping to 8pt on the category axis — sized for a print column."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 12, "bottom": 6 },
+  "title": {
+    "text": "Unemployment by state",
+    "subtitle": ["Annual average unemployment rate, 50 US states, 2023, per cent"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 430,
+      "height": 175,
+      "data": {
+        "values": [
+          { "State": "Alabama", "Unemployment (%)": 2.3 },
+          { "State": "Alaska", "Unemployment (%)": 4.3 },
+          { "State": "Arizona", "Unemployment (%)": 3.9 },
+          { "State": "Arkansas", "Unemployment (%)": 3.3 },
+          { "State": "California", "Unemployment (%)": 4.8 },
+          { "State": "Colorado", "Unemployment (%)": 3.2 },
+          { "State": "Connecticut", "Unemployment (%)": 3.9 },
+          { "State": "Delaware", "Unemployment (%)": 4.2 },
+          { "State": "Florida", "Unemployment (%)": 2.9 },
+          { "State": "Georgia", "Unemployment (%)": 3.2 },
+          { "State": "Hawaii", "Unemployment (%)": 3 },
+          { "State": "Idaho", "Unemployment (%)": 3.2 },
+          { "State": "Illinois", "Unemployment (%)": 4.5 },
+          { "State": "Indiana", "Unemployment (%)": 3.3 },
+          { "State": "Iowa", "Unemployment (%)": 2.9 },
+          { "State": "Kansas", "Unemployment (%)": 2.8 },
+          { "State": "Kentucky", "Unemployment (%)": 4.2 },
+          { "State": "Louisiana", "Unemployment (%)": 3.5 },
+          { "State": "Maine", "Unemployment (%)": 2.9 },
+          { "State": "Maryland", "Unemployment (%)": 2.1 },
+          { "State": "Massachusetts", "Unemployment (%)": 3.3 },
+          { "State": "Michigan", "Unemployment (%)": 3.9 },
+          { "State": "Minnesota", "Unemployment (%)": 2.8 },
+          { "State": "Mississippi", "Unemployment (%)": 3.2 },
+          { "State": "Missouri", "Unemployment (%)": 3 },
+          { "State": "Montana", "Unemployment (%)": 2.9 },
+          { "State": "Nebraska", "Unemployment (%)": 2.4 },
+          { "State": "Nevada", "Unemployment (%)": 5.3 },
+          { "State": "New Hampshire", "Unemployment (%)": 2.4 },
+          { "State": "New Jersey", "Unemployment (%)": 4.1 },
+          { "State": "New Mexico", "Unemployment (%)": 3.8 },
+          { "State": "New York", "Unemployment (%)": 4.1 },
+          { "State": "North Carolina", "Unemployment (%)": 3.4 },
+          { "State": "North Dakota", "Unemployment (%)": 1.9 },
+          { "State": "Ohio", "Unemployment (%)": 3.6 },
+          { "State": "Oklahoma", "Unemployment (%)": 3 },
+          { "State": "Oregon", "Unemployment (%)": 3.7 },
+          { "State": "Pennsylvania", "Unemployment (%)": 3.4 },
+          { "State": "Rhode Island", "Unemployment (%)": 2.9 },
+          { "State": "South Carolina", "Unemployment (%)": 3 },
+          { "State": "South Dakota", "Unemployment (%)": 1.9 },
+          { "State": "Tennessee", "Unemployment (%)": 3.2 },
+          { "State": "Texas", "Unemployment (%)": 4 },
+          { "State": "Utah", "Unemployment (%)": 2.5 },
+          { "State": "Vermont", "Unemployment (%)": 2.1 },
+          { "State": "Virginia", "Unemployment (%)": 2.8 },
+          { "State": "Washington", "Unemployment (%)": 4.1 },
+          { "State": "West Virginia", "Unemployment (%)": 4 },
+          { "State": "Wisconsin", "Unemployment (%)": 2.9 },
+          { "State": "Wyoming", "Unemployment (%)": 3.1 }
+        ]
+      },
+      "encoding": {
+        "x": {
+          "field": "State",
+          "type": "nominal",
+          "title": null,
+          "sort": null,
+          "scale": { "paddingInner": 0.25 },
+          "axis": {
+            "labelAngle": -90,
+            "labelAlign": "right",
+            "labelBaseline": "middle",
+            "labelFontSize": 8,
+            "labelLimit": 0,
+            "labelPadding": 4,
+            "domain": true,
+            "domainColor": "#121317",
+            "domainWidth": 1,
+            "grid": false
+          }
+        },
+        "y": {
+          "field": "Unemployment (%)",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true, "nice": false, "domain": [0, 5.5] },
+          "axis": {
+            "orient": "right",
+            "values": [0, 1, 2, 3, 4, 5],
+            "labelExpr": "datum.value + '%'",
+            "grid": true,
+            "gridColor": "#c9d3da",
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 4
+          }
+        }
+      },
+      "mark": { "type": "bar", "color": "#006ba2" }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "CO₂ (ppm)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1959",
+        "CO₂ (ppm)": 315.98
+      },
+      {
+        "Year": "1965",
+        "CO₂ (ppm)": 320.04
+      },
+      {
+        "Year": "1970",
+        "CO₂ (ppm)": 325.68
+      },
+      {
+        "Year": "1975",
+        "CO₂ (ppm)": 331.11
+      },
+      {
+        "Year": "1980",
+        "CO₂ (ppm)": 338.8
+      },
+      {
+        "Year": "1985",
+        "CO₂ (ppm)": 346.12
+      },
+      {
+        "Year": "1990",
+        "CO₂ (ppm)": 354.45
+      },
+      {
+        "Year": "1995",
+        "CO₂ (ppm)": 360.82
+      },
+      {
+        "Year": "2000",
+        "CO₂ (ppm)": 369.71
+      },
+      {
+        "Year": "2005",
+        "CO₂ (ppm)": 379.98
+      },
+      {
+        "Year": "2010",
+        "CO₂ (ppm)": 389.9
+      },
+      {
+        "Year": "2015",
+        "CO₂ (ppm)": 400.83
+      },
+      {
+        "Year": "2020",
+        "CO₂ (ppm)": 414.24
+      },
+      {
+        "Year": "2023",
+        "CO₂ (ppm)": 421.08
+      }
+    ]
+  },
+  "title": {
+    "text": "Keeling Curve",
+    "subtitle": [
+      "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million"
+    ]
+  }
+}

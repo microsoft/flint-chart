@@ -1,0 +1,142 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Life expectancy",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "layer": [
+    {
+      "mark": "line",
+      "encoding": {
+        "detail": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true
+      },
+      "encoding": {
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "scheme": "tableau10"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Japan",
+        "Sex": "Male",
+        "Life expectancy": 81.5
+      },
+      {
+        "Country": "Japan",
+        "Sex": "Female",
+        "Life expectancy": 87.6
+      },
+      {
+        "Country": "United States",
+        "Sex": "Male",
+        "Life expectancy": 73.5
+      },
+      {
+        "Country": "United States",
+        "Sex": "Female",
+        "Life expectancy": 79.3
+      },
+      {
+        "Country": "India",
+        "Sex": "Male",
+        "Life expectancy": 66
+      },
+      {
+        "Country": "India",
+        "Sex": "Female",
+        "Life expectancy": 69
+      },
+      {
+        "Country": "Brazil",
+        "Sex": "Male",
+        "Life expectancy": 69
+      },
+      {
+        "Country": "Brazil",
+        "Sex": "Female",
+        "Life expectancy": 76
+      },
+      {
+        "Country": "Nigeria",
+        "Sex": "Male",
+        "Life expectancy": 51
+      },
+      {
+        "Country": "Nigeria",
+        "Sex": "Female",
+        "Life expectancy": 54
+      },
+      {
+        "Country": "Germany",
+        "Sex": "Male",
+        "Life expectancy": 78.5
+      },
+      {
+        "Country": "Germany",
+        "Sex": "Female",
+        "Life expectancy": 83.4
+      }
+    ]
+  },
+  "title": {
+    "text": "Women outlive men everywhere, but not by the same margin",
+    "subtitle": [
+      "Life expectancy at birth by sex, 2021, years"
+    ]
+  }
+}

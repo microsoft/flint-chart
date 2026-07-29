@@ -1,0 +1,184 @@
+{
+  "mark": "circle",
+  "encoding": {
+    "x": {
+      "field": "GDP per capita",
+      "type": "quantitative",
+      "scale": {
+        "type": "log"
+      },
+      "axis": {
+        "gridColor": "#e8e8e8",
+        "gridOpacity": 0.5,
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Life expectancy",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "size": {
+      "field": "Population (M)",
+      "type": "quantitative",
+      "scale": {
+        "type": "sqrt",
+        "zero": true,
+        "range": [
+          9,
+          361
+        ]
+      }
+    },
+    "color": {
+      "field": "Continent",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 309,
+      "continuousHeight": 253
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Norway",
+        "GDP per capita": 64800,
+        "Life expectancy": 82.3,
+        "Population (M)": 5.3,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "United States",
+        "GDP per capita": 62600,
+        "Life expectancy": 78.6,
+        "Population (M)": 327,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Japan",
+        "GDP per capita": 39300,
+        "Life expectancy": 84.2,
+        "Population (M)": 127,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "China",
+        "GDP per capita": 16800,
+        "Life expectancy": 76.7,
+        "Population (M)": 1393,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "India",
+        "GDP per capita": 6900,
+        "Life expectancy": 69.4,
+        "Population (M)": 1353,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "Nigeria",
+        "GDP per capita": 5300,
+        "Life expectancy": 54.3,
+        "Population (M)": 196,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Brazil",
+        "GDP per capita": 15600,
+        "Life expectancy": 75.7,
+        "Population (M)": 209,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Germany",
+        "GDP per capita": 50900,
+        "Life expectancy": 81,
+        "Population (M)": 83,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "Ethiopia",
+        "GDP per capita": 2000,
+        "Life expectancy": 66.2,
+        "Population (M)": 109,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Russia",
+        "GDP per capita": 25800,
+        "Life expectancy": 72.4,
+        "Population (M)": 145,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "Mexico",
+        "GDP per capita": 19800,
+        "Life expectancy": 75,
+        "Population (M)": 126,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Indonesia",
+        "GDP per capita": 12400,
+        "Life expectancy": 71.5,
+        "Population (M)": 268,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "Qatar",
+        "GDP per capita": 116900,
+        "Life expectancy": 80.1,
+        "Population (M)": 2.8,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "South Africa",
+        "GDP per capita": 13000,
+        "Life expectancy": 63.9,
+        "Population (M)": 57,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Bangladesh",
+        "GDP per capita": 4200,
+        "Life expectancy": 72.3,
+        "Population (M)": 161,
+        "Continent": "Asia"
+      }
+    ]
+  },
+  "title": {
+    "text": "Money buys years, up to a point",
+    "subtitle": [
+      "Life expectancy against GDP per capita, 2018; bubble area is population"
+    ]
+  }
+}

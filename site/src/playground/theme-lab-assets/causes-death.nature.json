@@ -1,0 +1,99 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "The axis title is restored, not removed. Every other language here reasons that the subtitle already names the unit and drops 'Deaths (thousands)' from the axis. A journal figure is reproduced at column width, cited, and lifted out of the article it came from, so the axis must state its own unit — this is the one case where redundant labelling is the correct decision rather than the lazy one.",
+    "Domain line and outward ticks kept, gridlines refused. Flint draws neither a domain nor ticks; a figure that will be printed at 85 mm needs the scale anchored by a rule the reader can sight along, and gridlines crossing the bars would add ten horizontal interruptions to a panel that is already dense.",
+    "Type dropped to 8.5pt and the category gutter uncapped. Flint truncates five of ten names — 'Cerebrovascular disea…', 'Nephritis, nephrotic …', 'Intentional self-harm…'. An abbreviated cause of death is not a cause of death, and at journal sizes the smaller face is what makes room for the full string without the panel growing.",
+    "Bars narrowed to 55% of the band. At this scale the gaps do the work of separating rows, so no rule or alternating fill is needed between them.",
+    "Single fill #0072B2, the blue from the Okabe-Ito set. One measure needs one colour, and choosing it from a colour-vision-safe set costs nothing here but means the figure is already compliant if a second series is ever added.",
+    "Row order left exactly as the baseline has it — the source arrived ranked, so the bars descend without a theme touching the sort."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 14, "bottom": 6 },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": ["Leading causes of death, United States, 2022, thousands of deaths"]
+  },
+  "width": 215,
+  "height": 205,
+  "data": {
+    "values": [
+      { "Cause": "Diseases of heart", "Deaths (thousands)": 703 },
+      { "Cause": "Malignant neoplasms", "Deaths (thousands)": 608 },
+      { "Cause": "Unintentional injuries", "Deaths (thousands)": 227 },
+      { "Cause": "Cerebrovascular diseases", "Deaths (thousands)": 165 },
+      { "Cause": "Chronic lower respiratory diseases", "Deaths (thousands)": 148 },
+      { "Cause": "Alzheimer disease", "Deaths (thousands)": 120 },
+      { "Cause": "Diabetes mellitus", "Deaths (thousands)": 102 },
+      { "Cause": "Nephritis, nephrotic syndrome and nephrosis", "Deaths (thousands)": 58 },
+      { "Cause": "Chronic liver disease and cirrhosis", "Deaths (thousands)": 55 },
+      { "Cause": "Intentional self-harm (suicide)", "Deaths (thousands)": 49 }
+    ]
+  },
+  "mark": { "type": "bar", "color": "#0072b2", "height": { "band": 0.55 } },
+  "encoding": {
+    "y": {
+      "field": "Cause",
+      "type": "nominal",
+      "title": null,
+      "sort": null,
+      "axis": {
+        "labelLimit": 0,
+        "labelFontSize": 8.5,
+        "labelColor": "#000000",
+        "labelPadding": 3,
+        "domain": true,
+        "domainColor": "#000000",
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 3,
+        "grid": false
+      }
+    },
+    "x": {
+      "field": "Deaths (thousands)",
+      "type": "quantitative",
+      "title": "Deaths (thousands)",
+      "scale": { "zero": true, "nice": false, "domain": [0, 760] },
+      "axis": {
+        "values": [0, 200, 400, 600],
+        "format": "d",
+        "grid": false,
+        "domain": true,
+        "domainColor": "#000000",
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 3.5,
+        "labelFontSize": 8.5,
+        "labelColor": "#000000",
+        "titleFontSize": 9,
+        "titleFontWeight": 400,
+        "titleColor": "#000000",
+        "titlePadding": 4
+      }
+    }
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "titleFont": "Arial, Helvetica, sans-serif"
+    }
+  }
+}

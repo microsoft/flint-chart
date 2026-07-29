@@ -1,0 +1,138 @@
+{
+  "encoding": {},
+  "layer": [
+    {
+      "mark": {
+        "type": "rule",
+        "strokeWidth": 1.5
+      },
+      "encoding": {
+        "x": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        },
+        "y": {
+          "field": "Tonnes/person",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y2": {
+          "datum": 0
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "circle",
+        "size": 80,
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        },
+        "y": {
+          "field": "Tonnes/person",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Qatar",
+        "Tonnes/person": 37
+      },
+      {
+        "Country": "UAE",
+        "Tonnes/person": 22
+      },
+      {
+        "Country": "United States",
+        "Tonnes/person": 15
+      },
+      {
+        "Country": "Canada",
+        "Tonnes/person": 14
+      },
+      {
+        "Country": "Russia",
+        "Tonnes/person": 11
+      },
+      {
+        "Country": "Japan",
+        "Tonnes/person": 8.5
+      },
+      {
+        "Country": "China",
+        "Tonnes/person": 8
+      },
+      {
+        "Country": "Germany",
+        "Tonnes/person": 8
+      },
+      {
+        "Country": "UK",
+        "Tonnes/person": 5
+      },
+      {
+        "Country": "France",
+        "Tonnes/person": 4.6
+      },
+      {
+        "Country": "Brazil",
+        "Tonnes/person": 2.3
+      },
+      {
+        "Country": "India",
+        "Tonnes/person": 2
+      }
+    ]
+  },
+  "title": {
+    "text": "Emissions per person run from 37 tonnes to 2",
+    "subtitle": [
+      "Carbon dioxide emissions per capita, 2022, tonnes"
+    ]
+  }
+}

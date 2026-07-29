@@ -1,0 +1,110 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Direction is already a colour channel in the data, so the redesign only re-palettes it: tableau10's arbitrary pair becomes cool blue #2F6B9A for below-average decades and warm red #C2352B for above. The hue now agrees with what the value means.",
+    "Legend dropped. A zero-crossing bar chart with a stated baseline is self-labelling, and the NYT house move is to spend that space on the plot instead of a key.",
+    "A black zero rule is layered in so the baseline is an explicit reference line rather than an axis artefact — derived from the scale, not from added data.",
+    "Y grid kept but pushed to #e4e4e4; the x-axis domain line is deleted because the zero rule already plays that role — Flint's default kept both and they fought.",
+    "Bar width narrowed to 0.72 of the band so the negative and positive runs read as two groups instead of a continuous block.",
+    "Axis number format switched to signed (+.1f), which does the work the label colour would otherwise have to do.",
+    "Axis titles removed; the unit moves to a flat '°C' above the y axis, and the title splits into serif line plus sans deck."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 20, "bottom": 6 },
+  "width": 300,
+  "height": 190,
+  "title": {
+    "text": "Global temperature anomaly by decade",
+    "subtitle": ["°C against the 1951–1980 average"]
+  },
+  "data": {
+    "values": [
+      { "Decade": "1880s", "Anomaly (°C)": -0.17, "Direction": "Below average" },
+      { "Decade": "1900s", "Anomaly (°C)": -0.16, "Direction": "Below average" },
+      { "Decade": "1920s", "Anomaly (°C)": -0.27, "Direction": "Below average" },
+      { "Decade": "1940s", "Anomaly (°C)": 0.12, "Direction": "Above average" },
+      { "Decade": "1960s", "Anomaly (°C)": -0.03, "Direction": "Below average" },
+      { "Decade": "1980s", "Anomaly (°C)": 0.26, "Direction": "Above average" },
+      { "Decade": "2000s", "Anomaly (°C)": 0.4, "Direction": "Above average" },
+      { "Decade": "2010s", "Anomaly (°C)": 0.72, "Direction": "Above average" },
+      { "Decade": "2020s", "Anomaly (°C)": 1.02, "Direction": "Above average" }
+    ]
+  },
+  "encoding": {
+    "x": { "field": "Decade", "type": "nominal", "sort": null, "title": null },
+    "y": {
+      "field": "Anomaly (°C)",
+      "type": "quantitative",
+      "title": "°C",
+      "axis": { "tickCount": 4, "format": "+.1f" }
+    },
+    "color": {
+      "field": "Direction",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "domain": ["Below average", "Above average"],
+        "range": ["#2f6b9a", "#c2352b"]
+      },
+      "legend": null
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "width": { "band": 0.72 } }
+    },
+    {
+      "mark": { "type": "rule", "color": "#121212", "strokeWidth": 1 },
+      "encoding": { "y": { "datum": 0 }, "x": null, "color": null }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', Times, serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10,
+      "titleFontWeight": 400,
+      "titleColor": "#8e8e8e",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    },
+    "axisY": {
+      "grid": true,
+      "gridColor": "#e4e4e4",
+      "domain": false,
+      "ticks": false,
+      "titleAngle": 0,
+      "titleAlign": "left",
+      "titleAnchor": "start",
+      "titleBaseline": "bottom",
+      "titleY": -8,
+      "titlePadding": 0
+    },
+    "axisX": {
+      "grid": false,
+      "domain": false,
+      "ticks": false,
+      "labelAngle": 0,
+      "labelPadding": 4
+    }
+  }
+}

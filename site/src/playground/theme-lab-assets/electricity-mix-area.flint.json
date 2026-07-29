@@ -1,0 +1,188 @@
+{
+  "mark": "area",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Generation (TWh)",
+      "type": "quantitative",
+      "stack": "normalize",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Source",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10",
+        "domain": [
+          "Coal",
+          "Gas",
+          "Hydro",
+          "Nuclear",
+          "Wind & solar",
+          "Other"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1990",
+        "Source": "Coal",
+        "Generation (TWh)": 4430
+      },
+      {
+        "Year": "1990",
+        "Source": "Gas",
+        "Generation (TWh)": 1780
+      },
+      {
+        "Year": "1990",
+        "Source": "Hydro",
+        "Generation (TWh)": 2160
+      },
+      {
+        "Year": "1990",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2000
+      },
+      {
+        "Year": "1990",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 10
+      },
+      {
+        "Year": "1990",
+        "Source": "Other",
+        "Generation (TWh)": 1580
+      },
+      {
+        "Year": "2000",
+        "Source": "Coal",
+        "Generation (TWh)": 5990
+      },
+      {
+        "Year": "2000",
+        "Source": "Gas",
+        "Generation (TWh)": 2760
+      },
+      {
+        "Year": "2000",
+        "Source": "Hydro",
+        "Generation (TWh)": 2620
+      },
+      {
+        "Year": "2000",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2590
+      },
+      {
+        "Year": "2000",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 80
+      },
+      {
+        "Year": "2000",
+        "Source": "Other",
+        "Generation (TWh)": 1310
+      },
+      {
+        "Year": "2010",
+        "Source": "Coal",
+        "Generation (TWh)": 8670
+      },
+      {
+        "Year": "2010",
+        "Source": "Gas",
+        "Generation (TWh)": 4760
+      },
+      {
+        "Year": "2010",
+        "Source": "Hydro",
+        "Generation (TWh)": 3440
+      },
+      {
+        "Year": "2010",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2760
+      },
+      {
+        "Year": "2010",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 380
+      },
+      {
+        "Year": "2010",
+        "Source": "Other",
+        "Generation (TWh)": 1520
+      },
+      {
+        "Year": "2020",
+        "Source": "Coal",
+        "Generation (TWh)": 9420
+      },
+      {
+        "Year": "2020",
+        "Source": "Gas",
+        "Generation (TWh)": 6270
+      },
+      {
+        "Year": "2020",
+        "Source": "Hydro",
+        "Generation (TWh)": 4360
+      },
+      {
+        "Year": "2020",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2700
+      },
+      {
+        "Year": "2020",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 2720
+      },
+      {
+        "Year": "2020",
+        "Source": "Other",
+        "Generation (TWh)": 1610
+      }
+    ]
+  },
+  "title": {
+    "text": "Where the power comes from",
+    "subtitle": [
+      "World electricity generation by source, % of total"
+    ]
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Value axis deleted (axis: null) and replaced by direct value labels at the end of each bar. This is the single biggest structural change: the reader never traverses to an axis.",
+    "One measure, one colour: every bar in brand blue #2251FF, every value label in navy #051C2C. Population is already fully encoded by length, so a second colour treatment would be the same number stated twice.",
+    "Bars flipped to horizontal, keeping the baseline's row order; country labels read left-to-right at 10pt instead of Flint's rotated x labels.",
+    "All gridlines, ticks, domains and axis titles removed. What remains is category label → bar → number.",
+    "X scale domain padded to 1650 so the value labels have room to sit outside the bars rather than colliding with the plot edge.",
+    "Bar height cut to 0.62 of the band and ink switched to deep navy #051C2C — the deck grid wants whitespace more than it wants mark area."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 26, "bottom": 8 },
+  "title": {
+    "text": "Most populous countries, 2023",
+    "subtitle": ["Population in millions"]
+  },
+  "width": 250,
+  "height": 210,
+  "data": {
+    "values": [
+      { "Country": "India", "Population": 1428.6 },
+      { "Country": "China", "Population": 1425.7 },
+      { "Country": "United States", "Population": 339.9 },
+      { "Country": "Indonesia", "Population": 277.5 },
+      { "Country": "Pakistan", "Population": 240.5 },
+      { "Country": "Nigeria", "Population": 223.8 },
+      { "Country": "Brazil", "Population": 216.4 },
+      { "Country": "Bangladesh", "Population": 173 },
+      { "Country": "Russia", "Population": 144.4 },
+      { "Country": "Mexico", "Population": 128.5 }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": [
+        "India",
+        "China",
+        "United States",
+        "Indonesia",
+        "Pakistan",
+        "Nigeria",
+        "Brazil",
+        "Bangladesh",
+        "Russia",
+        "Mexico"
+      ],
+      "title": null,
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 6 }
+    },
+    "x": {
+      "field": "Population",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "domain": [0, 1650] },
+      "axis": null
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "height": { "band": 0.62 }, "color": "#2251ff" }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "text": { "field": "Population", "type": "quantitative", "format": ",.0f" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#5c6b75",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#8fa0ab",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

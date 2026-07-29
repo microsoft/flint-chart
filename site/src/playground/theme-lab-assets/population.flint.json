@@ -1,0 +1,95 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    },
+    "x": {
+      "field": "Population",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "India",
+        "Population": 1428.6
+      },
+      {
+        "Country": "China",
+        "Population": 1425.7
+      },
+      {
+        "Country": "United States",
+        "Population": 339.9
+      },
+      {
+        "Country": "Indonesia",
+        "Population": 277.5
+      },
+      {
+        "Country": "Pakistan",
+        "Population": 240.5
+      },
+      {
+        "Country": "Nigeria",
+        "Population": 223.8
+      },
+      {
+        "Country": "Brazil",
+        "Population": 216.4
+      },
+      {
+        "Country": "Bangladesh",
+        "Population": 173
+      },
+      {
+        "Country": "Russia",
+        "Population": 144.4
+      },
+      {
+        "Country": "Mexico",
+        "Population": 128.5
+      }
+    ]
+  },
+  "title": {
+    "text": "Most populous countries, 2023",
+    "subtitle": [
+      "Population in millions"
+    ]
+  }
+}

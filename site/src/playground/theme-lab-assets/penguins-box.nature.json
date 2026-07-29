@@ -1,0 +1,165 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "Box replaced by a box-and-points composite: the summary box is drawn narrow and hollow, and every observation is jittered across it so the points read through the outline. At n = 10–13 per group a filled box hides the sample it claims to summarise; journals require the reader to see n.",
+    "Whiskers set to the full data range (extent 'min-max') rather than 1.5×IQR, because with this few points the Tukey fence produces outliers that are not outliers.",
+    "Box fill removed and the outline taken to 1px black; the median becomes the only heavy rule in the mark, which is the single value the box exists to communicate.",
+    "Colour moved off the box and onto the observation dots, using the Okabe–Ito colourblind-safe triple (#0072B2, #E69F00, #009E73) rather than tableau10.",
+    "Legend deleted — the species are already labelled on the x axis, so a colour key restates the axis.",
+    "Grid removed and replaced with black L-spines and outward 3.5px ticks; y domain pinned to 3000–6000 so the tick interval is a round 500 g.",
+    "Y title shortened to 'Body mass (g)' at 9pt and the whole figure sized to a 240×250 single-column block, the width a journal actually prints."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 6, "bottom": 4 },
+  "width": { "step": 74 },
+  "height": 250,
+  "title": {
+    "text": "Body mass of three Pygoscelis species",
+    "subtitle": ["Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"]
+  },
+  "data": {
+    "values": [
+      { "Species": "Adelie", "Body mass (g)": 3750 },
+      { "Species": "Adelie", "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Body mass (g)": 3250 },
+      { "Species": "Adelie", "Body mass (g)": 3450 },
+      { "Species": "Adelie", "Body mass (g)": 3650 },
+      { "Species": "Adelie", "Body mass (g)": 3625 },
+      { "Species": "Adelie", "Body mass (g)": 4675 },
+      { "Species": "Adelie", "Body mass (g)": 3200 },
+      { "Species": "Adelie", "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Body mass (g)": 4400 },
+      { "Species": "Adelie", "Body mass (g)": 3700 },
+      { "Species": "Chinstrap", "Body mass (g)": 3500 },
+      { "Species": "Chinstrap", "Body mass (g)": 3900 },
+      { "Species": "Chinstrap", "Body mass (g)": 3650 },
+      { "Species": "Chinstrap", "Body mass (g)": 3525 },
+      { "Species": "Chinstrap", "Body mass (g)": 3950 },
+      { "Species": "Chinstrap", "Body mass (g)": 3800 },
+      { "Species": "Chinstrap", "Body mass (g)": 3300 },
+      { "Species": "Chinstrap", "Body mass (g)": 4800 },
+      { "Species": "Chinstrap", "Body mass (g)": 4050 },
+      { "Species": "Chinstrap", "Body mass (g)": 3550 },
+      { "Species": "Gentoo", "Body mass (g)": 4500 },
+      { "Species": "Gentoo", "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Body mass (g)": 4450 },
+      { "Species": "Gentoo", "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Body mass (g)": 5400 },
+      { "Species": "Gentoo", "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Body mass (g)": 4800 },
+      { "Species": "Gentoo", "Body mass (g)": 5000 },
+      { "Species": "Gentoo", "Body mass (g)": 4650 },
+      { "Species": "Gentoo", "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Body mass (g)": 5950 },
+      { "Species": "Gentoo", "Body mass (g)": 5250 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": ["Adelie", "Chinstrap", "Gentoo"],
+      "title": null,
+      "axis": {
+        "labelAngle": 0,
+        "grid": false,
+        "domain": true,
+        "domainColor": "#000000",
+        "domainWidth": 1,
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 3.5,
+        "labelPadding": 3
+      }
+    },
+    "y": {
+      "field": "Body mass (g)",
+      "type": "quantitative",
+      "title": "Body mass (g)",
+      "scale": { "domain": [3000, 6000], "nice": false },
+      "axis": {
+        "values": [3000, 3500, 4000, 4500, 5000, 5500, 6000],
+        "grid": false,
+        "domain": true,
+        "domainColor": "#000000",
+        "domainWidth": 1,
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 3.5,
+        "labelPadding": 2,
+        "titlePadding": 4
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "boxplot",
+        "extent": "min-max",
+        "size": 26,
+        "box": { "fill": null, "stroke": "#000000", "strokeWidth": 1 },
+        "median": { "stroke": "#000000", "strokeWidth": 1.8 },
+        "rule": { "stroke": "#000000", "strokeWidth": 1 },
+        "ticks": { "stroke": "#000000", "strokeWidth": 1, "size": 9 },
+        "outliers": false
+      }
+    },
+    {
+      "transform": [
+        { "calculate": "random() * 2 - 1", "as": "__jitter" }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 22,
+        "opacity": 0.85,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.4
+      },
+      "encoding": {
+        "xOffset": {
+          "field": "__jitter",
+          "type": "quantitative",
+          "scale": { "domain": [-3, 3] }
+        },
+        "color": {
+          "field": "Species",
+          "type": "nominal",
+          "scale": {
+            "domain": ["Adelie", "Chinstrap", "Gentoo"],
+            "range": ["#0072b2", "#e69f00", "#009e73"]
+          },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Helvetica, Arial, sans-serif",
+      "fontSize": 10.5,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleColor": "#3c3c3c",
+      "subtitleLineHeight": 11,
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#000000",
+      "titleFontWeight": 400
+    }
+  }
+}

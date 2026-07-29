@@ -1,0 +1,197 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Step",
+      "type": "ordinal",
+      "sort": null,
+      "axis": {
+        "labelAngle": -45
+      }
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "__wf_row"
+        }
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "as": "__wf_total"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.__wf_row === datum.__wf_total ? 'end' : 'delta'",
+      "as": "__wf_type"
+    },
+    {
+      "window": [
+        {
+          "op": "sum",
+          "field": "Population (M)",
+          "as": "__wf_sum_raw"
+        }
+      ]
+    },
+    {
+      "calculate": "datum['__wf_type'] === 'end' ? datum.__wf_sum_raw - datum['Population (M)'] : datum.__wf_sum_raw",
+      "as": "__wf_sum"
+    },
+    {
+      "calculate": "datum['__wf_type'] === 'end' ? 0 : datum.__wf_sum - datum['Population (M)']",
+      "as": "__wf_prev_sum"
+    },
+    {
+      "calculate": "(datum['__wf_type'] === 'start' || datum['__wf_type'] === 'end') ? 'total' : datum['Population (M)'] >= 0 ? 'increase' : 'decrease'",
+      "as": "__wf_color"
+    },
+    {
+      "window": [
+        {
+          "op": "lead",
+          "field": "Step",
+          "as": "__wf_lead"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.__wf_lead === null ? datum['Step'] : datum.__wf_lead",
+      "as": "__wf_lead"
+    },
+    {
+      "calculate": "datum.__wf_lead === datum['Step'] ? null : datum.__wf_sum",
+      "as": "__wf_connector_y"
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "bar"
+      },
+      "encoding": {
+        "y": {
+          "field": "__wf_prev_sum",
+          "type": "quantitative",
+          "title": "Population (M)",
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y2": {
+          "field": "__wf_sum"
+        },
+        "color": {
+          "field": "__wf_color",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "total",
+              "increase",
+              "decrease"
+            ],
+            "range": [
+              "#f7e0b6",
+              "#93c4aa",
+              "#f78a64"
+            ]
+          },
+          "legend": {
+            "title": "Type"
+          }
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "rule",
+        "color": "#6b7280",
+        "opacity": 0.7,
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "Step",
+          "type": "ordinal",
+          "sort": null,
+          "bandPosition": 0
+        },
+        "x2": {
+          "field": "__wf_lead",
+          "bandPosition": 1
+        },
+        "y": {
+          "field": "__wf_connector_y",
+          "type": "quantitative",
+          "axis": {
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Step": "1950",
+        "Population (M)": 2536
+      },
+      {
+        "Step": "Asia",
+        "Population (M)": 3237
+      },
+      {
+        "Step": "Africa",
+        "Population (M)": 1134
+      },
+      {
+        "Step": "Americas",
+        "Population (M)": 684
+      },
+      {
+        "Step": "Europe",
+        "Population (M)": 199
+      },
+      {
+        "Step": "Oceania",
+        "Population (M)": 32
+      }
+    ]
+  },
+  "title": {
+    "text": "Asia added more people than the world held in 1950",
+    "subtitle": [
+      "Contribution to world population growth by region, 1950–2020, millions"
+    ]
+  }
+}

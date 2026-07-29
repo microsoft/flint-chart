@@ -1,0 +1,108 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Decade",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Anomaly (°C)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Direction",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Decade": "1880s",
+        "Anomaly (°C)": -0.17,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1900s",
+        "Anomaly (°C)": -0.16,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1920s",
+        "Anomaly (°C)": -0.27,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1940s",
+        "Anomaly (°C)": 0.12,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "1960s",
+        "Anomaly (°C)": -0.03,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1980s",
+        "Anomaly (°C)": 0.26,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2000s",
+        "Anomaly (°C)": 0.4,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2010s",
+        "Anomaly (°C)": 0.72,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2020s",
+        "Anomaly (°C)": 1.02,
+        "Direction": "Above average"
+      }
+    ]
+  },
+  "title": {
+    "text": "Global temperature anomaly by decade",
+    "subtitle": [
+      "°C against the 1951–1980 average"
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "interpolate": "monotone",
+    "strokeWidth": 2
+  },
+  "encoding": {
+    "x": {
+      "field": "Games",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Rank",
+      "type": "quantitative",
+      "scale": {
+        "reverse": true,
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "set2"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Games": "2012",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2016",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2020",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2024",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2012",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2016",
+        "Country": "China",
+        "Rank": 3
+      },
+      {
+        "Games": "2020",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2024",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2012",
+        "Country": "Great Britain",
+        "Rank": 3
+      },
+      {
+        "Games": "2016",
+        "Country": "Great Britain",
+        "Rank": 2
+      },
+      {
+        "Games": "2020",
+        "Country": "Great Britain",
+        "Rank": 4
+      },
+      {
+        "Games": "2024",
+        "Country": "Great Britain",
+        "Rank": 7
+      },
+      {
+        "Games": "2012",
+        "Country": "Japan",
+        "Rank": 6
+      },
+      {
+        "Games": "2016",
+        "Country": "Japan",
+        "Rank": 6
+      },
+      {
+        "Games": "2020",
+        "Country": "Japan",
+        "Rank": 5
+      },
+      {
+        "Games": "2024",
+        "Country": "Japan",
+        "Rank": 3
+      }
+    ]
+  },
+  "title": {
+    "text": "Four Games, four different stories",
+    "subtitle": [
+      "Rank in the Summer Olympics medal table, 2012–2024"
+    ]
+  }
+}

@@ -1,0 +1,635 @@
+{
+  "hconcat": [
+    {
+      "data": {
+        "values": [
+          {
+            "Metric": "Revenue ($k)"
+          },
+          {
+            "Metric": "Active users (k)"
+          },
+          {
+            "Metric": "Churn (%)"
+          }
+        ]
+      },
+      "facet": {
+        "row": {
+          "field": "Metric",
+          "type": "nominal",
+          "sort": [
+            "Revenue ($k)",
+            "Active users (k)",
+            "Churn (%)"
+          ],
+          "header": null
+        }
+      },
+      "spec": {
+        "width": 116,
+        "height": 64,
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "baseline": "middle",
+          "fontSize": 11
+        },
+        "encoding": {
+          "y": {
+            "value": 32
+          },
+          "x": {
+            "value": 0
+          },
+          "text": {
+            "field": "Metric",
+            "type": "nominal"
+          }
+        }
+      },
+      "title": {
+        "text": "Metric",
+        "anchor": "start",
+        "fontSize": 11,
+        "fontWeight": "normal",
+        "color": "#999",
+        "offset": 6
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Month": "Jan",
+            "Metric": "Revenue ($k)",
+            "Value": 120
+          },
+          {
+            "Month": "Feb",
+            "Metric": "Revenue ($k)",
+            "Value": 125
+          },
+          {
+            "Month": "Mar",
+            "Metric": "Revenue ($k)",
+            "Value": 130
+          },
+          {
+            "Month": "Apr",
+            "Metric": "Revenue ($k)",
+            "Value": 128
+          },
+          {
+            "Month": "May",
+            "Metric": "Revenue ($k)",
+            "Value": 140
+          },
+          {
+            "Month": "Jun",
+            "Metric": "Revenue ($k)",
+            "Value": 145
+          },
+          {
+            "Month": "Jul",
+            "Metric": "Revenue ($k)",
+            "Value": 150
+          },
+          {
+            "Month": "Aug",
+            "Metric": "Revenue ($k)",
+            "Value": 148
+          },
+          {
+            "Month": "Sep",
+            "Metric": "Revenue ($k)",
+            "Value": 160
+          },
+          {
+            "Month": "Oct",
+            "Metric": "Revenue ($k)",
+            "Value": 165
+          },
+          {
+            "Month": "Nov",
+            "Metric": "Revenue ($k)",
+            "Value": 170
+          },
+          {
+            "Month": "Dec",
+            "Metric": "Revenue ($k)",
+            "Value": 180
+          },
+          {
+            "Month": "Jan",
+            "Metric": "Active users (k)",
+            "Value": 40
+          },
+          {
+            "Month": "Feb",
+            "Metric": "Active users (k)",
+            "Value": 42
+          },
+          {
+            "Month": "Mar",
+            "Metric": "Active users (k)",
+            "Value": 45
+          },
+          {
+            "Month": "Apr",
+            "Metric": "Active users (k)",
+            "Value": 47
+          },
+          {
+            "Month": "May",
+            "Metric": "Active users (k)",
+            "Value": 50
+          },
+          {
+            "Month": "Jun",
+            "Metric": "Active users (k)",
+            "Value": 52
+          },
+          {
+            "Month": "Jul",
+            "Metric": "Active users (k)",
+            "Value": 55
+          },
+          {
+            "Month": "Aug",
+            "Metric": "Active users (k)",
+            "Value": 58
+          },
+          {
+            "Month": "Sep",
+            "Metric": "Active users (k)",
+            "Value": 60
+          },
+          {
+            "Month": "Oct",
+            "Metric": "Active users (k)",
+            "Value": 63
+          },
+          {
+            "Month": "Nov",
+            "Metric": "Active users (k)",
+            "Value": 66
+          },
+          {
+            "Month": "Dec",
+            "Metric": "Active users (k)",
+            "Value": 70
+          },
+          {
+            "Month": "Jan",
+            "Metric": "Churn (%)",
+            "Value": 5.2
+          },
+          {
+            "Month": "Feb",
+            "Metric": "Churn (%)",
+            "Value": 5
+          },
+          {
+            "Month": "Mar",
+            "Metric": "Churn (%)",
+            "Value": 4.8
+          },
+          {
+            "Month": "Apr",
+            "Metric": "Churn (%)",
+            "Value": 4.9
+          },
+          {
+            "Month": "May",
+            "Metric": "Churn (%)",
+            "Value": 4.6
+          },
+          {
+            "Month": "Jun",
+            "Metric": "Churn (%)",
+            "Value": 4.5
+          },
+          {
+            "Month": "Jul",
+            "Metric": "Churn (%)",
+            "Value": 4.3
+          },
+          {
+            "Month": "Aug",
+            "Metric": "Churn (%)",
+            "Value": 4.4
+          },
+          {
+            "Month": "Sep",
+            "Metric": "Churn (%)",
+            "Value": 4.1
+          },
+          {
+            "Month": "Oct",
+            "Metric": "Churn (%)",
+            "Value": 4
+          },
+          {
+            "Month": "Nov",
+            "Metric": "Churn (%)",
+            "Value": 3.9
+          },
+          {
+            "Month": "Dec",
+            "Metric": "Churn (%)",
+            "Value": 3.8
+          }
+        ]
+      },
+      "facet": {
+        "row": {
+          "field": "Metric",
+          "type": "nominal",
+          "sort": [
+            "Revenue ($k)",
+            "Active users (k)",
+            "Churn (%)"
+          ],
+          "header": null
+        }
+      },
+      "spec": {
+        "width": 154,
+        "height": 64,
+        "layer": [
+          {
+            "mark": {
+              "type": "line",
+              "strokeWidth": 1.5
+            },
+            "encoding": {
+              "x": {
+                "field": "Month",
+                "type": "nominal",
+                "sort": [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec"
+                ],
+                "axis": null
+              },
+              "y": {
+                "field": "Value",
+                "type": "quantitative",
+                "axis": null,
+                "scale": {
+                  "range": [
+                    62,
+                    2
+                  ]
+                }
+              },
+              "color": {
+                "field": "Metric",
+                "type": "nominal",
+                "legend": null
+              }
+            }
+          },
+          {
+            "mark": {
+              "type": "rule",
+              "strokeDash": [
+                3,
+                2
+              ],
+              "stroke": "#9a9a9a",
+              "strokeWidth": 1,
+              "opacity": 0.7
+            },
+            "encoding": {
+              "y": {
+                "field": "Value",
+                "aggregate": "mean",
+                "type": "quantitative",
+                "axis": null
+              }
+            }
+          }
+        ]
+      },
+      "resolve": {
+        "scale": {
+          "y": "independent"
+        }
+      },
+      "title": {
+        "text": "Value",
+        "anchor": "middle",
+        "fontSize": 11,
+        "fontWeight": "normal",
+        "color": "#999",
+        "offset": 6
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Metric": "Revenue ($k)",
+            "flintSparkAvg": 146.75
+          },
+          {
+            "Metric": "Active users (k)",
+            "flintSparkAvg": 54
+          },
+          {
+            "Metric": "Churn (%)",
+            "flintSparkAvg": 4.458333333333333
+          }
+        ]
+      },
+      "facet": {
+        "row": {
+          "field": "Metric",
+          "type": "nominal",
+          "sort": [
+            "Revenue ($k)",
+            "Active users (k)",
+            "Churn (%)"
+          ],
+          "header": null
+        }
+      },
+      "spec": {
+        "width": 54,
+        "height": 64,
+        "mark": {
+          "type": "text",
+          "align": "right",
+          "baseline": "middle",
+          "fontSize": 11,
+          "fontWeight": 600
+        },
+        "encoding": {
+          "y": {
+            "value": 32
+          },
+          "x": {
+            "value": 54
+          },
+          "text": {
+            "field": "flintSparkAvg",
+            "type": "quantitative",
+            "format": ".3~s"
+          },
+          "color": {
+            "field": "Metric",
+            "type": "nominal",
+            "legend": null
+          }
+        }
+      },
+      "title": {
+        "text": "Average",
+        "anchor": "end",
+        "fontSize": 11,
+        "fontWeight": "normal",
+        "color": "#999",
+        "offset": 6
+      }
+    }
+  ],
+  "spacing": 8,
+  "resolve": {
+    "scale": {
+      "y": "independent",
+      "color": "shared"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 250,
+      "continuousHeight": 83,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "axisY": {
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "legend": {
+      "labelFontSize": 9,
+      "titleFontSize": 9
+    },
+    "facet": {
+      "spacing": 8
+    }
+  },
+  "width": {
+    "step": 21
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Jan",
+        "Metric": "Revenue ($k)",
+        "Value": 120
+      },
+      {
+        "Month": "Feb",
+        "Metric": "Revenue ($k)",
+        "Value": 125
+      },
+      {
+        "Month": "Mar",
+        "Metric": "Revenue ($k)",
+        "Value": 130
+      },
+      {
+        "Month": "Apr",
+        "Metric": "Revenue ($k)",
+        "Value": 128
+      },
+      {
+        "Month": "May",
+        "Metric": "Revenue ($k)",
+        "Value": 140
+      },
+      {
+        "Month": "Jun",
+        "Metric": "Revenue ($k)",
+        "Value": 145
+      },
+      {
+        "Month": "Jul",
+        "Metric": "Revenue ($k)",
+        "Value": 150
+      },
+      {
+        "Month": "Aug",
+        "Metric": "Revenue ($k)",
+        "Value": 148
+      },
+      {
+        "Month": "Sep",
+        "Metric": "Revenue ($k)",
+        "Value": 160
+      },
+      {
+        "Month": "Oct",
+        "Metric": "Revenue ($k)",
+        "Value": 165
+      },
+      {
+        "Month": "Nov",
+        "Metric": "Revenue ($k)",
+        "Value": 170
+      },
+      {
+        "Month": "Dec",
+        "Metric": "Revenue ($k)",
+        "Value": 180
+      },
+      {
+        "Month": "Jan",
+        "Metric": "Active users (k)",
+        "Value": 40
+      },
+      {
+        "Month": "Feb",
+        "Metric": "Active users (k)",
+        "Value": 42
+      },
+      {
+        "Month": "Mar",
+        "Metric": "Active users (k)",
+        "Value": 45
+      },
+      {
+        "Month": "Apr",
+        "Metric": "Active users (k)",
+        "Value": 47
+      },
+      {
+        "Month": "May",
+        "Metric": "Active users (k)",
+        "Value": 50
+      },
+      {
+        "Month": "Jun",
+        "Metric": "Active users (k)",
+        "Value": 52
+      },
+      {
+        "Month": "Jul",
+        "Metric": "Active users (k)",
+        "Value": 55
+      },
+      {
+        "Month": "Aug",
+        "Metric": "Active users (k)",
+        "Value": 58
+      },
+      {
+        "Month": "Sep",
+        "Metric": "Active users (k)",
+        "Value": 60
+      },
+      {
+        "Month": "Oct",
+        "Metric": "Active users (k)",
+        "Value": 63
+      },
+      {
+        "Month": "Nov",
+        "Metric": "Active users (k)",
+        "Value": 66
+      },
+      {
+        "Month": "Dec",
+        "Metric": "Active users (k)",
+        "Value": 70
+      },
+      {
+        "Month": "Jan",
+        "Metric": "Churn (%)",
+        "Value": 5.2
+      },
+      {
+        "Month": "Feb",
+        "Metric": "Churn (%)",
+        "Value": 5
+      },
+      {
+        "Month": "Mar",
+        "Metric": "Churn (%)",
+        "Value": 4.8
+      },
+      {
+        "Month": "Apr",
+        "Metric": "Churn (%)",
+        "Value": 4.9
+      },
+      {
+        "Month": "May",
+        "Metric": "Churn (%)",
+        "Value": 4.6
+      },
+      {
+        "Month": "Jun",
+        "Metric": "Churn (%)",
+        "Value": 4.5
+      },
+      {
+        "Month": "Jul",
+        "Metric": "Churn (%)",
+        "Value": 4.3
+      },
+      {
+        "Month": "Aug",
+        "Metric": "Churn (%)",
+        "Value": 4.4
+      },
+      {
+        "Month": "Sep",
+        "Metric": "Churn (%)",
+        "Value": 4.1
+      },
+      {
+        "Month": "Oct",
+        "Metric": "Churn (%)",
+        "Value": 4
+      },
+      {
+        "Month": "Nov",
+        "Metric": "Churn (%)",
+        "Value": 3.9
+      },
+      {
+        "Month": "Dec",
+        "Metric": "Churn (%)",
+        "Value": 3.8
+      }
+    ]
+  },
+  "title": {
+    "text": "Monthly KPIs",
+    "subtitle": [
+      "Twelve-month trend and latest value"
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Capacity (GW)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "strokeDash": {
+      "field": "Series",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2015",
+        "Series": "Observed",
+        "Capacity (GW)": 785
+      },
+      {
+        "Year": "2017",
+        "Series": "Observed",
+        "Capacity (GW)": 1080
+      },
+      {
+        "Year": "2019",
+        "Series": "Observed",
+        "Capacity (GW)": 1440
+      },
+      {
+        "Year": "2021",
+        "Series": "Observed",
+        "Capacity (GW)": 1900
+      },
+      {
+        "Year": "2023",
+        "Series": "Observed",
+        "Capacity (GW)": 2560
+      },
+      {
+        "Year": "2023",
+        "Series": "Projected",
+        "Capacity (GW)": 2560
+      },
+      {
+        "Year": "2025",
+        "Series": "Projected",
+        "Capacity (GW)": 3400
+      },
+      {
+        "Year": "2027",
+        "Series": "Projected",
+        "Capacity (GW)": 4300
+      },
+      {
+        "Year": "2030",
+        "Series": "Projected",
+        "Capacity (GW)": 5800
+      }
+    ]
+  },
+  "title": {
+    "text": "Global renewable capacity",
+    "subtitle": [
+      "Gigawatts installed, observed to 2023 and projected to 2030"
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Record (min)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1908",
+        "Record (min)": 175
+      },
+      {
+        "Year": "1925",
+        "Record (min)": 173
+      },
+      {
+        "Year": "1935",
+        "Record (min)": 166
+      },
+      {
+        "Year": "1947",
+        "Record (min)": 165
+      },
+      {
+        "Year": "1958",
+        "Record (min)": 155
+      },
+      {
+        "Year": "1967",
+        "Record (min)": 150
+      },
+      {
+        "Year": "1969",
+        "Record (min)": 148
+      },
+      {
+        "Year": "1988",
+        "Record (min)": 127
+      },
+      {
+        "Year": "1998",
+        "Record (min)": 126
+      },
+      {
+        "Year": "2003",
+        "Record (min)": 125
+      },
+      {
+        "Year": "2008",
+        "Record (min)": 124
+      },
+      {
+        "Year": "2011",
+        "Record (min)": 123.6
+      },
+      {
+        "Year": "2014",
+        "Record (min)": 122.9
+      },
+      {
+        "Year": "2018",
+        "Record (min)": 121.6
+      },
+      {
+        "Year": "2022",
+        "Record (min)": 121.1
+      },
+      {
+        "Year": "2023",
+        "Record (min)": 120.6
+      }
+    ]
+  },
+  "title": {
+    "text": "Men's marathon world record, 1908–2023 (minutes)"
+  }
+}

@@ -1,0 +1,285 @@
+{
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "axis": {
+        "title": null
+      }
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 0,
+            "__hi": 25
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 0,
+            "__hi": 23.75
+          },
+          {
+            "Country": "Germany",
+            "__lo": 0,
+            "__hi": 20
+          },
+          {
+            "Country": "World",
+            "__lo": 0,
+            "__hi": 15
+          },
+          {
+            "Country": "United States",
+            "__lo": 0,
+            "__hi": 12.5
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#e2e2e2",
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": "Share",
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 25,
+            "__hi": 50
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 23.75,
+            "__hi": 47.5
+          },
+          {
+            "Country": "Germany",
+            "__lo": 20,
+            "__hi": 40
+          },
+          {
+            "Country": "World",
+            "__lo": 15,
+            "__hi": 30
+          },
+          {
+            "Country": "United States",
+            "__lo": 12.5,
+            "__hi": 25
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#ececec",
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": "Share",
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 50,
+            "__hi": 75
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 47.5,
+            "__hi": 71.25
+          },
+          {
+            "Country": "Germany",
+            "__lo": 40,
+            "__hi": 60
+          },
+          {
+            "Country": "World",
+            "__lo": 30,
+            "__hi": 45
+          },
+          {
+            "Country": "United States",
+            "__lo": 25,
+            "__hi": 37.5
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#f5f5f5",
+        "opacity": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": "Share",
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "height": {
+          "band": 0.5
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "Share",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "title": "Share",
+            "format": ",.12~g"
+          }
+        },
+        "color": {
+          "field": "__status",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "Below target",
+              "Meets target"
+            ],
+            "range": [
+              "#c44e52",
+              "#2f855a"
+            ]
+          },
+          "legend": {
+            "title": null
+          },
+          "title": null
+        }
+      },
+      "transform": [
+        {
+          "calculate": "datum[\"Share\"] >= datum[\"Target\"] ? 'Meets target' : 'Below target'",
+          "as": "__status"
+        }
+      ]
+    },
+    {
+      "mark": {
+        "type": "tick",
+        "color": "#1a1a1a",
+        "thickness": 3,
+        "opacity": 1,
+        "size": 17
+      },
+      "encoding": {
+        "x": {
+          "field": "Target",
+          "type": "quantitative",
+          "axis": {
+            "title": "Share",
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Norway",
+        "Share": 98.6,
+        "Target": 100
+      },
+      {
+        "Country": "Brazil",
+        "Share": 89.2,
+        "Target": 95
+      },
+      {
+        "Country": "Germany",
+        "Share": 51.6,
+        "Target": 80
+      },
+      {
+        "Country": "World",
+        "Share": 30.3,
+        "Target": 60
+      },
+      {
+        "Country": "United States",
+        "Share": 22.7,
+        "Target": 50
+      }
+    ]
+  },
+  "title": {
+    "text": "Every country is short of its renewable target",
+    "subtitle": [
+      "Renewable share of electricity, 2023, per cent, against national targets"
+    ]
+  }
+}

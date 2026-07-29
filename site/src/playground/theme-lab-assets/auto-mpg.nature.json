@@ -1,0 +1,136 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "Empty colour and size channels removed. Flint emits 'color: {}' and 'size: {}' on the point layer with no field behind them, which is a spec-level no-op that still costs Vega-Lite a scale resolution — and it is the reason this baseline throws a warning when compiled.",
+    "Fit statistics printed on the panel: slope, R² and n, computed by the same regression transform that draws the line. A trend line without a fit statistic is a drawing, not a result — a reviewer cannot tell a real relationship from a line through noise.",
+    "Regression line recoloured from Flint's literal 'red' to black, and the points to Okabe–Ito blue. Red is the convention for an error or an alert; the fit is neither, and in greyscale it becomes indistinguishable from the data anyway.",
+    "Line drawn *under* the points rather than over them, and clipped to the observed power range rather than run out to the panel edges — the fit should not occlude the observations it summarises, nor imply predictions outside the data it was estimated from.",
+    "Both axis titles given their units (hp, miles per US gallon) and the axis extents pinned, so the same panel can be reprinted beside another without the scales silently changing with the sample.",
+    "Black L-shaped spines with outward 3.5pt ticks, no gridlines, 8.5pt type and 89 mm column geometry."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 6, "bottom": 4 },
+  "width": 220,
+  "height": 165,
+  "title": {
+    "text": "Power against fuel economy",
+    "subtitle": ["Ordinary least squares fit; each point is one car model"]
+  },
+  "data": {
+    "values": [
+      { "Horsepower": 130, "MPG": 18 },
+      { "Horsepower": 165, "MPG": 15 },
+      { "Horsepower": 150, "MPG": 18 },
+      { "Horsepower": 150, "MPG": 16 },
+      { "Horsepower": 140, "MPG": 17 },
+      { "Horsepower": 198, "MPG": 15 },
+      { "Horsepower": 220, "MPG": 14 },
+      { "Horsepower": 215, "MPG": 14 },
+      { "Horsepower": 97, "MPG": 22 },
+      { "Horsepower": 85, "MPG": 26 },
+      { "Horsepower": 88, "MPG": 25 },
+      { "Horsepower": 46, "MPG": 26 },
+      { "Horsepower": 90, "MPG": 25 },
+      { "Horsepower": 95, "MPG": 24 },
+      { "Horsepower": 68, "MPG": 29 },
+      { "Horsepower": 70, "MPG": 27 },
+      { "Horsepower": 52, "MPG": 30 },
+      { "Horsepower": 65, "MPG": 31 },
+      { "Horsepower": 67, "MPG": 30 },
+      { "Horsepower": 48, "MPG": 43 },
+      { "Horsepower": 66, "MPG": 32 },
+      { "Horsepower": 100, "MPG": 22 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Horsepower",
+      "type": "quantitative",
+      "title": "Engine power (hp)",
+      "scale": { "zero": false, "nice": false, "domain": [30, 235] },
+      "axis": { "tickCount": 5, "format": "d" }
+    },
+    "y": {
+      "field": "MPG",
+      "type": "quantitative",
+      "title": "Fuel economy (miles per US gallon)",
+      "scale": { "zero": false, "nice": false, "domain": [10, 46] },
+      "axis": { "tickCount": 5, "format": "d" }
+    }
+  },
+  "layer": [
+    {
+      "transform": [{ "regression": "MPG", "on": "Horsepower", "extent": [46, 220] }],
+      "mark": { "type": "line", "color": "#000000", "strokeWidth": 1.1 }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 26,
+        "color": "#0072b2",
+        "stroke": "#ffffff",
+        "strokeWidth": 0.5
+      }
+    },
+    {
+      "transform": [
+        { "regression": "MPG", "on": "Horsepower", "params": true },
+        {
+          "calculate": "'slope = ' + format(datum.coef[1], '.3f') + ' mpg/hp · R² = ' + format(datum.rSquared, '.2f') + ' · n = 22'",
+          "as": "__fit"
+        },
+        { "calculate": "233", "as": "Horsepower" },
+        { "calculate": "45.5", "as": "MPG" }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "top",
+        "fontSize": 8,
+        "color": "#000000"
+      },
+      "encoding": {
+        "text": { "field": "__fit", "type": "nominal" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "labelPadding": 2,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "titlePadding": 4,
+      "grid": false,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 3.5
+    }
+  }
+}

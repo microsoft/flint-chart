@@ -1,0 +1,121 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "The key is kept, on the right, where this language always puts it. A dashboard tile is one visual among several on a canvas the user is filtering, and the series set changes when a slicer moves — a legend that redraws in place survives that, whereas labels pinned to the last point of each line rearrange themselves every time the data changes. The two direct-labelling rows here are authoring a fixed picture; this one is describing a query result.",
+    "Dark ground #1B1A19 with the grid dropped to #3B3A39. On a light page a grid must be pale enough not to compete with the ink; on a dark one the same problem inverts, and a mid-grey rule reads brighter than the lines it is meant to sit behind.",
+    "Palette lifted to survive the dark ground — #118DFF, #E66C37, #3BD1C7, #E044A7 — pinned to the baseline's series order. Flint's 'set2' pastels are chosen for white and go muddy at this brightness.",
+    "Points marked at each observation. The series is sampled unevenly, and on a tile that will be hovered for a tooltip the marker is also the target the cursor is looking for.",
+    "Labels at 9.5pt in #C8C6C4 rather than white: pure white type on near-black blooms at low brightness, and a light grey holds the contrast without the halo.",
+    "Series order left exactly as the baseline has it: Norway, China, Germany, United States."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 8, "right": 14, "bottom": 8 },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": ["Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"]
+  },
+  "width": 265,
+  "height": 195,
+  "data": {
+    "values": [
+      { "Year": "2018", "Country": "Norway", "EV share (%)": 49 },
+      { "Year": "2020", "Country": "Norway", "EV share (%)": 75 },
+      { "Year": "2022", "Country": "Norway", "EV share (%)": 88 },
+      { "Year": "2023", "Country": "Norway", "EV share (%)": 93 },
+      { "Year": "2018", "Country": "China", "EV share (%)": 4 },
+      { "Year": "2020", "Country": "China", "EV share (%)": 6 },
+      { "Year": "2022", "Country": "China", "EV share (%)": 29 },
+      { "Year": "2023", "Country": "China", "EV share (%)": 38 },
+      { "Year": "2018", "Country": "Germany", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "Germany", "EV share (%)": 13 },
+      { "Year": "2022", "Country": "Germany", "EV share (%)": 31 },
+      { "Year": "2023", "Country": "Germany", "EV share (%)": 25 },
+      { "Year": "2018", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2022", "Country": "United States", "EV share (%)": 8 },
+      { "Year": "2023", "Country": "United States", "EV share (%)": 10 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "values": ["2018", "2020", "2022", "2023"],
+        "format": "%Y",
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 9.5,
+        "labelColor": "#c8c6c4",
+        "labelPadding": 4
+      }
+    },
+    "y": {
+      "field": "EV share (%)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 100] },
+      "axis": {
+        "values": [0, 25, 50, 75, 100],
+        "format": "d",
+        "grid": true,
+        "gridColor": "#3b3a39",
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 9.5,
+        "labelColor": "#c8c6c4"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "title": null,
+      "scale": {
+        "domain": ["Norway", "China", "Germany", "United States"],
+        "range": ["#118dff", "#e66c37", "#3bd1c7", "#e044a7"]
+      },
+      "legend": {
+        "orient": "right",
+        "labelFontSize": 9,
+        "labelColor": "#c8c6c4",
+        "symbolType": "stroke",
+        "symbolStrokeWidth": 3,
+        "symbolSize": 80,
+        "offset": 8
+      }
+    }
+  },
+  "layer": [
+    { "mark": { "type": "line", "strokeWidth": 2 } },
+    { "mark": { "type": "point", "filled": true, "size": 28 } }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Segoe UI Variable', system-ui, -apple-system, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#a19f9d",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "titleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    },
+    "legend": { "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif" }
+  }
+}

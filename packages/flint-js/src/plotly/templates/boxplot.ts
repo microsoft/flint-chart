@@ -55,20 +55,35 @@ export const plBoxplotDef: ChartTemplateDef = {
         const isHorizontal = catAxis === 'y';
 
         const categories = extractCategories(table, catField, channelSemantics[catAxis]?.ordinalSortOrder);
+        // `showPoints` overlays every raw observation on the box; that makes the
+        // separate outlier marks redundant, since those points are drawn too.
+        const showPoints = chartProperties?.showPoints === true;
         const showOutliers = chartProperties?.showOutliers !== false;
-        const boxpoints = showOutliers ? 'outliers' : false;
+        const boxpoints = showPoints ? 'all' : (showOutliers ? 'outliers' : false);
         const palette = getPlotlyPalette(ctx, 'color');
 
         const makeTrace = (name: string | undefined, rows: any[], colorIdx: number) => {
             const cats = rows.map((r: any) => String(r[catField] ?? ''));
             const vals = rows.map((r: any) => Number(r[valField]));
+            const seriesColor = getSeriesColor(palette, colorIdx);
             return {
                 type: 'box',
                 ...(name != null ? { name } : {}),
                 ...(isHorizontal ? { y: cats, x: vals } : { x: cats, y: vals }),
                 boxpoints,
-                marker: { color: getSeriesColor(palette, colorIdx), size: 3 },
-                line: { color: getSeriesColor(palette, colorIdx) },
+                // Drawing the sample inverts the visual hierarchy: the sample
+                // becomes the figure and the box demotes to scaffolding over it.
+                // So the box goes hollow and keeps only its outline, and the
+                // group colour lives on the points — fill *and* point colour
+                // would encode the group twice. `pointpos: 0` centres the cloud
+                // on the box instead of parking it alongside.
+                ...(showPoints
+                    ? { jitter: 0.6, pointpos: 0, fillcolor: 'rgba(0,0,0,0)' }
+                    : {}),
+                marker: showPoints
+                    ? { color: seriesColor, size: 4, opacity: 0.7, line: { color: '#ffffff', width: 0.5 } }
+                    : { color: seriesColor, size: 3 },
+                line: { color: seriesColor, ...(showPoints ? { width: 1.5 } : {}) },
             };
         };
 
@@ -108,6 +123,19 @@ export const plBoxplotDef: ChartTemplateDef = {
         delete spec.encoding;
     },
     properties: [
-        { key: 'showOutliers', label: 'Outliers', type: 'binary', defaultValue: true } as ChartPropertyDef,
+        {
+            key: 'showPoints', label: 'Points', type: 'binary', defaultValue: false,
+            // Jitter needs a band to scatter within, so this is only meaningful
+            // once one position axis is discrete.
+            check: (ctx) => ({
+                applicable: isDiscreteType(ctx.channelSemantics?.x?.type)
+                    || isDiscreteType(ctx.channelSemantics?.y?.type),
+            }),
+        } as ChartPropertyDef,
+        {
+            key: 'showOutliers', label: 'Outliers', type: 'binary', defaultValue: true,
+            // Once every observation is drawn, the outlier marks are duplicates.
+            check: (ctx) => ({ applicable: ctx.chartProperties?.showPoints !== true }),
+        } as ChartPropertyDef,
     ],
 };

@@ -106,6 +106,22 @@ const LIFE_EXP: Record<string, [number, number]> = {
     Nigeria: [46.6, 52.7], Japan: [81.1, 84.5], Russia: [65.5, 70.1], Brazil: [70.1, 72.8],
 };
 
+// ---------------------------------------------------------------------------
+// 8. Fifty states, one rate — drives both the choropleth and the fifty-colour bar
+// ---------------------------------------------------------------------------
+const STATE_UNEMPLOYMENT: [string, number][] = [
+    ['Alabama', 2.3], ['Alaska', 4.3], ['Arizona', 3.9], ['Arkansas', 3.3], ['California', 4.8],
+    ['Colorado', 3.2], ['Connecticut', 3.9], ['Delaware', 4.2], ['Florida', 2.9], ['Georgia', 3.2],
+    ['Hawaii', 3.0], ['Idaho', 3.2], ['Illinois', 4.5], ['Indiana', 3.3], ['Iowa', 2.9],
+    ['Kansas', 2.8], ['Kentucky', 4.2], ['Louisiana', 3.5], ['Maine', 2.9], ['Maryland', 2.1],
+    ['Massachusetts', 3.3], ['Michigan', 3.9], ['Minnesota', 2.8], ['Mississippi', 3.2], ['Missouri', 3.0],
+    ['Montana', 2.9], ['Nebraska', 2.4], ['Nevada', 5.3], ['New Hampshire', 2.4], ['New Jersey', 4.1],
+    ['New Mexico', 3.8], ['New York', 4.1], ['North Carolina', 3.4], ['North Dakota', 1.9], ['Ohio', 3.6],
+    ['Oklahoma', 3.0], ['Oregon', 3.7], ['Pennsylvania', 3.4], ['Rhode Island', 2.9], ['South Carolina', 3.0],
+    ['South Dakota', 1.9], ['Tennessee', 3.2], ['Texas', 4.0], ['Utah', 2.5], ['Vermont', 2.1],
+    ['Virginia', 2.8], ['Washington', 4.1], ['West Virginia', 4.0], ['Wisconsin', 2.9], ['Wyoming', 3.1],
+];
+
 function buildCases(): PreviewCase[] {
     const cases: PreviewCase[] = [];
 
@@ -153,7 +169,7 @@ function buildCases(): PreviewCase[] {
         source: 'UN World Population Prospects 2022 / World Bank (2023)',
         license: 'CC-BY 4.0 (attribute UN/World Bank)',
         semantic_types: { Country: 'Country', Population: 'Quantity' },
-        encodings: { x: 'Country', y: 'Population' },
+        encodings: { y: 'Country', x: 'Population' },
         data: [
             ['India', 1428.6], ['China', 1425.7], ['United States', 339.9], ['Indonesia', 277.5],
             ['Pakistan', 240.5], ['Nigeria', 223.8], ['Brazil', 216.4], ['Bangladesh', 173.0],
@@ -459,8 +475,10 @@ function buildCases(): PreviewCase[] {
         semantic_types: { Age: 'Category', Sex: 'Category', Population: 'Quantity' },
         encodings: { x: 'Population', y: 'Age', color: 'Sex' },
         data: (() => {
-            const ages = ['0–14', '15–29', '30–44', '45–59', '60–74', '75+'];
-            const m = [31, 34, 33, 30, 26, 10], f = [30, 32, 33, 31, 28, 15];
+            // Oldest first: an ordinal axis renders its domain top-down, and a population
+            // pyramid is read with age increasing upward.
+            const ages = ['75+', '60–74', '45–59', '30–44', '15–29', '0–14'];
+            const m = [10, 26, 30, 33, 34, 31], f = [15, 28, 31, 33, 32, 30];
             const rows: Record<string, unknown>[] = [];
             ages.forEach((Age, i) => { rows.push({ Age, Sex: 'Male', Population: m[i] }); rows.push({ Age, Sex: 'Female', Population: f[i] }); });
             return rows;
@@ -745,9 +763,9 @@ function buildCases(): PreviewCase[] {
         blurb: 'Bars cross zero — cool early decades below, rapid warming above.',
         source: 'NASA GISTEMP (approx. decadal means)',
         license: 'US-gov (PD)',
-        semantic_types: { Decade: 'Category', 'Anomaly (°C)': 'Quantity' },
-        encodings: { x: 'Decade', y: 'Anomaly (°C)' },
-        data: [['1880s', -0.17], ['1900s', -0.16], ['1920s', -0.27], ['1940s', 0.12], ['1960s', -0.03], ['1980s', 0.26], ['2000s', 0.40], ['2010s', 0.72], ['2020s', 1.02]].map(([Decade, v]) => ({ Decade, 'Anomaly (°C)': v })),
+        semantic_types: { Decade: 'Category', 'Anomaly (°C)': 'Quantity', Direction: 'Category' },
+        encodings: { x: 'Decade', y: 'Anomaly (°C)', color: 'Direction' },
+        data: [['1880s', -0.17], ['1900s', -0.16], ['1920s', -0.27], ['1940s', 0.12], ['1960s', -0.03], ['1980s', 0.26], ['2000s', 0.40], ['2010s', 0.72], ['2020s', 1.02]].map(([Decade, v]) => ({ Decade, 'Anomaly (°C)': v, Direction: (v as number) < 0 ? 'Below average' : 'Above average' })),
     });
 
     // US unemployment 2000–2023 — the recession spikes.
@@ -875,8 +893,279 @@ function buildCases(): PreviewCase[] {
         source: 'The Economist Big Mac index (approx. 2023)',
         license: 'Illustrative (The Economist)',
         semantic_types: { Country: 'Country', 'Price (USD)': 'Quantity' },
-        encodings: { x: 'Country', y: 'Price (USD)' },
+        encodings: { x: 'Price (USD)', y: 'Country' },
         data: [['Switzerland', 8.1], ['Norway', 6.9], ['United States', 5.7], ['Euro area', 5.5], ['UK', 4.9], ['Brazil', 4.5], ['Mexico', 3.9], ['China', 3.5], ['Japan', 3.2], ['Egypt', 2.7], ['South Africa', 2.6], ['India', 2.5]].map(([Country, p]) => ({ Country, 'Price (USD)': p })),
+    });
+
+    // ── Coverage cases ──────────────────────────────────────────────────────
+    // The set above is broad on chart *type* but narrow on chart *shape*: almost
+    // every case is a single un-faceted panel with one series. These add the
+    // configurations that dominate real reporting — small multiples, 100%
+    // stacks, diverging Likert bars, step lines, dashed projections and a
+    // choropleth — so the theme lab has something to say about layout, not just
+    // colour.
+
+    // Small multiples: the same line repeated per country.
+    cases.push({
+        id: 'oecd-unemployment-facet',
+        chartType: 'Line Chart',
+        title: 'Unemployment rate by country, 2000–2022 (%)',
+        blurb: 'Small multiples — four labour markets that behaved nothing alike.',
+        source: 'OECD Labour Force Statistics (harmonised unemployment rate)',
+        license: 'OECD terms (facts re-keyed)',
+        semantic_types: { Year: 'Year', Country: 'Country', 'Unemployment (%)': 'Quantity' },
+        encodings: { x: 'Year', y: 'Unemployment (%)', column: 'Country' },
+        data: ([
+            ['United States', [4.0, 5.1, 9.6, 5.3, 8.1, 3.6]],
+            ['Germany', [7.9, 11.2, 7.0, 4.6, 3.7, 3.1]],
+            ['Japan', [4.7, 4.4, 5.1, 3.4, 2.8, 2.6]],
+            ['Spain', [13.9, 9.2, 19.9, 22.1, 15.5, 12.9]],
+        ] as [string, number[]][]).flatMap(([Country, series]) =>
+            [2000, 2005, 2010, 2015, 2020, 2022].map((Year, i) => ({ Year, Country, 'Unemployment (%)': series[i] })),
+        ),
+    });
+
+    // 100% stacked bar — composition, not magnitude.
+    cases.push({
+        id: 'spending-quintile',
+        chartType: 'Stacked Bar Chart',
+        title: 'Where each income group\'s money goes (share of spending)',
+        blurb: 'A 100% stack: housing eats twice the share at the bottom that it does at the top.',
+        source: 'US Bureau of Labor Statistics, Consumer Expenditure Survey (approx. 2022)',
+        license: 'US-gov (PD)',
+        semantic_types: { Quintile: 'Category', Category: 'Category', 'Spending ($)': 'Quantity' },
+        encodings: { x: 'Quintile', y: 'Spending ($)', color: 'Category' },
+        chartProperties: { stackMode: 'normalize' },
+        data: ([
+            ['Lowest fifth', [12800, 4900, 5100, 2900, 6400]],
+            ['Second fifth', [16100, 7600, 6300, 4000, 10700]],
+            ['Middle fifth', [19400, 10600, 7600, 4700, 16400]],
+            ['Fourth fifth', [24300, 13700, 9100, 6100, 22800]],
+            ['Highest fifth', [36600, 19500, 13400, 8500, 43800]],
+        ] as [string, number[]][]).flatMap(([Quintile, vals]) =>
+            ['Housing', 'Transportation', 'Food', 'Healthcare', 'Everything else'].map((Category, i) => ({
+                Quintile, Category, 'Spending ($)': vals[i],
+            })),
+        ),
+    });
+
+    // Diverging stacked bar — the standard survey/Likert layout.
+    cases.push({
+        id: 'trust-likert',
+        chartType: 'Stacked Bar Chart',
+        title: 'Confidence in US institutions (% of adults)',
+        blurb: 'A Likert bar centred on the neutral split — agreement left, doubt right.',
+        source: 'Pew Research Center / Gallup confidence-in-institutions series (approx. 2023)',
+        license: 'Illustrative (figures re-keyed)',
+        semantic_types: { Institution: 'Category', Response: 'Category', 'Share (%)': 'Quantity' },
+        encodings: { x: 'Share (%)', y: 'Institution', color: 'Response' },
+        chartProperties: { stackMode: 'center' },
+        data: ([
+            ['Scientists', [39, 45, 12, 4]],
+            ['The military', [32, 43, 18, 7]],
+            ['The police', [26, 44, 21, 9]],
+            ['The press', [11, 32, 34, 23]],
+            ['Congress', [8, 30, 38, 24]],
+        ] as [string, number[]][]).flatMap(([Institution, vals]) =>
+            ['A great deal', 'Some', 'Not much', 'None at all'].map((Response, i) => ({
+                Institution, Response, 'Share (%)': vals[i],
+            })),
+        ),
+    });
+
+    // Step line — a policy rate only ever moves in jumps.
+    cases.push({
+        id: 'fed-funds-step',
+        chartType: 'Line Chart',
+        title: 'Federal funds target rate, 2015–2024 (%, upper bound)',
+        blurb: 'A rate that only moves at meetings — interpolation would lie about it.',
+        source: 'US Federal Reserve, FOMC target range (year-end upper bound)',
+        license: 'US-gov (PD)',
+        semantic_types: { Year: 'Year', 'Target rate (%)': 'Quantity' },
+        encodings: { x: 'Year', y: 'Target rate (%)' },
+        chartProperties: { interpolate: 'step' },
+        data: [[2015, 0.5], [2016, 0.75], [2017, 1.5], [2018, 2.5], [2019, 1.75], [2020, 0.25], [2021, 0.25], [2022, 4.5], [2023, 5.5], [2024, 4.75]]
+            .map(([Year, v]) => ({ Year, 'Target rate (%)': v })),
+    });
+
+    // Dashed projection — observed and forecast in one line.
+    cases.push({
+        id: 'renewables-projection',
+        chartType: 'Line Chart',
+        title: 'Global renewable capacity, observed and projected (GW)',
+        blurb: 'One measure, two epistemic states — the dash carries the difference.',
+        source: 'IEA Renewables market report (approx. figures)',
+        license: 'Illustrative (figures re-keyed)',
+        semantic_types: { Year: 'Year', Series: 'Category', 'Capacity (GW)': 'Quantity' },
+        encodings: { x: 'Year', y: 'Capacity (GW)', strokeDash: 'Series' },
+        data: [
+            ...[[2015, 785], [2017, 1080], [2019, 1440], [2021, 1900], [2023, 2560]].map(([Year, v]) => ({ Year, Series: 'Observed', 'Capacity (GW)': v })),
+            ...[[2023, 2560], [2025, 3400], [2027, 4300], [2030, 5800]].map(([Year, v]) => ({ Year, Series: 'Projected', 'Capacity (GW)': v })),
+        ],
+    });
+
+    // Horizontal grouped bar — the survey-topline shape.
+    cases.push({
+        id: 'earnings-education',
+        chartType: 'Grouped Bar Chart',
+        title: 'Median weekly earnings by education and sex, 2023 ($)',
+        blurb: 'Two gaps at once: the education ladder and the gap inside every rung.',
+        source: 'US Bureau of Labor Statistics, usual weekly earnings (2023 annual)',
+        license: 'US-gov (PD)',
+        semantic_types: { Education: 'Category', Sex: 'Category', 'Weekly earnings ($)': 'Quantity' },
+        encodings: { x: 'Weekly earnings ($)', y: 'Education', group: 'Sex' },
+        data: ([
+            // Highest attainment first: an ordinal axis renders its domain top-down, so this
+            // puts the top of the education ladder at the top of the chart.
+            ['Advanced degree', [2160, 1600]],
+            ['Bachelor\'s degree', [1700, 1290]],
+            ['Some college', [1120, 890]],
+            ['High school', [1000, 790]],
+            ['Less than high school', [780, 620]],
+        ] as [string, number[]][]).flatMap(([Education, vals]) =>
+            ['Men', 'Women'].map((Sex, i) => ({ Education, Sex, 'Weekly earnings ($)': vals[i] })),
+        ),
+    });
+
+    // 100% stacked area — share of a whole, over time.
+    cases.push({
+        id: 'electricity-mix-area',
+        chartType: 'Area Chart',
+        title: 'World electricity generation by source, 1990–2020 (share)',
+        blurb: 'Coal holds its share for thirty years while wind and solar appear from nothing.',
+        source: 'IEA / Ember global electricity review (approx. shares)',
+        license: 'Illustrative (figures re-keyed)',
+        semantic_types: { Year: 'Year', Source: 'Category', 'Generation (TWh)': 'Quantity' },
+        encodings: { x: 'Year', y: 'Generation (TWh)', color: 'Source' },
+        chartProperties: { stackMode: 'normalize' },
+        data: ([
+            [1990, [4430, 1780, 2160, 2000, 10, 1580]],
+            [2000, [5990, 2760, 2620, 2590, 80, 1310]],
+            [2010, [8670, 4760, 3440, 2760, 380, 1520]],
+            [2020, [9420, 6270, 4360, 2700, 2720, 1610]],
+        ] as [number, number[]][]).flatMap(([Year, vals]) =>
+            ['Coal', 'Gas', 'Hydro', 'Nuclear', 'Wind & solar', 'Other'].map((Source, i) => ({
+                Year, Source, 'Generation (TWh)': vals[i],
+            })),
+        ),
+    });
+
+    // Choropleth — the one VL template the corpus never exercised.
+    cases.push({
+        id: 'state-unemployment',
+        chartType: 'Choropleth',
+        title: 'Unemployment rate by state, 2023 (%)',
+        blurb: 'The only registered Vega-Lite template the gallery never used.',
+        source: 'US Bureau of Labor Statistics, Local Area Unemployment Statistics (2023 annual)',
+        license: 'US-gov (PD)',
+        semantic_types: { State: 'State', 'Unemployment (%)': 'Quantity' },
+        encodings: { id: 'State', color: 'Unemployment (%)' },
+        data: STATE_UNEMPLOYMENT.map(([State, v]) => ({ State, 'Unemployment (%)': v })),
+    });
+
+    // Long-label horizontal bars — the label is longer than the bar it names.
+    cases.push({
+        id: 'causes-death',
+        chartType: 'Bar Chart',
+        title: 'Leading causes of death, United States, 2022',
+        blurb: 'Every category name is a clinical phrase, and several are longer than the bar they label.',
+        source: 'CDC / National Center for Health Statistics, leading causes of death (approx. 2022)',
+        license: 'US-gov (PD); figures re-keyed',
+        semantic_types: { Cause: 'Category', 'Deaths (thousands)': 'Quantity' },
+        encodings: { y: 'Cause', x: 'Deaths (thousands)' },
+        data: [
+            ['Diseases of heart', 703],
+            ['Malignant neoplasms', 608],
+            ['Unintentional injuries', 227],
+            ['Cerebrovascular diseases', 165],
+            ['Chronic lower respiratory diseases', 148],
+            ['Alzheimer disease', 120],
+            ['Diabetes mellitus', 102],
+            ['Nephritis, nephrotic syndrome and nephrosis', 58],
+            ['Chronic liver disease and cirrhosis', 55],
+            ['Intentional self-harm (suicide)', 49],
+        ].map(([Cause, v]) => ({ Cause, 'Deaths (thousands)': v })),
+    });
+
+    // Fifty categories on one axis — past the point where a category axis can label itself.
+    cases.push({
+        id: 'state-jobless',
+        chartType: 'Bar Chart',
+        title: 'Unemployment rate by state, 2023 (%)',
+        blurb: 'Fifty categories on a single axis, in source order, each needing a readable name.',
+        source: 'US Bureau of Labor Statistics, Local Area Unemployment Statistics (2023 annual)',
+        license: 'US-gov (PD)',
+        semantic_types: { State: 'State', 'Unemployment (%)': 'Quantity' },
+        encodings: { x: 'State', y: 'Unemployment (%)' },
+        data: STATE_UNEMPLOYMENT.map(([State, v]) => ({ State, 'Unemployment (%)': v })),
+    });
+
+    // Dense small multiples — sixteen panels, past the point where each keeps an axis.
+    cases.push({
+        id: 'oecd-facet-16',
+        chartType: 'Line Chart',
+        title: 'Unemployment rate, sixteen OECD economies, 2000–2023 (%)',
+        blurb: 'Sixteen panels: too many for every panel to carry its own axis, too few to give up on labels.',
+        source: 'OECD Labour Force Statistics (harmonised unemployment rate, approx.)',
+        license: 'Illustrative (figures re-keyed)',
+        semantic_types: { Year: 'Year', Country: 'Country', 'Unemployment (%)': 'Quantity' },
+        encodings: { x: 'Year', y: 'Unemployment (%)', column: 'Country' },
+        data: ([
+            ['Australia', [6.3, 4.4, 5.2, 6.1, 3.7]],
+            ['Austria', [4.7, 4.9, 4.8, 5.7, 5.1]],
+            ['Belgium', [6.9, 7.5, 8.3, 8.5, 5.5]],
+            ['Canada', [6.8, 6.0, 8.0, 6.9, 5.4]],
+            ['Denmark', [4.3, 3.8, 7.5, 6.2, 5.1]],
+            ['Finland', [9.8, 6.9, 8.4, 9.4, 7.2]],
+            ['France', [9.0, 8.0, 9.3, 10.4, 7.3]],
+            ['Germany', [7.9, 8.7, 7.0, 4.6, 3.1]],
+            ['Ireland', [4.2, 4.7, 13.9, 9.9, 4.3]],
+            ['Italy', [10.1, 6.1, 8.4, 11.9, 7.7]],
+            ['Japan', [4.7, 3.8, 5.1, 3.4, 2.6]],
+            ['Netherlands', [3.1, 3.6, 5.0, 6.9, 3.6]],
+            ['Norway', [3.2, 2.5, 3.6, 4.4, 3.6]],
+            ['Spain', [13.9, 8.2, 19.9, 22.1, 12.2]],
+            ['Sweden', [5.6, 6.1, 8.6, 7.4, 7.7]],
+            ['United States', [4.0, 4.6, 9.6, 5.3, 3.6]],
+        ] as [string, number[]][]).flatMap(([Country, vals]) =>
+            [2000, 2007, 2010, 2015, 2023].map((Year, i) => ({
+                Year, Country, 'Unemployment (%)': vals[i],
+            })),
+        ),
+    });
+
+    // Uncertainty drawn as geometry — a 95% interval that narrows as the record improves.
+    cases.push({
+        id: 'temp-uncertainty',
+        chartType: 'Range Area Chart',
+        title: 'Global mean temperature anomaly with its 95% interval, 1850–2023',
+        blurb: 'The band is nine times wider in 1850 than in 2023 — the measurement record improving, drawn as geometry.',
+        source: 'Met Office Hadley Centre / UEA CRU, HadCRUT5 global annual anomaly vs 1961–1990 (approx.)',
+        license: 'Illustrative (figures re-keyed)',
+        semantic_types: {
+            Year: 'Year',
+            'Lower (°C)': 'Quantity',
+            'Upper (°C)': 'Quantity',
+            'Anomaly (°C)': 'Quantity',
+        },
+        encodings: { x: 'Year', y: 'Lower (°C)', y2: 'Upper (°C)' },
+        data: ([
+            [1850, -0.42, -0.62, -0.22],
+            [1870, -0.36, -0.53, -0.19],
+            [1890, -0.42, -0.56, -0.28],
+            [1910, -0.44, -0.55, -0.33],
+            [1930, -0.16, -0.25, -0.07],
+            [1950, -0.17, -0.24, -0.10],
+            [1970, -0.08, -0.14, -0.02],
+            [1990, 0.25, 0.20, 0.30],
+            [2010, 0.56, 0.52, 0.60],
+            [2023, 1.11, 1.07, 1.15],
+        ] as [number, number, number, number][]).map(([Year, est, lo, hi]) => ({
+            Year,
+            'Anomaly (°C)': est,
+            'Lower (°C)': lo,
+            'Upper (°C)': hi,
+        })),
     });
 
     return cases;

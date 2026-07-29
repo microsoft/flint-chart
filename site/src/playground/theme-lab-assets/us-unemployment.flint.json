@@ -1,0 +1,147 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Unemployment (%)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 326,
+      "continuousHeight": 240
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 24
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2000",
+        "Unemployment (%)": 4
+      },
+      {
+        "Year": "2001",
+        "Unemployment (%)": 4.7
+      },
+      {
+        "Year": "2002",
+        "Unemployment (%)": 5.8
+      },
+      {
+        "Year": "2003",
+        "Unemployment (%)": 6
+      },
+      {
+        "Year": "2004",
+        "Unemployment (%)": 5.5
+      },
+      {
+        "Year": "2005",
+        "Unemployment (%)": 5.1
+      },
+      {
+        "Year": "2006",
+        "Unemployment (%)": 4.6
+      },
+      {
+        "Year": "2007",
+        "Unemployment (%)": 4.6
+      },
+      {
+        "Year": "2008",
+        "Unemployment (%)": 5.8
+      },
+      {
+        "Year": "2009",
+        "Unemployment (%)": 9.3
+      },
+      {
+        "Year": "2010",
+        "Unemployment (%)": 9.6
+      },
+      {
+        "Year": "2011",
+        "Unemployment (%)": 8.9
+      },
+      {
+        "Year": "2012",
+        "Unemployment (%)": 8.1
+      },
+      {
+        "Year": "2013",
+        "Unemployment (%)": 7.4
+      },
+      {
+        "Year": "2014",
+        "Unemployment (%)": 6.2
+      },
+      {
+        "Year": "2015",
+        "Unemployment (%)": 5.3
+      },
+      {
+        "Year": "2016",
+        "Unemployment (%)": 4.9
+      },
+      {
+        "Year": "2017",
+        "Unemployment (%)": 4.4
+      },
+      {
+        "Year": "2018",
+        "Unemployment (%)": 3.9
+      },
+      {
+        "Year": "2019",
+        "Unemployment (%)": 3.7
+      },
+      {
+        "Year": "2020",
+        "Unemployment (%)": 8.1
+      },
+      {
+        "Year": "2021",
+        "Unemployment (%)": 5.3
+      },
+      {
+        "Year": "2022",
+        "Unemployment (%)": 3.6
+      },
+      {
+        "Year": "2023",
+        "Unemployment (%)": 3.6
+      }
+    ]
+  },
+  "title": {
+    "text": "American unemployment",
+    "subtitle": [
+      "Annual rate, per cent of the labour force, 2000–2023"
+    ]
+  }
+}

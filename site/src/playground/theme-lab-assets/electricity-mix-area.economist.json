@@ -1,0 +1,149 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "Masthead rule added above the plot as a separate vconcat row — brand furniture, no data.",
+    "Colour reassigned so the ramp reads dirty-to-clean — coal and gas take dark slate and rust, the low-carbon sources take the house blues — instead of tableau10's arbitrary assignment, which interleaved fossil and renewable hues. Which hue lands on which source changes; the order of the bands does not.",
+    "Stack order pinned to the sequence the baseline already produces (Coal → Gas → Hydro → Nuclear → Wind & solar → Other) rather than left to 'sort: null'. The spec now states the sequence instead of inheriting it from row order — the sequence itself is untouched, because what sits against the baseline is a claim about the data.",
+    "Y axis moved to the right edge with a 0–100 domain and % labels, which is where the paper puts a value axis so the series' left-hand start is unobstructed.",
+    "Legend moved from a right-hand column to a single horizontal key above the plot, listed in stack order so the key reads bottom-band-first exactly as the chart is built.",
+    "Area interpolation left linear but the band edges given 0.4px white strokes, so adjacent fills separate without a legend lookup at small sizes.",
+    "Gridlines dropped entirely: on a 100% stack the total is constant, so horizontal rules only compete with the band boundaries."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 8, "bottom": 6 },
+  "title": {
+    "text": "Where the power comes from",
+    "subtitle": ["World electricity generation by source, % of total"]
+  },
+  "spacing": 10,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 330,
+      "height": 200,
+      "data": {
+        "values": [
+          { "Year": "1990", "Source": "Coal", "Generation (TWh)": 4430 },
+          { "Year": "1990", "Source": "Gas", "Generation (TWh)": 1780 },
+          { "Year": "1990", "Source": "Hydro", "Generation (TWh)": 2160 },
+          { "Year": "1990", "Source": "Nuclear", "Generation (TWh)": 2000 },
+          { "Year": "1990", "Source": "Wind & solar", "Generation (TWh)": 10 },
+          { "Year": "1990", "Source": "Other", "Generation (TWh)": 1580 },
+          { "Year": "2000", "Source": "Coal", "Generation (TWh)": 5990 },
+          { "Year": "2000", "Source": "Gas", "Generation (TWh)": 2760 },
+          { "Year": "2000", "Source": "Hydro", "Generation (TWh)": 2620 },
+          { "Year": "2000", "Source": "Nuclear", "Generation (TWh)": 2590 },
+          { "Year": "2000", "Source": "Wind & solar", "Generation (TWh)": 80 },
+          { "Year": "2000", "Source": "Other", "Generation (TWh)": 1310 },
+          { "Year": "2010", "Source": "Coal", "Generation (TWh)": 8670 },
+          { "Year": "2010", "Source": "Gas", "Generation (TWh)": 4760 },
+          { "Year": "2010", "Source": "Hydro", "Generation (TWh)": 3440 },
+          { "Year": "2010", "Source": "Nuclear", "Generation (TWh)": 2760 },
+          { "Year": "2010", "Source": "Wind & solar", "Generation (TWh)": 380 },
+          { "Year": "2010", "Source": "Other", "Generation (TWh)": 1520 },
+          { "Year": "2020", "Source": "Coal", "Generation (TWh)": 9420 },
+          { "Year": "2020", "Source": "Gas", "Generation (TWh)": 6270 },
+          { "Year": "2020", "Source": "Hydro", "Generation (TWh)": 4360 },
+          { "Year": "2020", "Source": "Nuclear", "Generation (TWh)": 2700 },
+          { "Year": "2020", "Source": "Wind & solar", "Generation (TWh)": 2720 },
+          { "Year": "2020", "Source": "Other", "Generation (TWh)": 1610 }
+        ]
+      },
+      "mark": { "type": "area", "stroke": "#ffffff", "strokeWidth": 0.4, "interpolate": "linear" },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "title": null,
+          "scale": { "type": "utc" },
+          "axis": {
+            "format": "%Y",
+            "values": ["1990", "2000", "2010", "2020"],
+            "labelFlush": true,
+            "grid": false,
+            "domain": true,
+            "domainColor": "#121317",
+            "ticks": true,
+            "tickColor": "#121317",
+            "tickSize": 4,
+            "labelPadding": 3
+          }
+        },
+        "y": {
+          "field": "Generation (TWh)",
+          "type": "quantitative",
+          "stack": "normalize",
+          "title": null,
+          "axis": {
+            "orient": "right",
+            "format": ".0%",
+            "tickCount": 5,
+            "grid": false,
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 5
+          }
+        },
+        "color": {
+          "field": "Source",
+          "type": "nominal",
+          "title": null,
+          "sort": ["Coal", "Gas", "Hydro", "Nuclear", "Wind & solar", "Other"],
+          "scale": {
+            "domain": ["Coal", "Gas", "Hydro", "Nuclear", "Wind & solar", "Other"],
+            "range": ["#3f5661", "#a1655a", "#006ba2", "#7ba7b8", "#3ebcd2", "#c8b88a"]
+          },
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "symbolType": "square",
+            "symbolSize": 90,
+            "columnPadding": 8,
+            "offset": 4,
+            "padding": 0
+          }
+        },
+        "order": {
+          "field": "Source",
+          "type": "nominal",
+          "sort": ["Coal", "Gas", "Hydro", "Nuclear", "Wind & solar", "Other"]
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9,
+      "labelColor": "#54585a"
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9,
+      "labelColor": "#121317",
+      "symbolStrokeWidth": 0
+    }
+  }
+}

@@ -149,6 +149,60 @@ function maxNonOverlapSize(
 }
 
 /**
+ * Make a stacked mark's segment order match its colour order.
+ *
+ * The assembler expresses "keep the order the data arrived in" as
+ * `color.sort: null`. That governs the legend, but NOT the stack: Vega-Lite
+ * derives the stack's sort from the colour *scale*, and a scale with no
+ * explicit domain falls back to sorting the field ascending — i.e.
+ * alphabetically. The result is a chart whose legend reads
+ * `A great deal, Some, Not much, None at all` while its bars stack
+ * `A great deal, None at all, Not much, Some`. For any ordered series
+ * (a Likert scale, an age band, a size class) that silently destroys the
+ * meaning of the stack.
+ *
+ * Pinning `scale.domain` to the same order makes Vega-Lite emit a
+ * `_<field>_sort_index` and sort the stack by it, so legend and stack agree.
+ * An explicit `sort` array does NOT achieve this — Vega-Lite applies it to
+ * the legend only — which is why the domain is what gets set here.
+ */
+export function alignStackOrderToColorOrder(spec: any, ctx: InstantiateContext): void {
+    const color = spec.encoding?.color;
+    // Only meaningful for a discrete colour series.
+    if (!color?.field || (color.type !== 'nominal' && color.type !== 'ordinal')) return;
+    // Called from stacked templates, where stacking is implicit unless it has
+    // been explicitly switched off (`stackMode: 'layered'` → `stack: null`).
+    const unstacked = (['x', 'y'] as const).some(
+        (axis) => spec.encoding?.[axis] && 'stack' in spec.encoding[axis] &&
+            (spec.encoding[axis].stack === null || spec.encoding[axis].stack === false),
+    );
+    if (unstacked) return;
+    // An explicit domain already pins the order; don't override the caller.
+    if (color.scale?.domain) return;
+
+    // `sort: null` means data order; an array means that array. Anything else
+    // (a field-driven sort spec, "ascending"/"descending") is left alone.
+    let order: any[];
+    if (color.sort === null) {
+        const seen = new Set<any>();
+        order = [];
+        for (const row of ctx.table ?? []) {
+            const v = row?.[color.field];
+            if (v === undefined || v === null || seen.has(v)) continue;
+            seen.add(v);
+            order.push(v);
+        }
+    } else if (Array.isArray(color.sort)) {
+        order = color.sort;
+    } else {
+        return;
+    }
+    if (order.length < 2) return;
+
+    color.scale = { ...(color.scale ?? {}), domain: order };
+}
+
+/**
  * Adjust bar/rect marks for continuous-as-discrete axes.
  * v2 version: reads layout info from InstantiateContext.
  */

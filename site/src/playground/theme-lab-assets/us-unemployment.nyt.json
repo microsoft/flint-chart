@@ -1,0 +1,166 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Y scale forced through zero. A rate that a reader will compare against 'none' has a real zero, and the truncated default made the 2020 spike look like a doubling of an already-high number rather than a jump from 3.7% to 8.1%.",
+    "Line taken to 2.4px in near-black with a round cap and join, so the pandemic spike keeps its corner instead of being rounded off by a hairline.",
+    "The first and last points of the series marked and labelled with their own numbers, taken from the same Unemployment field the line already draws. The endpoints are where a reader starts and stops, and they are the two values a line chart makes hardest to recover — everything between them is read as shape.",
+    "Axis reduced to a horizontal grid of #E4E4E4 hairlines with no y domain and no ticks; the x axis keeps a solid black baseline, which is the paper's standard time-series frame.",
+    "Y title flattened to the unit '%' sitting horizontally above the top gridline instead of a rotated 'Unemployment (%)'.",
+    "Tick labels thinned to four decades plus the final year, and formatted as two-digit years after the first, which is how the paper labels a long series.",
+    "Georgia for the headline and deck, Helvetica for the numbers; the deck states the unit and period so the axis does not have to."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 10, "bottom": 6 },
+  "width": 320,
+  "height": 210,
+  "title": {
+    "text": "American unemployment",
+    "subtitle": ["Annual rate, per cent of the labour force, 2000–2023"]
+  },
+  "data": {
+    "values": [
+      { "Year": "2000", "Unemployment (%)": 4.0 },
+      { "Year": "2001", "Unemployment (%)": 4.7 },
+      { "Year": "2002", "Unemployment (%)": 5.8 },
+      { "Year": "2003", "Unemployment (%)": 6.0 },
+      { "Year": "2004", "Unemployment (%)": 5.5 },
+      { "Year": "2005", "Unemployment (%)": 5.1 },
+      { "Year": "2006", "Unemployment (%)": 4.6 },
+      { "Year": "2007", "Unemployment (%)": 4.6 },
+      { "Year": "2008", "Unemployment (%)": 5.8 },
+      { "Year": "2009", "Unemployment (%)": 9.3 },
+      { "Year": "2010", "Unemployment (%)": 9.6 },
+      { "Year": "2011", "Unemployment (%)": 8.9 },
+      { "Year": "2012", "Unemployment (%)": 8.1 },
+      { "Year": "2013", "Unemployment (%)": 7.4 },
+      { "Year": "2014", "Unemployment (%)": 6.2 },
+      { "Year": "2015", "Unemployment (%)": 5.3 },
+      { "Year": "2016", "Unemployment (%)": 4.9 },
+      { "Year": "2017", "Unemployment (%)": 4.4 },
+      { "Year": "2018", "Unemployment (%)": 3.9 },
+      { "Year": "2019", "Unemployment (%)": 3.7 },
+      { "Year": "2020", "Unemployment (%)": 8.1 },
+      { "Year": "2021", "Unemployment (%)": 5.3 },
+      { "Year": "2022", "Unemployment (%)": 3.6 },
+      { "Year": "2023", "Unemployment (%)": 3.6 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "values": ["2000", "2005", "2010", "2015", "2020", "2023"],
+        "labelExpr": "utcyear(datum.value) === 2000 ? '2000' : utcFormat(datum.value, '’%y')",
+        "labelFlush": true,
+        "grid": false,
+        "domain": true,
+        "domainColor": "#000000",
+        "domainWidth": 1,
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 4,
+        "labelPadding": 3
+      }
+    },
+    "y": {
+      "field": "Unemployment (%)",
+      "type": "quantitative",
+      "title": "%",
+      "scale": { "domain": [0, 10], "nice": false },
+      "axis": {
+        "values": [0, 2, 4, 6, 8, 10],
+        "grid": true,
+        "gridColor": "#e4e4e4",
+        "gridWidth": 1,
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 5,
+        "titleAngle": 0,
+        "titleAlign": "left",
+        "titleX": -4,
+        "titleY": -10,
+        "titleBaseline": "bottom"
+      }
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        { "op": "row_number", "as": "__i" },
+        { "op": "count", "as": "__n" }
+      ],
+      "frame": [null, null],
+      "sort": [{ "field": "Year", "order": "ascending" }]
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "color": "#1a1a1a",
+        "strokeWidth": 2.4,
+        "strokeCap": "round",
+        "strokeJoin": "round"
+      }
+    },
+    {
+      "transform": [
+        { "filter": "datum.__i === 1 || datum.__i === datum.__n" }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 45,
+        "color": "#1a1a1a"
+      }
+    },
+    {
+      "transform": [
+        { "filter": "datum.__i === 1 || datum.__i === datum.__n" }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dy": -7,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 700,
+        "color": "#1a1a1a"
+      },
+      "encoding": {
+        "text": { "field": "Unemployment (%)", "type": "quantitative", "format": ".1f" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Georgia, 'Times New Roman', serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 8
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10,
+      "titleColor": "#666666",
+      "titleFontWeight": 400
+    }
+  }
+}

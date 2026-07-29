@@ -7,6 +7,7 @@ const pages = [
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },
   { to: 'demo-wall', label: 'Demo wall' },
+  { to: 'theme-labs', label: 'Theme lab' },
   { to: 'full-test-cases', label: 'Full test cases' },
 ];
 

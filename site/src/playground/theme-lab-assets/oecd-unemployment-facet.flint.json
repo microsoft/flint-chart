@@ -1,0 +1,184 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Unemployment (%)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "facet": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "columns": 4
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 105,
+      "continuousHeight": 155
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "axisY": {
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "legend": {
+      "labelFontSize": 9,
+      "titleFontSize": 9
+    },
+    "headerFacet": {
+      "labelLimit": 125
+    },
+    "facet": {
+      "spacing": 11
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2000",
+        "Country": "United States",
+        "Unemployment (%)": 4
+      },
+      {
+        "Year": "2005",
+        "Country": "United States",
+        "Unemployment (%)": 5.1
+      },
+      {
+        "Year": "2010",
+        "Country": "United States",
+        "Unemployment (%)": 9.6
+      },
+      {
+        "Year": "2015",
+        "Country": "United States",
+        "Unemployment (%)": 5.3
+      },
+      {
+        "Year": "2020",
+        "Country": "United States",
+        "Unemployment (%)": 8.1
+      },
+      {
+        "Year": "2022",
+        "Country": "United States",
+        "Unemployment (%)": 3.6
+      },
+      {
+        "Year": "2000",
+        "Country": "Germany",
+        "Unemployment (%)": 7.9
+      },
+      {
+        "Year": "2005",
+        "Country": "Germany",
+        "Unemployment (%)": 11.2
+      },
+      {
+        "Year": "2010",
+        "Country": "Germany",
+        "Unemployment (%)": 7
+      },
+      {
+        "Year": "2015",
+        "Country": "Germany",
+        "Unemployment (%)": 4.6
+      },
+      {
+        "Year": "2020",
+        "Country": "Germany",
+        "Unemployment (%)": 3.7
+      },
+      {
+        "Year": "2022",
+        "Country": "Germany",
+        "Unemployment (%)": 3.1
+      },
+      {
+        "Year": "2000",
+        "Country": "Japan",
+        "Unemployment (%)": 4.7
+      },
+      {
+        "Year": "2005",
+        "Country": "Japan",
+        "Unemployment (%)": 4.4
+      },
+      {
+        "Year": "2010",
+        "Country": "Japan",
+        "Unemployment (%)": 5.1
+      },
+      {
+        "Year": "2015",
+        "Country": "Japan",
+        "Unemployment (%)": 3.4
+      },
+      {
+        "Year": "2020",
+        "Country": "Japan",
+        "Unemployment (%)": 2.8
+      },
+      {
+        "Year": "2022",
+        "Country": "Japan",
+        "Unemployment (%)": 2.6
+      },
+      {
+        "Year": "2000",
+        "Country": "Spain",
+        "Unemployment (%)": 13.9
+      },
+      {
+        "Year": "2005",
+        "Country": "Spain",
+        "Unemployment (%)": 9.2
+      },
+      {
+        "Year": "2010",
+        "Country": "Spain",
+        "Unemployment (%)": 19.9
+      },
+      {
+        "Year": "2015",
+        "Country": "Spain",
+        "Unemployment (%)": 22.1
+      },
+      {
+        "Year": "2020",
+        "Country": "Spain",
+        "Unemployment (%)": 15.5
+      },
+      {
+        "Year": "2022",
+        "Country": "Spain",
+        "Unemployment (%)": 12.9
+      }
+    ]
+  },
+  "title": {
+    "text": "Out of work",
+    "subtitle": [
+      "Unemployment rate, %, 2000–2022"
+    ]
+  }
+}

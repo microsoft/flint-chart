@@ -1,7 +1,7 @@
 """Area Chart template."""
 from __future__ import annotations
 
-from .utils import default_build_encodings, set_mark_prop
+from .utils import default_build_encodings, set_mark_prop, align_stack_order_to_color_order
 
 
 def _apply_interpolate(vg_spec, config):
@@ -34,6 +34,7 @@ def _area_instantiate(spec, ctx):
                 if enc and (enc.get("type") == "quantitative" or enc.get("aggregate")):
                     spec["encoding"][axis]["stack"] = None if stack_mode == "layered" else stack_mode
                     break
+    align_stack_order_to_color_order(spec, ctx)
 
 
 area_chart_def = {
@@ -92,6 +93,7 @@ def _streamgraph_instantiate(spec, ctx):
         x_enc["stack"] = "center"
         x_enc["axis"] = None
     _apply_interpolate(spec, ctx.get("chartProperties"))
+    align_stack_order_to_color_order(spec, ctx)
 
 
 streamgraph_def = {

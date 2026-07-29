@@ -1,0 +1,131 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "The legend is deleted and each line is named at its end — the same conclusion the NYT row reaches on this data, by the same reasoning. Worth recording as a convergence rather than dressing up as a difference: on a ranked bar these two languages disagreed about whether to print numbers, and on four separated lines they do not disagree at all. The design decision is forced by the chart, not by the house.",
+    "Year axis cut to its endpoints, 2018 and 2023. The series is four unevenly spaced observations, so a tick at every one implies the gaps are equal; labelling only the span states the period and leaves the line to describe the path.",
+    "Horizontal grid at #C9D3DA in 25-point steps, no vertical rules, no axis domain. The grid is the same weight this language uses on every other time series here, which is what makes the rows comparable at all.",
+    "Palette drawn from the house set — #006BA2, #3EBCD2, #A1655A, #7BA7B8 — in the baseline's series order, pinned by an explicit colour domain so the assignment cannot drift. The red is spent on the masthead tab and nothing else, so no country reads as flagged.",
+    "Series order left exactly as the baseline has it: Norway, China, Germany, United States.",
+    "Red 26×3 masthead tab, 9.5pt labels, no frame: the subtitle already states the unit, so an axis title would be the same words twice."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 86, "bottom": 8 },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": ["Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 290,
+      "height": 200,
+      "data": {
+        "values": [
+          { "Year": "2018", "Country": "Norway", "EV share (%)": 49 },
+          { "Year": "2020", "Country": "Norway", "EV share (%)": 75 },
+          { "Year": "2022", "Country": "Norway", "EV share (%)": 88 },
+          { "Year": "2023", "Country": "Norway", "EV share (%)": 93 },
+          { "Year": "2018", "Country": "China", "EV share (%)": 4 },
+          { "Year": "2020", "Country": "China", "EV share (%)": 6 },
+          { "Year": "2022", "Country": "China", "EV share (%)": 29 },
+          { "Year": "2023", "Country": "China", "EV share (%)": 38 },
+          { "Year": "2018", "Country": "Germany", "EV share (%)": 2 },
+          { "Year": "2020", "Country": "Germany", "EV share (%)": 13 },
+          { "Year": "2022", "Country": "Germany", "EV share (%)": 31 },
+          { "Year": "2023", "Country": "Germany", "EV share (%)": 25 },
+          { "Year": "2018", "Country": "United States", "EV share (%)": 2 },
+          { "Year": "2020", "Country": "United States", "EV share (%)": 2 },
+          { "Year": "2022", "Country": "United States", "EV share (%)": 8 },
+          { "Year": "2023", "Country": "United States", "EV share (%)": 10 }
+        ]
+      },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "title": null,
+          "scale": { "type": "utc" },
+          "axis": {
+            "values": ["2018", "2023"],
+            "format": "%Y",
+            "grid": false,
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 4
+          }
+        },
+        "y": {
+          "field": "EV share (%)",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true, "nice": false, "domain": [0, 100] },
+          "axis": {
+            "values": [0, 25, 50, 75, 100],
+            "format": "d",
+            "grid": true,
+            "gridColor": "#c9d3da",
+            "domain": false,
+            "ticks": false
+          }
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "legend": null,
+          "scale": {
+            "domain": ["Norway", "China", "Germany", "United States"],
+            "range": ["#006ba2", "#3ebcd2", "#a1655a", "#7ba7b8"]
+          }
+        }
+      },
+      "layer": [
+        { "mark": { "type": "line", "strokeWidth": 2 } },
+        {
+          "transform": [{ "filter": "utcyear(datum.Year) === 2023" }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 6,
+            "fontSize": 9.5,
+            "fontWeight": 600
+          },
+          "encoding": { "text": { "field": "Country", "type": "nominal" } }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

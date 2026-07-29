@@ -1,0 +1,120 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "The key is kept and the shares are printed as well — the category named twice, once in the legend and once against its own wedge. Every other language here treats that as waste and picks one. A figure that will be reproduced at column width, photocopied and cited on its own cannot assume the reader has the caption, so this is the third cluster in a row where this language answers a problem by adding rather than removing.",
+    "Palette is the Okabe-Ito colour-vision-safe set with grey for Other. Flint's tableau10 puts a green and an orange of near-equal lightness on the two 12 per cent slices; under deuteranopia those are one hue, and the two arcs are the same size, so the pair becomes genuinely unreadable rather than merely hard.",
+    "1.5px white separators, which is what keeps two arcs legible as two shapes once hue is unreliable.",
+    "Values are unavoidable here. Safari and Edge are both 12 per cent, and equal angles at different orientations cannot be compared; this is the one form where no language gets to trust the geometry.",
+    "Type at 8.5pt throughout so the key fits beside a 190-point plot without the figure growing.",
+    "Slice order left exactly as the baseline has it, clockwise from twelve o'clock in source order."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 10, "bottom": 6 },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": ["Desktop browser share, 2024, per cent"]
+  },
+  "width": 190,
+  "height": 165,
+  "data": {
+    "values": [
+      { "Browser": "Chrome", "Share": 65 },
+      { "Browser": "Safari", "Share": 12 },
+      { "Browser": "Edge", "Share": 12 },
+      { "Browser": "Firefox", "Share": 6 },
+      { "Browser": "Other", "Share": 5 }
+    ]
+  },
+  "transform": [
+    { "window": [{ "op": "row_number", "as": "__i" }], "frame": [null, null] },
+    {
+      "window": [{ "op": "sum", "field": "Share", "as": "__cum" }],
+      "sort": [{ "field": "__i", "order": "ascending" }],
+      "frame": [null, 0]
+    },
+    { "calculate": "(datum.__cum - datum.Share) / 100 * 2 * PI", "as": "__start" },
+    { "calculate": "datum.__cum / 100 * 2 * PI", "as": "__end" },
+    { "calculate": "(datum.__cum - datum.Share / 2) / 100 * 2 * PI", "as": "__mid" },
+    { "calculate": "datum.Share + '%'", "as": "__pct" }
+  ],
+  "encoding": {
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "title": null,
+      "scale": {
+        "domain": ["Chrome", "Safari", "Edge", "Firefox", "Other"],
+        "range": ["#0072b2", "#e69f00", "#009e73", "#cc79a7", "#999999"]
+      },
+      "legend": {
+        "orient": "right",
+        "labelFontSize": 8.5,
+        "labelColor": "#000000",
+        "symbolType": "square",
+        "symbolSize": 60,
+        "symbolStrokeWidth": 0,
+        "offset": 4
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "arc", "outerRadius": 58, "stroke": "#ffffff", "strokeWidth": 1.5 },
+      "encoding": {
+        "theta": {
+          "field": "__start",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "theta2": { "field": "__end" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid < PI" }],
+      "mark": { "type": "text", "radius": 66, "align": "left", "baseline": "middle", "fontSize": 8.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__pct", "type": "nominal" },
+        "color": { "value": "#000000" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid >= PI" }],
+      "mark": { "type": "text", "radius": 66, "align": "right", "baseline": "middle", "fontSize": 8.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__pct", "type": "nominal" },
+        "color": { "value": "#000000" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "legend": { "labelFont": "Arial, Helvetica, sans-serif" },
+    "text": { "font": "Arial, Helvetica, sans-serif" }
+  }
+}

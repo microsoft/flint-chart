@@ -1,0 +1,1000 @@
+{
+  "$comment": "ThemeSpecs for the six Theme Lab design languages, expressed in themespec.v6. Values are measured from the hand-authored redesigns, not invented. `coverage` records, per case, whether v6 is sufficient for a compiler to reach the hand-authored result.",
+  "schema": "https://flint.dev/schema/themespec/v12",
+  "themes": {
+    "nyt": {
+      "id": "nyt",
+      "label": "New York Times",
+      "ink": {
+        "surface": {
+          "source": "host"
+        },
+        "text": {
+          "primary": "#121212",
+          "secondary": "#6b6b6b",
+          "muted": "#8a8a8a",
+          "inverse": "#ffffff"
+        },
+        "structure": {
+          "grid": "#e4e4e4",
+          "axis": "#121212",
+          "rule": "#121212"
+        },
+        "series": {
+          "single": "#2f6b9a",
+          "categorical": [
+            "#2f6b9a",
+            "#c2352b",
+            "#4a8b6f",
+            "#7f6a9e",
+            "#d9a441"
+          ],
+          "diverging": {
+            "stops": [
+              "#2f6b9a",
+              "#8fb4cc",
+              "#efece5",
+              "#dd9a86",
+              "#c2352b"
+            ],
+            "neutral": "#efece5",
+            "space": "lab",
+            "endpointsAgainstSurface": true,
+            "consumption": "interpolate"
+          },
+          "overflow": "#9e9e9e",
+          "status": {
+            "positive": "#2f6b9a",
+            "negative": "#c2352b",
+            "neutral": "#9e9e9e"
+          },
+          "selection": {
+            "signed": "status",
+            "statusUse": "anySigned"
+          }
+        },
+        "accent": "#c2352b"
+      },
+      "type": {
+        "minSize": 8,
+        "headline": {
+          "family": "Georgia, serif",
+          "size": "text.400",
+          "weight": "bold",
+          "color": "#121212"
+        },
+        "deck": {
+          "family": "Georgia, serif",
+          "size": "text.200",
+          "color": "#6b6b6b"
+        },
+        "axisLabel": {
+          "family": "Helvetica, Arial, sans-serif",
+          "size": "text.100"
+        },
+        "valueLabel": {
+          "family": "Helvetica, Arial, sans-serif",
+          "size": "text.100",
+          "weight": "bold"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "full",
+            "ticks": "omit",
+            "tickLabels": "sparse"
+          },
+          "measure": {
+            "line": "omit",
+            "ticks": "omit",
+            "tickDensity": "sparse"
+          }
+        },
+        "grid": {
+          "measure": "quiet",
+          "category": "omit",
+          "style": "solid"
+        },
+        "frame": "omit",
+        "baseline": "full"
+      },
+      "marks": {
+        "bandFraction": 0.72,
+        "strokeWeight": 2.4,
+        "strokeCap": "round",
+        "strokeJoin": "round",
+        "zOrder": "summaryOverData",
+        "redundantEncoding": "whenNeeded",
+        "redundantChannels": [
+          "dash"
+        ]
+      },
+      "labels": {
+        "truncation": "never",
+        "flush": true
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "seriesEnd",
+          "top"
+        ],
+        "title": "omit",
+        "suppressWhenValuesPrinted": false
+      },
+      "dataLabels": {
+        "show": "always",
+        "placement": "atMark",
+        "inkMode": "contrastWithMark"
+      },
+      "annotation": {
+        "axisTitles": "omit",
+        "axisTitlePlacement": "flatAboveAxis",
+        "unit": "lastTick",
+        "pointEmphasis": "endpoints",
+        "numberFormat": {
+          "precision": "auto",
+          "thousands": "suffix"
+        }
+      },
+      "layout": {
+        "density": "normal",
+        "titleBlock": {
+          "anchor": "start"
+        }
+      }
+    },
+    "economist": {
+      "id": "economist",
+      "label": "The Economist",
+      "ink": {
+        "surface": {
+          "source": "host"
+        },
+        "text": {
+          "primary": "#121317",
+          "secondary": "#54585a",
+          "muted": "#8b9196"
+        },
+        "structure": {
+          "grid": "#c9d3da",
+          "axis": "#121317",
+          "rule": "#c9d3da"
+        },
+        "series": {
+          "single": "#006ba2",
+          "categorical": [
+            "#3f5661",
+            "#a1655a",
+            "#006ba2",
+            "#7ba7b8",
+            "#3ebcd2",
+            "#c8b88a"
+          ],
+          "diverging": {
+            "stops": [
+              "#006ba2",
+              "#7ba7b8",
+              "#e9e5dc",
+              "#c8967a",
+              "#a1655a"
+            ],
+            "neutral": "#e9e5dc",
+            "space": "lab",
+            "endpointsAgainstSurface": true,
+            "consumption": "interpolate"
+          },
+          "status": {
+            "positive": "#006ba2",
+            "negative": "#e3120b",
+            "neutral": "#b8c4cc"
+          },
+          "selection": {
+            "signed": "status",
+            "statusUse": "anySigned"
+          }
+        },
+        "accent": "#e3120b"
+      },
+      "type": {
+        "minSize": 8,
+        "headline": {
+          "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+          "size": "text.300",
+          "weight": "bold"
+        },
+        "deck": {
+          "size": "text.200",
+          "color": "#54585a"
+        },
+        "axisLabel": {
+          "size": "text.100"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "full",
+            "ticks": "omit"
+          },
+          "measure": {
+            "line": "omit",
+            "ticks": "omit",
+            "placement": "default"
+          }
+        },
+        "grid": {
+          "measure": "quiet",
+          "category": "omit",
+          "style": "solid"
+        },
+        "frame": "omit",
+        "baseline": "full"
+      },
+      "marks": {
+        "bandFraction": 0.68,
+        "strokeWeight": 1.6,
+        "interval": {
+          "fillOpacity": 0.22,
+          "edge": "quiet",
+          "inkSource": "sameAsCentral"
+        }
+      },
+      "labels": {
+        "truncation": "never",
+        "angle": "auto"
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "seriesEnd",
+          "top"
+        ],
+        "direction": "horizontal",
+        "title": "omit"
+      },
+      "dataLabels": {
+        "show": "whenTheyFit",
+        "placement": "atMark"
+      },
+      "annotation": {
+        "axisTitles": "omit",
+        "unit": "everyTick"
+      },
+      "furniture": [
+        {
+          "kind": "mastheadTab",
+          "anchor": "topLeft",
+          "color": "#e3120b",
+          "width": 26,
+          "height": 3
+        }
+      ],
+      "layout": {
+        "density": "compact",
+        "titleBlock": {
+          "anchor": "start"
+        }
+      },
+      "variants": [
+        {
+          "when": {
+            "markChannel": "length"
+          },
+          "then": {
+            "structure": {
+              "axis": {
+                "measure": {
+                  "placement": "opposite"
+                }
+              }
+            }
+          },
+          "because": "Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
+        },
+        {
+          "when": {
+            "isPartToWhole": true
+          },
+          "then": {
+            "structure": {
+              "axis": {
+                "measure": {
+                  "placement": "opposite"
+                }
+              }
+            }
+          },
+          "because": "Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+        }
+      ]
+    },
+    "nature": {
+      "id": "nature",
+      "label": "Nature",
+      "ink": {
+        "surface": {
+          "source": "host"
+        },
+        "text": {
+          "primary": "#000000",
+          "secondary": "#000000"
+        },
+        "structure": {
+          "axis": "#000000",
+          "grid": "#00000000",
+          "frame": "#000000"
+        },
+        "series": {
+          "single": "#0072b2",
+          "categorical": [
+            "#0072b2",
+            "#e69f00",
+            "#009e73",
+            "#cc79a7",
+            "#56b4e9",
+            "#d55e00"
+          ],
+          "diverging": {
+            "stops": [
+              "#0072b2",
+              "#83b9db",
+              "#ffffff",
+              "#eba06a",
+              "#d55e00"
+            ],
+            "neutral": "#ffffff",
+            "space": "lab",
+            "endpointsAgainstSurface": false,
+            "consumption": "interpolate"
+          },
+          "overflow": "#999999",
+          "selection": {
+            "partToWhole": "categorical"
+          }
+        },
+        "accent": "#000000"
+      },
+      "type": {
+        "minSize": 8.5,
+        "headline": {
+          "family": "Arial, Helvetica, sans-serif",
+          "size": "text.200",
+          "weight": "bold"
+        },
+        "deck": {
+          "size": "text.100",
+          "case": "asIs"
+        },
+        "axisLabel": {
+          "family": "Arial, Helvetica, sans-serif",
+          "size": "text.100"
+        },
+        "axisTitle": {
+          "family": "Arial, Helvetica, sans-serif",
+          "size": "text.100"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "full",
+            "ticks": "full",
+            "tickLength": "long",
+            "tickDirection": "outward"
+          },
+          "measure": {
+            "line": "full",
+            "ticks": "full",
+            "tickLength": "long",
+            "tickDirection": "outward"
+          }
+        },
+        "grid": {
+          "measure": "omit",
+          "category": "omit"
+        },
+        "frame": "omit",
+        "baseline": "quiet"
+      },
+      "marks": {
+        "bandFraction": 0.55,
+        "strokeWeight": 1.2,
+        "separator": {
+          "presence": "hairline",
+          "source": "surface",
+          "width": 0.5
+        },
+        "point": {
+          "presence": "full",
+          "size": 26,
+          "fill": "solid",
+          "halo": {
+            "presence": "hairline",
+            "width": 0.6
+          }
+        },
+        "interval": {
+          "fillOpacity": 0.25,
+          "edge": "omit",
+          "inkSource": "sameAsCentral"
+        },
+        "summary": {
+          "fill": "omit",
+          "outline": "full",
+          "centralRule": "emphasised",
+          "widthFraction": 0.4
+        },
+        "observations": {
+          "expose": "always",
+          "maxRows": 400
+        },
+        "zOrder": "summaryUnderData",
+        "redundantEncoding": "always",
+        "redundantChannels": [
+          "shape"
+        ]
+      },
+      "labels": {
+        "truncation": "never"
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "right",
+          "inside"
+        ],
+        "title": "whenAmbiguous",
+        "suppressWhenAxisNames": true
+      },
+      "dataLabels": {
+        "show": "whenTheyFit",
+        "placement": "outsideMark"
+      },
+      "annotation": {
+        "axisTitles": "always",
+        "axisTitlePlacement": "rotated",
+        "unitsInAxisTitle": true,
+        "statistics": {
+          "show": [
+            "n",
+            "r2",
+            "slope"
+          ],
+          "placement": "panel"
+        }
+      },
+      "layout": {
+        "density": "compact",
+        "targetWidth": 252,
+        "titleBlock": {
+          "anchor": "start"
+        }
+      }
+    },
+    "mckinsey": {
+      "id": "mckinsey",
+      "label": "McKinsey",
+      "ink": {
+        "surface": {
+          "source": "host"
+        },
+        "text": {
+          "primary": "#051c2c",
+          "secondary": "#5a6872",
+          "muted": "#8a969d"
+        },
+        "structure": {
+          "axis": "#051c2c",
+          "rule": "#d3dce1"
+        },
+        "series": {
+          "single": "#051c2c",
+          "categorical": [
+            "#051c2c",
+            "#2251ff",
+            "#00a9f4",
+            "#00cfb4",
+            "#8c9ba5"
+          ],
+          "sequential": {
+            "stops": [
+              "#eef3f8",
+              "#cfdcea",
+              "#9db8d2",
+              "#5b82ab",
+              "#051c2c"
+            ],
+            "space": "lab",
+            "endpointsAgainstSurface": true,
+            "consumption": "interpolate",
+            "$note": "Stated light-to-dark. browser-pie.mckinsey samples the same navy ramp in reverse for a categorical part-to-whole; temp-heatmap.mckinsey interpolates it. One ramp, two consumptions."
+          },
+          "selection": {
+            "partToWhole": "sequentialRamp",
+            "signed": "sequential"
+          }
+        },
+        "accent": "#2251ff"
+      },
+      "type": {
+        "minSize": 9,
+        "headline": {
+          "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+          "size": "text.300",
+          "weight": "bold"
+        },
+        "axisLabel": {
+          "size": "text.200"
+        },
+        "valueLabel": {
+          "size": "text.200",
+          "weight": "semibold",
+          "color": "#051c2c"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "omit",
+            "ticks": "omit"
+          },
+          "measure": {
+            "line": "omit",
+            "ticks": "omit"
+          }
+        },
+        "grid": {
+          "measure": "omit",
+          "category": "omit"
+        },
+        "frame": "omit",
+        "baseline": "full"
+      },
+      "marks": {
+        "bandFraction": 0.62,
+        "strokeWeight": 2,
+        "connector": {
+          "presence": "hairline",
+          "weight": 0.8
+        },
+        "separator": {
+          "presence": "hairline",
+          "source": "surface",
+          "width": 0.6
+        }
+      },
+      "labels": {
+        "truncation": "never",
+        "angle": "horizontal"
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "seriesEnd",
+          "inline",
+          "top"
+        ],
+        "direction": "horizontal",
+        "title": "omit",
+        "suppressWhenValuesPrinted": true
+      },
+      "dataLabels": {
+        "show": "always",
+        "placement": "column",
+        "inkMode": "contrastWithMark"
+      },
+      "annotation": {
+        "axisTitles": "omit",
+        "numberFormat": {
+          "precision": "integer",
+          "thousands": "separator"
+        }
+      },
+      "layout": {
+        "density": "airy",
+        "titleBlock": {
+          "anchor": "start"
+        }
+      }
+    },
+    "datawrapper": {
+      "id": "datawrapper",
+      "label": "Datawrapper",
+      "ink": {
+        "surface": {
+          "source": "host"
+        },
+        "text": {
+          "primary": "#333333",
+          "secondary": "#666666",
+          "muted": "#999999"
+        },
+        "structure": {
+          "grid": "#dcdcdc",
+          "rule": "#dcdcdc",
+          "axis": "#333333"
+        },
+        "series": {
+          "single": "#18a1cd",
+          "categorical": [
+            "#18a1cd",
+            "#e2a233",
+            "#c04a4a",
+            "#2d8659",
+            "#7e5aa2"
+          ],
+          "sequential": {
+            "stops": [
+              "#dceef6",
+              "#a9d3e6",
+              "#6aabcc",
+              "#2f7fa8",
+              "#0b5c82"
+            ],
+            "space": "lab",
+            "consumption": "quantize",
+            "quantizeCount": 5
+          },
+          "diverging": {
+            "stops": [
+              "#2f7fa8",
+              "#a9d3e6",
+              "#f0ece4",
+              "#e8ac70",
+              "#c04a4a"
+            ],
+            "neutral": "#f0ece4",
+            "space": "lab",
+            "endpointsAgainstSurface": true,
+            "consumption": "quantize",
+            "quantizeCount": 5
+          },
+          "selection": {}
+        },
+        "accent": "#18a1cd"
+      },
+      "type": {
+        "minSize": 11,
+        "headline": {
+          "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+          "size": "text.300",
+          "weight": "bold"
+        },
+        "axisLabel": {
+          "size": "text.200"
+        },
+        "keyLabel": {
+          "size": "text.200"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "full",
+            "ticks": "omit"
+          },
+          "measure": {
+            "line": "omit",
+            "ticks": "omit"
+          }
+        },
+        "grid": {
+          "measure": "quiet",
+          "category": "omit",
+          "style": "dashed"
+        },
+        "frame": "omit",
+        "baseline": "quiet"
+      },
+      "marks": {
+        "bandFraction": 0.66,
+        "separator": {
+          "presence": "hairline",
+          "source": "surface",
+          "width": 1.5
+        },
+        "connector": {
+          "presence": "hairline",
+          "weight": 1
+        }
+      },
+      "labels": {
+        "truncation": "never"
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "top"
+        ],
+        "direction": "horizontal",
+        "title": "omit"
+      },
+      "dataLabels": {
+        "show": "whenTheyFit",
+        "placement": "outsideMark"
+      },
+      "annotation": {
+        "axisTitles": "omit",
+        "unit": "lastTick",
+        "numberFormat": {
+          "precision": "auto"
+        }
+      },
+      "furniture": [
+        {
+          "kind": "footerRule",
+          "anchor": "bottomLeft",
+          "color": "#dcdcdc",
+          "height": 1
+        }
+      ],
+      "interaction": {
+        "tooltipFormat": "matchKey"
+      },
+      "layout": {
+        "density": "normal",
+        "targetWidth": 300,
+        "titleBlock": {
+          "anchor": "start"
+        }
+      }
+    },
+    "powerbi": {
+      "id": "powerbi",
+      "label": "Power BI",
+      "ink": {
+        "surface": {
+          "source": "house",
+          "canvas": "#1b1a19",
+          "plot": "#1b1a19",
+          "panel": "#252423"
+        },
+        "text": {
+          "primary": "#f3f2f1",
+          "secondary": "#c8c6c4",
+          "muted": "#a19f9d",
+          "inverse": "#1b1a19"
+        },
+        "structure": {
+          "grid": "#3b3a39",
+          "axis": "#3b3a39",
+          "rule": "#3b3a39"
+        },
+        "series": {
+          "single": "#118dff",
+          "categorical": [
+            "#118dff",
+            "#12239e",
+            "#e66c37",
+            "#6b007b",
+            "#e044a7",
+            "#744ec2"
+          ],
+          "diverging": {
+            "stops": [
+              "#118dff",
+              "#5aa9f0",
+              "#4a4948",
+              "#e08a4a",
+              "#d64550"
+            ],
+            "neutral": "#4a4948",
+            "space": "lab",
+            "endpointsAgainstSurface": true,
+            "consumption": "interpolate"
+          },
+          "status": {
+            "positive": "#22b14c",
+            "negative": "#e66c37",
+            "neutral": "#a19f9d"
+          },
+          "selection": {
+            "signed": "diverging",
+            "statusUse": "thresholdOnly",
+            "redundantWithFacet": "single"
+          }
+        },
+        "accent": "#118dff"
+      },
+      "type": {
+        "minSize": 8,
+        "headline": {
+          "family": "'Segoe UI', system-ui, sans-serif",
+          "size": "text.200",
+          "weight": "semibold",
+          "color": "#f3f2f1"
+        },
+        "display": {
+          "family": "'Segoe UI', system-ui, sans-serif",
+          "size": "text.hero900",
+          "weight": "semibold"
+        },
+        "axisLabel": {
+          "family": "'Segoe UI', system-ui, sans-serif",
+          "size": "text.100",
+          "color": "#c8c6c4"
+        },
+        "keyLabel": {
+          "size": "text.100",
+          "color": "#c8c6c4"
+        }
+      },
+      "structure": {
+        "axis": {
+          "categorical": {
+            "line": "omit",
+            "ticks": "omit"
+          },
+          "measure": {
+            "line": "omit",
+            "ticks": "omit",
+            "tickDensity": "sparse"
+          }
+        },
+        "grid": {
+          "measure": "quiet",
+          "category": "omit",
+          "style": "dashed"
+        },
+        "frame": "omit",
+        "baseline": "quiet"
+      },
+      "marks": {
+        "strokeWeight": 2.2,
+        "strokeCap": "square",
+        "minSize": 1.5,
+        "separator": {
+          "presence": "hairline",
+          "source": "surface",
+          "width": 1
+        },
+        "trailingFill": {
+          "presence": "quiet",
+          "opacity": 0.18
+        },
+        "reference": {
+          "presence": "full",
+          "style": "tick",
+          "label": true,
+          "weight": 2
+        }
+      },
+      "labels": {
+        "truncation": "never"
+      },
+      "legend": {
+        "show": "always",
+        "placement": [
+          "right",
+          "bottom"
+        ],
+        "title": "omit",
+        "gradientLength": 90,
+        "suppressWhenValuesPrinted": false
+      },
+      "dataLabels": {
+        "show": "whenTheyFit",
+        "placement": "atMark",
+        "inkMode": "contrastWithMark"
+      },
+      "annotation": {
+        "axisTitles": "omit",
+        "unit": "everyTick",
+        "pointEmphasis": "latest",
+        "numberFormat": {
+          "precision": "auto"
+        }
+      },
+      "facets": {
+        "header": {
+          "presence": "full",
+          "style": "flushLabel",
+          "fieldTitle": "omit"
+        },
+        "panelFrame": "omit",
+        "axisRepetition": "edgeOnly",
+        "preferredColumns": 4,
+        "sharedScale": "whenComparable"
+      },
+      "layout": {
+        "density": "compact",
+        "titleBlock": {
+          "anchor": "start"
+        }
+      }
+    }
+  },
+  "coverage": {
+    "$comment": "status: `full` = v6 is sufficient for a compiler; `partial` = reachable but one stated move is not derivable; `blocked` = a required move is outside the ThemeSpec by construction.",
+    "electricity-mix-area": {
+      "status": "blocked",
+      "notes": [
+        "Colour assigned by domain meaning: coal and gas take dark slate and rust so the ramp reads dirty-to-clean. No compiler-resolvable signal distinguishes coal from wind. This is editorial knowledge, not a theme policy."
+      ]
+    },
+    "gdp-bartable": {
+      "status": "blocked",
+      "notes": [
+        "A two-panel hconcat is collapsed into one plot. §7 forbids the ThemeSpec from altering composition, and this redesign depends on it."
+      ]
+    },
+    "us-pyramid": {
+      "status": "full",
+      "notes": [
+        "Reclassified in iteration 11. 'Male' and 'Female' are titles over the two halves of the plot, not names attached to marks, so this case supports no legend placement at all - it is `annotation`/title territory. It had been counted as direct labelling only because the draft implementation derived the two words by filtering the data to the '75+' band. Fixing that removed Datawrapper's only series-end evidence."
+      ]
+    },
+    "stock-candle": {
+      "status": "blocked",
+      "notes": [
+        "A temporal scale is converted to ordinal to delete non-trading gaps. That changes what the x position means, so it is semantic."
+      ]
+    },
+    "penguins-box": {
+      "status": "partial",
+      "notes": [
+        "Whisker extent changed from 1.5×IQR to min-max. A statistical definition, not a treatment — correctly outside the ThemeSpec, but the redesign needs it."
+      ]
+    },
+    "faithful-hist": {
+      "status": "partial",
+      "notes": [
+        "Bin width stated rather than inferred. Binning changes the claim, so it is semantic."
+      ]
+    },
+    "exam-ecdf": {
+      "status": "partial",
+      "notes": [
+        "Curve extended to both edges of the score range so the function starts at 0 and reaches 1. A domain decision."
+      ]
+    },
+    "driving": {
+      "status": "partial",
+      "notes": [
+        "Zero baseline dropped. Zero inclusion is semantic — and NYT drops it here while forcing it in us-unemployment, so there is no house policy to encode."
+      ]
+    },
+    "keeling": {
+      "status": "partial",
+      "notes": [
+        "Zero baseline dropped, same reasoning."
+      ]
+    },
+    "renewable-kpi": {
+      "status": "partial",
+      "notes": [
+        "Flint emits '67% of 45' as a string literal; the redesign computes it. A template-quality fix, not a theming act."
+      ]
+    },
+    "trust-likert": {
+      "status": "partial",
+      "notes": [
+        "stackMode 'center' is a no-op when every row totals 100, so the chart is not the diverging Likert it declares. A chart-type capability gap."
+      ]
+    },
+    "renewable-bullet": {
+      "status": "partial",
+      "notes": [
+        "Qualitative bands are not comparable across rows; the redesign replaces them. A semantic repair."
+      ]
+    },
+    "temp-heatmap": {
+      "status": "full",
+      "notes": [
+        "The continuous-colour cluster, added in iteration 9. All six languages redesign the same heatmap, so the ramp policy is separated from the chart that asked for it.",
+        "Confirms that ranked `legend.placement` degrades on its own: NYT, Economist and McKinsey all rank `seriesEnd` first, which a continuous ramp cannot realize, so grounding falls through to `top` and every one of them keeps a boxed legend - without the theme naming an exception.",
+        "Forced two fields - `ink.series.selection.signed: sequential` (McKinsey) and `legend.suppressWhenValuesPrinted` (McKinsey again). The repeated appearance of `suppressWhen*` flags is what eventually exposed `keying` as a legend block, in iteration 10.",
+        "Nature's ramp neutral is #FFFFFF, which is also its surface. Dropping the cell stroke follows from comparing `ramp.neutral` to the resolved surface, so it needs no new field - but it is the first case where the MIDPOINT, not the endpoints, collides with the paper."
+      ]
+    },
+    "state-unemployment": {
+      "status": "partial",
+      "notes": [
+        "`consumption: quantize` with `quantizeCount: 5` reaches the banded scale and the swatch key. What it does not reach is the break FORMAT: at one significant figure the five bands read 2%, 3%, 3%, 4%, 4%, and the renderer then drops the collisions. Choosing the precision that makes breaks distinct is a numeric decision the ThemeSpec cannot make without seeing the domain."
+      ]
+    }
+  },
+  "$evidence": "ink.series.sequential / .diverging are measured from every redesign in the lab that carries a continuous colour scale: state-unemployment.datawrapper (quantized sequential) and temp-heatmap in all six languages (diverging, except McKinsey). browser-pie.mckinsey samples a ramp categorically. temp-anomaly.nyt looks continuous but is nominal Below/Above average, so it is ink.series.status. McKinsey carries no diverging ramp because the house has no warm ink: on temp-heatmap it answers a signed measure with a single-hue sequential wash plus printed values, which is a measured house decision rather than a gap. Nature is the only language whose ramp does not hold its endpoints against the surface - its midpoint IS the surface, which is why its cells are left unstroked."
+}

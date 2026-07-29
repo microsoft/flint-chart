@@ -11,7 +11,7 @@ import {
 } from '../../core/axis-detection';
 import {
     defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
-    resolveAsDiscrete,
+    resolveAsDiscrete, alignStackOrderToColorOrder,
 } from './utils';
 
 const HEATMAP_SCHEME_COLORS: Record<string, [string, string]> = {
@@ -366,6 +366,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
                 }
             }
         }
+        alignStackOrderToColorOrder(spec, ctx);
         adjustBarMarks(spec, ctx);
     },
     properties: [

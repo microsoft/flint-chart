@@ -1,0 +1,110 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Legend deleted, every slice named on the page next to its own wedge. Flint's key sits to the right in source order, so reading the chart means matching five hues to five words and carrying the match back into the circle. With the name written against the arc there is nothing to match.",
+    "The share is printed with the name. This is not a stylistic addition: Safari and Edge are both on 12 per cent, and as two arcs of equal angle at different orientations that tie is unconfirmable by eye. Angle is the one channel where a language cannot decide to trust the geometry — which is why the values-or-axis split that separates these six on a bar chart has nothing to bite on here.",
+    "Palette reduced to four working hues plus grey for Other. Flint's tableau10 gives Other a saturated purple, the same weight as Chrome, which makes a residual category look like a finding.",
+    "White separators at 1.5px so two adjacent arcs stay two shapes.",
+    "Serif headline, small grey deck, no frame, no fill behind the circle.",
+    "Slice order left exactly as the baseline has it, clockwise from twelve o'clock in source order."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 10, "bottom": 8 },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": ["Desktop browser share, 2024, per cent"]
+  },
+  "width": 250,
+  "height": 205,
+  "data": {
+    "values": [
+      { "Browser": "Chrome", "Share": 65 },
+      { "Browser": "Safari", "Share": 12 },
+      { "Browser": "Edge", "Share": 12 },
+      { "Browser": "Firefox", "Share": 6 },
+      { "Browser": "Other", "Share": 5 }
+    ]
+  },
+  "transform": [
+    { "window": [{ "op": "row_number", "as": "__i" }], "frame": [null, null] },
+    {
+      "window": [{ "op": "sum", "field": "Share", "as": "__cum" }],
+      "sort": [{ "field": "__i", "order": "ascending" }],
+      "frame": [null, 0]
+    },
+    { "calculate": "(datum.__cum - datum.Share) / 100 * 2 * PI", "as": "__start" },
+    { "calculate": "datum.__cum / 100 * 2 * PI", "as": "__end" },
+    { "calculate": "(datum.__cum - datum.Share / 2) / 100 * 2 * PI", "as": "__mid" },
+    { "calculate": "datum.Browser + ' ' + datum.Share + '%'", "as": "__lab" }
+  ],
+  "encoding": {
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "domain": ["Chrome", "Safari", "Edge", "Firefox", "Other"],
+        "range": ["#2f6b9a", "#c2352b", "#5c8a3c", "#9a6c3f", "#9e9e9e"]
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "arc", "outerRadius": 62, "stroke": "#ffffff", "strokeWidth": 1.5 },
+      "encoding": {
+        "theta": {
+          "field": "__start",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "theta2": { "field": "__end" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid < PI" }],
+      "mark": { "type": "text", "radius": 70, "align": "left", "baseline": "middle", "fontSize": 10.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__lab", "type": "nominal" },
+        "color": { "value": "#121212" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid >= PI" }],
+      "mark": { "type": "text", "radius": 70, "align": "right", "baseline": "middle", "fontSize": 10.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__lab", "type": "nominal" },
+        "color": { "value": "#121212" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 10,
+      "lineHeight": 19,
+      "subtitleFont": "Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "text": { "font": "Helvetica, Arial, sans-serif" }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Flint's pyramid is upside down. It passes 'sort: null', so the age bands stay in source order and 0–14 lands at the top with 75+ at the bottom. Every population pyramid ever printed runs youngest at the base; Flint's reads as an inverted one, which is exactly the shape a reader interprets as a collapsing birth rate. The order is pinned here.",
+    "The two-panel hconcat collapsed into one plot with one axis. Flint mirrors by giving the left panel 'scale: {reverse: true}' and the right panel its own scale, so there are two independent rulers and the reader has to verify they match. Male counts are negated in a transform, and a single axis labels them with abs(), so the two halves are provably on the same scale.",
+    "'Male' and 'Female' stay what they were in Flint: titles for the two halves of the pyramid. They are set in the series colours and dropped to label weight, but they are headings for a region of the plot, not names attached to marks. They are pinned to the top of the plot area with their own two-row constant source, so they sit where a title sits and do not move if the data changes; the earlier draft derived them by filtering the data to the '75+' band, which made a title masquerade as a mark label.",
+    "Blue-for-boys, red-for-girls dropped. Datawrapper's #18A1CD and #E2A233 carry the split without importing a convention the data does not contain, and they stay distinguishable in greyscale and to the ~8% of men with a red–green deficiency.",
+    "Value labels added at every bar end. A pyramid is read for shape, but the 75+ band — 10 million men against 15 million women — is the one fact here that shape alone rounds away.",
+    "11pt type floor, dashed #DCDCDC vertical gridlines behind the bars, no frame, and a hairline footer row to close the block. The zero line is the same gridline as the others, promoted to near-black by a conditional gridColor rather than drawn as an extra layer.",
+    "Flint's 'opacity: 0.9' removed; it lightens the bars against the gridlines for no stated reason."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 14, "bottom": 8 },
+  "title": {
+    "text": "A pyramid that is no longer a pyramid",
+    "subtitle": ["United States population by age and sex, 2020, millions"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "width": 290,
+      "height": 190,
+      "data": {
+        "values": [
+          { "Age": "0–14", "Sex": "Male", "Population": 31 },
+          { "Age": "0–14", "Sex": "Female", "Population": 30 },
+          { "Age": "15–29", "Sex": "Male", "Population": 34 },
+          { "Age": "15–29", "Sex": "Female", "Population": 32 },
+          { "Age": "30–44", "Sex": "Male", "Population": 33 },
+          { "Age": "30–44", "Sex": "Female", "Population": 33 },
+          { "Age": "45–59", "Sex": "Male", "Population": 30 },
+          { "Age": "45–59", "Sex": "Female", "Population": 31 },
+          { "Age": "60–74", "Sex": "Male", "Population": 26 },
+          { "Age": "60–74", "Sex": "Female", "Population": 28 },
+          { "Age": "75+", "Sex": "Male", "Population": 10 },
+          { "Age": "75+", "Sex": "Female", "Population": 15 }
+        ]
+      },
+      "transform": [
+        { "calculate": "datum.Sex === 'Male' ? -datum.Population : datum.Population", "as": "__signed" }
+      ],
+      "encoding": {
+        "x": {
+          "field": "__signed",
+          "type": "quantitative",
+          "stack": null,
+          "title": null,
+          "scale": { "nice": false, "domain": [-40, 40] },
+          "axis": {
+            "values": [-30, -20, -10, 0, 10, 20, 30],
+            "labelExpr": "abs(datum.value)",
+            "grid": true,
+            "gridColor": {
+              "condition": { "test": "datum.value === 0", "value": "#333333" },
+              "value": "#dcdcdc"
+            },
+            "gridDash": {
+              "condition": { "test": "datum.value === 0", "value": [] },
+              "value": [2, 2]
+            },
+            "domain": false,
+            "ticks": false
+          }
+        },
+        "y": {
+          "field": "Age",
+          "type": "nominal",
+          "title": null,
+          "sort": ["75+", "60–74", "45–59", "30–44", "15–29", "0–14"],
+          "scale": { "paddingInner": 0.3 },
+          "axis": { "grid": false, "domain": false, "ticks": false, "labelPadding": 6 }
+        },
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "scale": { "domain": ["Male", "Female"], "range": ["#18a1cd", "#e2a233"] },
+          "legend": null
+        }
+      },
+      "layer": [
+        { "mark": { "type": "bar" } },
+        {
+          "transform": [{ "filter": "datum.Sex === 'Male'" }],
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "baseline": "middle",
+            "dx": -5,
+            "fontSize": 10.5
+          },
+          "encoding": {
+            "text": { "field": "Population", "type": "quantitative", "format": "d" },
+            "color": { "value": "#333333" }
+          }
+        },
+        {
+          "transform": [{ "filter": "datum.Sex === 'Female'" }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 5,
+            "fontSize": 10.5
+          },
+          "encoding": {
+            "text": { "field": "Population", "type": "quantitative", "format": "d" },
+            "color": { "value": "#333333" }
+          }
+        },
+        {
+          "data": {
+            "values": [
+              { "__half": "Male", "__halfX": -20 },
+              { "__half": "Female", "__halfX": 20 }
+            ]
+          },
+          "mark": { "type": "text", "baseline": "bottom", "dy": -8, "fontSize": 11, "fontWeight": 600 },
+          "encoding": {
+            "x": { "field": "__halfX", "type": "quantitative" },
+            "y": { "value": 0 },
+            "text": { "field": "__half", "type": "nominal" },
+            "color": {
+              "field": "__half",
+              "type": "nominal",
+              "scale": { "domain": ["Male", "Female"], "range": ["#18a1cd", "#e2a233"] },
+              "legend": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#dcdcdc", "stroke": null },
+      "width": 310,
+      "height": 1,
+      "view": { "stroke": null }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "lineHeight": 18,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "subtitleLineHeight": 15
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "labelPadding": 5,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10.5,
+      "titleFontWeight": 400,
+      "titleColor": "#767676",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333"
+    }
+  }
+}

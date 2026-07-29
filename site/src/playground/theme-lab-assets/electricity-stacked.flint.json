@@ -1,0 +1,140 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Share",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Source",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10",
+        "domain": [
+          "Nuclear",
+          "Renewables",
+          "Fossil"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "France",
+        "Source": "Nuclear",
+        "Share": 65
+      },
+      {
+        "Country": "France",
+        "Source": "Renewables",
+        "Share": 27
+      },
+      {
+        "Country": "France",
+        "Source": "Fossil",
+        "Share": 8
+      },
+      {
+        "Country": "Germany",
+        "Source": "Renewables",
+        "Share": 52
+      },
+      {
+        "Country": "Germany",
+        "Source": "Fossil",
+        "Share": 45
+      },
+      {
+        "Country": "Germany",
+        "Source": "Nuclear",
+        "Share": 3
+      },
+      {
+        "Country": "United States",
+        "Source": "Fossil",
+        "Share": 60
+      },
+      {
+        "Country": "United States",
+        "Source": "Nuclear",
+        "Share": 18
+      },
+      {
+        "Country": "United States",
+        "Source": "Renewables",
+        "Share": 22
+      },
+      {
+        "Country": "China",
+        "Source": "Fossil",
+        "Share": 62
+      },
+      {
+        "Country": "China",
+        "Source": "Renewables",
+        "Share": 33
+      },
+      {
+        "Country": "China",
+        "Source": "Nuclear",
+        "Share": 5
+      },
+      {
+        "Country": "Brazil",
+        "Source": "Renewables",
+        "Share": 89
+      },
+      {
+        "Country": "Brazil",
+        "Source": "Fossil",
+        "Share": 9
+      },
+      {
+        "Country": "Brazil",
+        "Source": "Nuclear",
+        "Share": 2
+      }
+    ]
+  },
+  "title": {
+    "text": "Electricity generation mix by country, 2023 (%)"
+  }
+}

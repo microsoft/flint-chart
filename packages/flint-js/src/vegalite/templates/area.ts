@@ -3,7 +3,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { makeCartesianPivot } from '../../core/pivot';
-import { defaultBuildEncodings, setMarkProp } from './utils';
+import { defaultBuildEncodings, setMarkProp, alignStackOrderToColorOrder } from './utils';
 
 const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -147,6 +147,7 @@ export const areaChartDef: ChartTemplateDef = {
         } else if (config?.stackMode !== 'layered') {
             interpolateSparseStack(spec, ctx);
         }
+        alignStackOrderToColorOrder(spec, ctx);
     },
     properties: [
         interpolateConfigProperty,
@@ -196,6 +197,7 @@ export const streamgraphDef: ChartTemplateDef = {
         // A streamgraph is always centre-stacked → interpolate sparse gaps so the
         // stack stays continuous (see interpolateSparseStack).
         interpolateSparseStack(spec, ctx);
+        alignStackOrderToColorOrder(spec, ctx);
     },
     properties: [interpolateConfigProperty] as ChartPropertyDef[],
 };

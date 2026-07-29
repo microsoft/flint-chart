@@ -1,0 +1,188 @@
+{
+  "_readme": [
+    "Canonical headline text for the theme lab. The SAME title and subtitle strings are",
+    "stamped onto both columns: `scripts/dump-flint-specs.ts` writes them into every",
+    "`<id>.flint.json` baseline (Flint itself has no title support — ChartAssemblyInput",
+    "has no title field — so a consumer has to post-process the spec), and each",
+    "hand-authored `<id>.<theme>.json` carries the identical strings.",
+    "",
+    "Holding the words constant is the point: it removes the confound where a bespoke",
+    "redesign looks better merely because it has a headline and the baseline does not.",
+    "What differs between the two columns is typography, anchoring, spacing and colour —",
+    "never the information.",
+    "",
+    "Cases with no entry here fall back to the corpus title from new-case-preview-data.ts",
+    "and get no subtitle. Duplicating strings that also live in the corpus is deliberate:",
+    "the theme lab owns its own text so specs can be tuned without touching the gallery."
+  ],
+  "headlines": {
+    "ev-share": {
+      "title": "Electric cars as a share of new sales",
+      "subtitle": "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
+    },
+    "renewable-kpi": {
+      "title": "Renewables supply 30% of the world's electricity",
+      "subtitle": "Share of global electricity generation, 2023, against a 45% target"
+    },
+    "renewable-bullet": {
+      "title": "Every country is short of its renewable target",
+      "subtitle": "Renewable share of electricity, 2023, per cent, against national targets"
+    },
+    "stock-candle": {
+      "title": "Two weeks of a stock going nowhere",
+      "subtitle": "Daily open, high, low and close, 2–12 January 2024"
+    },
+    "us-pyramid": {
+      "title": "A pyramid that is no longer a pyramid",
+      "subtitle": "United States population by age and sex, 2020, millions"
+    },
+    "co2-lollipop": {
+      "title": "Emissions per person run from 37 tonnes to 2",
+      "subtitle": "Carbon dioxide emissions per capita, 2022, tonnes"
+    },
+    "browser-pie": {
+      "title": "Chrome holds two-thirds of the desktop market",
+      "subtitle": "Desktop browser share, 2024, per cent"
+    },
+    "gdp-bartable": {
+      "title": "America and China lap the field",
+      "subtitle": "Gross domestic product, 2023, trillion US dollars"
+    },
+    "population-waterfall": {
+      "title": "Asia added more people than the world held in 1950",
+      "subtitle": "Contribution to world population growth by region, 1950–2020, millions"
+    },
+    "lifeexp-dumbbell": {
+      "title": "Women outlive men everywhere, but not by the same margin",
+      "subtitle": "Life expectancy at birth by sex, 2021, years"
+    },
+    "faithful-hist": {
+      "title": "Old Faithful eruption durations",
+      "subtitle": "Two clusters, not one: short eruptions near 2 min and long ones near 4 min"
+    },
+    "penguins-violin": {
+      "title": "Body mass by penguin species",
+      "subtitle": "Kernel density with all observations overlaid; horizontal rule marks the median"
+    },
+    "auto-mpg": {
+      "title": "Power against fuel economy",
+      "subtitle": "Ordinary least squares fit; each point is one car model"
+    },
+    "life-expectancy": {
+      "title": "Two decades of longer lives",
+      "subtitle": "Life expectancy at birth, years, 2000 and 2021"
+    },
+    "seattle-range": {
+      "title": "Seattle, month by month",
+      "subtitle": "Average daily high and low temperature, °F, 1991–2020 normals"
+    },
+    "gapminder-bubble": {
+      "title": "Money buys years, up to a point",
+      "subtitle": "Life expectancy against GDP per capita, 2018; bubble area is population"
+    },
+    "driving": {
+      "title": "Driving shifts into reverse",
+      "subtitle": "Miles driven per person against the price of a gallon of gas, United States, 1956–2010"
+    },
+    "olympic-bump": {
+      "title": "Four Games, four different stories",
+      "subtitle": "Rank in the Summer Olympics medal table, 2012–2024"
+    },
+    "population-stream": {
+      "title": "Where the world's people are",
+      "subtitle": "Population by region, 1950–2020, millions"
+    },
+    "keeling": {
+      "title": "Keeling Curve",
+      "subtitle": "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million"
+    },
+    "temp-anomaly": {
+      "title": "Global temperature anomaly by decade",
+      "subtitle": "°C against the 1951–1980 average"
+    },
+    "us-unemployment": {
+      "title": "American unemployment",
+      "subtitle": "Annual rate, per cent of the labour force, 2000–2023"
+    },
+    "renewables-projection": {
+      "title": "Global renewable capacity",
+      "subtitle": "Gigawatts installed, observed to 2023 and projected to 2030"
+    },
+    "big-mac": {
+      "title": "The price of a Big Mac",
+      "subtitle": "2023, converted to US dollars at market exchange rates"
+    },
+    "oecd-unemployment-facet": {
+      "title": "Out of work",
+      "subtitle": "Unemployment rate, %, 2000–2022"
+    },
+    "electricity-mix-area": {
+      "title": "Where the power comes from",
+      "subtitle": "World electricity generation by source, % of total"
+    },
+    "penguins": {
+      "title": "Flipper length versus body mass in three penguin species",
+      "subtitle": "Palmer Archipelago, Antarctica; n = 33"
+    },
+    "penguins-box": {
+      "title": "Body mass of three Pygoscelis species",
+      "subtitle": "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"
+    },
+    "exam-ecdf": {
+      "title": "Empirical distribution of exam scores",
+      "subtitle": "n = 30; circles mark individual scores"
+    },
+    "population": {
+      "title": "Most populous countries, 2023",
+      "subtitle": "Population in millions"
+    },
+    "earnings-education": {
+      "title": "Median weekly earnings by education and sex, 2023",
+      "subtitle": "US dollars, full-time wage and salary workers"
+    },
+    "spending-quintile": {
+      "title": "Where each income group's money goes",
+      "subtitle": "Share of annual household spending, by income quintile"
+    },
+    "population-region": {
+      "title": "World population by region",
+      "subtitle": "1950–2020, millions of people"
+    },
+    "trust-likert": {
+      "title": "Confidence in US institutions",
+      "subtitle": "% of adults expressing each level of confidence"
+    },
+    "state-unemployment": {
+      "title": "Unemployment rate by state, 2023",
+      "subtitle": "Annual average, % of the civilian labour force"
+    },
+    "temp-heatmap": {
+      "title": "Average monthly temperature",
+      "subtitle": "°C, climate normals, four cities"
+    },
+    "fed-funds-step": {
+      "title": "Federal funds target rate",
+      "subtitle": "Upper bound at year end, %"
+    },
+    "kpi-sparkline": {
+      "title": "Monthly KPIs",
+      "subtitle": "Twelve-month trend and latest value"
+    },
+    "causes-death": {
+      "title": "What Americans die of",
+      "subtitle": "Leading causes of death, United States, 2022, thousands of deaths"
+    },
+    "state-jobless": {
+      "title": "Unemployment by state",
+      "subtitle": "Annual average unemployment rate, 50 US states, 2023, per cent"
+    },
+    "oecd-facet-16": {
+      "title": "Sixteen labour markets, one shock",
+      "subtitle": "Harmonised unemployment rate, selected OECD economies, 2000–2023, per cent"
+    },
+    "temp-uncertainty": {
+      "title": "The record gets more certain as it gets warmer",
+      "subtitle": "Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C"
+    }
+  }
+}

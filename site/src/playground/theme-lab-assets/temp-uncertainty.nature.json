@@ -1,0 +1,100 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "The central estimate drawn inside its own interval. Flint's Range Area template has channels for y and y2 and none for the value the interval is about, so the anomaly — the number every sentence about this dataset quotes — is in the table and not on the chart. A confidence band with no estimate in it states the uncertainty and withholds the result.",
+    "The band's edges unstroked. Flint outlines the area, which draws a 95% interval as though it had a hard boundary at exactly 1.96σ; the whole content of the interval is that its edge is soft. Fill only, no line.",
+    "Axis title rewritten from 'Lower (°C), Upper (°C)' to the quantity being measured. Flint concatenates the names of the two encoded fields, which names the geometry rather than the variable and implies the panel shows two different things.",
+    "Zero pinned as a labelled tick. The series is an anomaly against the 1961–1990 mean, so zero is not an arbitrary round number — it is the definition of the baseline, and a reader cannot interpret a value of −0.42 without it.",
+    "Okabe–Ito blue at two weights: the band at 25% and the estimate line at full strength. The pair survives greyscale conversion and every form of colour blindness, because the distinction carried is lightness, not hue.",
+    "Column-width geometry — 89 mm at 8.5pt, hairline L-spines, outward ticks, no gridlines, and units in the axis title as the caption cannot supply them."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 8, "bottom": 4 },
+  "width": 240,
+  "height": 160,
+  "title": {
+    "text": "The record gets more certain as it gets warmer",
+    "subtitle": ["Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C"]
+  },
+  "data": {
+    "values": [
+      { "Year": "1850", "Anomaly (°C)": -0.42, "Lower (°C)": -0.62, "Upper (°C)": -0.22 },
+      { "Year": "1870", "Anomaly (°C)": -0.36, "Lower (°C)": -0.53, "Upper (°C)": -0.19 },
+      { "Year": "1890", "Anomaly (°C)": -0.42, "Lower (°C)": -0.56, "Upper (°C)": -0.28 },
+      { "Year": "1910", "Anomaly (°C)": -0.44, "Lower (°C)": -0.55, "Upper (°C)": -0.33 },
+      { "Year": "1930", "Anomaly (°C)": -0.16, "Lower (°C)": -0.25, "Upper (°C)": -0.07 },
+      { "Year": "1950", "Anomaly (°C)": -0.17, "Lower (°C)": -0.24, "Upper (°C)": -0.1 },
+      { "Year": "1970", "Anomaly (°C)": -0.08, "Lower (°C)": -0.14, "Upper (°C)": -0.02 },
+      { "Year": "1990", "Anomaly (°C)": 0.25, "Lower (°C)": 0.2, "Upper (°C)": 0.3 },
+      { "Year": "2010", "Anomaly (°C)": 0.56, "Lower (°C)": 0.52, "Upper (°C)": 0.6 },
+      { "Year": "2023", "Anomaly (°C)": 1.11, "Lower (°C)": 1.07, "Upper (°C)": 1.15 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": "Year",
+      "axis": { "format": "%Y", "tickCount": 6, "labelFlush": true }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "area", "color": "#0072b2", "opacity": 0.25, "line": false },
+      "encoding": {
+        "y": {
+          "field": "Lower (°C)",
+          "type": "quantitative",
+          "title": "Temperature anomaly (°C)",
+          "scale": { "zero": false, "nice": false, "domain": [-0.8, 1.3] },
+          "axis": { "values": [-0.5, 0, 0.5, 1], "format": ".1f" }
+        },
+        "y2": { "field": "Upper (°C)" }
+      }
+    },
+    {
+      "mark": { "type": "line", "color": "#0072b2", "strokeWidth": 1.3 },
+      "encoding": {
+        "y": { "field": "Anomaly (°C)", "type": "quantitative" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "labelPadding": 2,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "titlePadding": 4,
+      "grid": false,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 3.5
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "mark": {
+    "type": "bar",
+    "cornerRadius": 2,
+    "height": {
+      "band": 0.7
+    }
+  },
+  "encoding": {
+    "y": {
+      "field": "Task",
+      "type": "nominal",
+      "sort": {
+        "field": "Start",
+        "op": "min",
+        "order": "ascending"
+      },
+      "axis": {
+        "title": null
+      }
+    },
+    "x": {
+      "field": "Start",
+      "type": "temporal",
+      "axis": {
+        "title": null
+      }
+    },
+    "x2": {
+      "field": "End"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "data": {
+    "values": [
+      {
+        "Task": "Planning",
+        "Start": "2024-01-01",
+        "End": "2024-01-14"
+      },
+      {
+        "Task": "Design",
+        "Start": "2024-01-15",
+        "End": "2024-02-04"
+      },
+      {
+        "Task": "Implementation",
+        "Start": "2024-02-05",
+        "End": "2024-03-17"
+      },
+      {
+        "Task": "Testing",
+        "Start": "2024-03-11",
+        "End": "2024-04-07"
+      },
+      {
+        "Task": "Launch",
+        "Start": "2024-04-08",
+        "End": "2024-04-15"
+      }
+    ]
+  },
+  "title": {
+    "text": "Software release schedule"
+  }
+}

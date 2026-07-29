@@ -128,7 +128,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `showOutliers` | toggle | on / off | `true` | always | Outliers |
+| `showPoints` | toggle | on / off | `false` | conditional | Overlay point markers on the line. |
+| `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 
 ### ![](chart-icon-violin.svg) Violin Plot
 

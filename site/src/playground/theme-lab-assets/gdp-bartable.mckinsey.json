@@ -1,0 +1,95 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "The two-panel hconcat collapsed into one plot. Flint builds a bar table as a 180px chart glued to a 66px text panel driven by a fake 'x: {datum: 1}' scale and a duplicated '__bt_displayTable'. The same result — label, bar, number — is one layered spec, and the number now sits at the end of the bar it belongs to instead of in a detached column the eye has to re-associate by row.",
+    "One measure, one colour: every bar in a flat brand blue #2251FF. Flint maps GDP to both bar length and a #cdebd3→#41a25f ramp — the same number encoded twice, which buys no information and implies a continuous scale the reader has no key for. Length already carries the quantity.",
+    "Value axis deleted; the numbers are on the marks. Nothing here needs traversal to a ruler.",
+    "The 105px labelPadding / 105px labelLimit hack removed. Flint pushes country names 105px right and then truncates them at exactly the same width, which is how 'United States' ends up at the edge of clipping. Ordinary right-aligned axis labels do the job.",
+    "Row order pinned in the spec rather than inherited from row position — the rendered sequence is the baseline's — and the x domain padded to 31 so the labels sit outside the bars."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 26, "bottom": 8 },
+  "title": {
+    "text": "America and China lap the field",
+    "subtitle": ["Gross domestic product, 2023, trillion US dollars"]
+  },
+  "width": 250,
+  "height": 200,
+  "data": {
+    "values": [
+      { "Country": "United States", "GDP ($T)": 27.4 },
+      { "Country": "China", "GDP ($T)": 17.8 },
+      { "Country": "Germany", "GDP ($T)": 4.5 },
+      { "Country": "Japan", "GDP ($T)": 4.2 },
+      { "Country": "India", "GDP ($T)": 3.9 },
+      { "Country": "UK", "GDP ($T)": 3.3 },
+      { "Country": "France", "GDP ($T)": 3 },
+      { "Country": "Brazil", "GDP ($T)": 2.2 }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": { "field": "GDP ($T)", "op": "max", "order": "descending" },
+      "title": null,
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 6 }
+    },
+    "x": {
+      "field": "GDP ($T)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 31] },
+      "axis": null
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "height": { "band": 0.62 }, "color": "#2251ff" }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "text": { "field": "GDP ($T)", "type": "quantitative", "format": ".1f" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#5c6b75",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#8fa0ab",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

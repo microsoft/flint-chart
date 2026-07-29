@@ -283,7 +283,7 @@ describe('ECharts sparse grouped boxplot', () => {
 
   it('offsets global outliers onto their boxplot lane', () => {
     const option = assembleECharts(sparseInput('global')) as any;
-    const outliers = option.series.find((series: any) => series.name === 'G1 (outliers)');
+    const outliers = option.series.find((series: any) => series.name === 'G1 (points)');
     expect(outliers?.type).toBe('custom');
 
     const api = {

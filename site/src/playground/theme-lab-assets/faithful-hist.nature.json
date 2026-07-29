@@ -1,0 +1,119 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "Bin width stated rather than inferred. Flint's 'bin: true' hands the choice to d3's default, so the histogram's shape is a function of a heuristic the reader cannot see. Here it is a fixed 0.5-minute step over [1.5, 5], which gives the seven bins the square-root rule recommends for n = 36 — a number that can be written into a methods line and reproduced.",
+    "n printed on the axis title. A count histogram whose sample size is not stated cannot be compared with any other panel, and 36 observations is small enough that the bimodality claim depends on knowing it.",
+    "Bars given a white 0.5px separator and a flat Okabe–Ito blue fill. In greyscale the separator is what keeps adjacent bins from merging into one silhouette — the figure has to survive being printed without colour.",
+    "Frame replaced by black L-shaped spines with outward 3.5pt ticks and no gridlines. A gridline behind a bar is measuring the bar's own edge; the spine and tick do the job with less ink.",
+    "Both axis titles carry their unit explicitly (minutes, count), which is the one piece of chrome a figure panel is not allowed to drop.",
+    "Geometry cut to 89 mm column width with 8.5pt labels and 4px padding, so the panel is legible at the size it will actually be printed rather than at the size it was designed."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 6, "bottom": 4 },
+  "width": 230,
+  "height": 160,
+  "title": {
+    "text": "Old Faithful eruption durations",
+    "subtitle": ["Two clusters, not one: short eruptions near 2 min and long ones near 4 min"]
+  },
+  "data": {
+    "values": [
+      { "Duration (min)": 3.6 },
+      { "Duration (min)": 1.8 },
+      { "Duration (min)": 3.333 },
+      { "Duration (min)": 2.283 },
+      { "Duration (min)": 4.533 },
+      { "Duration (min)": 2.883 },
+      { "Duration (min)": 4.7 },
+      { "Duration (min)": 3.6 },
+      { "Duration (min)": 1.95 },
+      { "Duration (min)": 4.35 },
+      { "Duration (min)": 1.833 },
+      { "Duration (min)": 3.917 },
+      { "Duration (min)": 4.2 },
+      { "Duration (min)": 1.75 },
+      { "Duration (min)": 4.7 },
+      { "Duration (min)": 2.167 },
+      { "Duration (min)": 1.75 },
+      { "Duration (min)": 4.8 },
+      { "Duration (min)": 1.6 },
+      { "Duration (min)": 4.25 },
+      { "Duration (min)": 1.8 },
+      { "Duration (min)": 1.75 },
+      { "Duration (min)": 3.45 },
+      { "Duration (min)": 3.067 },
+      { "Duration (min)": 4.533 },
+      { "Duration (min)": 3.6 },
+      { "Duration (min)": 1.967 },
+      { "Duration (min)": 4.083 },
+      { "Duration (min)": 3.85 },
+      { "Duration (min)": 4.433 },
+      { "Duration (min)": 4.3 },
+      { "Duration (min)": 4.467 },
+      { "Duration (min)": 3.367 },
+      { "Duration (min)": 4.033 },
+      { "Duration (min)": 3.833 },
+      { "Duration (min)": 2.017 }
+    ]
+  },
+  "mark": {
+    "type": "bar",
+    "color": "#0072b2",
+    "stroke": "#ffffff",
+    "strokeWidth": 0.5
+  },
+  "encoding": {
+    "x": {
+      "field": "Duration (min)",
+      "type": "quantitative",
+      "bin": { "step": 0.5, "extent": [1.5, 5] },
+      "title": "Eruption duration (min)",
+      "axis": { "format": ".1f", "tickCount": 8, "labelOverlap": "greedy" }
+    },
+    "y": {
+      "aggregate": "count",
+      "type": "quantitative",
+      "title": "Count (n = 36)",
+      "scale": { "nice": false, "domain": [0, 9] },
+      "axis": { "values": [0, 3, 6, 9], "format": "d" }
+    }
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "labelPadding": 2,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "titlePadding": 4,
+      "grid": false,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 3.5
+    }
+  }
+}

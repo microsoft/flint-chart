@@ -258,6 +258,15 @@ function pyramidNiceTickStep(niceMax: number): number {
 }
 
 /**
+ * Overlay companions: the scatter series a boxplot draws alongside itself for
+ * its outliers or for the full raw sample. They are separate series only
+ * because ECharts needs a different series type to draw them, so they must
+ * take the colour of the box they sit on rather than the next palette slot.
+ */
+const COMPANION_SUFFIX = / \((?:outliers|points)\)$/;
+const isCompanionSeries = (s: any): boolean => s?._companion === true;
+
+/**
  * Grouped boxplot needs enough per-category horizontal room; otherwise boxes overlap.
  * Return a conservative minimum plot width for category x-axis grouped boxplots.
  */
@@ -1008,8 +1017,7 @@ export function ecApplyLayoutToSpec(
 
     // 当存在调色板时，覆盖模板中的硬编码 itemStyle.color，
     // 让最终颜色真正由 colorDecisions / colormap 注册表驱动。
-    if (effectivePalette && effectivePalette.length > 0 && Array.isArray(option.series)) {
-        const palette_ = effectivePalette; // local const so TS narrows inside closures
+    if (effectivePalette && effectivePalette.length > 0 && Array.isArray(option.series)) {        const palette_ = effectivePalette; // local const so TS narrows inside closures
         const n = palette_.length;
         const schemeType = colorDecision?.schemeType;
 
@@ -1082,13 +1090,13 @@ export function ecApplyLayoutToSpec(
             option.series.forEach((s: any, idx: number) => {
                 if (!s) return;
                 const rawName: string = typeof s.name === 'string' ? s.name : (s.name != null ? String(s.name) : '');
-                const baseName = rawName.endsWith(' (outliers)')
-                    ? rawName.slice(0, -' (outliers)'.length)
-                    : rawName;
+                const baseName = rawName.replace(COMPANION_SUFFIX, '');
                 const mappedColor = baseName && categoryToColor.has(baseName)
                     ? categoryToColor.get(baseName)
                     : palette_[idx % n];
                 s.itemStyle = s.itemStyle || {};
+                // A hollow boxplot (raw sample overlaid) declares a per-datum
+                // transparent fill; the palette still owns its outline.
                 s.itemStyle.color = mappedColor!;
                 if (s.type === 'boxplot') {
                     s.itemStyle.borderColor = mappedColor!;
@@ -1225,7 +1233,9 @@ export function ecApplyLayoutToSpec(
                     : new Map<string, string>();
 
                 // 只对「需要上色」的 series 从 palette 取色，已设 color 的（如连接线、参考线）不占下标，使 Min/Max 等得到第 1、2 个颜色
-                const colorableCount = option.series.filter((s: any) => s && s.itemStyle?.color == null).length;
+                const colorableCount = option.series.filter(
+                    (s: any) => s && s.itemStyle?.color == null && !isCompanionSeries(s),
+                ).length;
                 const spacedIndices = useEvenSpacing && colorableCount > 0
                     ? pickEvenlySpacedColorIndices(n, colorableCount)
                     : null;
@@ -1235,6 +1245,17 @@ export function ecApplyLayoutToSpec(
                     if (!s) return;
                     s.itemStyle = s.itemStyle || {};
                     if (s.itemStyle.color != null) return;
+
+                    // An overlay companion (outliers / the raw sample) belongs to
+                    // the series it sits on, so it inherits that colour instead
+                    // of consuming a palette slot and landing a different hue.
+                    if (isCompanionSeries(s)) {
+                        const owner = option.series[idx - 1];
+                        if (owner?.itemStyle?.color != null) {
+                            s.itemStyle.color = owner.itemStyle.color;
+                            return;
+                        }
+                    }
 
                     // Rank / Index 颜色映射：根据 rank 数值在连续色带上取色
                     if (isRankLikeColor && rankLegendColorMap.size > 0) {

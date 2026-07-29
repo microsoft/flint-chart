@@ -124,7 +124,8 @@ _无模板专用参数。_
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
-| `showOutliers` | toggle | on / off | `true` | always | 显示离群点。 |
+| `showPoints` | toggle | on / off | `false` | conditional | 在线上叠加点标记。 |
+| `showOutliers` | toggle | on / off | `true` | conditional | 显示离群点。 |
 
 ### ![](chart-icon-violin.svg) Violin Plot
 

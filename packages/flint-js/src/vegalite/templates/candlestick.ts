@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef } from '../../core/types';
+import { adjustBarMarks } from './utils';
 
 export const candlestickChartDef: ChartTemplateDef = {
     chart: "Candlestick Chart",
@@ -44,28 +45,55 @@ export const candlestickChartDef: ChartTemplateDef = {
         if (close) spec.layer[1].encoding.y2 = { field: close.field };
 
         if (open?.field && close?.field) {
+            // `<=`, not `<`: a session that closes exactly where it opened has
+            // not fallen, and colouring it as a decline is a false statement.
             spec.encoding.color = {
                 condition: {
-                    test: `datum['${open.field}'] < datum['${close.field}']`,
+                    test: `datum['${open.field}'] <= datum['${close.field}']`,
                     value: "#06982d",
                 },
                 value: "#ae1325",
             };
         }
 
-        // Compute bar width from x-axis cardinality
-        const table = ctx.table;
-        const plotWidth = ctx.canvasSize?.width || 400;
-        const xField = spec.encoding?.x?.field;
-        let barSize: number;
-
-        if (xField && table?.length > 0) {
-            const cardinality = new Set(table.map((r: any) => r[xField])).size;
-            barSize = Math.max(2, Math.min(20, Math.round(plotWidth * 0.6 / cardinality)));
+        // Body width.
+        //
+        // On a banded *continuous* x — the usual case, dates — the slot width
+        // is set by the smallest gap between observations, not by the row
+        // count: nine trading days spanning eleven calendar days occupy eleven
+        // slots, two of which are the weekend. Sizing on cardinality makes
+        // every body wider than its own slot and adjacent candles fuse into a
+        // single polygon. adjustBarMarks() already performs that min-gap
+        // analysis for bar marks, so use it rather than keep a second, wrong
+        // copy of the arithmetic here.
+        //
+        // It returns the largest *non-overlapping* size, and bodies that
+        // merely touch still read as one shape when consecutive sessions move
+        // the same way. A candlestick needs a visible gutter, so take a
+        // fraction of the fitted width.
+        const BODY_FILL = 0.8;
+        if ((ctx.layout?.xContinuousAsDiscrete ?? 0) > 0) {
+            adjustBarMarks(spec, ctx);
+            const fitted = (spec.layer[1].mark as { size?: number })?.size ?? 14;
+            spec.layer[1].mark = { ...spec.layer[1].mark, size: Math.max(2, Math.floor(fitted * BODY_FILL)) };
         } else {
-            barSize = 14;
+            const step = ctx.layout?.xStep ?? 20;
+            spec.layer[1].mark = { ...spec.layer[1].mark, size: Math.max(2, Math.round(step * BODY_FILL)) };
         }
 
-        spec.layer[1].mark = { ...spec.layer[1].mark, size: barSize };
+        // Doji sessions.
+        //
+        // When open === close the open→close bar has zero height and vanishes,
+        // so a flat session renders as a bare wick with no candle on it. Draw
+        // it as a horizontal tick at the shared price, which is the convention
+        // and is exactly what the bar degenerates to.
+        if (open?.field && close?.field) {
+            const bodySize = (spec.layer[1].mark as { size?: number })?.size ?? 14;
+            spec.layer.push({
+                transform: [{ filter: `datum['${open.field}'] === datum['${close.field}']` }],
+                mark: { type: "tick", size: bodySize, thickness: 2 },
+                encoding: { y: { field: close.field } },
+            });
+        }
     },
 };

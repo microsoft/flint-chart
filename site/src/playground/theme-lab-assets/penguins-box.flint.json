@@ -1,0 +1,190 @@
+{
+  "mark": {
+    "type": "boxplot",
+    "size": 22
+  },
+  "encoding": {
+    "x": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Body mass (g)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 32
+  },
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5250
+      }
+    ]
+  },
+  "title": {
+    "text": "Body mass of three Pygoscelis species",
+    "subtitle": [
+      "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"
+    ]
+  }
+}

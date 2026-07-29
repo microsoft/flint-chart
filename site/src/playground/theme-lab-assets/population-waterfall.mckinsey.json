@@ -1,0 +1,127 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Flint's waterfall mislabels its own last bar. Its transform marks the final row as the 'end' total, so Oceania — a 32-million contribution — is drawn as a full-height 7,790 bar in 'total' beige. The chart says the last region listed is the sum of everything before it. Here every one of the five regions is a delta and the running total is stated once, as a label, where the last bar ends.",
+    "The three-swatch legend deleted. Flint spends a legend on 'total / increase / decrease' when no bar in this data decreases. Two fills — navy #051C2C for the 1950 base, brand blue #2251FF for every contribution — need no key because the x labels already name them, and the distinction they draw is the one the chart type is built on: a level against the steps that move it.",
+    "Value axis deleted and the numbers moved onto the bars, signed. '+3,237' says contribution; the unsigned '2,536' on the first bar says level. Flint's ',.12~g' axis format — twelve significant digits on a count of millions — is gone with it.",
+    "The −45° rotated x labels straightened. '1950', 'Asia', 'Africa', 'Americas', 'Europe', 'Oceania' fit horizontally at a 42px step; rotation was a fallback for a width that was never measured.",
+    "Connectors kept but thinned to a 0.8px #d3dce1 hairline. They are scaffolding for reading the steps, not data, and Flint draws them at the same weight as the bars."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 10, "bottom": 8 },
+  "title": {
+    "text": "Asia added more people than the world held in 1950",
+    "subtitle": ["Contribution to world population growth by region, 1950–2020, millions"]
+  },
+  "width": 262,
+  "height": 200,
+  "data": {
+    "values": [
+      { "Step": "1950", "Population (M)": 2536 },
+      { "Step": "Asia", "Population (M)": 3237 },
+      { "Step": "Africa", "Population (M)": 1134 },
+      { "Step": "Americas", "Population (M)": 684 },
+      { "Step": "Europe", "Population (M)": 199 },
+      { "Step": "Oceania", "Population (M)": 32 }
+    ]
+  },
+  "transform": [
+    { "window": [{ "op": "sum", "field": "Population (M)", "as": "__cum" }], "frame": [null, 0] },
+    { "calculate": "datum.__cum - datum['Population (M)']", "as": "__prev" },
+    { "window": [{ "op": "lead", "field": "Step", "as": "__lead" }] },
+    { "calculate": "datum.__lead === null ? null : datum.__cum", "as": "__connY" },
+    {
+      "calculate": "datum.Step === '1950' ? format(datum['Population (M)'], ',') : '+' + format(datum['Population (M)'], ',')",
+      "as": "__label"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Step",
+      "type": "ordinal",
+      "sort": null,
+      "title": null,
+      "scale": { "paddingInner": 0.35 },
+      "axis": { "labelAngle": 0, "domain": false, "ticks": false, "labelPadding": 4 }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "rule", "color": "#d3dce1", "strokeWidth": 0.8 },
+      "encoding": {
+        "x": { "field": "Step", "type": "ordinal", "sort": null, "bandPosition": 1 },
+        "x2": { "field": "__lead", "bandPosition": 0 },
+        "y": { "field": "__connY", "type": "quantitative", "axis": null, "scale": { "domain": [0, 8600], "nice": false } }
+      }
+    },
+    {
+      "mark": { "type": "bar", "width": { "band": 0.78 } },
+      "encoding": {
+        "y": {
+          "field": "__prev",
+          "type": "quantitative",
+          "title": null,
+          "axis": null,
+          "scale": { "domain": [0, 8600], "nice": false }
+        },
+        "y2": { "field": "__cum" },
+        "color": {
+          "condition": [
+            { "test": "datum.Step === '1950'", "value": "#051c2c" }
+          ],
+          "value": "#2251ff"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dy": -4,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "y": { "field": "__cum", "type": "quantitative", "axis": null, "scale": { "domain": [0, 8600], "nice": false } },
+        "text": { "field": "__label", "type": "nominal" },
+        "color": {
+          "condition": [
+            { "test": "datum.Step === '1950'", "value": "#051c2c" }
+          ],
+          "value": "#2251ff"
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#5c6b75",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#8fa0ab",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

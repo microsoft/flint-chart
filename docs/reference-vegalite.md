@@ -219,6 +219,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
+| `showPoints` | toggle | on / off | `false` | conditional | Overlay point markers on the line. |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 | `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |

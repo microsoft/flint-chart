@@ -15,6 +15,7 @@ import { Illustrations } from './playground/Illustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
+import { ThemeLab } from './playground/ThemeLab';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
@@ -52,6 +53,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
+          <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}

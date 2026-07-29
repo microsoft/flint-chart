@@ -1,0 +1,138 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "Masthead rule added above the panels as its own vconcat row — the same brand furniture the paper puts on every chart, carrying no data.",
+    "Panel headers rewritten as flush-left bold labels with no 'Country' title and no boxes. Flint emits a centred grey header per facet; the house style treats each panel title as a small headline.",
+    "Shared y axis moved to the right of the last panel is not expressible in Vega-Lite, so the compromise is: y labels only on the first panel (via a per-panel axis config) and gridlines carried across all four.",
+    "Y scale pinned to a common [0, 24] domain. Flint already shares the scale, but pinning it makes the comparison a stated property rather than a side effect of the data.",
+    "Panel geometry widened to 88×150 with 14px spacing — four narrow columns read as one chart; Flint's 105×155 with 11px spacing reads as four charts.",
+    "Type dropped to 8.5pt labels and the x axis reduced to two ticks per panel (start and end), because a small multiple is read by shape, not by value.",
+    "House blue #006BA2 at 1.6px replaces the default hairline; the tick marks and baseline go hard black."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 10, "bottom": 6 },
+  "title": {
+    "text": "Out of work",
+    "subtitle": ["Unemployment rate, %, 2000–2022"]
+  },
+  "spacing": 10,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "data": {
+        "values": [
+          { "Year": "2000", "Country": "United States", "Unemployment (%)": 4.0 },
+          { "Year": "2005", "Country": "United States", "Unemployment (%)": 5.1 },
+          { "Year": "2010", "Country": "United States", "Unemployment (%)": 9.6 },
+          { "Year": "2015", "Country": "United States", "Unemployment (%)": 5.3 },
+          { "Year": "2020", "Country": "United States", "Unemployment (%)": 8.1 },
+          { "Year": "2022", "Country": "United States", "Unemployment (%)": 3.6 },
+          { "Year": "2000", "Country": "Germany", "Unemployment (%)": 7.9 },
+          { "Year": "2005", "Country": "Germany", "Unemployment (%)": 11.2 },
+          { "Year": "2010", "Country": "Germany", "Unemployment (%)": 7.0 },
+          { "Year": "2015", "Country": "Germany", "Unemployment (%)": 4.6 },
+          { "Year": "2020", "Country": "Germany", "Unemployment (%)": 3.7 },
+          { "Year": "2022", "Country": "Germany", "Unemployment (%)": 3.1 },
+          { "Year": "2000", "Country": "Japan", "Unemployment (%)": 4.7 },
+          { "Year": "2005", "Country": "Japan", "Unemployment (%)": 4.4 },
+          { "Year": "2010", "Country": "Japan", "Unemployment (%)": 5.1 },
+          { "Year": "2015", "Country": "Japan", "Unemployment (%)": 3.4 },
+          { "Year": "2020", "Country": "Japan", "Unemployment (%)": 2.8 },
+          { "Year": "2022", "Country": "Japan", "Unemployment (%)": 2.6 },
+          { "Year": "2000", "Country": "Spain", "Unemployment (%)": 13.9 },
+          { "Year": "2005", "Country": "Spain", "Unemployment (%)": 9.2 },
+          { "Year": "2010", "Country": "Spain", "Unemployment (%)": 19.9 },
+          { "Year": "2015", "Country": "Spain", "Unemployment (%)": 22.1 },
+          { "Year": "2020", "Country": "Spain", "Unemployment (%)": 15.5 },
+          { "Year": "2022", "Country": "Spain", "Unemployment (%)": 12.9 }
+        ]
+      },
+      "facet": {
+        "field": "Country",
+        "type": "nominal",
+        "sort": ["United States", "Germany", "Japan", "Spain"],
+        "columns": 4,
+        "title": null,
+        "header": {
+          "labelAnchor": "start",
+          "labelFontSize": 10,
+          "labelFontWeight": 700,
+          "labelColor": "#121317",
+          "labelPadding": 2,
+          "labelOrient": "top"
+        }
+      },
+      "spacing": 14,
+      "spec": {
+        "width": 88,
+        "height": 150,
+        "mark": { "type": "line", "color": "#006ba2", "strokeWidth": 1.6 },
+        "encoding": {
+          "x": {
+            "field": "Year",
+            "type": "temporal",
+            "title": null,
+            "scale": { "type": "utc" },
+            "axis": {
+              "format": "%y",
+              "values": ["2000", "2022"],
+              "labelFlush": true,
+              "grid": false,
+              "domain": true,
+              "domainColor": "#121317",
+              "ticks": true,
+              "tickColor": "#121317",
+              "tickSize": 3
+            }
+          },
+          "y": {
+            "field": "Unemployment (%)",
+            "type": "quantitative",
+            "title": null,
+            "scale": { "domain": [0, 24] },
+            "axis": {
+              "tickCount": 4,
+              "grid": true,
+              "gridColor": "#c9d3da",
+              "domain": false,
+              "ticks": false,
+              "labelPadding": 3
+            }
+          }
+        }
+      },
+      "resolve": { "axis": { "y": "shared" } }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#54585a",
+      "titleFontSize": 9
+    },
+    "header": { "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+  }
+}
