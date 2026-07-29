@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flint": {
+      "command": "npx",
+      "args": ["--yes", "flint-chart-mcp"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}
