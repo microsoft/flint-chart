@@ -15,7 +15,10 @@ const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordi
 // fills most of its category band; a grouped (dodged) box fills most of its
 // per-subgroup lane. The remainder becomes the gap between adjacent boxes.
 const BOXPLOT_BAND_FILL = 0.7;
-const GROUPED_BOXPLOT_LANE_FILL = 0.85;
+// A dodged box should leave a legible gap between adjacent lanes, otherwise a
+// quartet of boxes reads as one solid multi-colour block. 0.7 keeps the box
+// substantial while opening a clear ~30%-of-lane channel between neighbours.
+const GROUPED_BOXPLOT_LANE_FILL = 0.7;
 // Half-width of the raw-observation jitter cloud, as a fraction of one lane.
 // 0.3 spreads the points across the middle ~60% of the lane, so the cloud sits
 // inside its box rather than spilling over the neighbouring one.
