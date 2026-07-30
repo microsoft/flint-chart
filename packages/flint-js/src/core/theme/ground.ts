@@ -274,6 +274,11 @@ function guardHolds(guard: ThemeGuard, s: Signals): boolean {
 
 const SERIES_CHANNELS = ['color', 'group', 'detail', 'series', 'shape', 'stroke'];
 const FACET_CHANNELS = ['column', 'row', 'facet'];
+// Charts whose subject is the shape of a distribution, drawn from an area mark
+// rather than a summary mark. They summarise like a box plot does, so they take
+// the same label escape — a printed value names a quantity they were chosen not
+// to reduce to. (A box plot itself is caught earlier by its `boxplot` mark.)
+const DISTRIBUTION_SHAPE_CHARTS = new Set(['Violin Plot', 'Density Plot']);
 
 function distinctCount(table: any[], field: string | undefined): number {
     if (!field) return 0;
@@ -452,7 +457,13 @@ function deriveSignals(ctx: GroundingContext, b: Bindings): Signals {
         isSigned,
         isTemporal,
         isFaceted: Boolean(b.facetChannel),
-        isSummarised: ctx.markTypes.some((m) => m === 'boxplot' || m === 'errorbar' || m === 'errorband'),
+        isSummarised: ctx.markTypes.some((m) => m === 'boxplot' || m === 'errorbar' || m === 'errorband')
+            // A violin or density plot draws a distribution as a *shape* built
+            // from an area mark — the same escape a box plot gets from its
+            // `boxplot` mark, these earn from what they are, not how they draw.
+            // Their subject is the silhouette; a single number stamped on it
+            // names a quantity the chart was chosen not to reduce to.
+            || DISTRIBUTION_SHAPE_CHARTS.has(ctx.chartType),
         canvasWidth: Math.round(ctx.layout.subplotWidth || ctx.canvasSize.width),
     };
 }
@@ -778,7 +789,12 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // the band at its last reading, which is where a reader's eye already is
     // when they ask which band this is.
     const lineFamily = ctx.markTypes.some((m) => m === 'line' || m === 'trail');
-    const bandFamily = ctx.markTypes.some((m) => m === 'area');
+    // A violin or density plot is an area too, but its band has no meaningful
+    // last reading to hang a name on: the shape is a distribution, and its
+    // right edge is an arbitrary tail near zero, not an endpoint the eye rests
+    // at. Grounding withholds the in-band placement from it, and the name falls
+    // through to the ranked list — a legend — where the shapes stay legible.
+    const bandFamily = ctx.markTypes.some((m) => m === 'area') && !signals.isSummarised;
     const placementRealizable = (p: LegendPlacement): boolean => {
         if (p === 'seriesEnd' || p === 'inline') return (lineFamily || bandFamily) && !signals.isFaceted;
         return true;
