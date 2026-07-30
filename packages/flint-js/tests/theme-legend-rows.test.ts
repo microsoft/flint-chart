@@ -66,12 +66,14 @@ describe('two keys above one plot', () => {
 
     it('leaves them on one row when the block is wide enough', () => {
         const spec = bubble(1200);
-        expect(layoutOf(spec)).toBeUndefined();
+        expect(layoutOf(spec)?.top?.direction).toBeUndefined();
+        expect(spec._theme.report.some((r: any) => /row each/.test(r.message))).toBe(false);
     });
 
     it('says nothing about rows when there is only one key', () => {
         const spec = bubble(320, null);
-        expect(layoutOf(spec)).toBeUndefined();
+        expect(layoutOf(spec)?.top?.direction).toBeUndefined();
+        expect(spec._theme.report.some((r: any) => /row each/.test(r.message))).toBe(false);
     });
 
     /**

@@ -1773,6 +1773,24 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         }
     }
     if (!l.title) config.legend.title = null;
+    // A top or bottom key is a caption to the whole graphic, so it begins where
+    // the graphic does — flush with the title down the left edge — not indented
+    // to the plot rectangle the way Vega-Lite lays it by default. `bounds:
+    // 'full'` measures the key against the same box the start-anchored title
+    // uses (axes included), so the two share one left margin; the whitespace an
+    // indented key leaves between itself and the title, worst when the key
+    // wraps to several rows, closes up.
+    if ((l.orient === 'top' || l.orient === 'bottom')
+        && (l.direction ?? 'horizontal') === 'horizontal') {
+        config.legend.layout = {
+            ...(config.legend.layout ?? {}),
+            [l.orient]: {
+                anchor: 'start',
+                bounds: 'full',
+                ...(config.legend.layout?.[l.orient] ?? {}),
+            },
+        };
+    }
     if (l.orient === 'top-right' || l.orient === 'top-left') {
         config.legend.fillColor = d.surface.plot;
         config.legend.padding = 4;
@@ -1841,7 +1859,14 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         const block = blockWidth(spec, table);
         const total = widths.reduce((a, b) => a + b, 0);
         if (widths.length > 1 && block && total > block) {
-            config.legend.layout = { [l.orient]: { direction: 'vertical', anchor: 'start' } };
+            config.legend.layout = {
+                ...(config.legend.layout ?? {}),
+                [l.orient]: {
+                    ...(config.legend.layout?.[l.orient] ?? {}),
+                    direction: 'vertical',
+                    anchor: 'start',
+                },
+            };
             say('legend.placement',
                 `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`);
         }
@@ -2216,6 +2241,12 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // 10px dot lands the text on the dot. Where a mark has a radius, the gap
     // is measured from the rim by adding it.
     const radius = Math.max(0, ...units.map((unit: any) => markRadius(unit, spec, d)));
+    // A slice too thin to stand a line of text across gets no label: its share
+    // of the circle, swung out to the label radius, is a shorter arc than the
+    // label is tall, so the number would land on its neighbours. Hiding it by
+    // opacity (not by dropping the row) keeps every slice in the stack, so the
+    // surviving labels stay on the angles their arcs actually occupy.
+    let radialLabelKeepTest: string | undefined;
     const geometry = (within: boolean): any => {
         const w = reversed ? !within : within;
         return horizontal
@@ -2243,8 +2274,34 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         const r = typeof declared === 'number'
             ? declared
             : (typeof w === 'number' && typeof h === 'number' ? Math.min(w, h) / 2 : undefined);
-        if (r) Object.assign(markDef, { radius: inside ? r * 0.72 : r + 14 });
-        else say('dataLabels', 'the arc has no radius to hang a label from');
+        if (r) {
+            const labelRadius = inside ? r * 0.72 : r + 14;
+            Object.assign(markDef, { radius: labelRadius });
+            // The slice's share of the circle is its value over the total; swung
+            // out to the label radius that share becomes an arc of
+            // `labelRadius · share · 2π`. A label needs at least its own height
+            // of arc to sit in without touching its neighbours, so the smallest
+            // labelled value is the one whose arc clears a line of text.
+            const total = table.reduce((s, row) => {
+                const v = row?.[measure.field];
+                return typeof v === 'number' && Number.isFinite(v) ? s + Math.abs(v) : s;
+            }, 0);
+            const minArc = (t.fontSize ?? 10) + 2;
+            if (total > 0 && labelRadius > 0) {
+                const minValue = (minArc * total) / (labelRadius * 2 * Math.PI);
+                if (minValue > 0) {
+                    radialLabelKeepTest = `abs(datum[${JSON.stringify(measure.field)}]) >= ${minValue}`;
+                    const dropped = table.filter((row) => {
+                        const v = row?.[measure.field];
+                        return typeof v === 'number' && Math.abs(v) < minValue;
+                    }).length;
+                    if (dropped > 0) {
+                        say('dataLabels.show',
+                            `${dropped} slice${dropped === 1 ? '' : 's'} narrower than a line of text go unlabelled — their arc would not hold the number`);
+                    }
+                }
+            }
+        } else say('dataLabels', 'the arc has no radius to hang a label from');
     } else {
         Object.assign(markDef, geometry(inside));
     }
@@ -2290,6 +2347,9 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     }
 
     const layer: any = { __themeSynthetic: true, mark: markDef, encoding: labelEncoding };
+    if (radialLabelKeepTest) {
+        labelEncoding.opacity = { condition: { test: radialLabelKeepTest, value: 1 }, value: 0 };
+    }
     appendLayer(body, layer);
 
     if (radial) {
@@ -2428,9 +2488,21 @@ function appendLayer(body: any, layer: any): void {
 }
 
 function readableOn(background: string, light: string, dark: string): string {
+    // `light` and `dark` are the theme's two ink candidates. Which one reads on
+    // a surface is a fact about their contrast with it, not about which the
+    // theme calls primary — a dark house's "primary" ink is itself light, so a
+    // fixed light/dark mapping inverts on it. Pick whichever candidate sits
+    // furthest from the background in luminance; fall back to the first when a
+    // colour will not parse.
     const bg = parseColor(background);
-    if (!bg) return dark;
-    return luminance(bg) < 0.5 ? light : dark;
+    if (!bg) return light;
+    const bgLum = luminance(bg);
+    const lightC = parseColor(light);
+    const darkC = parseColor(dark);
+    if (!lightC || !darkC) return luminance(bg) < 0.5 ? light : dark;
+    const lightGap = Math.abs(luminance(lightC) - bgLum);
+    const darkGap = Math.abs(luminance(darkC) - bgLum);
+    return lightGap >= darkGap ? light : dark;
 }
 
 function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amount: number): void {

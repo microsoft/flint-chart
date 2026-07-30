@@ -81,6 +81,8 @@ export interface GroundingContext {
         subplotHeight: number;
         xStep: number;
         yStep: number;
+        xStepUnit?: 'item' | 'group';
+        yStepUnit?: 'item' | 'group';
         stepPadding: number;
         titleFontSize: number;
         legendFontSize: number;
@@ -832,10 +834,10 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
 
     // --- data labels --------------------------------------------------------
     const dl = theme.dataLabels ?? {};
-    const dlPlacement = dl.placement ?? 'outsideMark';
+    let dlPlacement = dl.placement ?? 'outsideMark';
     // A label placed *on* a mark sits on the mark's fill, whatever the house
     // said about ink. Contrast is a legibility floor, not a style choice.
-    const dlInkMode = dl.inkMode
+    let dlInkMode = dl.inkMode
         ?? (dlPlacement === 'atMark' ? 'contrastWithMark' : 'fixed');
     if (!dl.inkMode && dlInkMode === 'contrastWithMark') {
         say('dataLabels.inkMode',
@@ -910,6 +912,47 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 : '`whenTheyFit` resolved to false — no banded axis to key values to');
         }
     }
+    // A number is printed across a bar's *width*, not up its height. The band
+    // checks above stand a line of text inside a band; a value laid across a
+    // vertical bar has to clear the bar's width instead. A grouped bar splits
+    // its band between the series with nothing between them, so each bar's slot
+    // is the band over the series count; a single series keeps the whole band
+    // and can lean a number into the padding on either side.
+    let valueMaxAbs = 0;
+    let valueDigits = 1;
+    {
+        const mch = bindings.measureChannels[0];
+        const field = mch
+            ? (ctx.channelSemantics[mch]?.field ?? ctx.positional?.[mch]?.field)
+            : undefined;
+        if (field) {
+            for (const row of ctx.table) {
+                const v = row?.[field];
+                if (typeof v !== 'number') continue;
+                valueMaxAbs = Math.max(valueMaxAbs, Math.abs(v));
+                valueDigits = Math.max(valueDigits, String(Math.round(Math.abs(v))).length);
+            }
+        }
+    }
+    const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * valueDigits + 12;
+    if (dlShow && bindings.categoricalChannel === 'x' && signals.hasBandedAxis && valueMaxAbs > 0) {
+        const grouped = ctx.layout.xStepUnit === 'group' && signals.seriesCount > 1;
+        const slot = grouped
+            ? ctx.layout.xStep / Math.max(1, signals.seriesCount)
+            : ctx.layout.xStep;
+        if (valueLabelWidthPx > slot) {
+            if (grouped) {
+                dlShow = false;
+                say('dataLabels.show',
+                    `the bars group ${signals.seriesCount} to a band — each is ${Math.round(slot)}px wide, too narrow to carry a ${Math.round(valueLabelWidthPx)}px number without it landing on the next bar`);
+            } else if (dlPlacement === 'atMark') {
+                dlPlacement = 'outsideMark';
+                say('dataLabels.placement',
+                    `the bar is ${Math.round(slot)}px wide but the number is ${Math.round(valueLabelWidthPx)}px — it moves above the bar, where the gaps between bars give it room`);
+            }
+        }
+    }
+
     if (dlShow && legendShow && legendSpec.suppressWhenValuesPrinted) {
         // A printed value is not a name. It replaces a legend that was itself
         // a value key — a ramp — but never one that carried series names, and
@@ -963,22 +1006,10 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     let insideMinValue: number | undefined;
     let outsideMaxValue: number | undefined;
     if (dlShow && measureChannel) {
-        const field = ctx.channelSemantics[measureChannel]?.field ?? ctx.positional?.[measureChannel]?.field;
         const span = measureChannel === 'x' ? ctx.layout.subplotWidth : ctx.layout.subplotHeight;
-        let maxAbs = 0;
-        let digits = 1;
-        if (field) {
-            for (const row of ctx.table) {
-                const v = row?.[field];
-                if (typeof v !== 'number') continue;
-                maxAbs = Math.max(maxAbs, Math.abs(v));
-                digits = Math.max(digits, String(Math.round(Math.abs(v))).length);
-            }
-        }
-        if (maxAbs > 0 && span > 0) {
-            const labelPx = (valueLabel.fontSize ?? 10) * 0.62 * digits + 12;
-            insideMinValue = (labelPx / span) * maxAbs;
-            outsideMaxValue = maxAbs - insideMinValue;
+        if (valueMaxAbs > 0 && span > 0) {
+            insideMinValue = (valueLabelWidthPx / span) * valueMaxAbs;
+            outsideMaxValue = valueMaxAbs - insideMinValue;
         }
     }
 

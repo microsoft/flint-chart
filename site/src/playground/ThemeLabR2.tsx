@@ -65,8 +65,8 @@ function Row({ c }: { c: R2Case }) {
             <div
                 style={{
                     display: 'flex',
+                    flexWrap: 'wrap',
                     gap: 8,
-                    overflowX: 'auto',
                     paddingBottom: 10,
                 }}
             >
