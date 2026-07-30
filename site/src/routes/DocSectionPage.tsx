@@ -48,6 +48,16 @@ export function DocSectionPage({ section }: { section: DocSection }) {
     }
   }, [slug, section, firstSlug, navigate, lp]);
 
+  // Reset scroll to top when the active doc changes, unless a heading anchor
+  // is pending (handled by the next effect).
+  useEffect(() => {
+    const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
+    const hash = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
+    if (!stored && !hash) {
+      mainRef.current?.scrollTo({ top: 0 });
+    }
+  }, [activeSlug, location.hash]);
+
   useEffect(() => {
     const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
     const hash = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
