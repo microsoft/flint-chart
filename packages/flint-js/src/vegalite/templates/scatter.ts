@@ -335,7 +335,7 @@ export const boxplotDef: ChartTemplateDef = {
                     const laneOrder = (Array.isArray(colorEnc.sort) && colorEnc.sort.length > 0
                         ? colorEnc.sort
                         : [...new Set((ctx.fullTable ?? ctx.table).map((row) => row[colorField]))].sort()
-                    ).map((value) => String(value));
+                    ).map((value: unknown) => String(value));
                     subgroups = Math.max(1, laneOrder.length);
                     laneOffsetExpr = `(indexof(${JSON.stringify(laneOrder)}, toString(datum[${JSON.stringify(colorField)}])) - ${(subgroups - 1) / 2}) / ${subgroups}`;
                     spec.encoding[offsetChannel] = {

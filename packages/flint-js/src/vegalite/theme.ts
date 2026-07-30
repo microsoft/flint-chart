@@ -2209,7 +2209,11 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         say('annotation.unit',
             `each printed value carries its unit \`${d.dataLabels.unit}\` — there is no axis left to state it on`);
     }
-    for (const ch of ['x', 'y', 'xOffset', 'yOffset', 'column', 'row', 'facet', 'detail', 'theta', 'radius'] as const) {
+    // `facet`, `row` and `column` split the data; Vega-Lite refuses them inside
+    // a layer and `appendLayer` promotes them to a real facet operator that
+    // covers every layer, the label included. Copied onto the label they are a
+    // second, conflicting split — so they are left to the operator.
+    for (const ch of ['x', 'y', 'xOffset', 'yOffset', 'detail', 'theta', 'radius'] as const) {
         if (enc[ch]) labelEncoding[ch] = stripAxis(enc[ch]);
     }
     // Vega-Lite stacks `theta` for arcs but not for text, so a copied angle
@@ -2244,8 +2248,12 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         // colour field — left behind, the labels stack in a different order
         // from the slices they belong to. The label then overrides the
         // inherited colour with its own ink.
-        const arc = body.layer.find((n: any) => markTypeOf(n.mark) === 'arc');
-        const shared: any = { ...(body.encoding ?? {}) };
+        // `appendLayer` may have promoted an encoding-level facet to a real
+        // operator, in which case the arc and the label are layers of
+        // `body.spec`, not `body`. Operate on whichever node now owns them.
+        const host = body.layer ? body : body.spec;
+        const arc = host.layer.find((n: any) => markTypeOf(n.mark) === 'arc');
+        const shared: any = { ...(host.encoding ?? {}) };
         const theta = arc?.encoding?.theta ?? shared.theta;
         if (theta) {
             shared.theta = { ...theta, stack: true };
@@ -2262,7 +2270,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
             // and both layers read the same one.
             shared.order = { field: colour.field, type: colour.type ?? 'nominal', sort: 'ascending' };
         }
-        body.encoding = shared;
+        host.encoding = shared;
         delete labelEncoding.theta;
     }
 
@@ -3052,10 +3060,43 @@ function applyStatistics(spec: any, d: DesignDecisions, table: any[], say: (p: s
 // Furniture
 // ---------------------------------------------------------------------------
 
+/**
+ * A chart whose radial mark cannot survive being wrapped in a concatenation to
+ * hang furniture beneath it. A pie is a disc of angles and rides inside a
+ * `vconcat` unharmed; but a *rose* sizes its petals by radius, and a *faceted*
+ * disc splits into panels, and in either case Vega-Lite reads the panel's width
+ * signal to lay the mark out — a signal the concat wrapper either rescopes out
+ * of the mark's reach (the facet: an unresolved `child_width`) or leaves the
+ * radius scale to collapse against (the rose: petals shrunk to a compass). The
+ * chart is already its own block; a rule across it has no single width to take.
+ */
+function radialResistsFurniture(spec: any): boolean {
+    let faceted = false;
+    let arc = false;
+    let radiusArc = false;
+    walk(spec, (node) => {
+        if (node.facet) faceted = true;
+        for (const ch of ['facet', 'row', 'column'] as const) {
+            if (node.encoding?.[ch]) faceted = true;
+        }
+        if (markTypeOf(node.mark) === 'arc') {
+            arc = true;
+            if (node.encoding?.radius) radiusArc = true;
+        }
+    });
+    return radiusArc || (arc && faceted);
+}
+
 function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): boolean {
     if (!d.furniture.length) return false;
     if (spec.vconcat || spec.hconcat || spec.concat) {
         say('furniture', 'not drawn — the chart is already a concatenation');
+        return false;
+    }
+    // A rose or a faceted disc cannot be wrapped in a block to hang a rule
+    // beneath it — see `radialResistsFurniture`. It is already its own block.
+    if (radialResistsFurniture(spec)) {
+        say('furniture', 'not drawn — a radial chart is already its own block, with no edge to close');
         return false;
     }
 
