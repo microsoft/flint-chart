@@ -2681,12 +2681,37 @@ function applySeriesEndLabels(
     // list, and a list is labelled at its head, inside the plot.
     const runs = domain.type === 'quantitative' || domain.type === 'temporal' || domain.type === 'ordinal';
     const atEnd = runs || domainChannel === 'x';
+    // "The end" is the last band in the order the domain is *drawn*, which for
+    // an ordinal axis is the order the house declared (Jan…Dec), not the order
+    // the values happen to sort in as strings. Ranking by the raw field would
+    // end each series at its alphabetically-last reading — "Sep", stranded
+    // mid-plot under the crossing lines — instead of at the right-hand edge. So
+    // where the domain carries an explicit order, rank by each row's position
+    // in it; otherwise a descending sort of an ordered field finds the last.
+    let runsRank: any[] = [];
+    if (runs) {
+        if (Array.isArray(domain.sort)) {
+            const arr = JSON.stringify(domain.sort);
+            const fld = JSON.stringify(domain.field);
+            runsRank = [
+                { calculate: `indexof(${arr}, datum[${fld}])`, as: '__domainOrder' },
+                {
+                    window: [{ op: 'row_number', as: '__seriesEndRank' }],
+                    sort: [{ field: '__domainOrder', order: 'descending' }],
+                    groupby: [seriesField],
+                },
+            ];
+        } else {
+            const order = domain.sort === 'descending' ? 'ascending' : 'descending';
+            runsRank = [{
+                window: [{ op: 'row_number', as: '__seriesEndRank' }],
+                sort: [{ field: domain.field, order }],
+                groupby: [seriesField],
+            }];
+        }
+    }
     const rank = runs
-        ? [{
-            window: [{ op: 'row_number', as: '__seriesEndRank' }],
-            sort: [{ field: domain.field, order: 'descending' }],
-            groupby: [seriesField],
-        }]
+        ? runsRank
         : atEnd
             ? [
                 { window: [{ op: 'row_number', as: '__dataOrder' }] },

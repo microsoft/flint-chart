@@ -926,7 +926,48 @@ export function computeLayout(
     // for that — where squaring would cut the wider step by more than a third —
     // the grid stays rectangular: a shape nobody asked for is not worth losing
     // that much room over.
-    if (xTotalNominalCount > 0 && yTotalNominalCount > 0 && !xHasGrouping && !yHasGrouping) {
+    //
+    // A connected mark whose two axes are both discrete — a bump chart, ranks
+    // over time — is the exception: it is a line, not a grid of cells, so it is
+    // neither squared nor stretched to fill the height. The mark declares a
+    // cross-section per axis; the larger one is the run the line travels along
+    // (time), the smaller the stack it crosses (rank). Squaring the two, or
+    // letting the rank axis grow one band per competitor, only makes the panel
+    // taller and every crossing a near-vertical plunge — the shape the eye
+    // reads worst. Instead the rank axis is held to its thin cross-section and
+    // the run axis is stretched to a bounded multiple of it, so the panel comes
+    // out landscape and the slopes sit nearer 45°. Horizontal room is what
+    // untangles a crossing mass of lines, so the run is where the budget is
+    // spent.
+    const isConnectedMark = typeof continuousMarkCrossSection === 'object'
+        && !!continuousMarkCrossSection.seriesCountAxis;
+    const bothDiscreteConnected = isConnectedMark
+        && xTotalNominalCount > 0 && yTotalNominalCount > 0
+        && !xHasGrouping && !yHasGrouping;
+    if (bothDiscreteConnected && typeof continuousMarkCrossSection === 'object') {
+        const csX = continuousMarkCrossSection.x ?? 0;
+        const csY = continuousMarkCrossSection.y ?? 0;
+        if (csX > 0 && csY > 0) {
+            // Cap the run band's advantage over the cross band: past about 2:1
+            // the extra width buys little and the panel just runs off the edge.
+            const RUN_AR_CAP = 2;
+            const runIsX = csX >= csY;
+            const crossCS = runIsX ? csY : csX;
+            const runBudget = runIsX
+                ? Math.floor(maxSubplotW / xTotalNominalCount)
+                : Math.floor(maxSubplotH / yTotalNominalCount);
+            const cross = Math.max(minStepVal,
+                Math.min(runIsX ? yStepSize : xStepSize, crossCS));
+            const ratio = Math.min(RUN_AR_CAP, Math.max(1, Math.max(csX, csY) / Math.min(csX, csY)));
+            const run = Math.max(
+                runIsX ? xStepSize : yStepSize,
+                Math.min(runBudget, Math.round(cross * ratio)));
+            if (runIsX) { xStepSize = run; yStepSize = cross; }
+            else { yStepSize = run; xStepSize = cross; }
+        }
+    }
+    if (xTotalNominalCount > 0 && yTotalNominalCount > 0 && !xHasGrouping && !yHasGrouping
+        && !bothDiscreteConnected) {
         const capX = Math.floor(maxSubplotW / xTotalNominalCount);
         const capY = Math.floor(maxSubplotH / yTotalNominalCount);
         const generous = Math.round(CELL_BAND_SIZE * Math.max(1, sizeRatio));
