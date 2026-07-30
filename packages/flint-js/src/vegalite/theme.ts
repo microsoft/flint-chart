@@ -551,12 +551,11 @@ function applyZeroRule(spec: any, d: DesignDecisions, table: any[], say: (p: str
                 },
                 encoding: { [channel]: { datum: 0 } },
             };
-            if (Array.isArray(body.layer)) body.layer.push(rule);
-            else {
-                const own = { mark: body.mark, encoding: body.encoding };
-                delete body.mark;
-                body.layer = [own, rule];
-            }
+            // `appendLayer` turns a unit into a layer *and* promotes a
+            // `facet`/`row`/`column` split to a real operator wrapping the
+            // layer — Vega-Lite drops that split if it is left inside a layer's
+            // encoding, which silently un-facets the chart.
+            appendLayer(body, rule);
             if (!said) {
                 say('structure.grid.zero', 'the measure changes sign inside the plot — zero is drawn as its own rule, not as one gridline among the rest');
                 said = true;
