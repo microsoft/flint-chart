@@ -1093,6 +1093,9 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     }
 
     if (m.separator?.show) {
+        const plotW = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
+        const plotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
+        let saidThin = false;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
             if (mark !== 'bar' && mark !== 'rect') return;
@@ -1101,6 +1104,20 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             // and its fill is the reading, so how it is held apart is its own
             // decision, taken below.
             if (isGridCell(node, node.encoding ?? {})) return;
+            // A separator is drawn on the bar's edge, so half its width is taken
+            // out of the fill on each side. Once the bars are thinner than the
+            // stroke — a ramp dodged into fifty lanes, say — the stroke paints
+            // over the whole bar and the series vanishes. Leave those alone; the
+            // density itself already reads as separation.
+            const barW = estimateBarExtent(node, node.encoding ?? {}, table, plotW, plotH);
+            if (barW < 2 * m.separator!.width) {
+                if (!saidThin) {
+                    say('marks.separator',
+                        `bars are ${barW.toFixed(1)}px — too thin to hold a ${m.separator!.width}px separator, which would paint over them; left flush`);
+                    saidThin = true;
+                }
+                return;
+            }
             node.mark = { ...normalizeMark(node.mark), stroke: m.separator!.color, strokeWidth: m.separator!.width };
         });
     }
@@ -1435,6 +1452,26 @@ function laneCount(node: any, enc: any, table: any[]): number {
         return Math.max(1, distinctCount(table, enc?.color?.field) || 1);
     }
     return Math.max(1, distinctCount(table, offset.field) || 1);
+}
+
+/**
+ * Roughly how many pixels wide a single bar ends up. A pinned pixel size is the
+ * answer outright; otherwise the band the layout gives each category is split
+ * between the dodge lanes inside it. Only an estimate — it decides whether a
+ * mark is too thin to carry an edge stroke, where the exact figure does not
+ * matter, only the order of magnitude.
+ */
+function estimateBarExtent(node: any, enc: any, table: any[], plotW: number, plotH: number): number {
+    const size = (node.mark as any)?.size;
+    if (typeof size === 'number') return size;
+    const discreteX = enc.x?.field && (enc.x.type === 'nominal' || enc.x.type === 'ordinal');
+    const discreteY = enc.y?.field && (enc.y.type === 'nominal' || enc.y.type === 'ordinal');
+    const channel = discreteX ? 'x' : discreteY ? 'y' : undefined;
+    if (!channel) return Infinity;
+    const span = channel === 'x' ? plotW : plotH;
+    const cats = distinctCount(table, enc[channel].field) || 1;
+    const lanes = laneCount(node, enc, table);
+    return span / (cats * lanes);
 }
 
 // ---------------------------------------------------------------------------
