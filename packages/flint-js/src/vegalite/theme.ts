@@ -2904,17 +2904,41 @@ function bandEndLabels(
     const name = normalized
         ? `datum[${JSON.stringify(seriesField)}] + ''`
         : `datum[${JSON.stringify(seriesField)}] + ' ' + ${shown}`;
+    // The band is an `area` mark, which Vega-Lite stacks on its own; a `text`
+    // mark is not stacked unless told to. Left implicit, every label lands at
+    // its series' *raw* reading and the whole set piles up at the foot of the
+    // plot as if nothing were stacked. Naming the band's own offset on the
+    // label layer lifts each name to the middle of the band it belongs to.
+    const stackOffset =
+        value.stack === null || value.stack === false || value.stack === 'none'
+            ? undefined
+            : (value.stack ?? 'zero');
     // Both layers keep every series, because a stacked layer stacks only the
     // rows it is given: drop one and the rest slide off their own bands. What
     // changes between them is whether the text says anything.
+    //
+    // "The end" is the last reading in the order the domain is *drawn*. A time
+    // or number line sorts itself; an explicit category order is read off the
+    // house's list; but a bare nominal domain ("Stage 1"…"Stage 12") has no
+    // order but the one its rows arrived in — and sorting those as *strings*
+    // ends every series at "Stage 9", stranded mid-plot, not at "Stage 12". So
+    // rank by declared order where there is one, by the field where it is a
+    // scale, and by arrival order otherwise.
+    const rankTf: any[] = Array.isArray(domain.sort)
+        ? [
+            { calculate: `indexof(${JSON.stringify(domain.sort)}, datum[${JSON.stringify(domain.field)}])`, as: '__bandDomainOrder' },
+            { window: [{ op: 'row_number', as: '__bandEndRank' }], sort: [{ field: '__bandDomainOrder', order: 'descending' }], groupby: [seriesField] },
+        ]
+        : (domain.type === 'quantitative' || domain.type === 'temporal')
+            ? [{ window: [{ op: 'row_number', as: '__bandEndRank' }], sort: [{ field: domain.field, order: domain.sort === 'descending' ? 'ascending' : 'descending' }], groupby: [seriesField] }]
+            : [
+                { window: [{ op: 'row_number', as: '__bandDataOrder' }] },
+                { window: [{ op: 'row_number', as: '__bandEndRank' }], sort: [{ field: '__bandDataOrder', order: 'descending' }], groupby: [seriesField] },
+            ];
     const endLayer = (inside: boolean): any => ({
         __themeSynthetic: true,
         transform: [
-            {
-                window: [{ op: 'row_number', as: '__bandEndRank' }],
-                sort: [{ field: domain.field, order: 'descending' }],
-                groupby: [seriesField],
-            },
+            ...rankTf,
             { filter: 'datum.__bandEndRank === 1' },
             {
                 calculate: outside.length ? `${belongs(inside)} ? ${name} : ''` : name,
@@ -2933,7 +2957,7 @@ function bandEndLabels(
         },
         encoding: {
             [domainChannel]: stripAxis(domain),
-            [valueChannel]: { ...stripAxis(value), bandPosition: 0.5 },
+            [valueChannel]: { ...stripAxis(value), bandPosition: 0.5, ...(stackOffset ? { stack: stackOffset } : {}) },
             text: { field: '__bandEndLabel', type: 'nominal' },
             ...(inside ? knockedOut : inSeriesInk),
         },
