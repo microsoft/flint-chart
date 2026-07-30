@@ -1,8 +1,8 @@
 """Run the Python `assemble_vegalite` against every extracted JS fixture.
 
 Categorises each fixture as PASS, MISMATCH, PY_ERROR, or NO_EXPECTED, then
-writes a structured `results.json` and a human-readable `REPORT.md` to
-`flint-py/tests/fixtures/` for downstream analysis.
+writes a structured `results.json` next to the corpus in `shared/test-data/`
+and a human-readable `FULL_GALLERY_REPORT.md` to `flint-py/tests/`.
 
 Usage:
     python flint-py/tools/run_full_eval.py
@@ -20,7 +20,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-FIXTURES = ROOT / "tests" / "fixtures"
+# The fixture corpus moved to shared/test-data in 1d1ee39 ("rename
+# agents→agent-skills, test-fixtures→test-data"); results.json is tracked
+# alongside it. The report stays under tests/, where the committed copy lives.
+FIXTURES = ROOT.parent.parent / "shared" / "test-data"
+REPORT_DIR = ROOT / "tests"
 
 sys.path.insert(0, str(ROOT))
 from flint.vegalite import assemble_vegalite  # noqa: E402
@@ -342,7 +346,7 @@ def main() -> int:
         "Without these fixes the report would show ~70 MISMATCH cases.\n"
     )
 
-    out_path = FIXTURES.parent / "FULL_GALLERY_REPORT.md"
+    out_path = REPORT_DIR / "FULL_GALLERY_REPORT.md"
     out_path.write_text("".join(lines))
     print(f"Wrote {out_path}")
     print("Summary:")
