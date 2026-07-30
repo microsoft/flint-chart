@@ -50,4 +50,25 @@ export const GAP_NOTES: GapNote[] = [
             + 'rule can assert for the author. Parked as the reference case for palette '
             + 'exhaustion on part-to-whole.',
     },
+    {
+        id: 'grouped-color-continuous',
+        theme: 'datawrapper',
+        note:
+            'Fifty numeric groups on a *sequential* ramp, drawn as filled bars. '
+            + 'datawrapper\'s ramp runs from near-white to blue — right for a heatmap, '
+            + 'where cell gaps outline even the palest cell, but on bars against a white '
+            + 'plot the low end of the ramp is the plot surface, so half the bars vanish '
+            + 'and the panel reads as blank. The other houses survive only because their '
+            + 'ramps start darker; flint\'s purple low-end stays visible too. The real '
+            + 'principle underneath is generalisable — a *filled* mark needs a contrast '
+            + 'floor against the surface it sits on, and a sequential ramp whose low end '
+            + 'meets that surface must be lifted, or the marks given a thin stroke to '
+            + 'outline them (as the heatmap\'s gaps already do). But that touches every '
+            + 'sequential-coloured chart (heatmaps most of all, where the pale end is '
+            + 'deliberate) and needs the fill-vs-bordered-cell distinction drawn carefully; '
+            + 'too big and too risky to land blind mid-round. Parked as the reference case '
+            + 'for "ramp low-end washes out a fill mark against its surface", alongside a '
+            + 'note that continuous colour on fifty grouped bars is a poor encoding to '
+            + 'begin with.',
+    },
 ];
