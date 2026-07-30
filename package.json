@@ -26,6 +26,7 @@
     "site": "npm run dev -w site",
     "site:build": "npm run build -w site",
     "gen:reference": "esbuild scripts/gen-chart-reference.ts --bundle --platform=node --format=esm --outfile=scripts/.gen-chart-reference.mjs && node scripts/.gen-chart-reference.mjs && rm -f scripts/.gen-chart-reference.mjs",
+    "gen:schema": "esbuild scripts/gen-json-schema.ts --bundle --platform=node --format=esm --outfile=scripts/.gen-json-schema.mjs && node scripts/.gen-json-schema.mjs && node -e \"require('fs').rmSync('scripts/.gen-json-schema.mjs',{force:true})\"",
     "presite": "npm run gen:reference",
     "presite:build": "npm run gen:reference",
     "postinstall": "node scripts/link-site-react.mjs"
@@ -37,7 +38,9 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.0.0",
