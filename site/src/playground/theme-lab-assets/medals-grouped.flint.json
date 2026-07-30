@@ -56,6 +56,9 @@
     "step": 68,
     "for": "position"
   },
+  "title": {
+    "text": "Paris 2024 Olympic medals — top nations"
+  },
   "data": {
     "values": [
       {
@@ -134,8 +137,5 @@
         "Count": 22
       }
     ]
-  },
-  "title": {
-    "text": "Paris 2024 Olympic medals — top nations"
   }
 }

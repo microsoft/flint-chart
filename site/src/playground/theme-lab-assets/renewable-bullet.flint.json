@@ -247,6 +247,12 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "Every country is short of its renewable target",
+    "subtitle": [
+      "Renewable share of electricity, 2023, per cent, against national targets"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -274,12 +280,6 @@
         "Share": 22.7,
         "Target": 50
       }
-    ]
-  },
-  "title": {
-    "text": "Every country is short of its renewable target",
-    "subtitle": [
-      "Renewable share of electricity, 2023, per cent, against national targets"
     ]
   }
 }

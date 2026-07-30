@@ -130,7 +130,7 @@
     },
     "exam-ecdf": {
       "title": "Empirical distribution of exam scores",
-      "subtitle": "n = 30; circles mark individual scores"
+      "subtitle": "n = 30; each step is one score"
     },
     "population": {
       "title": "Most populous countries, 2023",

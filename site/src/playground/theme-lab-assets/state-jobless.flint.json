@@ -45,6 +45,12 @@
   "width": {
     "step": 9
   },
+  "title": {
+    "text": "Unemployment by state",
+    "subtitle": [
+      "Annual average unemployment rate, 50 US states, 2023, per cent"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -247,12 +253,6 @@
         "State": "Wyoming",
         "Unemployment (%)": 3.1
       }
-    ]
-  },
-  "title": {
-    "text": "Unemployment by state",
-    "subtitle": [
-      "Annual average unemployment rate, 50 US states, 2023, per cent"
     ]
   }
 }

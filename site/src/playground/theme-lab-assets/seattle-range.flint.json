@@ -65,6 +65,12 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Seattle, month by month",
+    "subtitle": [
+      "Average daily high and low temperature, °F, 1991–2020 normals"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -127,12 +133,6 @@
         "Low": 36,
         "High": 46
       }
-    ]
-  },
-  "title": {
-    "text": "Seattle, month by month",
-    "subtitle": [
-      "Average daily high and low temperature, °F, 1991–2020 normals"
     ]
   }
 }

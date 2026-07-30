@@ -52,6 +52,12 @@
       "spacing": 7
     }
   },
+  "title": {
+    "text": "Sixteen labour markets, one shock",
+    "subtitle": [
+      "Harmonised unemployment rate, selected OECD economies, 2000–2023, per cent"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -454,12 +460,6 @@
         "Country": "United States",
         "Unemployment (%)": 3.6
       }
-    ]
-  },
-  "title": {
-    "text": "Sixteen labour markets, one shock",
-    "subtitle": [
-      "Harmonised unemployment rate, selected OECD economies, 2000–2023, per cent"
     ]
   }
 }

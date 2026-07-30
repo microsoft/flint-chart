@@ -66,6 +66,9 @@ import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deri
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { resolveThemeSpec } from '../core/theme/presets';
+import { realizeThemeVegaLite, collectMarkTypes, collectPositional } from './theme';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -109,14 +112,21 @@ const escapeVlFieldName = (name: string): string =>
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
+    // `theme_spec` may name a house Flint ships rather than spell one out.
+    const themeSpec = resolveThemeSpec(input.theme_spec);
+    // A house may prefer a size, a stretch budget, a facet gap. Those settle
+    // before anything is measured, and in a fixed order: the chart spec first,
+    // the theme's presets under it, flint's own defaults under that.
+    const themePresets = resolveCompileDefaults(themeSpec, input.options);
     // Internal layout targets the base (target) size; the optional canvasSize
     // ceiling is applied as per-dimension stretch caps once options resolve.
     // The base is clamped to the ceiling so a smaller canvasSize shrinks the
     // chart to fit rather than overflowing it.
-    const sizeCeiling = input.chart_spec.canvasSize;
-    const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
+    const housePresets = themeSpec?.compileDefaults;
+    const sizeCeiling = input.chart_spec.canvasSize ?? housePresets?.canvasSize;
+    const baseSize = resolveBaseSize(input.chart_spec.baseSize ?? housePresets?.baseSize, sizeCeiling);
     const canvasSize = baseSize;
-    const options = input.options ?? {};
+    const options = themePresets.options ?? {};
     let chartTemplate = vlGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
         throw new Error(`Unknown chart type: ${chartType}`);
@@ -131,8 +141,20 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const normalizedProps = normalizeChartProperties(
         chartTemplate.properties, input.chart_spec.chartProperties,
     );
-    const chartProperties = normalizedProps.chartProperties;
+    let chartProperties = normalizedProps.chartProperties;
     warnings.push(...normalizedProps.warnings);
+
+    // A house's rules about the chart itself — points on a line, a bump chart
+    // left unsmoothed — change what is drawn, not how it is dressed, so they
+    // are folded in here, before the pipeline reads the properties. Anything
+    // the caller stated already is left alone.
+    if (themeSpec?.chartDefaults && !chartProperties) chartProperties = {};
+    const chartDefaultsReport = chartProperties
+        ? resolveChartDefaults(
+            themeSpec, chartType, chartTemplate.properties,
+            input.chart_spec.chartProperties, chartProperties,
+        )
+        : [];
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
@@ -346,6 +368,35 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         ...options,
         ...(declaration.paramOverrides || {}),
     };
+
+    // How much room one category gets is a house decision — a journal that
+    // prints three wide boxes and a dashboard that prints thirty thin bars are
+    // both right about their own page. A template's band size is a guess made
+    // without knowing the house, so the house's number replaces it; a caller
+    // who states one outranks both.
+    //
+    // But a band step is a statement about bar thickness, and where *both* axes
+    // are banded there are no bars: the marks are cells, and a cell's size is
+    // fixed by the two counts and the room they share. A house that asks for
+    // 80px categories would print a grid of stripes. That one the layout keeps.
+    const houseBandStep = themeSpec?.layout?.bandStep;
+    const cellGrid = declaration.axisFlags?.x?.banded === true
+        && declaration.axisFlags?.y?.banded === true;
+    if (houseBandStep && options.defaultBandSize == null && !cellGrid) {
+        effectiveOptions.defaultBandSize = houseBandStep;
+        effectiveOptions.maxBandSize = Math.max(houseBandStep, effectiveOptions.maxBandSize ?? 0);
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStep',
+            message: `the house gives each category ${houseBandStep}px`,
+        });
+    } else if (houseBandStep && cellGrid) {
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStep',
+            message: `the house asks for ${houseBandStep}px categories, but both axes are banded — the marks are cells, whose size the grid settles, not the house`,
+        });
+    }
 
     const {
         addTooltips: addTooltipsOpt = false,
@@ -659,10 +710,68 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // HEADLINE
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Written before theming, because whether the chart has a headline is a
+    // fact the theme reasons about: a house that omits axis titles is leaning
+    // on this line to name the measure.
+    const headline = input.chart_spec.title?.trim();
+    const deck = input.chart_spec.subtitle?.trim();
+    if (headline || deck) {
+        vgObj.title = {
+            text: headline ?? '',
+            ...(deck ? { subtitle: [deck] } : {}),
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // THEME (level 2 grounding → level 3 realization)
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Runs last, deliberately. `vlApplyLayoutToSpec` builds `config` wholesale
+    // from fit decisions; the theme is a style layer over a chart that already
+    // fits, so it must see the finished spec.
+    let themeDecisions: any;
+    if (themeSpec) {
+        const markTypes = collectMarkTypes(vgObj);
+        const stackedChannel = (vgObj.spec?.encoding ?? vgObj.encoding ?? {});
+        const stacked = stackedChannel.y?.stack ?? stackedChannel.x?.stack;
+        themeDecisions = groundTheme(themeSpec, {
+            chartType,
+            markChannel: chartTemplate.markCognitiveChannel,
+            markTypes,
+            channelSemantics,
+            resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
+            axisFlags: declaration.axisFlags,
+            positional: collectPositional(vgObj),
+            layout: layoutResult,
+            table: values,
+            canvasSize,
+            stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
+            partToWhole: markTypes.includes('arc'),
+            titled: Boolean(vgObj.title),
+            hostSurface: (input.options as any)?.background,
+        });
+        const realizeReport = realizeThemeVegaLite(vgObj, themeDecisions, values);
+        themeDecisions = {
+            ...themeDecisions,
+            report: [...themePresets.report, ...chartDefaultsReport, ...themeDecisions.report, ...realizeReport],
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // RESULT
     // ═══════════════════════════════════════════════════════════════════════
 
     const result: any = { ...vgObj, data: vgObj.data ?? { values } };
+    if (themeDecisions) {
+        result._theme = {
+            id: themeDecisions.themeId,
+            report: themeDecisions.report,
+            decisions: themeDecisions,
+        };
+    }
     if (warnings.length > 0) {
         result._warnings = warnings;
     }

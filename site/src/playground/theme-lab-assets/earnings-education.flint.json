@@ -56,6 +56,12 @@
     "step": 46,
     "for": "position"
   },
+  "title": {
+    "text": "Median weekly earnings by education and sex, 2023",
+    "subtitle": [
+      "US dollars, full-time wage and salary workers"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -108,12 +114,6 @@
         "Sex": "Women",
         "Weekly earnings ($)": 620
       }
-    ]
-  },
-  "title": {
-    "text": "Median weekly earnings by education and sex, 2023",
-    "subtitle": [
-      "US dollars, full-time wage and salary workers"
     ]
   }
 }

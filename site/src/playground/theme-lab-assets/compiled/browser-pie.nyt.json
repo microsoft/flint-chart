@@ -1,0 +1,196 @@
+{
+  "width": 340,
+  "height": 292,
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#8a8a8a",
+      "gradientLength": 164,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16.5,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 15,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 12,
+  "transform": [
+    {
+      "calculate": "format(datum[\"Share\"], \"~s\") + \"%\"",
+      "as": "__flintValueWithUnit"
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "#ffffff",
+        "strokeWidth": 1.5
+      },
+      "encoding": {}
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "Helvetica, Arial, sans-serif",
+        "fontSize": 10.5,
+        "fontWeight": 700,
+        "radius": 105.11999999999999,
+        "color": "#ffffff"
+      },
+      "encoding": {
+        "text": {
+          "field": "__flintValueWithUnit",
+          "type": "nominal"
+        },
+        "color": {
+          "value": "#ffffff"
+        }
+      }
+    }
+  ],
+  "encoding": {
+    "theta": {
+      "field": "Share",
+      "type": "quantitative",
+      "stack": true
+    },
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          "#2f6b9a",
+          "#c2352b",
+          "#4a8b6f",
+          "#7f6a9e",
+          "#d9a441"
+        ]
+      }
+    },
+    "order": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": "ascending"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.measure.suppressWhenValuesPrinted",
+      "message": "measure axis removed — every mark prints its own value"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.redundantEncoding",
+      "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.unit",
+      "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+    }
+  ]
+}

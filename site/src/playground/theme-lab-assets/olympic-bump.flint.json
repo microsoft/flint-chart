@@ -2,22 +2,41 @@
   "mark": {
     "type": "line",
     "point": true,
-    "interpolate": "monotone",
+    "interpolate": "linear",
     "strokeWidth": 2
   },
   "encoding": {
     "x": {
       "field": "Games",
-      "type": "temporal"
+      "type": "temporal",
+      "scale": {
+        "padding": 10
+      }
     },
     "y": {
       "field": "Rank",
       "type": "quantitative",
       "scale": {
         "reverse": true,
-        "zero": true
+        "domain": [
+          1,
+          7
+        ],
+        "zero": false,
+        "nice": false,
+        "padding": 14
       },
       "axis": {
+        "values": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "tickCount": 7,
         "format": ",.12~g"
       }
     },
@@ -26,7 +45,7 @@
       "type": "nominal",
       "sort": null,
       "scale": {
-        "scheme": "set2"
+        "scheme": "tableau10"
       }
     }
   },
@@ -51,6 +70,12 @@
     "facet": {
       "spacing": 25
     }
+  },
+  "title": {
+    "text": "Four Games, four different stories",
+    "subtitle": [
+      "Rank in the Summer Olympics medal table, 2012–2024"
+    ]
   },
   "data": {
     "values": [
@@ -134,12 +159,6 @@
         "Country": "Japan",
         "Rank": 3
       }
-    ]
-  },
-  "title": {
-    "text": "Four Games, four different stories",
-    "subtitle": [
-      "Rank in the Summer Olympics medal table, 2012–2024"
     ]
   }
 }

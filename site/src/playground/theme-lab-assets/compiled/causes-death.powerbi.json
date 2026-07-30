@@ -1,0 +1,266 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#323130",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "tickCount": 5
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": [
+      "Leading causes of death, United States, 2022, thousands of deaths"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": {
+    "left": 8,
+    "right": 28,
+    "top": 8,
+    "bottom": 8
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "#1b1a19",
+        "strokeWidth": 1,
+        "color": "#118dff"
+      },
+      "encoding": {
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.09999999999999998
+          }
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "'Segoe UI', system-ui, sans-serif",
+        "fontSize": 10,
+        "align": "right",
+        "baseline": "middle",
+        "dx": -5,
+        "color": "#1b1a19"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      },
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) >= 76.82785714285714"
+        }
+      ]
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) < 76.82785714285714"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "'Segoe UI', system-ui, sans-serif",
+        "fontSize": 10,
+        "align": "left",
+        "baseline": "middle",
+        "dx": 4,
+        "color": "#f3f2f1"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Cause": "Diseases of heart",
+        "Deaths (thousands)": 703
+      },
+      {
+        "Cause": "Malignant neoplasms",
+        "Deaths (thousands)": 608
+      },
+      {
+        "Cause": "Unintentional injuries",
+        "Deaths (thousands)": 227
+      },
+      {
+        "Cause": "Cerebrovascular diseases",
+        "Deaths (thousands)": 165
+      },
+      {
+        "Cause": "Chronic lower respiratory diseases",
+        "Deaths (thousands)": 148
+      },
+      {
+        "Cause": "Alzheimer disease",
+        "Deaths (thousands)": 120
+      },
+      {
+        "Cause": "Diabetes mellitus",
+        "Deaths (thousands)": 102
+      },
+      {
+        "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+        "Deaths (thousands)": 58
+      },
+      {
+        "Cause": "Chronic liver disease and cirrhosis",
+        "Deaths (thousands)": 55
+      },
+      {
+        "Cause": "Intentional self-harm (suicide)",
+        "Deaths (thousands)": 49
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks shorter than their own label print it outside instead"
+    }
+  ]
+}

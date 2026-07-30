@@ -46,6 +46,9 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "World Happiness vs income per capita (2023)"
+  },
   "data": {
     "values": [
       {
@@ -109,8 +112,5 @@
         "Happiness score": 7.1
       }
     ]
-  },
-  "title": {
-    "text": "World Happiness vs income per capita (2023)"
   }
 }

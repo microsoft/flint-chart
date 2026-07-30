@@ -50,6 +50,12 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Global temperature anomaly by decade",
+    "subtitle": [
+      "°C against the 1951–1980 average"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -97,12 +103,6 @@
         "Anomaly (°C)": 1.02,
         "Direction": "Above average"
       }
-    ]
-  },
-  "title": {
-    "text": "Global temperature anomaly by decade",
-    "subtitle": [
-      "°C against the 1951–1980 average"
     ]
   }
 }

@@ -41,6 +41,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Federal funds target rate",
+    "subtitle": [
+      "Upper bound at year end, %"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -83,12 +89,6 @@
         "Year": "2024",
         "Target rate (%)": 4.75
       }
-    ]
-  },
-  "title": {
-    "text": "Federal funds target rate",
-    "subtitle": [
-      "Upper bound at year end, %"
     ]
   }
 }

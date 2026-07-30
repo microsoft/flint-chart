@@ -194,3 +194,17 @@ export {
     resolveStackable,
     resolveSortDirection,
 } from './field-semantics';
+
+// ThemeSpec (experimental): level 1 vocabulary + level 2 grounding
+export {
+    type ThemeSpec,
+    type ThemePreset,
+    type DesignDecisions,
+    type ThemeReport,
+    type Presence,
+    type GroundingContext,
+    groundTheme,
+    THEME_PRESETS,
+    listThemePresets,
+    resolveThemeSpec,
+} from './theme';

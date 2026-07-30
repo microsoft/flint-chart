@@ -123,7 +123,7 @@
     "id": "exam-ecdf",
     "chartType": "ECDF Plot",
     "title": "Empirical distribution of exam scores",
-    "subtitle": "n = 30; circles mark individual scores",
+    "subtitle": "n = 30; each step is one score",
     "source": "Illustrative class scores",
     "rows": 30
   },

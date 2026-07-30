@@ -1,0 +1,327 @@
+{
+  "layer": [
+    {
+      "mark": {
+        "type": "circle",
+        "color": "#0072b2"
+      },
+      "encoding": {
+        "x": {
+          "field": "Horsepower",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y": {
+          "field": "MPG",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "color": {},
+        "size": {}
+      }
+    },
+    {
+      "mark": {
+        "type": "line",
+        "color": "#0072b2",
+        "point": false
+      },
+      "transform": [
+        {
+          "regression": "MPG",
+          "on": "Horsepower"
+        }
+      ],
+      "encoding": {
+        "x": {
+          "field": "Horsepower",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y": {
+          "field": "MPG",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "text": "n = 22 · R² = 0.76 · slope = −0.120",
+        "align": "right",
+        "baseline": "bottom",
+        "x": {
+          "expr": "width"
+        },
+        "y": {
+          "expr": "-4"
+        },
+        "font": "Arial, Helvetica, sans-serif",
+        "fontSize": 10.5,
+        "fill": "#000000"
+      }
+    }
+  ],
+  "encoding": {},
+  "config": {
+    "view": {
+      "continuousWidth": 313,
+      "continuousHeight": 250,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "tickCount": 7
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 6,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Power against fuel economy",
+    "subtitle": [
+      "Ordinary least squares fit; each point is one car model"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Horsepower": 130,
+        "MPG": 18
+      },
+      {
+        "Horsepower": 165,
+        "MPG": 15
+      },
+      {
+        "Horsepower": 150,
+        "MPG": 18
+      },
+      {
+        "Horsepower": 150,
+        "MPG": 16
+      },
+      {
+        "Horsepower": 140,
+        "MPG": 17
+      },
+      {
+        "Horsepower": 198,
+        "MPG": 15
+      },
+      {
+        "Horsepower": 220,
+        "MPG": 14
+      },
+      {
+        "Horsepower": 215,
+        "MPG": 14
+      },
+      {
+        "Horsepower": 97,
+        "MPG": 22
+      },
+      {
+        "Horsepower": 85,
+        "MPG": 26
+      },
+      {
+        "Horsepower": 88,
+        "MPG": 25
+      },
+      {
+        "Horsepower": 46,
+        "MPG": 26
+      },
+      {
+        "Horsepower": 90,
+        "MPG": 25
+      },
+      {
+        "Horsepower": 95,
+        "MPG": 24
+      },
+      {
+        "Horsepower": 68,
+        "MPG": 29
+      },
+      {
+        "Horsepower": 70,
+        "MPG": 27
+      },
+      {
+        "Horsepower": 52,
+        "MPG": 30
+      },
+      {
+        "Horsepower": 65,
+        "MPG": 31
+      },
+      {
+        "Horsepower": 67,
+        "MPG": 30
+      },
+      {
+        "Horsepower": 48,
+        "MPG": 43
+      },
+      {
+        "Horsepower": 66,
+        "MPG": 32
+      },
+      {
+        "Horsepower": 100,
+        "MPG": 22
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point",
+      "message": "the fitted line keeps no vertex points — its vertices are where the fit was sampled, not where anything was measured"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.statistics",
+      "message": "the fit is stated as well as drawn — n = 22, R² = 0.76, slope = −0.120 — computed from the 22 rows the line was fitted to"
+    }
+  ]
+}

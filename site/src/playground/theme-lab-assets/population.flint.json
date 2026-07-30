@@ -42,6 +42,12 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "Most populous countries, 2023",
+    "subtitle": [
+      "Population in millions"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -84,12 +90,6 @@
         "Country": "Mexico",
         "Population": 128.5
       }
-    ]
-  },
-  "title": {
-    "text": "Most populous countries, 2023",
-    "subtitle": [
-      "Population in millions"
     ]
   }
 }

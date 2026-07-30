@@ -44,6 +44,9 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Old Faithful eruptions — waiting time vs duration"
+  },
   "data": {
     "values": [
       {
@@ -191,8 +194,5 @@
         "Waiting (min)": 52
       }
     ]
-  },
-  "title": {
-    "text": "Old Faithful eruptions — waiting time vs duration"
   }
 }

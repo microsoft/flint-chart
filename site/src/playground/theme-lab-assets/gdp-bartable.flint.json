@@ -239,6 +239,12 @@
   "height": {
     "step": 27
   },
+  "title": {
+    "text": "America and China lap the field",
+    "subtitle": [
+      "Gross domestic product, 2023, trillion US dollars"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -273,12 +279,6 @@
         "Country": "Brazil",
         "GDP ($T)": 2.2
       }
-    ]
-  },
-  "title": {
-    "text": "America and China lap the field",
-    "subtitle": [
-      "Gross domestic product, 2023, trillion US dollars"
     ]
   }
 }

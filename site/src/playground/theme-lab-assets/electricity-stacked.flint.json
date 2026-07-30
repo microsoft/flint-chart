@@ -55,6 +55,9 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Electricity generation mix by country, 2023 (%)"
+  },
   "data": {
     "values": [
       {
@@ -133,8 +136,5 @@
         "Share": 2
       }
     ]
-  },
-  "title": {
-    "text": "Electricity generation mix by country, 2023 (%)"
   }
 }

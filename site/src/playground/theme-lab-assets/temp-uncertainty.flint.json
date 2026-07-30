@@ -48,6 +48,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "The record gets more certain as it gets warmer",
+    "subtitle": [
+      "Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -110,12 +116,6 @@
         "Lower (°C)": 1.07,
         "Upper (°C)": 1.15
       }
-    ]
-  },
-  "title": {
-    "text": "The record gets more certain as it gets warmer",
-    "subtitle": [
-      "Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C"
     ]
   }
 }

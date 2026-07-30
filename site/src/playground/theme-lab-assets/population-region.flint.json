@@ -53,6 +53,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "World population by region",
+    "subtitle": [
+      "1950–2020, millions of people"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -180,12 +186,6 @@
         "Region": "Oceania",
         "Population": 45
       }
-    ]
-  },
-  "title": {
-    "text": "World population by region",
-    "subtitle": [
-      "1950–2020, millions of people"
     ]
   }
 }

@@ -1,0 +1,281 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "Emissions per person run from 37 tonnes to 2",
+    "subtitle": [
+      "Carbon dioxide emissions per capita, 2022, tonnes"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "encoding": {},
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "strokeWidth": 1,
+            "color": "#c8c8c8"
+          },
+          "encoding": {
+            "x": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null,
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "Tonnes/person",
+              "type": "quantitative",
+              "scale": {
+                "zero": false
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            },
+            "y2": {
+              "datum": 0
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "circle",
+            "size": 80,
+            "opacity": 1,
+            "color": "#18a1cd"
+          },
+          "encoding": {
+            "x": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null,
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "Tonnes/person",
+              "type": "quantitative",
+              "scale": {
+                "zero": false
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            }
+          }
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "center",
+            "baseline": "bottom",
+            "dy": -9,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": {
+              "field": "Tonnes/person",
+              "type": "quantitative"
+            },
+            "x": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null
+            },
+            "y": {
+              "field": "Tonnes/person",
+              "type": "quantitative"
+            }
+          }
+        }
+      ],
+      "width": {
+        "step": 23
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 295,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ]
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12.5,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Qatar",
+        "Tonnes/person": 37
+      },
+      {
+        "Country": "UAE",
+        "Tonnes/person": 22
+      },
+      {
+        "Country": "United States",
+        "Tonnes/person": 15
+      },
+      {
+        "Country": "Canada",
+        "Tonnes/person": 14
+      },
+      {
+        "Country": "Russia",
+        "Tonnes/person": 11
+      },
+      {
+        "Country": "Japan",
+        "Tonnes/person": 8.5
+      },
+      {
+        "Country": "China",
+        "Tonnes/person": 8
+      },
+      {
+        "Country": "Germany",
+        "Tonnes/person": 8
+      },
+      {
+        "Country": "UK",
+        "Tonnes/person": 5
+      },
+      {
+        "Country": "France",
+        "Tonnes/person": 4.6
+      },
+      {
+        "Country": "Brazil",
+        "Tonnes/person": 2.3
+      },
+      {
+        "Country": "India",
+        "Tonnes/person": 2
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "marks.connector",
+      "message": "the stem is drawn at 1px in structural ink — it leads the eye to the axis and states nothing the dot's position has not"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 295px — not a fixed stub"
+    }
+  ]
+}

@@ -38,6 +38,9 @@
       "spacing": 24
     }
   },
+  "title": {
+    "text": "Sunspot number, 2000–2023"
+  },
   "data": {
     "values": [
       {
@@ -137,8 +140,5 @@
         "Sunspot number": 123
       }
     ]
-  },
-  "title": {
-    "text": "Sunspot number, 2000–2023"
   }
 }

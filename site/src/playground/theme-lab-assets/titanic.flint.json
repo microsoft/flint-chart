@@ -59,6 +59,9 @@
     "step": 46,
     "for": "position"
   },
+  "title": {
+    "text": "Titanic survival rate by class and sex"
+  },
   "data": {
     "values": [
       {
@@ -92,8 +95,5 @@
         "Survival (%)": 15
       }
     ]
-  },
-  "title": {
-    "text": "Titanic survival rate by class and sex"
   }
 }

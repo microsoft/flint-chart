@@ -101,6 +101,9 @@
       "spacing": 11
     }
   },
+  "title": {
+    "text": "Anscombe's Quartet — same stats, different shapes"
+  },
   "data": {
     "values": [
       {
@@ -324,8 +327,5 @@
         "Y": 6.89
       }
     ]
-  },
-  "title": {
-    "text": "Anscombe's Quartet — same stats, different shapes"
   }
 }

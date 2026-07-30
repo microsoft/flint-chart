@@ -1,0 +1,192 @@
+{
+  "width": 340,
+  "height": 292,
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "orient": "right",
+      "direction": "vertical",
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#8c8c8c",
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "#ffffff",
+        "strokeWidth": 1.5
+      },
+      "encoding": {}
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "Arial, Helvetica, sans-serif",
+        "fontSize": 11,
+        "radius": 160,
+        "color": "#000000"
+      },
+      "encoding": {
+        "text": {
+          "field": "Share",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "#000000"
+        }
+      }
+    }
+  ],
+  "encoding": {
+    "theta": {
+      "field": "Share",
+      "type": "quantitative",
+      "stack": true
+    },
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          "#0072b2",
+          "#e69f00",
+          "#009e73",
+          "#cc79a7",
+          "#56b4e9"
+        ]
+      }
+    },
+    "order": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": "ascending"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.redundantEncoding",
+      "message": "no mark in this chart can carry a redundant channel — colour is on its own"
+    }
+  ]
+}

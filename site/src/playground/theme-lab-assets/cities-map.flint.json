@@ -77,6 +77,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "World's largest cities (metro population)"
+  },
   "data": {
     "values": [
       {
@@ -140,8 +143,5 @@
         "Population (M)": 12.4
       }
     ]
-  },
-  "title": {
-    "text": "World's largest cities (metro population)"
   }
 }

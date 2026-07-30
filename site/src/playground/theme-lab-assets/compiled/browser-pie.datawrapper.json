@@ -1,0 +1,204 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "width": 340,
+      "height": 292,
+      "transform": [
+        {
+          "calculate": "datum[\"Share\"] + '' + \"%\"",
+          "as": "__flintValueWithUnit"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "arc",
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5
+          },
+          "encoding": {}
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "radius": 160,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": {
+              "field": "__flintValueWithUnit",
+              "type": "nominal"
+            },
+            "color": {
+              "value": "#333333"
+            }
+          }
+        }
+      ],
+      "encoding": {
+        "theta": {
+          "field": "Share",
+          "type": "quantitative",
+          "stack": true
+        },
+        "color": {
+          "field": "Browser",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#18a1cd",
+              "#e2a233",
+              "#c04a4a",
+              "#2d8659",
+              "#7e5aa2"
+            ]
+          }
+        },
+        "order": {
+          "field": "Browser",
+          "type": "nominal",
+          "sort": "ascending"
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 364,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 12.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 164,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12.5,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.unit",
+      "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 364px — not a fixed stub"
+    }
+  ]
+}

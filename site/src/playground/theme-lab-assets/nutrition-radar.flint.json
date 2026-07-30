@@ -894,6 +894,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Nutrition profile per 100 g — Almonds vs Oats vs Greek yogurt"
+  },
   "data": {
     "values": [
       {
@@ -972,8 +975,5 @@
         "Grams/100g": 4
       }
     ]
-  },
-  "title": {
-    "text": "Nutrition profile per 100 g — Almonds vs Oats vs Greek yogurt"
   }
 }

@@ -83,9 +83,11 @@ published, use the npm package or MCP server for released workflows.
 interface ChartAssemblyInput {
   // Bound by the HOST or by you, depending on the situation (see below).
   data: { values: any[] } | { url: string };
-  semantic_types?: Record<string, string>;   // field → semantic type  ← you write this
+  semantic_types?: Record<string, string | SemanticAnnotation>;  // field → type ( ← you write this)
   chart_spec: {                               //                        ← you write this
     chartType: string;                        // e.g. "Scatter Plot"
+    title?: string;                           // the headline — write one
+    subtitle?: string;                        // what is measured, of whom, when, in what units
     encodings: Record<string, EncodingValue>; // channel → { field, ... } (or array)
     baseSize?: { width: number; height: number };    // target layout size, default 400×320
     canvasSize?: { width: number; height: number };  // optional hard ceiling on stretch
@@ -93,6 +95,7 @@ interface ChartAssemblyInput {
   };
   options?: Record<string, any>;              // global layout options (rarely needed)
   field_display_names?: Record<string, string>; // field → readable axis/legend title
+  theme_spec?: string | ThemeSpec;            // design language, e.g. "economist" (Vega-Lite only)
 }
 ```
 
@@ -167,6 +170,44 @@ For a Vega-Lite-specific style tweak:
 
 This edited Vega-Lite spec is no longer a portable Flint spec. Do not send it to
 `render_chart`; use `render_chart` only for Flint `ChartAssemblyInput`.
+
+## Write a headline
+
+Set `chart_spec.title` to the finding, in a sentence, and `chart_spec.subtitle`
+to the reading of it — what is measured, of whom, when, in what units:
+
+```
+title:    "A pyramid that is no longer a pyramid"
+subtitle: "United States population by age and sex, 2020, millions"
+```
+
+`Jan`, `Cairo`, `Chrome` name their own kind; `26`, `5,300`, `0.42` do not, and
+the headline is where they get named. Leave it out only where the chart is not
+read on its own — a sparkline in a cell, a tile under its own caption. Nothing
+breaks: with no headline to lean on, the compiler keeps the axis titles instead.
+
+## Design languages (`theme_spec`)
+
+Name a house Flint ships and the compiler styles the chart to it:
+
+```json
+{ "chart_spec": { ... }, "theme_spec": "economist" }
+```
+
+| id | what it is for |
+| --- | --- |
+| `nyt` | Newsroom graphics: headline states the finding, values on the marks, series named at their ends. |
+| `economist` | Print weekly: compact, flat headline over a deck, units repeated down the ruler. |
+| `nature` | Journal figure: small panel, axis titles with units, statistics beside the fit. |
+| `mckinsey` | Consulting deck: wide bands, every value printed, headline states the takeaway. |
+| `datawrapper` | Embedded web chart: narrow column, plain headline and deck, rule under the footer. |
+| `powerbi` | Dashboard tile: compact, legend to the right, latest point emphasised. |
+
+A house governs the visual only — you still choose the fields, the aggregation
+and the sort. Where a house depends on something only you can supply, it says
+so: call `list_themes` with an `id` for that house's guidance, and read it
+*before* writing the chart spec, since it may change how you prepare the data.
+Vega-Lite only for now. You can also pass a `ThemeSpec` object of your own.
 
 ## Step 1 — pick `chartType`
 
@@ -333,6 +374,29 @@ What choosing well gets you (automatically):
 
 If you don't know, use `Quantity` for numbers, `Category` for strings,
 `Date`/`DateTime` for date-shaped values. Do **not** invent type names.
+
+### Saying more than the type name
+
+A field's entry can be an object instead of a string when the type alone
+understates what you know:
+
+```json
+"semantic_types": {
+  "anomaly": { "semanticType": "Quantity", "unit": "°C", "divergingMidpoint": 0 },
+  "rating":  { "semanticType": "Score", "intrinsicDomain": [1, 5] }
+}
+```
+
+- `unit` — the unit or currency code: `"USD"`, `"°C"`, `"kg"`.
+- `intrinsicDomain` — the field's own bounds, for bounded scales only: `[1, 5]`
+  for a five-star rating, `[0, 100]` for a percentage score. Not for
+  open-ended measures.
+- `divergingMidpoint` — where the middle colour of a diverging scale sits.
+  Set it if you can tell what the reader is comparing against; leave it out if
+  you can't.
+- `sortOrder` — the order the categories should appear in, when the order in
+  the data is not the one you want and it isn't alphabetical either:
+  `["Low", "Medium", "High"]`. For a handful of categories, not a long list.
 
 ## Chart-level properties (`chartProperties`)
 

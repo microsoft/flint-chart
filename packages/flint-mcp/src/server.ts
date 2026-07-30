@@ -14,7 +14,7 @@ import { renderChart, resolveDataSource } from './render/index.js';
 import type { RenderBackend } from './render/types.js';
 import { compileChart } from './tools/compile.js';
 import { validateChart } from './tools/validate.js';
-import { listChartTypes } from './tools/list.js';
+import { listChartTypes, listThemes } from './tools/list.js';
 import {
   buildAssemblyInputShape,
   toAssemblyInput,
@@ -265,6 +265,28 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     async (args: any) => {
       try {
         return jsonResult(listChartTypes(args?.backend as RenderBackend | undefined));
+      } catch (err) {
+        return errorResult(err);
+      }
+    },
+  );
+
+  // --- list_themes --------------------------------------------------------
+  server.registerTool(
+    'list_themes',
+    {
+      title: 'List themes',
+      description:
+        'List the design languages Flint ships, to be named in `theme_spec` ' +
+        '(e.g. theme_spec: "economist"). Pass an `id` to get that house\'s ' +
+        'authoring guidance — what the spec must supply for it to work.',
+      inputSchema: {
+        id: z.string().optional(),
+      },
+    },
+    async (args: any) => {
+      try {
+        return jsonResult(listThemes(args?.id as string | undefined));
       } catch (err) {
         return errorResult(err);
       }

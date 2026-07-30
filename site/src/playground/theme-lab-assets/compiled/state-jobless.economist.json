@@ -1,0 +1,396 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Unemployment by state",
+    "subtitle": [
+      "Annual average unemployment rate, 50 US states, 2023, per cent"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#006ba2"
+      },
+      "encoding": {
+        "x": {
+          "field": "State",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.31999999999999995
+          }
+        },
+        "y": {
+          "field": "Unemployment (%)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "orient": "right",
+            "labelExpr": "datum.label + \"%\""
+          }
+        }
+      },
+      "width": {
+        "step": 9
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 144,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 6,
+      "titleFontSize": 10.5,
+      "labelAngle": -90,
+      "labelAlign": "right",
+      "labelBaseline": "middle",
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121317",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 6,
+      "titleFontSize": 10.5,
+      "grid": true,
+      "gridColor": "#d8dfe4",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 3
+    },
+    "legend": {
+      "labelFontSize": 9,
+      "titleFontSize": 9
+    },
+    "facet": {
+      "spacing": {
+        "row": 18,
+        "column": 14
+      }
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "State": "Alabama",
+        "Unemployment (%)": 2.3
+      },
+      {
+        "State": "Alaska",
+        "Unemployment (%)": 4.3
+      },
+      {
+        "State": "Arizona",
+        "Unemployment (%)": 3.9
+      },
+      {
+        "State": "Arkansas",
+        "Unemployment (%)": 3.3
+      },
+      {
+        "State": "California",
+        "Unemployment (%)": 4.8
+      },
+      {
+        "State": "Colorado",
+        "Unemployment (%)": 3.2
+      },
+      {
+        "State": "Connecticut",
+        "Unemployment (%)": 3.9
+      },
+      {
+        "State": "Delaware",
+        "Unemployment (%)": 4.2
+      },
+      {
+        "State": "Florida",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "Georgia",
+        "Unemployment (%)": 3.2
+      },
+      {
+        "State": "Hawaii",
+        "Unemployment (%)": 3
+      },
+      {
+        "State": "Idaho",
+        "Unemployment (%)": 3.2
+      },
+      {
+        "State": "Illinois",
+        "Unemployment (%)": 4.5
+      },
+      {
+        "State": "Indiana",
+        "Unemployment (%)": 3.3
+      },
+      {
+        "State": "Iowa",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "Kansas",
+        "Unemployment (%)": 2.8
+      },
+      {
+        "State": "Kentucky",
+        "Unemployment (%)": 4.2
+      },
+      {
+        "State": "Louisiana",
+        "Unemployment (%)": 3.5
+      },
+      {
+        "State": "Maine",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "Maryland",
+        "Unemployment (%)": 2.1
+      },
+      {
+        "State": "Massachusetts",
+        "Unemployment (%)": 3.3
+      },
+      {
+        "State": "Michigan",
+        "Unemployment (%)": 3.9
+      },
+      {
+        "State": "Minnesota",
+        "Unemployment (%)": 2.8
+      },
+      {
+        "State": "Mississippi",
+        "Unemployment (%)": 3.2
+      },
+      {
+        "State": "Missouri",
+        "Unemployment (%)": 3
+      },
+      {
+        "State": "Montana",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "Nebraska",
+        "Unemployment (%)": 2.4
+      },
+      {
+        "State": "Nevada",
+        "Unemployment (%)": 5.3
+      },
+      {
+        "State": "New Hampshire",
+        "Unemployment (%)": 2.4
+      },
+      {
+        "State": "New Jersey",
+        "Unemployment (%)": 4.1
+      },
+      {
+        "State": "New Mexico",
+        "Unemployment (%)": 3.8
+      },
+      {
+        "State": "New York",
+        "Unemployment (%)": 4.1
+      },
+      {
+        "State": "North Carolina",
+        "Unemployment (%)": 3.4
+      },
+      {
+        "State": "North Dakota",
+        "Unemployment (%)": 1.9
+      },
+      {
+        "State": "Ohio",
+        "Unemployment (%)": 3.6
+      },
+      {
+        "State": "Oklahoma",
+        "Unemployment (%)": 3
+      },
+      {
+        "State": "Oregon",
+        "Unemployment (%)": 3.7
+      },
+      {
+        "State": "Pennsylvania",
+        "Unemployment (%)": 3.4
+      },
+      {
+        "State": "Rhode Island",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "South Carolina",
+        "Unemployment (%)": 3
+      },
+      {
+        "State": "South Dakota",
+        "Unemployment (%)": 1.9
+      },
+      {
+        "State": "Tennessee",
+        "Unemployment (%)": 3.2
+      },
+      {
+        "State": "Texas",
+        "Unemployment (%)": 4
+      },
+      {
+        "State": "Utah",
+        "Unemployment (%)": 2.5
+      },
+      {
+        "State": "Vermont",
+        "Unemployment (%)": 2.1
+      },
+      {
+        "State": "Virginia",
+        "Unemployment (%)": 2.8
+      },
+      {
+        "State": "Washington",
+        "Unemployment (%)": 4.1
+      },
+      {
+        "State": "West Virginia",
+        "Unemployment (%)": 4
+      },
+      {
+        "State": "Wisconsin",
+        "Unemployment (%)": 2.9
+      },
+      {
+        "State": "Wyoming",
+        "Unemployment (%)": 3.1
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "variants",
+      "message": "applied variant {\"markChannel\":\"length\"} — Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false (band 9px, 50 marks)"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.label.fontSize",
+      "message": "the axis is crowded — the layout fitted its labels at 6px and the house's 10.5px would not stand in the band"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.label.fontSize",
+      "message": "the axis is crowded — the layout fitted its labels at 6px and the house's 10.5px would not stand in the band"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+    }
+  ]
+}

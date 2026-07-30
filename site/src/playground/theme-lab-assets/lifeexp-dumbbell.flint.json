@@ -69,6 +69,12 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "Women outlive men everywhere, but not by the same margin",
+    "subtitle": [
+      "Life expectancy at birth by sex, 2021, years"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -131,12 +137,6 @@
         "Sex": "Female",
         "Life expectancy": 83.4
       }
-    ]
-  },
-  "title": {
-    "text": "Women outlive men everywhere, but not by the same margin",
-    "subtitle": [
-      "Life expectancy at birth by sex, 2021, years"
     ]
   }
 }

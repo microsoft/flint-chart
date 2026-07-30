@@ -1,0 +1,1915 @@
+{
+  "driving.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "annotation.axisTitles",
+        "message": "both rulers carry a measure — a headline can name one of them, so the axis titles are kept"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.title.placement",
+        "message": "the axis title lies flat above the axis, where it reads as a label rather than a caption on its side"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "penguins.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      }
+    ]
+  },
+  "keeling.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Line Chart.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 14 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `ppm` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "population.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      }
+    ]
+  },
+  "population-region.datawrapper": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 5 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 330px — not a fixed stub"
+      }
+    ]
+  },
+  "life-expectancy.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Slope Chart.showText",
+        "message": "house rule: `showText` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Slope Chart.showSeriesInLabel",
+        "message": "house rule: `showSeriesInLabel` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~23px and the band is 136px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.categorical",
+        "message": "7 series against 6 house inks, but the house names them on the mark — colour stops naming and takes the single ink"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.domain",
+        "message": "the value scale floats — a rule under the categories would claim a base the chart does not have"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels",
+        "message": "template already prints its own labels — left alone"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "the chart already prints its own end labels — no second set drawn"
+      }
+    ]
+  },
+  "population-waterfall.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series",
+        "message": "`__wf_color` is created by a backend transform — the whole categorical set is offered rather than guessing a count"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "the segments are stacked — a value at a segment edge would read as the running total"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.connector",
+        "message": "the lead line is drawn at 0.8px in structural ink — it runs across the categories at one level, and the two mark ends it touches already state that level"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 200px — under half the 456px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "auto-mpg.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point",
+        "message": "the fitted line keeps no vertex points — its vertices are where the fit was sampled, not where anything was measured"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.statistics",
+        "message": "the fit is stated as well as drawn — n = 22, R² = 0.76, slope = −0.120 — computed from the 22 rows the line was fitted to"
+      }
+    ]
+  },
+  "faithful-hist.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      }
+    ]
+  },
+  "penguins-box.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Boxplot.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~52px and the band is 52px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.summary.widthFraction",
+        "message": "the house fills 40% of the band with the box — 21px of a 52px band"
+      },
+      {
+        "stage": "realize",
+        "path": "ink.series",
+        "message": "the box is hollow because the observations are drawn through it — the outline is scaffolding and takes the text ink, not the series ink"
+      }
+    ]
+  },
+  "penguins-violin.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Violin Plot.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Violin Plot.showMedian",
+        "message": "house rule: `showMedian` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Violin Plot.showContour",
+        "message": "house rule: `showContour` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.suppressWhenAxisNames",
+        "message": "legend removed — it restated the categorical axis"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.redundantEncoding",
+        "message": "no mark in this chart can carry a redundant channel — colour is on its own"
+      }
+    ]
+  },
+  "exam-ecdf.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point",
+        "message": "28 readings on one line is past the 12 a reader can take one at a time, so the house's dots stand down and the line keeps its shape"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      }
+    ]
+  },
+  "co2-lollipop.datawrapper": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "marks.connector",
+        "message": "the stem is drawn at 1px in structural ink — it leads the eye to the axis and states nothing the dot's position has not"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 295px — not a fixed stub"
+      }
+    ]
+  },
+  "us-pyramid.datawrapper": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "ink.series",
+        "message": "the series is carried by the panels of a concatenation rather than a colour channel — the house set is assigned across the panels"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 101px — under half the 224px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "facets.header",
+        "message": "the panel names are set in their own panel's ink — the name is the swatch, so no key is drawn beside it"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "not drawn — the chart is already a concatenation"
+      }
+    ]
+  },
+  "gdp-bartable.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.endpointsAgainstSurface",
+        "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "the segments are stacked — a value at a segment edge would read as the running total"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.label.padding",
+        "message": "the template holds a 105px gutter for its labels — that is layout, not padding, so it stands"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 87px — under half the 193px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "lifeexp-dumbbell.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.connector",
+        "message": "the bridge is drawn at 3px in structural ink — the distance it spans is the reading, so it carries a mark's weight and none of a series' colour"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+      }
+    ]
+  },
+  "seattle-range.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~18px and the band is 23px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.domain",
+        "message": "the value scale floats — a rule under the categories would claim a base the chart does not have"
+      }
+    ]
+  },
+  "olympic-bump.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Bump Chart.interpolate",
+        "message": "house rule: `interpolate` set to \"linear\""
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.redundantEncoding",
+        "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "population-stream.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "the segments are stacked — a value at a segment edge would read as the running total"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.redundantEncoding",
+        "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 5 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "the bands climb away from their own labels — the names sit outside the plot in series ink, as a list"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized inside each band at its last reading — a name in the band beats a swatch beside the chart"
+      }
+    ]
+  },
+  "browser-pie.datawrapper": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.unit",
+        "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 364px — not a fixed stub"
+      }
+    ]
+  },
+  "browser-pie.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "variants",
+        "message": "applied variant {\"isPartToWhole\":true} — Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.unit",
+        "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+      }
+    ]
+  },
+  "browser-pie.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.endpointsAgainstSurface",
+        "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.suppressWhenValuesPrinted",
+        "message": "legend kept — the values are printed but nothing else names the series"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+      }
+    ]
+  },
+  "browser-pie.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.redundantEncoding",
+        "message": "no mark in this chart can carry a redundant channel — colour is on its own"
+      }
+    ]
+  },
+  "browser-pie.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.redundantEncoding",
+        "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.unit",
+        "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+      }
+    ]
+  },
+  "browser-pie.powerbi": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "marks.slice.gap",
+        "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.unit",
+        "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+      }
+    ]
+  },
+  "stock-candle.powerbi": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 9 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels",
+        "message": "the mark carries 2 measures (Open, Close) — no single value to print"
+      }
+    ]
+  },
+  "temp-heatmap.datawrapper": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~21px and the band is 32px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.tile",
+        "message": "the cells are cut apart by 1.5px — the grid reads as a table of separate readings rather than one continuous field"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 185px — under half the 411px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 411px — not a fixed stub"
+      }
+    ]
+  },
+  "temp-heatmap.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~18px and the band is 32px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 185px — under half the 411px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "temp-heatmap.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house asks for 80px categories, but both axes are banded — the marks are cells, whose size the grid settles, not the house"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.endpointsAgainstSurface",
+        "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.suppressWhenValuesPrinted",
+        "message": "legend removed — the ramp was a value key and every mark now prints its value"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.tile",
+        "message": "the cells are cut apart by 0.6px — the grid reads as a table of separate readings rather than one continuous field"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "`column` printed in the cell instead — a grid is continuous and has no outside"
+      }
+    ]
+  },
+  "temp-heatmap.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house asks for 46px categories, but both axes are banded — the marks are cells, whose size the grid settles, not the house"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~19px and the band is 32px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.title",
+        "message": "the key is a ruler, not a list of names — without a title nothing says what its numbers count"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.tile",
+        "message": "the cells are cut apart by 0.5px — the grid reads as a table of separate readings rather than one continuous field"
+      }
+    ]
+  },
+  "temp-heatmap.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.categorical.line",
+        "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~18px and the band is 32px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.tile",
+        "message": "the cells are cut apart by 1px — the grid reads as a table of separate readings rather than one continuous field"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 185px — under half the 411px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "temp-heatmap.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~18px and the band is 32px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.bandFraction",
+        "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.tile",
+        "message": "the cells are cut apart by 1px — the grid reads as a table of separate readings rather than one continuous field"
+      }
+    ]
+  },
+  "renewable-kpi.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "ink.series",
+        "message": "the template drew its own furniture in literal colours — those keep their role and are re-toned against the surface"
+      }
+    ]
+  },
+  "renewable-bullet.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "ink.series",
+        "message": "`__status` is created by a backend transform — the whole categorical set is offered rather than guessing a count"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "ink.series",
+        "message": "the layer states its own colour beside a colour-encoded layer — it is context, not series, so it keeps its role and is only re-toned against the surface"
+      }
+    ]
+  },
+  "kpi-sparkline.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the widest name needs ~16px and the band is 21px — at the house's label size they read straight"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.selection.redundantWithFacet",
+        "message": "series colour collapsed to single — the facet already names the series"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 9.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 9.5px would not stand in the band"
+      }
+    ]
+  },
+  "gapminder-bubble.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "annotation.axisTitles",
+        "message": "both rulers carry a measure — a headline can name one of them, so the axis titles are kept"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.sizeRange",
+        "message": "sized marks run from 10 to 450px² — the house's range, not the renderer's"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 149px — under half the 331px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "the size key is drawn in neutral ink — beside a colour key, swatches in series ink read as another category"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.maxSwatches",
+        "message": "the key to values is sampled at 3 round sizes — a swatch for every tick reads as data, not as a key"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "2 keys want 402px across a 331px block — they take a row each"
+      }
+    ]
+  },
+  "temp-anomaly.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "the segments are stacked — a value at a segment edge would read as the running total"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `°C` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "structure.grid.zero",
+        "message": "the measure changes sign inside the plot — zero is drawn as its own rule, not as one gridline among the rest"
+      },
+      {
+        "stage": "realize",
+        "path": "ink.series.status",
+        "message": "the categories carry a sign — Below average is negative, Above average is positive"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 99px — under half the 221px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "us-unemployment.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Line Chart.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 13 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `%` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "ev-share.datawrapper": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `%` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 330px — not a fixed stub"
+      }
+    ]
+  },
+  "ev-share.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+      }
+    ]
+  },
+  "ev-share.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+      }
+    ]
+  },
+  "ev-share.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      }
+    ]
+  },
+  "ev-share.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Line Chart.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.redundantEncoding",
+        "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `%` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "ev-share.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "ground",
+        "path": "marks.point.halo",
+        "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the latest reading carries a dot — the house marks where the line lands"
+      }
+    ]
+  },
+  "big-mac.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "variants",
+        "message": "applied variant {\"markChannel\":\"length\"} — Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.unit",
+        "message": "every label carries its unit — `$` — because the house prints no axis title to hold it"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks shorter than their own label print it outside instead"
+      }
+    ]
+  },
+  "oecd-unemployment-facet.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 8.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 8.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      }
+    ]
+  },
+  "spending-quintile.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "axes.x.label.angle",
+        "message": "the house sets category labels flat, but the widest needs ~83px in a 78px band — the angle is left to the layout"
+      },
+      {
+        "stage": "ground",
+        "path": "ink.series.endpointsAgainstSurface",
+        "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "the segments are stacked — a value at a segment edge would read as the running total"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 188px — under half the 417px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "trust-likert.datawrapper": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.unit",
+        "message": "the unit `%` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 135px — under half the 300px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 300px — not a fixed stub"
+      }
+    ]
+  },
+  "fed-funds-step.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 10 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the latest reading carries a dot — the house marks where the line lands"
+      }
+    ]
+  },
+  "renewables-projection.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "chartDefaults.Line Chart.showPoints",
+        "message": "house rule: `showPoints` set to true"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 8 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "the unit `GW` rides on the last label, where the ruler ends"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the line already shows every observation — a second dot at the end would say nothing new"
+      }
+    ]
+  },
+  "earnings-education.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.suppressWhenValuesPrinted",
+        "message": "legend kept — the values are printed but nothing else names the series"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      }
+    ]
+  },
+  "electricity-mix-area.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "variants",
+        "message": "applied variant {\"isPartToWhole\":true} — Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.placement",
+        "message": "the right margin holds the value axis, so a name too big for its band has nowhere to stand — the key is drawn `top` instead"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+      }
+    ]
+  },
+  "state-unemployment.datawrapper": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "legend.gradientLength",
+        "message": "the ramp runs 200px — under half the 535px block, so the key stays a caption to the chart"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 535px — not a fixed stub"
+      }
+    ]
+  },
+  "causes-death.datawrapper": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      },
+      {
+        "stage": "realize",
+        "path": "furniture",
+        "message": "the footerRule runs the width of the block — 300px — not a fixed stub"
+      }
+    ]
+  },
+  "causes-death.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "variants",
+        "message": "applied variant {\"markChannel\":\"length\"} — Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks shorter than their own label print it outside instead"
+      }
+    ]
+  },
+  "causes-death.mckinsey": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 80px"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`inline` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      }
+    ]
+  },
+  "causes-death.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks that reach the end of the scale print their label inside instead"
+      }
+    ]
+  },
+  "causes-death.nyt": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "structure.axis.measure.suppressWhenValuesPrinted",
+        "message": "measure axis removed — every mark prints its own value"
+      },
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks shorter than their own label print it outside instead"
+      }
+    ]
+  },
+  "causes-death.powerbi": {
+    "report": [
+      {
+        "stage": "realize",
+        "path": "dataLabels.placement",
+        "message": "marks shorter than their own label print it outside instead"
+      }
+    ]
+  },
+  "state-jobless.economist": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "variants",
+        "message": "applied variant {\"markChannel\":\"length\"} — Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
+      },
+      {
+        "stage": "ground",
+        "path": "legend.placement",
+        "message": "`seriesEnd` not available for this chart — falling through"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.inkMode",
+        "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false (band 9px, 50 marks)"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 6px and the house's 10.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 6px and the house's 10.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      }
+    ]
+  },
+  "oecd-facet-16.powerbi": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 8.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.x.tickLabels",
+        "message": "sparse labels — the axis is ticked at 5 of the dates the data holds, not at round numbers between them"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.label.fontSize",
+        "message": "the axis is crowded — the layout fitted its labels at 8px and the house's 8.5px would not stand in the band"
+      },
+      {
+        "stage": "realize",
+        "path": "axes.y.unit",
+        "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+      },
+      {
+        "stage": "realize",
+        "path": "annotation.pointEmphasis",
+        "message": "the latest reading carries a dot — the house marks where the line lands"
+      }
+    ]
+  },
+  "temp-uncertainty.nature": {
+    "report": [
+      {
+        "stage": "ground",
+        "path": "layout.bandStep",
+        "message": "the house gives each category 46px"
+      },
+      {
+        "stage": "ground",
+        "path": "dataLabels.show",
+        "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+      },
+      {
+        "stage": "realize",
+        "path": "marks.point.size",
+        "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+      }
+    ]
+  }
+}

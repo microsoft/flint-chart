@@ -39,6 +39,9 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Share of the world online, 1995–2023 (%)"
+  },
   "data": {
     "values": [
       {
@@ -74,8 +77,5 @@
         "Internet users (%)": 67
       }
     ]
-  },
-  "title": {
-    "text": "Share of the world online, 1995–2023 (%)"
   }
 }

@@ -55,6 +55,9 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "Software release schedule"
+  },
   "data": {
     "values": [
       {
@@ -83,8 +86,5 @@
         "End": "2024-04-15"
       }
     ]
-  },
-  "title": {
-    "text": "Software release schedule"
   }
 }

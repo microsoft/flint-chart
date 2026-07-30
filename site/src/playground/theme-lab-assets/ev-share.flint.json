@@ -20,7 +20,7 @@
       "type": "nominal",
       "sort": null,
       "scale": {
-        "scheme": "set2"
+        "scheme": "tableau10"
       }
     }
   },
@@ -45,6 +45,12 @@
     "facet": {
       "spacing": 25
     }
+  },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": [
+      "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
+    ]
   },
   "data": {
     "values": [
@@ -128,12 +134,6 @@
         "Country": "United States",
         "EV share (%)": 10
       }
-    ]
-  },
-  "title": {
-    "text": "Electric cars as a share of new sales",
-    "subtitle": [
-      "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
     ]
   }
 }

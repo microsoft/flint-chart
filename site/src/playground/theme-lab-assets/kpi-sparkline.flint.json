@@ -442,6 +442,12 @@
   "width": {
     "step": 21
   },
+  "title": {
+    "text": "Monthly KPIs",
+    "subtitle": [
+      "Twelve-month trend and latest value"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -624,12 +630,6 @@
         "Metric": "Churn (%)",
         "Value": 3.8
       }
-    ]
-  },
-  "title": {
-    "text": "Monthly KPIs",
-    "subtitle": [
-      "Twelve-month trend and latest value"
     ]
   }
 }

@@ -61,6 +61,26 @@ export interface SemanticAnnotation {
     /** Unit or currency code. E.g., "USD", "°C", "kg" */
     unit?: string;
 
+    /**
+     * The value a diverging colour scale should pivot on — what the reader is
+     * being asked to compare against.
+     *
+     * This is a judgement, not a fact about the field, which is why it has to
+     * be declared rather than inferred. A temperature in °C pivots at 0 if the
+     * question is whether it freezes, and at something nearer 18 if the
+     * question is whether a city is comfortable to live in; the numbers are
+     * identical either way and only the question tells them apart. Declare it
+     * when the chart is about the comparison — above and below an average, a
+     * target, a baseline period, a comfort line — and leave it out otherwise,
+     * in which case the pivot falls back to whatever the type and the data
+     * make obvious: a sign change at zero, a bounded domain's centre, or no
+     * pivot at all.
+     *
+     * Declaring one also *asserts* the split: the scale diverges even if every
+     * reading happens to land on one side of it.
+     */
+    divergingMidpoint?: number;
+
     /** Explicit ordinal ordering. E.g., ["Low", "Medium", "High"] */
     sortOrder?: string[];
 }
@@ -112,7 +132,7 @@ export interface DivergingInfo {
     /** Whether this type is always diverging or only when data spans both sides */
     inherent: boolean;
     /** Source of the midpoint determination */
-    source: 'unit' | 'type-intrinsic' | 'domain' | 'data';
+    source: 'annotation' | 'unit' | 'type-intrinsic' | 'domain' | 'data';
 }
 
 /**
@@ -211,7 +231,7 @@ export function normalizeAnnotation(
 // =============================================================================
 
 /** Map currency codes to display symbols */
-const CURRENCY_MAP: Record<string, string> = {
+export const CURRENCY_MAP: Record<string, string> = {
     USD: '$', EUR: '€', GBP: '£', JPY: '¥', CNY: '¥',
     KRW: '₩', INR: '₹', BRL: 'R$', CAD: 'CA$', AUD: 'A$',
     CHF: 'CHF', SEK: 'kr', NOK: 'kr', DKK: 'kr',
@@ -854,6 +874,7 @@ export function resolveNice(
  * Resolve diverging midpoint information for a field.
  *
  * Priority chain:
+ *   0. annotation.divergingMidpoint — the author said what to compare against
  *   1. annotation.unit → type lookup (°C → 0, °F → 32)
  *   2. type-intrinsic midpoint (Sentiment → 0, Correlation → 0)
  *   3. annotation.intrinsicDomain midpoint (Rating [1,5] → 3)
@@ -868,6 +889,13 @@ export function resolveDivergingInfo(
 ): DivergingInfo | undefined {
     const entry = getRegistryEntry(semanticType);
     // Types with diverging='none' don't get diverging treatment
+
+    // 0. Declared. Nothing below this line can know what the chart is asking,
+    // so a stated pivot outranks every inferred one — and it holds even when
+    // the data sits entirely on one side, because the comparison is the point.
+    if (annotation.divergingMidpoint !== undefined) {
+        return { midpoint: annotation.divergingMidpoint, inherent: true, source: 'annotation' };
+    }
 
     // 1. Unit-derived (Temperature)
     if (semanticType === 'Temperature' && annotation.unit) {

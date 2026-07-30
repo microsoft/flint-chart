@@ -55,6 +55,12 @@
       "spacing": 24
     }
   },
+  "title": {
+    "text": "Driving shifts into reverse",
+    "subtitle": [
+      "Miles driven per person against the price of a gallon of gas, United States, 1956–2010"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -332,12 +338,6 @@
         "Miles/person": 9596,
         "Gas price": 2.61
       }
-    ]
-  },
-  "title": {
-    "text": "Driving shifts into reverse",
-    "subtitle": [
-      "Miles driven per person against the price of a gallon of gas, United States, 1956–2010"
     ]
   }
 }

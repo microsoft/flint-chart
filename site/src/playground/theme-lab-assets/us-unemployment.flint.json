@@ -38,6 +38,12 @@
       "spacing": 24
     }
   },
+  "title": {
+    "text": "American unemployment",
+    "subtitle": [
+      "Annual rate, per cent of the labour force, 2000–2023"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -136,12 +142,6 @@
         "Year": "2023",
         "Unemployment (%)": 3.6
       }
-    ]
-  },
-  "title": {
-    "text": "American unemployment",
-    "subtitle": [
-      "Annual rate, per cent of the labour force, 2000–2023"
     ]
   }
 }

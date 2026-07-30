@@ -5,6 +5,8 @@ import {
   vlAllTemplateDefs,
   ecAllTemplateDefs,
   cjsAllTemplateDefs,
+  listThemePresets,
+  THEME_PRESETS,
   type ChartTemplateDef,
 } from 'flint-chart';
 import type { RenderBackend } from '../render/types.js';
@@ -42,4 +44,23 @@ export function listChartTypes(backend?: RenderBackend): BackendCatalog[] {
       .sort((a, b2) => a.chartType.localeCompare(b2.chartType));
     return { backend: b, count: chartTypes.length, chartTypes };
   });
+}
+
+/**
+ * The design languages Flint ships, to be named in `theme_spec`.
+ *
+ * Without an `id`, the catalogue: enough to choose by. With one, that house's
+ * guidance too — what an author has to supply for it to work, which is worth
+ * reading before writing the chart spec, not after.
+ */
+export function listThemes(id?: string) {
+  if (!id) return { themes: listThemePresets() };
+  const preset = THEME_PRESETS[id];
+  if (!preset) {
+    throw new Error(
+      `Unknown theme \`${id}\`. Flint ships: ${Object.keys(THEME_PRESETS).join(', ')}.`,
+    );
+  }
+  const { spec: _spec, ...rest } = preset;
+  return rest;
 }

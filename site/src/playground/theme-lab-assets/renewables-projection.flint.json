@@ -43,6 +43,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Global renewable capacity",
+    "subtitle": [
+      "Gigawatts installed, observed to 2023 and projected to 2030"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -90,12 +96,6 @@
         "Series": "Projected",
         "Capacity (GW)": 5800
       }
-    ]
-  },
-  "title": {
-    "text": "Global renewable capacity",
-    "subtitle": [
-      "Gigawatts installed, observed to 2023 and projected to 2030"
     ]
   }
 }

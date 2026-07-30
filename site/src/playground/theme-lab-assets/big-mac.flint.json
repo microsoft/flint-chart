@@ -42,6 +42,12 @@
   "height": {
     "step": 20
   },
+  "title": {
+    "text": "The price of a Big Mac",
+    "subtitle": [
+      "2023, converted to US dollars at market exchange rates"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -92,12 +98,6 @@
         "Country": "India",
         "Price (USD)": 2.5
       }
-    ]
-  },
-  "title": {
-    "text": "The price of a Big Mac",
-    "subtitle": [
-      "2023, converted to US dollars at market exchange rates"
     ]
   }
 }

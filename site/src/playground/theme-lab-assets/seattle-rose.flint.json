@@ -114,6 +114,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Seattle monthly rainfall (mm)"
+  },
   "data": {
     "values": [
       {
@@ -165,8 +168,5 @@
         "Rainfall (mm)": 155
       }
     ]
-  },
-  "title": {
-    "text": "Seattle monthly rainfall (mm)"
   }
 }

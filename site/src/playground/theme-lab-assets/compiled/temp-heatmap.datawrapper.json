@@ -1,0 +1,483 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "Average monthly temperature",
+    "subtitle": [
+      "°C, climate normals, four cities"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "mark": {
+        "type": "rect",
+        "stroke": "#ffffff",
+        "strokeWidth": 1.5
+      },
+      "encoding": {
+        "x": {
+          "field": "Month",
+          "type": "nominal",
+          "sort": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ],
+          "axis": {
+            "title": null
+          }
+        },
+        "y": {
+          "field": "City",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          }
+        },
+        "color": {
+          "field": "Temp (°C)",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -29,
+              29
+            ],
+            "type": "quantize",
+            "range": [
+              "#2f7fa8",
+              "#a9d3e6",
+              "#f0ece4",
+              "#e8ac70",
+              "#c04a4a"
+            ]
+          }
+        }
+      },
+      "width": {
+        "step": 32
+      },
+      "height": {
+        "step": 32
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 411,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelAngle": 0
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 12.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 185,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12.5,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "City": "Singapore",
+        "Month": "Jan",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Feb",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Mar",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Apr",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "May",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jul",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Aug",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Oct",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Nov",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Dec",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jan",
+        "Temp (°C)": 14
+      },
+      {
+        "City": "Cairo",
+        "Month": "Feb",
+        "Temp (°C)": 15
+      },
+      {
+        "City": "Cairo",
+        "Month": "Mar",
+        "Temp (°C)": 18
+      },
+      {
+        "City": "Cairo",
+        "Month": "Apr",
+        "Temp (°C)": 22
+      },
+      {
+        "City": "Cairo",
+        "Month": "May",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jul",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Aug",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Cairo",
+        "Month": "Oct",
+        "Temp (°C)": 24
+      },
+      {
+        "City": "Cairo",
+        "Month": "Nov",
+        "Temp (°C)": 20
+      },
+      {
+        "City": "Cairo",
+        "Month": "Dec",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jan",
+        "Temp (°C)": -9
+      },
+      {
+        "City": "Moscow",
+        "Month": "Feb",
+        "Temp (°C)": -7
+      },
+      {
+        "City": "Moscow",
+        "Month": "Mar",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Apr",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Moscow",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jun",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Moscow",
+        "Month": "Aug",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Sep",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Moscow",
+        "Month": "Oct",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Moscow",
+        "Month": "Nov",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Dec",
+        "Temp (°C)": -6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jan",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Seattle",
+        "Month": "Feb",
+        "Temp (°C)": 6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Mar",
+        "Temp (°C)": 8
+      },
+      {
+        "City": "Seattle",
+        "Month": "Apr",
+        "Temp (°C)": 10
+      },
+      {
+        "City": "Seattle",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jun",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Aug",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Sep",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Oct",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Seattle",
+        "Month": "Nov",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Seattle",
+        "Month": "Dec",
+        "Temp (°C)": 4
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "structure.axis.categorical.line",
+      "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.categorical.line",
+      "message": "no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing"
+    },
+    {
+      "stage": "ground",
+      "path": "axes.x.label.angle",
+      "message": "the widest name needs ~21px and the band is 32px — at the house's label size they read straight"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.bandFraction",
+      "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.tile",
+      "message": "the cells are cut apart by 1.5px — the grid reads as a table of separate readings rather than one continuous field"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 185px — under half the 411px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 411px — not a fixed stub"
+    }
+  ]
+}

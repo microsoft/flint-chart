@@ -77,6 +77,12 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Emissions per person run from 37 tonnes to 2",
+    "subtitle": [
+      "Carbon dioxide emissions per capita, 2022, tonnes"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -127,12 +133,6 @@
         "Country": "India",
         "Tonnes/person": 2
       }
-    ]
-  },
-  "title": {
-    "text": "Emissions per person run from 37 tonnes to 2",
-    "subtitle": [
-      "Carbon dioxide emissions per capita, 2022, tonnes"
     ]
   }
 }

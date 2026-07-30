@@ -54,6 +54,16 @@ export const chartSpecSchema = z
     chartType: z
       .string()
       .describe('Chart template name, e.g. "Bar Chart", "Scatter Plot", "Heatmap".'),
+    title: z
+      .string()
+      .optional()
+      .describe(
+        'Headline: what this chart says, in words. Strongly recommended — many design languages drop axis titles and rely on the headline to name the measure, so a chart without one reads as unlabelled numbers.',
+      ),
+    subtitle: z
+      .string()
+      .optional()
+      .describe('Deck: what is measured, of whom, when, and in what units. E.g. "US population by age and sex, 2020, millions".'),
     encodings: z
       .record(z.string(), z.any())
       .describe(
@@ -88,8 +98,16 @@ export function buildAssemblyInputShape(disableFileReference = false) {
     semantic_types: z
       .record(z.string(), z.any())
       .optional()
-      .describe('Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }.'),
+      .describe(
+        'Field name → semantic type, e.g. { revenue: "Quantity", country: "Country" }. A value may instead be an annotation object when the type alone understates what you know, e.g. { rating: { semanticType: "Score", intrinsicDomain: [1, 5] } } — see the flint://agent-skill resource.',
+      ),
     chart_spec: chartSpecSchema,
+    theme_spec: z
+      .union([z.string(), z.record(z.string(), z.any())])
+      .optional()
+      .describe(
+        'Design language: the name of a house Flint ships (see list_themes, e.g. "economist") or a ThemeSpec object of your own. Vega-Lite only.',
+      ),
     options: z
       .record(z.string(), z.any())
       .optional()
@@ -110,11 +128,14 @@ export type AssemblyInputArgs = {
   chart_spec: {
     chartType: string;
     encodings: Record<string, unknown>;
+    title?: string;
+    subtitle?: string;
     baseSize?: { width: number; height: number };
     canvasSize?: { width: number; height: number };
     chartProperties?: Record<string, unknown>;
   };
   options?: Record<string, unknown>;
+  theme_spec?: string | Record<string, unknown>;
   field_display_names?: Record<string, string>;
 };
 
@@ -124,6 +145,7 @@ export function toAssemblyInput(args: AssemblyInputArgs): ChartAssemblyInput {
     data: args.data,
     semantic_types: args.semantic_types,
     chart_spec: args.chart_spec,
+    theme_spec: args.theme_spec,
     options: args.options,
     field_display_names: args.field_display_names,
   } as ChartAssemblyInput;

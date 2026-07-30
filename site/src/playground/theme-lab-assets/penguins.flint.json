@@ -52,6 +52,12 @@
       "spacing": 26
     }
   },
+  "title": {
+    "text": "Flipper length versus body mass in three penguin species",
+    "subtitle": [
+      "Palmer Archipelago, Antarctica; n = 33"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -219,12 +225,6 @@
         "Flipper length (mm)": 217,
         "Body mass (g)": 5250
       }
-    ]
-  },
-  "title": {
-    "text": "Flipper length versus body mass in three penguin species",
-    "subtitle": [
-      "Palmer Archipelago, Antarctica; n = 33"
     ]
   }
 }

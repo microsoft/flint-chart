@@ -1,0 +1,290 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 317,
+      "continuousHeight": 247,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ]
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#323130",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Federal funds target rate",
+    "subtitle": [
+      "Upper bound at year end, %"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": 8,
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "interpolate": "step",
+        "color": "#118dff"
+      },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "axis": {
+            "title": null,
+            "values": [
+              {
+                "year": 2015,
+                "utc": true
+              },
+              {
+                "year": 2016,
+                "utc": true
+              },
+              {
+                "year": 2017,
+                "utc": true
+              },
+              {
+                "year": 2018,
+                "utc": true
+              },
+              {
+                "year": 2019,
+                "utc": true
+              },
+              {
+                "year": 2020,
+                "utc": true
+              },
+              {
+                "year": 2021,
+                "utc": true
+              },
+              {
+                "year": 2022,
+                "utc": true
+              },
+              {
+                "year": 2023,
+                "utc": true
+              },
+              {
+                "year": 2024,
+                "utc": true
+              }
+            ],
+            "format": "%Y"
+          },
+          "scale": {
+            "type": "utc"
+          }
+        },
+        "y": {
+          "field": "Target rate (%)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "labelExpr": "datum.label + \"%\""
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "__peLast"
+            }
+          ],
+          "sort": [
+            {
+              "field": "Year",
+              "order": "descending"
+            }
+          ],
+          "groupby": []
+        },
+        {
+          "filter": "datum.__peLast === 1"
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 30.800000000000004,
+        "color": "#118dff"
+      },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal"
+        },
+        "y": {
+          "field": "Target rate (%)",
+          "type": "quantitative"
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Year": "2015",
+        "Target rate (%)": 0.5
+      },
+      {
+        "Year": "2016",
+        "Target rate (%)": 0.75
+      },
+      {
+        "Year": "2017",
+        "Target rate (%)": 1.5
+      },
+      {
+        "Year": "2018",
+        "Target rate (%)": 2.5
+      },
+      {
+        "Year": "2019",
+        "Target rate (%)": 1.75
+      },
+      {
+        "Year": "2020",
+        "Target rate (%)": 0.25
+      },
+      {
+        "Year": "2021",
+        "Target rate (%)": 0.25
+      },
+      {
+        "Year": "2022",
+        "Target rate (%)": 4.5
+      },
+      {
+        "Year": "2023",
+        "Target rate (%)": 5.5
+      },
+      {
+        "Year": "2024",
+        "Target rate (%)": 4.75
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 10 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "every label carries its unit — `%` — because the house prints no axis title to hold it"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the latest reading carries a dot — the house marks where the line lands"
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": [
+      "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "mark": "line",
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "axis": {
+            "title": null,
+            "values": [
+              {
+                "year": 2018,
+                "utc": true
+              },
+              {
+                "year": 2020,
+                "utc": true
+              },
+              {
+                "year": 2022,
+                "utc": true
+              },
+              {
+                "year": 2023,
+                "utc": true
+              }
+            ],
+            "format": "%Y"
+          },
+          "scale": {
+            "type": "utc"
+          }
+        },
+        "y": {
+          "field": "EV share (%)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "labelExpr": "datum.index === 1 ? datum.label + \"%\" : datum.label"
+          }
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#18a1cd",
+              "#e2a233",
+              "#c04a4a",
+              "#2d8659"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 330,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ]
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 149,
+      "title": null
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2018",
+        "Country": "Norway",
+        "EV share (%)": 49
+      },
+      {
+        "Year": "2020",
+        "Country": "Norway",
+        "EV share (%)": 75
+      },
+      {
+        "Year": "2022",
+        "Country": "Norway",
+        "EV share (%)": 88
+      },
+      {
+        "Year": "2023",
+        "Country": "Norway",
+        "EV share (%)": 93
+      },
+      {
+        "Year": "2018",
+        "Country": "China",
+        "EV share (%)": 4
+      },
+      {
+        "Year": "2020",
+        "Country": "China",
+        "EV share (%)": 6
+      },
+      {
+        "Year": "2022",
+        "Country": "China",
+        "EV share (%)": 29
+      },
+      {
+        "Year": "2023",
+        "Country": "China",
+        "EV share (%)": 38
+      },
+      {
+        "Year": "2018",
+        "Country": "Germany",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "Germany",
+        "EV share (%)": 13
+      },
+      {
+        "Year": "2022",
+        "Country": "Germany",
+        "EV share (%)": 31
+      },
+      {
+        "Year": "2023",
+        "Country": "Germany",
+        "EV share (%)": 25
+      },
+      {
+        "Year": "2018",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2022",
+        "Country": "United States",
+        "EV share (%)": 8
+      },
+      {
+        "Year": "2023",
+        "Country": "United States",
+        "EV share (%)": 10
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.point.halo",
+      "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "the unit `%` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 330px — not a fixed stub"
+    }
+  ]
+}

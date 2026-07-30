@@ -1,0 +1,303 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 314,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labels": false,
+      "labelAngle": 0,
+      "tickCount": 7
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "labelAngle": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 29
+  },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": [
+      "Leading causes of death, United States, 2022, thousands of deaths"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 20,
+    "right": 56,
+    "top": 20,
+    "bottom": 20
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.4
+          }
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12,
+        "fontWeight": 600,
+        "align": "left",
+        "baseline": "middle",
+        "dx": 4,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      },
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) <= 626.1625477707006"
+        }
+      ]
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) > 626.1625477707006"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12,
+        "fontWeight": 600,
+        "align": "right",
+        "baseline": "middle",
+        "dx": -5,
+        "color": "#ffffff"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Cause": "Diseases of heart",
+        "Deaths (thousands)": 703
+      },
+      {
+        "Cause": "Malignant neoplasms",
+        "Deaths (thousands)": 608
+      },
+      {
+        "Cause": "Unintentional injuries",
+        "Deaths (thousands)": 227
+      },
+      {
+        "Cause": "Cerebrovascular diseases",
+        "Deaths (thousands)": 165
+      },
+      {
+        "Cause": "Chronic lower respiratory diseases",
+        "Deaths (thousands)": 148
+      },
+      {
+        "Cause": "Alzheimer disease",
+        "Deaths (thousands)": 120
+      },
+      {
+        "Cause": "Diabetes mellitus",
+        "Deaths (thousands)": 102
+      },
+      {
+        "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+        "Deaths (thousands)": 58
+      },
+      {
+        "Cause": "Chronic liver disease and cirrhosis",
+        "Deaths (thousands)": 55
+      },
+      {
+        "Cause": "Intentional self-harm (suicide)",
+        "Deaths (thousands)": 49
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`inline` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.measure.suppressWhenValuesPrinted",
+      "message": "measure axis removed — every mark prints its own value"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks that reach the end of the scale print their label inside instead"
+    }
+  ]
+}

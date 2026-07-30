@@ -479,8 +479,14 @@ export const heatmapDef: ChartTemplateDef = {
             && !semanticIsDiverging
             && !isDivergingHeatmapScheme(existingScheme)
             && colorEncodingType !== 'nominal';
+        // A diverging heatmap has a polarity, and the polarity is a reading of
+        // the field: warm at the top for an intensity, red at the bottom for a
+        // loss (see the diverging note in semantic-types). That call has
+        // already been made upstream, so take the scheme it named rather than
+        // pinning one here — a hard-coded default lands cold-red on every
+        // temperature grid we draw.
         const schemeName = userScheme
-            || (semanticIsDiverging ? (existingScheme || 'redblue') : undefined)
+            || (semanticIsDiverging ? (existingScheme || semanticScheme?.scheme || 'redblue') : undefined)
             || (shouldUseHeatmapDefault ? DEFAULT_HEATMAP_SCHEME : existingScheme);
         const isDiverging = isDivergingHeatmapScheme(schemeName);
         const intrinsicDomain = getSafeHeatmapIntrinsicDomain(ctx, colorField);
@@ -493,12 +499,20 @@ export const heatmapDef: ChartTemplateDef = {
             if (schemeName) {
                 spec.encoding.color.scale.scheme = schemeName;
             }
-            if (isDiverging && effectiveMin < 0 && effectiveMax > 0) {
-                const sym = Math.max(Math.abs(effectiveMin), Math.abs(effectiveMax));
-                effectiveMin = -sym;
-                effectiveMax = sym;
-                spec.encoding.color.scale.domain = [-sym, sym];
-                spec.encoding.color.scale.domainMid = 0;
+            // A diverging grid has to be symmetric about its pivot, or one arm
+            // of the ramp reaches further than the other and equal distances
+            // from the pivot read as unequal. The pivot is not always zero —
+            // an author can say what the reader is comparing against — so
+            // centre on whatever was resolved rather than on the origin.
+            const pivot = spec.encoding.color.scale.domainMid
+                ?? semanticScheme?.domainMid
+                ?? 0;
+            if (isDiverging && effectiveMin < pivot && effectiveMax > pivot) {
+                const sym = Math.max(pivot - effectiveMin, effectiveMax - pivot);
+                effectiveMin = pivot - sym;
+                effectiveMax = pivot + sym;
+                spec.encoding.color.scale.domain = [effectiveMin, effectiveMax];
+                spec.encoding.color.scale.domainMid = pivot;
             } else if (intrinsicDomain) {
                 // Sequential color with a known intrinsic domain (e.g. a
                 // Percentage field with [0, 100]). Don't force the full

@@ -45,6 +45,12 @@
   "width": {
     "step": 32
   },
+  "title": {
+    "text": "Body mass of three Pygoscelis species",
+    "subtitle": [
+      "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -179,12 +185,6 @@
         "Species": "Gentoo",
         "Body mass (g)": 5250
       }
-    ]
-  },
-  "title": {
-    "text": "Body mass of three Pygoscelis species",
-    "subtitle": [
-      "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"
     ]
   }
 }

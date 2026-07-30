@@ -42,6 +42,12 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": [
+      "Leading causes of death, United States, 2022, thousands of deaths"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -84,12 +90,6 @@
         "Cause": "Intentional self-harm (suicide)",
         "Deaths (thousands)": 49
       }
-    ]
-  },
-  "title": {
-    "text": "What Americans die of",
-    "subtitle": [
-      "Leading causes of death, United States, 2022, thousands of deaths"
     ]
   }
 }

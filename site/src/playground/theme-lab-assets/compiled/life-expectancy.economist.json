@@ -1,0 +1,426 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Two decades of longer lives",
+    "subtitle": [
+      "Life expectancy at birth, years, 2000 and 2021"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "layer": [
+        {
+          "mark": {
+            "type": "line",
+            "point": {
+              "stroke": "#ffffff",
+              "strokeWidth": 1.5
+            },
+            "interpolate": "linear",
+            "strokeWidth": 2
+          },
+          "encoding": {
+            "x": {
+              "field": "Year",
+              "type": "ordinal",
+              "sort": [
+                "2000",
+                "2021"
+              ],
+              "scale": {
+                "padding": 0.75
+              },
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "Life expectancy",
+              "type": "quantitative",
+              "scale": {
+                "zero": false,
+                "nice": true,
+                "padding": 12
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            },
+            "color": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null,
+              "scale": {
+                "range": [
+                  "#006ba2"
+                ]
+              },
+              "legend": null
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": {
+                "field": "Year",
+                "equal": "2000"
+              }
+            },
+            {
+              "calculate": "datum[\"Country\"] + ' ' + format(datum[\"Life expectancy\"], \".3~s\")",
+              "as": "__slopeLabel"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "baseline": "middle",
+            "dx": -8,
+            "fontSize": 11
+          },
+          "encoding": {
+            "x": {
+              "field": "Year",
+              "type": "ordinal",
+              "sort": [
+                "2000",
+                "2021"
+              ],
+              "scale": {
+                "padding": 0.75
+              },
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "Life expectancy",
+              "type": "quantitative",
+              "scale": {
+                "zero": false,
+                "nice": true,
+                "padding": 12
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            },
+            "color": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null,
+              "scale": {
+                "range": [
+                  "#006ba2"
+                ]
+              },
+              "legend": null
+            },
+            "text": {
+              "field": "__slopeLabel",
+              "type": "nominal"
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": {
+                "field": "Year",
+                "equal": "2021"
+              }
+            },
+            {
+              "calculate": "datum[\"Country\"] + ' ' + format(datum[\"Life expectancy\"], \".3~s\")",
+              "as": "__slopeLabel"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 8,
+            "fontSize": 11
+          },
+          "encoding": {
+            "x": {
+              "field": "Year",
+              "type": "ordinal",
+              "sort": [
+                "2000",
+                "2021"
+              ],
+              "scale": {
+                "padding": 0.75
+              },
+              "axis": {
+                "title": null
+              }
+            },
+            "y": {
+              "field": "Life expectancy",
+              "type": "quantitative",
+              "scale": {
+                "zero": false,
+                "nice": true,
+                "padding": 12
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            },
+            "color": {
+              "field": "Country",
+              "type": "nominal",
+              "sort": null,
+              "scale": {
+                "range": [
+                  "#006ba2"
+                ]
+              },
+              "legend": null
+            },
+            "text": {
+              "field": "__slopeLabel",
+              "type": "nominal"
+            }
+          }
+        }
+      ],
+      "width": {
+        "step": 136
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "labelAngle": 0,
+      "labelAlign": "center",
+      "labelBaseline": "top",
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "#121317",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": true,
+      "gridColor": "#d8dfe4",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "China",
+        "Year": "2000",
+        "Life expectancy": 72
+      },
+      {
+        "Country": "China",
+        "Year": "2021",
+        "Life expectancy": 78.2
+      },
+      {
+        "Country": "India",
+        "Year": "2000",
+        "Life expectancy": 62.5
+      },
+      {
+        "Country": "India",
+        "Year": "2021",
+        "Life expectancy": 67.2
+      },
+      {
+        "Country": "United States",
+        "Year": "2000",
+        "Life expectancy": 76.6
+      },
+      {
+        "Country": "United States",
+        "Year": "2021",
+        "Life expectancy": 76.3
+      },
+      {
+        "Country": "Nigeria",
+        "Year": "2000",
+        "Life expectancy": 46.6
+      },
+      {
+        "Country": "Nigeria",
+        "Year": "2021",
+        "Life expectancy": 52.7
+      },
+      {
+        "Country": "Japan",
+        "Year": "2000",
+        "Life expectancy": 81.1
+      },
+      {
+        "Country": "Japan",
+        "Year": "2021",
+        "Life expectancy": 84.5
+      },
+      {
+        "Country": "Russia",
+        "Year": "2000",
+        "Life expectancy": 65.5
+      },
+      {
+        "Country": "Russia",
+        "Year": "2021",
+        "Life expectancy": 70.1
+      },
+      {
+        "Country": "Brazil",
+        "Year": "2000",
+        "Life expectancy": 70.1
+      },
+      {
+        "Country": "Brazil",
+        "Year": "2021",
+        "Life expectancy": 72.8
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Slope Chart.showText",
+      "message": "house rule: `showText` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Slope Chart.showSeriesInLabel",
+      "message": "house rule: `showSeriesInLabel` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "axes.x.label.angle",
+      "message": "the widest name needs ~23px and the band is 136px — at the house's label size they read straight"
+    },
+    {
+      "stage": "ground",
+      "path": "ink.series.categorical",
+      "message": "7 series against 6 house inks, but the house names them on the mark — colour stops naming and takes the single ink"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.point.halo",
+      "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.domain",
+      "message": "the value scale floats — a rule under the categories would claim a base the chart does not have"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels",
+      "message": "template already prints its own labels — left alone"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "the chart already prints its own end labels — no second set drawn"
+    }
+  ]
+}

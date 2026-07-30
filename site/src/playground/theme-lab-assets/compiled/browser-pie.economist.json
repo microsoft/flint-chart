@@ -1,0 +1,214 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "width": 340,
+      "height": 292,
+      "transform": [
+        {
+          "calculate": "datum[\"Share\"] + '' + \"%\"",
+          "as": "__flintValueWithUnit"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "arc",
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5
+          },
+          "encoding": {}
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 10.5,
+            "radius": 105.11999999999999,
+            "color": "#ffffff"
+          },
+          "encoding": {
+            "text": {
+              "field": "__flintValueWithUnit",
+              "type": "nominal"
+            },
+            "color": {
+              "value": "#ffffff"
+            }
+          }
+        }
+      ],
+      "encoding": {
+        "theta": {
+          "field": "Share",
+          "type": "quantitative",
+          "stack": true
+        },
+        "color": {
+          "field": "Browser",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#3f5661",
+              "#a1655a",
+              "#006ba2",
+              "#7ba7b8",
+              "#3ebcd2"
+            ]
+          }
+        },
+        "order": {
+          "field": "Browser",
+          "type": "nominal",
+          "sort": "ascending"
+        }
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8b9196",
+      "gradientLength": 164,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "variants",
+      "message": "applied variant {\"isPartToWhole\":true} — Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.unit",
+      "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+    }
+  ]
+}

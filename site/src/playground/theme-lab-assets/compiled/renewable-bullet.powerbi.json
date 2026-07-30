@@ -1,0 +1,404 @@
+{
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "axis": {
+        "title": null
+      },
+      "scale": {
+        "paddingInner": 0.09999999999999998
+      }
+    }
+  },
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 0,
+            "__hi": 25
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 0,
+            "__hi": 23.75
+          },
+          {
+            "Country": "Germany",
+            "__lo": 0,
+            "__hi": 20
+          },
+          {
+            "Country": "World",
+            "__lo": 0,
+            "__hi": 15
+          },
+          {
+            "Country": "United States",
+            "__lo": 0,
+            "__hi": 12.5
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#373737",
+        "opacity": 1,
+        "stroke": "#1b1a19",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": null,
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 25,
+            "__hi": 50
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 23.75,
+            "__hi": 47.5
+          },
+          {
+            "Country": "Germany",
+            "__lo": 20,
+            "__hi": 40
+          },
+          {
+            "Country": "World",
+            "__lo": 15,
+            "__hi": 30
+          },
+          {
+            "Country": "United States",
+            "__lo": 12.5,
+            "__hi": 25
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#2d2d2d",
+        "opacity": 1,
+        "stroke": "#1b1a19",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": null,
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "Country": "Norway",
+            "__lo": 50,
+            "__hi": 75
+          },
+          {
+            "Country": "Brazil",
+            "__lo": 47.5,
+            "__hi": 71.25
+          },
+          {
+            "Country": "Germany",
+            "__lo": 40,
+            "__hi": 60
+          },
+          {
+            "Country": "World",
+            "__lo": 30,
+            "__hi": 45
+          },
+          {
+            "Country": "United States",
+            "__lo": 25,
+            "__hi": 37.5
+          }
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "color": "#242424",
+        "opacity": 1,
+        "stroke": "#1b1a19",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "__lo",
+          "type": "quantitative",
+          "axis": {
+            "title": null,
+            "format": ",.12~g"
+          }
+        },
+        "x2": {
+          "field": "__hi"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "height": {
+          "band": 0.5
+        },
+        "stroke": "#1b1a19",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "x": {
+          "field": "Share",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "title": null,
+            "format": ",.12~g"
+          }
+        },
+        "color": {
+          "field": "__status",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "Below target",
+              "Meets target"
+            ],
+            "range": [
+              "#118dff",
+              "#12239e",
+              "#e66c37",
+              "#6b007b",
+              "#e044a7",
+              "#744ec2"
+            ]
+          },
+          "legend": {
+            "title": null
+          },
+          "title": null
+        }
+      },
+      "transform": [
+        {
+          "calculate": "datum[\"Share\"] >= datum[\"Target\"] ? 'Meets target' : 'Below target'",
+          "as": "__status"
+        }
+      ]
+    },
+    {
+      "mark": {
+        "type": "tick",
+        "color": "#ffffff",
+        "thickness": 3,
+        "opacity": 1,
+        "size": 17
+      },
+      "encoding": {
+        "x": {
+          "field": "Target",
+          "type": "quantitative",
+          "axis": {
+            "title": null,
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#323130",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "tickCount": 5
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "orient": "right",
+      "direction": "vertical",
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#a19f9d",
+      "gradientLength": 90,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "title": {
+    "text": "Every country is short of its renewable target",
+    "subtitle": [
+      "Renewable share of electricity, 2023, per cent, against national targets"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Country": "Norway",
+        "Share": 98.6,
+        "Target": 100
+      },
+      {
+        "Country": "Brazil",
+        "Share": 89.2,
+        "Target": 95
+      },
+      {
+        "Country": "Germany",
+        "Share": 51.6,
+        "Target": 80
+      },
+      {
+        "Country": "World",
+        "Share": 30.3,
+        "Target": 60
+      },
+      {
+        "Country": "United States",
+        "Share": 22.7,
+        "Target": 50
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "ink.series",
+      "message": "`__status` is created by a backend transform — the whole categorical set is offered rather than guessing a count"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "ink.series",
+      "message": "the layer states its own colour beside a colour-encoded layer — it is context, not series, so it keeps its role and is only re-toned against the surface"
+    }
+  ]
+}

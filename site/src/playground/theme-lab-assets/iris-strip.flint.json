@@ -63,6 +63,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Iris petal length by species"
+  },
   "data": {
     "values": [
       {
@@ -186,8 +189,5 @@
         "Petal length (cm)": 6.1
       }
     ]
-  },
-  "title": {
-    "text": "Iris petal length by species"
   }
 }

@@ -55,6 +55,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Where the power comes from",
+    "subtitle": [
+      "World electricity generation by source, % of total"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -177,12 +183,6 @@
         "Source": "Other",
         "Generation (TWh)": 1610
       }
-    ]
-  },
-  "title": {
-    "text": "Where the power comes from",
-    "subtitle": [
-      "World electricity generation by source, % of total"
     ]
   }
 }

@@ -241,6 +241,19 @@ export function deriveStretchCaps(
 // ---------------------------------------------------------------------------
 
 /**
+ * The size a cell in a grid wants to be, before the room has its say. Larger
+ * than a bar's band because a tone needs area to be compared: below about
+ * twenty pixels a patch reads as grout between its neighbours.
+ */
+const CELL_BAND_SIZE = 28;
+
+/**
+ * How much of the wider step squaring a grid may cost. At 1.5 a 30px step will
+ * give way to a 20px square, but not to a 15px one.
+ */
+const SQUARE_CELL_TOLERANCE = 1.5;
+
+/**
  * Phase 1: Compute layout decisions.
  *
  * Takes channel semantics, template layout declaration, data, canvas size,
@@ -897,6 +910,35 @@ export function computeLayout(
         const stepSize = axis === 'x' ? xStepSize : yStepSize;
         if (axis === 'x') subplotWidth = Math.round(stepSize * (count + 1));
         else subplotHeight = Math.round(stepSize * (count + 1));
+    }
+
+    // --- Square cells ---
+    // Two banded axes means the marks are cells, not bars. A bar states its
+    // value as a length along one axis, so its thickness is free; a cell states
+    // its value as a tone, and the eye compares tones by area. A grid of
+    // squares reads as a surface; a grid of thin rectangles reads as stripes,
+    // and invites a comparison along the long side that the data does not
+    // support.
+    //
+    // So the two steps are pulled to one size. The caps used here are the ones
+    // the stretch budget already produced, which is what lets a grid spend a
+    // little extra canvas to come out square. Where the categories are too many
+    // for that — where squaring would cut the wider step by more than a third —
+    // the grid stays rectangular: a shape nobody asked for is not worth losing
+    // that much room over.
+    if (xTotalNominalCount > 0 && yTotalNominalCount > 0 && !xHasGrouping && !yHasGrouping) {
+        const capX = Math.floor(maxSubplotW / xTotalNominalCount);
+        const capY = Math.floor(maxSubplotH / yTotalNominalCount);
+        const generous = Math.round(CELL_BAND_SIZE * Math.max(1, sizeRatio));
+        // The square is the narrower of the two steps — that one already fits —
+        // grown to the generous size if there is room for it on both axes.
+        const wanted = Math.max(generous, Math.min(xStepSize, yStepSize));
+        const square = Math.min(capX, capY, wanted);
+        const widest = Math.max(xStepSize, yStepSize);
+        if (square >= minStepVal && square * SQUARE_CELL_TOLERANCE >= widest) {
+            xStepSize = square;
+            yStepSize = square;
+        }
     }
 
     // --- Nominal discrete subplot sizing ---

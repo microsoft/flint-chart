@@ -25,7 +25,7 @@
  * shows points at both ends.
  */
 
-import { ChartTemplateDef } from '../../core/types';
+import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
 import { defaultBuildEncodings } from './utils';
 
@@ -114,7 +114,9 @@ export const slopeChartDef: ChartTemplateDef = {
 
         // Inset the two period bands from the plot edges so the end points and
         // their value labels are not clipped (classic slopegraph framing).
-        xEnc.scale = { ...xEnc.scale, padding: 0.4 };
+        const labelled = ctx.chartProperties?.showText === true;
+        const named = labelled && ctx.chartProperties?.showSeriesInLabel === true;
+        xEnc.scale = { ...xEnc.scale, padding: named ? 0.75 : labelled ? 0.55 : 0.4 };
 
         // Give the value axis a little breathing room (in pixels) so the
         // extreme top / bottom end-point markers — common with zero-crossing
@@ -123,5 +125,67 @@ export const slopeChartDef: ChartTemplateDef = {
         // data rather than anchoring at zero — matching the ECharts / Chart.js
         // slope templates and classic slopegraph convention.
         yEnc.scale = { ...yEnc.scale, zero: false, nice: true, padding: 12 };
+
+        // A slopegraph is a table that happens to be drawn. Its two columns of
+        // numbers are the point of it — the line only says which way the pair
+        // moved — so printing the values at both ends is the chart's own job,
+        // not an annotation added over it. And a value with no name attached is
+        // half a row: `showSeriesInLabel` puts the two back together and makes
+        // the colour legend redundant.
+        const props = ctx.chartProperties;
+        if (props?.showText === true) {
+            const periods = orderedDistinct(ctx.table, xEnc.field);
+            if (periods.length >= 2) {
+                const first = periods[0];
+                const last = periods[periods.length - 1];
+                const seriesField = ctx.channelSemantics?.color?.field
+                    ?? ctx.channelSemantics?.detail?.field;
+                const withSeries = props.showSeriesInLabel === true && !!seriesField;
+                const fmt = props.labelFormat ?? '.3~s';
+                const valueExpr = `format(datum[${JSON.stringify(yEnc.field)}], ${JSON.stringify(fmt)})`;
+                const labelExpr = withSeries
+                    ? `datum[${JSON.stringify(seriesField)}] + ' ' + ${valueExpr}`
+                    : valueExpr;
+                const endLayer = (period: unknown, align: 'left' | 'right') => ({
+                    transform: [
+                        { filter: { field: xEnc.field, equal: period as any } },
+                        { calculate: labelExpr, as: '__slopeLabel' },
+                    ],
+                    mark: {
+                        type: 'text',
+                        align,
+                        baseline: 'middle',
+                        dx: align === 'right' ? -8 : 8,
+                        fontSize: 11,
+                    },
+                    encoding: {
+                        ...JSON.parse(JSON.stringify(spec.encoding)),
+                        text: { field: '__slopeLabel', type: 'nominal' },
+                    },
+                });
+                const lineLayer: Record<string, unknown> = { mark: spec.mark, encoding: spec.encoding };
+                if (spec.transform) lineLayer.transform = spec.transform;
+                spec.layer = [
+                    lineLayer,
+                    endLayer(first, 'right'),
+                    endLayer(last, 'left'),
+                ];
+                delete spec.mark;
+                delete spec.encoding;
+                delete spec.transform;
+            }
+        }
     },
+    properties: [
+        {
+            key: 'showText', label: 'Values', type: 'binary', defaultValue: false,
+        },
+        {
+            key: 'showSeriesInLabel', label: 'Name in label', type: 'binary', defaultValue: false,
+            // A name only goes in the label when there is a name to put there.
+            check: (ctx) => ({
+                applicable: Boolean(ctx.encodings?.color?.field || ctx.encodings?.detail?.field),
+            }),
+        },
+    ] as ChartPropertyDef[],
 };

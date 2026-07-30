@@ -83,6 +83,12 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Body mass by penguin species",
+    "subtitle": [
+      "Kernel density with all observations overlaid; horizontal rule marks the median"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -217,12 +223,6 @@
         "Species": "Gentoo",
         "Body mass (g)": 5250
       }
-    ]
-  },
-  "title": {
-    "text": "Body mass by penguin species",
-    "subtitle": [
-      "Kernel density with all observations overlaid; horizontal rule marks the median"
     ]
   }
 }

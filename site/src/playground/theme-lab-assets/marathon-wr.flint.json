@@ -38,6 +38,9 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Men's marathon world record, 1908–2023 (minutes)"
+  },
   "data": {
     "values": [
       {
@@ -105,8 +108,5 @@
         "Record (min)": 120.6
       }
     ]
-  },
-  "title": {
-    "text": "Men's marathon world record, 1908–2023 (minutes)"
   }
 }

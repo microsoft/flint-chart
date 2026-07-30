@@ -35,6 +35,12 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Old Faithful eruption durations",
+    "subtitle": [
+      "Two clusters, not one: short eruptions near 2 min and long ones near 4 min"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -145,12 +151,6 @@
       {
         "Duration (min)": 2.017
       }
-    ]
-  },
-  "title": {
-    "text": "Old Faithful eruption durations",
-    "subtitle": [
-      "Two clusters, not one: short eruptions near 2 min and long ones near 4 min"
     ]
   }
 }

@@ -44,6 +44,9 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Diamonds — carat vs price"
+  },
   "data": {
     "values": [
       {
@@ -127,8 +130,5 @@
         "Price (USD)": 25000
       }
     ]
-  },
-  "title": {
-    "text": "Diamonds — carat vs price"
   }
 }

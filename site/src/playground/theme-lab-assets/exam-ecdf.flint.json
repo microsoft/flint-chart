@@ -87,6 +87,12 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Empirical distribution of exam scores",
+    "subtitle": [
+      "n = 30; each step is one score"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -179,12 +185,6 @@
       {
         "Score": 99
       }
-    ]
-  },
-  "title": {
-    "text": "Empirical distribution of exam scores",
-    "subtitle": [
-      "n = 30; circles mark individual scores"
     ]
   }
 }

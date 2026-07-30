@@ -66,6 +66,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Money buys years, up to a point",
+    "subtitle": [
+      "Life expectancy against GDP per capita, 2018; bubble area is population"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -173,12 +179,6 @@
         "Population (M)": 161,
         "Continent": "Asia"
       }
-    ]
-  },
-  "title": {
-    "text": "Money buys years, up to a point",
-    "subtitle": [
-      "Life expectancy against GDP per capita, 2018; bubble area is population"
     ]
   }
 }

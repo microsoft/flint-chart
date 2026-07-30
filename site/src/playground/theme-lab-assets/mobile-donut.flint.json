@@ -38,6 +38,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Mobile OS market share, 2024"
+  },
   "data": {
     "values": [
       {
@@ -53,8 +56,5 @@
         "Share": 1
       }
     ]
-  },
-  "title": {
-    "text": "Mobile OS market share, 2024"
   }
 }

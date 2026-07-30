@@ -160,6 +160,12 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Asia added more people than the world held in 1950",
+    "subtitle": [
+      "Contribution to world population growth by region, 1950–2020, millions"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -186,12 +192,6 @@
         "Step": "Oceania",
         "Population (M)": 32
       }
-    ]
-  },
-  "title": {
-    "text": "Asia added more people than the world held in 1950",
-    "subtitle": [
-      "Contribution to world population growth by region, 1950–2020, millions"
     ]
   }
 }

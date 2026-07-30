@@ -85,6 +85,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Power against fuel economy",
+    "subtitle": [
+      "Ordinary least squares fit; each point is one car model"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -175,12 +181,6 @@
         "Horsepower": 100,
         "MPG": 22
       }
-    ]
-  },
-  "title": {
-    "text": "Power against fuel economy",
-    "subtitle": [
-      "Ordinary least squares fit; each point is one car model"
     ]
   }
 }

@@ -38,6 +38,12 @@
       "spacing": 25
     }
   },
+  "title": {
+    "text": "Keeling Curve",
+    "subtitle": [
+      "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -96,12 +102,6 @@
         "Year": "2023",
         "CO₂ (ppm)": 421.08
       }
-    ]
-  },
-  "title": {
-    "text": "Keeling Curve",
-    "subtitle": [
-      "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million"
     ]
   }
 }

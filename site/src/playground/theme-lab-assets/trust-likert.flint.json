@@ -57,6 +57,12 @@
   "height": {
     "step": 23
   },
+  "title": {
+    "text": "Confidence in US institutions",
+    "subtitle": [
+      "% of adults expressing each level of confidence"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -159,12 +165,6 @@
         "Response": "None at all",
         "Share (%)": 24
       }
-    ]
-  },
-  "title": {
-    "text": "Confidence in US institutions",
-    "subtitle": [
-      "% of adults expressing each level of confidence"
     ]
   }
 }

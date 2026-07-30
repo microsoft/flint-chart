@@ -1,0 +1,450 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "interpolate": "linear",
+    "strokeWidth": 2,
+    "color": "#2f6b9a"
+  },
+  "encoding": {
+    "x": {
+      "field": "Miles/person",
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Gas price",
+      "type": "quantitative",
+      "scale": {
+        "nice": true,
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g",
+        "titleAngle": 0,
+        "titleAlign": "left",
+        "titleAnchor": "start",
+        "titleX": 0,
+        "titleY": -16,
+        "titleBaseline": "bottom"
+      }
+    },
+    "order": {
+      "field": "Year",
+      "type": "quantitative"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 320,
+      "continuousHeight": 244,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "tickCount": 5
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 24
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16.5,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 15,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Driving shifts into reverse",
+    "subtitle": [
+      "Miles driven per person against the price of a gallon of gas, United States, 1956–2010"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 12,
+    "right": 12,
+    "top": 30,
+    "bottom": 12
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1956",
+        "Miles/person": 3675,
+        "Gas price": 2.38
+      },
+      {
+        "Year": "1957",
+        "Miles/person": 3706,
+        "Gas price": 2.4
+      },
+      {
+        "Year": "1958",
+        "Miles/person": 3766,
+        "Gas price": 2.26
+      },
+      {
+        "Year": "1959",
+        "Miles/person": 3905,
+        "Gas price": 2.31
+      },
+      {
+        "Year": "1960",
+        "Miles/person": 3935,
+        "Gas price": 2.27
+      },
+      {
+        "Year": "1961",
+        "Miles/person": 3977,
+        "Gas price": 2.25
+      },
+      {
+        "Year": "1962",
+        "Miles/person": 4085,
+        "Gas price": 2.22
+      },
+      {
+        "Year": "1963",
+        "Miles/person": 4218,
+        "Gas price": 2.12
+      },
+      {
+        "Year": "1964",
+        "Miles/person": 4369,
+        "Gas price": 2.11
+      },
+      {
+        "Year": "1965",
+        "Miles/person": 4538,
+        "Gas price": 2.14
+      },
+      {
+        "Year": "1966",
+        "Miles/person": 4676,
+        "Gas price": 2.14
+      },
+      {
+        "Year": "1967",
+        "Miles/person": 4827,
+        "Gas price": 2.14
+      },
+      {
+        "Year": "1968",
+        "Miles/person": 5038,
+        "Gas price": 2.13
+      },
+      {
+        "Year": "1969",
+        "Miles/person": 5207,
+        "Gas price": 2.07
+      },
+      {
+        "Year": "1970",
+        "Miles/person": 5376,
+        "Gas price": 2.01
+      },
+      {
+        "Year": "1971",
+        "Miles/person": 5617,
+        "Gas price": 1.93
+      },
+      {
+        "Year": "1972",
+        "Miles/person": 5973,
+        "Gas price": 1.87
+      },
+      {
+        "Year": "1973",
+        "Miles/person": 6154,
+        "Gas price": 1.9
+      },
+      {
+        "Year": "1974",
+        "Miles/person": 5943,
+        "Gas price": 2.34
+      },
+      {
+        "Year": "1975",
+        "Miles/person": 6111,
+        "Gas price": 2.31
+      },
+      {
+        "Year": "1976",
+        "Miles/person": 6389,
+        "Gas price": 2.32
+      },
+      {
+        "Year": "1977",
+        "Miles/person": 6630,
+        "Gas price": 2.36
+      },
+      {
+        "Year": "1978",
+        "Miles/person": 6883,
+        "Gas price": 2.23
+      },
+      {
+        "Year": "1979",
+        "Miles/person": 6744,
+        "Gas price": 2.68
+      },
+      {
+        "Year": "1980",
+        "Miles/person": 6672,
+        "Gas price": 3.3
+      },
+      {
+        "Year": "1981",
+        "Miles/person": 6732,
+        "Gas price": 3.3
+      },
+      {
+        "Year": "1982",
+        "Miles/person": 6835,
+        "Gas price": 2.92
+      },
+      {
+        "Year": "1983",
+        "Miles/person": 6943,
+        "Gas price": 2.66
+      },
+      {
+        "Year": "1984",
+        "Miles/person": 7130,
+        "Gas price": 2.48
+      },
+      {
+        "Year": "1985",
+        "Miles/person": 7323,
+        "Gas price": 2.36
+      },
+      {
+        "Year": "1986",
+        "Miles/person": 7558,
+        "Gas price": 1.76
+      },
+      {
+        "Year": "1987",
+        "Miles/person": 7770,
+        "Gas price": 1.76
+      },
+      {
+        "Year": "1988",
+        "Miles/person": 8089,
+        "Gas price": 1.68
+      },
+      {
+        "Year": "1989",
+        "Miles/person": 8397,
+        "Gas price": 1.75
+      },
+      {
+        "Year": "1990",
+        "Miles/person": 8529,
+        "Gas price": 1.88
+      },
+      {
+        "Year": "1991",
+        "Miles/person": 8535,
+        "Gas price": 1.78
+      },
+      {
+        "Year": "1992",
+        "Miles/person": 8662,
+        "Gas price": 1.69
+      },
+      {
+        "Year": "1993",
+        "Miles/person": 8855,
+        "Gas price": 1.6
+      },
+      {
+        "Year": "1994",
+        "Miles/person": 8909,
+        "Gas price": 1.59
+      },
+      {
+        "Year": "1995",
+        "Miles/person": 9150,
+        "Gas price": 1.6
+      },
+      {
+        "Year": "1996",
+        "Miles/person": 9192,
+        "Gas price": 1.67
+      },
+      {
+        "Year": "1997",
+        "Miles/person": 9416,
+        "Gas price": 1.65
+      },
+      {
+        "Year": "1998",
+        "Miles/person": 9590,
+        "Gas price": 1.39
+      },
+      {
+        "Year": "1999",
+        "Miles/person": 9687,
+        "Gas price": 1.5
+      },
+      {
+        "Year": "2000",
+        "Miles/person": 9717,
+        "Gas price": 1.89
+      },
+      {
+        "Year": "2001",
+        "Miles/person": 9699,
+        "Gas price": 1.77
+      },
+      {
+        "Year": "2002",
+        "Miles/person": 9814,
+        "Gas price": 1.64
+      },
+      {
+        "Year": "2003",
+        "Miles/person": 9868,
+        "Gas price": 1.86
+      },
+      {
+        "Year": "2004",
+        "Miles/person": 9994,
+        "Gas price": 2.14
+      },
+      {
+        "Year": "2005",
+        "Miles/person": 10067,
+        "Gas price": 2.53
+      },
+      {
+        "Year": "2006",
+        "Miles/person": 10037,
+        "Gas price": 2.79
+      },
+      {
+        "Year": "2007",
+        "Miles/person": 10025,
+        "Gas price": 2.95
+      },
+      {
+        "Year": "2008",
+        "Miles/person": 9880,
+        "Gas price": 3.31
+      },
+      {
+        "Year": "2009",
+        "Miles/person": 9657,
+        "Gas price": 2.38
+      },
+      {
+        "Year": "2010",
+        "Miles/person": 9596,
+        "Gas price": 2.61
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "annotation.axisTitles",
+      "message": "both rulers carry a measure — a headline can name one of them, so the axis titles are kept"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.title.placement",
+      "message": "the axis title lies flat above the axis, where it reads as a label rather than a caption on its side"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the line already shows every observation — a second dot at the end would say nothing new"
+    }
+  ]
+}

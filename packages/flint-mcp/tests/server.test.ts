@@ -52,6 +52,7 @@ describe('MCP server', () => {
       'compile_chart',
       'create_chart_view',
       'list_chart_types',
+      'list_themes',
       'render_chart',
       'validate_chart',
     ]);

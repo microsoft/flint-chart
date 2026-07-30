@@ -116,6 +116,8 @@ interface ChartAssemblyInput {
   semantic_types?: Record<string, string | SemanticAnnotation>;
   chart_spec: {
     chartType: string;
+    title?: string;                                    // headline
+    subtitle?: string;                                 // deck: what is measured, of whom, when, in what units
     encodings: Record<string, ChartEncoding | string>;  // string = field shorthand
     baseSize?: { width: number; height: number };      // target layout size, default 400×320
     canvasSize?: { width: number; height: number };    // optional hard ceiling on stretch
@@ -159,6 +161,8 @@ legend headers. Keep encodings bound to the original field names:
 | Field | Description |
 |-------|-------------|
 | `chartType` | Template name — must match a backend registry entry (`"Bar Chart"`, `"Heatmap"`, …) |
+| `title` | The headline. Write one: `Jan` and `Cairo` name their own kind, `26` and `5,300` do not, and a theme that omits axis titles is delegating that naming to the headline. Vega-Lite only for now; where no headline is given, the compiler puts the axis titles back. |
+| `subtitle` | The deck — what is measured, of whom, when, in what units. |
 | `encodings` | Channel → encoding map |
 | `baseSize` | **Target** layout size in pixels (default 400×320): the size the chart aims for with typical data. Dense data may stretch past it, up to the ceiling. |
 | `canvasSize` | **Hard ceiling:** the maximum size the chart may ever reach, including faceted grids. If omitted, the ceiling is `baseSize × options.maxStretch` (default 1.5×). Per-dimension caps are `βx = canvasSize.width / baseSize.width`, `βy = canvasSize.height / baseSize.height` (each ≥ 1). The base is clamped to the ceiling, so a `canvasSize` on its own acts as a fixed box the chart fills and shrinks to fit without overflowing. |

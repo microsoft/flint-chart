@@ -1,0 +1,269 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "color": "#2f6b9a"
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "axis": {
+        "title": null,
+        "values": [
+          {
+            "year": 2015,
+            "utc": true
+          },
+          {
+            "year": 2017,
+            "utc": true
+          },
+          {
+            "year": 2019,
+            "utc": true
+          },
+          {
+            "year": 2021,
+            "utc": true
+          },
+          {
+            "year": 2023,
+            "utc": true
+          },
+          {
+            "year": 2025,
+            "utc": true
+          },
+          {
+            "year": 2027,
+            "utc": true
+          },
+          {
+            "year": 2030,
+            "utc": true
+          }
+        ],
+        "format": "%Y"
+      },
+      "scale": {
+        "type": "utc"
+      }
+    },
+    "y": {
+      "field": "Capacity (GW)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g",
+        "title": null,
+        "labelExpr": "datum.index === 1 ? datum.label + \" GW\" : datum.label"
+      }
+    },
+    "strokeDash": {
+      "field": "Series",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          [
+            1,
+            0
+          ],
+          [
+            7.199999999999999,
+            4.8
+          ],
+          [
+            2.88,
+            2.88
+          ],
+          [
+            12,
+            4.8,
+            2.88,
+            4.8
+          ]
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "butt",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Global renewable capacity",
+    "subtitle": [
+      "Gigawatts installed, observed to 2023 and projected to 2030"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 12,
+  "data": {
+    "values": [
+      {
+        "Year": "2015",
+        "Series": "Observed",
+        "Capacity (GW)": 785
+      },
+      {
+        "Year": "2017",
+        "Series": "Observed",
+        "Capacity (GW)": 1080
+      },
+      {
+        "Year": "2019",
+        "Series": "Observed",
+        "Capacity (GW)": 1440
+      },
+      {
+        "Year": "2021",
+        "Series": "Observed",
+        "Capacity (GW)": 1900
+      },
+      {
+        "Year": "2023",
+        "Series": "Observed",
+        "Capacity (GW)": 2560
+      },
+      {
+        "Year": "2023",
+        "Series": "Projected",
+        "Capacity (GW)": 2560
+      },
+      {
+        "Year": "2025",
+        "Series": "Projected",
+        "Capacity (GW)": 3400
+      },
+      {
+        "Year": "2027",
+        "Series": "Projected",
+        "Capacity (GW)": 4300
+      },
+      {
+        "Year": "2030",
+        "Series": "Projected",
+        "Capacity (GW)": 5800
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Line Chart.showPoints",
+      "message": "house rule: `showPoints` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 8 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "the unit `GW` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the line already shows every observation — a second dot at the end would say nothing new"
+    }
+  ]
+}

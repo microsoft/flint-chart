@@ -190,6 +190,12 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Renewables supply 30% of the world's electricity",
+    "subtitle": [
+      "Share of global electricity generation, 2023, against a 45% target"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -197,12 +203,6 @@
         "Share (%)": 30.3,
         "Target": 45
       }
-    ]
-  },
-  "title": {
-    "text": "Renewables supply 30% of the world's electricity",
-    "subtitle": [
-      "Share of global electricity generation, 2023, against a 45% target"
     ]
   }
 }

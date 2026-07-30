@@ -34,7 +34,7 @@
       "type": "nominal",
       "sort": null,
       "scale": {
-        "scheme": "set2"
+        "scheme": "tableau10"
       }
     }
   },
@@ -65,6 +65,12 @@
   },
   "width": {
     "step": 136
+  },
+  "title": {
+    "text": "Two decades of longer lives",
+    "subtitle": [
+      "Life expectancy at birth, years, 2000 and 2021"
+    ]
   },
   "data": {
     "values": [
@@ -138,12 +144,6 @@
         "Year": "2021",
         "Life expectancy": 72.8
       }
-    ]
-  },
-  "title": {
-    "text": "Two decades of longer lives",
-    "subtitle": [
-      "Life expectancy at birth, years, 2000 and 2021"
     ]
   }
 }

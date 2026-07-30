@@ -44,6 +44,9 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Old Faithful — eruption duration density"
+  },
   "data": {
     "values": [
       {
@@ -155,8 +158,5 @@
         "Duration (min)": 2.017
       }
     ]
-  },
-  "title": {
-    "text": "Old Faithful — eruption duration density"
   }
 }

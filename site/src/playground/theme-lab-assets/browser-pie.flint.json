@@ -38,6 +38,12 @@
       "spacing": 23
     }
   },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -60,12 +66,6 @@
         "Browser": "Other",
         "Share": 5
       }
-    ]
-  },
-  "title": {
-    "text": "Chrome holds two-thirds of the desktop market",
-    "subtitle": [
-      "Desktop browser share, 2024, per cent"
     ]
   }
 }

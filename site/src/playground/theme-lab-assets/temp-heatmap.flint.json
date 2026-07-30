@@ -28,7 +28,7 @@
       "field": "Temp (°C)",
       "type": "quantitative",
       "scale": {
-        "scheme": "redblue",
+        "scheme": "blueorange",
         "domainMid": 0,
         "domain": [
           -29,
@@ -60,10 +60,16 @@
     }
   },
   "width": {
-    "step": 23
+    "step": 32
   },
   "height": {
-    "step": 23
+    "step": 32
+  },
+  "title": {
+    "text": "Average monthly temperature",
+    "subtitle": [
+      "°C, climate normals, four cities"
+    ]
   },
   "data": {
     "values": [
@@ -307,12 +313,6 @@
         "Month": "Dec",
         "Temp (°C)": 4
       }
-    ]
-  },
-  "title": {
-    "text": "Average monthly temperature",
-    "subtitle": [
-      "°C, climate normals, four cities"
     ]
   }
 }

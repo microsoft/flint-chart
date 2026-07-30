@@ -1,0 +1,277 @@
+{
+  "mark": {
+    "type": "line",
+    "point": true,
+    "color": "#2f6b9a"
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "axis": {
+        "title": null,
+        "values": [
+          {
+            "year": 1959,
+            "utc": true
+          },
+          {
+            "year": 1965,
+            "utc": true
+          },
+          {
+            "year": 1970,
+            "utc": true
+          },
+          {
+            "year": 1975,
+            "utc": true
+          },
+          {
+            "year": 1980,
+            "utc": true
+          },
+          {
+            "year": 1985,
+            "utc": true
+          },
+          {
+            "year": 1990,
+            "utc": true
+          },
+          {
+            "year": 1995,
+            "utc": true
+          },
+          {
+            "year": 2000,
+            "utc": true
+          },
+          {
+            "year": 2005,
+            "utc": true
+          },
+          {
+            "year": 2010,
+            "utc": true
+          },
+          {
+            "year": 2015,
+            "utc": true
+          },
+          {
+            "year": 2020,
+            "utc": true
+          },
+          {
+            "year": 2023,
+            "utc": true
+          }
+        ],
+        "format": "%Y"
+      },
+      "scale": {
+        "type": "utc"
+      }
+    },
+    "y": {
+      "field": "CO₂ (ppm)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g",
+        "title": null,
+        "labelExpr": "datum.index === 1 ? datum.label + \" ppm\" : datum.label"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Keeling Curve",
+    "subtitle": [
+      "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 12,
+  "data": {
+    "values": [
+      {
+        "Year": "1959",
+        "CO₂ (ppm)": 315.98
+      },
+      {
+        "Year": "1965",
+        "CO₂ (ppm)": 320.04
+      },
+      {
+        "Year": "1970",
+        "CO₂ (ppm)": 325.68
+      },
+      {
+        "Year": "1975",
+        "CO₂ (ppm)": 331.11
+      },
+      {
+        "Year": "1980",
+        "CO₂ (ppm)": 338.8
+      },
+      {
+        "Year": "1985",
+        "CO₂ (ppm)": 346.12
+      },
+      {
+        "Year": "1990",
+        "CO₂ (ppm)": 354.45
+      },
+      {
+        "Year": "1995",
+        "CO₂ (ppm)": 360.82
+      },
+      {
+        "Year": "2000",
+        "CO₂ (ppm)": 369.71
+      },
+      {
+        "Year": "2005",
+        "CO₂ (ppm)": 379.98
+      },
+      {
+        "Year": "2010",
+        "CO₂ (ppm)": 389.9
+      },
+      {
+        "Year": "2015",
+        "CO₂ (ppm)": 400.83
+      },
+      {
+        "Year": "2020",
+        "CO₂ (ppm)": 414.24
+      },
+      {
+        "Year": "2023",
+        "CO₂ (ppm)": 421.08
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Line Chart.showPoints",
+      "message": "house rule: `showPoints` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 14 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "the unit `ppm` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the line already shows every observation — a second dot at the end would say nothing new"
+    }
+  ]
+}

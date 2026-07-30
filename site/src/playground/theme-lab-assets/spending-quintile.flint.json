@@ -58,6 +58,12 @@
   "width": {
     "step": 23
   },
+  "title": {
+    "text": "Where each income group's money goes",
+    "subtitle": [
+      "Share of annual household spending, by income quintile"
+    ]
+  },
   "data": {
     "values": [
       {
@@ -185,12 +191,6 @@
         "Category": "Everything else",
         "Spending ($)": 43800
       }
-    ]
-  },
-  "title": {
-    "text": "Where each income group's money goes",
-    "subtitle": [
-      "Share of annual household spending, by income quintile"
     ]
   }
 }
