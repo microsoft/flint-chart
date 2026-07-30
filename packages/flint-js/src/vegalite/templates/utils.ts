@@ -206,6 +206,13 @@ export function alignStackOrderToColorOrder(spec: any, ctx: InstantiateContext):
  * Adjust bar/rect marks for continuous-as-discrete axes.
  * v2 version: reads layout info from InstantiateContext.
  */
+/**
+ * Fraction of a continuous-banded step a bar fills by default, leaving a 10%
+ * gap. A house that states its own `marks.bandFraction` re-cuts against this
+ * baseline (see theme.ts `bandWalk`), so the two must agree on the number.
+ */
+export const CONTINUOUS_BAR_STEP_FILL = 0.9;
+
 export function adjustBarMarks(spec: any, ctx: InstantiateContext): void {
     const layout = ctx.layout;
     for (const axis of ['x', 'y'] as const) {
@@ -234,7 +241,7 @@ export function adjustBarMarks(spec: any, ctx: InstantiateContext): void {
         const maxSize = enc?.field
             ? maxNonOverlapSize(enc.field, ctx.table, isTemporal, subplotDim, count)
             : Infinity;
-        const cellSize = Math.max(2, Math.min(Math.round(effStep * 0.9), maxSize));
+        const cellSize = Math.max(2, Math.min(Math.round(effStep * CONTINUOUS_BAR_STEP_FILL), maxSize));
 
         if (Array.isArray(spec.layer)) {
             for (const layer of spec.layer) {

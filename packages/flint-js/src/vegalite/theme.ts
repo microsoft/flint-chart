@@ -16,6 +16,7 @@
 
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
 import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
+import { CONTINUOUS_BAR_STEP_FILL } from './templates/utils.js';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -970,6 +971,26 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                         'the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply');
                     saidCells = true;
                 }
+            } else if (mark === 'bar' && discrete.length === 0
+                && typeof (node.mark as any)?.size === 'number'
+                && continuousBandedBar(enc)) {
+                // A bar on a continuous-banded axis (a year, a date) has no band
+                // scale to carry `paddingInner`, so the pixel width the layout
+                // already cut — `step × CONTINUOUS_BAR_STEP_FILL`, capped so the
+                // closest pair never touches — is the only handle. Re-scale it
+                // to the house's fill: dividing out the baseline recovers the
+                // step, and every house asks for a thinner bar than the
+                // baseline, so re-cutting can only widen the gap, never collide.
+                const current = (node.mark as any).size as number;
+                const resized = Math.max(1, Math.round(current * m.bandFraction / CONTINUOUS_BAR_STEP_FILL));
+                if (resized !== current) {
+                    node.mark = { ...normalizeMark(node.mark), size: resized };
+                    if (!saidBand) {
+                        say('marks.bandFraction',
+                            `bars on a continuous axis are re-cut to ${Math.round(m.bandFraction * 100)}% of the step`);
+                        saidBand = true;
+                    }
+                }
             } else {
                 for (const channel of discrete) {
                     const target = node.encoding?.[channel] ?? inherited?.[channel];
@@ -1356,6 +1377,19 @@ function bandStep(spec: any, node: any, enc: any, channel: 'x' | 'y', table: any
     const count = distinctCount(table, enc?.[channel]?.field);
     if (!count) return undefined;
     return size / count;
+}
+
+/**
+ * A bar sitting on a continuous positional axis the layout has banded (a year,
+ * a date): one axis carries a temporal or quantitative field that is not
+ * binned. There is no band scale to take `paddingInner`, so the only handle on
+ * the gap is the pixel width the layout already cut.
+ */
+function continuousBandedBar(enc: any): boolean {
+    return (['x', 'y'] as const).some((c) => {
+        const e = enc?.[c];
+        return e?.field && (e.type === 'temporal' || e.type === 'quantitative') && !e.bin;
+    });
 }
 
 /** Side-by-side lanes inside one band, from the offset channel if there is one. */
