@@ -1115,7 +1115,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             : undefined,
         redundantChannels: marksSpec.redundantChannels ?? [],
         redundantEncoding: marksSpec.redundantEncoding ?? 'never',
-        redundant: groundRedundancy(marksSpec, series, signals, say),
+        redundant: groundRedundancy(marksSpec, series, signals,
+            legendShow && (placement === 'seriesEnd' || placement === 'inline'), say),
     };
 
     // --- facets -------------------------------------------------------------
@@ -1422,6 +1423,7 @@ function groundRedundancy(
     marksSpec: NonNullable<ThemeSpec['marks']>,
     series: ResolvedSeriesInk,
     signals: Signals,
+    directlyLabeled: boolean,
     say: (path: string, message: string) => void,
 ): { shape: boolean; dash: boolean } {
     const off = { shape: false, dash: false };
@@ -1437,6 +1439,17 @@ function groundRedundancy(
         if (!strained) {
             say('marks.redundantEncoding',
                 '`whenNeeded` withheld — the house has a distinct ink for every series');
+            return off;
+        }
+        // Even with more series than inks, a redundant channel earns its noise
+        // only if the reader needs it to tell the series apart. When each series
+        // is named at its own mark — a line labelled at its end, a band at its
+        // last reading — that identity is already carried, and a dash spread
+        // over a dense path degrades into texture rather than a distinguishing
+        // mark. The name does the work `whenNeeded` was reaching for.
+        if (directlyLabeled) {
+            say('marks.redundantEncoding',
+                '`whenNeeded` withheld — each series is named at its own mark, so nothing else need tell them apart');
             return off;
         }
     }
