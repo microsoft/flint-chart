@@ -17,6 +17,7 @@
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
 import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
 import { CONTINUOUS_BAR_STEP_FILL } from './templates/utils.js';
+import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -996,18 +997,52 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                     const target = node.encoding?.[channel] ?? inherited?.[channel];
                     if (!target) continue;
                     target.scale = { ...(target.scale ?? {}), paddingInner };
-                    // A template that pinned its bars to a pixel width fixed the
-                    // gap along with it. The house sets the gap, so the width
-                    // has to move with it.
-                    if (typeof (node.mark as any)?.size === 'number' && mark !== 'boxplot') {
-                        const step = bandStep(spec, node, enc, channel, table);
-                        if (step) {
-                            node.mark = { ...normalizeMark(node.mark), size: Math.max(1, Math.round(step * m.bandFraction)) };
-                            if (!saidBand) {
-                                say('marks.bandFraction',
-                                    `the template pinned its bars to a pixel width — they are re-cut to ${Math.round(m.bandFraction * 100)}% of the band`);
-                                saidBand = true;
-                            }
+                }
+                // Dodged bars carry a second band inside each group — the
+                // offset. A house gap that only narrows the group leaves the
+                // lanes touching, so the offset has to take the same fill.
+                const offset = enc.xOffset ?? enc.yOffset;
+                const offsetCh = enc.xOffset?.field ? 'xOffset' : enc.yOffset?.field ? 'yOffset' : undefined;
+                const offsetDiscrete = !!offsetCh && (offset?.type === 'nominal' || offset?.type === 'ordinal');
+                const offsetLocal = !!offsetCh && offset?.type === 'quantitative';
+                const sizedMark = typeof (node.mark as any)?.size === 'number' && mark !== 'boxplot';
+                if (offsetDiscrete && mark !== 'boxplot') {
+                    // Native dodge: the lanes are a band scale of their own, so
+                    // the gap lives on the offset scale, not on any pixel size.
+                    const offTarget = node.encoding?.[offsetCh!] ?? inherited?.[offsetCh!];
+                    if (offTarget) {
+                        offTarget.scale = { ...(offTarget.scale ?? {}), paddingInner };
+                        if (!saidBand) {
+                            say('marks.bandFraction',
+                                `dodged lanes fill ${Math.round(m.bandFraction * 100)}% of their slot`);
+                            saidBand = true;
+                        }
+                    }
+                } else if (sizedMark && offsetLocal) {
+                    // Local dodge: the template pinned each lane to
+                    // LOCAL_DODGE_LANE_FILL of its pitch. Re-scale to the house's
+                    // fill — recomputing from the band step would spread one
+                    // bar across the whole band and overlap the lanes.
+                    const current = (node.mark as any).size as number;
+                    const resized = Math.max(1, Math.round(current * m.bandFraction / LOCAL_DODGE_LANE_FILL));
+                    if (resized !== current) {
+                        node.mark = { ...normalizeMark(node.mark), size: resized };
+                        if (!saidBand) {
+                            say('marks.bandFraction',
+                                `dodged lanes are re-cut to ${Math.round(m.bandFraction * 100)}% of their pitch`);
+                            saidBand = true;
+                        }
+                    }
+                } else if (sizedMark && discrete[0]) {
+                    // A simple bar pinned to a pixel width fixed the gap along
+                    // with it. The house sets the gap, so the width moves too.
+                    const step = bandStep(spec, node, enc, discrete[0], table);
+                    if (step) {
+                        node.mark = { ...normalizeMark(node.mark), size: Math.max(1, Math.round(step * m.bandFraction)) };
+                        if (!saidBand) {
+                            say('marks.bandFraction',
+                                `the template pinned its bars to a pixel width — they are re-cut to ${Math.round(m.bandFraction * 100)}% of the band`);
+                            saidBand = true;
                         }
                     }
                 }

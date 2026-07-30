@@ -14,6 +14,14 @@ import {
     resolveAsDiscrete, alignStackOrderToColorOrder,
 } from './utils';
 
+/**
+ * Fraction of a lane's pitch a locally-dodged bar fills, leaving a small gap
+ * between the bars inside one band. A house that states its own
+ * `marks.bandFraction` re-cuts against this baseline (see theme.ts `bandWalk`),
+ * so the two must agree on the number.
+ */
+export const LOCAL_DODGE_LANE_FILL = 0.85;
+
 const HEATMAP_SCHEME_COLORS: Record<string, [string, string]> = {
     viridis: ['#440154', '#fde725'],
     inferno: ['#000004', '#fcffa4'],
@@ -293,11 +301,12 @@ export const groupedBarChartDef: ChartTemplateDef = {
                     { joinaggregate: [{ op: 'distinct', field: groupField, as: '__localCount' }], groupby: [axisField] },
                     { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
                 ];
-                // Constant bar width ≈ 85% of a lane. VL's band reserves ~20%
-                // padding, so the usable per-lane pitch is (band·0.8 / maxPerBand).
+                // Constant bar width ≈ LOCAL_DODGE_LANE_FILL of a lane. VL's
+                // band reserves ~20% padding, so the usable per-lane pitch is
+                // (band·0.8 / maxPerBand).
                 const band = offsetCh === 'xOffset' ? ctx.layout?.xStep : ctx.layout?.yStep;
                 if (band) {
-                    spec.mark = setMarkProp(spec.mark, 'size', Math.max(2, Math.round((band * 0.8 / maxPB) * 0.85)));
+                    spec.mark = setMarkProp(spec.mark, 'size', Math.max(2, Math.round((band * 0.8 / maxPB) * LOCAL_DODGE_LANE_FILL)));
                 }
             }
         }
