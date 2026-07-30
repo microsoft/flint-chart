@@ -49,10 +49,10 @@ export function ThemeLabGaps() {
                             {c ? (
                                 <div
                                     style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
+                                        display: 'flex',
                                         gap: 8,
-                                        maxWidth: columns.length === 2 ? 640 : undefined,
+                                        overflowX: 'auto',
+                                        paddingBottom: 10,
                                     }}
                                 >
                                     {columns.map((col) => (
