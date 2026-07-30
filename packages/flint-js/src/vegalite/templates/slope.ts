@@ -82,8 +82,12 @@ export const slopeChartDef: ChartTemplateDef = {
             paramOverrides: {
                 // Spread the two periods well apart and keep the plot from being
                 // squeezed tall: a wide band step + no series-count vertical
-                // stretch yields the classic balanced slopegraph framing.
+                // stretch yields the classic balanced slopegraph framing. The
+                // band step is also a floor (`minBandStep`): a compact house may
+                // spread the two columns wider, but not pack them so close the
+                // slopes go near-vertical and the end labels have no room.
                 defaultBandSize: 120,
+                minBandStep: 120,
                 continuousMarkCrossSection: { x: 0, y: 0, seriesCountAxis: 'auto' },
                 facetAspectRatioResistance: 0.4,
             },
@@ -141,6 +145,14 @@ export const slopeChartDef: ChartTemplateDef = {
                 const seriesField = ctx.channelSemantics?.color?.field
                     ?? ctx.channelSemantics?.detail?.field;
                 const withSeries = props.showSeriesInLabel === true && !!seriesField;
+                // Names on the marks make the colour legend redundant: it would
+                // only repeat, in a second place, the words already printed at
+                // each line's ends. Drop it so the plot is the whole story.
+                if (withSeries && (spec.encoding as any)?.color) {
+                    (spec.encoding as any).color = {
+                        ...(spec.encoding as any).color, legend: null,
+                    };
+                }
                 const fmt = props.labelFormat ?? '.3~s';
                 const valueExpr = `format(datum[${JSON.stringify(yEnc.field)}], ${JSON.stringify(fmt)})`;
                 const labelExpr = withSeries

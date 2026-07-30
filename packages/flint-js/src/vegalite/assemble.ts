@@ -148,7 +148,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // left unsmoothed — change what is drawn, not how it is dressed, so they
     // are folded in here, before the pipeline reads the properties. Anything
     // the caller stated already is left alone.
-    if (themeSpec?.chartDefaults && !chartProperties) chartProperties = {};
+    if (themeSpec && !chartProperties) chartProperties = {};
     const chartDefaultsReport = chartProperties
         ? resolveChartDefaults(
             themeSpec, chartType, chartTemplate.properties,
@@ -382,13 +382,20 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const houseBandStep = themeSpec?.layout?.bandStep;
     const cellGrid = declaration.axisFlags?.x?.banded === true
         && declaration.axisFlags?.y?.banded === true;
+    // A template may state a floor its read cannot go below (a slopegraph needs
+    // its two columns spread wide however compact the house). The house sets
+    // the band step, but not below that floor.
+    const minBandStep = (declaration.paramOverrides as AssembleOptions | undefined)?.minBandStep;
     if (houseBandStep && options.defaultBandSize == null && !cellGrid) {
-        effectiveOptions.defaultBandSize = houseBandStep;
-        effectiveOptions.maxBandSize = Math.max(houseBandStep, effectiveOptions.maxBandSize ?? 0);
+        const step = minBandStep ? Math.max(houseBandStep, minBandStep) : houseBandStep;
+        effectiveOptions.defaultBandSize = step;
+        effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
         chartDefaultsReport.push({
             stage: 'ground',
             path: 'layout.bandStep',
-            message: `the house gives each category ${houseBandStep}px`,
+            message: minBandStep && step > houseBandStep
+                ? `the house gives each category ${houseBandStep}px, but this chart reads only above ${minBandStep}px — held to ${step}px`
+                : `the house gives each category ${houseBandStep}px`,
         });
     } else if (houseBandStep && cellGrid) {
         chartDefaultsReport.push({
@@ -741,6 +748,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             chartType,
             markChannel: chartTemplate.markCognitiveChannel,
             markTypes,
+            namesOnMarks: (chartProperties as any)?.showSeriesInLabel === true,
             channelSemantics,
             resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
             axisFlags: declaration.axisFlags,

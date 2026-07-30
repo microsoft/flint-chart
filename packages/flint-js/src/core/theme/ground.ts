@@ -57,6 +57,8 @@ export interface GroundingContext {
     markChannel: string;
     /** Mark families present in the instantiated chart, e.g. `['bar','text']`. */
     markTypes: string[];
+    /** The resolved `showSeriesInLabel`: the chart names its series on the marks. */
+    namesOnMarks?: boolean;
     /** Per-channel resolved semantics (phase 0). */
     channelSemantics: Record<string, any>;
     /** Encoding types after template-driven conversion (e.g. Q→O for bars). */
@@ -168,8 +170,30 @@ export function resolveChartDefaults(
     target: Record<string, any>,
 ): ThemeReport[] {
     const defaults = theme?.chartDefaults;
-    if (!defaults) return [];
-    const wanted = { ...(defaults['*'] ?? {}), ...(defaults[chartType] ?? {}) };
+    // A slopegraph reads in one of two ways, and which one is a house matter.
+    // An editorial house takes the value axis away — no spine, no ruler — so
+    // the only place a value can be read is off the mark itself: it prints the
+    // number at each end, with the series name beside it, and needs no colour
+    // key. A house that keeps its value axis (a journal panel with a measured
+    // spine) reads the numbers off that axis and tells the lines apart the
+    // ordinary way, with a legend — printing a name on every end point there
+    // would fight the axis for the same margin and clutter a small panel.
+    //
+    // So the end-label treatment is the default only where the house omits the
+    // measure axis line. Houses may still override in their own defaults, a
+    // caller who set the control keeps it, and baseline (no theme) is left
+    // alone — it keeps its legend.
+    const omitsMeasureAxis = theme?.structure?.axis?.measure?.line === 'omit';
+    const globalDefaults: Record<string, Record<string, any>> = omitsMeasureAxis
+        ? { 'Slope Chart': { showText: true, showSeriesInLabel: true } }
+        : {};
+    const wanted = {
+        ...(globalDefaults['*'] ?? {}),
+        ...(globalDefaults[chartType] ?? {}),
+        ...(defaults?.['*'] ?? {}),
+        ...(defaults?.[chartType] ?? {}),
+    };
+    if (Object.keys(wanted).length === 0) return [];
     const keys = new Set((declared ?? []).map((p) => p.key));
     const report: ThemeReport[] = [];
     for (const [key, value] of Object.entries(wanted)) {
@@ -1433,12 +1457,13 @@ function groundSeriesInk(
         if (s.overflow) {
             say('ink.series.categorical',
                 `${count} series but the house declares ${categorical.length} — the rest take the overflow ink`);
-        } else if (theme.chartDefaults?.[ctx.chartType]?.showSeriesInLabel === true) {
-            // The house prints the series name on the mark for this kind of
-            // chart, so the names are already on the page in words. Colour was
-            // never the key here; keeping a foreign palette only spreads seven
-            // hues across seven lines and seven labels that say the same thing
-            // the words do. One ink, and the reader reads the names.
+        } else if (ctx.namesOnMarks === true) {
+            // The chart prints the series name on the mark (a slopegraph's end
+            // labels, a house that asked for it), so the names are already on
+            // the page in words. Colour was never the key here; keeping a
+            // foreign palette only spreads seven hues across seven lines and
+            // seven labels that say the same thing the words do. One ink, and
+            // the reader reads the names.
             say('ink.series.categorical',
                 `${count} series against ${categorical.length} house inks, but the house names them on the mark — colour stops naming and takes the single ink`);
             return { ...base, mode: 'single' };

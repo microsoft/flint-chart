@@ -1237,6 +1237,20 @@ export interface AssembleOptions {
      */
     defaultBandSize?: number;
     /**
+     * Chart-specific **floor** on the per-category band step (at a 300px
+     * baseline canvas), which a house's `layout.bandStep` may grow but not
+     * undercut. Ordinary charts have no such floor: a compact house is right
+     * to print thin bars. But a few chart types are only legible above a
+     * minimum band width regardless of house — a slopegraph draws its whole
+     * meaning from the angle of two columns, and a house that packs them 46px
+     * apart turns every slope near-vertical and leaves no room for the end
+     * labels. Such a template states the width its read needs here, and the
+     * house is held to it as a minimum while still free to spread wider.
+     *
+     * Unset for most templates (no floor). Set via paramOverrides.
+     */
+    minBandStep?: number;
+    /**
      * Maximum pixels per discrete category at a 300px baseline canvas,
      * scaled proportionally with canvas size (like {@link defaultBandSize}).
      *
