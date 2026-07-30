@@ -1846,7 +1846,59 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`);
         }
     }
+
+    // A single key with many entries laid horizontally is the same overrun seen
+    // one key at a time: the house asked for one row, and one row of fifty names
+    // runs off the side of the canvas. A row has a width — the block the chart
+    // occupies — so the entries are wrapped into as many columns as fit and no
+    // more, and where even a wrapped grid would tower over the plot the count
+    // is capped. Vega-Lite draws a top or bottom legend in a single row unless
+    // told how many columns to fill, so it is told.
+    if (l.orient === 'top' || l.orient === 'bottom') {
+        wrapWideKeys(spec, l, blockWidth(spec, table), table, say);
+    }
     void say;
+}
+
+/**
+ * Wrap a high-cardinality horizontal key into a bounded grid.
+ *
+ * A top or bottom legend flows its entries along a single row until told
+ * otherwise. One key with more names than fit across the block overruns the
+ * canvas, so the row is broken into as many columns as the block holds; and
+ * because a very long list would then grow downward without end, the number
+ * of entries drawn is capped to a few rows' worth.
+ */
+function wrapWideKeys(
+    spec: any, l: DesignDecisions['legend'], block: number | undefined, table: any[],
+    say: (p: string, m: string) => void,
+): void {
+    if (!block) return;
+    const MAX_ROWS = 4;
+    walk(spec, (node) => {
+        for (const channel of ['color', 'fill', 'stroke'] as const) {
+            const enc = node.encoding?.[channel];
+            if (!enc?.field || enc.legend === null || enc.type === 'quantitative') continue;
+            const entries: string[] = Array.isArray(enc.legend?.values)
+                ? enc.legend.values.map(String)
+                : Array.isArray(enc.scale?.domain)
+                    ? enc.scale.domain.map(String)
+                    : orderedValues(table, enc.field).map(String);
+            if (entries.length < 2) continue;
+            const labelFS = enc.legend?.labelFontSize ?? l.label.fontSize ?? 10;
+            const symbolArea = enc.legend?.symbolSize;
+            const symbol = symbolArea ? 2 * Math.sqrt(symbolArea / Math.PI) : 10;
+            const entryWidth = entries.reduce(
+                (m, e) => Math.max(m, symbol + 4 + e.length * labelFS * 0.55 + 10), 0);
+            const columns = Math.max(1, Math.floor(block / entryWidth));
+            if (entries.length <= columns) continue;
+            enc.legend = { ...(enc.legend ?? {}), columns };
+            const cap = columns * MAX_ROWS;
+            if (entries.length > cap) enc.legend.symbolLimit = cap;
+            say('legend.columns',
+                `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
+        }
+    });
 }
 
 /**
@@ -2299,17 +2351,36 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         say('dataLabels.placement', message);
     };
 
+    // A vertical bar's outside label is cleared by giving the measure scale
+    // headroom (below); a horizontal one by reserving right margin. The
+    // scale-end flip — printing the tallest bars' labels inside instead —
+    // solves the same "no room past the end" problem, so it is only needed
+    // where headroom is not the remedy: on horizontal bars.
+    const headroomClears = !inside && onMarkBody && !horizontal && !radial && !cells;
+
     if (!radial && !cells && onMarkBody) {
         if (inside && d.dataLabels.insideMinValue != null) {
             split(d.dataLabels.insideMinValue, '<', 'marks shorter than their own label print it outside instead');
             growPadding(spec, horizontal ? 'right' : 'top', (t.fontSize ?? 10) * 2);
-        } else if (!inside && d.dataLabels.outsideMaxValue != null) {
+        } else if (!inside && d.dataLabels.outsideMaxValue != null && !headroomClears) {
             split(d.dataLabels.outsideMaxValue, '>', 'marks that reach the end of the scale print their label inside instead');
         }
     }
 
-    // Outside labels sit past the end of the mark, so the plot needs room.
-    if (!inside && horizontal) growPadding(spec, reversed ? 'left' : 'right', (t.fontSize ?? 10) * 3);
+    // Outside labels sit past the end of the mark, so the plot needs room —
+    // to the side the bar grows toward. A horizontal bar's label sits past its
+    // right end, in clean margin the padding reserves. A vertical bar's sits
+    // above its top, where the title already is, so reserving outer padding
+    // does not clear it; instead the measure scale is given headroom so the
+    // tallest bar stops short of the plot ceiling and its label lands in
+    // whitespace inside the plot.
+    if (!inside && !radial && !cells) {
+        if (horizontal) {
+            growPadding(spec, reversed ? 'left' : 'right', (t.fontSize ?? 10) * 3);
+        } else if (onMarkBody) {
+            addMeasureHeadroom(body, measureChannel, measure.field, table);
+        }
+    }
     return layer;
 }
 
@@ -2368,6 +2439,50 @@ function growPadding(spec: any, side: 'left' | 'right' | 'top' | 'bottom', amoun
         : { left: 8, right: 8, top: 8, bottom: 8, ...(spec.padding ?? {}) };
     base[side] = (base[side] ?? 8) + Math.round(amount);
     spec.padding = base;
+}
+
+/**
+ * A value label printed above a bar needs a strip of plot above the bar to sit
+ * in. The bar that defines the scale's maximum reaches the top of the plot and
+ * leaves none, so the scale is given a margin: the domain is pushed past the
+ * data by a fraction of its span, on whichever end carries labelled bar ends.
+ * A stack of bars rising from zero keeps its zero; only the outward end moves.
+ */
+function addMeasureHeadroom(
+    body: any, channel: 'x' | 'y' | 'theta' | 'color', field: string, table: any[],
+): void {
+    const HEADROOM = 0.15;
+    const nums = table.map((r) => r?.[field]).filter((v: any) => typeof v === 'number' && Number.isFinite(v)) as number[];
+    if (nums.length === 0) return;
+    const dataMax = Math.max(...nums);
+    const dataMin = Math.min(...nums);
+    // Bars stand on zero, so the span the labels have to clear is measured from
+    // zero, not from the smallest bar.
+    const span = Math.max(dataMax, 0) - Math.min(dataMin, 0);
+    if (!(span > 0)) return;
+    const pad = span * HEADROOM;
+    // `appendLayer` has already run: the mark that carried the measure is no
+    // longer `body` but a layer inside it (and may have been pushed under a
+    // hoisted facet operator). Follow the same path to the node that now owns
+    // the encodings, and set the scale on every place the measure appears —
+    // the shared encoding and each layer that repeats the field — so the
+    // shared scale Vega-Lite resolves across the layers picks the wider domain.
+    const host = body.spec?.layer ? body.spec : body;
+    const encodings: any[] = [];
+    if (host.encoding?.[channel]?.field === field) encodings.push(host.encoding[channel]);
+    for (const u of (host.layer ?? [])) {
+        if (u?.encoding?.[channel]?.field === field) encodings.push(u.encoding[channel]);
+    }
+    for (const encChannel of encodings) {
+        const scale = { ...(encChannel.scale ?? {}) };
+        // An explicit domain is a deliberate choice; headroom does not override it.
+        if (scale.domain != null) continue;
+        // The label sits past the end of the bar — above a positive bar, below
+        // a negative one — so each populated end is given room.
+        if (dataMax > 0 && scale.domainMax == null) scale.domainMax = dataMax + pad;
+        if (dataMin < 0 && scale.domainMin == null) scale.domainMin = dataMin - pad;
+        encChannel.scale = scale;
+    }
 }
 
 // ---------------------------------------------------------------------------
