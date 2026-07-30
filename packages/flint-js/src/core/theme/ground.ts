@@ -305,6 +305,10 @@ const FACET_CHANNELS = ['column', 'row', 'facet'];
 // the same label escape — a printed value names a quantity they were chosen not
 // to reduce to. (A box plot itself is caught earlier by its `boxplot` mark.)
 const DISTRIBUTION_SHAPE_CHARTS = new Set(['Violin Plot', 'Density Plot']);
+// A table with in-row bars: every value is also printed in its own column, so
+// the bar is a secondary in-cell glyph and the category axis is a row-header
+// gutter, not a base the bars stand on.
+const TABLE_CHARTS = new Set(['Bar Table']);
 
 function distinctCount(table: any[], field: string | undefined): number {
     if (!field) return 0;
@@ -625,15 +629,24 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // there is nothing standing on it, and the rule is just a line under a
         // list of names.
         const standsOnIt = bindings.measureChannels.length > 0;
-        const domain = indexing && !standsOnIt
+        // A bar table prints each value in its own column, so its category axis
+        // is a row-header gutter, not a base the bars stand on — like the
+        // no-measure grid above, a rule under the names is a line under a list.
+        const tableGutter = indexing && TABLE_CHARTS.has(ctx.chartType);
+        const domain = (indexing && !standsOnIt) || tableGutter
             ? rule('omit', structureInk.axis, 'omit')
             : rule(lineSpec?.line, structureInk.axis, indexing ? 'full' : 'omit');
-        if (indexing && !standsOnIt && (lineSpec?.line ?? 'full') !== 'omit') {
-            say(`structure.axis.categorical.line`,
-                'no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing');
+        if (((indexing && !standsOnIt) || tableGutter) && (lineSpec?.line ?? 'full') !== 'omit') {
+            say(`structure.axis.categorical.line`, tableGutter
+                ? 'a bar table prints its values in a column — the category axis is a row-header gutter, not a base, so a rule under the names is a line under a list'
+                : 'no axis carries a measure — the cells are the structure, and a rule under their names is a line under nothing');
         }
         const tickLen = spec?.tickLength === 'long' ? 5 : spec?.tickLength === 'short' ? 2 : 3;
-        const ticksRule = rule(spec?.ticks, structureInk.axis, 'omit');
+        // A row-header gutter has neither spine nor ticks — dropping the line
+        // but keeping ticks leaves them floating against nothing.
+        const ticksRule = tableGutter
+            ? rule('omit', structureInk.axis, 'omit')
+            : rule(spec?.ticks, structureInk.axis, 'omit');
         const inward = spec?.tickDirection === 'inward';
 
         // A title that only repeats what the labels already say is noise.
