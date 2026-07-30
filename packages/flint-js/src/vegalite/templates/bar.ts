@@ -406,6 +406,12 @@ export const histogramDef: ChartTemplateDef = {
     },
     channels: ["x", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    // A binned x is an index axis, not a measure: the reader keys counts off
+    // its intervals, and its identity comes from banding even though the field
+    // is quantitative. Declaring it banded keeps the count off it and stops a
+    // house that seats its *measure* axis opposite (economist's right/top) from
+    // flipping the bins to the top of the plot.
+    declareLayoutMode: () => ({ axisFlags: { x: { banded: true } } }),
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         // `binCount` is the maxbins cap; 0 (auto) leaves the template's `bin: true`
