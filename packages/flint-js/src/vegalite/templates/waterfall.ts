@@ -119,7 +119,11 @@ export const waterfallChartDef: ChartTemplateDef = {
             field: xField,
             type: "ordinal" as const,
             sort: null,
-            axis: { labelAngle: -45 },
+            // x2 binds the synthetic `__wf_lead` field for the connector span;
+            // without an explicit title Vega-Lite folds that helper's name into
+            // the axis title ("Month, __wf_lead"). Pin the title to the real
+            // field so the internal column never surfaces.
+            axis: { labelAngle: -45, title: xField },
         };
 
         // ── Preserve facet encodings ─────────────────────────────────
