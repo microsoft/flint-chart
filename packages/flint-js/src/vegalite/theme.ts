@@ -990,6 +990,32 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                         }
                     }
                 }
+                // A bar on a *continuous* index — a month on a time axis — has
+                // no band scale to pad, so the same occupancy is expressed as a
+                // fraction of the step the mark spans: `width`/`height` {band}
+                // on the continuous side. Without it the template's pinned pixel
+                // size fills — or, over enough points, overruns — the step and
+                // the bars touch, losing the gap the house asked for. Only a
+                // time index bands this way; a quantitative x is a histogram,
+                // whose bars are meant to meet.
+                if (mark === 'bar' && discrete.length === 0) {
+                    const timeIndex = (['x', 'y'] as const).find((channel) => {
+                        const other = channel === 'x' ? 'y' : 'x';
+                        return enc[channel]?.field && enc[channel]?.type === 'temporal'
+                            && enc[other]?.field && (enc[other]?.type === 'quantitative' || !!enc[other]?.aggregate);
+                    });
+                    if (timeIndex) {
+                        const mk = normalizeMark(node.mark);
+                        delete (mk as any).size;
+                        (mk as any)[timeIndex === 'x' ? 'width' : 'height'] = { band: m.bandFraction };
+                        node.mark = mk;
+                        if (!saidBand) {
+                            say('marks.bandFraction',
+                                `bars on a continuous time index are cut to ${Math.round(m.bandFraction * 100)}% of the step, not left to fill it`);
+                            saidBand = true;
+                        }
+                    }
+                }
             }
         }
         // A box is a summary, and how much of its band it fills is a house
