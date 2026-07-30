@@ -56,9 +56,28 @@ export const mckinsey: ThemePreset = {
                     // interpolates it.
                     "consumption": "interpolate"
                 },
+                // A signed measure crosses zero, and a single-hue ramp cannot
+                // say which side of it a value sits on — dark reads as "more",
+                // not "positive". The house is otherwise all blue, so the one
+                // place it must reach for a second hue is here: cool blue below
+                // zero, a restrained warm above, the light surface tint at the
+                // break. Cool-below / warm-above matches the other houses.
+                "diverging": {
+                    "stops": [
+                        "#2251ff",
+                        "#9db8d2",
+                        "#eef3f8",
+                        "#d98f6a",
+                        "#b4472e"
+                    ],
+                    "neutral": "#eef3f8",
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "selection": {
                     "partToWhole": "sequentialRamp",
-                    "signed": "sequential"
+                    "signed": "diverging"
                 }
             },
             "accent": "#2251ff"
