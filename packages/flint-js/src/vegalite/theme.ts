@@ -2561,7 +2561,40 @@ function applySeriesEndLabels(
         const longest = estimateLongestLabel(table, seriesField) + (merged ? 6 : 0);
         growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
     }
+    // Naming the series at the line end frees the corner the colour key used to
+    // hold — but a *second* encoding (a forecast dash, a shape) still keeps its
+    // own key, and Vega-Lite parks it top-right by default, right where the end
+    // labels now are. The two collide into an unreadable pile. The end labels
+    // own that edge now, so the surviving key steps down to the foot of the
+    // plot, where it has the width to itself.
+    relocateSecondaryLegends(spec, 'bottom', say);
     say('legend.placement', '`seriesEnd` realized as a synthesized text layer at each series\' last point');
+}
+
+/**
+ * When the series are named at the line end, a second, non-colour encoding
+ * (`strokeDash` for actual/forecast, `shape`, `size`, `opacity`) still draws a
+ * key, and its default corner is the top-right the end labels have just taken.
+ * Move each such surviving key to the foot of the plot, clear of the labels.
+ * Colour/fill/stroke are the series itself and are already spoken for.
+ */
+function relocateSecondaryLegends(spec: any, orient: 'bottom' | 'top', say: (p: string, m: string) => void): void {
+    const channels = ['strokeDash', 'shape', 'size', 'opacity'] as const;
+    let moved = 0;
+    walk(spec, (node) => {
+        if (!node.encoding) return;
+        for (const ch of channels) {
+            const enc = node.encoding[ch];
+            if (enc?.field && enc.legend !== null) {
+                enc.legend = { ...(typeof enc.legend === 'object' && enc.legend ? enc.legend : {}), orient };
+                moved++;
+            }
+        }
+    });
+    if (moved) {
+        say('legend.orient',
+            `a second key sat where the end labels now are — moved to the ${orient}, clear of them`);
+    }
 }
 
 /**
@@ -3086,6 +3119,24 @@ function radialResistsFurniture(spec: any): boolean {
     return radiusArc || (arc && faceted);
 }
 
+/**
+ * A faceted *table* — a `facet` operator whose panel is itself a concatenation
+ * (a bar-table's label / bar / value columns laid side by side) — meets the
+ * same wall as the faceted disc in `radialResistsFurniture`, one level deeper.
+ * Wrapping `facet > concat` in an outer furniture `vconcat` yields
+ * `concat > facet > concat`, and Vega-Lite rescopes the inner panels' width
+ * signals out of the concat's reach: every column collapses and the whole
+ * block renders empty. A plain faceted unit (line-facet, area-facet) has no
+ * such nested signal and rides the wrapper unharmed, so this stays narrow —
+ * only the facet-of-concat is refused. Like the disc, the table is already its
+ * own stack of blocks, with no single width for a rule to run across.
+ */
+function facetedTableResistsFurniture(spec: any): boolean {
+    if (!spec.facet) return false;
+    const panel = spec.spec;
+    return !!(panel && (panel.hconcat || panel.vconcat || panel.concat));
+}
+
 function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): boolean {
     if (!d.furniture.length) return false;
     if (spec.vconcat || spec.hconcat || spec.concat) {
@@ -3096,6 +3147,12 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
     // beneath it — see `radialResistsFurniture`. It is already its own block.
     if (radialResistsFurniture(spec)) {
         say('furniture', 'not drawn — a radial chart is already its own block, with no edge to close');
+        return false;
+    }
+    // A faceted table (facet of concat) collapses when wrapped — see
+    // `facetedTableResistsFurniture`. It is already its own stack of blocks.
+    if (facetedTableResistsFurniture(spec)) {
+        say('furniture', 'not drawn — a faceted table is already its own stack of blocks, with no single edge to close');
         return false;
     }
 
