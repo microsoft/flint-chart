@@ -14,7 +14,7 @@
  * time, and each cell compiles only when it scrolls into view.
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { siteTheme } from '../shared/theme';
 import {
     R2_CASES,
@@ -28,6 +28,25 @@ function byFamily(family: R2Family): R2Case[] {
     return R2_CASES.filter((c) => c.family === family);
 }
 
+function Pill({ children }: { children: ReactNode }) {
+    return (
+        <span
+            style={{
+                display: 'inline-block',
+                fontSize: 11,
+                lineHeight: 1.5,
+                padding: '1px 8px',
+                borderRadius: 999,
+                background: siteTheme.bg,
+                border: `1px solid ${siteTheme.border}`,
+                color: siteTheme.textMuted,
+            }}
+        >
+            {children}
+        </span>
+    );
+}
+
 function Row({ c }: { c: R2Case }) {
     return (
         <section style={{ marginBottom: 28 }}>
@@ -38,15 +57,17 @@ function Row({ c }: { c: R2Case }) {
                         <span style={{ fontWeight: 400, color: siteTheme.textMuted }}> — {c.subtitle}</span>
                     ) : null}
                 </div>
-                <div style={{ fontSize: 12, color: siteTheme.textMuted, marginTop: 2 }}>
-                    {c.gen} · probe: {c.probe}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                    <Pill>{c.gen}</Pill>
+                    <Pill>probe: {c.probe}</Pill>
                 </div>
             </header>
             <div
                 style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${R2_COLUMNS.length}, minmax(0, 1fr))`,
+                    display: 'flex',
                     gap: 8,
+                    overflowX: 'auto',
+                    paddingBottom: 10,
                 }}
             >
                 {R2_COLUMNS.map((col) => (

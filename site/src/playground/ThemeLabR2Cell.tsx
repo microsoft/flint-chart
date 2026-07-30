@@ -11,11 +11,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { THEME_PRESETS, assembleVegaLite } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
+import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import { r2Input, type R2Case } from './theme-lab-r2-data';
 
 export const R2_COLUMNS = ['flint', ...Object.keys(THEME_PRESETS)] as const;
 export type R2Column = (typeof R2_COLUMNS)[number];
+
+/** Tile geometry — fixed so a chart is never flex-shrunk below legibility. */
+export const R2_TILE_WIDTH = 320;
+const R2_TILE_HEIGHT = 320;
 
 function stripInternal(node: any): void {
     if (!node || typeof node !== 'object') return;
@@ -76,7 +81,8 @@ export function R2Cell({ c, column }: { c: R2Case; column: R2Column }) {
         <div
             ref={ref}
             style={{
-                minWidth: 0,
+                width: R2_TILE_WIDTH,
+                flex: `0 0 ${R2_TILE_WIDTH}px`,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
@@ -99,25 +105,48 @@ export function R2Cell({ c, column }: { c: R2Case; column: R2Column }) {
             </div>
             <div
                 style={{
+                    position: 'relative',
+                    height: R2_TILE_HEIGHT,
                     background: built?.background ?? siteTheme.surface,
                     border: `1px solid ${siteTheme.border}`,
                     borderRadius: 6,
-                    minHeight: 300,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     overflow: 'hidden',
-                    padding: 4,
                 }}
             >
                 {!built ? (
-                    <span style={{ color: siteTheme.textMuted, fontSize: 12 }}>…</span>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: siteTheme.textMuted,
+                            fontSize: 12,
+                        }}
+                    >
+                        …
+                    </div>
                 ) : built.error ? (
-                    <span style={{ color: '#b00020', fontSize: 11, padding: 8, textAlign: 'center' }}>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#b00020',
+                            fontSize: 11,
+                            padding: 8,
+                            textAlign: 'center',
+                        }}
+                    >
                         {built.error}
-                    </span>
+                    </div>
                 ) : (
-                    <VegaLiteView spec={built.spec} renderer="svg" />
+                    <ScaleToFit fill padding={6} height={R2_TILE_HEIGHT}>
+                        <VegaLiteView spec={built.spec} renderer="svg" />
+                    </ScaleToFit>
                 )}
             </div>
         </div>

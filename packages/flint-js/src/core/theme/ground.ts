@@ -861,6 +861,27 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                     : 'no banded axis to key values to — one number per datum would be noise, not a label');
     }
 
+    if (dl.show === 'always' && dlShow) {
+        // `always` is a preference to print, not a licence to overprint. It
+        // reads fit by the same two facts `whenTheyFit` does — a band wide
+        // enough to stand a number in, and few enough marks that the numbers do
+        // not pile up — but it holds to that preference further: it keeps
+        // printing past `whenTheyFit`'s comfort margin, onto the tight-but-
+        // legible charts the cautious houses leave to a legend, and yields only
+        // when the marks are genuinely too dense (a hundred-odd bars, a dozen-
+        // plus pie slices) for the numbers to be read.
+        const band = signals.hasBandedAxis
+            ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)
+            : Infinity;
+        const marksOnScreen = Math.max(1, signals.categoryCount || ctx.table.length) * Math.max(1, signals.seriesCount);
+        if (band < (valueLabel.fontSize ?? 10) + 4 || marksOnScreen > 120) {
+            dlShow = false;
+            say('dataLabels.show', band < (valueLabel.fontSize ?? 10) + 4
+                ? `\`always\` overridden — a ${Math.round(band)}px band cannot hold a number`
+                : `\`always\` overridden — ${marksOnScreen} marks would pile the numbers past reading`);
+        }
+    }
+
     if (dl.show === 'whenTheyFit') {
         const band = signals.hasBandedAxis
             ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)

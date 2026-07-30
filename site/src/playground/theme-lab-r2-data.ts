@@ -156,8 +156,11 @@ export const R2_CASES: R2Case[] = [
     { id: 'bullet-12', gen: 'Bullet Chart', index: 1, family: 'Single value & schedule', title: 'Revenue against target', subtitle: 'Twelve stores', probe: 'twelve rows of measure, target and bands' },
 ];
 
-/** The base canvas every R2 case is compiled at, so sheets are comparable. */
-export const R2_BASE_SIZE = { width: 400, height: 280 };
+/** The base canvas every R2 case is designed at, so sheets are comparable. */
+export const R2_BASE_SIZE = { width: 300, height: 300 };
+
+/** The ceiling a case may stretch to when its data needs more room (1.5×). */
+export const R2_CANVAS_SIZE = { width: 450, height: 450 };
 
 const CASE_CACHE = new Map<string, TestCase>();
 
@@ -181,6 +184,10 @@ export function r2TestCase(c: R2Case): TestCase {
 export function r2Input(c: R2Case): any {
     const t = r2TestCase(c);
     const input = testCaseToAssemblyInput(t, R2_BASE_SIZE);
+    // A design size of 300² with a 450² ceiling: the house lays out at the
+    // base and is allowed to stretch each dimension up to 1.5× when the data
+    // (many bands, a long legend) needs the room.
+    input.chart_spec.canvasSize = R2_CANVAS_SIZE;
     input.chart_spec.title = c.title;
     if (c.subtitle) input.chart_spec.subtitle = c.subtitle;
     return input;
