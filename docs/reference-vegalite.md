@@ -210,6 +210,10 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `bandwidth` | number | 0.05 – 2 (step 0.05) | `0` | always | Kernel-density bandwidth (0 = auto). |
+| `showPoints` | toggle | on / off | `false` | always | Overlay point markers on the line. |
+| `showMedian` | toggle | on / off | `false` | always | Median rule |
+| `showContour` | toggle | on / off | `false` | always | Contour |
+| `medianWidth` | number | 0.2 – 1 (step 0.05) | `0.6` | conditional | Median width |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-box-plot.svg) Boxplot
@@ -284,6 +288,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
@@ -296,6 +301,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `showText` | toggle | on / off | `false` | always | Values |
+| `showSeriesInLabel` | toggle | on / off | `false` | conditional | Name in label |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
