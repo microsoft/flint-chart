@@ -78,7 +78,8 @@ export const mckinsey: ThemePreset = {
                 "selection": {
                     "partToWhole": "sequentialRamp",
                     "signed": "diverging"
-                }
+                },
+                "overflow": "#b6bfc7"
             },
             "accent": "#2251ff"
         },

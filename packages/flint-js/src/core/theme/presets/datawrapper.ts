@@ -44,6 +44,20 @@ export const datawrapper: ThemePreset = {
                     "#2d8659",
                     "#7e5aa2"
                 ],
+                "categoricalExtended": [
+                    "#18a1cd",
+                    "#e2a233",
+                    "#c04a4a",
+                    "#2d8659",
+                    "#7e5aa2",
+                    "#d97b4f",
+                    "#5b8fb0",
+                    "#b5546a",
+                    "#8c9a3f",
+                    "#c98ac0",
+                    "#6b8e8a",
+                    "#a67c52"
+                ],
                 "sequential": {
                     "stops": [
                         "#dceef6",
@@ -70,7 +84,8 @@ export const datawrapper: ThemePreset = {
                     "consumption": "quantize",
                     "quantizeCount": 5
                 },
-                "selection": {}
+                "selection": {},
+                "overflow": "#b9bcbe"
             },
             "accent": "#18a1cd"
         },

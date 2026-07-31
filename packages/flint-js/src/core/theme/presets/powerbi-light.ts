@@ -51,6 +51,20 @@ export const powerbiLight: ThemePreset = {
                     "#e044a7",
                     "#744ec2"
                 ],
+                "categoricalExtended": [
+                    "#118dff",
+                    "#12239e",
+                    "#e66c37",
+                    "#6b007b",
+                    "#e044a7",
+                    "#744ec2",
+                    "#d9b300",
+                    "#d64550",
+                    "#197278",
+                    "#5c2e91",
+                    "#ff9d3b",
+                    "#4a9c2d"
+                ],
                 "diverging": {
                     "stops": [
                         "#118dff",
@@ -73,7 +87,8 @@ export const powerbiLight: ThemePreset = {
                     "signed": "diverging",
                     "statusUse": "thresholdOnly",
                     "redundantWithFacet": "single"
-                }
+                },
+                "overflow": "#bcbcbc"
             },
             "accent": "#118dff"
         },

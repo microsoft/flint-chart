@@ -51,6 +51,20 @@ export function collectMarkTypes(spec: any): string[] {
     return [...found];
 }
 
+/** Series marks that draw a connected path — folding several onto one colour
+ * key would thread a single line through unrelated readings. */
+const CONNECTED_MARKS = new Set(['line', 'area', 'trail']);
+
+/** True when any mark at or under this node draws a connected series path. */
+function subtreeHasConnectedMark(node: any): boolean {
+    let found = false;
+    walk(node, (n) => {
+        const t = markTypeOf(n.mark);
+        if (t && CONNECTED_MARKS.has(t)) found = true;
+    });
+    return found;
+}
+
 /**
  * What the spec actually put on the two screen axes. A template is free to
  * name its semantic channels `high`/`low`/`open`/`close`; the reader still
@@ -1541,6 +1555,35 @@ const POSITIVE_WORDS = /\b(above|increase|growth|gain|gains|positive|up|rise|sur
  * label says so, and otherwise by the sign of the quantity it carries.
  */
 /**
+ * The synthetic field name a colour-overflow chart keys off: the top-share
+ * categories keep their own name, the tail collapses onto one "Others (N)"
+ * value so the legend can name it.
+ */
+const OVERFLOW_KEY_FIELD = '__flintColorKey';
+
+/**
+ * Fold a colour field's tail categories onto one key via a Vega-Lite
+ * `calculate` transform: `topK` values pass through, everything else becomes
+ * `othersLabel`. The transform is prepended so the derived field exists before
+ * any the template added. Marks keep their own rows — only the colour key each
+ * row carries is remapped.
+ */
+function addColorKeyTransform(
+    node: any,
+    field: string,
+    topK: any[],
+    othersLabel: string,
+    keyField: string,
+): void {
+    const f = JSON.stringify(field);
+    const calc = `indexof(${JSON.stringify(topK)}, datum[${f}]) >= 0 ? datum[${f}] : ${JSON.stringify(othersLabel)}`;
+    const transform = Array.isArray(node.transform) ? node.transform.slice() : [];
+    if (transform.some((t: any) => t?.as === keyField)) return;
+    transform.push({ calculate: calc, as: keyField });
+    node.transform = transform;
+}
+
+/**
  * Order a colour domain by each category's share of the measure, largest
  * first. Used when there are more series than the house's indexed set: the top
  * inks go to the biggest categories and the small ones fold into the overflow
@@ -1700,25 +1743,51 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
                 }
                 continue;
             }
-            if (s.overflowTail && s.overflow && need > s.categorical.length) {
+            if (s.overflowTail && s.overflow && need > s.categorical.length && !subtreeHasConnectedMark(node)) {
                 // Order the colour domain by share so the largest series keep
                 // a named ink and the small ones fold into the single overflow
                 // tail — a chart with a handful of headline categories and a
                 // grey remainder, not a wheel of near-identical hues.
+                //
+                // Only for marks that stand on their own — a pie's wedges, a
+                // scatter's points, a bar's bars. A line or an area is a
+                // *connected* series: fold two of them onto one colour key and
+                // Vega-Lite threads a single path through both, a grey scribble
+                // where two readings should be. Those keep the palette (top
+                // inks, the rest sharing the overflow ink but each still its
+                // own line) via the fall-through below.
                 const ordered = orderDomainByShare(enc, node, table);
                 if (ordered && ordered.length > s.categorical.length) {
-                    const range = ordered.map((_, i) =>
-                        i < s.categorical.length ? s.categorical[i] : s.overflow!);
-                    setColorRange(enc, range, { domain: ordered });
-                    // A legend that lists twenty identical grey rows is noise.
-                    // Name the top inks; the grey wedges read as "everything
-                    // else" without a row apiece.
+                    const k = s.categorical.length;
+                    const topK = ordered.slice(0, k);
+                    const restCount = ordered.length - k;
+                    // One legend row stands in for the grey tail — an explicit
+                    // "Others (N)" swatch in the overflow ink, so the reader is
+                    // told how many categories share it rather than being left
+                    // to infer that the grey wedges are "everything else".
+                    const othersLabel = `Others (${restCount})`;
+                    const field = enc.field;
+                    const keyField = OVERFLOW_KEY_FIELD;
+                    // A derived key folds the tail categories onto one value.
+                    // The marks keep their own rows (a pie still draws N wedges,
+                    // a bar N bars) — only which colour-key each row shows is
+                    // remapped, so the legend dedupes to top-K plus one Others.
+                    addColorKeyTransform(node, field, topK, othersLabel, keyField);
+                    enc.field = keyField;
+                    enc.type = 'nominal';
+                    const domain = [...topK, othersLabel];
+                    const range = [...s.categorical.slice(0, k), s.overflow!];
+                    setColorRange(enc, range, { domain });
                     if (enc.legend !== null) {
-                        enc.legend = { ...(enc.legend ?? {}), values: ordered.slice(0, s.categorical.length) };
+                        // The K+1 domain is short enough to list in full; drop
+                        // any values pin the template left so Others shows too.
+                        const legend = { ...(enc.legend ?? {}) };
+                        delete legend.values;
+                        enc.legend = legend;
                     }
                     if (!saidExhausted) {
                         say('ink.series.categorical',
-                            `${need} series past ${s.categorical.length} inks — the ${s.categorical.length} largest keep a colour, the rest share one "other" ink; the legend names only the coloured ones`);
+                            `${need} series past ${k} inks — the ${k} largest keep a colour, the rest fold into one "${othersLabel}" ink named in the legend`);
                         saidExhausted = true;
                     }
                     continue;

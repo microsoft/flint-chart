@@ -62,6 +62,7 @@ export const economist: ThemePreset = {
                     "negative": "#e3120b",
                     "neutral": "#b8c4cc"
                 },
+                "overflow": "#b0aca1",
                 "selection": {
                     "signed": "status",
                     "statusUse": "anySigned"
