@@ -1,5 +1,5 @@
 {
-  "order": ["nyt", "economist", "nature", "mckinsey", "datawrapper", "powerbi"],
+  "order": ["nyt", "economist", "nature", "mckinsey", "datawrapper", "powerbi", "powerbi-light"],
   "themes": {
     "nyt": {
       "label": "NYT",
@@ -94,6 +94,22 @@
         "Compact 9.5pt Segoe UI — the tile is small on purpose",
         "Dashed low-contrast gridlines; marks stay dominant",
         "Legend in a fixed position as a reusable convention",
+        "Status colours reserved for thresholds"
+      ]
+    },
+    "powerbi-light": {
+      "label": "Power BI (light)",
+      "alias": "product-dashboard-light",
+      "surface": "#ffffff",
+      "ink": "#252423",
+      "accent": "#118dff",
+      "swatches": ["#118dff", "#12239e", "#e66c37", "#6b007b", "#e044a7", "#744ec2"],
+      "intent": "The default polished light-mode report tile: a white card in a grid of cards, the same product as the dark theme with the ink flipped. Geometry stays stable as the data refreshes; legibility comes from a hairline grid and a fixed palette, not contrast against a dark ground.",
+      "signature": [
+        "White card surface; #252423 ink, #ededed hairline grid",
+        "Compact 9.5pt Segoe UI — the tile is small on purpose",
+        "Solid low-contrast gridlines; marks stay dominant",
+        "Legend fixed on the right as a reusable convention",
         "Status colours reserved for thresholds"
       ]
     }

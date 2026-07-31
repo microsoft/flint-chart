@@ -294,7 +294,7 @@ function Thumb({ spec, bg, height }: { spec: any; bg: string; height: number }) 
  * and the compiler's reading of the same ThemeSpec. Small enough to scan a whole
  * language in one screen; the argument lives in the popup, not here.
  */
-function WallTile({ row, onOpen }: { row: LabRow; onOpen: () => void }) {
+function WallTile({ row, showFlint, onOpen }: { row: LabRow; showFlint: boolean; onOpen: () => void }) {
     const t = THEMES[row.theme];
     const flint = useMemo(() => cleanSpec(row.flintSpec), [row.flintSpec]);
     const themed = useMemo(() => cleanSpec(row.themedSpec), [row.themedSpec]);
@@ -322,7 +322,29 @@ function WallTile({ row, onOpen }: { row: LabRow; onOpen: () => void }) {
             }}
         >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                <Thumb spec={flint} bg="#ffffff" height={232} />
+                {showFlint ? (
+                    <Thumb spec={flint} bg="#ffffff" height={232} />
+                ) : (
+                    <div
+                        style={{
+                            height: 232,
+                            borderRadius: 5,
+                            display: 'grid',
+                            placeItems: 'center',
+                            textAlign: 'center',
+                            padding: 8,
+                            fontSize: 10.5,
+                            lineHeight: 1.4,
+                            color: siteTheme.navInactive,
+                            background:
+                                'repeating-linear-gradient(135deg, transparent, transparent 7px, rgba(0,0,0,0.02) 7px, rgba(0,0,0,0.02) 8px)',
+                        }}
+                    >
+                        Flint baseline is
+                        <br />
+                        the same as above ↑
+                    </div>
+                )}
                 <Thumb spec={themed} bg={t.surface} height={232} />
                 {compiled ? (
                     <Thumb spec={compiled} bg={t.surface} height={232} />
@@ -737,7 +759,9 @@ export function ThemeLab() {
                     The wall is for scanning; click any tile for the full-size pair, the diff (the
                     concrete list of things a design-theme layer would have to be able to express) and
                     both raw specs. Tiles are grouped by chart, so a case themed in several languages
-                    sits together. Specs live in <code>site/src/playground/theme-lab-assets/</code>, one
+                    sits together. The Flint baseline is identical across a group, so it is drawn once,
+                    on the first tile; the follow-ups pair the redesign against the compiled theme only.
+                    Specs live in <code>site/src/playground/theme-lab-assets/</code>, one
                     JSON per chart per theme, tagged with <code>__theme__</code>.
                 </p>
                 <p
@@ -870,10 +894,11 @@ export function ThemeLab() {
                     gap: 12,
                 }}
             >
-                {shown.map((row) => (
+                {shown.map((row, i) => (
                     <WallTile
                         key={`${row.id}-${row.theme}`}
                         row={row}
+                        showFlint={i === 0 || shown[i - 1].id !== row.id}
                         onOpen={() => setOpenKey(`${row.id}-${row.theme}`)}
                     />
                 ))}
