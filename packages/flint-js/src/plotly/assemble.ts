@@ -48,6 +48,7 @@ import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plAp
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { validateUnknownInputKeys } from '../core/validate-input-keys';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -141,6 +142,11 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         const swapped = plGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
+    warnings.push(...validateUnknownInputKeys(
+        [authoredTemplate, chartTemplate],
+        input.chart_spec.chartProperties,
+        input.options,
+    ));
     const encodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Optional aggregation transform — see vegalite/assemble for rationale.

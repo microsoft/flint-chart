@@ -116,6 +116,31 @@ describe('MCP server', () => {
     expect(payload.valid).toBe(true);
   });
 
+  it('validate_chart reports unknown properties and options as warnings', async () => {
+    const res: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: {
+        ...barChart,
+        chart_spec: {
+          ...barChart.chart_spec,
+          chartProperties: { totallyFakeKnob: true },
+        },
+        options: { bogusOption: 'xyz' },
+        backend: 'vegalite',
+      },
+    });
+    const payload = JSON.parse(res.content[0].text);
+
+    expect(payload.valid).toBe(true);
+    expect(payload.errors).toEqual([]);
+    expect(payload.warnings.map((w: any) => w.code)).toEqual(
+      expect.arrayContaining([
+        'unknown-chart-property',
+        'unknown-assemble-option',
+      ]),
+    );
+  });
+
   it('validate_chart rejects malformed specs before assembly', async () => {
     for (const chart_spec of [
       { ...barChart.chart_spec, encodings: {} },

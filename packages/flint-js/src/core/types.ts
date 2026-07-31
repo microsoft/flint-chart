@@ -942,6 +942,9 @@ export interface ChartTemplateDef {
     /** Optional configurable properties for the chart type */
     properties?: ChartPropertyDef[];
 
+    /** Non-control chartProperties keys consumed directly by the template. */
+    additionalPropertyKeys?: string[];
+
     /**
      * Opt out of a backend's *generic* column/row facet-splitting pass, even
      * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
