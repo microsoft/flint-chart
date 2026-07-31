@@ -871,6 +871,23 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ? 'none'
             : (placement as 'top' | 'right' | 'bottom' | 'left');
 
+    // A chart that prints each series' name at its right-hand end (seriesEnd /
+    // inline placement on a left-to-right axis) has claimed the right margin.
+    // A house that also seats its measure axis on the right (opposite
+    // placement) would stack that axis's tick labels under the names —
+    // "Uni1ted", "Ch2na", "Ja3an" on a bump chart's rank axis. The end labels
+    // own the right side; the measure axis falls back to the left.
+    if (placement === 'seriesEnd' || placement === 'inline') {
+        for (const ch of bindings.measureChannels) {
+            const ax = axes[ch];
+            if (ax && ax.orient === 'right') {
+                ax.orient = 'left';
+                say('axes.measure.placement',
+                    'the series names sit at the line ends on the right — the measure axis moves to the left so its ticks do not land under the names');
+            }
+        }
+    }
+
     // A key to a set of names needs no title: `Chrome`, `Safari`, `Firefox`
     // say what kind of thing they are, and `Browser` written over them repeats
     // it. A ramp of numbers says nothing of the sort — `26` is an instance of
