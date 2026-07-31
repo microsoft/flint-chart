@@ -65,6 +65,47 @@ function subtreeHasConnectedMark(node: any): boolean {
     return found;
 }
 
+/** Part-to-whole marks whose slices are a share of a summed measure — the
+ * overflow tail can be summed into a single "Others" slice at the data level. */
+const PART_TO_WHOLE_MARKS = new Set(['arc']);
+
+/** True when the node's own mark is a part-to-whole (share) mark. */
+function isPartToWholeMark(node: any): boolean {
+    const t = markTypeOf(node.mark);
+    return !!t && PART_TO_WHOLE_MARKS.has(t);
+}
+
+/**
+ * Every field the node's encodings read, minus the colour and angle fields the
+ * overflow fold already accounts for. If anything is left, a sum-aggregate
+ * would drop it, so the tail is kept as separate wedges rather than merged.
+ */
+function otherEncodedFields(encoding: any, keep: Set<string>): string[] {
+    const out: string[] = [];
+    for (const ch of Object.keys(encoding ?? {})) {
+        const e = (encoding as any)[ch];
+        const list = Array.isArray(e) ? e : [e];
+        for (const one of list) {
+            const f = one?.field;
+            if (typeof f === 'string' && !keep.has(f)) out.push(f);
+        }
+    }
+    return out;
+}
+
+/**
+ * Sum the angle measure across each colour key. On a part-to-whole chart the
+ * top categories keep their own key (one row each, unchanged) and the folded
+ * tail — all sharing the "Others (N)" key — collapse into a single summed
+ * slice. Prepended after the key `calculate` so the key exists to group on.
+ */
+function addTailAggregate(node: any, thetaField: string, keyField: string): void {
+    const transform = Array.isArray(node.transform) ? node.transform.slice() : [];
+    if (transform.some((t: any) => Array.isArray(t?.aggregate) && (t?.groupby ?? []).includes(keyField))) return;
+    transform.push({ aggregate: [{ op: 'sum', field: thetaField, as: thetaField }], groupby: [keyField] });
+    node.transform = transform;
+}
+
 /**
  * What the spec actually put on the two screen axes. A template is free to
  * name its semantic channels `high`/`low`/`open`/`close`; the reader still
@@ -1333,6 +1374,10 @@ function applySliceGap(
         } else {
             mark.stroke = slice.color;
             mark.strokeWidth = slice.gap;
+            // Wedges taper to a point at the hub; a mitred stroke on those acute
+            // tips shoots a spike past the centre (worse the thinner the slice).
+            // Round the join so the rule stays a rule all the way to the middle.
+            mark.strokeJoin = 'round';
             if (!said) {
                 say('marks.slice.gap',
                     `a ${slice.gap}px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one`);
@@ -1673,7 +1718,12 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
     let saidCollapse = false;
     let saidStatus = false;
     let saidExhausted = false;
-
+    // Merging the overflow tail into one summed slice rewrites the data feeding
+    // this node. Safe for a lone arc view; inside a layer/facet/concat the
+    // sibling layers (a value-label text mark, say) still read the full rows,
+    // so summing one layer's data would desync them. Only merge when the spec
+    // is a single view.
+    const composed = !!(spec?.layer || spec?.concat || spec?.hconcat || spec?.vconcat || spec?.facet || spec?.spec);
     /** The house's indexed set, extended to `n` positions with the overflow ink. */
     const palette = (n: number): string[] => {
         const out = s.categorical.slice(0, n);
@@ -1785,9 +1835,30 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
                         delete legend.values;
                         enc.legend = legend;
                     }
+                    // On a part-to-whole chart the tail is a *share*, so summing
+                    // it is meaningful: merge the "Others" categories into one
+                    // slice at the data level rather than fanning out N same-grey
+                    // wedges. Only when the angle is a plain summed field (a
+                    // count already groups by the colour key) and nothing else is
+                    // encoded off a field the aggregate would drop.
+                    const thetaEnc = node.encoding?.theta;
+                    const thetaField = thetaEnc?.field;
+                    let merged = false;
+                    if (
+                        isPartToWholeMark(node) &&
+                        !composed &&
+                        typeof thetaField === 'string' &&
+                        !thetaEnc.aggregate &&
+                        otherEncodedFields(node.encoding, new Set([thetaField, keyField])).length === 0
+                    ) {
+                        addTailAggregate(node, thetaField, keyField);
+                        merged = true;
+                    }
                     if (!saidExhausted) {
                         say('ink.series.categorical',
-                            `${need} series past ${k} inks — the ${k} largest keep a colour, the rest fold into one "${othersLabel}" ink named in the legend`);
+                            merged
+                                ? `${need} series past ${k} inks — the ${k} largest keep a colour, the rest sum into one "${othersLabel}" slice`
+                                : `${need} series past ${k} inks — the ${k} largest keep a colour, the rest fold into one "${othersLabel}" ink named in the legend`);
                         saidExhausted = true;
                     }
                     continue;
@@ -2012,6 +2083,18 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         }
     }
     if (!l.title) config.legend.title = null;
+    // A vertical-axis title laid flat sits at the plot's top-left corner; a key
+    // riding along the top of that same plot lands its last row in the very
+    // strip the title occupies, and on a multi-row key the two collide. Push
+    // the key up off the plot far enough to clear the flat title.
+    const yTitleForOffset = d.axes?.y?.title;
+    if (l.orient === 'top' && yTitleForOffset?.show
+        && (yTitleForOffset.placement === 'flatAboveAxis' || yTitleForOffset.placement === 'inline')) {
+        const clearance = (yTitleForOffset.fontSize ?? 11) + 12;
+        config.legend.offset = (config.legend.offset ?? 18) + clearance;
+        say('legend.offset',
+            `the top key clears the flat axis title by ${clearance}px so its last row does not land on the title`);
+    }
     // A top or bottom key is a caption to the whole graphic, so it begins where
     // the graphic does — flush with the title down the left edge — not indented
     // to the plot rectangle the way Vega-Lite lays it by default. `bounds:
