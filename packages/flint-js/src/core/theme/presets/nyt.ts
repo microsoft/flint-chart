@@ -166,6 +166,9 @@ export const nyt: ThemePreset = {
                 "anchor": "start"
             }
         },
+        "compileDefaults": {
+            "baseSize": { "width": 380, "height": 340 }
+        },
         "chartDefaults": {
             "Line Chart": {
                 "showPoints": true

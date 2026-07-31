@@ -159,8 +159,10 @@ export const R2_CASES: R2Case[] = [
 /** The base canvas every R2 case is designed at, so sheets are comparable. */
 export const R2_BASE_SIZE = { width: 300, height: 300 };
 
-/** The ceiling a case may stretch to when its data needs more room (1.5×). */
-export const R2_CANVAS_SIZE = { width: 450, height: 450 };
+/** A generous square stretch ceiling. Each house starts from its own
+ *  `compileDefaults.baseSize` (aspect ratio + footprint) and may grow up to
+ *  this when the data needs the room, so the shape is the house's, not ours. */
+export const R2_CANVAS_SIZE = { width: 800, height: 800 };
 
 const CASE_CACHE = new Map<string, TestCase>();
 
@@ -184,9 +186,12 @@ export function r2TestCase(c: R2Case): TestCase {
 export function r2Input(c: R2Case): any {
     const t = r2TestCase(c);
     const input = testCaseToAssemblyInput(t, R2_BASE_SIZE);
-    // A design size of 300² with a 450² ceiling: the house lays out at the
-    // base and is allowed to stretch each dimension up to 1.5× when the data
-    // (many bands, a long legend) needs the room.
+    // Let each house's own `compileDefaults.baseSize` drive its aspect ratio
+    // and footprint: dropping the caller's baseSize lets the theme's win
+    // (flint, with no theme, falls back to flint's neutral default). A single
+    // generous square ceiling lets every house stretch when the data needs it
+    // without dictating the shape it starts from.
+    delete input.chart_spec.baseSize;
     input.chart_spec.canvasSize = R2_CANVAS_SIZE;
     input.chart_spec.title = c.title;
     if (c.subtitle) input.chart_spec.subtitle = c.subtitle;

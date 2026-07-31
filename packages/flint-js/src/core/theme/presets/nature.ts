@@ -183,6 +183,9 @@ export const nature: ThemePreset = {
             },
             "bandStep": 46
         },
+        "compileDefaults": {
+            "baseSize": { "width": 300, "height": 250 }
+        },
         "chartDefaults": {
             "Boxplot": {
                 "showPoints": true

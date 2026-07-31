@@ -170,6 +170,9 @@ export const mckinsey: ThemePreset = {
                 "anchor": "start"
             },
             "bandStep": 80
+        },
+        "compileDefaults": {
+            "baseSize": { "width": 440, "height": 300 }
         }
     },
 };

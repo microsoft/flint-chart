@@ -159,6 +159,9 @@ export const datawrapper: ThemePreset = {
             "titleBlock": {
                 "anchor": "start"
             }
+        },
+        "compileDefaults": {
+            "baseSize": { "width": 420, "height": 340 }
         }
     },
 };

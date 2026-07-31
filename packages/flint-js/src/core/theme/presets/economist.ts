@@ -158,6 +158,9 @@ export const economist: ThemePreset = {
                 "anchor": "start"
             }
         },
+        "compileDefaults": {
+            "baseSize": { "width": 460, "height": 300 }
+        },
         "variants": [
             {
                 "when": {

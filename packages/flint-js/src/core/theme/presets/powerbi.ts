@@ -182,6 +182,9 @@ export const powerbi: ThemePreset = {
             "titleBlock": {
                 "anchor": "start"
             }
+        },
+        "compileDefaults": {
+            "baseSize": { "width": 480, "height": 280 }
         }
     },
 };
