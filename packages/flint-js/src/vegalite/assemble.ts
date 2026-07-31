@@ -66,6 +66,7 @@ import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deri
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { validateUnknownInputKeys } from '../core/validate-input-keys';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -202,6 +203,11 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const swapped = vlGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
+    warnings.push(...validateUnknownInputKeys(
+        [authoredTemplate, chartTemplate],
+        input.chart_spec.chartProperties,
+        input.options,
+    ));
     const composedEncodings = applyEncodingOverrides(chartTemplate, transformed.encodings, chartProperties);
 
     // Template-level encoding normalization (e.g. Sparkline remaps its series

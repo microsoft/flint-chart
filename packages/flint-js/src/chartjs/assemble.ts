@@ -44,6 +44,7 @@ import { decideColorMaps } from '../core/color-decisions';
 import { cjsApplyLayoutToSpec, cjsApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { validateUnknownInputKeys } from '../core/validate-input-keys';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -130,6 +131,11 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         const swapped = cjsGetTemplateDef(transformed.chartType) as ChartTemplateDef | undefined;
         if (swapped) chartTemplate = swapped;
     }
+    warnings.push(...validateUnknownInputKeys(
+        [authoredTemplate, chartTemplate],
+        input.chart_spec.chartProperties,
+        input.options,
+    ));
 
     // Compose Category-B encoding-action overrides (stored by the host in
     // chartProperties, keyed by action key) onto the post-transform encodings
