@@ -83,7 +83,7 @@ published, use the npm package or MCP server for released workflows.
 interface ChartAssemblyInput {
   // Bound by the HOST or by you, depending on the situation (see below).
   data: { values: any[] } | { url: string };
-  semantic_types?: Record<string, string>;   // field → semantic type  ← you write this
+  semantic_types?: Record<string, string | SemanticAnnotation>; // field → type or annotation  ← you write this
   chart_spec: {                               //                        ← you write this
     chartType: string;                        // e.g. "Scatter Plot"
     encodings: Record<string, EncodingValue>; // channel → { field, ... } (or array)
@@ -324,15 +324,51 @@ more. Pick the most specific type for each field. Full registered set:
 
 What choosing well gets you (automatically):
 
-- `Price` / `Amount` → currency formatting, zero baseline, sequential color
+- `Price` / `Amount` → zero baseline, sequential color; add `unit` for
+  currency axis labels (see "Annotation objects" below)
 - `Temperature` → diverging color scheme, no forced zero baseline
 - `Correlation` → fixed `[-1, 1]` diverging domain
 - `Rank` → reversed axis (1 on top), discrete color
 - `Date` / `DateTime` → temporal axis with auto-granularity formatting
-- `Percentage` → percent formatting, 0–100 domain awareness
+- `Percentage` → 0–100 domain awareness; add `intrinsicDomain` for percent
+  axis labels (see "Annotation objects" below)
 
 If you don't know, use `Quantity` for numbers, `Category` for strings,
 `Date`/`DateTime` for date-shaped values. Do **not** invent type names.
+
+### Annotation objects: `unit` and `intrinsicDomain`
+
+Each `semantic_types` entry is either a bare type string or a
+`SemanticAnnotation` object — `"Price"` is shorthand for
+`{ "semanticType": "Price" }`:
+
+```json
+"semantic_types": {
+  "revenue": { "semanticType": "Price", "unit": "USD" },
+  "share":   { "semanticType": "Percentage", "intrinsicDomain": [0, 1] },
+  "rating":  { "semanticType": "Score", "intrinsicDomain": [1, 5] },
+  "region":  "Region"
+}
+```
+
+Without these fields Flint stays conservative: it falls back to plain
+number formatting rather than guess a currency or rescale values it cannot
+verify.
+
+| Annotation | Effect |
+|---|---|
+| `Price` + `unit` with a known currency code (`USD`, `EUR`, `GBP`, `JPY`, `CNY`, …) | Currency symbol on value-axis labels (`$1,200.00`) |
+| `Percentage` + `intrinsicDomain: [0, 1]` over fractional data | Percent axis labels (`0.42` → `42%`) and a domain capped at 1 |
+| `Percentage` + `intrinsicDomain: [0, 100]` | Domain capped at 100; whole numbers stay readable as-is |
+| Bounded type + `intrinsicDomain` (e.g. `Score` `[1, 5]`) | Scale anchored to the intrinsic range instead of the data extent |
+| `Temperature` (and other physical measures) + `unit` (`°C`, `kg`, `km`, …) | Unit suffix on tooltip values |
+
+Axis-label formatting above is fully wired in the Vega-Lite backend today;
+other backends may not apply every format decision yet.
+
+Add `unit` / `intrinsicDomain` when the user states them or the data makes
+them unambiguous (a `price_usd` column; shares that sum to 1). If neither
+is known, keep the bare string — do not guess.
 
 ## Chart-level properties (`chartProperties`)
 
@@ -561,7 +597,8 @@ Before returning, verify:
 
 1. `chartType` is an exact registered name supported by the target backend.
 2. Every `field` referenced in `encodings` is a real column name.
-3. Every encoded field has an entry in `semantic_types` (specific type).
+3. Every encoded field has an entry in `semantic_types` (specific type;
+   add `unit` / `intrinsicDomain` when known — see "Annotation objects").
 4. Required channels for the chart type are present (e.g. Bullet→`goal`,
    Candlestick→`open/high/low/close`, Pie→`size`+`color`).
 5. Any `chartProperties` keys are valid for that chart type and in range.
