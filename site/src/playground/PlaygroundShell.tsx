@@ -9,6 +9,7 @@ const pages = [
   { to: 'demo-wall', label: 'Demo wall' },
   { to: 'theme-labs', label: 'Theme lab' },
   { to: 'theme-lab-r2', label: 'Theme lab R2' },
+  { to: 'theme-lab-real', label: 'Theme lab real' },
   { to: 'theme-lab-gaps', label: 'Theme lab gaps' },
   { to: 'full-test-cases', label: 'Full test cases' },
 ];

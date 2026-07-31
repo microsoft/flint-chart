@@ -17,6 +17,7 @@ import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
 import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
+import { ThemeLabReal } from './playground/ThemeLabReal';
 import { ThemeLabGaps } from './playground/ThemeLabGaps';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
@@ -57,6 +58,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="demo-wall" element={<DemoWall />} />
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
+          <Route path="theme-lab-real" element={<ThemeLabReal />} />
           <Route path="theme-lab-gaps" element={<ThemeLabGaps />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
