@@ -33,6 +33,13 @@ export const mckinsey: ThemePreset = {
                 "rule": "#d3dce1"
             },
             "series": {
+                // McKinsey's 2020 "Deep Blue" (#051c2c) is deliberately
+                // *almost black* — the firm's own brand refresh describes it
+                // as near-black to project authority against white, and real
+                // exhibits/reports use it as the primary data-bar colour.
+                // So a lone series reads near-black by design; electric blue
+                // (#2251ff) is the house's highlight, not its default. Kept
+                // authentic — do not "fix" it to a lighter blue.
                 "single": "#051c2c",
                 "categorical": [
                     "#051c2c",
