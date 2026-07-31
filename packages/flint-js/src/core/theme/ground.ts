@@ -612,7 +612,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         const spec = role === 'measure' ? structure.axis?.measure : structure.axis?.categorical;
         const opposite = spec?.placement === 'opposite';
         const orient: ResolvedAxis['orient'] = channel === 'x'
-            ? (opposite ? 'top' : 'bottom')
+            ? (opposite && channel !== indexChannel ? 'top' : 'bottom')
             : (opposite ? 'right' : 'left');
 
         // The axis a reader indexes the chart *by* is not always the discrete

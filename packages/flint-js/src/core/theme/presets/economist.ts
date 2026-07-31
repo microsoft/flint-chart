@@ -93,7 +93,7 @@ export const economist: ThemePreset = {
                 "measure": {
                     "line": "omit",
                     "ticks": "omit",
-                    "placement": "default"
+                    "placement": "opposite"
                 }
             },
             "grid": {
@@ -164,33 +164,19 @@ export const economist: ThemePreset = {
         "variants": [
             {
                 "when": {
-                    "markChannel": "length"
+                    "markChannel": "area",
+                    "isPartToWhole": false
                 },
                 "then": {
                     "structure": {
                         "axis": {
                             "measure": {
-                                "placement": "opposite"
+                                "placement": "default"
                             }
                         }
                     }
                 },
-                "because": "Measured: big-mac, causes-death and state-jobless all carry the measure axis opposite (3 of 3 bar charts). On a banded chart the far edge is where a reader enters."
-            },
-            {
-                "when": {
-                    "isPartToWhole": true
-                },
-                "then": {
-                    "structure": {
-                        "axis": {
-                            "measure": {
-                                "placement": "opposite"
-                            }
-                        }
-                    }
-                },
-                "because": "Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+                "because": "Right-hand measure axis is the house default (ggthemes theme_economist; measured opposite on 3/3 bar charts and the electricity-mix part-to-whole area). The one measured exception is a non-part-to-whole range/area band (seattle-range), which keeps y on the left."
             }
         ],
         "chartDefaults": {
