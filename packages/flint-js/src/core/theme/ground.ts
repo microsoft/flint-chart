@@ -1442,11 +1442,24 @@ function groundSeriesInk(
     }
 
     if (signals.isPartToWhole && selection.partToWhole === 'sequentialRamp' && s.sequential?.stops?.length) {
-        // One ramp, consumed as an indexed set: the largest share takes the
-        // darkest end, so the ramp is sampled in reverse.
-        const ramp = offSurface(s.sequential, surfaceColour, say)!;
-        const range = sampleRamp(ramp.stops, Math.max(2, count)).reverse();
-        return { ...base, mode: 'sequential', ramp, range };
+        // A single-hue ramp names a part-to-whole cleanly only while the slices
+        // stay as few as the ramp has control points. Sampled past that, the
+        // adjacent shades blur into one another and the wheel reads as a smear
+        // of near-identical tints — worse than distinct hues, and it also skips
+        // the "Others" tail a large pie needs. Up to the ramp's resolution the
+        // house keeps its monochrome part-to-whole look; beyond it, fall through
+        // to the indexed set (distinct hues + an Others fold) so every slice
+        // stays nameable.
+        const rampResolution = s.sequential.stops.length;
+        if (!signals.seriesCountKnown || count <= rampResolution) {
+            // One ramp, consumed as an indexed set: the largest share takes the
+            // darkest end, so the ramp is sampled in reverse.
+            const ramp = offSurface(s.sequential, surfaceColour, say)!;
+            const range = sampleRamp(ramp.stops, Math.max(2, count)).reverse();
+            return { ...base, mode: 'sequential', ramp, range };
+        }
+        say('ink.series.selection.partToWhole',
+            `${count} slices exceed the ${rampResolution}-stop ramp's resolution — distinct hues name them better than shades, so the indexed set stands`);
     }
 
     if (signals.isSigned && s.status && selection.signed === 'status' && selection.statusUse !== 'never') {

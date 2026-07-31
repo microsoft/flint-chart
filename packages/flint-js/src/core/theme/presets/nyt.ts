@@ -57,6 +57,21 @@ export const nyt: ThemePreset = {
                     "#d07b3a",
                     "#b5546a"
                 ],
+                // Continuous measure: the house blue, light tint to deep, so
+                // a heat map or choropleth reads as one hue growing, not a set.
+                "sequential": {
+                    "stops": [
+                        "#eef4f8",
+                        "#c2d8e7",
+                        "#8bb0cf",
+                        "#5187b3",
+                        "#2f6b9a",
+                        "#1c4363"
+                    ],
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "diverging": {
                     "stops": [
                         "#2f6b9a",

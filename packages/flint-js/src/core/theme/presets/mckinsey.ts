@@ -41,6 +41,24 @@ export const mckinsey: ThemePreset = {
                     "#00cfb4",
                     "#8c9ba5"
                 ],
+                // The house is blue at heart, so the extended set does not
+                // reach for a rainbow — it walks the cool wheel the way
+                // McKinsey's own decks do: blue → cyan → teal, then a
+                // restrained turn into violet before the slate. The core five
+                // stay a prefix so a chart's colours don't reshuffle as it
+                // grows past the handful the identity is built on.
+                "categoricalExtended": [
+                    "#051c2c",
+                    "#2251ff",
+                    "#00a9f4",
+                    "#00cfb4",
+                    "#8c9ba5",
+                    "#7c5cff",
+                    "#0e7c8b",
+                    "#6fb7e8",
+                    "#b39ddb",
+                    "#3d4f66"
+                ],
                 "sequential": {
                     "stops": [
                         "#eef3f8",
@@ -76,7 +94,7 @@ export const mckinsey: ThemePreset = {
                     "consumption": "interpolate"
                 },
                 "selection": {
-                    "partToWhole": "sequentialRamp",
+                    "partToWhole": "categorical",
                     "signed": "diverging"
                 },
                 "overflow": "#b6bfc7"

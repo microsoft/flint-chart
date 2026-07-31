@@ -65,6 +65,20 @@ export const powerbiLight: ThemePreset = {
                     "#ff9d3b",
                     "#4a9c2d"
                 ],
+                // Continuous measure: Power BI azure, light to deep.
+                "sequential": {
+                    "stops": [
+                        "#e5f1ff",
+                        "#b3d7ff",
+                        "#7bbcff",
+                        "#3f9dff",
+                        "#118dff",
+                        "#0a5cb5"
+                    ],
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "diverging": {
                     "stops": [
                         "#118dff",

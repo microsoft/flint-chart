@@ -61,6 +61,23 @@ export const powerbi: ThemePreset = {
                     "#ff9d3b",
                     "#4a9c2d"
                 ],
+                // Continuous measure on a dark canvas: dim blue at the low end
+                // (never the background) rising to bright azure, so "more"
+                // reads as brighter — a light-to-dark ramp would sink the high
+                // values into the near-black plot.
+                "sequential": {
+                    "stops": [
+                        "#123049",
+                        "#0f4c86",
+                        "#1170c9",
+                        "#3f9dff",
+                        "#7bbcff",
+                        "#c9e3ff"
+                    ],
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "diverging": {
                     "stops": [
                         "#118dff",

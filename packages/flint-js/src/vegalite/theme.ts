@@ -2619,9 +2619,34 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         const declared = normalizeMark(arc?.mark)?.outerRadius;
         const w = body.width ?? spec.width;
         const h = body.height ?? spec.height;
-        const r = typeof declared === 'number'
+        let r = typeof declared === 'number'
             ? declared
             : (typeof w === 'number' && typeof h === 'number' ? Math.min(w, h) / 2 : undefined);
+        // Vega-Lite grows the wedge to fill the plot box, then hangs an
+        // outside label at `radius + 14`. With nothing declared the wedge
+        // already touches the box edge, so a label — centred on the radius
+        // and reaching out half its own width — runs off the canvas (the
+        // widest numbers on the 3/9-o'clock slices lose a digit). When the
+        // house prints its numbers outside, pull the wedge in far enough to
+        // seat the labels: reserve half the widest label plus the offset,
+        // and write that radius back onto the arc so the drawn wedge and the
+        // label ring agree. An arc that states its own radius is left alone.
+        if (r !== undefined && !inside && typeof declared !== 'number'
+            && typeof w === 'number' && typeof h === 'number' && arc) {
+            const labelChars = table.reduce((m, row) => {
+                const v = row?.[measure.field];
+                if (typeof v !== 'number' || !Number.isFinite(v)) return m;
+                return Math.max(m, Math.round(Math.abs(v)).toLocaleString('en-US').length);
+            }, 1);
+            const estHalfWidth = (labelChars * (t.fontSize ?? 10) * 0.62) / 2;
+            const halfMin = Math.min(w, h) / 2;
+            const arcOuter = Math.max(halfMin * 0.5, halfMin - (estHalfWidth + 16));
+            if (arcOuter < r) {
+                const norm = normalizeMark(arc.mark) ?? { type: 'arc' };
+                arc.mark = { ...norm, outerRadius: Math.round(arcOuter) };
+                r = arcOuter;
+            }
+        }
         if (r) {
             const labelRadius = inside ? r * 0.72 : r + 14;
             Object.assign(markDef, { radius: labelRadius });

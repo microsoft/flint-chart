@@ -44,6 +44,20 @@ export const economist: ThemePreset = {
                     "#3ebcd2",
                     "#c8b88a"
                 ],
+                // Continuous measure: the Economist blue, light to deep.
+                "sequential": {
+                    "stops": [
+                        "#dcebf2",
+                        "#a7ccdd",
+                        "#6ba7c6",
+                        "#2f88ae",
+                        "#006ba2",
+                        "#003f5c"
+                    ],
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "diverging": {
                     "stops": [
                         "#006ba2",

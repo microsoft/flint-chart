@@ -56,6 +56,20 @@ export const nature: ThemePreset = {
                     "#88ccee",
                     "#999933"
                 ],
+                // Continuous measure: the house blue (Wong), light to deep.
+                "sequential": {
+                    "stops": [
+                        "#e6f0f7",
+                        "#b3d3e8",
+                        "#79b0d5",
+                        "#3a8fc4",
+                        "#0072b2",
+                        "#00436a"
+                    ],
+                    "space": "lab",
+                    "endpointsAgainstSurface": true,
+                    "consumption": "interpolate"
+                },
                 "diverging": {
                     "stops": [
                         "#0072b2",
