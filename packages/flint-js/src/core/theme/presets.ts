@@ -16,6 +16,7 @@ import { nature } from './presets/nature';
 import { mckinsey } from './presets/mckinsey';
 import { datawrapper } from './presets/datawrapper';
 import { powerbi } from './presets/powerbi';
+import { powerbiLight } from './presets/powerbi-light';
 
 export const THEME_PRESETS: Record<string, ThemePreset> = {
     nyt,
@@ -24,6 +25,7 @@ export const THEME_PRESETS: Record<string, ThemePreset> = {
     mckinsey,
     datawrapper,
     powerbi,
+    'powerbi-light': powerbiLight,
 };
 
 /** The catalogue, without the specs — enough to choose by. */
