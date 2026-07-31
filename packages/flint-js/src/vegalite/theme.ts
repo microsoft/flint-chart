@@ -2075,13 +2075,39 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
     const l = d.legend;
 
     if (!l.show || l.placement === 'seriesEnd' || l.placement === 'inline') {
+        // The legend "show" decision (and seriesEnd/inline placement) is about
+        // *naming series* — the colour/shape key. A quantitative size or
+        // opacity encoding is a different kind of legend: a value key, like a
+        // bubble map's size scale. It has to survive even when there is no
+        // series legend, or the reader cannot decode how big is how much.
+        let keptValueKey = false;
         walk(spec, (node) => {
             for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity'] as const) {
                 const enc = node.encoding?.[channel];
-                if (enc?.field) enc.legend = null;
+                if (!enc?.field) continue;
+                if ((channel === 'size' || channel === 'opacity') && enc.type === 'quantitative') {
+                    keptValueKey = true;
+                    continue;
+                }
+                enc.legend = null;
             }
         });
-        if (!l.show) return;
+        if (!keptValueKey) return;
+        // A value key survives; the series-naming placement ('none' for
+        // seriesEnd, or no legend at all) does not govern it. Style it in the
+        // house's legend type and seat it to the side.
+        config.legend = {
+            ...(config.legend ?? {}),
+            orient: !l.orient || l.orient === 'none' ? 'right' : l.orient,
+            labelFont: l.label.font,
+            labelFontSize: l.label.fontSize,
+            labelColor: l.label.color,
+            titleFont: l.label.font,
+            titleFontSize: l.label.fontSize,
+            titleColor: d.text.muted,
+        };
+        say('legend.valueKey',
+            'no series legend, but the size key is a value scale — it stays so the bubble sizes can be read');
         return;
     }
 

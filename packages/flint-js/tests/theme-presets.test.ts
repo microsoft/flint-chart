@@ -620,3 +620,50 @@ describe('holding cells apart', () => {
         expect(cell(spec).strokeWidth).toBe(1.5);
     });
 });
+
+/**
+ * A size or opacity encoding is a *value* key, not a series-name key. A bubble
+ * map has no colour series — its whole legend is the size scale — so the
+ * "no series legend" decision must not sweep the size key away with it.
+ */
+describe('keeping a value key when there is no series legend', () => {
+    const CITIES = [
+        { City: 'Tokyo', lon: 139, lat: 35, Pop: 37 },
+        { City: 'Delhi', lon: 77, lat: 28, Pop: 32 },
+        { City: 'Cairo', lon: 31, lat: 30, Pop: 22 },
+    ];
+    const bubble = (themeSpec: ThemeSpec) => assembleVegaLite({
+        data: { values: CITIES },
+        semantic_types: { City: 'Category', lon: 'Longitude', lat: 'Latitude', Pop: 'Quantity' },
+        chart_spec: {
+            chartType: 'Scatter Plot',
+            encodings: { x: 'lon', y: 'lat', size: 'Pop' },
+        },
+        theme_spec: themeSpec,
+    } as any) as any;
+
+    function sizeEnc(spec: any): any {
+        let found: any;
+        walkSpec(spec, (n) => {
+            const e = n.encoding?.size;
+            if (e?.field === 'Pop') found = e;
+        });
+        return found;
+    }
+    function walkSpec(node: any, visit: (n: any) => void): void {
+        if (!node || typeof node !== 'object') return;
+        visit(node);
+        for (const key of ['layer', 'concat', 'hconcat', 'vconcat', 'spec']) {
+            const child = (node as any)[key];
+            if (Array.isArray(child)) child.forEach((c) => walkSpec(c, visit));
+            else if (child) walkSpec(child, visit);
+        }
+    }
+
+    it('does not null the size legend when the chart names no series', () => {
+        const spec = bubble(theme({ ink: { surface: { canvas: '#ffffff' } } } as Partial<ThemeSpec>));
+        const size = sizeEnc(spec);
+        expect(size).toBeTruthy();
+        expect(size.legend).not.toBeNull();
+    });
+});
