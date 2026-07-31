@@ -31,6 +31,13 @@ export const waterfallChartDef: ChartTemplateDef = {
         const yField: string = y?.field || 'Amount';
         const colorField: string | undefined = color?.field;
 
+        // The assembler has already resolved the axis titles (including any
+        // `field_display_names` override) onto the encodings; the layers below
+        // rebuild their own encoding objects, so carry those titles across
+        // rather than falling back to the raw field names.
+        const xTitle = x?.title ?? xField;
+        const yTitle = y?.title ?? yField;
+
         if (!spec.encoding) spec.encoding = {};
         if (column) spec.encoding.column = column;
         if (row) spec.encoding.row = row;
@@ -115,11 +122,19 @@ export const waterfallChartDef: ChartTemplateDef = {
         spec.transform = transforms;
 
         // ── Shared x encoding ────────────────────────────────────────
+        // Vega-Lite derives an axis title from the field name of every untitled
+        // encoding on a shared scale and concatenates them, so leaving this
+        // untitled surfaced the internal connector column in the rendered axis
+        // ("week, __wf_lead"). An explicit title settles the whole shared scale.
+        // It has to be an explicit title rather than `title: null` on the
+        // internal bindings: a null on a primary channel resolves the merged
+        // axis title to nothing, blanking the axis for every layer.
         const xEnc = {
             field: xField,
             type: "ordinal" as const,
             sort: null,
             axis: { labelAngle: -45 },
+            title: xTitle,
         };
 
         // ── Preserve facet encodings ─────────────────────────────────
@@ -176,7 +191,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                     y: {
                         field: "__wf_prev_sum",
                         type: "quantitative",
-                        title: yField,
+                        title: yTitle,
                         ...(yDomain ? { scale: { domain: yDomain } } : {}),
                     },
                     y2: { field: "__wf_sum" },
