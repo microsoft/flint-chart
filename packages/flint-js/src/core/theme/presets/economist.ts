@@ -155,7 +155,8 @@ export const economist: ThemePreset = {
         "layout": {
             "density": "compact",
             "titleBlock": {
-                "anchor": "start"
+                "anchor": "start",
+                "gap": "tight"
             }
         },
         "compileDefaults": {

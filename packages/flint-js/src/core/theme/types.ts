@@ -342,7 +342,18 @@ export interface ThemeFacets {
 export interface ThemeLayout {
     density?: 'compact' | 'normal' | 'airy';
     targetWidth?: number;
-    titleBlock?: { anchor?: 'start' | 'middle' | 'end' };
+    titleBlock?: {
+        anchor?: 'start' | 'middle' | 'end';
+        /**
+         * The vertical gap between the title block and the chart below it — a
+         * house's whitespace personality reaching the headline. `tight` packs
+         * the chart up under the title (a dense figure, a dashboard tile);
+         * `loose` gives an action title room to breathe (a slide exhibit).
+         */
+        gap?: 'tight' | 'normal' | 'loose';
+        /** The vertical gap between the headline and its deck (subtitle). */
+        deckGap?: 'tight' | 'normal' | 'loose';
+    };
     bandStep?: number;
 }
 
@@ -626,6 +637,10 @@ export interface DesignDecisions {
         anchor: 'start' | 'middle' | 'end';
         headline: ResolvedText;
         deck: ResolvedText;
+        /** Gap from the title block to the chart, in px. */
+        offset: number;
+        /** Gap between the headline and its deck, in px. */
+        deckPadding: number;
     };
     /** Bound axes, keyed by screen channel. */
     axes: { x?: ResolvedAxis; y?: ResolvedAxis };

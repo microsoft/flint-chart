@@ -184,7 +184,9 @@ export const powerbiLight: ThemePreset = {
         "layout": {
             "density": "compact",
             "titleBlock": {
-                "anchor": "start"
+                "anchor": "start",
+                "gap": "tight",
+                "deckGap": "tight"
             }
         },
         "compileDefaults": {

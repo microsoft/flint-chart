@@ -215,12 +215,12 @@ function applyTypography(config: any, d: DesignDecisions): void {
         ...(h.fontStyle ? { fontStyle: h.fontStyle } : {}),
         color: h.color,
         anchor: d.title.anchor,
-        offset: Math.round((h.fontSize ?? 14) * 0.9),
+        offset: d.title.offset,
         subtitleFont: deck.font,
         subtitleFontSize: deck.fontSize,
         ...(deck.fontStyle ? { subtitleFontStyle: deck.fontStyle } : {}),
         subtitleColor: deck.color,
-        subtitlePadding: Math.round((deck.fontSize ?? 11) * 0.6),
+        subtitlePadding: d.title.deckPadding,
     };
     // A start-anchored headline belongs at the edge of the *graphic*, not at
     // the left edge of the plotting rectangle — otherwise the width of the

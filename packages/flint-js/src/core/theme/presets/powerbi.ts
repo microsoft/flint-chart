@@ -180,7 +180,9 @@ export const powerbi: ThemePreset = {
         "layout": {
             "density": "compact",
             "titleBlock": {
-                "anchor": "start"
+                "anchor": "start",
+                "gap": "tight",
+                "deckGap": "tight"
             }
         },
         "compileDefaults": {

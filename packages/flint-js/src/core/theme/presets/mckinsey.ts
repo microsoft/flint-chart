@@ -167,7 +167,9 @@ export const mckinsey: ThemePreset = {
         "layout": {
             "density": "airy",
             "titleBlock": {
-                "anchor": "start"
+                "anchor": "start",
+                "gap": "loose",
+                "deckGap": "loose"
             },
             "bandStep": 80
         },

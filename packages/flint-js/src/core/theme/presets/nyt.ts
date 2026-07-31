@@ -163,7 +163,8 @@ export const nyt: ThemePreset = {
         "layout": {
             "density": "normal",
             "titleBlock": {
-                "anchor": "start"
+                "anchor": "start",
+                "deckGap": "tight"
             }
         },
         "compileDefaults": {

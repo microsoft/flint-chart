@@ -310,6 +310,14 @@ const DISTRIBUTION_SHAPE_CHARTS = new Set(['Violin Plot', 'Density Plot']);
 // gutter, not a base the bars stand on.
 const TABLE_CHARTS = new Set(['Bar Table']);
 
+// The title block's vertical rhythm, as a multiple of the headline / deck font
+// size. A house's whitespace personality reaches the title here: `tight` packs
+// the chart up under the headline (a dense figure, a dashboard tile); `loose`
+// gives an action title room to breathe (a slide exhibit). `normal` preserves
+// the ratios the realizer used before the block was expressible.
+const TITLE_GAP: Record<'tight' | 'normal' | 'loose', number> = { tight: 0.45, normal: 0.9, loose: 1.7 };
+const DECK_GAP: Record<'tight' | 'normal' | 'loose', number> = { tight: 0.25, normal: 0.55, loose: 1.05 };
+
 function distinctCount(table: any[], field: string | undefined): number {
     if (!field) return 0;
     const seen = new Set<any>();
@@ -1232,6 +1240,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             anchor: theme.layout?.titleBlock?.anchor ?? 'start',
             headline,
             deck,
+            offset: Math.round((headline.fontSize ?? 14) * TITLE_GAP[theme.layout?.titleBlock?.gap ?? 'normal']),
+            deckPadding: Math.round((deck.fontSize ?? 11) * DECK_GAP[theme.layout?.titleBlock?.deckGap ?? 'normal']),
         },
         axes,
         frame,
