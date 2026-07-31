@@ -2623,14 +2623,18 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
             ? declared
             : (typeof w === 'number' && typeof h === 'number' ? Math.min(w, h) / 2 : undefined);
         // Vega-Lite grows the wedge to fill the plot box, then hangs an
-        // outside label at `radius + 14`. With nothing declared the wedge
+        // outside label just past the rim. With nothing declared the wedge
         // already touches the box edge, so a label — centred on the radius
         // and reaching out half its own width — runs off the canvas (the
         // widest numbers on the 3/9-o'clock slices lose a digit). When the
         // house prints its numbers outside, pull the wedge in far enough to
-        // seat the labels: reserve half the widest label plus the offset,
-        // and write that radius back onto the arc so the drawn wedge and the
-        // label ring agree. An arc that states its own radius is left alone.
+        // seat the labels with air around them: reserve half the widest
+        // label plus the gap, and write that radius back onto the arc so the
+        // drawn wedge and the label ring agree. A snug 14px gap reads as the
+        // number stuck to the rim; McKinsey and its peers sit the annotation
+        // clear of the arc, so the gap is generous. An arc that states its
+        // own radius is left alone.
+        const radialOutsideGap = 22;
         if (r !== undefined && !inside && typeof declared !== 'number'
             && typeof w === 'number' && typeof h === 'number' && arc) {
             const labelChars = table.reduce((m, row) => {
@@ -2640,7 +2644,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
             }, 1);
             const estHalfWidth = (labelChars * (t.fontSize ?? 10) * 0.62) / 2;
             const halfMin = Math.min(w, h) / 2;
-            const arcOuter = Math.max(halfMin * 0.5, halfMin - (estHalfWidth + 16));
+            const arcOuter = Math.max(halfMin * 0.5, halfMin - (estHalfWidth + radialOutsideGap + 4));
             if (arcOuter < r) {
                 const norm = normalizeMark(arc.mark) ?? { type: 'arc' };
                 arc.mark = { ...norm, outerRadius: Math.round(arcOuter) };
@@ -2648,7 +2652,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
             }
         }
         if (r) {
-            const labelRadius = inside ? r * 0.72 : r + 14;
+            const labelRadius = inside ? r * 0.72 : r + radialOutsideGap;
             Object.assign(markDef, { radius: labelRadius });
             // The slice's share of the circle is its value over the total; swung
             // out to the label radius that share becomes an arc of
