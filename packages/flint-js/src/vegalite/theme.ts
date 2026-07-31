@@ -1540,6 +1540,46 @@ const POSITIVE_WORDS = /\b(above|increase|growth|gain|gains|positive|up|rise|sur
  * So pair each domain value with a role: by what it calls itself where the
  * label says so, and otherwise by the sign of the quantity it carries.
  */
+/**
+ * Order a colour domain by each category's share of the measure, largest
+ * first. Used when there are more series than the house's indexed set: the top
+ * inks go to the biggest categories and the small ones fold into the overflow
+ * tail, so the grey is the long tail rather than an arbitrary slice. Returns
+ * `undefined` for a continuous colour field or when no measure can be found.
+ */
+function orderDomainByShare(enc: any, node: any, table: any[]): any[] | undefined {
+    if (isContinuousColor(enc)) return undefined;
+    const field = enc.field;
+    if (!field) return undefined;
+    const domain: any[] = Array.isArray(enc.scale?.domain) && enc.scale.domain.length
+        ? enc.scale.domain.slice()
+        : [...new Set((table ?? []).map((r) => r?.[field]).filter((v) => v != null))];
+    if (domain.length < 2) return undefined;
+
+    // The measure whose share ranks the categories: theta for a pie, else the
+    // quantitative position (size before the axes for a bubble legend).
+    let measure: string | undefined;
+    for (const ch of ['theta', 'size', 'y', 'x'] as const) {
+        const e = node?.encoding?.[ch];
+        if (e?.field && (e.type === 'quantitative' || e.type == null)) { measure = e.field; break; }
+    }
+    if (!measure) return undefined;
+
+    const total = new Map<any, number>();
+    for (const row of table ?? []) {
+        const key = row?.[field];
+        if (key == null) continue;
+        const v = Number(row?.[measure]);
+        total.set(key, (total.get(key) ?? 0) + (Number.isFinite(v) ? Math.abs(v) : 0));
+    }
+    if (total.size === 0) return undefined;
+    // Stable descending sort, preserving the original domain order among ties.
+    return domain
+        .map((value, i) => ({ value, i, w: total.get(value) ?? 0 }))
+        .sort((a, b) => (b.w - a.w) || (a.i - b.i))
+        .map((d) => d.value);
+}
+
 function statusRange(
     enc: any,
     node: any,
@@ -1659,6 +1699,30 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
                     saidExhausted = true;
                 }
                 continue;
+            }
+            if (s.overflowTail && s.overflow && need > s.categorical.length) {
+                // Order the colour domain by share so the largest series keep
+                // a named ink and the small ones fold into the single overflow
+                // tail — a chart with a handful of headline categories and a
+                // grey remainder, not a wheel of near-identical hues.
+                const ordered = orderDomainByShare(enc, node, table);
+                if (ordered && ordered.length > s.categorical.length) {
+                    const range = ordered.map((_, i) =>
+                        i < s.categorical.length ? s.categorical[i] : s.overflow!);
+                    setColorRange(enc, range, { domain: ordered });
+                    // A legend that lists twenty identical grey rows is noise.
+                    // Name the top inks; the grey wedges read as "everything
+                    // else" without a row apiece.
+                    if (enc.legend !== null) {
+                        enc.legend = { ...(enc.legend ?? {}), values: ordered.slice(0, s.categorical.length) };
+                    }
+                    if (!saidExhausted) {
+                        say('ink.series.categorical',
+                            `${need} series past ${s.categorical.length} inks — the ${s.categorical.length} largest keep a colour, the rest share one "other" ink; the legend names only the coloured ones`);
+                        saidExhausted = true;
+                    }
+                    continue;
+                }
             }
             setColorRange(enc, palette(need));
         }

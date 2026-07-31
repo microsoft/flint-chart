@@ -107,6 +107,21 @@ export interface ThemeInk {
     series?: {
         single?: string;
         categorical?: string[];
+        /**
+         * A larger indexed set the house reaches for when a chart has more
+         * series than its core {@link categorical} palette can name, in the
+         * spirit of Tableau's 10→20 step. The core set carries the house's
+         * identity at low cardinality (a handful of well-known inks); the
+         * extended set trades a little of that identity for the capacity to
+         * keep every series distinct up to its length. Grounding picks the
+         * smallest set whose length covers the series count; past the extended
+         * set's length the {@link overflow} ink takes the tail.
+         *
+         * Must contain the core set's inks as a prefix is *not* required — but
+         * ordering the shared hues first keeps a chart's colours stable as it
+         * grows. Unset ⇒ the house has only its core palette.
+         */
+        categoricalExtended?: string[];
         overflow?: string;
         sequential?: Ramp;
         diverging?: Ramp;
@@ -531,6 +546,15 @@ export interface ResolvedSeriesInk {
      * the count.
      */
     exhausted?: boolean;
+    /**
+     * More series than even the extended palette holds, but the house *does*
+     * name an {@link overflow} ink. The top {@link categorical}.length series
+     * by prominence take the indexed inks; every remaining ("other") series
+     * takes the one overflow ink. Realization orders the colour domain by
+     * share so it is the *smallest* series that fold into the overflow tail,
+     * not an arbitrary slice of the domain.
+     */
+    overflowTail?: boolean;
     ramp?: Ramp;
     status?: { positive?: string; negative?: string; neutral?: string };
     /** Concrete range to hand a continuous colour scale (already sampled). */

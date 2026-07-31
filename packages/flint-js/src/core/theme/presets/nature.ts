@@ -42,6 +42,20 @@ export const nature: ThemePreset = {
                     "#56b4e9",
                     "#d55e00"
                 ],
+                "categoricalExtended": [
+                    "#0072b2",
+                    "#e69f00",
+                    "#009e73",
+                    "#cc79a7",
+                    "#56b4e9",
+                    "#d55e00",
+                    "#f0e442",
+                    "#332288",
+                    "#117733",
+                    "#882255",
+                    "#88ccee",
+                    "#999933"
+                ],
                 "diverging": {
                     "stops": [
                         "#0072b2",

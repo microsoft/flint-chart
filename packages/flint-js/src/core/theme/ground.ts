@@ -1369,8 +1369,17 @@ function groundSeriesInk(
     const s = theme.ink.series ?? {};
     const selection = s.selection ?? {};
     const categorical = s.categorical ?? [];
+    const extended = s.categoricalExtended ?? [];
     const single = s.single ?? categorical[0] ?? theme.ink.accent ?? '#4c78a8';
     const surfaceColour = theme.ink.surface?.plot ?? theme.ink.surface?.canvas ?? '#ffffff';
+
+    // The house may name a larger indexed set for higher cardinality (Tableau
+    // 10→20). Rank the tiers by capacity so we can reach for the smallest one
+    // that still gives every series its own ink.
+    const tiers = [categorical, extended]
+        .filter((t) => t.length > 0)
+        .sort((a, b) => a.length - b.length);
+    const largestTier = tiers.length ? tiers[tiers.length - 1] : categorical;
 
     const seriesChannel = bindings.seriesChannel;
     const seriesField = channelFact(ctx, seriesChannel)?.field;
@@ -1477,9 +1486,23 @@ function groundSeriesInk(
     }
 
     if (signals.seriesCountKnown && count > categorical.length && categorical.length > 0) {
-        if (s.overflow) {
+        // Auto-upsize: an extended tier that still names every series is the
+        // right answer — reach for the smallest one that covers the count.
+        const fittingTier = tiers.find((t) => count <= t.length);
+        if (fittingTier && fittingTier.length > categorical.length) {
             say('ink.series.categorical',
-                `${count} series but the house declares ${categorical.length} — the rest take the overflow ink`);
+                `${count} series past the core ${categorical.length} inks — the house's extended ${fittingTier.length}-colour set is used so each stays distinct`);
+            return { ...base, categorical: fittingTier, mode: 'categorical' };
+        }
+
+        if (s.overflow) {
+            // Past even the extended set. The top inks by prominence name the
+            // largest series; every remaining ("other") series folds into the
+            // one overflow ink. Realization orders the domain by share so it is
+            // the smallest series that go grey, read as a single tail.
+            say('ink.series.categorical',
+                `${count} series past the house's ${largestTier.length} inks — the largest ${largestTier.length} keep a colour, the rest fold into one "other" ink`);
+            return { ...base, categorical: largestTier, mode: 'categorical', overflowTail: true };
         } else if (ctx.namesOnMarks === true) {
             // The chart prints the series name on the mark (a slopegraph's end
             // labels, a house that asked for it), so the names are already on
@@ -1488,7 +1511,7 @@ function groundSeriesInk(
             // seven labels that say the same thing the words do. One ink, and
             // the reader reads the names.
             say('ink.series.categorical',
-                `${count} series against ${categorical.length} house inks, but the house names them on the mark — colour stops naming and takes the single ink`);
+                `${count} series against ${largestTier.length} house inks, but the house names them on the mark — colour stops naming and takes the single ink`);
             return { ...base, mode: 'single' };
         } else {
             // An indexed set has a capacity, and past it the colours stop
@@ -1497,8 +1520,8 @@ function groundSeriesInk(
             // said what the twenty-fifth thing looks like, and cycling is not
             // an answer — it is the same answer twice.
             say('ink.series.categorical',
-                `${count} series and the house declares ${categorical.length} with no overflow ink — colour cannot name them all, so the scale already on the chart stands`);
-            return { ...base, mode: 'categorical', exhausted: true };
+                `${count} series and the house declares ${largestTier.length} with no overflow ink — colour cannot name them all, so the scale already on the chart stands`);
+            return { ...base, categorical: largestTier, mode: 'categorical', exhausted: true };
         }
     }
     return { ...base, mode: 'categorical' };

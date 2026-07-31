@@ -43,6 +43,20 @@ export const nyt: ThemePreset = {
                     "#7f6a9e",
                     "#d9a441"
                 ],
+                "categoricalExtended": [
+                    "#2f6b9a",
+                    "#c2352b",
+                    "#4a8b6f",
+                    "#7f6a9e",
+                    "#d9a441",
+                    "#e27ea6",
+                    "#3fae9e",
+                    "#9ca13a",
+                    "#8c6d31",
+                    "#6b8fb3",
+                    "#d07b3a",
+                    "#b5546a"
+                ],
                 "diverging": {
                     "stops": [
                         "#2f6b9a",
