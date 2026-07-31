@@ -934,96 +934,122 @@ function CoverageNotes({ rows }: { rows: LabRow[] }) {
     const full = [...themesPerCase.entries()].filter(([, n]) => n >= THEME_ORDER.length);
     const once = [...themesPerCase.values()].filter((n) => n === 1).length;
 
+    const bulletList: React.CSSProperties = {
+        margin: '6px 0 18px',
+        paddingLeft: 18,
+        maxWidth: 860,
+        fontSize: 13,
+        lineHeight: 1.6,
+        color: siteTheme.textMuted,
+    };
+    const heading: React.CSSProperties = {
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: siteTheme.text,
+        margin: '18px 0 0',
+    };
+
     return (
         <section style={{ marginTop: 34, paddingTop: 22, borderTop: `1px solid ${siteTheme.border}` }}>
             <h2 style={{ fontSize: 18, margin: '0 0 6px', color: siteTheme.text }}>
                 Coverage, and what is still missing
             </h2>
-            <p style={{ maxWidth: 860, fontSize: 13, lineHeight: 1.6, color: siteTheme.textMuted, margin: '0 0 18px' }}>
+            <p style={{ maxWidth: 860, fontSize: 13, lineHeight: 1.6, color: siteTheme.textMuted, margin: '0 0 6px' }}>
                 {rows.length} redesigns across {coveredTypes.size} chart types and {THEME_ORDER.length}{' '}
                 design languages, drawn from {index.length} Flint baselines. A case earns its place by
                 forcing a decision no theme here has had to make yet — more charts is not the same as more
                 evidence.
             </p>
 
-            <p
-                style={{
-                    maxWidth: 860,
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                    color: siteTheme.textMuted,
-                    borderLeft: `2px solid ${siteTheme.accent}`,
-                    paddingLeft: 12,
-                    margin: '0 0 18px',
-                }}
-            >
-                <strong style={{ color: siteTheme.text }}>The largest gap is not a missing chart.</strong>{' '}
-                {full.length === 0
-                    ? `No case carries all ${THEME_ORDER.length} languages, and ${once} of ${themesPerCase.size} are themed exactly once.`
-                    : `${full.length} of ${themesPerCase.size} cases carry all ${THEME_ORDER.length} languages (${full
-                          .map(([id]) => id)
-                          .join(', ')}); ${once} are themed exactly once.`}{' '}
-                Themed once, a row cannot separate what the language decided from what the chart
-                demanded.
-                <br />
-                <br />
-                Three replicated sets sort the decisions into two kinds.{' '}
-                <em>Print the values or keep the axis</em> splits the six on the bar — NYT, McKinsey,
-                Datawrapper and Power BI print; the Economist and Nature trust the axis — and then stops
-                meaning anything: on the pie there is no axis to trust, and all six print.{' '}
-                <em>Legend or direct labels</em> holds: NYT, the Economist and McKinsey label directly on
-                both the line and the pie; Nature, Datawrapper and Power BI keep a key on both. The first
-                is the chart talking, the second is the house — and a single-case table would have called
-                both style.
-                <br />
-                <br />
-                So what a theme layer has to encode is an attitude to scaffolding, not a rule about
-                marks. Nature keeps the most, and is the only language that answers a problem by adding
-                an encoding rather than removing one. McKinsey keeps the least.
-            </p>
+            <h3 style={heading}>The biggest gap is not a missing chart</h3>
+            <ul style={bulletList}>
+                <li>
+                    {full.length === 0
+                        ? `No case carries all ${THEME_ORDER.length} languages, and ${once} of ${themesPerCase.size} are themed exactly once.`
+                        : `${full.length} of ${themesPerCase.size} cases carry all ${THEME_ORDER.length} languages (${full
+                              .map(([id]) => id)
+                              .join(', ')}); ${once} are themed exactly once.`}{' '}
+                    Themed once, a row cannot separate what the language decided from what the chart
+                    demanded.
+                </li>
+                <li>
+                    <em>Print the values or keep the axis</em> is the chart talking, not the house: on the
+                    bar most houses print the number on the mark and the Economist and Nature trust the
+                    axis instead (Power BI, in either mode, keeps both); on the pie there is no axis to
+                    trust, so everyone prints.
+                </li>
+                <li>
+                    <em>Legend or direct labels</em> is the house talking, and it holds across charts: NYT,
+                    the Economist and McKinsey label directly on both the line and the pie; Nature,
+                    Datawrapper and Power BI (light and dark) keep a key on both.
+                </li>
+                <li>
+                    So what a theme layer has to encode is an attitude to scaffolding, not a rule about
+                    marks. Nature keeps the most, and is the only language that answers a problem by adding
+                    an encoding rather than removing one; McKinsey keeps the least.
+                </li>
+            </ul>
 
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: 16,
-                    marginBottom: 22,
-                }}
-            >
-                <GapCard
-                    title="Missing: structural situations"
-                    tone="gap"
-                    items={[
-                        'Dual-axis / combo. Two units in one frame is the hardest thing to theme — which axis keeps the grid, which series takes the accent. Unreachable: Flint has no Vega-Lite combo template, so there is no baseline to argue against.',
-                        'Missing data. No dataset here has a hole in it. Break the line, interpolate, or shade the gap — a newspaper and a journal answer differently.',
-                        'High cardinality in colour. The fifty-state row tests fifty axis labels, which is typography. It never tests what happens when hue itself runs out.',
-                    ]}
-                />
-                <GapCard
-                    title="Missing: chart types"
-                    tone="gap"
-                    items={[
-                        `Untouched baselines: ${untouched.length}, but only ${untouchedNew.length} add a chart type never themed here (${untouchedNew.map((e) => e.chartType).join(', ')}). The other ${untouched.length - untouchedNew.length} are repeats of covered types and buy nothing — a second scatter tests the same decisions as the first.`,
-                        'Calendar heatmaps and cycle plots — seasonality is a layout question no case here asks.',
-                        'Point-symbol maps. The choropleth settles class breaks and hue ramps; a size legend floating over a basemap is untested.',
-                        'Radial forms — donut, rose, radar sit unpaired. Angle and area are the hardest channels for a language to legislate, and the pie is the only one of the four any of these six has had to argue.',
-                        'Funnel and gauge — Plotly-only in Flint, so the baseline column cannot be produced at all.',
-                    ]}
-                />
-                <GapCard
-                    title="Missing: theme languages"
-                    tone="gap"
-                    items={[
-                        'All four come after replication, not before. A seventh language on a seventh chart widens the table without deepening it.',
-                        'Print-mono — one ink, texture and weight only. Every rule that currently leans on hue would have to be restated.',
-                        'High-density terminal — tiny type, dark ground, no whitespace, information over legibility.',
-                        'Accessibility-first — an explicit contrast floor and pattern fills, which would collide productively with the Datawrapper rows.',
-                        'Raw exploratory — deliberately unstyled and disposable. The null hypothesis: the point below which theming is not worth doing.',
-                    ]}
-                />
-            </div>
+            <h3 style={heading}>Missing: structural situations</h3>
+            <ul style={bulletList}>
+                <li>
+                    Dual-axis / combo. Two units in one frame is the hardest thing to theme — which axis
+                    keeps the grid, which series takes the accent. Unreachable: Flint has no Vega-Lite
+                    combo template, so there is no baseline to argue against.
+                </li>
+                <li>
+                    Missing data. No dataset here has a hole in it. Break the line, interpolate, or shade
+                    the gap — a newspaper and a journal answer differently.
+                </li>
+                <li>
+                    High cardinality in colour. The fifty-state row tests fifty axis labels, which is
+                    typography. It never tests what happens when hue itself runs out.
+                </li>
+            </ul>
 
-            <details>
+            <h3 style={heading}>Missing: chart types</h3>
+            <ul style={bulletList}>
+                <li>
+                    Untouched baselines: {untouched.length}, but only {untouchedNew.length} add a chart
+                    type never themed here ({untouchedNew.map((e) => e.chartType).join(', ')}). The other{' '}
+                    {untouched.length - untouchedNew.length} are repeats of covered types and buy nothing —
+                    a second scatter tests the same decisions as the first.
+                </li>
+                <li>Calendar heatmaps and cycle plots — seasonality is a layout question no case here asks.</li>
+                <li>
+                    Point-symbol maps. The choropleth settles class breaks and hue ramps; a size legend
+                    floating over a basemap is untested.
+                </li>
+                <li>
+                    Radial forms — donut, rose, radar sit unpaired. Angle and area are the hardest channels
+                    for a language to legislate, and the pie is the only one of the four any house here has
+                    had to argue.
+                </li>
+                <li>Funnel and gauge — Plotly-only in Flint, so the baseline column cannot be produced at all.</li>
+            </ul>
+
+            <h3 style={heading}>Missing: theme languages</h3>
+            <ul style={bulletList}>
+                <li>
+                    The {THEME_ORDER.length} here are six houses plus a light mode of one — the languages
+                    below would each force a decision no current house makes, not just widen the table.
+                </li>
+                <li>
+                    Print-mono — one ink, texture and weight only. Every rule that currently leans on hue
+                    would have to be restated.
+                </li>
+                <li>High-density terminal — tiny type, dark ground, no whitespace, information over legibility.</li>
+                <li>
+                    Accessibility-first — an explicit contrast floor and pattern fills, which would collide
+                    productively with the Datawrapper rows.
+                </li>
+                <li>
+                    Raw exploratory — deliberately unstyled and disposable. The null hypothesis: the point
+                    below which theming is not worth doing.
+                </li>
+            </ul>
+
+            <details style={{ marginTop: 6 }}>
                 <summary style={{ cursor: 'pointer', fontSize: 13, color: siteTheme.accent }}>
                     Baselines with no bespoke counterpart yet ({untouched.length})
                 </summary>
@@ -1046,29 +1072,6 @@ function CoverageNotes({ rows }: { rows: LabRow[] }) {
                 </div>
             </details>
         </section>
-    );
-}
-
-function GapCard({ title, tone, items }: { title: string; tone: 'done' | 'gap'; items: string[] }) {
-    return (
-        <article
-            style={{
-                border: `1px solid ${siteTheme.border}`,
-                borderRadius: 8,
-                padding: 14,
-                background: siteTheme.surface,
-                borderLeft: `3px solid ${tone === 'done' ? siteTheme.border : siteTheme.accent}`,
-            }}
-        >
-            <strong style={{ fontSize: 13, color: siteTheme.text }}>{title}</strong>
-            <ul style={{ margin: '10px 0 0', paddingLeft: 16, fontSize: 11.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-                {items.map((s, i) => (
-                    <li key={i} style={{ marginBottom: 6 }}>
-                        {s}
-                    </li>
-                ))}
-            </ul>
-        </article>
     );
 }
 
