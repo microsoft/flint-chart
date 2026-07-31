@@ -309,6 +309,14 @@ const DISTRIBUTION_SHAPE_CHARTS = new Set(['Violin Plot', 'Density Plot']);
 // the bar is a secondary in-cell glyph and the category axis is a row-header
 // gutter, not a base the bars stand on.
 const TABLE_CHARTS = new Set(['Bar Table']);
+// A multi-value glyph carries several measures in one mark — a candlestick is
+// open/high/low/close — so there is no single scalar per datum to print. The
+// mark itself is the value; a lone number stamped on it would name one of four
+// prices and mislead on the other three. These charts look labelable (a measure
+// on a position, a banded axis, not a distribution summary) but must never
+// print a value, and — the reason this matters — must never let a house drop
+// the measure axis on the false premise that the value is printed elsewhere.
+const MULTI_VALUE_GLYPH_CHARTS = new Set(['Candlestick Chart']);
 
 // The title block's vertical rhythm, as a multiple of the headline / deck font
 // size. A house's whitespace personality reaches the title here: `tight` packs
@@ -912,16 +920,19 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     const labelable = ((signals.hasBandedAxis && (bindings.measureChannels.length > 0 || gridCells))
         || signals.isPartToWhole)
         && !ctx.positional?.stacked
-        && !signals.isSummarised;
+        && !signals.isSummarised
+        && !MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType);
     if (dlShow && !labelable) {
         dlShow = false;
         say('dataLabels.show', ctx.positional?.stacked
             ? 'the segments are stacked — a value at a segment edge would read as the running total'
             : signals.isSummarised
                 ? 'the chart summarises a distribution — each band holds a sample, not one quantity to print'
-                : signals.hasBandedAxis
-                    ? 'the measure is not on an axis — there is no position to print a value at'
-                    : 'no banded axis to key values to — one number per datum would be noise, not a label');
+                : MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType)
+                    ? 'the mark carries several measures at once — there is no single value to print, and the measure axis stays as the only reading of them'
+                    : signals.hasBandedAxis
+                        ? 'the measure is not on an axis — there is no position to print a value at'
+                        : 'no banded axis to key values to — one number per datum would be noise, not a label');
     }
 
     if (dl.show === 'always' && dlShow) {
@@ -1038,10 +1049,19 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         ?? (['theta', 'size', 'radius'] as const).find((ch) => ctx.channelSemantics?.[ch]?.field);
     const axisStatesUnit = (['x', 'y'] as const)
         .some((ch) => axes[ch]?.unit && axes[ch]!.label.show !== false);
-    const valueUnit = (theme.annotation?.unit ?? 'never') !== 'never' && !axisStatesUnit
-        ? (unitText(ctx, valueUnitChannel ?? '')
-            ?? (signals.isPartToWhole ? percentOfWhole(ctx, valueUnitChannel ?? '') : undefined))
+    const houseStatesUnit = (theme.annotation?.unit ?? 'never') !== 'never' && !axisStatesUnit;
+    // A part-to-whole value whose slices sum to 100 *is* a percentage — the `%`
+    // is the number's meaning, not a house-style flourish, and a pie has no
+    // ruler to carry it. So it rides on the printed value whatever the house's
+    // axis-unit policy: a bare `65` on a slice reads as a count, not a share.
+    // (`percentOfWhole` only fires on values that actually total 100, so a pie
+    // of raw amounts keeps its bare numbers.)
+    const shareUnit = signals.isPartToWhole && !axisStatesUnit
+        ? percentOfWhole(ctx, valueUnitChannel ?? '')
         : undefined;
+    const valueUnit = houseStatesUnit
+        ? (unitText(ctx, valueUnitChannel ?? '') ?? shareUnit)
+        : shareUnit;
 
     // A label placed at the mark sits *inside* it, which only works while the
     // mark is longer than the label. Below that length the label has to move

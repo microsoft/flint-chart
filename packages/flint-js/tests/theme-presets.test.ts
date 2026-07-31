@@ -222,8 +222,31 @@ describe('a printed value carries the unit no axis can', () => {
         expect(JSON.stringify(transform)).toContain('%');
     });
 
-    it('leaves the value bare where the house asks for no unit', () => {
-        const { text } = labelText(pie({}));
+    it('carries the share % even where the house states no unit', () => {
+        // A pie slice summing to 100 *is* a percentage — the % is the number's
+        // meaning, not a house flourish, and the pie has no axis to hold it. So
+        // it rides on the value whatever the house's axis-unit policy.
+        const { text, transform } = labelText(pie({}));
+        expect(text?.field).toBe('__flintValueWithUnit');
+        expect(JSON.stringify(transform)).toContain('%');
+    });
+
+    it('leaves raw amounts bare — a pie that is not shares keeps its numbers', () => {
+        const AMOUNTS = [
+            { Browser: 'Chrome', Share: 650 },
+            { Browser: 'Safari', Share: 200 },
+            { Browser: 'Edge', Share: 100 },
+            { Browser: 'Other', Share: 50 },
+        ];
+        const spec = assembleVegaLite({
+            data: { values: AMOUNTS },
+            semantic_types: { Browser: 'Category', Share: 'Quantity' },
+            chart_spec: { chartType: 'Pie Chart', encodings: { size: 'Share', color: 'Browser' } },
+            theme_spec: theme({
+                dataLabels: { show: 'always', placement: 'atMark', inkMode: 'fixed' },
+            }),
+        } as any) as any;
+        const { text } = labelText(spec);
         expect(text?.field).toBe('Share');
     });
 });

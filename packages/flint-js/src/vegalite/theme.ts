@@ -2250,6 +2250,13 @@ function wrapWideKeys(
 ): void {
     if (!block) return;
     const MAX_ROWS = 4;
+    // A top/bottom legend has the whole chart width to flow across; the base
+    // display is 300px wide, so a narrow plot's key still has at least this
+    // much room before it has to stack into one column.
+    const MIN_HORIZONTAL_LEGEND_BLOCK = 280;
+    // A full categorical palette's worth of names always fits — the point past
+    // which high cardinality has already been folded into "Others (N)".
+    const MIN_LEGEND_ENTRIES = 12;
     walk(spec, (node) => {
         for (const channel of ['color', 'fill', 'stroke'] as const) {
             const enc = node.encoding?.[channel];
@@ -2265,7 +2272,13 @@ function wrapWideKeys(
             const symbol = symbolArea ? 2 * Math.sqrt(symbolArea / Math.PI) : 10;
             const entryWidth = entries.reduce(
                 (m, e) => Math.max(m, symbol + 4 + e.length * labelFS * 0.55 + 10), 0);
-            const columns = Math.max(1, Math.floor(block / entryWidth));
+            // A top or bottom legend flows across the whole chart, not just the
+            // plot the marks occupy. A five-bar stacked column is ~90px wide
+            // yet its key has the full canvas to spread over, so a narrow plot
+            // must not force the key into one column (and, below, into a cap
+            // that would then hide entries).
+            const usableBlock = Math.max(block, MIN_HORIZONTAL_LEGEND_BLOCK);
+            const columns = Math.max(1, Math.floor(usableBlock / entryWidth));
             if (entries.length <= columns) continue;
             enc.legend = { ...(enc.legend ?? {}), columns };
             // A folded key is already the bounded top-K + "Others (N)" list the
@@ -2273,7 +2286,14 @@ function wrapWideKeys(
             // the very Others row that stands in for the tail. Wrap it into
             // columns, but never truncate it.
             const folded = enc.field === OVERFLOW_KEY_FIELD;
-            const cap = columns * MAX_ROWS;
+            // The cap bounds a genuine *tower* of names — dozens of entries no
+            // grid can hold. It must never hide the handful of series a normal
+            // key names: on a stacked bar or an area the colour key is the only
+            // thing telling those series apart, so truncating it to "…2 entries"
+            // leaves two bands unidentifiable. Never cap below a full
+            // categorical palette's worth (past which the "Others (N)" fold
+            // would already have engaged upstream).
+            const cap = Math.max(columns * MAX_ROWS, MIN_LEGEND_ENTRIES);
             if (!folded && entries.length > cap) enc.legend.symbolLimit = cap;
             say('legend.columns',
                 `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
