@@ -216,7 +216,7 @@ export const boxplotDef: ChartTemplateDef = {
         return {
             axisFlags: { [result.axis]: { banded: true } },
             resolvedTypes: result.resolvedTypes,
-            paramOverrides: { defaultBandSize: 28 },  // box+whisker needs wider bands
+            paramOverrides: { defaultBandSize: 28, groupBandFillsLanes: true },  // box+whisker needs wider bands; grouped lanes each get full width
             colorActsAsGroup,  // dodge-by-color → budget band per category, shrink lanes
             ...(groupLaneCount ? { groupLaneCount } : {}),
         };

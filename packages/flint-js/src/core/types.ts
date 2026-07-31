@@ -1269,6 +1269,22 @@ export interface AssembleOptions {
      */
     maxBandSize?: number;
     /**
+     * When a discrete axis is **grouped** (dodged lanes within each category
+     * band), by default the band's elastic stretch target is the *per-item*
+     * step — so a category holding N lanes is only sized as if it held one.
+     * For thin marks (grouped bars) that's fine: 4 lanes share a ~66px band
+     * comfortably. But wide marks — a box-and-whisker glyph — need real room
+     * per lane, and the per-item target leaves grouped boxplots compressed on
+     * an otherwise roomy canvas.
+     *
+     * When set, the grouped band instead targets `itemsPerGroup × step`, so
+     * the category band stretches to give each lane its full width (still
+     * bounded by `maxBandSize × itemsPerGroup` and the canvas budget). Scoped
+     * to templates whose grouped glyph is wide (boxplot); left off for bars so
+     * their tuned grouped spacing does not change.
+     */
+    groupBandFillsLanes?: boolean;
+    /**
      * Backend-native base font size (px) for axis **tick labels**, at a 300px
      * reference canvas. The core scales it subtly with canvas size and uses it
      * as the ceiling of the shrink→rotate→cap ladder, so a chart never renders

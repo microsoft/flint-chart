@@ -832,7 +832,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, elasticParamsX);
+        const groupElasticX = options.groupBandFillsLanes
+            ? { ...elasticParamsX, defaultStepSize: elasticParamsX.defaultStepSize * itemsPerGroup }
+            : elasticParamsX;
+        const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, groupElasticX);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         xStepSize = groupStep;
         xStepUnit = 'group';
@@ -848,7 +851,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, elasticParamsY);
+        const groupElasticY = options.groupBandFillsLanes
+            ? { ...elasticParamsY, defaultStepSize: elasticParamsY.defaultStepSize * itemsPerGroup }
+            : elasticParamsY;
+        const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, groupElasticY);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         yStepSize = groupStep;
         yStepUnit = 'group';
