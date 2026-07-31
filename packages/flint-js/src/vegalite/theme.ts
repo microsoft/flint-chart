@@ -2185,6 +2185,11 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 const enc = node.encoding?.[channel];
                 if (!enc?.field || enc.type !== 'quantitative' || enc.legend === null) continue;
                 if (channel === 'color' && !enc.scale?.type) continue;
+                // Discretizing colour scales (quantize/quantile/threshold) already
+                // render one swatch per bin — sampling round tick values collapses
+                // that stepped key into a couple of end-labels over a gradient bar.
+                if (channel === 'color'
+                    && ['quantize', 'quantile', 'threshold', 'bin-ordinal'].includes(enc.scale?.type)) continue;
                 if (enc.legend?.values) continue;
                 const values = roundSample(table, enc.field, l.maxSwatches!);
                 if (!values) continue;

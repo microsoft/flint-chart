@@ -69,7 +69,8 @@ export const economist: ThemePreset = {
                     "neutral": "#e9e5dc",
                     "space": "lab",
                     "endpointsAgainstSurface": true,
-                    "consumption": "interpolate"
+                    "consumption": "quantize",
+                    "quantizeCount": 5
                 },
                 "status": {
                     "positive": "#006ba2",
