@@ -242,7 +242,7 @@ function ThemeChip({ theme }: { theme: ThemeId }) {
 function SpecCell({ spec, dark, label }: { spec: any; dark: boolean; label: string }) {
     const cleaned = useMemo(() => cleanSpec(spec), [spec]);
     return (
-        <div style={{ minWidth: 0 }}>
+        <div style={{ flex: '1 1 340px', minWidth: 300, maxWidth: '100%' }}>
             <div
                 style={{
                     fontSize: 10,
@@ -260,10 +260,11 @@ function SpecCell({ spec, dark, label }: { spec: any; dark: boolean; label: stri
                     border: `1px solid ${siteTheme.border}`,
                     borderRadius: 8,
                     padding: 12,
-                    overflowX: 'auto',
                 }}
             >
-                <VegaLiteView spec={cleaned} renderer="svg" />
+                <ScaleToFit adaptiveHeight height={440} minHeight={180} padding={0}>
+                    <VegaLiteView spec={cleaned} renderer="svg" />
+                </ScaleToFit>
             </div>
         </div>
     );
@@ -536,10 +537,10 @@ function DetailModal({ row, onClose }: { row: LabRow; onClose: () => void }) {
 
                 <div
                     style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)',
+                        display: 'flex',
+                        flexWrap: 'wrap',
                         gap: 20,
-                        alignItems: 'start',
+                        alignItems: 'flex-start',
                     }}
                 >
                     <SpecCell spec={flint} dark={false} label="1 · Flint default (Vega-Lite)" />
