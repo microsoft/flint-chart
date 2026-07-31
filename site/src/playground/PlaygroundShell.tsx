@@ -10,7 +10,6 @@ const pages = [
   { to: 'theme-labs', label: 'Theme lab' },
   { to: 'theme-lab-r2', label: 'Theme lab R2' },
   { to: 'theme-lab-gaps', label: 'Theme lab gaps' },
-  { to: 'theme-lab-reference', label: 'Theme references' },
   { to: 'full-test-cases', label: 'Full test cases' },
 ];
 

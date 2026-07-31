@@ -18,7 +18,6 @@ import { DemoWall } from './playground/DemoWall';
 import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabGaps } from './playground/ThemeLabGaps';
-import { ThemeLabReference } from './playground/ThemeLabReference';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
@@ -59,7 +58,6 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-gaps" element={<ThemeLabGaps />} />
-          <Route path="theme-lab-reference" element={<ThemeLabReference />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}
