@@ -69,6 +69,16 @@ function subtreeHasConnectedMark(node: any): boolean {
  * overflow tail can be summed into a single "Others" slice at the data level. */
 const PART_TO_WHOLE_MARKS = new Set(['arc']);
 
+/**
+ * The distinct-count at which `assemble` shrinks a colour key's labels to fit
+ * the field's full cardinality (see `assemble.ts`, "Legend sizing for
+ * high-cardinality nominal color/group"). When the overflow fold collapses the
+ * key to a short top-K + Others list, only a handful of rows render, so that
+ * shrink is recomputed against the folded count and short lists are handed back
+ * to the house's own size. Kept in sync with the literal in `assemble.ts`.
+ */
+const HIGH_CARDINALITY_LEGEND_MIN = 16;
+
 /** True when the node's own mark is a part-to-whole (share) mark. */
 function isPartToWholeMark(node: any): boolean {
     const t = markTypeOf(node.mark);
@@ -1833,6 +1843,17 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
                         // any values pin the template left so Others shows too.
                         const legend = { ...(enc.legend ?? {}) };
                         delete legend.values;
+                        // assemble shrank these labels (and their swatches) to
+                        // fit the field's *full* cardinality; the fold now shows
+                        // only the K largest plus one Others row, so that shrink
+                        // is measured against the wrong count. Recompute it here
+                        // against what actually renders — a short list stands at
+                        // the house's own size, not squeezed to 8px for names it
+                        // no longer draws.
+                        if (topK.length + 1 < HIGH_CARDINALITY_LEGEND_MIN) {
+                            delete legend.labelFontSize;
+                            delete legend.symbolSize;
+                        }
                         enc.legend = legend;
                     }
                     // On a part-to-whole chart the tail is a *share*, so summing
@@ -2240,8 +2261,13 @@ function wrapWideKeys(
             const columns = Math.max(1, Math.floor(block / entryWidth));
             if (entries.length <= columns) continue;
             enc.legend = { ...(enc.legend ?? {}), columns };
+            // A folded key is already the bounded top-K + "Others (N)" list the
+            // overflow pass built to be listable in full; capping it would hide
+            // the very Others row that stands in for the tail. Wrap it into
+            // columns, but never truncate it.
+            const folded = enc.field === OVERFLOW_KEY_FIELD;
             const cap = columns * MAX_ROWS;
-            if (entries.length > cap) enc.legend.symbolLimit = cap;
+            if (!folded && entries.length > cap) enc.legend.symbolLimit = cap;
             say('legend.columns',
                 `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
         }

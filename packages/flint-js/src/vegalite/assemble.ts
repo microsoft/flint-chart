@@ -1004,6 +1004,10 @@ function buildVLEncodings(
             // Legend sizing for high-cardinality nominal color/group
             if (encodingObj.type === "nominal" && (channel === 'color' || channel === 'group')) {
                 const actualDomain = [...new Set(data.map(r => r[fieldName]))];
+                // Threshold kept in sync with HIGH_CARDINALITY_LEGEND_MIN in
+                // vegalite/theme.ts: when a theme later folds the key to a short
+                // top-K + Others list, that pass recomputes this shrink against
+                // the folded count so short legends are not squeezed to 8px.
                 if (actualDomain.length >= 16) {
                     if (!encodingObj.legend) encodingObj.legend = {};
                     encodingObj.legend.symbolSize = 12;
