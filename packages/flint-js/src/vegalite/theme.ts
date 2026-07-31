@@ -215,8 +215,15 @@ function mergedEncoding(node: any, inherited: any): any {
 
 /** The words Vega-Lite will write on this axis if nobody says otherwise. */
 function titleOf(enc: any): string | undefined {
+    // An explicit `title: null` is the author saying "this layer carries no
+    // title" — a shared-scale helper layer (a waterfall connector, a label
+    // series) that must not contribute its field name to the merged axis title.
+    if (enc?.title === null) return undefined;
     if (typeof enc?.title === 'string') return enc.title;
-    return typeof enc?.field === 'string' ? enc.field : undefined;
+    // Internal helper fields (`__wf_connector_y`, …) are plumbing, never a
+    // reader-facing title.
+    if (typeof enc?.field === 'string' && !enc.field.startsWith('__')) return enc.field;
+    return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -2964,14 +2971,23 @@ function demoteSeriesEnd(spec: any, d: DesignDecisions, say: (p: string, m: stri
     const runsAlongX = runChannel(d) === 'x';
     const marginTaken = bands
         && (runsAlongX ? d.axes.y?.orient === 'right' : d.axes.x?.orient === 'top');
+    // A closed run (a radar/spider polygon, `interpolate: *-closed`) has no last
+    // point: every vertex is an axis, not an end, so an end label would land on
+    // an arbitrary spoke. The series can only be named by a key.
+    const closedRun = units.some((n: any) => {
+        const interp = normalizeMark(n.mark)?.interpolate;
+        return typeof interp === 'string' && interp.endsWith('-closed');
+    });
     const reason = units.length === 0
         ? '`seriesEnd` needs a line mark'
         : (!field ? '`seriesEnd` needs a series field to name'
             : (field === d.bound.categoryField
                 ? '`seriesEnd` would restate the categorical axis'
-                : marginTaken
-                    ? `the ${runsAlongX ? 'right' : 'top'} margin holds the value axis, so a name too big for its band has nowhere to stand`
-                    : null));
+                : closedRun
+                    ? '`seriesEnd` needs an open run — a closed polygon has no last point'
+                    : marginTaken
+                        ? `the ${runsAlongX ? 'right' : 'top'} margin holds the value axis, so a name too big for its band has nowhere to stand`
+                        : null));
     if (!reason) return;
     // The house ranked its placements; a demotion should land on the next one
     // it named, not on whatever this function happens to prefer.

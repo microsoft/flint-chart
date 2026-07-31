@@ -211,7 +211,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                 encoding: {
                     x: { field: xField, type: "ordinal", sort: null, bandPosition: 0 },
                     x2: { field: "__wf_lead", bandPosition: 1 },
-                    y: { field: "__wf_connector_y", type: "quantitative" },
+                    y: { field: "__wf_connector_y", type: "quantitative", title: null },
                 },
             },
         ];
@@ -239,7 +239,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         fill: "#374151",
                     },
                     encoding: {
-                        y: { field: "__wf_sum", type: "quantitative" },
+                        y: { field: "__wf_sum", type: "quantitative", title: null },
                         text: { field: "__wf_sum", type: "quantitative", format: labelFormat },
                     },
                 },
@@ -254,7 +254,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         fontSize: labelFontSize,
                     },
                     encoding: {
-                        y: { field: "__wf_center", type: "quantitative" },
+                        y: { field: "__wf_center", type: "quantitative", title: null },
                         text: { field: "__wf_delta_text", type: "nominal" },
                         color: {
                             condition: { test: "datum.__wf_color === 'total'", value: "#725a30" },
