@@ -3923,6 +3923,11 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
         return false;
     }
 
+    // A masthead tab opens the block *above* the headline — the Economist's
+    // red rule sits at the very top of the graphic, over the title, not
+    // between the title and the plot. A rule (header/footer) closes a block
+    // and stays where it is drawn: under the headline, or under the plot.
+    const aboveTitle: any[] = [];
     const before: any[] = [];
     const after: any[] = [];
     // A tab is a mark of its own — the Economist's red rectangle is 26px
@@ -3949,12 +3954,21 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
             height: item.height ?? 2,
             data: { values: [{}] },
         };
-        (isTop ? before : after).push(rect);
+        if (!isTop) after.push(rect);
+        else if (item.kind === 'mastheadTab') aboveTitle.push(rect);
+        else before.push(rect);
     }
-    if (!before.length && !after.length) return false;
+    if (!aboveTitle.length && !before.length && !after.length) return false;
 
     const inner: any = { ...spec };
     for (const key of ['$schema', 'background', 'padding', 'title', 'config', 'autosize']) delete inner[key];
+
+    // The masthead tab must draw *over* the title, but the outer view's title
+    // always renders above every concatenated child. So when a tab opens the
+    // block, the title rides down onto the plot body and the tab is the first
+    // thing in the stack — tab, then headline, then chart.
+    const tabOverTitle = aboveTitle.length > 0 && !!spec.title;
+    if (tabOverTitle) inner.title = spec.title;
 
     // A concatenated child's legends are hoisted to the outer view and drawn
     // above every child in it — including the tab, which is the one thing that
@@ -3973,9 +3987,9 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
         ...(spec.$schema ? { $schema: spec.$schema } : {}),
         background: spec.background,
         padding: spec.padding,
-        ...(spec.title ? { title: spec.title } : {}),
+        ...(spec.title && !tabOverTitle ? { title: spec.title } : {}),
         spacing: 6,
-        vconcat: [...before, inner, ...after],
+        vconcat: [...aboveTitle, ...before, inner, ...after],
         ...(keyed.size
             ? { resolve: { legend: Object.fromEntries([...keyed].map((c) => [c, 'independent'])) } }
             : {}),

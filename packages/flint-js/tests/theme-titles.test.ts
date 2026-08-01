@@ -107,3 +107,46 @@ describe('legend titles', () => {
         expect(spec._theme.decisions.legend.title).toBe(true);
     });
 });
+
+/**
+ * A masthead tab opens the block above the headline.
+ *
+ * The Economist's red rule sits at the very top of the graphic, over the
+ * title — not between the title and the plot. So a house that draws one keeps
+ * the tab first in the stack and lets the headline ride down onto the plot.
+ */
+describe('masthead furniture', () => {
+    function withTab(): any {
+        const themeSpec = {
+            id: 'tabbed',
+            label: 'Tabbed',
+            ink: { surface: { canvas: '#ffffff' }, series: { single: '#333333' } },
+            annotation: { axisTitles: 'always' },
+            furniture: [{ kind: 'mastheadTab', anchor: 'topLeft', color: '#e3120b', width: 26, height: 3 }],
+        } as unknown as ThemeSpec;
+        return assembleVegaLite({
+            data: { values: MONTHLY },
+            semantic_types: { Month: 'Month', Rainfall: 'Amount' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Rain keeps falling',
+                encodings: { x: 'Month', y: 'Rainfall' },
+            },
+            theme_spec: themeSpec,
+        } as any) as any;
+    }
+
+    it('draws the tab first and above the title', () => {
+        const spec = withTab();
+        expect(Array.isArray(spec.vconcat)).toBe(true);
+        // The tab opens the stack.
+        const first = spec.vconcat[0];
+        expect(first.__themeSynthetic).toBe(true);
+        expect(first.mark.type).toBe('rect');
+        expect(first.mark.color).toBe('#e3120b');
+        // The title has come off the outer view and ridden down onto the plot.
+        expect(spec.title).toBeUndefined();
+        const titled = spec.vconcat.find((v: any) => v && v.title);
+        expect(titled).toBeTruthy();
+    });
+});
