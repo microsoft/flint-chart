@@ -15,9 +15,9 @@ import type { ThemePreset } from '../types';
  * What makes it a different design *language* rather than a palette reskin of
  * the editorial houses: the modular grid is drawn, not hidden (NYT hides it);
  * the axes are structural black rules; the headline is a bold flush-left
- * Helvetica block sitting over a thick rule; and colour is a single saturated
- * signal red against warm paper, with flat primaries for extra categories. No
- * gradients on the marks, no rounded corners, no ornament.
+ * Helvetica block; and colour is a single saturated signal red against warm
+ * paper, with flat primaries for extra categories. No gradients on the marks,
+ * no rounded corners, no ornament.
  */
 export const swiss: ThemePreset = {
     id: 'swiss',
@@ -186,14 +186,6 @@ export const swiss: ThemePreset = {
                 precision: 'auto',
             },
         },
-        furniture: [
-            {
-                kind: 'headerRule',
-                anchor: 'topLeft',
-                color: '#1a1a1a',
-                height: 3,
-            },
-        ],
         layout: {
             density: 'normal',
             targetWidth: 300,
