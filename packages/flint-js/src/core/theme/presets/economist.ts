@@ -161,10 +161,14 @@ export const economist: ThemePreset = {
         },
         "furniture": [
             {
+                // The red rule runs about a tenth of the chart's width — the
+                // Economist style guide places it at ~1/8–1/10 of the graphic
+                // (≈46–58px on this ~460px plot). 46 keeps it a thin rule at
+                // the top-left, not a stub.
                 "kind": "mastheadTab",
                 "anchor": "topLeft",
                 "color": "#e3120b",
-                "width": 26,
+                "width": 46,
                 "height": 3
             }
         ],
