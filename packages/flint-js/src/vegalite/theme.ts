@@ -1168,6 +1168,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         const plotW = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
         const plotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
         let saidThin = false;
+        let saidBaseline = false;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
             if (mark !== 'bar' && mark !== 'rect') return;
@@ -1191,6 +1192,26 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                 return;
             }
             node.mark = { ...normalizeMark(node.mark), stroke: m.separator!.color, strokeWidth: m.separator!.width };
+            // A bar sits *on* the category baseline, so its edge stroke straddles
+            // the axis line at the base and — painted in the surface — chops it
+            // into a dash under every bar. The baseline is furniture the marks
+            // rest on, so it is drawn last: raise the band axis over the marks
+            // and the rule reads continuous again. Only the band axis, and only
+            // where a house strokes its bars — the value axis and unstroked
+            // houses keep the renderer's order.
+            const enc = node.encoding ?? {};
+            const bandCh = (['x', 'y'] as const).find((ch) => {
+                const e = enc[ch];
+                return e?.field && e.type !== 'quantitative';
+            });
+            if (bandCh) {
+                enc[bandCh] = { ...enc[bandCh], axis: { ...(enc[bandCh].axis ?? {}), zindex: 1 } };
+                if (!saidBaseline) {
+                    say('marks.separator',
+                        'the band axis is drawn over the bars so its baseline reads continuous under the edge strokes');
+                    saidBaseline = true;
+                }
+            }
         });
     }
 
