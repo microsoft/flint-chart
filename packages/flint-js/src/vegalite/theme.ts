@@ -18,6 +18,7 @@ import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
 import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
 import { CONTINUOUS_BAR_STEP_FILL } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
+import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -3906,44 +3907,54 @@ function facetedTableResistsFurniture(spec: any): boolean {
 
 function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): boolean {
     if (!d.furniture.length) return false;
+
+    // Two kinds of furniture with different homes. A masthead tab is *branding*
+    // anchored to the graphic frame: it draws onto the rendered canvas at
+    // graphic-left, flush with the title, and does not care what the plot is or
+    // how wide its axis gutter runs (see canvas-furniture.ts). A header/footer
+    // rule *closes a block*: it wraps the plot in a concatenation and runs the
+    // block's width.
+    const canvas = d.furniture.filter((f) => f.kind === 'mastheadTab');
+    const rules = d.furniture.filter((f) => f.kind !== 'mastheadTab');
+
+    // Canvas furniture is drawn after render, so — unlike a block rule — it
+    // applies to every chart, including the concats, radials and faceted tables
+    // a rule cannot wrap.
+    let handled = false;
+    if (canvas.length) handled = applyCanvasFurniture(spec, canvas, d, say) || handled;
+
+    if (!rules.length) return handled;
+
     if (spec.vconcat || spec.hconcat || spec.concat) {
-        say('furniture', 'not drawn — the chart is already a concatenation');
-        return false;
+        say('furniture', 'the closing rule is not drawn — the chart is already a concatenation');
+        return handled;
     }
     // A rose or a faceted disc cannot be wrapped in a block to hang a rule
     // beneath it — see `radialResistsFurniture`. It is already its own block.
     if (radialResistsFurniture(spec)) {
-        say('furniture', 'not drawn — a radial chart is already its own block, with no edge to close');
-        return false;
+        say('furniture', 'the closing rule is not drawn — a radial chart is already its own block, with no edge to close');
+        return handled;
     }
     // A faceted table (facet of concat) collapses when wrapped — see
     // `facetedTableResistsFurniture`. It is already its own stack of blocks.
     if (facetedTableResistsFurniture(spec)) {
-        say('furniture', 'not drawn — a faceted table is already its own stack of blocks, with no single edge to close');
-        return false;
+        say('furniture', 'the closing rule is not drawn — a faceted table is already its own stack of blocks, with no single edge to close');
+        return handled;
     }
 
-    // A masthead tab opens the block *above* the headline — the Economist's
-    // red rule sits at the very top of the graphic, over the title, not
-    // between the title and the plot. A rule (header/footer) closes a block
-    // and stays where it is drawn: under the headline, or under the plot.
-    const aboveTitle: any[] = [];
+    // A rule closes a block, so its length is the block's, and a house that
+    // draws one does not state a number for it. Falling back to a stub leaves a
+    // dash in the corner that looks like a mistake rather than an edge.
     const before: any[] = [];
     const after: any[] = [];
-    // A tab is a mark of its own — the Economist's red rectangle is 26px
-    // because 26px is what it is. A rule is not: it closes the block, so its
-    // length is the block's, and a house that draws one does not state a
-    // number for it. Falling back to a stub leaves a dash in the corner that
-    // looks like a mistake rather than an edge.
     const block = blockWidth(spec, table);
-    for (const item of d.furniture) {
-        const isRule = item.kind !== 'mastheadTab';
-        const width = item.width ?? (isRule ? block : 40);
+    for (const item of rules) {
+        const width = item.width ?? block;
         if (width == null) {
             say('furniture', `the house draws a ${item.kind} across the block, but the chart states no width to draw it across — left out`);
             continue;
         }
-        if (isRule && item.width == null) {
+        if (item.width == null) {
             say('furniture', `the ${item.kind} runs the width of the block — ${width}px — not a fixed stub`);
         }
         const isTop = (item.anchor ?? 'topLeft').startsWith('top');
@@ -3954,27 +3965,17 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
             height: item.height ?? 2,
             data: { values: [{}] },
         };
-        if (!isTop) after.push(rect);
-        else if (item.kind === 'mastheadTab') aboveTitle.push(rect);
-        else before.push(rect);
+        (isTop ? before : after).push(rect);
     }
-    if (!aboveTitle.length && !before.length && !after.length) return false;
+    if (!before.length && !after.length) return handled;
 
     const inner: any = { ...spec };
-    for (const key of ['$schema', 'background', 'padding', 'title', 'config', 'autosize']) delete inner[key];
-
-    // The masthead tab must draw *over* the title, but the outer view's title
-    // always renders above every concatenated child. So when a tab opens the
-    // block, the title rides down onto the plot body and the tab is the first
-    // thing in the stack — tab, then headline, then chart.
-    const tabOverTitle = aboveTitle.length > 0 && !!spec.title;
-    if (tabOverTitle) inner.title = spec.title;
+    for (const key of ['$schema', 'background', 'padding', 'title', 'config', 'autosize', 'usermeta']) delete inner[key];
 
     // A concatenated child's legends are hoisted to the outer view and drawn
-    // above every child in it — including the tab, which is the one thing that
-    // is supposed to open the block. Resolved independently they stay with the
-    // plot they key, and the house's rule sits back under the headline where it
-    // was drawn.
+    // above every child in it. Resolved independently they stay with the plot
+    // they key, and the house's rule sits back under the headline where it was
+    // drawn.
     const keyed = new Set<string>();
     walk(inner, (node) => {
         for (const channel of ['color', 'fill', 'stroke', 'size', 'shape', 'opacity'] as const) {
@@ -3987,9 +3988,10 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
         ...(spec.$schema ? { $schema: spec.$schema } : {}),
         background: spec.background,
         padding: spec.padding,
-        ...(spec.title && !tabOverTitle ? { title: spec.title } : {}),
+        ...(spec.usermeta ? { usermeta: spec.usermeta } : {}),
+        ...(spec.title ? { title: spec.title } : {}),
         spacing: 6,
-        vconcat: [...aboveTitle, ...before, inner, ...after],
+        vconcat: [...before, inner, ...after],
         ...(keyed.size
             ? { resolve: { legend: Object.fromEntries([...keyed].map((c) => [c, 'independent'])) } }
             : {}),
@@ -3997,6 +3999,48 @@ function applyFurniture(spec: any, d: DesignDecisions, table: any[], say: (p: st
     };
     for (const key of Object.keys(spec)) delete spec[key];
     Object.assign(spec, outer);
+    return true;
+}
+
+/** Normalise Vega-Lite's number|object padding into a full-sided object. */
+function normalizePadding(p: any): { left: number; right: number; top: number; bottom: number } {
+    if (typeof p === 'number') return { left: p, right: p, top: p, bottom: p };
+    return { left: 8, right: 8, top: 8, bottom: 8, ...(p ?? {}) };
+}
+
+/**
+ * Canvas-anchored branding (the Economist red tab). Records where each piece
+ * draws — graphic-left, flush with the title's own margin — and reserves a
+ * strip of top padding so the tab opens the graphic above the headline rather
+ * than colliding with it. The renderer draws the recorded rects onto the SVG;
+ * Vega-Lite carries the record through compile in `usermeta`.
+ */
+function applyCanvasFurniture(
+    spec: any,
+    items: DesignDecisions['furniture'],
+    d: DesignDecisions,
+    say: (p: string, m: string) => void,
+): boolean {
+    const base = normalizePadding(spec.padding);
+    const marginLeft = base.left; // the same left margin the title anchors to
+    const topBefore = base.top;
+    const gapBelow = 8;
+    const built: CanvasFurnitureItem[] = [];
+    let band = 0;
+    for (const item of items) {
+        const width = item.width ?? 40;
+        const height = item.height ?? 2;
+        built.push({ kind: item.kind, x: marginLeft, y: topBefore, width, height, color: item.color ?? d.text.primary });
+        band = Math.max(band, height);
+    }
+    if (!built.length) return false;
+    growPadding(spec, 'top', band + gapBelow);
+    const prev = readCanvasFurniture(spec);
+    spec.usermeta = { ...(spec.usermeta ?? {}), [CANVAS_FURNITURE_KEY]: [...prev, ...built] };
+    say(
+        'furniture',
+        `the masthead tab rides the canvas at graphic-left (${marginLeft}px), in a ${band}px band above the title — clear of the plot's axis gutter`,
+    );
     return true;
 }
 

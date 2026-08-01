@@ -109,11 +109,14 @@ describe('legend titles', () => {
 });
 
 /**
- * A masthead tab opens the block above the headline.
+ * A masthead tab is canvas furniture — branding anchored to the graphic frame.
  *
- * The Economist's red rule sits at the very top of the graphic, over the
- * title — not between the title and the plot. So a house that draws one keeps
- * the tab first in the stack and lets the headline ride down onto the plot.
+ * The Economist's red tab sits at the very top-left of the graphic, flush with
+ * the title's own margin, and has nothing to do with the plot. So it is not a
+ * concat child (which would pin to the plot's data rectangle and drift right on
+ * a wide axis gutter) — it is recorded in `usermeta` for the renderer to draw
+ * onto the SVG, and a strip of top padding is reserved so it opens the graphic
+ * above the headline.
  */
 describe('masthead furniture', () => {
     function withTab(): any {
@@ -136,17 +139,26 @@ describe('masthead furniture', () => {
         } as any) as any;
     }
 
-    it('draws the tab first and above the title', () => {
+    it('records the tab as canvas furniture, flush with the title, and keeps the title on the graphic', () => {
         const spec = withTab();
-        expect(Array.isArray(spec.vconcat)).toBe(true);
-        // The tab opens the stack.
-        const first = spec.vconcat[0];
-        expect(first.__themeSynthetic).toBe(true);
-        expect(first.mark.type).toBe('rect');
-        expect(first.mark.color).toBe('#e3120b');
-        // The title has come off the outer view and ridden down onto the plot.
-        expect(spec.title).toBeUndefined();
-        const titled = spec.vconcat.find((v: any) => v && v.title);
-        expect(titled).toBeTruthy();
+        // The tab is not wrapped into a concat — it draws onto the canvas.
+        expect(spec.vconcat).toBeUndefined();
+        const tabs = spec.usermeta?.flintCanvasFurniture;
+        expect(Array.isArray(tabs)).toBe(true);
+        expect(tabs).toHaveLength(1);
+        const tab = tabs[0];
+        expect(tab.kind).toBe('mastheadTab');
+        expect(tab.color).toBe('#e3120b');
+        expect(tab.width).toBe(26);
+        expect(tab.height).toBe(3);
+        // The tab anchors to the same left margin the title anchors to.
+        const pad = spec.padding;
+        const left = typeof pad === 'number' ? pad : pad.left;
+        expect(tab.x).toBe(left);
+        // A band of top padding is reserved so the tab opens above the headline.
+        const top = typeof pad === 'number' ? pad : pad.top;
+        expect(top).toBeGreaterThanOrEqual(tab.y + tab.height);
+        // The headline stays on the graphic frame.
+        expect(spec.title).toBeTruthy();
     });
 });

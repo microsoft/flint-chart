@@ -33,6 +33,7 @@ import * as vega from 'vega';
 import { Resvg } from '@resvg/resvg-js';
 
 import { assembleVegaLite } from '../packages/flint-js/src/index';
+import { injectCanvasFurnitureSVG, readCanvasFurniture } from '../packages/flint-js/src/vegalite/canvas-furniture';
 import { THEME_PRESETS } from '../packages/flint-js/src/core/theme/presets';
 import { R2_CASES, r2Input, type R2Case } from '../site/src/playground/theme-lab-r2-data';
 
@@ -64,8 +65,9 @@ interface Panel { svg: string; width: number; height: number; label: string; bac
 async function toSvg(spec: any): Promise<{ svg: string; width: number; height: number }> {
     const vgSpec = compile(spec).spec;
     const view = new vega.View(vega.parse(vgSpec), { renderer: 'none' });
-    const svg = await view.toSVG();
+    let svg = await view.toSVG();
     view.finalize();
+    svg = injectCanvasFurnitureSVG(svg, readCanvasFurniture(vgSpec));
     const m = /<svg[^>]*\bwidth="([\d.]+)"[^>]*\bheight="([\d.]+)"/.exec(svg);
     return { svg, width: m ? Number(m[1]) : 400, height: m ? Number(m[2]) : 300 };
 }
