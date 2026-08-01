@@ -608,7 +608,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // let it be an ordinary line.
     const zeroRule: ResolvedRule | undefined = structure.grid?.zero
         && structure.grid.zero !== 'omit'
-        ? rule(structure.grid.zero, structureInk.rule ?? structureInk.axis, 'full')
+        ? rule(structure.grid.zero, structureInk.zero ?? structureInk.rule ?? structureInk.axis, 'full')
         : undefined;
 
     const frame = rule(structure.frame, structureInk.frame ?? structureInk.axis, 'omit');

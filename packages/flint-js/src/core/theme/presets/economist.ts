@@ -32,17 +32,18 @@ export const economist: ThemePreset = {
             "structure": {
                 "grid": "#c9d3da",
                 "axis": "#121317",
-                "rule": "#c9d3da"
+                "rule": "#c9d3da",
+                "zero": "#e3120b"
             },
             "series": {
                 "single": "#006ba2",
                 "categorical": [
-                    "#3f5661",
-                    "#a1655a",
                     "#006ba2",
-                    "#7ba7b8",
                     "#3ebcd2",
-                    "#c8b88a"
+                    "#ebb434",
+                    "#379a8b",
+                    "#9a3d5b",
+                    "#a17ba5"
                 ],
                 // Continuous measure: the Economist blue, light to deep.
                 "sequential": {
@@ -161,15 +162,16 @@ export const economist: ThemePreset = {
         },
         "furniture": [
             {
-                // The red rule runs about a tenth of the chart's width — the
-                // Economist style guide places it at ~1/8–1/10 of the graphic
-                // (≈46–58px on this ~460px plot). 46 keeps it a thin rule at
-                // the top-left, not a stub.
+                // The Economist "red tab" is a chunky rectangle, not a thin
+                // rule: the style guide draws it ~15pt wide × 5pt tall (≈3:1)
+                // on a 160pt chart — about 1/10 of the width. On this ~460px
+                // plot that is ≈44px wide; a ~12px height keeps the 3–4:1 block
+                // proportion so it reads as the masthead tag, not a hairline.
                 "kind": "mastheadTab",
                 "anchor": "topLeft",
                 "color": "#e3120b",
-                "width": 46,
-                "height": 3
+                "width": 44,
+                "height": 12
             }
         ],
         "layout": {

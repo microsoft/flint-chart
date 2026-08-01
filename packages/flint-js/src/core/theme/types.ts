@@ -95,6 +95,14 @@ export interface ThemeInk {
         frame?: string;
         rule?: string;
         /**
+         * The zero line, when the house makes it more than one gridline among
+         * the rest. The Economist strokes zero in its signature red so every
+         * length is read from a line the eye cannot miss. It borrows `rule`
+         * (then `axis`) where the house says nothing, so a house that draws an
+         * ordinary zero needs to state nothing.
+         */
+        zero?: string;
+        /**
          * The stem of a lollipop, the bridge of a dumbbell. It borrows `rule`
          * where the house says nothing, but the two are not the same job: a
          * gridline is read *through*, so it sits at the bottom of the ordinal,
