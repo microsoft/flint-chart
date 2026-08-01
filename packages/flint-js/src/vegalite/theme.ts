@@ -4014,7 +4014,7 @@ function clamp(v: number, lo: number, hi: number): number {
  * categories decide — so the total is read back the same way the layout wrote
  * it, one band per name.
  */
-function blockWidth(spec: any, table: any[]): number | undefined {
+function widestWidth(spec: any, table: any[]): number | undefined {
     let widest: number | undefined;
     const consider = (w: number | undefined) => {
         if (w != null && Number.isFinite(w) && (widest == null || w > widest)) widest = w;
@@ -4041,7 +4041,30 @@ function blockWidth(spec: any, table: any[]): number | undefined {
     // A chart that states no width of its own is drawn at the one the layout
     // put in the view config — that is the width, not a default to guess at.
     if (widest == null) consider(spec.config?.view?.continuousWidth);
-    return widest == null ? undefined : Math.round(widest * 1.07);
+    return widest;
+}
+
+function blockWidth(spec: any, table: any[]): number | undefined {
+    const widest = widestWidth(spec, table);
+    if (widest == null) return undefined;
+    // A row of columns laid side by side — a bar-table's bars and its printed
+    // value column — is as wide as the columns *summed*, not as wide as the
+    // widest one. Anything that flows across the whole graphic (a top or bottom
+    // legend) has that whole width to spread over, so the key is not crowded
+    // into the few columns the bar plot alone would allow while the space above
+    // the value column sits empty.
+    if (Array.isArray(spec.hconcat) && spec.hconcat.length > 1) {
+        const spacing = typeof spec.spacing === 'number' ? spec.spacing : 8;
+        let sum = 0;
+        let ok = true;
+        for (const child of spec.hconcat) {
+            const cw = widestWidth(child, table);
+            if (cw == null) { ok = false; break; }
+            sum += cw;
+        }
+        if (ok && sum > widest) return Math.round(sum * 1.07 + spacing * (spec.hconcat.length - 1));
+    }
+    return Math.round(widest * 1.07);
 }
 
 void contrastingInk;
