@@ -30,7 +30,14 @@ export const mckinsey: ThemePreset = {
             },
             "structure": {
                 "axis": "#051c2c",
-                "rule": "#d3dce1"
+                "rule": "#d3dce1",
+                // A lollipop stem borrows the rule where no connector ink is
+                // named, but McKinsey's rule is a near-white gridline (#d3dce1)
+                // — far too faint for a stem that must carry the eye up to the
+                // dot. Their exhibits draw the stem a solid medium-light grey,
+                // clearly present yet subordinate to the near-black dot. So the
+                // connector states its own, more definite ink.
+                "connector": "#a7b1bc"
             },
             "series": {
                 // McKinsey's 2020 "Deep Blue" (#051c2c) is deliberately
