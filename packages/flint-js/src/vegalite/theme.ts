@@ -1168,7 +1168,8 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         const plotW = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
         const plotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
         let saidThin = false;
-        let saidBaseline = false;
+        let sawStroke = false;
+        let measureCh: 'x' | 'y' | undefined;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
             if (mark !== 'bar' && mark !== 'rect') return;
@@ -1192,32 +1193,72 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                 return;
             }
             node.mark = { ...normalizeMark(node.mark), stroke: m.separator!.color, strokeWidth: m.separator!.width };
-            // A bar sits *on* the category baseline, so its edge stroke straddles
-            // the axis line at the base and — painted in the surface — chops it
-            // into a dash under every bar. The baseline is furniture the marks
-            // rest on, so it is drawn last: raise the band axis over the marks
-            // and the rule reads continuous again. Only the band axis, and only
-            // where a house strokes its bars — the value axis and unstroked
-            // houses keep the renderer's order.
+            sawStroke = true;
+            // Which axis carries the measure is read off the bar, not off where
+            // the encoding sits: a waterfall carries its category on the parent
+            // layer and only the measure on the bar. The measure is the
+            // quantitative channel (or the one that spans, x2/y2).
             const enc = node.encoding ?? {};
-            const bandCh = (['x', 'y'] as const).find((ch) => {
-                const e = enc[ch];
-                return e?.field && e.type !== 'quantitative';
-            });
-            if (bandCh) {
-                enc[bandCh] = { ...enc[bandCh], axis: { ...(enc[bandCh].axis ?? {}), zindex: 1 } };
-                if (!saidBaseline) {
-                    say('marks.separator',
-                        'the band axis is drawn over the bars so its baseline reads continuous under the edge strokes');
-                    saidBaseline = true;
-                }
-            }
+            if (enc.y?.type === 'quantitative' || enc.y2) measureCh = 'y';
+            else if (enc.x?.type === 'quantitative' || enc.x2) measureCh = 'x';
+            else if (enc.x?.field && enc.x.type !== 'quantitative') measureCh = 'y';
+            else if (enc.y?.field && enc.y.type !== 'quantitative') measureCh = 'x';
         });
+        if (sawStroke && measureCh) restoreBaseline(spec, measureCh, say);
     }
 
     if (m.tile) applyTileGap(spec, m.tile, say);
 
     if (m.slice) applySliceGap(spec, m.slice, table, say);
+}
+
+/**
+ * A house that strokes its bars in the surface colour (datawrapper's white
+ * hairline between stacked segments, swiss's paper gap) draws that stroke on
+ * every edge of the bar — including the bottom edge, which sits *on* the
+ * category baseline. Painted in the surface, it chops the axis domain line
+ * into a dash under each bar. Raising the axis over the marks would fix it,
+ * but Vega-Lite drops `zindex` off a config axis, so the domain stays behind.
+ *
+ * The baseline is furniture the bars rest on, so it is redrawn as its own rule
+ * on top of them — the same way the zero rule is drawn last. It runs at the
+ * measure's zero (where an all-positive bar meets the axis) in the band axis's
+ * own domain ink, so it reads as the one continuous line it always was. A
+ * house that draws no band domain has nothing to protect, so nothing is added;
+ * a diverging chart already draws its zero rule on top, and this rule lands on
+ * the same line.
+ */
+function restoreBaseline(spec: any, measureCh: 'x' | 'y', say: (p: string, m: string) => void): void {
+    const bandCh = measureCh === 'y' ? 'x' : 'y';
+    const axisCfg = spec.config?.[bandCh === 'x' ? 'axisX' : 'axisY'] ?? {};
+    const color = axisCfg.domainColor;
+    const width = axisCfg.domainWidth ?? 1;
+    if (axisCfg.domain === false || !color || color === 'transparent' || width <= 0) return;
+    let said = false;
+    for (const body of plotBodies(spec)) {
+        // Only a body that actually plots the measure gets a baseline — a
+        // furniture rect or a header band carries no measured axis to chop.
+        const layers: any[] = body.layer ?? [body];
+        const carries = layers.some((l) => {
+            const e = l.encoding?.[measureCh];
+            return e?.field && e.type !== 'nominal' && e.type !== 'ordinal';
+        });
+        if (!carries) continue;
+        appendLayer(body, {
+            data: { values: [{}] },
+            mark: { type: 'rule', color, strokeWidth: width },
+            // Null the band channel so the rule spans the full plot and does
+            // not inherit a shared category encoding (a waterfall binds `x` on
+            // the parent layer; without this the rule's empty datum would add
+            // an "undefined" band to the axis).
+            encoding: { [measureCh]: { datum: 0 }, [bandCh]: null },
+        });
+        if (!said) {
+            say('marks.separator',
+                'the category baseline is redrawn over the bars so its edge strokes do not chop it into a dash');
+            said = true;
+        }
+    }
 }
 
 /**
@@ -1299,7 +1340,9 @@ function applyConnectors(spec: any, d: DesignDecisions, say: (p: string, m: stri
     if (!c?.show) return;
 
     const said = new Set<string>();
+    let sawStem = false;
     const paint = (node: any, role: 'stem' | 'bridge' | 'lead'): void => {
+        if (role === 'stem') sawStem = true;
         const mark = normalizeMark(node.mark);
         if (c.color) mark.color = c.color;
         mark.strokeWidth = role === 'bridge' ? c.spanWidth : c.width;
@@ -1351,7 +1394,30 @@ function applyConnectors(spec: any, d: DesignDecisions, say: (p: string, m: stri
         if (node.facet?.spec) bandWalk(node.facet.spec, enc);
     };
     bandWalk(spec, undefined);
+
+    // A lollipop's category axis is a point scale — its dots have no width, so
+    // Vega-Lite's default `pointPadding` of 0.5 leaves the first and last dot
+    // only half a step from the axis while every neighbour sits a full step
+    // apart. On a bar that half-step is right (a bar fills toward the edge);
+    // on a zero-width dot it reads as cramped against the spine. Widen the
+    // outer padding so the end dots stand off the axis by the same gap they
+    // keep from each other. Scoped to a chart that actually hangs stems, and
+    // to the point scale only (the measured axis is linear), so nothing else
+    // moves; a house or template that pinned its own padding keeps it.
+    if (sawStem) {
+        const config = (spec.config ??= {});
+        const scale = (config.scale ??= {});
+        if (scale.pointPadding == null) {
+            scale.pointPadding = LOLLIPOP_CATEGORY_PADDING;
+            say('config.scale.pointPadding',
+                `the lollipop's end dots are stood off the category axis by a full step (pointPadding ${LOLLIPOP_CATEGORY_PADDING}) so they are not cramped against the spine`);
+        }
+    }
 }
+
+/** Outer padding for a lollipop's category point scale: end dots stand a full
+ *  inter-item gap off the axis instead of Vega-Lite's default half-step. */
+const LOLLIPOP_CATEGORY_PADDING = 1;
 
 /**
  * How far a mark reaches from the point it is anchored at. Only the round
