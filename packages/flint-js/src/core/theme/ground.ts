@@ -1156,6 +1156,15 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ? 'monotone'
             : marksSpec.interpolation === 'step' ? 'step' : undefined,
         fillOpacity: marksSpec.fillOpacity,
+        cornerRadius: marksSpec.cornerRadius,
+        outline: marksSpec.outline && (marksSpec.outline.presence ?? 'omit') !== 'omit'
+            ? {
+                color: marksSpec.outline.source === 'surface'
+                    ? plot
+                    : (ink('full', structureInk.axis ?? structureInk.rule, 'full') ?? foreground),
+                width: marksSpec.outline.weight ?? 1.5,
+            }
+            : undefined,
         point: marksSpec.point || halo
             ? {
                 show: (marksSpec.point?.presence ?? 'omit') !== 'omit',

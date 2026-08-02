@@ -194,6 +194,23 @@ export interface ThemeMarks {
     strokeJoin?: 'miter' | 'round' | 'bevel';
     interpolation?: 'linear' | 'monotone' | 'step';
     fillOpacity?: number;
+    /**
+     * How far the *value* end of a bar is rounded, in px — the top of a
+     * column, the right of a horizontal bar — and, on a wedge, its corners.
+     * Only the value end of a bar moves; the baseline stays a clean edge, so a
+     * stack still reads as one column. A house that says nothing keeps square
+     * corners; a friendlier, less clinical house rounds them.
+     */
+    cornerRadius?: number;
+    /**
+     * A stroke drawn around every filled mark — a bar, a wedge, a tile: the
+     * "sticker" / flat-illustration edge. It is not a `separator` (which cuts
+     * *between* adjacent pieces) nor a `frame` (which bounds the plot): it
+     * bounds each mark on its own, so a lone bar carries it too. `ink` draws it
+     * in the house's dark structural ink; `surface` draws it in the page, which
+     * reads as a cut-out. A house that says nothing leaves its marks unbordered.
+     */
+    outline?: { presence?: Presence; weight?: number; source?: 'ink' | 'surface' };
     sizeRange?: [number, number];
     minSize?: number;
     zOrder?: 'summaryOverData' | 'summaryUnderData';
@@ -625,6 +642,10 @@ export interface ResolvedMarks {
     strokeJoin?: string;
     interpolate?: string;
     fillOpacity?: number;
+    /** Corner radius for the value end of a bar, and a wedge's corners, in px. */
+    cornerRadius?: number;
+    /** A stroke around each filled mark (bar/arc/tile): the sticker edge. */
+    outline?: { color: string; width: number };
     point?: { show: boolean; size?: number; filled?: boolean; haloColor?: string; haloWidth?: number };
     /** The area a sized mark may take, smallest to largest, in px². */
     sizeRange?: [number, number];

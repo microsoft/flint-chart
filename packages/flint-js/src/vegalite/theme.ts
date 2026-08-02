@@ -928,6 +928,22 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;
     if (m.interpolate) config.line.interpolate = m.interpolate;
     if (m.fillOpacity != null) config.area = { ...(config.area ?? {}), fillOpacity: m.fillOpacity };
+    if (m.cornerRadius != null) {
+        // Round only the value end of a bar so the baseline stays a clean edge
+        // and a stack still reads as one column; `cornerRadiusEnd` rounds the
+        // top of a vertical bar and the right of a horizontal one. A wedge has
+        // no baseline, so it rounds all its corners.
+        config.bar = { ...(config.bar ?? {}), cornerRadiusEnd: m.cornerRadius };
+        config.arc = { ...(config.arc ?? {}), cornerRadius: m.cornerRadius };
+    }
+    if (m.outline) {
+        // The sticker edge: a stroke around each filled shape. A per-node
+        // separator (stacked-bar divider) or slice/tile gap still overrides it
+        // where the house draws one, so pieces cut apart keep their own cut.
+        for (const family of ['bar', 'arc', 'rect'] as const) {
+            config[family] = { ...(config[family] ?? {}), stroke: m.outline.color, strokeWidth: m.outline.width };
+        }
+    }
     protectDashEncoding(spec, config, m.strokeWidth);
 
     if (m.point?.show) {
