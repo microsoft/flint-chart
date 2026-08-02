@@ -194,14 +194,6 @@ export interface ThemeMarks {
     strokeJoin?: 'miter' | 'round' | 'bevel';
     interpolation?: 'linear' | 'monotone' | 'step';
     fillOpacity?: number;
-    /**
-     * How far the *value* end of a bar is rounded, in px — the top of a
-     * column, the right of a horizontal bar. Only the end moves; the baseline
-     * stays a clean edge, so a stack still reads as one column. A house that
-     * says nothing keeps square corners; a friendlier, less clinical house
-     * rounds them.
-     */
-    cornerRadius?: number;
     sizeRange?: [number, number];
     minSize?: number;
     zOrder?: 'summaryOverData' | 'summaryUnderData';
@@ -633,8 +625,6 @@ export interface ResolvedMarks {
     strokeJoin?: string;
     interpolate?: string;
     fillOpacity?: number;
-    /** Corner radius for the value end of a bar, in px. */
-    cornerRadius?: number;
     point?: { show: boolean; size?: number; filled?: boolean; haloColor?: string; haloWidth?: number };
     /** The area a sized mark may take, smallest to largest, in px². */
     sizeRange?: [number, number];

@@ -18,7 +18,6 @@ import { datawrapper } from './presets/datawrapper';
 import { powerbi } from './presets/powerbi';
 import { powerbiLight } from './presets/powerbi-light';
 import { swiss } from './presets/swiss';
-import { cartoon } from './presets/cartoon';
 
 export const THEME_PRESETS: Record<string, ThemePreset> = {
     nyt,
@@ -29,7 +28,6 @@ export const THEME_PRESETS: Record<string, ThemePreset> = {
     powerbi,
     'powerbi-light': powerbiLight,
     swiss,
-    cartoon,
 };
 
 /** The catalogue, without the specs — enough to choose by. */

@@ -20,6 +20,7 @@ import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
 import { ThemeLabGaps } from './playground/ThemeLabGaps';
 import { SwissLab } from './playground/SwissLab';
+import { CartoonLab } from './playground/CartoonLab';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
@@ -62,6 +63,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-lab-real" element={<ThemeLabReal />} />
           <Route path="theme-lab-gaps" element={<ThemeLabGaps />} />
           <Route path="swiss-lab" element={<SwissLab />} />
+          <Route path="cartoon-lab" element={<CartoonLab />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}
