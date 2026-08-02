@@ -45,7 +45,7 @@ export { genDiscreteAxisTests } from './discrete-axis-tests';
 export { genDateTests, genDateYearTests, genDateMonthTests, genDateYearMonthTests, genDateDecadeTests, genDateDateTimeTests, genDateHoursTests } from './date-tests';
 export { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
 export { genMapTests, genChoroplethTests } from './map-tests';
-export { genGanttTests, genBulletTests } from './gantt-bullet-tests';
+export { genGanttTests, genBulletTests, genKpiCardTests } from './gantt-bullet-tests';
 export {
     OMNI_VIZ_ROWS,
     OMNI_VIZ_LEVELS,
@@ -92,7 +92,7 @@ import { genHistogramTests, genBoxplotTests, genDensityTests, genStripPlotTests 
 import { genDensityContourTests } from './density-2d-tests';
 import { genViolinTests } from './violin-tests';
 import { genMapTests, genChoroplethTests } from './map-tests';
-import { genGanttTests, genBulletTests } from './gantt-bullet-tests';
+import { genGanttTests, genBulletTests, genKpiCardTests } from './gantt-bullet-tests';
 import { genLineTests } from './line-tests';
 import { genSparklineTests } from './sparkline-tests';
 import { genBumpChartTests } from './line-area-tests';
@@ -180,6 +180,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Choropleth': genChoroplethTests,
     'Gantt Chart': genGanttTests,
     'Bullet Chart': genBulletTests,
+    'KPI Card': genKpiCardTests,
     'Facet: Columns': genFacetColumnTests,
     'Facet: Rows': genFacetRowTests,
     'Facet: Cols+Rows': genFacetColRowTests,

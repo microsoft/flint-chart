@@ -869,3 +869,142 @@ describe('keeping a value key when there is no series legend', () => {
         expect(size.legend).not.toBeNull();
     });
 });
+
+/**
+ * A composed chart has no single plot. Anything that budgets a mark against
+ * the room it has must ask the view the mark is drawn in, not the outermost
+ * one, or a narrow panel is measured against a plot several times its size.
+ */
+describe('vertex dots are budgeted against the panel that holds them', () => {
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const SPARK = MONTHS.flatMap((Month, i) =>
+        ['Revenue', 'Users'].map((Metric) => ({ Metric, Month, Value: 10 + i + (Metric === 'Users' ? 5 : 0) })),
+    );
+
+    function walkScoped(node: any, outerW: number | undefined, visit: (n: any, w?: number) => void): void {
+        if (!node || typeof node !== 'object') return;
+        const w = typeof node.width === 'number' ? node.width : outerW;
+        visit(node, w);
+        for (const key of ['layer', 'concat', 'hconcat', 'vconcat']) {
+            if (Array.isArray(node[key])) node[key].forEach((c: any) => walkScoped(c, w, visit));
+        }
+        if (node.spec) walkScoped(node.spec, w, visit);
+        if (node.facet?.spec) walkScoped(node.facet.spec, w, visit);
+    }
+
+    /** Edge-to-edge ink of a dot: `size` is an area, and the stroke straddles. */
+    function outerDiameter(size: number, strokeWidth: number): number {
+        return 2 * Math.sqrt(size / Math.PI) + strokeWidth;
+    }
+
+    function sparkline(themeId: string): any {
+        return assembleVegaLite({
+            data: { values: SPARK },
+            semantic_types: { Metric: 'Category', Month: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Sparkline',
+                encodings: { x: 'Month', y: 'Value', color: 'Metric' },
+                baseSize: { width: 300, height: 300 },
+            },
+            theme_spec: THEME_PRESETS[themeId].spec,
+        } as any) as any;
+    }
+
+    it('shrinks the cartoon dot so it fits the gap between two readings', () => {
+        const spec = sparkline('cartoon');
+        let checked = 0;
+        walkScoped(spec, spec._width, (node, width) => {
+            const mark = node.mark;
+            if (markTypeOf(mark) !== 'line' || typeof mark !== 'object') return;
+            const dot = mark.point ?? spec.config?.line?.point;
+            if (!dot || typeof dot !== 'object') return;
+            expect(typeof width).toBe('number');
+            // One reading per month along this panel.
+            const spacing = (width as number) / MONTHS.length;
+            expect(outerDiameter(dot.size, dot.strokeWidth ?? 0)).toBeLessThanOrEqual(spacing);
+            checked++;
+        });
+        expect(checked).toBeGreaterThan(0);
+    });
+
+    it('leaves the dot alone where the panel is wide enough to hold it', () => {
+        // The same house and the same twelve readings across a full-width plot
+        // keep the authored size — the rule reacts to room, not to count.
+        const spec = assembleVegaLite({
+            data: { values: MONTHS.map((Month, i) => ({ Month, Value: 10 + i })) },
+            semantic_types: { Month: 'Month', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'Month', y: 'Value' },
+                baseSize: { width: 600, height: 300 },
+            },
+            theme_spec: THEME_PRESETS['cartoon'].spec,
+        } as any) as any;
+        const authored = THEME_PRESETS['cartoon'].spec.marks?.point?.size;
+        expect(spec.config.line.point.size).toBe(authored);
+        let overridden = false;
+        walkScoped(spec, spec._width, (node) => {
+            const mark = node.mark;
+            if (markTypeOf(mark) !== 'line' || typeof mark !== 'object') return;
+            if (mark.point && typeof mark.point === 'object' && mark.point.size != null) overridden = true;
+        });
+        expect(overridden).toBe(false);
+    });
+});
+
+/**
+ * A KPI card is drawn entirely in pixels, so none of it reaches the theme
+ * through an encoding. Its progress bar is nonetheless the one part of the
+ * tile that states a measurement, and it has to carry the house's ink.
+ */
+describe('KPI card progress bar takes house ink', () => {
+    const KPIS = [
+        { metric: 'Behind', value: 20, goal: 100 },
+        { metric: 'On track', value: 70, goal: 100 },
+        { metric: 'Exceeded', value: 130, goal: 100 },
+    ];
+
+    function card(themeId: string): any {
+        return assembleVegaLite({
+            data: { values: KPIS },
+            semantic_types: { metric: 'Category', value: 'Quantity', goal: 'Quantity' },
+            chart_spec: {
+                chartType: 'KPI Card',
+                encodings: { metric: 'metric', value: 'value', goal: 'goal' },
+                baseSize: { width: 600, height: 240 },
+            },
+            theme_spec: THEME_PRESETS[themeId].spec,
+        } as any) as any;
+    }
+
+    function bars(spec: any): Record<string, string> {
+        const out: Record<string, string> = {};
+        const visit = (n: any): void => {
+            if (!n || typeof n !== 'object') return;
+            if (Array.isArray(n)) { n.forEach(visit); return; }
+            if (n.__themeRole && n.mark?.type === 'rect') out[n.__themeRole] = n.mark.fill;
+            for (const k of Object.keys(n)) visit(n[k]);
+        };
+        visit(spec);
+        return out;
+    }
+
+    for (const id of Object.keys(THEME_PRESETS)) {
+        it(`${id}: the in-progress bar is the house's own ink`, () => {
+            const spec = card(id);
+            const found = bars(spec);
+            expect(found.accent).toBe(THEME_PRESETS[id].spec.ink?.series?.single);
+        });
+
+        it(`${id}: met and missed stay distinguishable from in-progress`, () => {
+            const found = bars(card(id));
+            expect(found.accent).toBeTruthy();
+            expect(found.positive).toBeTruthy();
+            expect(found.negative).toBeTruthy();
+            // A verdict painted the same ink as "still going" says nothing.
+            expect(found.positive).not.toBe(found.accent);
+            expect(found.negative).not.toBe(found.accent);
+            expect(found.positive).not.toBe(found.negative);
+        });
+    }
+});

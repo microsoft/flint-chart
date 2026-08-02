@@ -173,6 +173,35 @@ function walk(node: any, visit: (n: any) => void): void {
 }
 
 /**
+ * As {@link walk}, but carrying the size of the view each node is drawn in.
+ *
+ * A composed spec has no single plot: a concat gives each panel its own width,
+ * and a sparkline's line panel is a third of the chart it sits in. Anything
+ * that budgets a mark against the space available to it — how much room a dot
+ * has before it touches its neighbour — has to ask the view the mark is
+ * actually drawn in, not the outermost one, or a panel is measured against a
+ * plot several times its size. The nearest declared numeric `width`/`height`
+ * wins; children inherit until one of them overrides it.
+ */
+function walkScoped(
+    node: any,
+    outer: { width?: number; height?: number },
+    visit: (n: any, view: { width?: number; height?: number }) => void,
+): void {
+    if (!node || typeof node !== 'object') return;
+    const view = {
+        width: typeof node.width === 'number' ? node.width : outer.width,
+        height: typeof node.height === 'number' ? node.height : outer.height,
+    };
+    visit(node, view);
+    for (const key of ['layer', 'vconcat', 'hconcat', 'concat']) {
+        if (Array.isArray(node[key])) node[key].forEach((c: any) => walkScoped(c, view, visit));
+    }
+    if (node.spec) walkScoped(node.spec, view, visit);
+    if (node.facet && node.facet.spec) walkScoped(node.facet.spec, view, visit);
+}
+
+/**
  * The node that owns the plot body — where layers must be added and where the
  * positional encodings live. For a facet spec that is `spec`, for a concat it
  * is the first child that has marks, otherwise the spec itself.
@@ -949,6 +978,11 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     }
     protectDashEncoding(spec, config, m.strokeWidth);
 
+    // Dots whose size this house deliberately cut to fit the room its panel
+    // gives them. The ring-writing passes below hand a bare `point: true` the
+    // house's full-size ring, which would put back exactly the ink the fit
+    // just took out, so they leave these alone.
+    const fittedDots = new Set<any>();
     if (m.point?.show) {
         config.line.point = {
             filled: m.point.filled !== false,
@@ -981,18 +1015,56 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         // A spec that asked for points itself keeps them; this only decides
         // whether the *house* adds them where the chart never asked.
         let saidCrowd = false;
-        walk(spec, (node) => {
+        let saidShrink = false;
+        walkScoped(spec, { width: plotWidth, height: plotHeight }, (node, view) => {
             if (!LINE_MARKS.has(markTypeOf(node.mark) ?? '')) return;
             const mark = normalizeMark(node.mark);
             if (mark.point !== undefined) return;
             const enc = mergedEncoding(node, spec.encoding);
             const readings = maxReadingsPerSeries(enc, table);
-            if (readings <= MAX_DOTTED_READINGS) return;
-            node.mark = { ...mark, point: false };
-            if (!saidCrowd) {
-                say('marks.point',
-                    `${readings} readings on one line is past the ${MAX_DOTTED_READINGS} a reader can take one at a time, so the house's dots stand down and the line keeps its shape`);
-                saidCrowd = true;
+            if (readings > MAX_DOTTED_READINGS) {
+                node.mark = { ...mark, point: false };
+                if (!saidCrowd) {
+                    say('marks.point',
+                        `${readings} readings on one line is past the ${MAX_DOTTED_READINGS} a reader can take one at a time, so the house's dots stand down and the line keeps its shape`);
+                    saidCrowd = true;
+                }
+                return;
+            }
+            // Countable is not the same as roomy. A dozen readings are easy to
+            // take one at a time across a full plot and impossible across a
+            // sparkline a third as wide, where the house's dot is wider than
+            // the gap between two of them. Measure the dot against the space
+            // this view actually gives it and shrink it until it fits.
+            const dot = config.line.point;
+            const spacing = readingSpacing(view.width, readings);
+            if (spacing == null) return;
+            const outer = dotOuterDiameter(dot.size, dot.strokeWidth ?? 0);
+            const needed = (spacing * DOT_SPACING_FIT) / outer;
+            if (needed >= 1) return;
+            const shrink = Math.max(MIN_DOT_SHRINK, needed);
+            if (outer * shrink > spacing) {
+                // Even at the smallest a bead may be drawn it still runs into
+                // its neighbour, so the line is better read without them.
+                node.mark = { ...mark, point: false };
+                if (!saidCrowd) {
+                    say('marks.point',
+                        `${readings} readings across ${Math.round(spacing)}px apart leave no room for the house's ${Math.round(outer)}px dots, so they stand down and the line keeps its shape`);
+                    saidCrowd = true;
+                }
+                return;
+            }
+            const size = Math.max(4, Math.round(dot.size * shrink * shrink));
+            const point: any = { ...dot, size };
+            if (dot.strokeWidth) {
+                point.strokeWidth = Math.max(0.5, Number((dot.strokeWidth * shrink).toFixed(1)));
+            }
+            node.mark = { ...mark, point };
+            fittedDots.add(node);
+            if (!saidShrink) {
+                say('marks.point.size',
+                    `this panel gives each of its ${readings} readings ${Math.round(spacing)}px, so the house's dots shrink to ${size}px² to sit apart on their line`);
+                saidShrink = true;
             }
         });
     }
@@ -1006,6 +1078,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         const dot = m.point;
         walk(spec, (node) => {
             if (!LINE_MARKS.has(markTypeOf(node.mark) ?? '')) return;
+            if (fittedDots.has(node)) return;
             const mark = normalizeMark(node.mark);
             if (!mark.point) return;
             mark.point = {
@@ -1021,6 +1094,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.outline && !m.point?.haloColor) {
         walk(spec, (node) => {
             if (!LINE_MARKS.has(markTypeOf(node.mark) ?? '')) return;
+            if (fittedDots.has(node)) return;
             const mark = normalizeMark(node.mark);
             if (!mark.point) return;
             mark.point = {
@@ -1695,8 +1769,98 @@ function distinctCount(table: any[], field: string | undefined): number {
     return seen.size;
 }
 
+/**
+ * Paint the marks a template drew in pixels but flagged as carrying meaning.
+ *
+ * Most template furniture is scenery — a card, a track, a caption — and the
+ * pass above only re-tones it against the surface. A few of those pixel marks
+ * are not scenery at all: a KPI card's progress bar is the one part of the
+ * tile that states a measurement, and left literal it stays flint's blue in
+ * every house on the wall. A template cannot read the theme, so it names the
+ * *role* its colour plays with `__themeRole` and the house supplies the ink.
+ *
+ *   accent    the reading itself, with no verdict attached — the house's ink
+ *   positive  a reading that met or beat its target
+ *   negative  a reading that fell short
+ *
+ * A house that never named status inks keeps the template's own red and green:
+ * those hues are conventional rather than decorative, and inventing a verdict
+ * colour from the palette would say something the house did not.
+ *
+ * A verdict also has to stay *legible as a verdict*. Several houses draw their
+ * status ink from the same short palette as their series ink — the Economist's
+ * positive is its blue, Swiss's negative is its red — so taking it here would
+ * paint "beat the target" and "still going" in one colour and quietly delete
+ * the distinction the bar exists to make. Where the house's verdict ink is the
+ * ink already on the bar, the template's conventional hue stays.
+ */
+function paintRoleMarks(spec: any, d: DesignDecisions, say: (p: string, m: string) => void): void {
+    const status = d.series.status;
+    const accent = d.series.single;
+    const same = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
+    const verdict = (ink?: string) => (ink && !same(ink, accent) ? ink : undefined);
+    let said = false;
+    walk(spec, (node) => {
+        const role = node.__themeRole;
+        if (!role || !markTypeOf(node.mark)) return;
+        const ink = role === 'accent'
+            ? accent
+            : role === 'positive'
+                ? verdict(status?.positive)
+                : role === 'negative'
+                    ? verdict(status?.negative)
+                    : undefined;
+        if (!ink) return;
+        const mark = normalizeMark(node.mark);
+        for (const key of ['fill', 'stroke', 'color'] as const) {
+            if (typeof mark[key] === 'string') mark[key] = ink;
+        }
+        node.mark = mark;
+        if (!said) {
+            say('ink.series',
+                'the card\'s progress bar states a measurement, not scenery, so it takes the house ink rather than the template\'s own blue');
+            said = true;
+        }
+    });
+}
+
+
+
 /** How many dots one line can carry before they stop being countable. */
 const MAX_DOTTED_READINGS = 12;
+
+/**
+ * The share of the gap between two readings a dot may occupy.
+ *
+ * At 1 the beads on a line touch exactly; a little under that leaves a thread
+ * of page between them, which is what makes them read as separate readings
+ * rather than as one rope.
+ */
+const DOT_SPACING_FIT = 0.9;
+
+/**
+ * The room one reading gets along a line, in px.
+ *
+ * Returns `undefined` when the view has no settled width (a step-sized or
+ * responsive panel), where there is nothing to measure the dot against and the
+ * house's size is left alone.
+ */
+function readingSpacing(width: number | undefined, readings: number): number | undefined {
+    if (typeof width !== 'number' || !isFinite(width) || width <= 0) return undefined;
+    if (readings <= 1) return undefined;
+    return width / readings;
+}
+
+/**
+ * How much page a dot covers, edge to edge.
+ *
+ * A mark's `size` is its area in px², and its stroke straddles the edge it is
+ * drawn on, so half the stroke falls outside the disc on each side — the ink a
+ * neighbouring dot has to clear is the diameter plus one whole stroke width.
+ */
+function dotOuterDiameter(size: number, strokeWidth: number): number {
+    return 2 * Math.sqrt(size / Math.PI) + strokeWidth;
+}
 
 /**
  * The most of a bar's own thickness a rounded end may eat.
@@ -2197,6 +2361,7 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
     // stays a white island on a dark canvas.
     walk(spec, (node) => {
         if (!markTypeOf(node.mark) || node.__themeSynthetic || !isLiteralMark(node)) return;
+        if (node.__themeRole) return;
         const mark = normalizeMark(node.mark);
         let changed = false;
         for (const key of ['fill', 'stroke', 'color'] as const) {
@@ -2213,6 +2378,8 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
             saidChrome = true;
         }
     });
+
+    paintRoleMarks(spec, d, say);
 
     walk(spec, (node) => {
         const mark = markTypeOf(node.mark);

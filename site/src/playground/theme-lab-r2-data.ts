@@ -154,6 +154,8 @@ export const R2_CASES: R2Case[] = [
     { id: 'gantt-project', gen: 'Gantt Chart', index: 0, family: 'Single value & schedule', title: 'Project schedule', probe: 'a temporal range per row' },
     { id: 'gantt-ci', gen: 'Gantt Chart', index: 1, family: 'Single value & schedule', title: 'Pipeline run', subtitle: 'Seconds from start', probe: 'a numeric range per row' },
     { id: 'bullet-12', gen: 'Bullet Chart', index: 1, family: 'Single value & schedule', title: 'Revenue against target', subtitle: 'Twelve stores', probe: 'twelve rows of measure, target and bands' },
+    { id: 'kpi-verdicts', gen: 'KPI Card', index: 0, family: 'Single value & schedule', title: 'Quarterly KPIs', subtitle: 'Against goal', probe: 'a chart drawn entirely in pixels — whether the house reaches its progress bar, and whether accent, met and missed stay three distinguishable inks' },
+    { id: 'kpi-pair', gen: 'KPI Card', index: 1, family: 'Single value & schedule', title: 'Adoption against plan', probe: 'two wide tiles — the big number at its largest, and card furniture re-toned to the house surface' },
 ];
 
 /** The base canvas every R2 case is designed at, so sheets are comparable. */
