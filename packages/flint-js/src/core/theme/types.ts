@@ -203,12 +203,15 @@ export interface ThemeMarks {
      */
     cornerRadius?: number;
     /**
-     * A stroke drawn around every filled mark — a bar, a wedge, a tile: the
+     * A stroke drawn around every filled mark — a bar or a wedge: the
      * "sticker" / flat-illustration edge. It is not a `separator` (which cuts
      * *between* adjacent pieces) nor a `frame` (which bounds the plot): it
-     * bounds each mark on its own, so a lone bar carries it too. `ink` draws it
-     * in the house's dark structural ink; `surface` draws it in the page, which
-     * reads as a cut-out. A house that says nothing leaves its marks unbordered.
+     * bounds each mark on its own, so a lone bar carries it too. A bar's
+     * outline stands down where the bar is too thin to hold it (so a dense bar
+     * chart keeps its fill); a grid cell is a field, held apart by a `tile`
+     * gap, not an outline. `ink` draws it in the house's dark structural ink;
+     * `surface` draws it in the page. A house that says nothing leaves its
+     * marks unbordered.
      */
     outline?: { presence?: Presence; weight?: number; source?: 'ink' | 'surface' };
     sizeRange?: [number, number];
@@ -644,7 +647,7 @@ export interface ResolvedMarks {
     fillOpacity?: number;
     /** Corner radius for the value end of a bar, and a wedge's corners, in px. */
     cornerRadius?: number;
-    /** A stroke around each filled mark (bar/arc/tile): the sticker edge. */
+    /** A stroke around each filled bar/wedge: the sticker edge (thin bars skip it). */
     outline?: { color: string; width: number };
     point?: { show: boolean; size?: number; filled?: boolean; haloColor?: string; haloWidth?: number };
     /** The area a sized mark may take, smallest to largest, in px². */

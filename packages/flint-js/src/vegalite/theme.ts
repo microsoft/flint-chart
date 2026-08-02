@@ -937,12 +937,12 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         config.arc = { ...(config.arc ?? {}), cornerRadius: m.cornerRadius };
     }
     if (m.outline) {
-        // The sticker edge: a stroke around each filled shape. A per-node
-        // separator (stacked-bar divider) or slice/tile gap still overrides it
-        // where the house draws one, so pieces cut apart keep their own cut.
-        for (const family of ['bar', 'arc', 'rect'] as const) {
-            config[family] = { ...(config[family] ?? {}), stroke: m.outline.color, strokeWidth: m.outline.width };
-        }
+        // A wedge's outline follows its radial edges and never swallows it, so
+        // it rides the arc config. A bar's outline is width-sensitive — a fat
+        // border eats a thin bar whole — so it is drawn per bar below, only on
+        // bars wide enough to hold it. Grid cells (heatmaps) are a field, not
+        // shapes to cut out, and are held apart by a tile gap, not an outline.
+        config.arc = { ...(config.arc ?? {}), stroke: m.outline.color, strokeWidth: m.outline.width };
     }
     protectDashEncoding(spec, config, m.strokeWidth);
 
@@ -1227,6 +1227,34 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.tile) applyTileGap(spec, m.tile, say);
 
     if (m.slice) applySliceGap(spec, m.slice, table, say);
+
+    // The sticker edge on bars: a dark border around each column, drawn per
+    // bar so a fat outline can stand down where a bar is too thin to hold it
+    // (the same guard the separator uses). A bar the separator already stroked
+    // keeps that stroke; grid cells are a field, held apart by a tile gap.
+    if (m.outline) {
+        const oPlotW = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
+        const oPlotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
+        let saidThinOutline = false;
+        walk(spec, (node) => {
+            if (markTypeOf(node.mark) !== 'bar') return;
+            if (isLiteralMark(node)) return;
+            const enc = node.encoding ?? {};
+            if (isGridCell(node, enc)) return;
+            const mark = normalizeMark(node.mark);
+            if (mark.stroke) return;
+            const barW = estimateBarExtent(node, enc, table, oPlotW, oPlotH);
+            if (barW < 2 * m.outline!.width) {
+                if (!saidThinOutline) {
+                    say('marks.outline',
+                        `bars are ${barW.toFixed(1)}px — too thin to hold a ${m.outline!.width}px outline, which would paint over them; left unbordered`);
+                    saidThinOutline = true;
+                }
+                return;
+            }
+            node.mark = { ...mark, stroke: m.outline!.color, strokeWidth: m.outline!.width };
+        });
+    }
 }
 
 /**
