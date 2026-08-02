@@ -35,7 +35,8 @@ export const powerbi: ThemePreset = {
             "structure": {
                 "grid": "#3b3a39",
                 "axis": "#3b3a39",
-                "rule": "#3b3a39"
+                "rule": "#3b3a39",
+                "connector": "#797775"
             },
             "series": {
                 "single": "#118dff",
@@ -144,7 +145,7 @@ export const powerbi: ThemePreset = {
             "grid": {
                 "measure": "quiet",
                 "category": "omit",
-                "style": "dashed"
+                "style": "solid"
             },
             "frame": "omit",
             "baseline": "quiet"
@@ -160,6 +161,11 @@ export const powerbi: ThemePreset = {
             },
             "slice": {
                 "gap": 1.5
+            },
+            "connector": {
+                "presence": "full",
+                "weight": 1.5,
+                "spanWeight": 2
             },
             "trailingFill": {
                 "presence": "quiet",

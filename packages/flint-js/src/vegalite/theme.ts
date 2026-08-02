@@ -1878,7 +1878,18 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
             }
             if ((s.mode === 'sequential' || s.mode === 'diverging') && s.range?.length) {
                 const quantize = s.quantize && enc.type === 'quantitative';
-                setColorRange(enc, s.range, quantize ? { type: 'quantize' } : undefined);
+                // A diverging/sequential ramp sampled onto a *discrete* colour
+                // domain (a waterfall's total/increase/decrease, say) can hand
+                // a near-neutral midpoint to a bar fill. That neutral was
+                // placed against a light surface; on a dark canvas it sinks
+                // into the background. Re-tone the neutral entries to the same
+                // distance from this surface, leaving the hued endpoints — and
+                // every continuous heat ramp — untouched.
+                const surface = d.surface.plot ?? d.surface.canvas;
+                const range = isContinuousColor(enc)
+                    ? s.range
+                    : s.range.map((c) => reToneNeutral(c, surface));
+                setColorRange(enc, range, quantize ? { type: 'quantize' } : undefined);
                 continue;
             }
             // Categorical: an ordered set consumed by index, with the overflow

@@ -39,7 +39,8 @@ export const powerbiLight: ThemePreset = {
             "structure": {
                 "grid": "#ededed",
                 "axis": "#d2d0ce",
-                "rule": "#d2d0ce"
+                "rule": "#d2d0ce",
+                "connector": "#8a8886"
             },
             "series": {
                 "single": "#118dff",
@@ -161,6 +162,11 @@ export const powerbiLight: ThemePreset = {
             },
             "slice": {
                 "gap": 1.5
+            },
+            "connector": {
+                "presence": "full",
+                "weight": 1.5,
+                "spanWeight": 2
             },
             "trailingFill": {
                 "presence": "quiet",
