@@ -928,6 +928,12 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;
     if (m.interpolate) config.line.interpolate = m.interpolate;
     if (m.fillOpacity != null) config.area = { ...(config.area ?? {}), fillOpacity: m.fillOpacity };
+    if (m.cornerRadius != null) {
+        // Round only the value end so the baseline stays a clean edge and a
+        // stack still reads as one column. `cornerRadiusEnd` rounds the top of
+        // a vertical bar and the right of a horizontal one.
+        config.bar = { ...(config.bar ?? {}), cornerRadiusEnd: m.cornerRadius };
+    }
     protectDashEncoding(spec, config, m.strokeWidth);
 
     if (m.point?.show) {

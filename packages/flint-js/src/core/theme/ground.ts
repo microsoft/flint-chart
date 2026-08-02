@@ -1156,6 +1156,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ? 'monotone'
             : marksSpec.interpolation === 'step' ? 'step' : undefined,
         fillOpacity: marksSpec.fillOpacity,
+        cornerRadius: marksSpec.cornerRadius,
         point: marksSpec.point || halo
             ? {
                 show: (marksSpec.point?.presence ?? 'omit') !== 'omit',
