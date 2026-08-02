@@ -243,6 +243,7 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     applyZeroRule(spec, d, table, say);
     applyMarks(spec, d, table, say);
     applySeriesInk(spec, d, table, say);
+    harmonizeLinePoints(spec, d, table, say);
     applyConnectors(spec, d, say);
     applyRedundantChannels(spec, d, say);
     demoteSeriesEnd(spec, d, say);
@@ -921,6 +922,8 @@ function protectDashEncoding(spec: any, config: any, strokeWidth: number): void 
 function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
     const config = spec.config;
     const m = d.marks;
+    const plotWidth = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
+    const plotHeight = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
 
     config.line = { ...(config.line ?? {}), strokeWidth: m.strokeWidth };
     config.trail = { ...(config.trail ?? {}), size: m.strokeWidth };
@@ -950,7 +953,11 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         config.line.point = {
             filled: m.point.filled !== false,
             size: m.point.size ?? 24,
-            ...(m.point.haloColor ? { stroke: m.point.haloColor, strokeWidth: m.point.haloWidth ?? 1 } : {}),
+            ...(m.outline
+                ? { stroke: m.outline.color, strokeWidth: m.outline.width }
+                : m.point.haloColor
+                    ? { stroke: m.point.haloColor, strokeWidth: m.point.haloWidth ?? 1 }
+                    : {}),
         };        // A point on a line marks a reading. A fitted line has no readings —
         // it is sampled wherever the fit needs sampling, which for a straight
         // one is the two ends — so a point at each vertex claims two
@@ -1005,8 +1012,21 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                 ...(typeof mark.point === 'object' ? mark.point : {}),
                 ...(dot.filled != null ? { filled: dot.filled } : {}),
                 ...(dot.size != null ? { size: dot.size } : {}),
-                stroke: dot.haloColor,
-                strokeWidth: dot.haloWidth ?? 1,
+                stroke: m.outline?.color ?? dot.haloColor,
+                strokeWidth: m.outline?.width ?? dot.haloWidth ?? 1,
+            };
+            node.mark = mark;
+        });
+    }
+    if (m.outline && !m.point?.haloColor) {
+        walk(spec, (node) => {
+            if (!LINE_MARKS.has(markTypeOf(node.mark) ?? '')) return;
+            const mark = normalizeMark(node.mark);
+            if (!mark.point) return;
+            mark.point = {
+                ...(typeof mark.point === 'object' ? mark.point : {}),
+                stroke: m.outline!.color,
+                strokeWidth: m.outline!.width,
             };
             node.mark = mark;
         });
@@ -1016,16 +1036,35 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     // their own config blocks, and most scatters are drawn as one of those, so
     // a house that sized only `point` silently missed every scatter it had.
     if (m.point?.size != null || m.point?.filled != null) {
+        // This config reaches only standalone point-family marks; line
+        // vertices use `config.line.point` above. It is therefore safe to
+        // budget the standalone dots from the row count even when a template
+        // inherits its mark through a facet or composition node.
+        const densitySize = table.length > 0
+            ? Math.max(36, Math.floor((plotWidth * plotHeight * 0.12) / table.length))
+            : undefined;
+        const pointSize = m.point.size != null && densitySize != null
+            ? Math.min(m.point.size, densitySize)
+            : m.point.size;
+        const pointOutlineWidth = m.outline && pointSize != null
+            ? Math.min(m.outline.width, Math.max(1.2, Math.sqrt(pointSize) * 0.22))
+            : m.outline?.width;
         for (const family of ['point', 'circle', 'square'] as const) {
             config[family] = {
                 ...(config[family] ?? {}),
-                ...(m.point.size != null ? { size: m.point.size } : {}),
+                ...(pointSize != null ? { size: pointSize } : {}),
                 filled: m.point.filled !== false,
+                ...(m.outline ? { stroke: m.outline.color, strokeWidth: pointOutlineWidth } : {}),
             };
         }
         if (m.point.size != null) {
-            say('marks.point.size',
-                `a dot is drawn at ${m.point.size}px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it`);
+            if (pointSize !== m.point.size) {
+                say('marks.point.size',
+                    `${table.length} points would cover too much of the ${Math.round(plotWidth)}×${Math.round(plotHeight)}px plot at ${m.point.size}px² each, so the dots shrink to ${pointSize}px²`);
+            } else {
+                say('marks.point.size',
+                    `a dot is drawn at ${m.point.size}px² wherever one is drawn — the house's size, not the renderer's`);
+            }
         }
     }
 
@@ -1186,7 +1225,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         const plotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
         let saidThin = false;
         let sawStroke = false;
-        let measureCh: 'x' | 'y' | undefined;
+        let bandCh: 'x' | 'y' | undefined;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
             if (mark !== 'bar' && mark !== 'rect') return;
@@ -1211,17 +1250,18 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             }
             node.mark = { ...normalizeMark(node.mark), stroke: m.separator!.color, strokeWidth: m.separator!.width };
             sawStroke = true;
-            // Which axis carries the measure is read off the bar, not off where
-            // the encoding sits: a waterfall carries its category on the parent
-            // layer and only the measure on the bar. The measure is the
-            // quantitative channel (or the one that spans, x2/y2).
+            // Which axis carries the bands is read off the bar itself: a
+            // waterfall keeps its category on the parent layer and only the
+            // measure on the bar. The band is whatever is not the measure —
+            // the measure being the quantitative channel, or the one that
+            // spans (x2/y2).
             const enc = node.encoding ?? {};
-            if (enc.y?.type === 'quantitative' || enc.y2) measureCh = 'y';
-            else if (enc.x?.type === 'quantitative' || enc.x2) measureCh = 'x';
-            else if (enc.x?.field && enc.x.type !== 'quantitative') measureCh = 'y';
-            else if (enc.y?.field && enc.y.type !== 'quantitative') measureCh = 'x';
+            if (enc.y?.type === 'quantitative' || enc.y2) bandCh = 'x';
+            else if (enc.x?.type === 'quantitative' || enc.x2) bandCh = 'y';
+            else if (enc.x?.field && enc.x.type !== 'quantitative') bandCh = 'x';
+            else if (enc.y?.field && enc.y.type !== 'quantitative') bandCh = 'y';
         });
-        if (sawStroke && measureCh) restoreBaseline(spec, measureCh, say);
+        if (sawStroke && bandCh) liftBandAxis(spec, bandCh, say);
     }
 
     if (m.tile) applyTileGap(spec, m.tile, say);
@@ -1233,8 +1273,6 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     // (the same guard the separator uses). A bar the separator already stroked
     // keeps that stroke; grid cells are a field, held apart by a tile gap.
     if (m.outline) {
-        const oPlotW = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
-        const oPlotH = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
         let saidThinOutline = false;
         walk(spec, (node) => {
             if (markTypeOf(node.mark) !== 'bar') return;
@@ -1243,7 +1281,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             if (isGridCell(node, enc)) return;
             const mark = normalizeMark(node.mark);
             if (mark.stroke) return;
-            const barW = estimateBarExtent(node, enc, table, oPlotW, oPlotH);
+            const barW = estimateBarExtent(node, enc, table, plotWidth, plotHeight);
             if (barW < 2 * m.outline!.width) {
                 if (!saidThinOutline) {
                     say('marks.outline',
@@ -1255,55 +1293,133 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             node.mark = { ...mark, stroke: m.outline!.color, strokeWidth: m.outline!.width };
         });
     }
+
+    // A corner radius is authored in pixels, but what it has to stay
+    // proportional to is the bar it rounds. The radius that reads as a
+    // friendly sticker corner on a wide bar swallows a narrow one: once it
+    // passes half the bar's thickness the shape stops being a bar at all and
+    // becomes a lozenge, and a ranking of lozenges is no longer a ranking of
+    // lengths. The house keeps its full roundness wherever the bar has room
+    // for it, and is held to the same *fraction* of the bar where it does not.
+    if (m.cornerRadius != null) {
+        let saidRound = false;
+        walk(spec, (node) => {
+            if (markTypeOf(node.mark) !== 'bar') return;
+            if (isLiteralMark(node)) return;
+            const enc = node.encoding ?? {};
+            if (isGridCell(node, enc)) return;
+            const barW = estimateBarExtent(node, enc, table, plotWidth, plotHeight);
+            const capped = Math.round(barW * MAX_CORNER_FRACTION * 10) / 10;
+            if (capped >= m.cornerRadius!) return;
+            node.mark = { ...normalizeMark(node.mark), cornerRadiusEnd: capped };
+            if (!saidRound) {
+                say('marks.cornerRadius',
+                    `bars are ${barW.toFixed(1)}px — a ${m.cornerRadius}px corner would round the bar away, so it is held to ${capped}px, the same share of the bar the house rounds off a wide one`);
+                saidRound = true;
+            }
+        });
+    }
 }
 
 /**
  * A house that strokes its bars in the surface colour (datawrapper's white
  * hairline between stacked segments, swiss's paper gap) draws that stroke on
- * every edge of the bar — including the bottom edge, which sits *on* the
- * category baseline. Painted in the surface, it chops the axis domain line
- * into a dash under each bar. Raising the axis over the marks would fix it,
- * but Vega-Lite drops `zindex` off a config axis, so the domain stays behind.
+ * every edge of the bar — including the edge that sits *on* the band axis.
+ * Painted in the surface, it chops that axis domain into a dash under each bar.
  *
- * The baseline is furniture the bars rest on, so it is redrawn as its own rule
- * on top of them — the same way the zero rule is drawn last. It runs at the
- * measure's zero (where an all-positive bar meets the axis) in the band axis's
- * own domain ink, so it reads as the one continuous line it always was. A
- * house that draws no band domain has nothing to protect, so nothing is added;
- * a diverging chart already draws its zero rule on top, and this rule lands on
- * the same line.
+ * Vega-Lite drops `zindex` from a *config* axis, but honours it on an axis
+ * declared in the encoding, so the band axis is simply lifted over the marks.
+ * Nothing is drawn twice and no geometry is invented — the one line Vega
+ * already draws is just drawn last. Only the band axis is lifted, and only
+ * while it carries no grid, so no gridline is ever raised over the data.
  */
-function restoreBaseline(spec: any, measureCh: 'x' | 'y', say: (p: string, m: string) => void): void {
-    const bandCh = measureCh === 'y' ? 'x' : 'y';
+function liftBandAxis(spec: any, bandCh: 'x' | 'y', say: (p: string, m: string) => void): void {
     const axisCfg = spec.config?.[bandCh === 'x' ? 'axisX' : 'axisY'] ?? {};
     const color = axisCfg.domainColor;
     const width = axisCfg.domainWidth ?? 1;
     if (axisCfg.domain === false || !color || color === 'transparent' || width <= 0) return;
-    let said = false;
-    for (const body of plotBodies(spec)) {
-        // Only a body that actually plots the measure gets a baseline — a
-        // furniture rect or a header band carries no measured axis to chop.
-        const layers: any[] = body.layer ?? [body];
-        const carries = layers.some((l) => {
-            const e = l.encoding?.[measureCh];
-            return e?.field && e.type !== 'nominal' && e.type !== 'ordinal';
-        });
-        if (!carries) continue;
-        appendLayer(body, {
-            data: { values: [{}] },
-            mark: { type: 'rule', color, strokeWidth: width },
-            // Null the band channel so the rule spans the full plot and does
-            // not inherit a shared category encoding (a waterfall binds `x` on
-            // the parent layer; without this the rule's empty datum would add
-            // an "undefined" band to the axis).
-            encoding: { [measureCh]: { datum: 0 }, [bandCh]: null },
-        });
-        if (!said) {
-            say('marks.separator',
-                'the category baseline is redrawn over the bars so its edge strokes do not chop it into a dash');
-            said = true;
-        }
+    // Lifting an axis lifts its grid with it. A band axis that rules its own
+    // grid would paint those lines over the bars, which is a worse fault than
+    // the one being fixed, so it keeps its place.
+    if (axisCfg.grid && (axisCfg.gridWidth ?? 1) > 0 &&
+        axisCfg.gridColor && axisCfg.gridColor !== 'transparent') return;
+
+    let lifted = false;
+    walk(spec, (node) => {
+        const enc = node.encoding?.[bandCh];
+        // `axis: null` is the chart saying this band carries no ruler at all.
+        if (!enc?.field || enc.axis === null) return;
+        enc.axis = { ...(enc.axis ?? {}), zindex: 1 };
+        lifted = true;
+    });
+    if (lifted) {
+        say('marks.separator',
+            'the band axis is drawn over the bars — their surface-coloured edge strokes would otherwise chop its domain line into a dash');
     }
+}
+
+/**
+ * Vega-Lite's nested `line.point` mark does not inherit a literal colour from
+ * its parent line, so a single-series themed line can become one colour with
+ * renderer-default blue dots. Keep the two pieces of the same trajectory in
+ * the same ink. Where a house deliberately draws outlined sticker dots, also
+ * scale both dot and line down together once a trajectory has too many
+ * observations for every vertex to remain full-size.
+ */
+function harmonizeLinePoints(
+    spec: any,
+    d: DesignDecisions,
+    table: any[],
+    say: (p: string, m: string) => void,
+): void {
+    let saidColor = false;
+    let saidDensity = false;
+    walk(spec, (node) => {
+        if (!LINE_MARKS.has(markTypeOf(node.mark) ?? '')) return;
+        const mark = normalizeMark(node.mark);
+        if (!mark.point) return;
+
+        const point = typeof mark.point === 'object' ? { ...mark.point } : {};
+        if (mark.color && point.color == null && point.fill == null) {
+            point.color = mark.color;
+            if (!saidColor) {
+                say('marks.point.color',
+                    'the vertex dots inherit the line ink — both pieces belong to the same trajectory');
+                saidColor = true;
+            }
+        }
+
+        if (d.marks.point?.size != null && d.marks.outline && point.size == null) {
+            const enc = mergedEncoding(node, spec.encoding);
+            const readings = maxReadingsPerSeries(enc, table);
+            // A dot and the line under it are one object — a bead on a string
+            // — and the house sized them against each other. Crowding shrinks
+            // the *diameter*, and the stroke follows it by the same factor, so
+            // the proportion the house authored survives at every density.
+            // Area goes as the square of the diameter, so the size follows the
+            // factor squared: scaling the area directly would fatten the dots
+            // against their own line every time the plot got busier.
+            const shrink = readings > MAX_DOTTED_READINGS
+                ? Math.max(MIN_DOT_SHRINK, Math.sqrt(MAX_DOTTED_READINGS / readings))
+                : 1;
+            const size = Math.round(d.marks.point.size * shrink * shrink);
+            point.size = size;
+            if (point.stroke === d.marks.outline.color) {
+                point.strokeWidth = Math.max(1, Number((d.marks.outline.width * shrink).toFixed(1)));
+            }
+            if (shrink < 1) {
+                mark.strokeWidth = Math.max(1, Number((d.marks.strokeWidth * shrink).toFixed(1)));
+                if (!saidDensity) {
+                    say('marks.point.size',
+                        `${readings} connected readings shrink the house's dots to ${size}px² and its line to ${mark.strokeWidth}px together, so the dot stays the same bead on the same string`);
+                    saidDensity = true;
+                }
+            }
+        }
+
+        mark.point = point;
+        node.mark = mark;
+    });
 }
 
 /**
@@ -1583,6 +1699,23 @@ function distinctCount(table: any[], field: string | undefined): number {
 const MAX_DOTTED_READINGS = 12;
 
 /**
+ * The most of a bar's own thickness a rounded end may eat.
+ *
+ * Read off the hand-drawn cartoon reference, whose 14px corner sits on a 46px
+ * bar. Past roughly a third the corner starts reading as the shape rather than
+ * as a finish on it, and at a half the bar is a capsule.
+ */
+const MAX_CORNER_FRACTION = 0.3;
+
+/**
+ * How far a crowded trajectory may shrink its dots and line.
+ *
+ * Below about half the authored size the bead stops being a reading a finger
+ * could land on, and the trajectory is better served by the line alone.
+ */
+const MIN_DOT_SHRINK = 0.5;
+
+/**
  * The longest single line in the plot, counted in readings.
  *
  * A reading is one position along the line, so it is the distinct values of
@@ -1665,9 +1798,10 @@ function laneCount(node: any, enc: any, table: any[]): number {
 /**
  * Roughly how many pixels wide a single bar ends up. A pinned pixel size is the
  * answer outright; otherwise the band the layout gives each category is split
- * between the dodge lanes inside it. Only an estimate — it decides whether a
- * mark is too thin to carry an edge stroke, where the exact figure does not
- * matter, only the order of magnitude.
+ * between the dodge lanes inside it, and the padding the house holds between
+ * bands is taken back off — a house that spends a third of every band on air
+ * draws a bar a third narrower than its step, which is the difference between
+ * a stroke that fits and one that paints the bar out.
  */
 function estimateBarExtent(node: any, enc: any, table: any[], plotW: number, plotH: number): number {
     const size = (node.mark as any)?.size;
@@ -1679,7 +1813,12 @@ function estimateBarExtent(node: any, enc: any, table: any[], plotW: number, plo
     const span = channel === 'x' ? plotW : plotH;
     const cats = distinctCount(table, enc[channel].field) || 1;
     const lanes = laneCount(node, enc, table);
-    return span / (cats * lanes);
+    const step = span / (cats * lanes);
+    // Vega-Lite's own default gap for a banded bar, used when the house has
+    // not said how much of the band it wants the bar to fill.
+    const padInner = enc[channel].scale?.paddingInner;
+    const fill = 1 - (typeof padInner === 'number' ? padInner : 0.1);
+    return step * Math.max(0.05, fill);
 }
 
 // ---------------------------------------------------------------------------

@@ -16,7 +16,6 @@ const pages: NavEntry[] = [
       { to: 'theme-labs', label: 'Theme lab' },
       { to: 'theme-lab-r2', label: 'Theme lab R2' },
       { to: 'theme-lab-real', label: 'Theme lab real' },
-      { to: 'theme-lab-gaps', label: 'Theme lab gaps' },
       { to: 'swiss-lab', label: 'Swiss lab' },
       { to: 'cartoon-lab', label: 'Cartoon lab' },
     ],

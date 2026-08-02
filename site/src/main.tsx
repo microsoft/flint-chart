@@ -18,7 +18,6 @@ import { DemoWall } from './playground/DemoWall';
 import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
-import { ThemeLabGaps } from './playground/ThemeLabGaps';
 import { SwissLab } from './playground/SwissLab';
 import { CartoonLab } from './playground/CartoonLab';
 import { FullTestCases } from './playground/FullTestCases';
@@ -61,7 +60,6 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-real" element={<ThemeLabReal />} />
-          <Route path="theme-lab-gaps" element={<ThemeLabGaps />} />
           <Route path="swiss-lab" element={<SwissLab />} />
           <Route path="cartoon-lab" element={<CartoonLab />} />
           <Route path="full-test-cases" element={<FullTestCases />} />

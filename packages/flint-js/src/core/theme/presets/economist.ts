@@ -33,7 +33,7 @@ export const economist: ThemePreset = {
                 "grid": "#c9d3da",
                 "axis": "#121317",
                 "rule": "#c9d3da",
-                "zero": "#e3120b"
+                "zero": "#121317"
             },
             "series": {
                 "single": "#006ba2",

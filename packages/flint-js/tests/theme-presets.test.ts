@@ -85,6 +85,208 @@ describe('naming a house Flint ships', () => {
             expect(Number(stated![1]), `${preset.id}`).toBe(declared);
         }
     });
+
+    it('keeps the Economist zero rule structural rather than accent red', () => {
+        const ink = THEME_PRESETS.economist.spec.ink;
+        expect(ink.structure?.zero).toBe(ink.structure?.axis);
+        expect(ink.structure?.zero).not.toBe(ink.accent);
+    });
+});
+
+describe('cartoon mark character', () => {
+    function scatter(count: number) {
+        const values = Array.from({ length: count }, (_, i) => ({
+            X: i % 100,
+            Y: (i * 37) % 101,
+        }));
+        return assembleVegaLite({
+            data: { values },
+            semantic_types: { X: 'Quantity', Y: 'Quantity' },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'X', y: 'Y' },
+                baseSize: { width: 380, height: 320 },
+            },
+            theme_spec: THEME_PRESETS.cartoon.spec,
+        } as any) as any;
+    }
+
+    function connected(themeSpec: ThemeSpec, count: number) {
+        const values = Array.from({ length: count }, (_, i) => ({
+            Step: i,
+            X: 50 + Math.sin(i / 4) * 20,
+            Y: 50 + Math.cos(i / 5) * 20,
+        }));
+        return assembleVegaLite({
+            data: { values },
+            semantic_types: { Step: 'Order', X: 'Quantity', Y: 'Quantity' },
+            chart_spec: {
+                chartType: 'Connected Scatter Plot',
+                encodings: { x: 'X', y: 'Y', order: 'Step' },
+            },
+            theme_spec: themeSpec,
+        } as any) as any;
+    }
+
+    it('puts the dark sticker edge around filled points', () => {
+        const spec = scatter(12);
+        expect(spec.config.point.stroke).toBe('#2e2b28');
+        expect(spec.config.point.strokeWidth).toBe(2.5);
+        expect(spec.config.point.size).toBe(170);
+
+        const line = build(THEME_PRESETS.cartoon.spec);
+        expect(line.config.line.point.stroke).toBe('#2e2b28');
+        expect(line.config.line.point.strokeWidth).toBe(2.5);
+    });
+
+    it('uses the lab weight and breathing room for chart furniture', () => {
+        const spec = scatter(12);
+        for (const axis of [spec.config.axisX, spec.config.axisY]) {
+            expect(axis.domainWidth).toBe(2.5);
+            expect(axis.labelPadding).toBe(7);
+        }
+        expect(spec.config.axisX.gridWidth).toBe(0);
+        expect(spec.config.axisY.gridWidth).toBe(1.5);
+    });
+
+    it('shrinks a dense point cloud without flattening sparse dots', () => {
+        const dense = scatter(500);
+        expect(dense.config.point.size).toBeLessThan(170);
+        expect(dense.config.point.size).toBeGreaterThanOrEqual(36);
+        expect(dense.config.point.strokeWidth).toBeLessThan(2.5);
+        expect(JSON.stringify(dense._theme?.report ?? [])).toContain('cover too much');
+    });
+
+    it('leaves area axis geometry to Vega-Lite', () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [
+                    { Year: 2020, Region: 'A', Value: 10 },
+                    { Year: 2021, Region: 'A', Value: 14 },
+                    { Year: 2020, Region: 'B', Value: 5 },
+                    { Year: 2021, Region: 'B', Value: 8 },
+                ],
+            },
+            semantic_types: { Year: 'Year', Region: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Area Chart',
+                encodings: { x: 'Year', y: 'Value', color: 'Region' },
+                chartProperties: { stackMode: 'stack' },
+            },
+            theme_spec: THEME_PRESETS.cartoon.spec,
+        } as any) as any;
+        const spine = spec.layer?.find((layer: any) =>
+            layer.__themeSynthetic && markTypeOf(layer.mark) === 'rule' && layer.encoding?.x?.value === 0);
+        expect(spine).toBeUndefined();
+        expect(JSON.stringify(spec._theme?.report ?? [])).not.toContain('closing edge');
+    });
+
+    it('lifts the band axis over surface-stroked bars instead of redrawing it', () => {
+        const spec = assembleVegaLite({
+            data: { values: [{ Group: 'A', Value: 10 }, { Group: 'B', Value: 14 }] },
+            semantic_types: { Group: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Value', y: 'Group' },
+            },
+            theme_spec: THEME_PRESETS.swiss.spec,
+        } as any) as any;
+
+        // No invented geometry: the old fix appended a rule at the measure's
+        // zero, which sat a hair off the real domain and doubled it.
+        const baseline = spec.layer?.find((layer: any) =>
+            markTypeOf(layer.mark) === 'rule' &&
+            layer.encoding?.x?.datum === 0 &&
+            layer.encoding?.y === null);
+        expect(baseline).toBeUndefined();
+
+        // The band axis Vega already draws is simply drawn last.
+        const bar = spec.layer?.find((l: any) => markTypeOf(l.mark) === 'bar');
+        expect(bar.mark.stroke).toBe('#f4f1ea');
+        expect(bar.encoding.y.axis.zindex).toBe(1);
+        // The measure axis carries the grid, so it must stay behind the bars.
+        expect(bar.encoding.x.axis?.zindex).toBeUndefined();
+        expect(JSON.stringify(spec._theme?.report ?? [])).toContain('band axis is drawn over the bars');
+    });
+
+    it('leaves the band axis alone for a house that does not stroke its bars', () => {
+        const spec = assembleVegaLite({
+            data: { values: [{ Group: 'A', Value: 10 }, { Group: 'B', Value: 14 }] },
+            semantic_types: { Group: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Value', y: 'Group' },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+        const bar = spec.layer?.find((l: any) => markTypeOf(l.mark) === 'bar') ?? spec;
+        expect(bar.encoding?.y?.axis?.zindex).toBeUndefined();
+    });
+
+    it('holds the sticker corner to a share of the bar it rounds', () => {
+        const bars = (count: number) => assembleVegaLite({
+            data: {
+                values: Array.from({ length: count }, (_, i) => ({
+                    G: `Cat${i}`, V: 100 + ((i * 37) % 400),
+                })),
+            },
+            semantic_types: { G: 'Category', V: 'Quantity' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: 'G', y: 'V' } },
+            theme_spec: THEME_PRESETS.cartoon.spec,
+        } as any) as any;
+
+        const barMark = (spec: any) =>
+            (spec.layer ?? [spec]).find((l: any) => markTypeOf(l.mark) === 'bar')?.mark;
+
+        // Wide bars have room for the house's full roundness.
+        expect(bars(5).config.bar.cornerRadiusEnd).toBe(10);
+        expect(barMark(bars(5))?.cornerRadiusEnd).toBeUndefined();
+
+        // Thin bars keep the same *fraction* instead of being rounded away.
+        const thin = bars(60);
+        const radius = barMark(thin)?.cornerRadiusEnd;
+        expect(radius).toBeLessThan(10);
+        expect(radius).toBeGreaterThan(0);
+        expect(JSON.stringify(thin._theme?.report ?? [])).toContain('round the bar away');
+    });
+
+    it('keeps a crowded trajectory in the lab dot-to-line proportion', () => {
+        const diameter = (size: number) => 2 * Math.sqrt(size / Math.PI);
+        const ratioOf = (spec: any) => {
+            const mark = markOf(spec);
+            return diameter(mark.point.size) / (mark.strokeWidth ?? spec.config.line.strokeWidth);
+        };
+
+        const sparse = connected(THEME_PRESETS.cartoon.spec, 8);
+        // Untouched, the house's own bead: 170px² on a 5px line.
+        expect(markOf(sparse).point.size).toBe(170);
+        expect(markOf(sparse).strokeWidth).toBeUndefined();
+
+        // The dot and the line shrink together, so the proportion the house
+        // authored survives the crowding rather than fattening with it.
+        for (const count of [20, 35, 55]) {
+            const spec = connected(THEME_PRESETS.cartoon.spec, count);
+            expect(markOf(spec).point.size).toBeLessThan(170);
+            expect(markOf(spec).strokeWidth).toBeLessThan(5);
+            expect(ratioOf(spec)).toBeCloseTo(ratioOf(sparse), 1);
+        }
+    });
+
+    it('keeps connected dots in the line ink and scales a crowded cartoon path', () => {
+        const swiss = connected(THEME_PRESETS.swiss.spec, 55);
+        const swissMark = markOf(swiss);
+        expect(swissMark.point.color).toBe(swissMark.color);
+        expect(swissMark.strokeWidth).toBeUndefined();
+        expect(swiss.config.line.strokeWidth).toBe(3);
+
+        const cartoon = connected(THEME_PRESETS.cartoon.spec, 55);
+        const cartoonMark = markOf(cartoon);
+        expect(cartoonMark.point.color).toBe(cartoonMark.color);
+        expect(cartoonMark.point.size).toBeLessThan(170);
+        expect(cartoonMark.point.strokeWidth).toBeLessThan(2.5);
+        expect(cartoonMark.strokeWidth).toBeLessThan(5);
+        expect(JSON.stringify(cartoon._theme?.report ?? [])).toContain('same bead on the same string');
+    });
 });
 
 describe('theme chartDefaults', () => {

@@ -45,9 +45,16 @@ export interface TypeRole {
 
 export interface AxisRole {
     line?: Presence;
+    /** Stroke width of the axis rule in px. Presence still decides whether it is drawn. */
+    lineWeight?: number;
     ticks?: Presence;
     tickLength?: 'short' | 'medium' | 'long';
     tickDirection?: 'outward' | 'inward';
+    /**
+     * Distance from the axis rule to its labels in px. For outward ticks, the
+     * tick occupies the first part of this distance.
+     */
+    labelGap?: number;
     /** `opposite` = the far side of the plot (top for x, right for y). */
     placement?: 'default' | 'opposite';
     tickLabels?: 'all' | 'observed' | 'endpoints' | 'sparse';
@@ -176,6 +183,8 @@ export interface ThemeStructure {
         measure?: Presence;
         category?: Presence;
         style?: 'solid' | 'dashed' | 'dotted';
+        /** Stroke width of visible gridlines in px. */
+        weight?: number;
         /**
          * A separate rule where the value axis crosses zero. `omit` leaves
          * zero as an ordinary gridline; anything else draws it in its own
@@ -203,13 +212,15 @@ export interface ThemeMarks {
      */
     cornerRadius?: number;
     /**
-     * A stroke drawn around every filled mark — a bar or a wedge: the
+     * A stroke drawn around every filled mark — a bar, wedge, or point: the
      * "sticker" / flat-illustration edge. It is not a `separator` (which cuts
      * *between* adjacent pieces) nor a `frame` (which bounds the plot): it
      * bounds each mark on its own, so a lone bar carries it too. A bar's
      * outline stands down where the bar is too thin to hold it (so a dense bar
      * chart keeps its fill); a grid cell is a field, held apart by a `tile`
-     * gap, not an outline. `ink` draws it in the house's dark structural ink;
+     * gap, not an outline. Large points keep the outline while dense point
+     * clouds may shrink the whole dot so the border does not turn the plot
+     * into a solid field. `ink` draws it in the house's dark structural ink;
      * `surface` draws it in the page. A house that says nothing leaves its
      * marks unbordered.
      */
@@ -647,7 +658,7 @@ export interface ResolvedMarks {
     fillOpacity?: number;
     /** Corner radius for the value end of a bar, and a wedge's corners, in px. */
     cornerRadius?: number;
-    /** A stroke around each filled bar/wedge: the sticker edge (thin bars skip it). */
+    /** A stroke around each filled bar/wedge/point: the sticker edge (thin bars skip it). */
     outline?: { color: string; width: number };
     point?: { show: boolean; size?: number; filled?: boolean; haloColor?: string; haloWidth?: number };
     /** The area a sized mark may take, smallest to largest, in px². */

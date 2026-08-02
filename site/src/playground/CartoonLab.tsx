@@ -4,9 +4,9 @@
 /**
  * Cartoon lab — hand-authored Vega-Lite mockups of a playful "cartoon" look,
  * laid out as a simple chart grid for look-and-feel inspection. These are
- * manual reference specs (see cartoon-lab-data.ts), NOT theme-pipeline output;
- * they explore what actually reads as *fun* before we commit to a `cartoon`
- * ThemeSpec preset (a first pipeline attempt felt flat).
+ * manual reference specs (see cartoon-lab-data.ts), NOT theme-pipeline output.
+ * They are the design reference for the shipped `cartoon` ThemeSpec preset and
+ * remain useful for checking which parts of that target the pipeline can own.
  */
 
 import { siteTheme } from '../shared/theme';
@@ -23,10 +23,10 @@ export function CartoonLab() {
                 <p style={{ margin: 0, fontSize: 13, color: siteTheme.textMuted, maxWidth: 780 }}>
                     Manual Vega-Lite specs exploring a playful, xkcd-flavoured look — a rounded
                     comic face, a bright crayon palette on warm paper, fat dark "sticker" outlines
-                    on rounded marks, big haloed dots, and emoji markers. These are a design target
-                    for a future <code>cartoon</code> preset, not theme-pipeline output: the first
-                    pipeline pass felt flat, so we're testing which levers actually make it fun
-                    (and which — like emoji markers — the theme spec would need to grow).
+                    on rounded marks, big bordered dots, and emoji markers. These are the design
+                    reference for the shipped <code>cartoon</code> preset, not theme-pipeline
+                    output. The preset now owns the reusable levers; emoji markers remain an
+                    intentionally hand-authored idea outside the theme spec.
                 </p>
             </div>
 

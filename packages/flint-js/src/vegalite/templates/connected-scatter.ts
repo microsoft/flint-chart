@@ -59,7 +59,7 @@ function resolveOrderType(
 export const connectedScatterDef: ChartTemplateDef = {
     chart: "Connected Scatter Plot",
     template: {
-        mark: { type: "line", point: true, interpolate: "linear", strokeWidth: 2 },
+        mark: { type: "line", point: true, interpolate: "linear" },
         encoding: {},
     },
     channels: ["x", "y", "order", "color", "detail", "column", "row"],

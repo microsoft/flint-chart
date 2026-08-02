@@ -16,8 +16,8 @@ import type { ThemePreset } from '../types';
  *   - a rounded comic typeface (Comic Sans / Comic Neue / Chalkboard fallbacks);
  *   - `marks.cornerRadius` — rounded bar tops and wedge corners (balloon/sticker
  *     shapes, not spreadsheet rectangles);
- *   - `marks.outline` — a fat dark border around every filled shape (the sticker
- *     edge that makes a bar look drawn, not printed);
+ *   - `marks.outline` — a fat dark border around every filled shape, including
+ *     dots (the sticker edge that makes a mark look drawn, not printed);
  *
  * over a warm cream-paper canvas, a soft dashed grid, round-capped chunky
  * strokes, and a bright six-crayon palette.
@@ -26,7 +26,7 @@ export const cartoon: ThemePreset = {
     id: 'cartoon',
     label: 'Cartoon',
     description:
-        'A playful comic house: warm cream paper, a rounded comic typeface, fat dark "sticker" outlines and rounded corners on bright crayon-coloured marks, chunky round-capped lines, and a soft dashed grid.',
+        'A playful comic house: warm cream paper, a rounded comic typeface, fat dark "sticker" outlines around bright crayon-coloured bars, wedges and dots, rounded corners, chunky round-capped lines, and a soft dashed grid.',
     guidance: [
         '- `title` carries the naming in a bold rounded comic block; `subtitle` names the measure in a friendly aside.',
         '- Annotate the measure with `unit` in `semantic_types`.',
@@ -131,11 +131,15 @@ export const cartoon: ThemePreset = {
             axis: {
                 categorical: {
                     line: 'full',
+                    lineWeight: 2.5,
                     ticks: 'omit',
+                    labelGap: 7,
                 },
                 measure: {
                     line: 'full',
+                    lineWeight: 2.5,
                     ticks: 'omit',
+                    labelGap: 7,
                 },
             },
             // A soft dashed grid the reader reads values off, only across the
@@ -144,6 +148,7 @@ export const cartoon: ThemePreset = {
                 measure: 'quiet',
                 category: 'omit',
                 style: 'dashed',
+                weight: 1.5,
             },
             frame: 'omit',
             baseline: 'full',
@@ -164,7 +169,9 @@ export const cartoon: ThemePreset = {
                 presence: 'full',
                 fill: 'solid',
                 size: 170,
-                halo: { presence: 'full', width: 3 },
+                // The dark sticker edge is the identity here; a pale halo would
+                // replace it because Vega-Lite gives a point only one stroke.
+                halo: { presence: 'omit' },
             },
             // Wedges swing apart (keeping their dark ring) rather than being cut
             // by a rule that would paint over the outline.

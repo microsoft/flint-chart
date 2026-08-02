@@ -5,15 +5,14 @@
  * Cartoon lab — hand-authored Vega-Lite mockups of a playful, colourful
  * "cartoon" look, in the spirit of xkcd / modern flat illustration.
  *
- * These are NOT theme-pipeline output. They are manual reference specs used to
- * explore what actually reads as *fun* before we commit to a `cartoon`
- * ThemeSpec preset. A first pipeline attempt (font + palette + rounded bars)
- * felt flat, so this lab pushes the levers a theme could eventually own AND a
- * few it may need to grow: thick dark "sticker" outlines on rounded marks, big
- * haloed dots, wobble-free but chunky strokes, emoji markers, and a warm paper
- * canvas with a bright crayon palette.
+ * These are NOT theme-pipeline output. They are manual reference specs for the
+ * shipped `cartoon` ThemeSpec preset. A first pipeline attempt (font + palette
+ * + rounded bars) felt flat, so this lab established the reusable levers the
+ * preset now owns AND a few it still intentionally does not: thick dark
+ * "sticker" outlines on rounded marks and dots, wobble-free but chunky strokes,
+ * emoji markers, and a warm paper canvas with a bright crayon palette.
  *
- * The design tokens we're testing (candidates for the eventual preset):
+ * The design tokens the preset is checked against:
  *   - Type:      a rounded comic face (Comic Sans / Comic Neue / Chalkboard).
  *   - Palette:   bright crayon — sky, coral, sunflower, grass, grape, tangerine.
  *   - Furniture: warm cream paper, dashed soft grid, round-capped axes.

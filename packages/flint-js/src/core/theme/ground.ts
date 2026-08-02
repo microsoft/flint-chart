@@ -593,13 +593,14 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
 
     const gridStyle = structure.grid?.style ?? 'solid';
     const gridDash = gridStyle === 'dashed' ? [3, 3] : gridStyle === 'dotted' ? [1, 3] : undefined;
+    const gridWeight = structure.grid?.weight ?? 1;
 
     const measureGrid: ResolvedRule = {
-        ...rule(structure.grid?.measure, structureInk.grid, 'quiet'),
+        ...rule(structure.grid?.measure, structureInk.grid, 'quiet', gridWeight),
         dash: gridDash,
     };
     const categoryGrid: ResolvedRule = {
-        ...rule(structure.grid?.category, structureInk.grid, 'omit'),
+        ...rule(structure.grid?.category, structureInk.grid, 'omit', gridWeight),
         dash: gridDash,
     };
     // Zero is not one gridline among the others: it is where the measure
@@ -650,8 +651,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // no-measure grid above, a rule under the names is a line under a list.
         const tableGutter = indexing && TABLE_CHARTS.has(ctx.chartType);
         const domain = (indexing && !standsOnIt) || tableGutter
-            ? rule('omit', structureInk.axis, 'omit')
-            : rule(lineSpec?.line, structureInk.axis, indexing ? 'full' : 'omit');
+            ? rule('omit', structureInk.axis, 'omit', lineSpec?.lineWeight ?? 1)
+            : rule(lineSpec?.line, structureInk.axis, indexing ? 'full' : 'omit', lineSpec?.lineWeight ?? 1);
         if (((indexing && !standsOnIt) || tableGutter) && (lineSpec?.line ?? 'full') !== 'omit') {
             say(`structure.axis.categorical.line`, tableGutter
                 ? 'a bar table prints its values in a column — the category axis is a row-header gutter, not a base, so a rule under the names is a line under a list'
@@ -733,7 +734,11 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // of that distance and the padding covers the rest; where the house
         // draws none — or turns them inward — the padding is the whole distance,
         // and 4px leaves the label sitting against the edge of the plot.
-        const labelGap = labelFlush ? 2 : ticksRule.show && !inward ? 4 : 4 + tickLen;
+        const defaultLabelGap = labelFlush ? 2 : 4 + tickLen;
+        const ruleToLabelGap = spec?.labelGap ?? defaultLabelGap;
+        const labelPadding = ticksRule.show && !inward
+            ? Math.max(0, ruleToLabelGap - tickLen)
+            : ruleToLabelGap;
 
         return {
             role,
@@ -748,7 +753,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             label: {
                 ...axisLabelText,
                 limit: truncation === 'never' ? 0 : undefined,
-                padding: labelGap,
+                padding: labelPadding,
                 flush: labelFlush,
                 angle: theme.labels?.angle === 'horizontal' ? 0 : undefined,
             },
