@@ -25,7 +25,7 @@
  *   node scripts/.r2.mjs --pair bar-n30.economist    one 2-panel sheet, large
  */
 
-import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { compile } from 'vega-lite';
@@ -39,6 +39,21 @@ import { R2_CASES, r2Input, type R2Case } from '../site/src/playground/theme-lab
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, '../audit-out/r2');
+
+// resvg loads system fonts, but does not always match display faces by name
+// (e.g. Comic Sans MS for the Cartoon house). Point it at the files so the
+// offline sheets show each house's real type where the font is installed;
+// missing files are dropped so this stays portable.
+const FONT_OPT = {
+    loadSystemFonts: true,
+    fontFiles: [
+        '/System/Library/Fonts/Supplemental/Comic Sans MS.ttf',
+        '/System/Library/Fonts/Supplemental/Comic Sans MS Bold.ttf',
+        '/System/Library/Fonts/Supplemental/ChalkboardSE.ttc',
+        '/Library/Fonts/Comic Sans MS.ttf',
+        '/Library/Fonts/Comic Sans MS Bold.ttf',
+    ].filter((p) => existsSync(p)),
+};
 
 const THEME_IDS = Object.keys(THEME_PRESETS);
 const COLUMNS = ['flint', ...THEME_IDS];
@@ -149,7 +164,7 @@ async function main(): Promise<void> {
         const sheet = contactSheet(panels, 2, `${id} — ${c.probe}`);
         writeFileSync(
             resolve(OUT, `pair.${id}.${theme}.png`),
-            new Resvg(sheet.svg, { fitTo: { mode: 'width', value: Math.round(sheet.width * 2.5) } }).render().asPng(),
+            new Resvg(sheet.svg, { font: FONT_OPT, fitTo: { mode: 'width', value: Math.round(sheet.width * 2.5) } }).render().asPng(),
         );
         console.log(`wrote ${resolve(OUT, `pair.${id}.${theme}.png`)}`);
         return;
@@ -181,7 +196,7 @@ async function main(): Promise<void> {
         const sheet = contactSheet(panels, GRID_COLS, `${c.id}  ·  ${c.gen}[${c.index}]  ·  ${c.probe}`);
         writeFileSync(
             resolve(OUT, `${c.id}.png`),
-            new Resvg(sheet.svg, { fitTo: { mode: 'width', value: sheet.width * 2 } }).render().asPng(),
+            new Resvg(sheet.svg, { font: FONT_OPT, fitTo: { mode: 'width', value: sheet.width * 2 } }).render().asPng(),
         );
         written++;
         process.stdout.write(`\r${written}/${cases.length} ${c.id.padEnd(28)}`);
