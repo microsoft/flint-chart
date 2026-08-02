@@ -31,6 +31,13 @@ export const waterfallChartDef: ChartTemplateDef = {
         const yField: string = y?.field || 'Amount';
         const colorField: string | undefined = color?.field;
 
+        // The assembler has already resolved the axis titles (including any
+        // `field_display_names` override) onto the encodings; the layers below
+        // rebuild their own encoding objects, so carry those titles across
+        // rather than falling back to the raw field names.
+        const xTitle = x?.title ?? xField;
+        const yTitle = y?.title ?? yField;
+
         if (!spec.encoding) spec.encoding = {};
         if (column) spec.encoding.column = column;
         if (row) spec.encoding.row = row;
@@ -115,15 +122,24 @@ export const waterfallChartDef: ChartTemplateDef = {
         spec.transform = transforms;
 
         // ── Shared x encoding ────────────────────────────────────────
+        // Vega-Lite derives an axis title from the field name of every untitled
+        // encoding on a shared scale and concatenates them, so leaving this
+        // untitled surfaced the internal connector column in the rendered axis
+        // ("week, __wf_lead"). An explicit title settles the whole shared scale.
+        // It has to be an explicit title rather than `title: null` on the
+        // internal bindings: a null on a primary channel resolves the merged
+        // axis title to nothing, blanking the axis for every layer.
         const xEnc = {
             field: xField,
             type: "ordinal" as const,
             sort: null,
             // x2 binds the synthetic `__wf_lead` field for the connector span;
             // without an explicit title Vega-Lite folds that helper's name into
-            // the axis title ("Month, __wf_lead"). Pin the title to the real
-            // field so the internal column never surfaces.
-            axis: { labelAngle: -45, title: xField },
+            // the axis title ("Month, __wf_lead"). Pinning the resolved title
+            // here keeps the internal column off the axis and still honours a
+            // caller-supplied label, falling back to the field name.
+            axis: { labelAngle: -45 },
+            title: xTitle,
         };
 
         // ── Preserve facet encodings ─────────────────────────────────
@@ -180,7 +196,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                     y: {
                         field: "__wf_prev_sum",
                         type: "quantitative",
-                        title: yField,
+                        title: yTitle,
                         ...(yDomain ? { scale: { domain: yDomain } } : {}),
                     },
                     y2: { field: "__wf_sum" },
@@ -211,7 +227,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                 encoding: {
                     x: { field: xField, type: "ordinal", sort: null, bandPosition: 0 },
                     x2: { field: "__wf_lead", bandPosition: 1 },
-                    y: { field: "__wf_connector_y", type: "quantitative", title: null },
+                    y: { field: "__wf_connector_y", type: "quantitative", title: yTitle },
                 },
             },
         ];
@@ -239,7 +255,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         fill: "#374151",
                     },
                     encoding: {
-                        y: { field: "__wf_sum", type: "quantitative", title: null },
+                        y: { field: "__wf_sum", type: "quantitative", title: yTitle },
                         text: { field: "__wf_sum", type: "quantitative", format: labelFormat },
                     },
                 },
@@ -254,7 +270,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         fontSize: labelFontSize,
                     },
                     encoding: {
-                        y: { field: "__wf_center", type: "quantitative", title: null },
+                        y: { field: "__wf_center", type: "quantitative", title: yTitle },
                         text: { field: "__wf_delta_text", type: "nominal" },
                         color: {
                             condition: { test: "datum.__wf_color === 'total'", value: "#725a30" },
