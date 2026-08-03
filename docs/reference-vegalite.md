@@ -106,6 +106,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
@@ -115,6 +116,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-column-stacked.svg) Stacked Bar Chart
 
@@ -135,6 +137,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-waterfall.svg) Waterfall Chart
 
@@ -144,8 +147,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `0` | always | Corner radius for supported marks. |
 | `totals` | choice | `auto` (Auto), `none` (None), `first` (First), `last` (Last), `both` (Both) | `auto` | conditional | Totals |
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
+| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks (legacy spelling of showValueLabels). |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-gantt.svg) Gantt Chart
 
@@ -236,7 +240,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-candlestick.svg) Candlestick Chart
 
@@ -352,6 +358,7 @@ _No template-specific parameters._
 | `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
@@ -359,9 +366,10 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
+| `innerRadius` | number | 0 – 100 (step 5) | `50` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
 
@@ -373,6 +381,7 @@ _No template-specific parameters._
 | `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-radar.svg) Radar Chart
 
@@ -397,10 +406,11 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
+| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks (legacy spelling of showValueLabels). |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. |
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 

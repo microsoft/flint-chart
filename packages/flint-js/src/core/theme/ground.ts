@@ -106,6 +106,18 @@ export interface GroundingContext {
     titled?: boolean;
     /** The surface the host page provides, if the theme defers to it. */
     hostSurface?: string;
+    /**
+     * The reader's own answer to "print the numbers?", from
+     * `chartProperties.showValueLabels`.
+     *
+     * Absent leaves the house's `dataLabels.show` policy in charge — that
+     * policy is what seeds the control in the first place. A present value is
+     * a decision someone made about *this* chart, so it outranks the standing
+     * preference — but `on` is a preference to print, not a licence to
+     * overprint: it still yields where the marks are too dense to read,
+     * exactly as a house's own `always` does.
+     */
+    valueLabels?: 'on' | 'off';
 }
 
 // ---------------------------------------------------------------------------
@@ -918,7 +930,23 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         say('dataLabels.inkMode',
             'no ink mode declared but the label sits on the mark — it contrasts with what it is printed on');
     }
-    let dlShow = dl.show === 'always';
+    // The reader's own answer outranks the house's standing preference: `off`
+    // is a decision that this chart carries no numbers, `on` that it does.
+    // `auto` (and absence) leaves the house in charge. `on` becomes `always`
+    // rather than an unconditional print, so it inherits the density guard
+    // below — a control that can bury a chart in unreadable numbers is not a
+    // control, it is a trap.
+    const dlShowPolicy: 'always' | 'whenTheyFit' | 'never' | undefined =
+        ctx.valueLabels === 'off' ? 'never'
+            : ctx.valueLabels === 'on' ? 'always'
+                : dl.show;
+    if (ctx.valueLabels === 'on' || ctx.valueLabels === 'off') {
+        if (dlShowPolicy !== dl.show) {
+            say('dataLabels.show',
+                `the chart asked for value labels \`${ctx.valueLabels}\`, overriding the house's \`${dl.show ?? 'unset'}\``);
+        }
+    }
+    let dlShow = dlShowPolicy === 'always';
 
     // A cell in a grid *is* a position. The reader finds it by its row and its
     // column, and the number goes in the middle of it — the measure being on
@@ -957,36 +985,42 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                         : 'no banded axis to key values to — one number per datum would be noise, not a label');
     }
 
-    if (dl.show === 'always' && dlShow) {
+    // Both policies read fit from the same two facts — a band wide enough to
+    // stand a number in, and few enough marks that the numbers do not pile up
+    // — and differ only in where they draw the line. Computing them once also
+    // gives the honest answer to "could this chart carry labels at all?",
+    // which is what a host needs to decide whether offering the control is
+    // meaningful.
+    const labelBand = signals.hasBandedAxis
+        ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)
+        : Infinity;
+    const labelMarks = Math.max(1, signals.categoryCount || ctx.table.length)
+        * Math.max(1, signals.seriesCount);
+    const bandHoldsNumber = labelBand >= (valueLabel.fontSize ?? 10) + 4;
+    // The hard ceiling: past this the numbers cannot be read whoever asked for
+    // them, so it binds `always` and an explicit `on` alike.
+    const readableAtAll = bandHoldsNumber && labelMarks <= 120;
+
+    if (dlShowPolicy === 'always' && dlShow) {
         // `always` is a preference to print, not a licence to overprint. It
-        // reads fit by the same two facts `whenTheyFit` does — a band wide
-        // enough to stand a number in, and few enough marks that the numbers do
-        // not pile up — but it holds to that preference further: it keeps
-        // printing past `whenTheyFit`'s comfort margin, onto the tight-but-
-        // legible charts the cautious houses leave to a legend, and yields only
-        // when the marks are genuinely too dense (a hundred-odd bars, a dozen-
-        // plus pie slices) for the numbers to be read.
-        const band = signals.hasBandedAxis
-            ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)
-            : Infinity;
-        const marksOnScreen = Math.max(1, signals.categoryCount || ctx.table.length) * Math.max(1, signals.seriesCount);
-        if (band < (valueLabel.fontSize ?? 10) + 4 || marksOnScreen > 120) {
+        // holds to that preference past `whenTheyFit`'s comfort margin, onto
+        // the tight-but-legible charts the cautious houses leave to a legend,
+        // and yields only when the marks are genuinely too dense (a hundred-odd
+        // bars, a dozen-plus pie slices) for the numbers to be read.
+        if (!readableAtAll) {
+            const asked = ctx.valueLabels === 'on' ? 'the chart asked to print values, but' : '`always` overridden —';
             dlShow = false;
-            say('dataLabels.show', band < (valueLabel.fontSize ?? 10) + 4
-                ? `\`always\` overridden — a ${Math.round(band)}px band cannot hold a number`
-                : `\`always\` overridden — ${marksOnScreen} marks would pile the numbers past reading`);
+            say('dataLabels.show', !bandHoldsNumber
+                ? `${asked} a ${Math.round(labelBand)}px band cannot hold a number`
+                : `${asked} ${labelMarks} marks would pile the numbers past reading`);
         }
     }
 
-    if (dl.show === 'whenTheyFit') {
-        const band = signals.hasBandedAxis
-            ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)
-            : Infinity;
-        const marksOnScreen = Math.max(1, signals.categoryCount || ctx.table.length) * Math.max(1, signals.seriesCount);
-        dlShow = labelable && band >= (valueLabel.fontSize ?? 10) + 4 && marksOnScreen <= 40;
+    if (dlShowPolicy === 'whenTheyFit') {
+        dlShow = labelable && bandHoldsNumber && labelMarks <= 40;
         if (!dlShow) {
             say('dataLabels.show', labelable
-                ? `\`whenTheyFit\` resolved to false (band ${Math.round(band)}px, ${marksOnScreen} marks)`
+                ? `\`whenTheyFit\` resolved to false (band ${Math.round(labelBand)}px, ${labelMarks} marks)`
                 : '`whenTheyFit` resolved to false — no banded axis to key values to');
         }
     }
@@ -1333,6 +1367,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         },
         dataLabels: {
             show: dlShow,
+            possible: labelable && readableAtAll,
             placement: dlPlacement,
             inkMode: dlInkMode,
             text: valueLabel,

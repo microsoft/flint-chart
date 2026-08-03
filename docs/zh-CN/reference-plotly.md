@@ -100,7 +100,7 @@ _无模板专用参数。_
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
 | `totals` | choice | `auto` (Auto), `none` (None), `first` (First only), `last` (Last only), `both` (First and last) | `auto` | always | 瀑布图总计标记。 |
-| `showTextLabels` | toggle | on / off | `false` | always | 在标记上显示数值标签。 |
+| `showTextLabels` | toggle | on / off | `false` | always | 在标记上显示数值标签（showValueLabels 的旧写法）。 |
 
 ### ![](chart-icon-pyramid.svg) Pyramid Chart
 

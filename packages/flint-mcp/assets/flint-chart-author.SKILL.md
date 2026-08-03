@@ -430,7 +430,8 @@ derived). Values are clamped to the ranges shown.
 | Lollipop | `dotSize` | 20–300 (80) | Circle size (px) |
 | Waterfall | `cornerRadius` | 0–8 (0) | Round bar corners |
 | Waterfall | `totals` | `auto` \| `none` \| `first` \| `last` \| `both` (`auto`) | Which bars anchor to zero as totals (only when no Type column) |
-| Waterfall | `showTextLabels` | boolean (false) | Render value labels on bars |
+| Waterfall | `showTextLabels` | boolean (false) | Legacy spelling of `showValueLabels`; still accepted |
+| Bar / Grouped Bar / Lollipop / Pyramid / Pie / Donut / Rose / Heatmap / Waterfall | `showValueLabels` | boolean | Print the numbers on the marks. Leave it unset to follow the theme's own habit — the default the compiler reports is the house's answer at this density. Set it to overrule the house for one chart. Reported inapplicable (and ignored) when the marks are too dense to carry readable numbers, so it can never overprint a chart. |
 | Regression | `regressionMethod` | `linear` \| `log` \| `exp` \| `pow` \| `quad` \| `poly` (`linear`) | Fit method |
 | Regression | `polyOrder` | 1–5 (3) | Polynomial order (when `poly`) |
 | Radar | `filled` | boolean (true) | Fill the polygon |

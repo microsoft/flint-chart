@@ -156,6 +156,18 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         )
         : [];
 
+    // One toggle, whichever way the template draws the numbers. A few charts
+    // print their own value labels from a boolean of their own (`showTextLabels`
+    // on waterfall and heatmap) instead of going through the theme's data-label
+    // layer. Translating the reader's answer into that boolean here means a host
+    // offers `showValueLabels` and never has to know which kind of chart it is
+    // looking at. Silence stays silent: with no answer the template keeps its
+    // own default, which a house can still move via `chartDefaults`.
+    if (chartProperties && templateOwnsValueLabels(chartTemplate)) {
+        const choice = resolveValueLabelChoice(chartProperties);
+        if (choice) chartProperties.showTextLabels = choice === 'on';
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
     // ═══════════════════════════════════════════════════════════════════════
@@ -760,6 +772,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             partToWhole: markTypes.includes('arc'),
             titled: Boolean(vgObj.title),
             hostSurface: (input.options as any)?.background,
+            valueLabels: resolveValueLabelChoice(chartProperties),
         });
         const realizeReport = realizeThemeVegaLite(vgObj, themeDecisions, values);
         themeDecisions = {
@@ -805,13 +818,34 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         data,
         chartProperties,
     };
+    const ownsLabels = templateOwnsValueLabels(chartTemplate);
     const layoutCoupledRecommendation: Record<string, any> = {
         independentYAxis: computedIndependentYAxis,
+        // Seed the labels toggle from what the house and the density actually
+        // decided, so an untouched control shows the theme's own habit and
+        // re-seeds when the reader switches theme. Where the template owns its
+        // labels, its own boolean is the honest answer.
+        showValueLabels: ownsLabels
+            ? chartProperties?.showTextLabels === true
+            : themeDecisions?.dataLabels?.show,
+    };
+    // Whether offering a labels control means anything is a question about the
+    // resolved layout and the house's policy, so only the grounded theme can
+    // answer it: no theme means no data-label layer to govern, and a chart too
+    // dense to read numbers on cannot be argued into it. Templates that print
+    // their own labels are the exception — they need neither.
+    const themeCoupledApplicability: Record<string, boolean> = {
+        showValueLabels: ownsLabels || themeDecisions?.dataLabels?.possible === true,
+        // The older spelling stays an accepted *input* for compatibility, but a
+        // host should be shown one switch, not two that fight.
+        showTextLabels: false,
     };
 
     result._options = (chartTemplate.properties ?? []).map((def): ChartOption => {
         const ev = def.check?.(evalCtx);
-        const applicable = ev ? ev.applicable : true;
+        const applicable = def.key in themeCoupledApplicability
+            ? themeCoupledApplicability[def.key]
+            : ev ? ev.applicable : true;
         const recommended = layoutCoupledRecommendation[def.key] ?? ev?.recommendedValue;
         const value = chartProperties?.[def.key] ?? recommended ?? def.defaultValue;
         // Strip the `check` rule — a ChartOption is the resolved, serializable
@@ -857,6 +891,34 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         result._pivot = legacyPivot.surface;
     }
     return result;
+}
+
+/**
+ * What the caller asked for on value labels, in one word.
+ *
+ * `showValueLabels` is the control; `showTextLabels` is the older boolean some
+ * templates and hosts still pass, and it keeps working — `true` means print,
+ * `false` means the caller never touched it (it was the key's default), so it
+ * reads as `auto` rather than as a demand for silence. Only the tri-state can
+ * say "off".
+ */
+/**
+ * Does this template print its own value labels, rather than leaving them to
+ * the theme's data-label layer? Waterfall and heatmap do, via `showTextLabels`.
+ */
+function templateOwnsValueLabels(template: ChartTemplateDef): boolean {
+    return (template.properties ?? []).some((p) => p.key === 'showTextLabels');
+}
+
+function resolveValueLabelChoice(
+    chartProperties: Record<string, any> | undefined,
+): 'on' | 'off' | undefined {
+    const choice = chartProperties?.showValueLabels;
+    if (typeof choice === 'boolean') return choice ? 'on' : 'off';
+    // `showTextLabels` is the older, template-owned spelling of the same wish.
+    // Only `true` is meaningful: it was the opt-in for charts that print their
+    // own numbers, so `false` means "never asked", not "asked for silence".
+    return chartProperties?.showTextLabels === true ? 'on' : undefined;
 }
 
 /**

@@ -660,6 +660,17 @@ export interface ResolvedDataLabels {
      * outside label would fall off the plot. The mirror of `insideMinValue`.
      */
     outsideMaxValue?: number;
+    /**
+     * Whether this chart could carry value labels *at all* — structurally
+     * labelable, and not so dense that the numbers would be unreadable however
+     * firmly they were asked for.
+     *
+     * `show` is what the house decided; this is what the chart permits. A host
+     * reads it to know whether offering the reader a labels control is
+     * meaningful: where it is false the control can do nothing, so it is not
+     * shown rather than shown broken.
+     */
+    possible: boolean;
 }
 
 export interface ResolvedMarks {
