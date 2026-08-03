@@ -608,6 +608,35 @@ export function FlintAppInner(props: {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'downloaded' | 'error'>('idle');
   const [copyError, setCopyError] = useState<string | null>(null);
   const renderSeq = useRef(0);
+  // The width the chart actually has. Rendering into the real width means the
+  // finished SVG is shown at 1:1 rather than being scaled down to fit, which
+  // is what otherwise shrinks every label below the app's own chrome. Height
+  // is deliberately not measured: the frame grows to the chart.
+  const [chartWidth, setChartWidth] = useState<number | null>(null);
+  const chartBoxObserver = useRef<ResizeObserver | null>(null);
+
+  // Measure the chart frame, quantised so a scrollbar appearing and vanishing
+  // cannot start an oscillation between two neighbouring sizes.
+  const measureChartBox = useCallback((node: HTMLDivElement | null) => {
+    chartBoxObserver.current?.disconnect();
+    chartBoxObserver.current = null;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const read = () => {
+      const style = window.getComputedStyle(node);
+      // `clientWidth` already excludes any scrollbar, so the reading does not
+      // shrink in response to the chart it is measuring.
+      const width = node.clientWidth
+        - parseFloat(style.paddingLeft || '0') - parseFloat(style.paddingRight || '0');
+      if (!(width > 0)) return;
+      const next = Math.max(0, Math.floor(width / 8) * 8);
+      setChartWidth((prev) => (prev === next ? prev : next));
+    };
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(node);
+    chartBoxObserver.current = observer;
+  }, []);
+  useEffect(() => () => chartBoxObserver.current?.disconnect(), []);
 
   // Re-seed when a new tool input arrives from the host.
   useEffect(() => setCurrent(input), [input]);
@@ -624,7 +653,7 @@ export function FlintAppInner(props: {
     const seq = ++renderSeq.current;
     setCopyStatus('idle');
     const handle = setTimeout(() => {
-      renderFlintSvg(current)
+      renderFlintSvg(current, undefined, chartWidth ? { width: chartWidth } : undefined)
         .then((result) => {
           if (seq === renderSeq.current) {
             setRender(result);
@@ -638,7 +667,7 @@ export function FlintAppInner(props: {
         });
     }, 100);
     return () => clearTimeout(handle);
-  }, [current]);
+  }, [current, chartWidth]);
 
   const model = useMemo(() => buildPanelModel(current), [current]);
   const canReset = useMemo(
@@ -716,10 +745,14 @@ export function FlintAppInner(props: {
             <strong>Could not render chart</strong>
             <pre>{error}</pre>
           </div>
-        ) : render ? (
-          <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
         ) : (
-          <div className="placeholder">Rendering…</div>
+          // The frame is always mounted, so its size is known before the first
+          // render and the chart can be assembled to fit it straight away.
+          <div className="chart" ref={measureChartBox}>
+            {render
+              ? <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
+              : <span className="chart-pending">Rendering…</span>}
+          </div>
         )}
 
         {warnings.length > 0 && (

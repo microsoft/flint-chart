@@ -15,6 +15,9 @@
   --font: Arial, Roboto, "Helvetica Neue", sans-serif;
   --option-cell-width: 176px;
   --option-readout-width: 44px;
+  /* The tallest a chart may be drawn. Keep in step with the height in
+     APP_PREVIEW_CANVAS_SIZE (packages/flint-mcp/ui/src/render.ts). */
+  --chart-max-height: 468px;
 }
 
 * {
@@ -53,18 +56,41 @@ body {
   min-width: 0;
 }
 
+/* The chart frame. Its width is measured and handed to the assembler, so the
+   SVG should already fit across; the `max-*` rules are a backstop for specs
+   that state their own size and so opt out of the preview's sizing.
+
+   Height is deliberately not fixed. A title, deck, legend and axis can take
+   145px before the plot gets any, so pinning a short frame and scaling the
+   graphic down shrinks the type below the app's own 11px chrome. The frame
+   grows to the chart instead, up to --chart-max-height.
+
+   That cap is a length, not a percentage, and is repeated on the SVG below.
+   A percentage `max-height` resolves against the parent's height, and this
+   parent has none to give — so the SVG would render at full height, the frame
+   would stop at its cap, and the difference would become a scrollbar. */
 .chart {
   background: var(--paper);
   padding: 6px;
   display: flex;
   width: 100%;
   max-width: 600px;
-  height: 75vw;
-  max-height: 360px;
+  min-height: 220px;
+  /* Content box + the 6px padding either side (box-sizing: border-box). */
+  max-height: calc(var(--chart-max-height) + 12px);
   margin-inline: auto;
   justify-content: center;
   align-items: center;
   overflow: auto;
+}
+
+/* The SVG is the flex item; this wrapper only carries the markup. */
+.chart-svg {
+  display: contents;
+}
+
+.chart-pending {
+  color: var(--muted);
 }
 
 .chart svg {
@@ -72,16 +98,10 @@ body {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 100%;
+  max-height: var(--chart-max-height);
   flex: none;
 }
 
-.placeholder {
-  border: 1px solid var(--hairline);
-  padding: 40px;
-  text-align: center;
-  color: var(--muted);
-}
 
 .error {
   border: 1px solid var(--hairline);
