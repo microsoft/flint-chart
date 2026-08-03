@@ -10,6 +10,13 @@ type Example = {
   input: ChartAssemblyInput;
 };
 
+// Every fixture carries a headline and a deck, because every real call does.
+// They are also the part of a chart a house has most to say about — the type
+// scale is set on them and the Economist hangs its masthead tab off them — so
+// a titleless fixture makes the theme switch look like it does almost nothing.
+// Sizes are left unstated for the same reason: a stated size outranks the
+// house's own footprint, and the widget's sizing is one of the things this
+// page exists to exercise.
 const lineInput: ChartAssemblyInput = {
   data: {
     values: [
@@ -37,12 +44,12 @@ const lineInput: ChartAssemblyInput = {
       y: { field: 'commits' },
       color: { field: 'area' },
     },
+    title: 'Where the commits went',
+    subtitle: 'Commits per month, 2026',
     chartProperties: {
       interpolate: 'monotone',
       showPoints: true,
     },
-    baseSize: { width: 360, height: 360 },
-    canvasSize: { width: 720, height: 720 },
   },
   options: { addTooltips: true },
   field_display_names: {
@@ -74,9 +81,9 @@ const scatterInput: ChartAssemblyInput = {
       y: { field: 'mpg' },
       color: { field: 'origin' },
     },
+    title: 'Heavier cars, thirstier engines',
+    subtitle: 'Miles per gallon against kerb weight, tonnes',
     chartProperties: { opacity: 0.8 },
-    baseSize: { width: 360, height: 360 },
-    canvasSize: { width: 720, height: 720 },
   },
   options: { addTooltips: true },
   field_display_names: { weight: 'Weight', mpg: 'MPG', origin: 'Origin' },
@@ -103,9 +110,9 @@ const areaInput: ChartAssemblyInput = {
       y: { field: 'hours' },
       color: { field: 'stage' },
     },
+    title: 'Build overtakes design',
+    subtitle: 'Hours logged by stage, 2026',
     chartProperties: { interpolate: 'monotone' },
-    baseSize: { width: 360, height: 360 },
-    canvasSize: { width: 720, height: 720 },
   },
   options: { addTooltips: true },
   field_display_names: { month: 'Month', stage: 'Stage', hours: 'Hours' },
@@ -128,9 +135,9 @@ const barInput: ChartAssemblyInput = {
       x: { field: 'team' },
       y: { field: 'wins' },
     },
+    title: 'The Bears run away with it',
+    subtitle: 'Wins, regular season',
     chartProperties: { cornerRadius: 3 },
-    baseSize: { width: 360, height: 360 },
-    canvasSize: { width: 720, height: 720 },
   },
   options: { addTooltips: true },
   field_display_names: { team: 'Team', wins: 'Wins' },
@@ -162,8 +169,12 @@ const sparklineInput: ChartAssemblyInput = {
       y: { field: 'latency' },
       color: { field: 'service' },
     },
+    title: 'Latency, service by service',
+    subtitle: 'Median response in ms, last 14 days',
     chartProperties: { interpolate: 'monotone' },
     // Sparklines want a wide, short canvas: long traces packed into short rows.
+    // The only fixture that states a size, so the app's other sizing branch —
+    // caller said, so nobody else gets a say — stays covered here too.
     baseSize: { width: 720, height: 360 },
     canvasSize: { width: 720, height: 360 },
   },
