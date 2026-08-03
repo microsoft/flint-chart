@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { BACKENDS } from '../shared/supported-backends';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
+import { ThemePicker } from './ThemePicker';
 import { PREVIEW_CASES, type PreviewCase } from './new-case-preview-data';
 
 /** VL if it has a template for the chart type, else fall back to Plotly. */
@@ -11,7 +12,7 @@ function pickBackend(chartType: string): 'vegalite' | 'plotly' {
     return BACKENDS.vegalite.getTemplateDef(chartType) ? 'vegalite' : 'plotly';
 }
 
-function buildInput(c: PreviewCase) {
+function buildInput(c: PreviewCase, themeId: string | undefined) {
     return {
         data: { values: c.data },
         semantic_types: c.semantic_types,
@@ -21,6 +22,9 @@ function buildInput(c: PreviewCase) {
             baseSize: { width: 300, height: 200 },
             ...(c.chartProperties ? { chartProperties: c.chartProperties } : {}),
         },
+        // Only Vega-Lite reads this; Plotly ignores it, so a Plotly tile stays
+        // on Flint's defaults and the wall shows honestly how far a house reaches.
+        ...(themeId ? { theme_spec: themeId } : {}),
     } as any;
 }
 
@@ -77,15 +81,15 @@ const FAMILY_OF: Record<string, (typeof FAMILY_ORDER)[number]> = {
 
 const familyOf = (chartType: string) => FAMILY_OF[chartType] ?? 'Points & correlation';
 
-function CaseCard({ c }: { c: PreviewCase }) {
+function CaseCard({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
     const backend = pickBackend(c.chartType);
     const compiled = useMemo(() => {
         try {
-            return { ok: true as const, value: BACKENDS[backend].assemble(buildInput(c)) };
+            return { ok: true as const, value: BACKENDS[backend].assemble(buildInput(c, themeId)) };
         } catch (err) {
             return { ok: false as const, err };
         }
-    }, [c, backend]);
+    }, [c, backend, themeId]);
 
     return (
         <article
@@ -114,6 +118,7 @@ function CaseCard({ c }: { c: PreviewCase }) {
 }
 
 export function DemoWall() {
+    const [themeId, setThemeId] = useState<string | undefined>(undefined);
     const groups = useMemo(() => {
         const byFamily = new Map<string, { c: PreviewCase; index: number }[]>();
         PREVIEW_CASES.forEach((c, index) => {
@@ -130,11 +135,9 @@ export function DemoWall() {
         <div className="dev-page">
             <header className="dev-page-heading">
                 <h1>Demo wall <span style={{ fontSize: 14, fontWeight: 400, color: siteTheme.navInactive }}>({PREVIEW_CASES.length} candidates)</span></h1>
-                <p style={{ color: siteTheme.textMuted, maxWidth: 760, fontSize: 13 }}>
-                    Candidate real-world datasets, grouped by family. Rendered with Vega-Lite by
-                    default, Plotly where the chart type isn't in Vega-Lite. Hover a tile for its
-                    source, license and row count.
-                </p>
+                <div style={{ marginTop: 10 }}>
+                    <ThemePicker themeId={themeId} onTheme={setThemeId} />
+                </div>
             </header>
             {groups.map(({ fam, items }) => (
                 <section key={fam} style={{ margin: '18px 0 6px', width: 'min(100%, 1500px)' }}>
@@ -143,7 +146,7 @@ export function DemoWall() {
                     </h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 10 }}>
                         {items.map(({ c }) => (
-                            <CaseCard key={c.id} c={c} />
+                            <CaseCard key={c.id} c={c} themeId={themeId} />
                         ))}
                     </div>
                 </section>

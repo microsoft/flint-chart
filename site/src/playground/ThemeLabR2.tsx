@@ -88,10 +88,6 @@ export function ThemeLabR2() {
                 <h2 style={{ margin: '0 0 4px', fontSize: 18, color: siteTheme.text }}>
                     Theme lab · round 2 (coverage)
                 </h2>
-                <p style={{ margin: 0, fontSize: 13, color: siteTheme.textMuted, maxWidth: 720 }}>
-                    Gallery cases the compiler was never tuned against, each read as all six houses.
-                    Held-out criterion: nothing broken, illegible or absurd, and the house present.
-                </p>
             </div>
 
             <nav

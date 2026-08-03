@@ -80,14 +80,11 @@ export function ThemeLabReal() {
         <div style={{ padding: '8px 4px 64px' }}>
             <div style={{ marginBottom: 12 }}>
                 <h2 style={{ margin: '0 0 4px', fontSize: 18, color: siteTheme.text }}>
-                    Theme lab · real data
+                    Theme lab · real data{' '}
+                    <span style={{ fontSize: 13, fontWeight: 400, color: siteTheme.textMuted }}>
+                        ({REAL_CASES.length} cases)
+                    </span>
                 </h2>
-                <p style={{ margin: 0, fontSize: 13, color: siteTheme.textMuted, maxWidth: 720 }}>
-                    The r1 theme-lab real-world datasets, each read as Flint plus all seven houses — the
-                    browser twin of the <code>audit-out/real/</code> contact sheets. Real labels,
-                    distributions and negatives stress the themes in ways the synthetic R2 corpus does not.
-                    {' '}{REAL_CASES.length} VL-supported cases.
-                </p>
             </div>
 
             <nav

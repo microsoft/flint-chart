@@ -79,9 +79,6 @@ export function PlaygroundShell() {
         </nav>
       </header>
       <main className="dev-content" style={{ color: siteTheme.text }}>
-        <p className="dev-workbench-note">
-          You shouldn't be here! This is the lab where I test new features. Curious what&apos;s next? Ping me and let&apos;s grab coffee.
-        </p>
         <Outlet />
       </main>
     </div>

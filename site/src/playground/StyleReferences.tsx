@@ -34,6 +34,7 @@ export function StyleReferences() {
                         <NavLink
                             key={r.id}
                             to={`../style-references/${r.id}`}
+                            title={`${r.blurb}\n\nRefs: ${r.refs}`}
                             style={({ isActive }) => ({
                                 padding: '4px 12px',
                                 fontSize: 13,
@@ -49,12 +50,6 @@ export function StyleReferences() {
                     ))}
                 </div>
 
-                <p style={{ margin: '0 0 4px', fontSize: 13, color: siteTheme.textMuted, maxWidth: 780 }}>
-                    {reference.blurb}
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: siteTheme.textMuted, maxWidth: 780 }}>
-                    These are manual specs, <strong>not</strong> theme-pipeline output. Refs: {reference.refs}
-                </p>
             </div>
 
             <div
