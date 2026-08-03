@@ -670,6 +670,19 @@ export interface ResolvedDataLabels {
      */
     outsideMaxValue?: number;
     /**
+     * The smallest share of the measure axis a stacked segment may occupy and
+     * still be labelled — a line of text over the plot's extent along that
+     * axis. Segments below it get no number: it would not fit between the
+     * segment's edges and would read as its neighbour's.
+     *
+     * A share rather than a value because the two stack modes divide by
+     * different totals — the tallest stack when the bars are summed, each
+     * bar's own total when they are normalized. Grounding owns it because
+     * only grounding knows the plot's size; by the time a spec is assembled
+     * the height may be a step or a container, not a number.
+     */
+    segmentMinShare?: number;
+    /**
      * Whether this chart could carry value labels *at all* — structurally
      * labelable, and not so dense that the numbers would be unreadable however
      * firmly they were asked for.

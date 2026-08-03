@@ -237,3 +237,146 @@ describe('showValueLabels on templates that print their own labels', () => {
       .toBe(strip(assembleVegaLite(rose({ showValueLabels: false }))));
   });
 });
+
+/**
+ * Bars that share a band — grouped and stacked.
+ *
+ * Both divide the room a single bar would have had, and each divides it a
+ * different way, so each needs its own fit test:
+ *
+ *   - a *grouped* bar splits the band across the categorical axis, so the room
+ *     for a number is the band over the series count. The applicability test
+ *     used to read the whole band while the renderer read the slot, so between
+ *     those two readings the control was offered on charts that then printed
+ *     nothing; the horizontal case had no slot test at all and printed a
+ *     hundred-odd clipped numbers over each other.
+ *   - a *stacked* bar keeps the whole band but splits the measure axis, so
+ *     what has to hold a line of text is each segment's own thickness. The
+ *     number goes in the middle of the segment: at the edge it reads as the
+ *     running total, which is why stacks went unlabelled before.
+ */
+describe('value labels on bars that share a band', () => {
+  const grid = (cats: number, series: number, value: (c: number, s: number) => number) => {
+    const out: any[] = [];
+    for (let c = 0; c < cats; c++) {
+      for (let s = 0; s < series; s++) out.push({ cat: `C${c + 1}`, grp: `S${s + 1}`, val: value(c, s) });
+    }
+    return out;
+  };
+  const spread = (c: number, s: number) => 10 + ((c * 7 + s * 13) % 60);
+
+  const sharedBar = (
+    chartType: 'Grouped Bar Chart' | 'Stacked Bar Chart',
+    cats: number,
+    series: number,
+    opts: { horizontal?: boolean; props?: Record<string, unknown>; value?: (c: number, s: number) => number } = {},
+  ) => ({
+    data: { values: grid(cats, series, opts.value ?? spread) },
+    semantic_types: { cat: 'nominal', grp: 'nominal', val: 'quantitative' },
+    chart_spec: {
+      chartType,
+      encodings: chartType === 'Grouped Bar Chart'
+        ? (opts.horizontal ? { y: 'cat', x: 'val', group: 'grp' } : { x: 'cat', y: 'val', group: 'grp' })
+        : (opts.horizontal ? { y: 'cat', x: 'val', color: 'grp' } : { x: 'cat', y: 'val', color: 'grp' }),
+      baseSize: { width: 800, height: 420 },
+      ...(opts.props ? { chartProperties: opts.props } : {}),
+    },
+    theme_spec: 'nyt',
+  }) as any;
+
+  /** The synthetic label layer, wherever it ended up. */
+  const labelLayer = (spec: any): any => {
+    let found: any;
+    const walk = (node: any) => {
+      if (!node || typeof node !== 'object' || found) return;
+      if (Array.isArray(node)) { node.forEach(walk); return; }
+      const mark = typeof node.mark === 'string' ? node.mark : node.mark?.type;
+      if (mark === 'text' && node.__themeSynthetic) { found = node; return; }
+      for (const key of Object.keys(node)) if (key !== 'mark') walk(node[key]);
+    };
+    walk(spec);
+    return found;
+  };
+
+  describe('grouped bars offer the control only where the slot holds the number', () => {
+    for (const horizontal of [false, true]) {
+      const way = horizontal ? 'horizontal' : 'vertical';
+
+      it(`${way}: a roomy grid both offers and prints`, () => {
+        const input = sharedBar('Grouped Bar Chart', 4, 3, { horizontal });
+        expect(option(input, 'showValueLabels')?.applicable).toBe(true);
+        const on = sharedBar('Grouped Bar Chart', 4, 3, { horizontal, props: { showValueLabels: true } });
+        expect(countTextMarks(assembleVegaLite(on))).toBeGreaterThan(0);
+      });
+
+      it(`${way}: a crowded grid withholds the control rather than offering it inert`, () => {
+        // 20 categories x 6 series leaves each bar a few pixels: the numbers
+        // would overlap and clip. The control must be withheld *and* silent —
+        // offering it while printing nothing is the bug this pins down.
+        const input = sharedBar('Grouped Bar Chart', 20, 6, { horizontal });
+        expect(option(input, 'showValueLabels')?.applicable).toBe(false);
+        const on = sharedBar('Grouped Bar Chart', 20, 6, { horizontal, props: { showValueLabels: true } });
+        expect(countTextMarks(assembleVegaLite(on))).toBe(0);
+      });
+    }
+  });
+
+  describe('stacked bars label each segment, in the middle of it', () => {
+    it('offers the control and prints a number per segment', () => {
+      const input = sharedBar('Stacked Bar Chart', 6, 3);
+      expect(option(input, 'showValueLabels')?.applicable).toBe(true);
+      const layer = labelLayer(assembleVegaLite(sharedBar('Stacked Bar Chart', 6, 3, { props: { showValueLabels: true } })));
+      expect(layer).toBeTruthy();
+      // Centred in the segment, not at its edge: the edge reads as the total.
+      expect(layer.encoding.y.stack).toBeTruthy();
+      expect(layer.encoding.y.bandPosition).toBe(0.5);
+      expect(layer.mark.baseline).toBe('middle');
+    });
+
+    it('stacks its labels in the same order as the bars', () => {
+      // Vega-Lite reads stack order off the colour field, which the label
+      // layer does not carry; without a stated order every number lands on a
+      // neighbour's segment. The two axes run opposite ways, so the order that
+      // matches the bars flips with the orientation.
+      const vertical = labelLayer(assembleVegaLite(
+        sharedBar('Stacked Bar Chart', 6, 3, { props: { showValueLabels: true } })));
+      expect(vertical.encoding.order).toMatchObject({ field: 'grp', sort: 'descending' });
+      const horizontal = labelLayer(assembleVegaLite(
+        sharedBar('Stacked Bar Chart', 6, 3, { horizontal: true, props: { showValueLabels: true } })));
+      expect(horizontal.encoding.order).toMatchObject({ field: 'grp', sort: 'ascending' });
+    });
+
+    it('drops the number from segments too thin to hold it', () => {
+      // One series is a sliver against the others; it cannot carry a line of
+      // text, so it is hidden by opacity — not dropped, which would restack
+      // the surviving labels onto the wrong segments.
+      const sliver = (_c: number, s: number) => (s === 0 ? 1 : 60);
+      const layer = labelLayer(assembleVegaLite(
+        sharedBar('Stacked Bar Chart', 6, 3, { props: { showValueLabels: true }, value: sliver })));
+      expect(layer.encoding.opacity?.condition?.test).toBeTruthy();
+      expect(layer.encoding.opacity.value).toBe(0);
+    });
+
+    it('prints shares, not raw values, when the stack is normalized', () => {
+      // The axis is a percentage and the segment's length *is* its share, so a
+      // raw value there would name a quantity the chart does not draw.
+      const layer = labelLayer(assembleVegaLite(sharedBar('Stacked Bar Chart', 6, 3, {
+        props: { stackMode: 'normalize', showValueLabels: true },
+      })));
+      expect(layer.encoding.text.format).toBe('.0%');
+      expect(JSON.stringify(layer.transform)).toContain('joinaggregate');
+    });
+
+    it('withholds the control when the bars are narrower than the number', () => {
+      // A stacked bar cannot move a too-wide number above itself the way a
+      // single-series bar can — above the bar is the top of the whole stack.
+      const wide = (c: number, s: number) => 1234567 + c * 100000 + s * 70000;
+      const input = sharedBar('Stacked Bar Chart', 20, 4, { value: wide, props: { valueFormat: 'raw' } });
+      expect(option(input, 'showValueLabels')?.applicable).toBe(false);
+      const on = sharedBar('Stacked Bar Chart', 20, 4, {
+        value: wide, props: { valueFormat: 'raw', showValueLabels: true },
+      });
+      expect(countTextMarks(assembleVegaLite(on))).toBe(0);
+    });
+  });
+});

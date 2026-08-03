@@ -3478,10 +3478,15 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         say('dataLabels', `measure channel \`${measureChannel}\` has no field`);
         return;
     }
-    if (measureChannel !== 'theta' && measureChannel !== 'color' && isStacked(primary, measureChannel)) {
-        say('dataLabels', 'stacked segments are not labelled — Vega-Lite would place text at the segment edge');
-        return;
-    }
+    // A stacked segment *can* carry its value, but only in the middle of it.
+    // At the segment edge the number reads as the running total, which is why
+    // it used to be refused outright; centred, it reads as the segment — the
+    // one quantity a stacked bar otherwise makes hard to get at.
+    const stackedSegments = measureChannel !== 'theta' && measureChannel !== 'color'
+        && (isStacked(primary, measureChannel)
+            || (Boolean(enc.color?.field) && !enc.xOffset && !enc.yOffset
+                && measure.stack !== null && measure.stack !== false
+                && (markTypeOf(primary.mark) === 'bar' || markTypeOf(primary.mark) === 'area')));
 
     const horizontal = measureChannel === 'x';
     const outside = d.dataLabels.placement !== 'atMark';
@@ -3599,6 +3604,9 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
                 }
             }
         } else say('dataLabels', 'the arc has no radius to hang a label from');
+    } else if (stackedSegments) {
+        // The middle of the segment, whichever way the bars run.
+        Object.assign(markDef, { align: 'center', baseline: 'middle' });
     } else {
         Object.assign(markDef, geometry(inside));
     }
@@ -3625,6 +3633,84 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // would measure from zero instead of from the start of the slice.
     if (radial && labelEncoding.theta) labelEncoding.theta = { ...labelEncoding.theta, stack: true };
 
+    // A stacked label rides the same stack as its segment, sat in the middle
+    // of it rather than at its end.
+    let stackedKeepTest: string | undefined;
+    let stackedTransform: any[] | undefined;
+    if (stackedSegments) {
+        labelEncoding[measureChannel] = {
+            ...labelEncoding[measureChannel],
+            stack: measure.stack ?? 'zero',
+            bandPosition: 0.5,
+        };
+        if (enc.color?.field) {
+            const key = { field: enc.color.field, type: enc.color.type ?? 'nominal' };
+            labelEncoding.detail = labelEncoding.detail
+                ? [].concat(labelEncoding.detail as any, key as any)
+                : key;
+            // Vega-Lite reads the stacking order off the colour field. The
+            // label layer carries no colour, so left to itself it stacks the
+            // segments in a different order from the bars and every number
+            // lands on a neighbour's segment. Stating the order the bars
+            // already use puts them back — and stating it only here leaves
+            // the drawn bars exactly as they were. The two axes run opposite
+            // ways: a stack grows up the y axis but rightward along the x, so
+            // the order that matches the bars flips with the orientation.
+            labelEncoding.order = { ...key, sort: horizontal ? 'ascending' : 'descending' };
+        }
+        // A segment shorter than a line of text cannot hold its number. How
+        // much of the plot a segment occupies is its value over the tallest
+        // stack — or, where the chart is normalized, over its own stack, since
+        // every bar is drawn full height. Hiding by opacity rather than
+        // dropping the row keeps the stack intact, so the surviving labels
+        // stay on the segments they belong to.
+        const minShare = d.dataLabels.segmentMinShare;
+        const catField = horizontal ? enc.y?.field : enc.x?.field;
+        if (minShare !== undefined && minShare > 0) {
+            const normalized = measure.stack === 'normalize';
+            const v = `abs(datum[${JSON.stringify(measure.field)}])`;
+            if (normalized && catField) {
+                // Each bar is measured against its own total, which only
+                // exists once the rows are grouped — so Vega-Lite computes it.
+                stackedTransform = [{
+                    joinaggregate: [{ op: 'sum', field: measure.field, as: '__flintStackTotal' }],
+                    groupby: [catField],
+                }, {
+                    calculate: `datum.__flintStackTotal ? datum[${JSON.stringify(measure.field)}] / datum.__flintStackTotal : 0`,
+                    as: '__flintStackShare',
+                }];
+                // On a normalized bar the length of a segment *is* its share,
+                // and the axis is a percentage. Printing the raw value there
+                // would name a different quantity from the one drawn, so the
+                // number that goes in the segment is the share itself.
+                labelEncoding.text = { field: '__flintStackShare', type: 'quantitative', format: '.0%' };
+                say('dataLabels', 'each segment prints its share — on a normalized bar the segment\'s length is its share, not its value');
+                stackedKeepTest = `datum.__flintStackTotal > 0 && ${v} / datum.__flintStackTotal >= ${minShare}`;
+            } else {
+                const totals = new Map<any, number>();
+                for (const row of table) {
+                    const val = row?.[measure.field];
+                    if (typeof val !== 'number' || !Number.isFinite(val)) continue;
+                    const k = catField ? row?.[catField] : '';
+                    totals.set(k, (totals.get(k) ?? 0) + Math.abs(val));
+                }
+                const tallest = Math.max(0, ...totals.values());
+                if (tallest > 0) {
+                    const minValue = minShare * tallest;
+                    stackedKeepTest = `${v} >= ${minValue}`;
+                    const dropped = table.filter((row) => {
+                        const val = row?.[measure.field];
+                        return typeof val === 'number' && Math.abs(val) < minValue;
+                    }).length;
+                    if (dropped > 0) {
+                        say('dataLabels.show',
+                            `${dropped} segment${dropped === 1 ? '' : 's'} thinner than a line of text go unlabelled — the number would not fit between the segment's edges`);
+                    }
+                }
+            }
+        }
+    }
+
     if (cells) {
         // The cell under the number is the ramp, so the ink follows the ramp.
         const values = table.map((r) => r?.[measure.field]).filter((v) => typeof v === 'number');
@@ -3647,6 +3733,10 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     if (radialLabelKeepTest) {
         labelEncoding.opacity = { condition: { test: radialLabelKeepTest, value: 1 }, value: 0 };
     }
+    if (stackedKeepTest) {
+        labelEncoding.opacity = { condition: { test: stackedKeepTest, value: 1 }, value: 0 };
+    }
+    if (stackedTransform) layer.transform = stackedTransform;
     appendLayer(body, layer);
 
     if (radial) {
@@ -3715,7 +3805,10 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // where headroom is not the remedy: on horizontal bars.
     const headroomClears = !inside && onMarkBody && !horizontal && !radial && !cells;
 
-    if (!radial && !cells && onMarkBody) {
+    // A stacked segment is exempt: "outside" a segment is the top of the
+    // stack, a different quantity. Segments too short for their number drop it
+    // instead, which the keep test above already arranges.
+    if (!radial && !cells && !stackedSegments && onMarkBody) {
         if (inside && d.dataLabels.insideMinValue != null) {
             split(d.dataLabels.insideMinValue, '<', 'marks shorter than their own label print it outside instead');
             growPadding(spec, horizontal ? 'right' : 'top', (t.fontSize ?? 10) * 2);

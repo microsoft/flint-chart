@@ -964,40 +964,132 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // This gate binds `always` too; `always` is a house habit, not a licence.
     // There also has to be a value to print: a heatmap has two banded axes and
     // its measure on colour, and a number can only be printed where a measure
-    // is on a position. Stacked segments have a position but not a readable
-    // one — a number at the edge of a segment reads as the running total. And
-    // where the chart summarises a distribution, the marks in a band *are* the
-    // sample: its subject is the shape, and thirty numbers per band bury it.
+    // is on a position. And where the chart summarises a distribution, the
+    // marks in a band *are* the sample: its subject is the shape, and thirty
+    // numbers per band bury it.
+    //
+    // Stacked segments are labelled, but only in the middle of the segment.
+    // The objection to labelling a stack is against the *edge*, where a number
+    // reads as the running total; a number centred in the segment reads as the
+    // segment, which is the one thing a stacked bar otherwise makes hard to
+    // get at. Whether each segment is thick enough to hold that number is a
+    // separate question, settled below.
     const labelable = ((signals.hasBandedAxis && (bindings.measureChannels.length > 0 || gridCells))
         || signals.isPartToWhole)
-        && !ctx.positional?.stacked
         && !signals.isSummarised
         && !MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType);
     if (dlShow && !labelable) {
         dlShow = false;
-        say('dataLabels.show', ctx.positional?.stacked
-            ? 'the segments are stacked — a value at a segment edge would read as the running total'
-            : signals.isSummarised
-                ? 'the chart summarises a distribution — each band holds a sample, not one quantity to print'
-                : MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType)
-                    ? 'the mark carries several measures at once — there is no single value to print, and the measure axis stays as the only reading of them'
-                    : signals.hasBandedAxis
-                        ? 'the measure is not on an axis — there is no position to print a value at'
-                        : 'no banded axis to key values to — one number per datum would be noise, not a label');
+        say('dataLabels.show', signals.isSummarised
+            ? 'the chart summarises a distribution — each band holds a sample, not one quantity to print'
+            : MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType)
+                ? 'the mark carries several measures at once — there is no single value to print, and the measure axis stays as the only reading of them'
+                : signals.hasBandedAxis
+                    ? 'the measure is not on an axis — there is no position to print a value at'
+                    : 'no banded axis to key values to — one number per datum would be noise, not a label');
     }
 
-    // Both policies read fit from the same two facts — a band wide enough to
-    // stand a number in, and few enough marks that the numbers do not pile up
-    // — and differ only in where they draw the line. Computing them once also
-    // gives the honest answer to "could this chart carry labels at all?",
-    // which is what a host needs to decide whether offering the control is
-    // meaningful.
+    // How wide the printed number itself is. Needed before the fit checks
+    // below, not after them: on a dodged chart the number's own width is what
+    // decides whether a bar's slot can carry it, so a check that runs later
+    // can only veto a decision already reported — which is how the control
+    // came to be offered on charts that then printed nothing.
+    let valueMaxAbs = 0;
+    let valueDigits = 1;
+    let measureField: string | undefined;
+    {
+        const mch = bindings.measureChannels[0];
+        measureField = mch
+            ? (ctx.channelSemantics[mch]?.field ?? ctx.positional?.[mch]?.field)
+            : undefined;
+        if (measureField) {
+            for (const row of ctx.table) {
+                const v = row?.[measureField];
+                if (typeof v !== 'number') continue;
+                valueMaxAbs = Math.max(valueMaxAbs, Math.abs(v));
+                valueDigits = Math.max(valueDigits, String(Math.round(Math.abs(v))).length);
+            }
+        }
+    }
+    const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * valueDigits + 12;
+
+    // Both policies read fit from the same two facts — room enough to stand a
+    // number in, and few enough marks that the numbers do not pile up — and
+    // differ only in where they draw the line. Computing them once also gives
+    // the honest answer to "could this chart carry labels at all?", which is
+    // what a host needs to decide whether offering the control is meaningful.
     const labelBand = signals.hasBandedAxis
         ? (bindings.categoricalChannel === 'y' ? ctx.layout.yStep : ctx.layout.xStep)
         : Infinity;
+    // A dodged chart splits its band between the series with nothing between
+    // them, so the room a single number gets is the band over the series count
+    // — not the band. A single series keeps the whole band and can lean a
+    // number into the padding on either side.
+    const dodged = signals.seriesCount > 1
+        && (bindings.categoricalChannel === 'y'
+            ? ctx.layout.yStepUnit === 'group'
+            : ctx.layout.xStepUnit === 'group');
+    const labelSlot = dodged ? labelBand / Math.max(1, signals.seriesCount) : labelBand;
     const labelMarks = Math.max(1, signals.categoryCount || ctx.table.length)
         * Math.max(1, signals.seriesCount);
-    const bandHoldsNumber = labelBand >= (valueLabel.fontSize ?? 10) + 4;
+    // Which way the number has to fit depends on which way the bars run. Across
+    // a vertical bar it is the number's *width* that must clear the slot; along
+    // a horizontal one the number sits at the bar's end, so what the slot must
+    // hold is the height of a line of text.
+    const slotHoldsLine = labelSlot >= (valueLabel.fontSize ?? 10) + 4;
+    // `ctx.stacked` reports only an *explicit* stack; a bar with a colour
+    // channel is stacked by Vega-Lite without being asked, and that shows up
+    // in the positional facts. It is `||`, not `??`: the explicit reading is
+    // `false` rather than absent when nothing was stated.
+    const stacked = ctx.stacked || ctx.positional?.stacked;
+    // On a vertical bar the number lies across the band, so the band has to be
+    // at least as wide as the number is. A single-series bar can escape a
+    // narrow band by moving the label above itself (below); a dodged or
+    // stacked one cannot — above the bar belongs to another series or to the
+    // whole stack — so for those the width is a condition of labelling at all.
+    const widthIsBinding = bindings.categoricalChannel === 'x' && (dodged || Boolean(stacked));
+    const slotHoldsNumber = !widthIsBinding || labelSlot >= valueLabelWidthPx;
+    // A stacked bar shares its band between the segments the *other* way: the
+    // band is whole, but each segment's own thickness is what has to hold a
+    // line of text. Segments thinner than that are dropped one by one further
+    // down; what is settled here is the chart-level question — if not one
+    // segment can carry its number, there is nothing to offer the reader.
+    let segmentsFit = true;
+    let totalSegments = 0;
+    let thinSegments = 0;
+    let segmentMinShare: number | undefined;
+    if (stacked && measureField && signals.hasBandedAxis) {
+        // Along the measure axis, a segment gets the share of the plot its
+        // value has of the tallest stack — or, on a normalized chart, of its
+        // own stack, since every bar is drawn full height.
+        const extent = bindings.categoricalChannel === 'y'
+            ? ctx.layout.subplotWidth
+            : ctx.layout.subplotHeight;
+        const catField = bindings.categoricalChannel === 'y'
+            ? (ctx.positional?.y?.field ?? ctx.channelSemantics.y?.field)
+            : (ctx.positional?.x?.field ?? ctx.channelSemantics.x?.field);
+        const totals = new Map<any, number>();
+        for (const row of ctx.table) {
+            const v = row?.[measureField];
+            if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+            const key = catField ? row?.[catField] : '';
+            totals.set(key, (totals.get(key) ?? 0) + Math.abs(v));
+        }
+        const tallest = Math.max(0, ...totals.values());
+        const minPx = (valueLabel.fontSize ?? 10) + 4;
+        if (extent > 0) segmentMinShare = minPx / extent;
+        for (const row of ctx.table) {
+            const v = row?.[measureField];
+            if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+            const key = catField ? row?.[catField] : '';
+            const against = stacked === 'normalize' ? (totals.get(key) ?? 0) : tallest;
+            if (against <= 0) continue;
+            totalSegments += 1;
+            if ((Math.abs(v) / against) * extent < minPx) thinSegments += 1;
+        }
+        segmentsFit = totalSegments === 0 || thinSegments < totalSegments;
+    }
+    const bandHoldsNumber = slotHoldsLine && slotHoldsNumber && segmentsFit;
     // The hard ceiling: past this the numbers cannot be read whoever asked for
     // them, so it binds `always` and an explicit `on` alike.
     const readableAtAll = bandHoldsNumber && labelMarks <= 120;
@@ -1011,9 +1103,15 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         if (!readableAtAll) {
             const asked = ctx.valueLabels === 'on' ? 'the chart asked to print values, but' : '`always` overridden —';
             dlShow = false;
-            say('dataLabels.show', !bandHoldsNumber
-                ? `${asked} a ${Math.round(labelBand)}px band cannot hold a number`
-                : `${asked} ${labelMarks} marks would pile the numbers past reading`);
+            say('dataLabels.show', !segmentsFit
+                ? `${asked} every segment is thinner than a line of text — none can hold its number`
+                : !slotHoldsNumber
+                    ? (dodged
+                        ? `${asked} the bars group ${signals.seriesCount} to a band — each is ${Math.round(labelSlot)}px wide, too narrow to carry a ${Math.round(valueLabelWidthPx)}px number without it landing on the next bar`
+                        : `${asked} the bars are ${Math.round(labelSlot)}px wide and the number is ${Math.round(valueLabelWidthPx)}px — it would overrun the bar it belongs to`)
+                    : !slotHoldsLine
+                        ? `${asked} a ${Math.round(labelSlot)}px slot cannot hold a number`
+                        : `${asked} ${labelMarks} marks would pile the numbers past reading`);
         }
     }
 
@@ -1021,49 +1119,31 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         dlShow = labelable && bandHoldsNumber && labelMarks <= 40;
         if (!dlShow) {
             say('dataLabels.show', labelable
-                ? `\`whenTheyFit\` resolved to false (band ${Math.round(labelBand)}px, ${labelMarks} marks)`
+                ? `\`whenTheyFit\` resolved to false (slot ${Math.round(labelSlot)}px, ${labelMarks} marks)`
                 : '`whenTheyFit` resolved to false — no banded axis to key values to');
         }
     }
-    // A number is printed across a bar's *width*, not up its height. The band
-    // checks above stand a line of text inside a band; a value laid across a
-    // vertical bar has to clear the bar's width instead. A grouped bar splits
-    // its band between the series with nothing between them, so each bar's slot
-    // is the band over the series count; a single series keeps the whole band
-    // and can lean a number into the padding on either side.
-    let valueMaxAbs = 0;
-    let valueDigits = 1;
-    {
-        const mch = bindings.measureChannels[0];
-        const field = mch
-            ? (ctx.channelSemantics[mch]?.field ?? ctx.positional?.[mch]?.field)
-            : undefined;
-        if (field) {
-            for (const row of ctx.table) {
-                const v = row?.[field];
-                if (typeof v !== 'number') continue;
-                valueMaxAbs = Math.max(valueMaxAbs, Math.abs(v));
-                valueDigits = Math.max(valueDigits, String(Math.round(Math.abs(v))).length);
-            }
-        }
+    // A stacked segment's number belongs in the middle of the segment and
+    // nowhere else. Outside the mark is the top of the *stack*, which is a
+    // different quantity, and the segment edge is the running total — the very
+    // reading a stacked label has to avoid.
+    if (dlShow && stacked && dlPlacement !== 'atMark') {
+        say('dataLabels.placement',
+            `\`${dlPlacement}\` printed in the segment instead — outside a stacked bar is the top of the stack, not the end of the segment`);
+        dlPlacement = 'atMark';
     }
-    const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * valueDigits + 12;
-    if (dlShow && bindings.categoricalChannel === 'x' && signals.hasBandedAxis && valueMaxAbs > 0) {
-        const grouped = ctx.layout.xStepUnit === 'group' && signals.seriesCount > 1;
-        const slot = grouped
-            ? ctx.layout.xStep / Math.max(1, signals.seriesCount)
-            : ctx.layout.xStep;
-        if (valueLabelWidthPx > slot) {
-            if (grouped) {
-                dlShow = false;
-                say('dataLabels.show',
-                    `the bars group ${signals.seriesCount} to a band — each is ${Math.round(slot)}px wide, too narrow to carry a ${Math.round(valueLabelWidthPx)}px number without it landing on the next bar`);
-            } else if (dlPlacement === 'atMark') {
-                dlPlacement = 'outsideMark';
-                say('dataLabels.placement',
-                    `the bar is ${Math.round(slot)}px wide but the number is ${Math.round(valueLabelWidthPx)}px — it moves above the bar, where the gaps between bars give it room`);
-            }
-        }
+    // A number is printed across a bar's *width*, not up its height. A single
+    // bar too narrow for its own number does not lose the number — it moves it
+    // above the bar, where the gaps between bars give it room. (A dodged chart
+    // cannot do this: there are no gaps to move into, which is why that case is
+    // settled above, as a question of whether to label at all. Nor can a
+    // stacked one: above the bar means above the whole stack.)
+    if (dlShow && bindings.categoricalChannel === 'x' && signals.hasBandedAxis
+        && valueMaxAbs > 0 && !dodged && !stacked && valueLabelWidthPx > labelSlot
+        && dlPlacement === 'atMark') {
+        dlPlacement = 'outsideMark';
+        say('dataLabels.placement',
+            `the bar is ${Math.round(labelSlot)}px wide but the number is ${Math.round(valueLabelWidthPx)}px — it moves above the bar, where the gaps between bars give it room`);
     }
 
     if (dlShow && legendShow && legendSpec.suppressWhenValuesPrinted) {
@@ -1376,6 +1456,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ...(valueUnit ? { unit: valueUnit } : {}),
             insideMinValue,
             outsideMaxValue,
+            ...(segmentMinShare !== undefined ? { segmentMinShare } : {}),
         },
         // A house that dots the end of a line is saying where the story stops.
         // Only the policy is decided here: whether the chart *has* a line to

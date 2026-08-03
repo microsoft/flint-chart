@@ -242,7 +242,7 @@ const VALUE_LABEL_PROPERTIES: ChartPropertyDef[] = [
  * them for the same reason.
  */
 const VALUE_LABEL_CHARTS = new Set([
-    'Bar Chart', 'Grouped Bar Chart', 'Lollipop Chart', 'Pyramid Chart',
+    'Bar Chart', 'Grouped Bar Chart', 'Stacked Bar Chart', 'Lollipop Chart', 'Pyramid Chart',
     'Pie Chart', 'Donut Chart', 'Rose Chart', 'Heatmap', 'Waterfall Chart',
 ]);
 
