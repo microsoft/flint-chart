@@ -16,8 +16,7 @@ const pages: NavEntry[] = [
       { to: 'theme-labs', label: 'Theme lab' },
       { to: 'theme-lab-r2', label: 'Theme lab R2' },
       { to: 'theme-lab-real', label: 'Theme lab real' },
-      { to: 'swiss-lab', label: 'Swiss lab' },
-      { to: 'cartoon-lab', label: 'Cartoon lab' },
+      { to: 'style-references', label: 'Style references' },
     ],
   },
   { to: 'full-test-cases', label: 'Full test cases' },
@@ -25,7 +24,9 @@ const pages: NavEntry[] = [
 
 function ThemeLabsMenu({ group, children }: { group: string; children: NavLeaf[] }) {
   const { pathname } = useLocation();
-  const active = children.some((c) => pathname.endsWith(`/${c.to}`));
+  // A page may carry further segments (style-references/swiss), so match the
+  // page rather than the end of the path.
+  const active = children.some((c) => pathname.includes(`/${c.to}`));
   return (
     <div className="dev-nav-group">
       <button

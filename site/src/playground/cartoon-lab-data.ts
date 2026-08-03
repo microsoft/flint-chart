@@ -24,6 +24,9 @@
  * infographics (rounded bars, thick outlines, sticker shapes).
  */
 
+// The case shape is shared with the other style references.
+import type { StyleReferenceCase } from './style-references';
+
 const FONT = "'Comic Sans MS', 'Comic Neue', 'Chalkboard SE', 'Marker Felt', cursive";
 const PAPER = '#fffdf5';
 const INK = '#2e2b28';
@@ -88,17 +91,10 @@ const cartoonConfig: any = {
     },
 };
 
-export interface CartoonCase {
-    id: string;
-    title: string;
-    note: string;
-    spec: any;
-}
-
 const W = 360;
 const H = 300;
 
-export const CARTOON_CASES: CartoonCase[] = [
+export const CARTOON_CASES: StyleReferenceCase[] = [
     // ── 1. Sticker bars — rounded tops + fat dark outline = the cartoon tell. ──
     {
         id: 'cartoon-sticker-bars',

@@ -21,6 +21,9 @@
  * Tonhalle posters · Vignelli 1972 NYC Subway Map · Aicher 1972 Munich palette.
  */
 
+// The case shape is shared with the other style references.
+import type { StyleReferenceCase } from './style-references';
+
 const FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
 const INK = '#1a1a1a';
 const PAPER = '#f4f1ea';
@@ -85,17 +88,10 @@ const swissConfig = {
     },
 };
 
-export interface SwissCase {
-    id: string;
-    title: string;
-    note: string;
-    spec: any;
-}
-
 const W = 360;
 const H = 300;
 
-export const SWISS_CASES: SwissCase[] = [
+export const SWISS_CASES: StyleReferenceCase[] = [
     // ── 1. Vertical bars — the archetypal Swiss chart. Flat red, value grid. ──
     {
         id: 'swiss-bar',
