@@ -22,6 +22,7 @@ import { chartIconFor } from './chart-icons';
 import {
   buildPanelModel,
   setProperty,
+  valueKey,
   withTheme,
   type PanelModel,
   type ResolvedAction,
@@ -34,11 +35,6 @@ type ControlSpec =
   | { type: 'continuous'; min: number; max: number; step?: number }
   | { type: 'discrete'; options: { value: unknown; label: string }[] }
   | { type: 'binary' };
-
-/** Stable string key for an arbitrary option value (handles undefined/objects). */
-function valueKey(value: unknown): string {
-  return JSON.stringify(value ?? null);
-}
 
 function compactSelectLabel(label: string): string {
   const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();

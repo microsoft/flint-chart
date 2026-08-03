@@ -16,13 +16,9 @@ import type { ChartOption } from 'flint-chart';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
 import { chartIconFor } from '../shared/chart-categories';
+import { valueKey } from '../shared/chart-options';
 import type { ControlSpec, PanelModel, ResolvedAction } from '../shared/chart-options';
 import './gallery-options-bar.css';
-
-/** Stable string key for an arbitrary option value (handles undefined/objects). */
-function valueKey(value: unknown): string {
-  return JSON.stringify(value ?? null);
-}
 
 /** Trim a trailing "(hint)" and clip long labels for the compact select. */
 function compactSelectLabel(label: string): string {

@@ -6,7 +6,7 @@ import { ScaleToFit } from './ScaleToFit';
 import { WallChart } from './WallChart';
 import { GalleryOptionsBar } from './GalleryOptionsBar';
 import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
-import { buildPanelModel } from '../shared/chart-options';
+import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { buildGalleryEditorHref } from '../shared/editor-payload';
 import { useLocale } from '../i18n/LocaleContext';
 import { humanizeVariants } from '../shared/wall-title';
@@ -75,6 +75,15 @@ export function ChartCodeModal({
       },
     };
   }, [testCase, tempOptions, themeId, canTheme]);
+
+  // A house can change what a chart *is*, not only how it looks — the NYT puts
+  // points on a line. Those are defaults, so they yield to anything the bar has
+  // stated, and a value the reader never really chose would silently outrank
+  // the new house. Let go of the ones that were only echoing the old one.
+  const chooseTheme = (next: string | undefined) => {
+    if (displayInput) setTempOptions((options) => withoutEchoedOverrides(displayInput, options));
+    setThemeId(next);
+  };
 
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, chart.backend) : null),
@@ -272,7 +281,7 @@ export function ChartCodeModal({
                 model={panelModel}
                 chartType={displayInput.chart_spec.chartType}
                 themeId={themeId}
-                onTheme={canTheme ? setThemeId : undefined}
+                onTheme={canTheme ? chooseTheme : undefined}
                 canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
                 onReset={() => {
                   setTempOptions({});

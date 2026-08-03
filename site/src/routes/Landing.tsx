@@ -12,7 +12,7 @@ import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { buildGalleryEditorHref, openEditorWithPayload } from '../shared/editor-payload';
-import { buildPanelModel } from '../shared/chart-options';
+import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
 import {
@@ -528,6 +528,15 @@ function HeroShowcase() {
     };
   }, [testCase, effectiveOptions, activeTheme]);
 
+  // A house can change what a chart *is*, not only how it looks — the NYT puts
+  // points on a line. Those are defaults, so they yield to anything the bar has
+  // stated, and a value the reader never really chose would silently outrank
+  // the new house. Let go of the ones that were only echoing the old one.
+  const chooseTheme = (next: string | undefined) => {
+    if (displayInput) setTempOptions((options) => withoutEchoedOverrides(displayInput, options));
+    setThemeId(next);
+  };
+
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, backend) : null),
     [displayInput, backend],
@@ -620,7 +629,7 @@ function HeroShowcase() {
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
                     themeId={themeId}
-                    onTheme={canTheme ? setThemeId : undefined}
+                    onTheme={canTheme ? chooseTheme : undefined}
                     canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
                     onReset={() => {
                       setTempOptions({});
