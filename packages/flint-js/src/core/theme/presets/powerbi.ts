@@ -156,6 +156,9 @@ export const powerbi: ThemePreset = {
             "strokeWeight": 2.2,
             "strokeCap": "square",
             "minSize": 1.5,
+            "point": {
+                "size": 62
+            },
             "separator": {
                 "presence": "hairline",
                 "source": "surface",

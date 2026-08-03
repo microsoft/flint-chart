@@ -132,6 +132,9 @@ export const datawrapper: ThemePreset = {
                 "source": "surface",
                 "width": 1.5
             },
+            "point": {
+                "size": 48
+            },
             "connector": {
                 "presence": "full",
                 "weight": 1

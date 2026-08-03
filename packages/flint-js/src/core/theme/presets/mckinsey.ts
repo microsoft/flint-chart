@@ -161,7 +161,7 @@ export const mckinsey: ThemePreset = {
                 "spanWeight": 3
             },
             "point": {
-                "size": 64
+                "size": 72
             },
             "separator": {
                 "presence": "hairline",

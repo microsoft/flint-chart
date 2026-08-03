@@ -157,6 +157,9 @@ export const nyt: ThemePreset = {
             "tile": {
                 "gap": 1
             },
+            "point": {
+                "size": 58
+            },
             "zOrder": "summaryOverData",
             "redundantEncoding": "whenNeeded",
             "redundantChannels": [

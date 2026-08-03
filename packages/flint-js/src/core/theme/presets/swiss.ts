@@ -152,6 +152,9 @@ export const swiss: ThemePreset = {
             point: {
                 presence: 'omit',
                 fill: 'solid',
+                // Small and exact. The grid does the work of placing a
+                // reading here, so the dot only has to mark the spot.
+                size: 52,
             },
             separator: {
                 presence: 'hairline',

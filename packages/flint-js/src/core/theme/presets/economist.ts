@@ -135,6 +135,9 @@ export const economist: ThemePreset = {
                 "edge": "quiet",
                 "inkSource": "sameAsCentral"
             },
+            "point": {
+                "size": 66
+            },
             "sizeRange": [
                 10,
                 450

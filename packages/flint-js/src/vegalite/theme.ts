@@ -986,8 +986,58 @@ function protectDashEncoding(spec: any, config: any, strokeWidth: number): void 
     });
 }
 
-function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
-    const config = spec.config;
+/**
+ * The area below which a dot stops reading as a dot — about 5px across. The
+ * crowding budget may shrink a house's dots this far and no further; past
+ * here the answer is no longer a smaller dot but a different chart.
+ */
+const MIN_DENSE_POINT_SIZE = 20;
+
+/**
+ * How many panels the table is spread across. A facet draws each panel from
+ * its own slice of the rows, so anything budgeting panel space against the
+ * row count has to divide by this first.
+ */
+function panelCount(spec: any, table: any[]): number {
+    const fields = new Set<string>();
+    const note = (def: any) => { if (def?.field) fields.add(def.field); };
+    walk(spec, (node) => {
+        note(node.encoding?.facet);
+        note(node.encoding?.row);
+        note(node.encoding?.column);
+        note(node.facet);
+        note(node.facet?.row);
+        note(node.facet?.column);
+    });
+    note(spec.facet);
+    note(spec.facet?.row);
+    note(spec.facet?.column);
+    if (fields.size === 0) return 1;
+    let panels = 1;
+    for (const field of fields) {
+        const values = new Set(table.map((r) => r?.[field]).filter((v) => v != null));
+        panels *= Math.max(1, values.size);
+    }
+    return panels;
+}
+
+/**
+ * Whether the spec draws a dot per row — a scatter, a strip, a dot plot. Only
+ * then does the crowding budget below have a claim on the plot's area: a
+ * boxplot's dots are its outliers and a line's are its vertices, and neither
+ * is one-per-row.
+ */
+function drawsPointCloud(spec: any): boolean {
+    let found = false;
+    walk(spec, (node) => {
+        if (found) return;
+        const type = markTypeOf(node.mark);
+        if (type === 'point' || type === 'circle' || type === 'square') found = true;
+    });
+    return found;
+}
+
+function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {    const config = spec.config;
     const m = d.marks;
     const plotWidth = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
     const plotHeight = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
@@ -1149,11 +1199,28 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     // a house that sized only `point` silently missed every scatter it had.
     if (m.point?.size != null || m.point?.filled != null) {
         // This config reaches only standalone point-family marks; line
-        // vertices use `config.line.point` above. It is therefore safe to
-        // budget the standalone dots from the row count even when a template
-        // inherits its mark through a facet or composition node.
-        const densitySize = table.length > 0
-            ? Math.max(36, Math.floor((plotWidth * plotHeight * 0.12) / table.length))
+        // vertices use `config.line.point` above.
+        //
+        // The house's size is the size of a dot that has room. Crowd the plot
+        // and the dots have to give ground, or the reading stops being a
+        // cloud of observations and becomes one solid field. The budget is
+        // the share of the plot the dots may collectively ink — 12%, the
+        // middle of the 10-15% band the practitioner literature converges on
+        // — divided among the dots that have to share it.
+        //
+        // `plotWidth`/`plotHeight` are one panel, so the count has to be one
+        // panel's worth too: a six-panel facet draws a sixth of the table in
+        // each panel, and budgeting all of it against one panel would shrink
+        // every dot to the floor for rows that are not even drawn there.
+        //
+        // And the budget only means anything where the dots *are* the
+        // reading. A boxplot draws a dot per outlier, a line chart draws none
+        // at all: charging those few dots for every row in the table would
+        // shrink an outlier to a speck to make room for marks that were never
+        // drawn.
+        const perPanel = table.length / Math.max(1, panelCount(spec, table));
+        const densitySize = table.length > 0 && drawsPointCloud(spec)
+            ? Math.max(MIN_DENSE_POINT_SIZE, Math.floor((plotWidth * plotHeight * 0.12) / perPanel))
             : undefined;
         const pointSize = m.point.size != null && densitySize != null
             ? Math.min(m.point.size, densitySize)
@@ -1172,7 +1239,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         if (m.point.size != null) {
             if (pointSize !== m.point.size) {
                 say('marks.point.size',
-                    `${table.length} points would cover too much of the ${Math.round(plotWidth)}×${Math.round(plotHeight)}px plot at ${m.point.size}px² each, so the dots shrink to ${pointSize}px²`);
+                    `${Math.round(perPanel)} points would cover too much of the ${Math.round(plotWidth)}×${Math.round(plotHeight)}px plot at ${m.point.size}px² each, so the dots shrink to ${pointSize}px²`);
             } else {
                 say('marks.point.size',
                     `a dot is drawn at ${m.point.size}px² wherever one is drawn — the house's size, not the renderer's`);
