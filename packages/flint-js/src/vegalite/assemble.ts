@@ -68,7 +68,7 @@ import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
 import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
-import { realizeThemeVegaLite, collectMarkTypes, collectPositional } from './theme';
+import { realizeThemeVegaLite, realizeValueLabelsVegaLite, collectMarkTypes, collectPositional } from './theme';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -751,34 +751,51 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // Runs last, deliberately. `vlApplyLayoutToSpec` builds `config` wholesale
     // from fit decisions; the theme is a style layer over a chart that already
     // fits, so it must see the finished spec.
+    //
+    // Grounding runs whether or not a house was named — with the neutral house
+    // when it was not. Some design questions are Flint's own and want answering
+    // either way: whether this chart can carry its values, and at this density
+    // whether it should. A house enhances that answer (it may prefer values on,
+    // or tolerate a tighter chart); it does not own it. Only *realization* is
+    // gated, so an untheme'd chart gets its numbers without also getting a
+    // house's ink, type and furniture.
+    const markTypes = collectMarkTypes(vgObj);
+    // Some templates write their own text on the marks. Where they do, the
+    // label layer stands down (it will not print a second number beside the
+    // template's), so the toggle would be a control that changes nothing.
+    // Asked before realization, because realization is what adds the label
+    // layer — asked after, every labelled chart would look like this.
+    const templateDrawsOwnText = markTypes.includes('text');
+    const stackedChannel = (vgObj.spec?.encoding ?? vgObj.encoding ?? {});
+    const stacked = stackedChannel.y?.stack ?? stackedChannel.x?.stack;
+    const design = groundTheme(themeSpec ?? {}, {
+        chartType,
+        markChannel: chartTemplate.markCognitiveChannel,
+        markTypes,
+        namesOnMarks: (chartProperties as any)?.showSeriesInLabel === true,
+        channelSemantics,
+        resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
+        axisFlags: declaration.axisFlags,
+        positional: collectPositional(vgObj),
+        layout: layoutResult,
+        table: values,
+        canvasSize,
+        stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
+        partToWhole: markTypes.includes('arc'),
+        titled: Boolean(vgObj.title),
+        hostSurface: (input.options as any)?.background,
+        valueLabels: resolveValueLabelChoice(chartProperties),
+    });
+
     let themeDecisions: any;
     if (themeSpec) {
-        const markTypes = collectMarkTypes(vgObj);
-        const stackedChannel = (vgObj.spec?.encoding ?? vgObj.encoding ?? {});
-        const stacked = stackedChannel.y?.stack ?? stackedChannel.x?.stack;
-        themeDecisions = groundTheme(themeSpec, {
-            chartType,
-            markChannel: chartTemplate.markCognitiveChannel,
-            markTypes,
-            namesOnMarks: (chartProperties as any)?.showSeriesInLabel === true,
-            channelSemantics,
-            resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
-            axisFlags: declaration.axisFlags,
-            positional: collectPositional(vgObj),
-            layout: layoutResult,
-            table: values,
-            canvasSize,
-            stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
-            partToWhole: markTypes.includes('arc'),
-            titled: Boolean(vgObj.title),
-            hostSurface: (input.options as any)?.background,
-            valueLabels: resolveValueLabelChoice(chartProperties),
-        });
-        const realizeReport = realizeThemeVegaLite(vgObj, themeDecisions, values);
+        const realizeReport = realizeThemeVegaLite(vgObj, design, values);
         themeDecisions = {
-            ...themeDecisions,
-            report: [...themePresets.report, ...chartDefaultsReport, ...themeDecisions.report, ...realizeReport],
+            ...design,
+            report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],
         };
+    } else {
+        realizeValueLabelsVegaLite(vgObj, design, values);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -827,15 +844,17 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         // labels, its own boolean is the honest answer.
         showValueLabels: ownsLabels
             ? chartProperties?.showTextLabels === true
-            : themeDecisions?.dataLabels?.show,
+            : design?.dataLabels?.show,
     };
     // Whether offering a labels control means anything is a question about the
-    // resolved layout and the house's policy, so only the grounded theme can
-    // answer it: no theme means no data-label layer to govern, and a chart too
-    // dense to read numbers on cannot be argued into it. Templates that print
-    // their own labels are the exception — they need neither.
-    const themeCoupledApplicability: Record<string, boolean> = {
-        showValueLabels: ownsLabels || themeDecisions?.dataLabels?.possible === true,
+    // resolved layout — is there anything to key a number to, and is there room
+    // to print it — so only the grounded design can answer it. A chart too
+    // dense to read numbers on cannot be argued into it, and neither can one
+    // whose template already writes its own text. Templates that print labels
+    // *on request* are the exception: they answer to the toggle themselves.
+    const designCoupledApplicability: Record<string, boolean> = {
+        showValueLabels: ownsLabels
+            || (design?.dataLabels?.possible === true && !templateDrawsOwnText),
         // The older spelling stays an accepted *input* for compatibility, but a
         // host should be shown one switch, not two that fight.
         showTextLabels: false,
@@ -843,8 +862,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     result._options = (chartTemplate.properties ?? []).map((def): ChartOption => {
         const ev = def.check?.(evalCtx);
-        const applicable = def.key in themeCoupledApplicability
-            ? themeCoupledApplicability[def.key]
+        const applicable = def.key in designCoupledApplicability
+            ? designCoupledApplicability[def.key]
             : ev ? ev.applicable : true;
         const recommended = layoutCoupledRecommendation[def.key] ?? ev?.recommendedValue;
         const value = chartProperties?.[def.key] ?? recommended ?? def.defaultValue;

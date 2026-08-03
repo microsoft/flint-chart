@@ -431,7 +431,7 @@ derived). Values are clamped to the ranges shown.
 | Waterfall | `cornerRadius` | 0–8 (0) | Round bar corners |
 | Waterfall | `totals` | `auto` \| `none` \| `first` \| `last` \| `both` (`auto`) | Which bars anchor to zero as totals (only when no Type column) |
 | Waterfall | `showTextLabels` | boolean (false) | Legacy spelling of `showValueLabels`; still accepted |
-| Bar / Grouped Bar / Lollipop / Pyramid / Pie / Donut / Rose / Heatmap / Waterfall | `showValueLabels` | boolean | Print the numbers on the marks. Leave it unset to follow the theme's own habit — the default the compiler reports is the house's answer at this density. Set it to overrule the house for one chart. Reported inapplicable (and ignored) when the marks are too dense to carry readable numbers, so it can never overprint a chart. |
+| Bar / Grouped Bar / Lollipop / Pyramid / Pie / Donut / Heatmap / Waterfall | `showValueLabels` | boolean | Print the numbers on the marks. Works with or without a theme: unset, it follows the house's own habit at this density (and with no house named, stays off), so the default the compiler reports is always the honest one. Set it to overrule that for one chart. Reported inapplicable (and ignored) where the marks are too dense to carry readable numbers, or where the template already writes its own text, so it is never a control that does nothing. |
 | Regression | `regressionMethod` | `linear` \| `log` \| `exp` \| `pow` \| `quad` \| `poly` (`linear`) | Fit method |
 | Regression | `polyOrder` | 1–5 (3) | Polynomial order (when `poly`) |
 | Radar | `filled` | boolean (true) | Fill the polygon |

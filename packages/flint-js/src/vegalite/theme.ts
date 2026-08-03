@@ -289,6 +289,22 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     return wrapped ? report : report;
 }
 
+/**
+ * Print the value labels, and nothing else.
+ *
+ * Value labels belong to Flint, not to a house: a bar chart can carry its own
+ * numbers with no theme in sight. What a house adds is a *preference* — whether
+ * it likes them on, and how crowded a chart it will still print them in. So
+ * when the caller named no house, this runs alone over the neutral grounding,
+ * rather than dragging the entire visual layer in behind one label.
+ */
+export function realizeValueLabelsVegaLite(spec: any, d: DesignDecisions, table: any[] = []): ThemeReport[] {
+    const report: ThemeReport[] = [];
+    const say = (path: string, message: string) => report.push({ stage: 'realize', path, message });
+    applyDataLabels(spec, d, table, say);
+    return report;
+}
+
 // ---------------------------------------------------------------------------
 // Surface & typography
 // ---------------------------------------------------------------------------

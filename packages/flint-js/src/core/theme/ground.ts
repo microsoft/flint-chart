@@ -546,18 +546,18 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     }
 
     // --- surface ------------------------------------------------------------
-    const houseCanvas = theme.ink.surface?.canvas;
-    const deferToHost = (theme.ink.surface?.source ?? 'house') === 'host';
+    const houseCanvas = theme.ink?.surface?.canvas;
+    const deferToHost = (theme.ink?.surface?.source ?? 'house') === 'host';
     const canvas = (deferToHost ? (ctx.hostSurface ?? houseCanvas) : houseCanvas) ?? '#ffffff';
-    const plot = theme.ink.surface?.plot ?? canvas;
-    const panel = theme.ink.surface?.panel ?? plot;
+    const plot = theme.ink?.surface?.plot ?? canvas;
+    const panel = theme.ink?.surface?.panel ?? plot;
     const dark = isDarkSurface(plot);
 
     const text = {
-        primary: theme.ink.text?.primary ?? contrastingInk(plot, '#f3f2f1', '#121212'),
-        secondary: theme.ink.text?.secondary ?? mixHex(plot, contrastingInk(plot, '#ffffff', '#000000'), 0.72),
-        muted: theme.ink.text?.muted ?? mixHex(plot, contrastingInk(plot, '#ffffff', '#000000'), 0.45),
-        inverse: theme.ink.text?.inverse ?? (dark ? '#121212' : '#ffffff'),
+        primary: theme.ink?.text?.primary ?? contrastingInk(plot, '#f3f2f1', '#121212'),
+        secondary: theme.ink?.text?.secondary ?? mixHex(plot, contrastingInk(plot, '#ffffff', '#000000'), 0.72),
+        muted: theme.ink?.text?.muted ?? mixHex(plot, contrastingInk(plot, '#ffffff', '#000000'), 0.45),
+        inverse: theme.ink?.text?.inverse ?? (dark ? '#121212' : '#ffffff'),
     };
     const foreground = text.primary;
 
@@ -593,7 +593,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
 
     // --- structure ----------------------------------------------------------
     const structure = theme.structure ?? {};
-    const structureInk = theme.ink.structure ?? {};
+    const structureInk = theme.ink?.structure ?? {};
 
     const ink = (presence: Presence | undefined, roleInk: string | undefined, fallback: Presence) =>
         resolvePresenceInk({ presence, surface: plot, roleInk, foreground, fallback });
@@ -932,10 +932,11 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     }
     // The reader's own answer outranks the house's standing preference: `off`
     // is a decision that this chart carries no numbers, `on` that it does.
-    // `auto` (and absence) leaves the house in charge. `on` becomes `always`
-    // rather than an unconditional print, so it inherits the density guard
-    // below — a control that can bury a chart in unreadable numbers is not a
-    // control, it is a trap.
+    // Absence leaves the house in charge — and with no house named, the neutral
+    // default is silence, so an untheme'd chart prints numbers only when asked.
+    // `on` becomes `always` rather than an unconditional print, so it inherits
+    // the density guard below — a control that can bury a chart in unreadable
+    // numbers is not a control, it is a trap.
     const dlShowPolicy: 'always' | 'whenTheyFit' | 'never' | undefined =
         ctx.valueLabels === 'off' ? 'never'
             : ctx.valueLabels === 'on' ? 'always'
@@ -1338,7 +1339,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     const padding = density === 'compact' ? 8 : density === 'airy' ? 20 : 12;
 
     return {
-        themeId: theme.id,
+        themeId: theme.id ?? 'flint',
         surface: { canvas, plot, panel },
         text,
         font: bodyFamily,
@@ -1473,12 +1474,12 @@ function groundSeriesInk(
     signals: Signals,
     say: (path: string, message: string) => void,
 ): ResolvedSeriesInk {
-    const s = theme.ink.series ?? {};
+    const s = theme.ink?.series ?? {};
     const selection = s.selection ?? {};
     const categorical = s.categorical ?? [];
     const extended = s.categoricalExtended ?? [];
-    const single = s.single ?? categorical[0] ?? theme.ink.accent ?? '#4c78a8';
-    const surfaceColour = theme.ink.surface?.plot ?? theme.ink.surface?.canvas ?? '#ffffff';
+    const single = s.single ?? categorical[0] ?? theme.ink?.accent ?? '#4c78a8';
+    const surfaceColour = theme.ink?.surface?.plot ?? theme.ink?.surface?.canvas ?? '#ffffff';
 
     // The house may name a larger indexed set for higher cardinality (Tableau
     // 10→20). Rank the tiers by capacity so we can reach for the smallest one
@@ -1538,7 +1539,7 @@ function groundSeriesInk(
         // says "different" where the data says "more". If the house has not
         // declared a ramp, the honest fallback is a ramp of its own colour,
         // from a tint of it to the colour itself.
-        const surface = theme.ink.surface?.canvas ?? '#ffffff';
+        const surface = theme.ink?.surface?.canvas ?? '#ffffff';
         const stops = [mixHex(single, surface, 0.85), single];
         return {
             ...base,

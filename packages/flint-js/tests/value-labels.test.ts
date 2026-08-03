@@ -123,6 +123,51 @@ describe('showValueLabels', () => {
   });
 });
 
+describe('showValueLabels without a theme', () => {
+  it('is offered on a plain bar chart, defaulting to off', () => {
+    const opt = option(barChart(12, undefined), 'showValueLabels');
+    expect(opt?.applicable).toBe(true);
+    expect(opt?.value).toBe(false);
+  });
+
+  it('prints the numbers when asked, with no house in sight', () => {
+    expect(countTextMarks(assembleVegaLite(barChart(12, undefined)))).toBe(0);
+    expect(countTextMarks(assembleVegaLite(barChart(12, undefined, { showValueLabels: true }))))
+      .toBeGreaterThan(0);
+  });
+
+  it('obeys the same density ceiling as a house does', () => {
+    expect(option(barChart(130, undefined), 'showValueLabels')?.applicable).toBe(false);
+    expect(countTextMarks(assembleVegaLite(barChart(130, undefined, { showValueLabels: true })))).toBe(0);
+  });
+
+  it('leaves an untouched chart exactly as it was', () => {
+    // The default is silence, so simply grounding the neutral house must not
+    // put a single mark on a chart nobody asked to label.
+    const strip = (s: any) => { const { _theme, _options, _warnings, ...rest } = s; return JSON.stringify(rest); };
+    const untouched = strip(assembleVegaLite(barChart(12, undefined)));
+    const explicitOff = strip(assembleVegaLite(barChart(12, undefined, { showValueLabels: false })));
+    expect(explicitOff).toBe(untouched);
+  });
+
+  it('does not leak a _theme onto a chart that named no house', () => {
+    expect((assembleVegaLite(barChart(12, undefined)) as any)._theme).toBeUndefined();
+    expect((assembleVegaLite(barChart(12, undefined, { showValueLabels: true })) as any)._theme)
+      .toBeUndefined();
+  });
+});
+
+describe('an empty ThemeSpec is the neutral house, not an error', () => {
+  it('grounds instead of throwing', () => {
+    expect(() => assembleVegaLite({ ...barChart(12, undefined), theme_spec: {} } as any)).not.toThrow();
+  });
+
+  it('is a real theme, so it reports itself', () => {
+    const spec = assembleVegaLite({ ...barChart(12, undefined), theme_spec: {} } as any) as any;
+    expect(spec._theme?.id).toBe('flint');
+  });
+});
+
 describe('showValueLabels on templates that print their own labels', () => {
   const waterfall = (props?: Record<string, unknown>) => ({
     data: {
@@ -171,4 +216,24 @@ describe('showValueLabels on templates that print their own labels', () => {
       expect(shown).toEqual(['showValueLabels']);
     });
   }
+
+  it('is withheld where the template already writes its own text', () => {
+    // A rose prints its own text on the marks, so the label layer stands down.
+    // Offering a toggle there would be offering a control that changes nothing.
+    const rose = (props?: Record<string, unknown>) => ({
+      data: { values: bars(6) },
+      semantic_types: { cat: 'nominal', val: 'quantitative' },
+      chart_spec: {
+        chartType: 'Rose Chart',
+        encodings: { x: 'cat', y: 'val' },
+        baseSize: { width: 600, height: 380 },
+        ...(props ? { chartProperties: props } : {}),
+      },
+    }) as any;
+    expect(option(rose(), 'showValueLabels')?.applicable).toBe(false);
+    // ...and it is withheld precisely because it would be inert.
+    const strip = (s: any) => { const { _theme, _options, _warnings, ...rest } = s; return JSON.stringify(rest); };
+    expect(strip(assembleVegaLite(rose({ showValueLabels: true }))))
+      .toBe(strip(assembleVegaLite(rose({ showValueLabels: false }))));
+  });
 });

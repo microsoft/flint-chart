@@ -88,7 +88,11 @@ describe('naming a house Flint ships', () => {
                 .find(l => /colour|key/i.test(l));
             const stated = line && /(\d+)/.exec(line);
             expect(stated, `${preset.id} says nothing about colour`).toBeTruthy();
-            const series = preset.spec.ink.series as any;
+            // A ThemeSpec may state no ink at all (the neutral house), but a
+            // *shipped* house that names a colour count must declare it.
+            const ink = preset.spec.ink;
+            expect(ink, `${preset.id} declares no ink`).toBeDefined();
+            const series = ink!.series as any;
             const declared = preset.spec.legend?.maxSwatches
                 ?? (series.categorical as string[]).length;
             expect(Number(stated![1]), `${preset.id}`).toBe(declared);
@@ -96,7 +100,7 @@ describe('naming a house Flint ships', () => {
     });
 
     it('keeps the Economist zero rule structural rather than accent red', () => {
-        const ink = THEME_PRESETS.economist.spec.ink;
+        const ink = THEME_PRESETS.economist.spec.ink!;
         expect(ink.structure?.zero).toBe(ink.structure?.axis);
         expect(ink.structure?.zero).not.toBe(ink.accent);
     });

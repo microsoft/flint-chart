@@ -470,12 +470,21 @@ export interface ThemeCompileDefaults extends Partial<AssembleOptions> {
     canvasSize?: { width: number; height: number };
 }
 
-/** Level 1. One JSON document per design language. */
+/**
+ * Level 1. One JSON document per design language.
+ *
+ * Every field is optional, including the ink and the type. A house that states
+ * nothing is not an error — it is the neutral house, and grounding it yields
+ * Flint's own defaults. That matters beyond tidiness: it is what lets the
+ * compiler reason about a chart's design (can it carry value labels? at this
+ * density?) when the caller named no house at all, without having to invent a
+ * second, parallel set of rules for the untheme'd case.
+ */
 export interface ThemeSpec {
-    id: string;
+    id?: string;
     label?: string;
-    ink: ThemeInk;
-    type: ThemeType;
+    ink?: ThemeInk;
+    type?: ThemeType;
     structure?: ThemeStructure;
     marks?: ThemeMarks;
     labels?: ThemeLabels;
