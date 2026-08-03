@@ -1198,33 +1198,50 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                     : plot,
             }
             : undefined,
-        connector: marksSpec.connector
-            ? {
-                show: (marksSpec.connector.presence ?? 'omit') !== 'omit',
-                // A connector is not a gridline. It borrows the rule's ink
-                // where the house declares none of its own, but it is read as
-                // part of the mark, not through it — so it is scaled at the
-                // step the house named against whichever of the two inks it
-                // gave, and a house whose rules are already pale states a
-                // `connector` ink rather than fading a faint grey further.
-                color: ink(
+        connector: {
+            // A house that names no connector has still not asked for its
+            // dumbbell's bridge to be drawn in a series colour. `show` says
+            // whether the house styles connectors at all; stage 3 uses it to
+            // separate the roles it may restyle freely from the one it must
+            // correct either way. The ink is resolved for both cases, so an
+            // undeclared house gets the same quiet structural grey a declared
+            // one would have got by saying nothing about its ink.
+            show: marksSpec.connector ? (marksSpec.connector.presence ?? 'omit') !== 'omit' : false,
+            // A connector is not a gridline. It borrows the rule's ink
+            // where the house declares none of its own, but it is read as
+            // part of the mark, not through it — so it is scaled at the
+            // step the house named against whichever of the two inks it
+            // gave, and a house whose rules are already pale states a
+            // `connector` ink rather than fading a faint grey further.
+            //
+            // Where the house declares no connector at all there is no step
+            // to scale and no ink to borrow that is not the grid's, and grid
+            // ink is too faint: a bridge carries the reading, so it has to
+            // sit clearly above the lines drawn *through* the plot even while
+            // it stays below the marks. The three houses that do state a
+            // connector ink put it at very nearly the same place — about
+            // 45% of the way from the axis-label ink toward the plot surface
+            // (mckinsey 0.48, powerbi 0.47, powerbi-light 0.26) — so a silent
+            // house is given the same relationship against its own two inks.
+            color: marksSpec.connector
+                ? ink(
                     marksSpec.connector.presence,
                     structureInk.connector ?? structureInk.rule,
                     'quiet',
-                ) ?? undefined,
-                width: marksSpec.connector.weight ?? 1,
-                // A stem and a bridge are one setting only in the sense that
-                // both are drawn in structure's ink. What they are worth
-                // differs: a stem repeats a position already plotted, a bridge
-                // draws a distance that is plotted nowhere else. So a house
-                // that says nothing about the bridge is not silent about it
-                // either — it has already said what a mark of its own weighs.
-                spanWidth: marksSpec.connector.spanWeight ?? (marksSpec.strokeWeight ?? 2),
-                ...(marksSpec.connector.style && marksSpec.connector.style !== 'solid'
-                    ? { dash: marksSpec.connector.style === 'dotted' ? [1, 2] : [4, 3] }
-                    : {}),
-            }
-            : undefined,
+                ) ?? undefined
+                : mixHex(axisLabelText.color ?? foreground, plot, 0.45, foreground),
+            width: marksSpec.connector?.weight ?? 1,
+            // A stem and a bridge are one setting only in the sense that
+            // both are drawn in structure's ink. What they are worth
+            // differs: a stem repeats a position already plotted, a bridge
+            // draws a distance that is plotted nowhere else. So a house
+            // that says nothing about the bridge is not silent about it
+            // either — it has already said what a mark of its own weighs.
+            spanWidth: marksSpec.connector?.spanWeight ?? (marksSpec.strokeWeight ?? 2),
+            ...(marksSpec.connector?.style && marksSpec.connector.style !== 'solid'
+                ? { dash: marksSpec.connector.style === 'dotted' ? [1, 2] : [4, 3] }
+                : {}),
+        },
         interval: marksSpec.interval
             ? {
                 fillOpacity: marksSpec.interval.fillOpacity,

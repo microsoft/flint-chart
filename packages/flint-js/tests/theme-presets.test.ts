@@ -1008,3 +1008,322 @@ describe('KPI card progress bar takes house ink', () => {
         });
     }
 });
+
+/**
+ * A dumbbell's connector is not a third series. It joins one row's two dots,
+ * so whichever dot's ink it borrows it credits that dot with the whole span —
+ * and, worse, the line leaving that dot becomes indistinguishable from the dot
+ * itself. The bridge has to be structural: quiet, and its own colour.
+ */
+describe('ranged dot connector', () => {
+    const ROWS = ['USA', 'China', 'Japan', 'Germany'].flatMap((c, i) => [
+        { Country: c, Value: 30 + i * 5, Metric: 'Min' },
+        { Country: c, Value: 70 + i * 5, Metric: 'Max' },
+    ]);
+
+    function dumbbell(themeId: string): any {
+        return assembleVegaLite({
+            data: { values: ROWS },
+            semantic_types: { Country: 'Country', Value: 'Quantity', Metric: 'Category' },
+            chart_spec: {
+                chartType: 'Ranged Dot Plot',
+                encodings: { x: 'Value', y: 'Country', color: 'Metric' },
+                baseSize: { width: 480, height: 320 },
+            },
+            theme_spec: THEME_PRESETS[themeId].spec,
+        } as any) as any;
+    }
+
+    // A house may wrap the plot (datawrapper puts its key in a `vconcat`), so
+    // neither the bridge nor the dots are reliably a top-level layer.
+    function collect(spec: any): { bridge?: any; range: string[] } {
+        let bridge: any;
+        const range: string[] = [];
+        const visit = (n: any): void => {
+            if (!n || typeof n !== 'object') return;
+            if (Array.isArray(n)) { n.forEach(visit); return; }
+            if (n.mark && markTypeOf(n.mark) === 'line' && !bridge) bridge = n;
+            const r = n.encoding?.color?.scale?.range;
+            if (Array.isArray(r)) range.push(...r);
+            for (const k of Object.keys(n)) if (k !== 'data') visit(n[k]);
+        };
+        visit(spec);
+        return { bridge, range };
+    }
+
+    for (const id of Object.keys(THEME_PRESETS)) {
+        it(`${id}: the bridge carries none of the dots' colour`, () => {
+            const { bridge, range } = collect(dumbbell(id));
+            expect(bridge).toBeTruthy();
+            expect(range.length).toBeGreaterThan(1);
+
+            const ink = bridge.mark?.color;
+            expect(ink).toBeTruthy();
+            for (const series of range) {
+                expect(String(ink).toLowerCase()).not.toBe(String(series).toLowerCase());
+            }
+        });
+    }
+});
+
+/**
+ * Three rules about where a chart's walls are, and what may paint over them.
+ */
+describe('plot edges', () => {
+    const STRIP = ['Control', 'Treatment A', 'Treatment B'].flatMap((g) =>
+        [38, 55, 72, 88, 100].map((v) => ({ Group: g, Score: v + g.length })));
+
+    function strip(themeId: string): any {
+        return assembleVegaLite({
+            data: { values: STRIP },
+            semantic_types: { Group: 'Category', Score: 'Quantity' },
+            chart_spec: {
+                chartType: 'Strip Plot',
+                encodings: { x: 'Group', y: 'Score' },
+                baseSize: { width: 480, height: 320 },
+            },
+            theme_spec: THEME_PRESETS[themeId].spec,
+        } as any) as any;
+    }
+
+    // A house that draws no domain at all is not making a point about zero.
+    const RULES_A_DOMAIN = Object.keys(THEME_PRESETS).filter((id) => {
+        const c = strip(id).config ?? {};
+        return c.axisY?.domainColor && c.axisY.domainColor !== 'transparent';
+    });
+
+    it('some house draws a domain, so the rule is actually under test', () => {
+        expect(RULES_A_DOMAIN.length).toBeGreaterThan(0);
+    });
+
+    for (const id of RULES_A_DOMAIN) {
+        it(`${id}: a strip plot keeps the wall under its categories`, () => {
+            // Nothing on a strip plot is measured from the bottom of the plot,
+            // so the line there is a wall, not a false zero.
+            expect(strip(id).config?.axisX?.domain).not.toBe(false);
+        });
+    }
+
+    for (const id of Object.keys(THEME_PRESETS)) {
+        it(`${id}: dots are given room to sit inside the axes`, () => {
+            const spec = strip(id);
+            const pads: number[] = [];
+            const visit = (n: any): void => {
+                if (!n || typeof n !== 'object') return;
+                if (Array.isArray(n)) { n.forEach(visit); return; }
+                const p = n.encoding?.y?.scale?.padding;
+                if (typeof p === 'number') pads.push(p);
+                for (const k of Object.keys(n)) if (k !== 'data') visit(n[k]);
+            };
+            visit(spec);
+            expect(pads.length).toBeGreaterThan(0);
+            // Room enough for the radius of the dot the house draws.
+            expect(Math.min(...pads)).toBeGreaterThan(0);
+        });
+
+        it(`${id}: a grid never repaints the spine it lands on`, () => {
+            const spec = strip(id);
+            const cfg = spec.config ?? {};
+            const gridded = (['x', 'y'] as const).filter((ch) => {
+                const c = cfg[ch === 'x' ? 'axisX' : 'axisY'];
+                return c?.grid && c.gridColor && c.gridColor !== 'transparent';
+            });
+            for (const ch of gridded) {
+                const other = cfg[ch === 'x' ? 'axisY' : 'axisX'];
+                const spine = other?.domain !== false && other?.domainColor
+                    && other.domainColor !== 'transparent';
+                if (!spine) continue;
+                let conditional = false;
+                const visit = (n: any): void => {
+                    if (!n || typeof n !== 'object') return;
+                    if (Array.isArray(n)) { n.forEach(visit); return; }
+                    const g = n.encoding?.[ch]?.axis?.gridColor;
+                    if (g && typeof g === 'object' && g.condition) conditional = true;
+                    for (const k of Object.keys(n)) if (k !== 'data') visit(n[k]);
+                };
+                visit(spec);
+                expect(conditional).toBe(true);
+            }
+        });
+    }
+
+    for (const id of RULES_A_DOMAIN) {
+        it(`${id}: a dumbbell keeps the wall beside its rows`, () => {
+            // Same narrowing, the other way round: the dumbbell's value scale
+            // floats and its rows are bands, but the dots are read against the
+            // ticks, not measured from the left-hand wall.
+            const spec: any = assembleVegaLite({
+                data: {
+                    values: ['USA', 'China', 'Japan'].flatMap((c, i) => [
+                        { Country: c, Value: 30 + i * 5, Metric: 'Min' },
+                        { Country: c, Value: 70 + i * 5, Metric: 'Max' },
+                    ]),
+                },
+                semantic_types: { Country: 'Country', Value: 'Quantity', Metric: 'Category' },
+                chart_spec: {
+                    chartType: 'Ranged Dot Plot',
+                    encodings: { x: 'Value', y: 'Country', color: 'Metric' },
+                    baseSize: { width: 480, height: 320 },
+                },
+                theme_spec: THEME_PRESETS[id].spec,
+            } as any);
+            expect(spec.config?.axisY?.domain).not.toBe(false);
+        });
+    }
+});
+
+describe('group dividers', () => {
+    // A dashed rule between one group of boxes and the next is written as
+    // `bandPosition: 1` — the end of the band, which is the middle of the gap
+    // only while there is no gap. Every house opens one, so the divider has to
+    // move with it or it reads as the left-hand group's own right edge.
+    // Sparse on purpose: dividers are drawn only when the lanes are packed
+    // locally, which is what a house does when not every group has every level.
+    const rows = ['Eng', 'Sales', 'HR', 'Ops', 'Legal'].flatMap((dept, d) =>
+        ['L1', 'L2', 'L3', 'L4', 'L5'].slice(d % 3, (d % 3) + 2).flatMap((level) =>
+            [90, 100, 110, 120].map((v, i) => ({ Department: dept, Level: level, Comp: v * 1000 + i })),
+        ),
+    );
+    let anyDrawn = false;
+
+    for (const id of Object.keys(THEME_PRESETS)) {
+        it(`${id}: centres group dividers in the gap between bands`, () => {
+            const spec: any = assembleVegaLite({
+                data: { values: rows },
+                semantic_types: { Department: 'Category', Level: 'Category', Comp: 'Currency' },
+                chart_spec: {
+                    chartType: 'Boxplot',
+                    encodings: { x: 'Department', y: 'Comp', color: 'Level' },
+                    baseSize: { width: 480, height: 320 },
+                },
+                theme_spec: THEME_PRESETS[id].spec,
+            } as any);
+
+            let padding: number | undefined;
+            const positions: number[] = [];
+            const collect = (node: any): void => {
+                if (!node || typeof node !== 'object') return;
+                for (const channel of ['x', 'y'] as const) {
+                    const e = node.encoding?.[channel];
+                    if (e?.field !== 'Department') continue;
+                    if (typeof e.scale?.paddingInner === 'number') padding = e.scale.paddingInner;
+                    if (typeof e.bandPosition === 'number' && !node.encoding[`${channel}2`]) {
+                        positions.push(e.bandPosition);
+                    }
+                }
+                for (const key of ['layer', 'vconcat', 'hconcat', 'concat']) {
+                    if (Array.isArray(node[key])) node[key].forEach(collect);
+                }
+                if (node.spec) collect(node.spec);
+                if (node.facet?.spec) collect(node.facet.spec);
+            };
+            collect(spec);
+
+            if (positions.length === 0) return; // this house's layout drew no dividers
+            anyDrawn = true;
+            const p = padding ?? 0;
+            // Band start + this many band widths lands halfway across the gap.
+            const expected = 1 + p / (2 * (1 - p));
+            for (const got of positions) expect(got).toBeCloseTo(expected, 6);
+        });
+    }
+
+    it('draws dividers at all', () => {
+        expect(anyDrawn).toBe(true);
+    });
+});
+
+describe('legibility on the house surface', () => {
+    const luminance = (hex: string): number => {
+        const h = hex.replace('#', '');
+        const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+        const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255)
+            .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string): number => {
+        const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+        return (hi + 0.05) / (lo + 0.05);
+    };
+    const surfaceOf = (spec: any): string =>
+        spec.config?.view?.fill ?? spec.config?.background ?? spec.background ?? '#ffffff';
+
+    const boxRows = ['Eng', 'Sales', 'HR'].flatMap((dept) =>
+        ['L1', 'L2'].flatMap((level) =>
+            [90, 100, 110, 120].map((v, i) => ({ Department: dept, Level: level, Comp: v * 1000 + i })),
+        ),
+    );
+
+    for (const id of Object.keys(THEME_PRESETS)) {
+        it(`${id}: box plot whiskers stay legible when the box takes a colour channel`, () => {
+            const spec: any = assembleVegaLite({
+                data: { values: boxRows },
+                semantic_types: { Department: 'Category', Level: 'Category', Comp: 'Currency' },
+                chart_spec: {
+                    chartType: 'Boxplot',
+                    encodings: { x: 'Department', y: 'Comp', color: 'Level' },
+                    baseSize: { width: 480, height: 320 },
+                },
+                theme_spec: THEME_PRESETS[id].spec,
+            } as any);
+
+            const inks: string[] = [];
+            const collect = (node: any): void => {
+                if (!node || typeof node !== 'object') return;
+                const mark = typeof node.mark === 'string' ? { type: node.mark } : node.mark;
+                if (mark?.type === 'boxplot' && (node.encoding?.color?.field || node.encoding?.fill?.field)) {
+                    inks.push(mark.rule?.color ?? mark.color ?? '#000000');
+                }
+                for (const key of ['layer', 'vconcat', 'hconcat', 'concat']) {
+                    if (Array.isArray(node[key])) node[key].forEach(collect);
+                }
+                if (node.spec) collect(node.spec);
+                if (node.facet?.spec) collect(node.facet.spec);
+            };
+            collect(spec);
+
+            expect(inks.length).toBeGreaterThan(0);
+            const surface = surfaceOf(spec);
+            for (const ink of inks) expect(contrast(ink, surface)).toBeGreaterThan(3);
+        });
+
+        it(`${id}: radar axis labels stay legible on the house surface`, () => {
+            const spec: any = assembleVegaLite({
+                data: {
+                    values: ['A', 'B'].flatMap((team) =>
+                        ['Speed', 'Attack', 'Tactics', 'Stamina'].map((axis, i) => ({
+                            Team: team, Measure: axis, Score: 40 + i * 12,
+                        })),
+                    ),
+                },
+                semantic_types: { Team: 'Category', Measure: 'Category', Score: 'Quantity' },
+                chart_spec: {
+                    chartType: 'Radar Chart',
+                    encodings: { x: 'Measure', y: 'Score', color: 'Team' },
+                    baseSize: { width: 480, height: 360 },
+                },
+                theme_spec: THEME_PRESETS[id].spec,
+            } as any);
+
+            const inks: string[] = [];
+            const collect = (node: any): void => {
+                if (!node || typeof node !== 'object') return;
+                const mark = typeof node.mark === 'string' ? { type: node.mark } : node.mark;
+                if (mark?.type === 'text' && node.encoding?.text?.value !== undefined) {
+                    const ink = mark.fill ?? mark.color;
+                    if (typeof ink === 'string') inks.push(ink);
+                }
+                for (const key of ['layer', 'vconcat', 'hconcat', 'concat']) {
+                    if (Array.isArray(node[key])) node[key].forEach(collect);
+                }
+                if (node.spec) collect(node.spec);
+                if (node.facet?.spec) collect(node.facet.spec);
+            };
+            collect(spec);
+
+            expect(inks.length).toBeGreaterThan(0);
+            const surface = surfaceOf(spec);
+            for (const ink of inks) expect(contrast(ink, surface)).toBeGreaterThan(3);
+        });
+    }
+});

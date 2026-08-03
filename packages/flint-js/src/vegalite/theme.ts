@@ -358,8 +358,18 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         // itself a measure — a scatter's horizontal — its rule is the edge of
         // the window, not a base anything is measured from, and taking it away
         // leaves the plot hanging off a single wall.
+        //
+        // It is also an argument about *lengths*. The rule lies only if
+        // someone reads a distance from it, and only bars and areas are read
+        // that way. A strip plot's dots, a dumbbell's dots and a bump chart's
+        // lines are read against the tick labels; none of them reaches the
+        // bottom of the plot, so the line there is doing what the left-hand
+        // spine does — bounding the window and giving the category labels
+        // something to hang from. A house that draws one wall and not the
+        // other has not made a point about zero, it has lost a wall.
         let domainShow = axis.domain.show;
-        if (domainShow && axis.indexing && bandedAxis(spec, channel) && floatingValueScale(spec, channel)) {
+        if (domainShow && axis.indexing && bandedAxis(spec, channel)
+            && floatingValueScale(spec, channel) && lengthsFromIndexAxis(spec, channel)) {
             domainShow = false;
             say(`axes.${channel}.domain`,
                 'the value scale floats — a rule under the categories would claim a base the chart does not have');
@@ -573,6 +583,8 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
             }
         });
     }
+
+    dropGridUnderSpine(spec, config, say);
 }
 
 /**
@@ -601,6 +613,32 @@ function bandedAxis(spec: any, channel: 'x' | 'y'): boolean {
  * whatever the scale asked for, and the rule under it is the floor those stems
  * land on.
  */
+/**
+ * True when something on the chart is read as a *length* measured from the
+ * index axis, so a rule drawn there would be the line that length starts at.
+ *
+ * Bars and areas are the marks that work this way: their reading is extent,
+ * and the base they extend from is wherever the plot ends. Everything else on
+ * a banded axis — dots, ticks, series lines — is read by position against the
+ * labels, and stops well short of the edge; the edge is then just the edge.
+ *
+ * A bar or area given a second value channel is a *span*, not a length from a
+ * base: a gantt task runs between two dates and a range band between two
+ * values, and neither is measured from the bottom of the plot either.
+ */
+function lengthsFromIndexAxis(spec: any, indexChannel: 'x' | 'y'): boolean {
+    const other = indexChannel === 'x' ? 'y' : 'x';
+    let found = false;
+    walk(spec, (node) => {
+        if (found || isLiteralMark(node)) return;
+        const type = markTypeOf(node.mark);
+        if (type !== 'bar' && type !== 'area') return;
+        if (node.encoding?.[`${other}2`]) return;
+        found = true;
+    });
+    return found;
+}
+
 function floatingValueScale(spec: any, indexChannel: 'x' | 'y'): boolean {
     const other = indexChannel === 'x' ? 'y' : 'x';
     let floating = false;
@@ -1142,6 +1180,16 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         }
     }
 
+    // Every house's dots need the room, not only the houses that size them:
+    // where none is stated the renderer still draws a 30px² dot with whatever
+    // outline the house asked for, and that dot has the same radius problem.
+    padScaleForDots(
+        spec,
+        config.point?.size ?? config.circle?.size ?? 30,
+        config.point?.strokeWidth ?? m.outline?.width ?? 0,
+        say,
+    );
+
     // Band occupancy is a scale decision, not a mark size: expressing it as
     // padding keeps grouped and simple bars consistent and leaves the layout
     // engine's step untouched.
@@ -1154,6 +1202,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     const paddingInner = clamp(1 - m.bandFraction, 0, 0.9);
     let saidCells = false;
     let saidBand = false;
+    const paddedBandFields = new Set<string>();
     const bandWalk = (node: any, inherited: any): void => {
         if (!node || typeof node !== 'object') return;
         const enc = mergedEncoding(node, inherited);
@@ -1199,6 +1248,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
                     const target = node.encoding?.[channel] ?? inherited?.[channel];
                     if (!target) continue;
                     target.scale = { ...(target.scale ?? {}), paddingInner };
+                    if (typeof target.field === 'string') paddedBandFields.add(target.field);
                 }
                 // Dodged bars carry a second band inside each group — the
                 // offset. A house gap that only narrows the group leaves the
@@ -1272,6 +1322,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         if (node.facet?.spec) bandWalk(node.facet.spec, enc);
     };
     bandWalk(spec, undefined);
+    centerBandDividers(spec, paddedBandFields, paddingInner, say);
 
     // A sized mark reads by area, and how much area the largest circle may take
     // is a house matter — a page of small multiples cannot spend what a full
@@ -1433,6 +1484,62 @@ function liftBandAxis(spec: any, bandCh: 'x' | 'y', say: (p: string, m: string) 
 }
 
 /**
+ * A grid puts a line at every tick of the axis it belongs to, and the tick at
+ * the end of a scale sits exactly where the *other* axis draws its domain. The
+ * two lines are then one line drawn twice, in two different inks — and the
+ * grid, being part of the panel, is drawn second: a 2.5px black spine comes
+ * out as a pale dashed rule in grid ink.
+ *
+ * Z-order is not the answer here. Vega-Lite hoists a shared axis out of a
+ * faceted plot's panels, so the panel's own grid is always laid down after it
+ * however the axis is ranked, and drawing a second spine to cover the damage
+ * would be inventing geometry. The honest fix is that the redundant line
+ * should not be there: the spine already states that edge, so the grid gives
+ * up its outermost line. Vega-Lite's conditional axis properties can say this
+ * exactly — `datum.index` is the tick's position along the axis as a fraction,
+ * so the line the domain lies on is the one at 0 or at 1.
+ */
+function dropGridUnderSpine(spec: any, config: any, say: (p: string, m: string) => void): void {
+    const drawsGrid = (cfg: any): boolean =>
+        !!cfg?.grid && (cfg.gridWidth ?? 1) > 0 && !!cfg.gridColor && cfg.gridColor !== 'transparent';
+    const drawsDomain = (cfg: any): boolean =>
+        cfg?.domain !== false && !!cfg?.domainColor && cfg.domainColor !== 'transparent'
+        && (cfg.domainWidth ?? 1) > 0;
+
+    let said = false;
+    for (const gridCh of ['x', 'y'] as const) {
+        const spineCh = gridCh === 'x' ? 'y' : 'x';
+        const gridCfg = config[gridCh === 'x' ? 'axisX' : 'axisY'];
+        const spineCfg = config[spineCh === 'x' ? 'axisX' : 'axisY'];
+        if (!drawsGrid(gridCfg) || !drawsDomain(spineCfg)) continue;
+        // `index` runs from the start of the range to its end. A y range runs
+        // top-to-bottom, so its 0 is the bottom of the plot, where an x axis
+        // sits by default; an x range runs left-to-right, so its 0 is the left,
+        // where a y axis sits.
+        const far = spineCh === 'x'
+            ? (spineCfg.orient === 'top' ? 1 : 0)
+            : (spineCfg.orient === 'right' ? 1 : 0);
+        walk(spec, (node) => {
+            const enc = node.encoding?.[gridCh];
+            if (!enc?.field || enc.axis === null) return;
+            if (enc.axis?.gridColor && typeof enc.axis.gridColor === 'object') return;
+            enc.axis = {
+                ...(enc.axis ?? {}),
+                gridColor: {
+                    condition: { test: `datum.index === ${far}`, value: 'transparent' },
+                    value: gridCfg.gridColor,
+                },
+            };
+            if (!said) {
+                say(`axes.${gridCh}.grid`,
+                    `the ${gridCh} grid drops its outermost line — the ${spineCh} axis already rules that edge, and a grid line over a spine repaints it in grid ink`);
+                said = true;
+            }
+        });
+    }
+}
+
+/**
  * Vega-Lite's nested `line.point` mark does not inherit a literal colour from
  * its parent line, so a single-series themed line can become one colour with
  * renderer-default blue dots. Keep the two pieces of the same trajectory in
@@ -1572,24 +1679,53 @@ function applyTileGap(
  */
 function applyConnectors(spec: any, d: DesignDecisions, say: (p: string, m: string) => void): void {
     const c = d.marks.connector;
-    if (!c?.show) return;
+    if (!c) return;
+    // A house that never styles connectors still gets its bridges corrected.
+    // A bridge joins two marks belonging to *different* series, so whichever
+    // series ink it inherits by default belongs to one of its two ends — it
+    // misattributes the span to one endpoint and, worse, makes that endpoint's
+    // dot indistinguishable from the line leaving it. A stem and a lead have
+    // no such ambiguity (a stem falls to the baseline within one series; a
+    // lead runs between two bars at one level), so where the house is silent
+    // they keep whatever the series pass gave them.
+    const bridgeOnly = !c.show;
 
     const said = new Set<string>();
     let sawStem = false;
-    const paint = (node: any, role: 'stem' | 'bridge' | 'lead'): void => {
-        if (role === 'stem') sawStem = true;
+    const paint = (node: any, role: 'stem' | 'bridge' | 'lead', enc: any): void => {
+        if (bridgeOnly && role !== 'bridge') return;
+        // A mark whose colour is encoded takes its ink from the data — a
+        // candlestick's wick is a rule that spans low to high but is coloured
+        // by whether the session closed up, whether that is said with a field
+        // or with a test and two values. Vega-Lite would discard a mark-level
+        // colour set beneath it. Structure has nothing to add to a line that
+        // is already saying something.
+        if ((node.encoding?.color ?? enc?.color) !== undefined) return;
         const mark = normalizeMark(node.mark);
+        // A mark that names its own stroke has already been given its ink by
+        // whoever drew it — a radar's spokes and rings are `rule`s that reach
+        // from centre to rim and so read as spans, but they are the chart's
+        // furniture, not a connector between two readings. Vega-Lite drops a
+        // `color` set alongside an explicit `stroke` anyway; skipping keeps
+        // that from being said twice and warned about once.
+        if (mark.stroke !== undefined) return;
+        if (role === 'stem') sawStem = true;
         if (c.color) mark.color = c.color;
-        mark.strokeWidth = role === 'bridge' ? c.spanWidth : c.width;
-        if (c.dash) mark.strokeDash = c.dash;
+        // Correcting an undeclared bridge is a correction of colour, not of
+        // weight: the house said nothing about how heavy its spans should be,
+        // and the series pass already sized this line like every other line.
+        if (!bridgeOnly) mark.strokeWidth = role === 'bridge' ? c.spanWidth : c.width;
+        if (c.dash && !bridgeOnly) mark.strokeDash = c.dash;
         node.mark = mark;
         if (said.has(role)) return;
         said.add(role);
-        const why = {
-            bridge: `the bridge is drawn at ${c.spanWidth}px in structural ink — the distance it spans is the reading, so it carries a mark's weight and none of a series' colour`,
-            stem: `the stem is drawn at ${c.width}px in structural ink — it leads the eye to the axis and states nothing the dot's position has not`,
-            lead: `the lead line is drawn at ${c.width}px in structural ink — it runs across the categories at one level, and the two mark ends it touches already state that level`,
-        }[role];
+        const why = bridgeOnly
+            ? `the bridge is drawn in structural ink — it joins two series' marks, so any series colour it took would credit the span to one of its two ends`
+            : {
+                bridge: `the bridge is drawn at ${c.spanWidth}px in structural ink — the distance it spans is the reading, so it carries a mark's weight and none of a series' colour`,
+                stem: `the stem is drawn at ${c.width}px in structural ink — it leads the eye to the axis and states nothing the dot's position has not`,
+                lead: `the lead line is drawn at ${c.width}px in structural ink — it runs across the categories at one level, and the two mark ends it touches already state that level`,
+            }[role];
         say('marks.connector', why);
     };
 
@@ -1609,7 +1745,7 @@ function applyConnectors(spec: any, d: DesignDecisions, say: (p: string, m: stri
                 if (end) {
                     const start = along === 'x' ? (own.x ?? enc.x) : (own.y ?? enc.y);
                     const acrossCategories = start?.type === 'nominal' || start?.type === 'ordinal';
-                    paint(node, !end.field ? 'stem' : acrossCategories ? 'lead' : 'bridge');
+                    paint(node, !end.field ? 'stem' : acrossCategories ? 'lead' : 'bridge', enc);
                 }
             } else if (type === 'line') {
                 // A line grouped by the field the categorical axis already
@@ -1619,7 +1755,7 @@ function applyConnectors(spec: any, d: DesignDecisions, say: (p: string, m: stri
                 const band = (['x', 'y'] as const)
                     .map((ch) => enc[ch])
                     .find((e: any) => e?.field && (e.type === 'nominal' || e.type === 'ordinal'));
-                if (key && band?.field === key) paint(node, 'bridge');
+                if (key && band?.field === key) paint(node, 'bridge', enc);
             }
         }
         for (const k of ['layer', 'vconcat', 'hconcat', 'concat']) {
@@ -1863,6 +1999,77 @@ function dotOuterDiameter(size: number, strokeWidth: number): number {
 }
 
 /**
+ * A dot has a radius; a scale fitted to the data does not know that.
+ *
+ * Vega-Lite sizes a continuous scale to the extremes of the field, which puts
+ * the *centre* of the outermost dot exactly on the edge of the plot and throws
+ * away the half of it that falls outside — the lowest value in a dumbbell ends
+ * up as a half-moon glued to the y axis, sitting on its own row label. A bar
+ * never has this trouble because its end *is* the edge; only a mark with ink
+ * either side of its position does.
+ *
+ * So the range is opened by the dot's own radius. `scale.padding` is measured
+ * in pixels, which is the unit the problem is in: it costs the same sliver of
+ * plot whatever the data happens to span, and it moves no value.
+ *
+ * Held back wherever something on the chart is measured *from* the edge — a
+ * bar, an area, a lollipop's stem — because there the edge is a base, and a
+ * base that has been nudged off zero is worse than a clipped dot.
+ */
+function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: string, m: string) => void): void {
+    const radius = Math.ceil(dotOuterDiameter(size, strokeWidth) / 2);
+    if (radius <= 0) return;
+    // A dumbbell keeps its position channels on the parent and gives the dot
+    // layer only its colour, so the scale to open is not always written on the
+    // node that carries the mark. Walk down remembering where each channel was
+    // last declared, and pad that.
+    let anchored = false;
+    const dots: Record<string, any>[] = [];
+    const visit = (node: any, declared: Record<string, any>): void => {
+        if (!node || typeof node !== 'object') return;
+        const next = { ...declared };
+        for (const ch of ['x', 'y'] as const) {
+            if (node.encoding?.[ch]?.field) next[ch] = node.encoding[ch];
+        }
+        if (node.mark && !isLiteralMark(node)) {
+            const type = markTypeOf(node.mark);
+            if (type === 'bar' || type === 'area' || type === 'rect' || type === 'rule' || type === 'arc') anchored = true;
+            else if (type && POINT_MARKS.has(type)) dots.push(next);
+        }
+        for (const k of ['layer', 'vconcat', 'hconcat', 'concat']) {
+            if (Array.isArray(node[k])) node[k].forEach((child: any) => visit(child, next));
+        }
+        if (node.spec) visit(node.spec, next);
+        if (node.facet?.spec) visit(node.facet.spec, next);
+    };
+    visit(spec, {});
+    if (anchored || !dots.length) return;
+
+    let padded = false;
+    for (const declared of dots) {
+        for (const ch of ['x', 'y'] as const) {
+            const enc = declared[ch];
+            if (!enc?.field) continue;
+            if (enc.type !== 'quantitative' && enc.type !== 'temporal') continue;
+            // A scale pinned to zero, or to a domain the caller chose, is
+            // saying where its ends are. Padding would move them.
+            if (enc.scale?.zero === true || enc.scale?.domain || enc.scale?.padding != null) continue;
+            // `nice` rounds the domain outward to the next whole tick, and it
+            // does that *after* the padding is folded in — so a 4px gap turns
+            // into a whole extra interval of empty plot and an axis labelled
+            // past where the data goes. The padding is the breathing room; the
+            // rounding on top of it is not wanted.
+            enc.scale = { ...(enc.scale ?? {}), padding: radius, nice: enc.scale?.nice ?? false };
+            padded = true;
+        }
+    }
+    if (padded) {
+        say('marks.point.size',
+            `the plot is opened by ${radius}px at each end — a dot's own radius — so the outermost reading sits inside the axes instead of half outside them`);
+    }
+}
+
+/**
  * The most of a bar's own thickness a rounded end may eat.
  *
  * Read off the hand-drawn cartoon reference, whose 14px corner sits on a 46px
@@ -1934,6 +2141,43 @@ function bandStep(spec: any, node: any, enc: any, channel: 'x' | 'y', table: any
     const count = distinctCount(table, enc?.[channel]?.field);
     if (!count) return undefined;
     return size / count;
+}
+
+/**
+ * A group divider — the dashed rule a grouped box or violin plot draws between
+ * one department and the next — is written by the template as `bandPosition: 1`,
+ * the end of the band. That is the middle of the gap only while the gap is
+ * nothing: `bandPosition` is measured in band *widths*, so once a house asks for
+ * `paddingInner` the band stops short of the step and the divider lands hard
+ * against the right shoulder of the group on its left, reading as that group's
+ * edge rather than as a boundary between two.
+ *
+ * The gap runs from the band's end to the next band's start and is
+ * `step - width` wide; in band widths that is `paddingInner / (1 - paddingInner)`.
+ * Half of it puts the rule in the middle, where it belongs — equidistant from
+ * the two groups it separates, which is the whole claim a divider makes.
+ */
+function centerBandDividers(spec: any, paddedFields: Set<string>, paddingInner: number, say: (p: string, m: string) => void): void {
+    if (paddingInner <= 0 || paddedFields.size === 0) return;
+    const centered = 1 + paddingInner / (2 * (1 - paddingInner));
+    let said = false;
+    walk(spec, (node: any) => {
+        if (markTypeOf(node.mark) !== 'rule') return;
+        for (const channel of ['x', 'y'] as const) {
+            const e = node.encoding?.[channel];
+            // A rule with a second end on the same axis spans a range and is
+            // anchored at both ends on purpose — a waterfall's connector reaches
+            // from one bar's edge to the next and must keep touching them.
+            if (!e || node.encoding?.[`${channel}2`]) continue;
+            if (e.bandPosition !== 1 || !paddedFields.has(e.field)) continue;
+            e.bandPosition = centered;
+            if (!said) {
+                say('marks.bandFraction',
+                    'group dividers move to the middle of the gap the house opened between bands');
+                said = true;
+            }
+        }
+    });
 }
 
 /**
@@ -2359,6 +2603,66 @@ function applySeriesInk(spec: any, d: DesignDecisions, table: any[], say: (p: st
     // roles, not series: they keep their hues and only move to the same
     // distance from the surface they now sit on. Left alone, a white card
     // stays a white island on a dark canvas.
+    // A label the template wrote itself — a radar's axis names, drawn as text
+    // marks because the plot has no axis to hang them on — is chrome the house
+    // owns. It is positioned by fields, so the furniture pass below does not
+    // see it, and its literal grey was picked against flint's white: on a dark
+    // canvas it sinks into the surface. The text is a constant, so nothing here
+    // is a reading; it takes the house's secondary ink like any other label.
+    let saidLabels = false;
+    walk(spec, (node) => {
+        if (markTypeOf(node.mark) !== 'text' || node.__themeSynthetic || node.__themeRole) return;
+        if (node.encoding?.text?.value === undefined) return;
+        const mark = normalizeMark(node.mark);
+        let changed = false;
+        for (const key of ['fill', 'color'] as const) {
+            if (typeof mark[key] === 'string' && mark[key] !== d.text.secondary) {
+                mark[key] = d.text.secondary;
+                changed = true;
+            }
+        }
+        if (!changed) return;
+        node.mark = mark;
+        if (!saidLabels) {
+            say('type.axisLabel',
+                'the template wrote its own labels as text marks — those are chrome and take the house label ink, not the literal grey they were drawn in');
+            saidLabels = true;
+        }
+    });
+
+    // Vega-Lite paints a box plot's whiskers and caps from the mark's colour,
+    // but only when the mark states one: with the colour *encoded*, the box
+    // takes the series ink and the rule falls back to a literal black. On a
+    // dark canvas the extremes then disappear entirely. The whisker is
+    // structure holding a reading, so it takes the house's text ink — which on
+    // a light house is the black it already was.
+    let saidWhisker = false;
+    walk(spec, (node) => {
+        if (markTypeOf(node.mark) !== 'boxplot') return;
+        const encoded = node.encoding?.color?.field ?? node.encoding?.fill?.field;
+        if (!encoded) return;
+        const mark = normalizeMark(node.mark);
+        if (mark.color != null) return;
+        let changed = false;
+        for (const part of ['rule', 'ticks'] as const) {
+            const own = mark[part];
+            // `ticks` is off unless the mark asks for it, and an object *is*
+            // asking — so only an existing tick gets recoloured. A rule is
+            // always drawn, so it can be given one.
+            if (part === 'ticks' && !(own && typeof own === 'object')) continue;
+            if (own && typeof own === 'object' && own.color != null) continue;
+            mark[part] = { ...(typeof own === 'object' ? own : {}), color: d.text.primary };
+            changed = true;
+        }
+        if (!changed) return;
+        node.mark = mark;
+        if (!saidWhisker) {
+            say('ink.series',
+                'the box takes its ink from the colour channel, which leaves the whiskers literal black — they take the text ink so the extremes stay legible on any surface');
+            saidWhisker = true;
+        }
+    });
+
     walk(spec, (node) => {
         if (!markTypeOf(node.mark) || node.__themeSynthetic || !isLiteralMark(node)) return;
         if (node.__themeRole) return;
