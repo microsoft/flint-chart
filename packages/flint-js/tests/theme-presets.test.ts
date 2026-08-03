@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { assembleVegaLite } from '../src';
 import { markTypeOf } from '../src/vegalite/theme';
-import { THEME_PRESETS, listThemePresets, resolveThemeSpec } from '../src/core/theme/presets';
+import { THEME_PRESETS, DEFAULT_THEME_ICON, listThemePresets, resolveThemeSpec } from '../src/core/theme/presets';
 import type { ThemeSpec } from '../src/core/theme/types';
 
 /**
@@ -1326,4 +1326,66 @@ describe('legibility on the house surface', () => {
             for (const ink of inks) expect(contrast(ink, surface)).toBeGreaterThan(3);
         });
     }
+});
+
+describe('house icons', () => {
+    // A picker has to say what a house looks like before the reader has seen a
+    // chart in it. The icons are how it does that, so they have to be present,
+    // well-formed, and — the point of the set — distinguishable from each other.
+    const icons = Object.entries(THEME_PRESETS).map(([id, preset]) => [id, preset.icon] as const);
+
+    for (const [id, icon] of icons) {
+        it(`${id}: ships a self-contained 16px SVG`, () => {
+            expect(icon).toMatch(/^<svg\b/);
+            expect(icon).toMatch(/<\/svg>$/);
+            // Self-contained: a bare `<svg>` element without the namespace does
+            // not render from an `<img src>` or a data URL.
+            expect(icon).toContain('xmlns="http://www.w3.org/2000/svg"');
+            expect(icon).toContain('viewBox="0 0 16 16"');
+            // No external references — an icon that fetches is an icon that
+            // fails offline, and these ship inside the package.
+            expect(icon).not.toMatch(/\b(?:href|src|url\()/);
+        });
+
+        it(`${id}: is drawn in colours the house actually uses`, () => {
+            const spec: any = THEME_PRESETS[id].spec;
+            const declared = new Set<string>(
+                JSON.stringify(spec)
+                    .match(/#[0-9a-fA-F]{6}/g)
+                    ?.map((hex) => hex.toLowerCase()) ?? [],
+            );
+            const series: string[] = spec.ink?.series?.categorical ?? [];
+            // The three bars are the first three of the house's own set: an icon
+            // that invents a palette is a promise the chart will not keep.
+            for (const hex of series.slice(0, 3)) expect(icon.toLowerCase()).toContain(hex.toLowerCase());
+            // The tile is the house's canvas where it states one.
+            const canvas = spec.ink?.surface?.canvas;
+            if (canvas) expect(icon.toLowerCase()).toContain(String(canvas).toLowerCase());
+            expect(declared.size).toBeGreaterThan(0);
+        });
+    }
+
+    it('gives every house a different picture', () => {
+        const seen = new Map<string, string>();
+        for (const [id, icon] of icons) {
+            const clash = seen.get(icon);
+            expect(clash, `${id} and ${clash} share an icon`).toBeUndefined();
+            seen.set(icon, id);
+        }
+        expect(seen.size).toBe(icons.length);
+    });
+
+    it('offers "no house" its own picture too', () => {
+        expect(DEFAULT_THEME_ICON).toMatch(/^<svg\b/);
+        for (const [, icon] of icons) expect(icon).not.toBe(DEFAULT_THEME_ICON);
+    });
+
+    it('keeps the pictures out of the catalogue an agent reads', () => {
+        // `listThemePresets` is what a model reads to choose a house. An SVG it
+        // cannot see is context spent for nothing.
+        for (const entry of listThemePresets()) {
+            expect(entry).not.toHaveProperty('icon');
+            expect(JSON.stringify(entry)).not.toContain('<svg');
+        }
+    });
 });

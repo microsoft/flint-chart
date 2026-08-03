@@ -49,6 +49,10 @@ export function ChartCodeModal({
   // Temporary, display-only overrides driven by the options bar. These tweak
   // the shown Flint spec JSON without mutating any underlying test case.
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
+  // The house the preview is drawn in. Only Vega-Lite reads `theme_spec`, so
+  // the switch is offered only there.
+  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const canTheme = chart.backend === 'vegalite';
 
   const testCase = tests[index];
 
@@ -65,12 +69,13 @@ export function ChartCodeModal({
     const base = testCaseToAssemblyInput(testCase);
     return {
       ...base,
+      ...(canTheme && themeId ? { theme_spec: themeId } : {}),
       chart_spec: {
         ...base.chart_spec,
         chartProperties: { ...base.chart_spec.chartProperties, ...tempOptions },
       },
     };
-  }, [testCase, tempOptions]);
+  }, [testCase, tempOptions, themeId, canTheme]);
 
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, chart.backend) : null),
@@ -234,6 +239,7 @@ export function ChartCodeModal({
                     testCase={testCase}
                     backend={chart.backend}
                     chartPropertyOverrides={tempOptions}
+                    themeId={themeId}
                   />
                 </ScaleToFit>
               )}
@@ -266,8 +272,13 @@ export function ChartCodeModal({
               <GalleryOptionsBar
                 model={panelModel}
                 chartType={displayInput.chart_spec.chartType}
-                canReset={Object.keys(tempOptions).length > 0}
-                onReset={() => setTempOptions({})}
+                themeId={themeId}
+                onTheme={canTheme ? setThemeId : undefined}
+                canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
+                onReset={() => {
+                  setTempOptions({});
+                  setThemeId(undefined);
+                }}
                 onChange={(key, value) =>
                   setTempOptions((prev) => {
                     const next = { ...prev };

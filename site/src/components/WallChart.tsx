@@ -19,6 +19,7 @@ export function WallChart({
   backend,
   canvasSize,
   chartPropertyOverrides,
+  themeId,
 }: {
   testCase: TestCase;
   backend: PreviewBackend;
@@ -28,20 +29,26 @@ export function WallChart({
    * gallery's dynamic options bar). Display only — not persisted.
    */
   chartPropertyOverrides?: Record<string, unknown>;
+  /**
+   * House to draw in, named by preset id. Only the Vega-Lite assembler reads
+   * `theme_spec`, so it is left off elsewhere rather than passed and ignored.
+   */
+  themeId?: string;
 }) {
   const input = useMemo(() => {
     const base = testCaseToAssemblyInput(testCase, canvasSize ?? thumbnailCanvasSize(testCase));
+    const themed = themeId && backend === 'vegalite' ? { ...base, theme_spec: themeId } : base;
     if (!chartPropertyOverrides || Object.keys(chartPropertyOverrides).length === 0) {
-      return base;
+      return themed;
     }
     return {
-      ...base,
+      ...themed,
       chart_spec: {
-        ...base.chart_spec,
-        chartProperties: { ...base.chart_spec.chartProperties, ...chartPropertyOverrides },
+        ...themed.chart_spec,
+        chartProperties: { ...themed.chart_spec.chartProperties, ...chartPropertyOverrides },
       },
     };
-  }, [testCase, canvasSize, chartPropertyOverrides]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, backend]);
 
   const compiled = useMemo(() => {
     try {

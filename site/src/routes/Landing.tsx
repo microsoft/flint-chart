@@ -491,6 +491,9 @@ function HeroShowcase() {
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
+  // The house the showcase chart is drawn in. Only Vega-Lite reads
+  // `theme_spec`, so the switch is offered only on that backend.
+  const [themeId, setThemeId] = useState<string | undefined>(undefined);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
   const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
@@ -511,17 +514,20 @@ function HeroShowcase() {
 
   useEffect(() => setTempOptions({}), [exampleIdx, backend]);
 
+  const canTheme = backend === 'vegalite';
+  const activeTheme = canTheme ? themeId : undefined;
   const displayInput = useMemo(() => {
     if (!testCase) return null;
     const base = testCaseToAssemblyInput(testCase);
     return {
       ...base,
+      ...(activeTheme ? { theme_spec: activeTheme } : {}),
       chart_spec: {
         ...base.chart_spec,
         chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
       },
     };
-  }, [testCase, effectiveOptions]);
+  }, [testCase, effectiveOptions, activeTheme]);
 
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, backend) : null),
@@ -569,6 +575,7 @@ function HeroShowcase() {
               testCase={testCase}
               canvasSize={example.canvasSize}
               chartPropertyOverrides={effectiveOptions}
+              themeId={activeTheme}
             />
           </div>
 
@@ -604,6 +611,7 @@ function HeroShowcase() {
                     backend={backend}
                     canvasSize={example.canvasSize}
                     chartPropertyOverrides={effectiveOptions}
+                    themeId={activeTheme}
                   />
                 </ScaleToFit>
               </div>
@@ -612,8 +620,13 @@ function HeroShowcase() {
                   <GalleryOptionsBar
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
-                    canReset={Object.keys(tempOptions).length > 0}
-                    onReset={() => setTempOptions({})}
+                    themeId={themeId}
+                    onTheme={canTheme ? setThemeId : undefined}
+                    canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
+                    onReset={() => {
+                      setTempOptions({});
+                      setThemeId(undefined);
+                    }}
                     onChange={(key, value) =>
                       setTempOptions((current) => {
                         const next = { ...current };
@@ -722,10 +735,12 @@ function FlintSpecCode({
   testCase,
   canvasSize,
   chartPropertyOverrides,
+  themeId,
 }: {
   testCase: TestCase;
   canvasSize?: { width: number; height: number };
   chartPropertyOverrides?: Record<string, unknown>;
+  themeId?: string;
 }) {
   const text = useMemo(() => {
     const summary = testCaseToFlintSummary(testCase);
@@ -741,10 +756,10 @@ function FlintSpecCode({
           }
         : {}),
     };
-    const withCanvas = { ...summary, chart_spec: chartSpec };
+    const withCanvas = { ...summary, ...(themeId ? { theme_spec: themeId } : {}), chart_spec: chartSpec };
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
-  }, [testCase, canvasSize, chartPropertyOverrides]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId]);
   return <pre style={specPreStyle}>{text}</pre>;
 }
 

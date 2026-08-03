@@ -61,6 +61,8 @@ export function listThemes(id?: string) {
       `Unknown theme \`${id}\`. Flint ships: ${Object.keys(THEME_PRESETS).join(', ')}.`,
     );
   }
-  const { spec: _spec, ...rest } = preset;
+  // `spec` is the compiler's business and `icon` is a picker's; neither
+  // helps an agent decide, and both are large.
+  const { spec: _spec, icon: _icon, ...rest } = preset;
   return rest;
 }

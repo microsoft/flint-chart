@@ -239,6 +239,19 @@ export function setChannelField(
 }
 
 /**
+ * Name the house the chart is drawn in, or clear it back to flint's own
+ * defaults. `theme_spec` sits at the top of the input rather than inside
+ * `chart_spec` because it is not a property of this chart — the same house
+ * applies whatever the chart turns out to be.
+ */
+export function withTheme(input: ChartAssemblyInput, themeId: string | undefined): ChartAssemblyInput {
+  const next = cloneInput(input);
+  if (themeId === undefined) delete next.theme_spec;
+  else next.theme_spec = themeId;
+  return next;
+}
+
+/**
  * Set (or reset, when value is undefined) a chart property or encoding-action
  * override. Both are stored under `chart_spec.chartProperties[key]`.
  */

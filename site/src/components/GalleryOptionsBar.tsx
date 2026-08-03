@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChartOption } from 'flint-chart';
+import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
 import { chartIconFor } from '../shared/chart-categories';
 import type { ControlSpec, PanelModel, ResolvedAction } from '../shared/chart-options';
@@ -93,6 +94,151 @@ function DiscreteControl(props: {
                 >
                   {option.label}
                 </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** A theme preset's icon as an `<img>`-ready URL. */
+function iconUrl(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const THEME_CHOICES: { id: string | undefined; label: string; icon: string; description: string }[] = [
+  {
+    id: undefined,
+    label: 'Flint default',
+    icon: DEFAULT_THEME_ICON,
+    description: "Flint's own defaults — no house applied.",
+  },
+  ...Object.values(THEME_PRESETS).map((preset) => ({
+    id: preset.id,
+    label: preset.label,
+    icon: preset.icon,
+    description: preset.description,
+  })),
+];
+
+/**
+ * The house switch. First in the bar, because a theme is the outermost
+ * decision on the chart: it settles the surface, the ink and the type that
+ * everything the other controls touch is then drawn in.
+ *
+ * Only Vega-Lite reads `theme_spec`, so on the other backends the control is
+ * absent rather than inert — a switch that does nothing reads as a bug in the
+ * theme, which is exactly what themes must never look like.
+ */
+function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string | undefined) => void }) {
+  const { themeId, onTheme } = props;
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const current = THEME_CHOICES.find((choice) => choice.id === themeId) ?? THEME_CHOICES[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      style={{ position: 'relative', display: 'inline-flex', borderRadius: 8, background: 'rgba(0, 0, 0, 0.05)' }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Theme: ${current.label}`}
+        title={`Theme: ${current.label}`}
+        onClick={() => setOpen((o) => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          padding: '5px 8px',
+          border: 'none',
+          borderRadius: 8,
+          cursor: 'pointer',
+          outline: 'none',
+          color: siteTheme.text,
+          background: open || hover ? 'rgba(0, 0, 0, 0.07)' : 'transparent',
+        }}
+      >
+        <img src={iconUrl(current.icon)} alt="" style={{ width: 15, height: 15, display: 'block', flex: '0 0 auto' }} />
+        <Chevron color={siteTheme.textMuted} />
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          aria-label="Theme"
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 5px)',
+            left: 0,
+            zIndex: 60,
+            margin: 0,
+            padding: 4,
+            listStyle: 'none',
+            minWidth: 190,
+            maxHeight: 320,
+            overflowY: 'auto',
+            border: `1px solid ${siteTheme.border}`,
+            borderRadius: 10,
+            background: siteTheme.surface,
+            boxShadow: '0 -8px 24px rgba(0,0,0,0.14)',
+          }}
+        >
+          {THEME_CHOICES.map((choice) => {
+            const selected = choice.id === current.id;
+            return (
+              <li
+                key={choice.id ?? 'default'}
+                role="option"
+                aria-selected={selected}
+                title={choice.description}
+                onClick={() => {
+                  onTheme(choice.id);
+                  setOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 8px',
+                  borderRadius: 7,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  color: siteTheme.text,
+                  background: selected ? 'rgba(0,0,0,0.06)' : 'transparent',
+                }}
+                onMouseEnter={(e) => {
+                  if (!selected) (e.currentTarget as HTMLLIElement).style.background = 'rgba(0,0,0,0.04)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!selected) (e.currentTarget as HTMLLIElement).style.background = 'transparent';
+                }}
+              >
+                <img src={iconUrl(choice.icon)} alt="" style={{ width: 16, height: 16, display: 'block', flex: '0 0 auto' }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{choice.label}</span>
               </li>
             );
           })}
@@ -376,9 +522,12 @@ export function GalleryOptionsBar(props: {
   onReset: () => void;
   canReset: boolean;
   chartType: string;
+  /** Current house, or undefined for flint's own defaults. Omit to hide the switch. */
+  themeId?: string;
+  onTheme?: (id: string | undefined) => void;
   style?: CSSProperties;
 }) {
-  const { model, onChange, onReset, canReset, chartType, style } = props;
+  const { model, onChange, onReset, canReset, chartType, themeId, onTheme, style } = props;
 
   const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
     ...model.properties.map((option: ChartOption) => ({
@@ -397,6 +546,7 @@ export function GalleryOptionsBar(props: {
 
   return (
     <div role="toolbar" aria-label={`${chartType} options`} className="gopt-bar" style={style}>
+      {onTheme && <ThemeControl themeId={themeId} onTheme={onTheme} />}
       {((model.chartType && model.chartType.length > 1) ||
         (model.arrange && model.arrange.length > 1)) && (
         <TransformControl

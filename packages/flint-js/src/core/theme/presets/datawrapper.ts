@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { DATAWRAPPER_ICON } from './icons';
 
 /**
  * Datawrapper.
@@ -17,6 +18,7 @@ export const datawrapper: ThemePreset = {
         "- Sized for a narrow column, so it reads tall rather than wide.",
         "- Colour can tell 5 categories apart.",
     ].join('\n'),
+    icon: DATAWRAPPER_ICON,
     spec: {
         "id": "datawrapper",
         "label": "Datawrapper",

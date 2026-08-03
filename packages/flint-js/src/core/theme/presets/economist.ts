@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { ECONOMIST_ICON } from './icons';
 
 /**
  * The Economist.
@@ -17,6 +18,7 @@ export const economist: ThemePreset = {
         "- Annotate each measure with `unit` in `semantic_types`.",
         "- The key holds 3 colours.",
     ].join('\n'),
+    icon: ECONOMIST_ICON,
     spec: {
         "id": "economist",
         "label": "The Economist",

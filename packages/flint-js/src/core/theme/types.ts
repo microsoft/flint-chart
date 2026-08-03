@@ -514,6 +514,19 @@ export interface ThemePreset {
     description: string;
     /** A few markdown bullets: what this house needs the chart spec to do. */
     guidance: string;
+    /**
+     * A 16px SVG standing in for the house in a picker, as a complete document
+     * so a caller can drop it straight into an `<img>` or inline it.
+     *
+     * It is drawn from the house's own decisions rather than invented: the tile
+     * is its canvas, the bars are the first three of its categorical set, and
+     * the one thing left over says what the house does that the others do not —
+     * the Economist's red tab, Swiss's structural black rules, McKinsey's
+     * horizontal bars, Nature's bare axis, cartoon's rounded tops. At this size
+     * that is all a reader can take in, and it is enough to recognise the house
+     * once they have seen one chart in it.
+     */
+    icon: string;
     spec: ThemeSpec;
 }
 

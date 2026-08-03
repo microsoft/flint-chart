@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { NATURE_ICON } from './icons';
 
 /**
  * Nature.
@@ -16,6 +17,7 @@ export const nature: ThemePreset = {
         "- Annotate every measure with `unit` in `semantic_types`; `subtitle` names the sample, not the unit.",
         "- Colour can tell 6 categories apart; past that they share a grey.",
     ].join('\n'),
+    icon: NATURE_ICON,
     spec: {
         "id": "nature",
         "label": "Nature",

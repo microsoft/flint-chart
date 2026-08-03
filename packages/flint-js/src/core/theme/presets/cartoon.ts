@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { CARTOON_ICON } from './icons';
 
 /**
  * Cartoon — a playful, friendly house in the spirit of xkcd and modern
@@ -32,6 +33,7 @@ export const cartoon: ThemePreset = {
         '- Annotate the measure with `unit` in `semantic_types`.',
         '- Colour is a bright crayon set; the key tells 6 series apart.',
     ].join('\n'),
+    icon: CARTOON_ICON,
     spec: {
         id: 'cartoon',
         label: 'Cartoon',

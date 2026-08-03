@@ -15,12 +15,14 @@ import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
+import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 
 import { renderFlintSvg, type FlintRenderResult } from './render';
 import { chartIconFor } from './chart-icons';
 import {
   buildPanelModel,
   setProperty,
+  withTheme,
   type PanelModel,
   type ResolvedAction,
 } from './options';
@@ -331,6 +333,95 @@ function TransformControl(props: {
   );
 }
 
+/** A theme preset's icon as an `<img>`-ready URL. */
+function themeIconUrl(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const THEME_CHOICES: { id: string | undefined; label: string; icon: string; description: string }[] = [
+  {
+    id: undefined,
+    label: 'Flint default',
+    icon: DEFAULT_THEME_ICON,
+    description: "Flint's own defaults \u2014 no house applied.",
+  },
+  ...Object.values(THEME_PRESETS).map((preset) => ({
+    id: preset.id,
+    label: preset.label,
+    icon: preset.icon,
+    description: preset.description,
+  })),
+];
+
+/**
+ * The house switch, first in the bar. A theme is the outermost decision on the
+ * chart — it settles the surface, the ink and the type that everything the
+ * other controls touch is then drawn in — so it reads left of them.
+ *
+ * It borrows the chart-type switch's chrome rather than growing its own: the
+ * two are the same gesture (a small picture of the result, a caret, a list),
+ * and giving them different shapes would suggest they are different kinds of
+ * control.
+ */
+function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string | undefined) => void }) {
+  const { themeId, onTheme } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const current = THEME_CHOICES.find((choice) => choice.id === themeId) ?? THEME_CHOICES[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div className="transform-control" ref={rootRef}>
+      <button
+        type="button"
+        className="tc-type"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Theme: ${current.label}`}
+        title={`Theme: ${current.label}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <img className="tc-icon" src={themeIconUrl(current.icon)} alt="" />
+        <svg className="tc-caret" width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 4.5 L6 7.5 L9 4.5" />
+        </svg>
+      </button>
+
+      {open && (
+        <ul className="tc-menu" role="listbox" aria-label="Theme">
+          {THEME_CHOICES.map((choice) => {
+            const selected = choice.id === current.id;
+            return (
+              <li
+                key={choice.id ?? 'default'}
+                role="option"
+                aria-selected={selected}
+                title={choice.description}
+                className={selected ? 'tc-opt tc-opt-selected' : 'tc-opt'}
+                onClick={() => {
+                  onTheme(choice.id);
+                  setOpen(false);
+                }}
+              >
+                <img className="tc-opt-icon" src={themeIconUrl(choice.icon)} alt="" />
+                <span>{choice.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ActionButton(props: {
   label: string;
   className?: string;
@@ -443,6 +534,10 @@ function OptionsBar(props: {
   return (
     <div className="optionsbar" role="toolbar" aria-label={`${input.chart_spec.chartType} options`}>
       <div className="optionsbar-grid">
+        <ThemeControl
+          themeId={typeof input.theme_spec === 'string' ? input.theme_spec : undefined}
+          onTheme={(id) => onInput(withTheme(input, id))}
+        />
         {((model.chartType && model.chartType.length > 1) ||
           (model.arrange && model.arrange.length > 1)) && (
           <TransformControl
@@ -551,8 +646,10 @@ export function FlintAppInner(props: {
 
   const model = useMemo(() => buildPanelModel(current), [current]);
   const canReset = useMemo(
-    () => JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec),
-    [current.chart_spec, input.chart_spec],
+    () =>
+      JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec) ||
+      JSON.stringify(current.theme_spec ?? null) !== JSON.stringify(input.theme_spec ?? null),
+    [current.chart_spec, input.chart_spec, current.theme_spec, input.theme_spec],
   );
 
   const handleCopyPng = useCallback(async () => {

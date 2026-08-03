@@ -10,6 +10,7 @@
  */
 
 import type { ThemePreset, ThemeSpec } from './types';
+import { FLINT_ICON } from './presets/icons';
 import { nyt } from './presets/nyt';
 import { economist } from './presets/economist';
 import { nature } from './presets/nature';
@@ -32,7 +33,19 @@ export const THEME_PRESETS: Record<string, ThemePreset> = {
     cartoon,
 };
 
-/** The catalogue, without the specs — enough to choose by. */
+/**
+ * The icon for "no house" — flint's own defaults, so a picker can offer
+ * *not* theming as a visible choice rather than an empty slot.
+ */
+export const DEFAULT_THEME_ICON = FLINT_ICON;
+
+/**
+ * The catalogue, without the specs — enough to choose by.
+ *
+ * Without the icons either: this is what an agent reads to pick a house, and a
+ * picture it cannot see costs it context it could have spent on the chart. A
+ * picker that wants icons reads them off {@link THEME_PRESETS}.
+ */
 export function listThemePresets(): Array<Pick<ThemePreset, 'id' | 'label' | 'description'>> {
     return Object.values(THEME_PRESETS).map(({ id, label, description }) => ({ id, label, description }));
 }

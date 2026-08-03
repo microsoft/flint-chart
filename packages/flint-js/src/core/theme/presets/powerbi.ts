@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { POWERBI_ICON } from './icons';
 
 /**
  * Power BI.
@@ -16,6 +17,7 @@ export const powerbi: ThemePreset = {
         "- Leave `title` out where the tile sits under its own caption — the axis titles come back to name the measure.",
         "- Colour can tell 6 categories apart.",
     ].join('\n'),
+    icon: POWERBI_ICON,
     spec: {
         "id": "powerbi",
         "label": "Power BI",

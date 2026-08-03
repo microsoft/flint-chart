@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { SWISS_ICON } from './icons';
 
 /**
  * Swiss / International Typographic Style.
@@ -29,6 +30,7 @@ export const swiss: ThemePreset = {
         '- Annotate the measure with `unit` in `semantic_types`.',
         '- Colour is a single signal red; the categorical key tells 5 series apart.',
     ].join('\n'),
+    icon: SWISS_ICON,
     spec: {
         id: 'swiss',
         label: 'Swiss',

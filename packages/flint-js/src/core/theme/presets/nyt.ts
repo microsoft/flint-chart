@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { NYT_ICON } from './icons';
 
 /**
  * New York Times.
@@ -16,6 +17,7 @@ export const nyt: ThemePreset = {
         "- `title` is the finding, in a sentence; `subtitle` names the measure, the population and the unit.",
         "- Colour can tell 5 categories apart; past that they share a grey.",
     ].join('\n'),
+    icon: NYT_ICON,
     spec: {
         "id": "nyt",
         "label": "New York Times",

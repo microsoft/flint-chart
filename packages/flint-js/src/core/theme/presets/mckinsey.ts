@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { ThemePreset } from '../types';
+import { MCKINSEY_ICON } from './icons';
 
 /**
  * McKinsey.
@@ -16,6 +17,7 @@ export const mckinsey: ThemePreset = {
         "- `title` states the takeaway; `subtitle` names the measure and unit.",
         "- Colour can tell 5 categories apart.",
     ].join('\n'),
+    icon: MCKINSEY_ICON,
     spec: {
         "id": "mckinsey",
         "label": "McKinsey",

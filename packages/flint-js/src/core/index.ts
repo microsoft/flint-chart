@@ -205,6 +205,7 @@ export {
     type GroundingContext,
     groundTheme,
     THEME_PRESETS,
+    DEFAULT_THEME_ICON,
     listThemePresets,
     resolveThemeSpec,
 } from './theme';
