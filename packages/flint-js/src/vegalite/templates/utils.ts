@@ -80,6 +80,16 @@ export function setMarkProp(mark: any, key: string, value: any): any {
 }
 
 /**
+ * Marks whose size came from the coarse coverage estimate in
+ * `applyPointSizeScaling`, which runs at build time against an assumed plot
+ * and the whole table. A theme knows the plot it actually got and how many
+ * panels the rows are spread over, so where both have an opinion the theme's
+ * is the better-informed one — but only for the marks this rule sized, never
+ * for a mark a template fitted to a lane.
+ */
+export const coverageSizedMarks = new WeakSet<object>();
+
+/**
  * Coverage-based point sizing.
  */
 export const applyPointSizeScaling = (
@@ -107,6 +117,7 @@ export const applyPointSizeScaling = (
 
     const size = Math.round(Math.max(minSize, (targetCoverage * plotArea) / n));
     vgSpec.mark = setMarkProp(vgSpec.mark, 'size', size);
+    coverageSizedMarks.add(vgSpec.mark);
     return vgSpec;
 };
 

@@ -30,11 +30,15 @@ const scatter = (n: number, house: string, extra: Record<string, unknown> = {}, 
             encodings: { x: { field: 'Weight' }, y: { field: 'Economy' }, ...extra },
         },
         theme_spec: THEME_PRESETS[house].spec,
-    } as never) as never as { config?: Record<string, { size?: number }> };
+    } as never) as never as { mark?: unknown; config?: Record<string, { size?: number }> };
 };
 
-const drawnSize = (spec: { config?: Record<string, { size?: number }> }) =>
-    spec.config?.point?.size ?? spec.config?.circle?.size;
+const drawnSize = (spec: { mark?: unknown; config?: Record<string, { size?: number }> }) => {
+    // A mark-level size beats the config block, so reading the config alone
+    // can report a size that nothing is actually drawn at.
+    const mark = (typeof spec.mark === 'string' ? { type: spec.mark } : spec.mark ?? {}) as { type?: string; size?: number };
+    return mark.size ?? (mark.type ? spec.config?.[mark.type]?.size : undefined);
+};
 
 const declaredSize = (house: string) =>
     (THEME_PRESETS[house].spec as { marks?: { point?: { size?: number } } }).marks?.point?.size;
@@ -82,16 +86,18 @@ describe('point size', () => {
         expect(drawnSize(spec)).toBe(Math.min(declaredSize('mckinsey')!, perPanel));
     });
 
-    it('a chart that draws no dot cloud keeps the house size', () => {
+    it('a chart that draws no dot cloud is not charged for the crowd', () => {
         // A line chart's dots are its vertices and a boxplot's are its
         // outliers — neither is one per row, so neither pays the crowd's
-        // rent for rows it never drew.
-        const values = Array.from({ length: 900 }, (_, i) => ({
+        // rent for rows it never drew. The same row count in a scatter,
+        // where every row *is* a dot, does have to give ground.
+        const rows = 900;
+        const values = Array.from({ length: rows }, (_, i) => ({
             Month: `2024-${String((i % 12) + 1).padStart(2, '0')}-01`,
             Revenue: 100 + (i % 37),
             Series: `S${i % 3}`,
         }));
-        const spec = assembleVegaLite({
+        const line = assembleVegaLite({
             data: { values },
             semantic_types: { Month: 'Time', Revenue: 'Quantity', Series: 'Category' },
             chart_spec: {
@@ -100,6 +106,7 @@ describe('point size', () => {
             },
             theme_spec: THEME_PRESETS['mckinsey'].spec,
         } as never) as never as { config?: Record<string, { size?: number }> };
-        expect(drawnSize(spec)).toBe(declaredSize('mckinsey'));
+        expect(line.config?.circle?.size).toBe(declaredSize('mckinsey'));
+        expect(drawnSize(scatter(rows, 'mckinsey'))).toBeLessThan(declaredSize('mckinsey')!);
     });
 });

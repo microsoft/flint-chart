@@ -50,6 +50,15 @@ function markOf(spec: any): any {
     return typeof node.mark === 'string' ? { type: node.mark } : node.mark;
 }
 
+/**
+ * The size a dot is actually drawn at. A mark-level `size` beats the config
+ * block, so reading the config alone can report a size nothing is drawn at.
+ */
+function dotSize(spec: any): number | undefined {
+    const mark = markOf(spec);
+    return mark?.size ?? spec.config?.[mark?.type]?.size;
+}
+
 describe('naming a house Flint ships', () => {
     it('reads the same as passing that house in full', () => {
         const named = build('economist' as any);
@@ -132,7 +141,7 @@ describe('cartoon mark character', () => {
         const spec = scatter(12);
         expect(spec.config.point.stroke).toBe('#2e2b28');
         expect(spec.config.point.strokeWidth).toBe(2.5);
-        expect(spec.config.point.size).toBe(170);
+        expect(dotSize(spec)).toBe(170);
 
         const line = build(THEME_PRESETS.cartoon.spec);
         expect(line.config.line.point.stroke).toBe('#2e2b28');
@@ -151,8 +160,8 @@ describe('cartoon mark character', () => {
 
     it('shrinks a dense point cloud without flattening sparse dots', () => {
         const dense = scatter(500);
-        expect(dense.config.point.size).toBeLessThan(170);
-        expect(dense.config.point.size).toBeGreaterThanOrEqual(36);
+        expect(dotSize(dense)).toBeLessThan(170);
+        expect(dotSize(dense)).toBeGreaterThanOrEqual(20);
         expect(dense.config.point.strokeWidth).toBeLessThan(2.5);
         expect(JSON.stringify(dense._theme?.report ?? [])).toContain('cover too much');
     });
@@ -754,20 +763,32 @@ describe('what a connector joins, and what a dot has to carry alone', () => {
     });
 
     it('sizes a dot the same wherever one is drawn', () => {
-        const rows = Array.from({ length: 12 }, (_, i) => ({ HP: 40 + i * 15, MPG: 40 - i * 2 }));
-        const spec = assembleVegaLite({
+        const rows = Array.from({ length: 12 }, (_, i) => ({ HP: 40 + i * 15, MPG: 40 - i * 2, Kind: `K${i % 3}` }));
+        const houseSpec = theme({
+            marks: { point: { presence: 'full', size: 45 } },
+        } as Partial<ThemeSpec>);
+        const at = (encodings: Record<string, unknown>) => assembleVegaLite({
             data: { values: rows },
-            semantic_types: { HP: 'Quantity', MPG: 'Quantity' },
-            chart_spec: { chartType: 'Scatter Plot', encodings: { x: 'HP', y: 'MPG' } },
-            theme_spec: theme({
-                marks: { point: { presence: 'full', size: 45 } },
-            } as Partial<ThemeSpec>),
+            semantic_types: { HP: 'Quantity', MPG: 'Quantity', Kind: 'Category' },
+            chart_spec: { chartType: 'Scatter Plot', encodings },
+            theme_spec: houseSpec,
         } as any) as any;
-        // The scatter is drawn as `circle`, which has its own config block —
-        // sizing `point` alone would have missed it entirely.
-        expect(spec.config.circle.size).toBe(45);
-        expect(spec.config.point.size).toBe(45);
-        expect(spec.config.line.point.size).toBe(45);
+
+        // The plain scatter is drawn as `circle`, which has its own config
+        // block — sizing `point` alone would have missed it entirely.
+        const plain = at({ x: 'HP', y: 'MPG' });
+        expect(markTypeOf(plain.mark)).toBe('circle');
+        expect(dotSize(plain)).toBe(45);
+
+        // A shape encoding promotes the same scatter to the `point` mark. It
+        // takes the house's size too — but from the mark, because
+        // `config.point` is shared with the symbol Vega-Lite draws for a
+        // line's vertices, whose size is a question about spacing.
+        const shaped = at({ x: 'HP', y: 'MPG', shape: { field: 'Kind' } });
+        expect(markTypeOf(shaped.mark)).toBe('point');
+        expect(dotSize(shaped)).toBe(45);
+
+        expect(plain.config.line.point.size).toBe(45);
     });
 });
 

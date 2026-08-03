@@ -1174,10 +1174,14 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ? {
                 show: (marksSpec.point?.presence ?? 'omit') !== 'omit',
                 size: marksSpec.point?.size,
-                // Only a house that spoke about its dots decides how they are
-                // filled; inventing an answer here would re-fill every
-                // scatter it has for the sake of a line chart's vertices.
-                filled: marksSpec.point ? marksSpec.point.fill !== 'hollow' : undefined,
+                // Only a house that spoke about its dots' fill decides how
+                // they are filled; inventing an answer here would re-fill
+                // every scatter it has for the sake of a line chart's
+                // vertices — or, for a house that named only a size, turn
+                // the hollow glyphs of a shape-encoded scatter solid.
+                filled: marksSpec.point?.fill != null
+                    ? marksSpec.point.fill !== 'hollow'
+                    : undefined,
                 haloColor: halo ? plot : undefined,
                 haloWidth: marksSpec.point?.halo?.width ?? (halo ? 1.5 : undefined),
             }

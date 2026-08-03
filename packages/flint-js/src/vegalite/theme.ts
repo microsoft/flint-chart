@@ -16,7 +16,7 @@
 
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
 import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
-import { CONTINUOUS_BAR_STEP_FILL } from './templates/utils.js';
+import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
 
@@ -1231,10 +1231,36 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         for (const family of ['point', 'circle', 'square'] as const) {
             config[family] = {
                 ...(config[family] ?? {}),
-                ...(pointSize != null ? { size: pointSize } : {}),
-                filled: m.point.filled !== false,
+                // `config.point` is not only the point *mark*: Vega-Lite
+                // normalizes a line's `point: true` overlay into a symbol
+                // styled `point`, so a size written here would also resize
+                // every line vertex in the chart — dots whose spacing along
+                // the line, not the plot's area, is what decides their size.
+                // Only `circle` and `square`, which no overlay borrows, can
+                // take the size from the config; the point marks that really
+                // are a data cloud are sized on the mark below.
+                ...(pointSize != null && family !== 'point' ? { size: pointSize } : {}),
+                // Only a house that spoke about its dots decides how they are
+                // filled. Vega-Lite draws a bare `point` hollow, which is how
+                // a shape-encoded scatter tells its glyphs apart, and a house
+                // that merely named a size has not asked for that to change.
+                ...(m.point.filled != null ? { filled: m.point.filled } : {}),
                 ...(m.outline ? { stroke: m.outline.color, strokeWidth: pointOutlineWidth } : {}),
             };
+        }
+        if (pointSize != null) {
+            walk(spec, (node) => {
+                const type = markTypeOf(node.mark);
+                if (type !== 'point' && type !== 'circle' && type !== 'square') return;
+                const mark = normalizeMark(node.mark);
+                // A template that fitted its dot to a lane measured something
+                // this pass cannot see, so its size stands. A size left by
+                // the build-time coverage estimate does not: it assumed a
+                // plot rather than being given one, and knew nothing of
+                // facets, so the budget above supersedes it.
+                if (mark.size != null && !coverageSizedMarks.has(node.mark)) return;
+                node.mark = { ...mark, size: pointSize };
+            });
         }
         if (m.point.size != null) {
             if (pointSize !== m.point.size) {
