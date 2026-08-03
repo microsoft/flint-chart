@@ -3520,11 +3520,42 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // opacity (not by dropping the row) keeps every slice in the stack, so the
     // surviving labels stay on the angles their arcs actually occupy.
     let radialLabelKeepTest: string | undefined;
+    // Which side of the mark's end a label sits on depends on which way the
+    // mark grew. A bar that runs down from zero has its end at the bottom, so
+    // "outside" is *below* it — placing the number above puts it on top of the
+    // bar it labels. The direction is a property of the datum, not of the
+    // layer, so where the series has negatives it is stated as an expression
+    // and Vega-Lite resolves it per mark.
+    let hasNegative = false;
+    for (const row of table ?? []) {
+        const v = row?.[measure.field];
+        if (typeof v === 'number' && Number.isFinite(v) && v < 0) { hasNegative = true; break; }
+    }
     const geometry = (within: boolean): any => {
         const w = reversed ? !within : within;
+        const gap = horizontal ? (within ? 5 + radius : 4 + radius) : 4 + radius;
+        if (!hasNegative) {
+            return horizontal
+                ? { align: w ? 'right' : 'left', baseline: 'middle', dx: w ? -gap : gap }
+                : { align: 'center', baseline: w ? 'top' : 'bottom', dy: w ? gap : -gap };
+        }
+        const down = `datum[${JSON.stringify(measure.field)}] < 0`;
+        const pick = (positive: string | number, negative: string | number) => ({
+            expr: typeof positive === 'string'
+                ? `${down} ? '${negative}' : '${positive}'`
+                : `${down} ? ${negative} : ${positive}`,
+        });
         return horizontal
-            ? { align: w ? 'right' : 'left', baseline: 'middle', dx: w ? -(5 + radius) : 4 + radius }
-            : { align: 'center', baseline: w ? 'top' : 'bottom', dy: w ? 4 + radius : -(4 + radius) };
+            ? {
+                align: pick(w ? 'right' : 'left', w ? 'left' : 'right'),
+                baseline: 'middle',
+                dx: pick(w ? -gap : gap, w ? gap : -gap),
+            }
+            : {
+                align: 'center',
+                baseline: pick(w ? 'top' : 'bottom', w ? 'bottom' : 'top'),
+                dy: pick(w ? gap : -gap, w ? -gap : gap),
+            };
     };
     if (cells) {
         // A cell has no outside: the grid is continuous, and a number beside a

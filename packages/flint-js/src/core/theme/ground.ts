@@ -40,6 +40,7 @@ import {
 } from './presence.js';
 import { CURRENCY_MAP } from '../field-semantics.js';
 import { getRegistryEntry } from '../type-registry.js';
+import { inferValueLabelFormat, longestLabelChars } from './value-label-format.js';
 
 // ---------------------------------------------------------------------------
 // Input
@@ -994,9 +995,15 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // decides whether a bar's slot can carry it, so a check that runs later
     // can only veto a decision already reported — which is how the control
     // came to be offered on charts that then printed nothing.
+    //
+    // What is measured is the label as it will be *printed*. Measuring
+    // `String(Math.round(value))` instead — as this did — is the width of a
+    // number nobody prints: it ignores the decimals, the separators, the sign
+    // and the format, so a chart of decimals measured four times narrower than
+    // it drew and its labels were offered straight into a pile.
     let valueMaxAbs = 0;
-    let valueDigits = 1;
     let measureField: string | undefined;
+    let labelValues: number[] = [];
     {
         const mch = bindings.measureChannels[0];
         measureField = mch
@@ -1005,13 +1012,30 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         if (measureField) {
             for (const row of ctx.table) {
                 const v = row?.[measureField];
-                if (typeof v !== 'number') continue;
+                if (typeof v !== 'number' || !Number.isFinite(v)) continue;
                 valueMaxAbs = Math.max(valueMaxAbs, Math.abs(v));
-                valueDigits = Math.max(valueDigits, String(Math.round(Math.abs(v))).length);
+                labelValues.push(v);
             }
         }
     }
-    const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * valueDigits + 12;
+    const numberFormatChoice = groundNumberFormat(theme, ctx, bindings.measureChannels[0], labelValues);
+    const numberFormat = numberFormatChoice.pattern;
+    if (numberFormatChoice.inferred && labelValues.length > 0) {
+        // Say it out loud: the digits a label carries are a decision, and a
+        // silent one would look like the number had simply been mangled.
+        const rawWidth = longestLabelChars(labelValues, undefined);
+        const shown = longestLabelChars(labelValues, numberFormat);
+        say('annotation.numberFormat',
+            `printed values use \`${numberFormat}\` — three significant figures is what a reader takes off a mark, and it holds the longest label to ${shown} characters where the raw value runs to ${rawWidth}`);
+    }
+    // A normalized stack prints each segment's share, not its value, so that
+    // is the string whose width has to fit — never wider than `100%`, however
+    // large the underlying numbers are.
+    const normalizedStack = (ctx.stacked ?? undefined) === 'normalize';
+    const labelChars = normalizedStack
+        ? 4
+        : longestLabelChars(labelValues, numberFormat);
+    const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * labelChars + 12;
 
     // Both policies read fit from the same two facts — room enough to stand a
     // number in, and few enough marks that the numbers do not pile up — and
@@ -1176,7 +1200,6 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     }
 
     const measureChannel = bindings.measureChannels[0];
-    const numberFormat = groundNumberFormat(theme, ctx, measureChannel);
 
     // A unit has to be stated somewhere. Normally that is the ruler; a pie has
     // no ruler, and a measure axis whose labels were removed is no longer one
@@ -1784,25 +1807,51 @@ function groundRedundancy(
 // Number format
 // ---------------------------------------------------------------------------
 
+/**
+ * The format a printed value is rendered with.
+ *
+ * The house states a *style* — group the thousands, use a k/M suffix, always
+ * show the sign — and a style says nothing about how many digits follow. Left
+ * open, `~s` prints `1.23457M` and a bare `,` prints `3.14159265`: the mark
+ * gets a number longer than itself and the reader gets precision they cannot
+ * use. So a house's stated precision is honoured, and a precision the house
+ * left open is inferred from the data.
+ *
+ * With no house at all there is still a format, which is the change of
+ * substance here: the alternative is Vega-Lite's raw rendering, and that is
+ * how a tidy chart ends up captioned `0.00123456`.
+ */
 function groundNumberFormat(
     theme: ThemeSpec,
     ctx: GroundingContext,
     measureChannel: 'x' | 'y' | undefined,
-): string | undefined {
+    values: number[],
+): { pattern: string | undefined; inferred: boolean } {
     const nf = theme.annotation?.numberFormat;
-    if (!nf) return undefined;
     const sem = measureChannel ? ctx.channelSemantics[measureChannel] : undefined;
     const isPercent = typeof sem?.format?.suffix === 'string' && sem.format.suffix.includes('%');
 
-    const sign = nf.signed ? '+' : '';
-    if (nf.thousands === 'suffix') return `${sign}~s`;
-    const group = nf.thousands === 'separator' ? ',' : '';
-    const precision = nf.precision === 'integer' ? '.0'
-        : nf.precision === 'one' ? '.1'
-            : nf.precision === 'two' ? '.2'
-                : undefined;
-    if (precision === undefined) return group ? `${sign}${group}` : undefined;
-    return `${sign}${group}${precision}${isPercent ? 'f' : 'f'}`;
+    let house: string | undefined;
+    if (nf) {
+        const sign = nf.signed ? '+' : '';
+        if (nf.thousands === 'suffix') house = `${sign}~s`;
+        else {
+            const group = nf.thousands === 'separator' ? ',' : '';
+            const precision = nf.precision === 'integer' ? '.0'
+                : nf.precision === 'one' ? '.1'
+                    : nf.precision === 'two' ? '.2'
+                        : undefined;
+            house = precision === undefined
+                ? (group ? `${sign}${group}` : (sign || undefined))
+                : `${sign}${group}${precision}${isPercent ? 'f' : 'f'}`;
+        }
+    }
+    // A field already carrying its own percent formatting is left alone: the
+    // semantics decided how that number reads, and re-deriving it here would
+    // print a share of a share.
+    if (isPercent) return { pattern: house, inferred: false };
+    const pattern = inferValueLabelFormat(values, house);
+    return { pattern, inferred: pattern !== house };
 }
 
 function clamp(v: number, lo: number, hi: number): number {
