@@ -4,7 +4,7 @@ import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { PlotlyView } from './PlotlyView';
-import { testCaseToAssemblyInput, thumbnailCanvasSize, type CanvasSize } from '../shared/test-case-utils';
+import { testCaseToAssemblyInput, thumbnailCanvasSize, withHouse, type CanvasSize } from '../shared/test-case-utils';
 import { BACKENDS, type PreviewBackend } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
 
@@ -37,7 +37,7 @@ export function WallChart({
 }) {
   const input = useMemo(() => {
     const base = testCaseToAssemblyInput(testCase, canvasSize ?? thumbnailCanvasSize(testCase));
-    const themed = themeId && backend === 'vegalite' ? { ...base, theme_spec: themeId } : base;
+    const themed: any = withHouse(base, themeId && backend === 'vegalite' ? themeId : undefined);
     if (!chartPropertyOverrides || Object.keys(chartPropertyOverrides).length === 0) {
       return themed;
     }

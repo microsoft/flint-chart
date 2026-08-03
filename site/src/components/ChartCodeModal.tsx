@@ -5,7 +5,7 @@ import { JsonCodeMirror } from './JsonCodeMirror';
 import { ScaleToFit } from './ScaleToFit';
 import { WallChart } from './WallChart';
 import { GalleryOptionsBar } from './GalleryOptionsBar';
-import { testCaseToAssemblyInput } from '../shared/test-case-utils';
+import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { buildPanelModel } from '../shared/chart-options';
 import { buildGalleryEditorHref } from '../shared/editor-payload';
 import { useLocale } from '../i18n/LocaleContext';
@@ -66,10 +66,9 @@ export function ChartCodeModal({
   // actions are stored). Display only — never persisted.
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = testCaseToAssemblyInput(testCase);
+    const base = withHouse(testCaseToAssemblyInput(testCase), canTheme ? themeId : undefined);
     return {
       ...base,
-      ...(canTheme && themeId ? { theme_spec: themeId } : {}),
       chart_spec: {
         ...base.chart_spec,
         chartProperties: { ...base.chart_spec.chartProperties, ...tempOptions },

@@ -158,3 +158,33 @@ export function thumbnailCanvasSize(t: TestCase): CanvasSize {
   if (cardinality === 0 || cardinality > LOW_CARDINALITY_MAX) return DEFAULT_CANVAS;
   return THUMBNAIL_WIDE_CANVAS;
 }
+
+/**
+ * How far a themed chart may stretch when the house's own footprint drives it.
+ * Square and generous, so a house that wants to run wide (a long category
+ * ruler) or tall (a stack of small multiples) can, without the ceiling
+ * dictating the shape it starts from.
+ */
+const THEMED_CANVAS_CEILING: CanvasSize = { width: 720, height: 720 };
+
+/**
+ * Name a house on an assembly input, and stand the gallery's own sizing down.
+ *
+ * A house states the footprint its style was measured against — the
+ * Economist's wide print column, Nature's narrow single-column figure — and
+ * its type scale is read off that footprint. The gallery's per-chart-type
+ * canvas is a tile-shaping convenience, not a decision anyone made about this
+ * chart, so when a house is chosen it steps aside and becomes a ceiling
+ * instead. That is exactly what the Theme Lab does, which is why the two agree.
+ */
+export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
+  input: T,
+  themeId: string | undefined,
+): T {
+  if (!themeId) return input;
+  return {
+    ...input,
+    chart_spec: { ...input.chart_spec, baseSize: undefined, canvasSize: THEMED_CANVAS_CEILING },
+    theme_spec: themeId,
+  } as T;
+}

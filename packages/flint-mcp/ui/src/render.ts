@@ -7,7 +7,7 @@
  * the chart re-renders instantly as the user edits options. No server round
  * trip, no data leaving the host.
  */
-import { assembleVegaLite } from 'flint-chart';
+import { assembleVegaLite, injectCanvasFurnitureSVG, readCanvasFurniture, resolveThemeSpec } from 'flint-chart';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { compile } from 'vega-lite';
 import { parse, View, Error as VegaError } from 'vega';
@@ -44,13 +44,36 @@ function usesAutoPreviewSize(input: ChartAssemblyInput): boolean {
   return !input.chart_spec.baseSize && !input.chart_spec.canvasSize;
 }
 
+/**
+ * The footprint the chosen house draws at, if it states one.
+ *
+ * A house's `baseSize` is not a stray number: it is the measure the rest of the
+ * style was set against — the Economist's wide print column, Nature's narrow
+ * single-column figure — and the type scale is read off it. Handing the
+ * assembler the app's own preview size instead pre-empts it, and every house
+ * comes out at the same size in the same type, which is the one thing a set of
+ * houses must not do.
+ */
+function houseBaseSize(input: ChartAssemblyInput): { width: number; height: number } | undefined {
+  try {
+    return resolveThemeSpec(input.theme_spec)?.compileDefaults?.baseSize;
+  } catch {
+    // An unknown house is the assembler's error to report, not ours to swallow.
+    return undefined;
+  }
+}
+
 function withAppPreviewDefaults(input: ChartAssemblyInput): ChartAssemblyInput {
   if (!usesAutoPreviewSize(input)) return input;
+  // The ceiling is the widget's business — it is how much room there is. The
+  // footprint is the house's, and the app's preview size only stands in where
+  // no house has spoken.
+  const base = houseBaseSize(input) ?? APP_PREVIEW_BASE_SIZE;
   return {
     ...input,
     chart_spec: {
       ...input.chart_spec,
-      baseSize: { ...APP_PREVIEW_BASE_SIZE },
+      baseSize: { ...base },
       canvasSize: { ...APP_PREVIEW_CANVAS_SIZE },
     },
   };
@@ -129,7 +152,23 @@ export async function renderFlintSvg(
   view.logLevel(VegaError);
   await view.runAsync();
   const pngScale = copyPngScale(view.width(), view.height());
-  const [svg, canvas] = await Promise.all([view.toSVG(), view.toCanvas(pngScale)]);
+  const [rawSvg, canvas] = await Promise.all([view.toSVG(), view.toCanvas(pngScale)]);
+  // Canvas-anchored furniture (the Economist masthead tab) is painted after
+  // Vega is done, because it belongs to the graphic frame rather than the plot
+  // and Vega-Lite has no way to say so. Both artifacts get it: the SVG by
+  // markup, the PNG by drawing straight onto the same view's canvas at the
+  // scale it was rasterised at.
+  const furniture = readCanvasFurniture(vlSpec);
+  const svg = injectCanvasFurnitureSVG(rawSvg, furniture);
+  if (furniture.length) {
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
+    if (ctx) {
+      for (const item of furniture) {
+        ctx.fillStyle = item.color;
+        ctx.fillRect(item.x * pngScale, item.y * pngScale, item.width * pngScale, item.height * pngScale);
+      }
+    }
+  }
   const png = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => blob ? resolve(blob) : reject(new Error('Could not encode chart PNG')),

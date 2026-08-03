@@ -116,3 +116,29 @@ describe('input guards', () => {
     }
   });
 });
+
+describe('house styling survives the render', () => {
+  // The Economist's red masthead tab is anchored to the graphic frame, not the
+  // plot, so Vega-Lite cannot draw it — the theme records its coordinates and
+  // the renderer paints it on afterwards. That last step is easy to lose (the
+  // spec still looks correct), so it is asserted on the artifact.
+  it('paints canvas-anchored furniture into the SVG', async () => {
+    const plain = await renderChart(sales, 'vegalite', { format: 'svg' });
+    const themed = await renderChart(
+      { ...sales, theme_spec: 'economist' },
+      'vegalite',
+      { format: 'svg' },
+    );
+    expect(plain.svg).not.toContain('#e3120b');
+    expect(themed.svg).toContain('#e3120b');
+  });
+
+  it('carries the tab through to the PNG', async () => {
+    const themed = await renderChart(
+      { ...sales, theme_spec: 'economist' },
+      'vegalite',
+      { format: 'png' },
+    );
+    expect(themed.buffer!.length).toBeGreaterThan(1000);
+  });
+});

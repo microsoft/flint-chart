@@ -10,7 +10,7 @@ import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
-import { testCaseToFlintSummary, testCaseToAssemblyInput } from '../shared/test-case-utils';
+import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { buildGalleryEditorHref, openEditorWithPayload } from '../shared/editor-payload';
 import { buildPanelModel } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
@@ -518,10 +518,9 @@ function HeroShowcase() {
   const activeTheme = canTheme ? themeId : undefined;
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = testCaseToAssemblyInput(testCase);
+    const base = withHouse(testCaseToAssemblyInput(testCase), activeTheme);
     return {
       ...base,
-      ...(activeTheme ? { theme_spec: activeTheme } : {}),
       chart_spec: {
         ...base.chart_spec,
         chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
@@ -756,7 +755,7 @@ function FlintSpecCode({
           }
         : {}),
     };
-    const withCanvas = { ...summary, ...(themeId ? { theme_spec: themeId } : {}), chart_spec: chartSpec };
+    const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId);
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
   }, [testCase, canvasSize, chartPropertyOverrides, themeId]);
