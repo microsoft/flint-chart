@@ -10,7 +10,7 @@
 .chart-redesign-figure {
   width: 100%;
   max-width: 100%;
-  min-height: 520px;
+  min-height: 560px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
   align-items: center;
@@ -22,19 +22,27 @@
 
 .redesign-real-mcp {
   min-width: 0;
-  min-height: 430px;
+  min-height: 470px;
   box-sizing: border-box;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 5px;
   background: #fff;
+  /* The app is built so the chart frame grows to the graphic, up to this cap.
+     Pinning `.chart` to a fixed height instead turns any graphic taller than
+     the frame — a Swiss bubble chart carries a colour key and a size key above
+     the plot — into a scrollbar inside the figure. Capping the *graphic* is
+     what the app already knows how to do, so the two panels still frame alike
+     without either of them scrolling. */
+  --chart-max-height: 400px;
 }
 
 .redesign-real-mcp .app {
-  min-height: 428px;
+  min-height: 468px;
 }
 
 .redesign-real-mcp .chart {
-  height: 350px;
+  min-height: 400px;
+  overflow: hidden;
 }
 
 .redesign-real-mcp .tc-menu {

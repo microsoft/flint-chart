@@ -104,8 +104,11 @@ function chartInput(variant: RedesignVariant, transformed: boolean): ChartAssemb
         title: 'Wealth and health of nations',
         subtitle: 'Life expectancy vs income per capita, 2018',
         chartProperties: { logScale_x: true },
-        baseSize: { width: 400, height: 300 },
-        canvasSize: { width: 400, height: 300 },
+        // Swiss stacks a colour key and a size key above the plot, which costs
+        // about 140px. At this height the taller of the two states lands on
+        // the frame exactly, so neither panel has to be scaled down to fit.
+        baseSize: { width: 400, height: 260 },
+        canvasSize: { width: 400, height: 260 },
       },
       field_display_names: {
         country: 'Country',
