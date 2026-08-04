@@ -265,7 +265,7 @@ function TransformControl(props: {
         (canSwitchType ? (
           <button
             type="button"
-            className="tc-type"
+            className="tc-type tc-type-chart"
             aria-haspopup="listbox"
             aria-expanded={open}
             aria-label={`${chartType.label}: ${curName ?? ''}`}
@@ -375,10 +375,10 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
   }, [open]);
 
   return (
-    <div className="transform-control" ref={rootRef}>
+    <div className="transform-control tc-theme" ref={rootRef}>
       <button
         type="button"
-        className="tc-type"
+        className="tc-type tc-type-theme"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Theme: ${current.label}`}
