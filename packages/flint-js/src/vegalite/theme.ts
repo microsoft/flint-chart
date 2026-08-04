@@ -768,6 +768,30 @@ function decadeTicks(table: any[], field: string | undefined): number[] | undefi
  */
 const MAX_OBSERVED_TICKS = 30;
 
+/**
+ * Whether a sorted run of values is a *step* rather than a scatter of readings.
+ *
+ * A little slack is allowed, because real steps are not exact: months are 28 to
+ * 31 days long and a survey run "every year" lands a fortnight late. Values
+ * that are not numbers at all are ordinal — they are already a step, one
+ * category at a time. A run that steps geometrically counts too: a log axis of
+ * 1, 10, 100 is as much a ruler as 2012, 2016, 2020.
+ */
+function evenlySpaced(values: any[]): boolean {
+    const nums = values.map(Number);
+    if (!nums.every((n) => Number.isFinite(n))) return true;
+    if (nums.length < 3) return true;
+    const regular = (xs: number[]) => {
+        const gaps: number[] = [];
+        for (let i = 1; i < xs.length; i++) gaps.push(xs[i] - xs[i - 1]);
+        const lo = Math.min(...gaps);
+        const hi = Math.max(...gaps);
+        return lo > 0 && hi / lo <= 1.5;
+    };
+    if (regular(nums)) return true;
+    return nums.every((n) => n > 0) && regular(nums.map(Math.log));
+}
+
 function observedTicks(
     table: any[],
     field: string | undefined,
@@ -792,6 +816,15 @@ function observedTicks(
         return String(a) < String(b) ? -1 : 1;
     });
     if (mode === 'endpoints') return [values[0], values[values.length - 1]];
+
+    // Ticking at observations is a claim that the data is *spaced* by
+    // something — Olympic years every four, quarters every three months — so
+    // that a tick between two of them would name a year there was no Games in.
+    // Fifteen countries' incomes are not spaced by anything: 5,300 is Nigeria,
+    // not a mark on a ruler, and a fence built from them is jagged, unroundable
+    // and says nothing a reader can carry to the next chart. So the axis is
+    // only stepped by its observations where they are actually a step.
+    if (!evenlySpaced(values)) return undefined;
 
     // Every label needs its own width. Where there is not room for all of
     // them, take every k-th — and keep the last, which is where a reader

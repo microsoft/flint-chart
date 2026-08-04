@@ -81,3 +81,36 @@ describe('two tick numbers may not read as one', () => {
         expect(spec.config.axisY.labelSeparation).toBeGreaterThan(0);
     });
 });
+
+/**
+ * Some houses ask for the axis to be ticked at the values the data holds,
+ * rather than at round numbers between them — an axis of Olympic years has no
+ * 2014 on it. That is a claim the data is *spaced* by something. Fifteen
+ * countries' incomes are not: 5,300 is Nigeria, not a mark on a ruler.
+ */
+describe('an axis is ticked at observations only where they are a step', () => {
+    it('leaves a measure axis to its round numbers', () => {
+        const spec = scatter('nyt');
+        const enc = spec.encoding?.x ?? spec.layer?.[0]?.encoding?.x;
+        expect(enc.axis?.values).toBeUndefined();
+    });
+
+    it('still ticks a regularly spaced index at its own observations', () => {
+        const games = [2012, 2016, 2020, 2024].flatMap((year) =>
+            ['United States', 'China'].map((country, i) => ({ year, country, rank: i + 1 })),
+        );
+        const out: any = assembleVegaLite({
+            data: { values: games },
+            semantic_types: { year: 'Quantity', country: 'Category', rank: 'Quantity' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: { field: 'year' }, y: { field: 'rank' }, color: { field: 'country' } },
+                baseSize: { width: 500, height: 300 },
+            },
+            theme_spec: 'nyt',
+        } as any);
+        const spec = out.spec ?? out;
+        const enc = spec.encoding?.x ?? spec.layer?.[0]?.encoding?.x;
+        expect(enc.axis?.values).toEqual([2012, 2016, 2020, 2024]);
+    });
+});

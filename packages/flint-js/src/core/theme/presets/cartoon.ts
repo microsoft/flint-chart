@@ -84,9 +84,12 @@ export const cartoon: ThemePreset = {
                     consumption: 'quantize',
                     quantizeCount: 5,
                 },
-                // Diverging: coral to sky, through the warm paper neutral.
+                // Diverging: sky to coral, through the warm paper neutral. The
+                // warm end is the high end — a ramp that runs the other way
+                // paints a hot July blue and a cold January red, and no reader
+                // checks the key before believing that.
                 diverging: {
-                    stops: ['#ff5d5d', '#ffb0a0', '#f2ead8', '#8fc9ff', '#3aa9ff'],
+                    stops: ['#3aa9ff', '#8fc9ff', '#f2ead8', '#ffb0a0', '#ff5d5d'],
                     neutral: '#f2ead8',
                     space: 'lab',
                     endpointsAgainstSurface: true,
