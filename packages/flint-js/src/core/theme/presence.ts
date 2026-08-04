@@ -96,6 +96,28 @@ export function isDarkSurface(surface: string): boolean {
 }
 
 /**
+ * Whether a surface is a colour the reader can see, as opposed to the absence
+ * of one.
+ *
+ * Plain white is how a house says "no surface": the chart is ink on the page,
+ * and the page's own whitespace runs straight through the chart's margin, so
+ * there is no boundary anywhere. Any other value — the dark house's near
+ * black, the cream of a print house — is a rectangle that has been painted,
+ * with an edge, and everything inside it is now measured against that edge.
+ *
+ * The test is deliberately exact rather than a luminance threshold. A cream at
+ * #fffdf5 is a hair off white and would pass any "is it light?" test, but a
+ * house that went to the trouble of naming a colour other than white meant to
+ * paint something, and the reader can see it against the page.
+ */
+export function isPaintedSurface(surface: string | undefined): boolean {
+    if (!surface) return false;
+    const c = parseColor(surface);
+    if (!c) return false;
+    return !(c.r === 255 && c.g === 255 && c.b === 255);
+}
+
+/**
  * How far up the ordinal an element sits, expressed as the fraction of the
  * distance from the surface to full-strength role ink.
  *

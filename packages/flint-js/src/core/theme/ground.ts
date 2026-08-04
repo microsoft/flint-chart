@@ -31,6 +31,7 @@ import type {
 import {
     contrastingInk,
     isDarkSurface,
+    isPaintedSurface,
     luminance,
     mixHex,
     parseColor,
@@ -1461,7 +1462,30 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
 
     // --- layout -------------------------------------------------------------
     const density = theme.layout?.density ?? 'normal';
-    const padding = density === 'compact' ? 8 : density === 'airy' ? 20 : 12;
+    const densityPadding = density === 'compact' ? 8 : density === 'airy' ? 20 : 12;
+
+    // A house that paints its canvas has drawn a rectangle, and the padding
+    // stops being empty space: it becomes that rectangle's margin, a visible
+    // edge with the ink measured against it. On plain white the same number is
+    // invisible — the page's whitespace runs straight through it, so ink
+    // sitting 8px from the boundary still looks like it has all the room in
+    // the world, because there is no boundary to see.
+    //
+    // Against a painted edge it does not. The nearest ink to the boundary is
+    // almost always an axis tick label, and a margin narrower than the type it
+    // surrounds reads as a crop rather than a frame. That is exactly what the
+    // dark house was doing: `compact` density gave it 8px, its tick labels are
+    // 10px, and the numbers looked shaved off the bottom of the panel.
+    //
+    // So a painted canvas is held to a floor of one and a half label heights
+    // on all four sides — the usual margin for framed type, and derived from
+    // the type rather than picked, because it is that type the margin has to
+    // clear. A house already breathing wider than the floor keeps its own
+    // number: density is still the house's voice, and this only stops that
+    // voice from cropping itself.
+    const padding = isPaintedSurface(canvas)
+        ? Math.max(densityPadding, Math.round((axisLabelText.fontSize ?? 10) * 1.5))
+        : densityPadding;
 
     return {
         themeId: theme.id ?? 'flint',
