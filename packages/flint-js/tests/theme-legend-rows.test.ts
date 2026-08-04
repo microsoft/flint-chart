@@ -90,3 +90,66 @@ describe('two keys above one plot', () => {
         expect(found.length).toBeGreaterThan(0);
     });
 });
+
+/**
+ * How many entries a horizontal key fits in one row.
+ *
+ * Vega-Lite packs a legend row — each entry takes the width of its own name.
+ * Charging every entry the width of the longest one wraps keys that would
+ * have fitted, which is what put "None at all" on a second row under a row
+ * with a third of its block still empty.
+ */
+describe('a legend row is packed, not ruled into columns', () => {
+    const likert = ['A great deal', 'Some', 'Not much', 'None at all'];
+    const many = [
+        'Strongly agree', 'Somewhat agree', 'Neither agree nor disagree',
+        'Somewhat disagree', 'Strongly disagree', 'No opinion',
+        'Prefer not to say', 'Not applicable',
+    ];
+
+    const survey = (responses: string[], width: number): any => assembleVegaLite({
+        data: {
+            values: ['Scientists', 'The military', 'The police', 'The press', 'Congress']
+                .flatMap((Institution) => responses.map((Response) => ({
+                    Institution, Response, Share: 100 / responses.length,
+                }))),
+        },
+        semantic_types: { Institution: 'Category', Response: 'Category', Share: 'Quantity' },
+        chart_spec: {
+            chartType: 'Stacked Bar Chart',
+            encodings: { x: 'Share', y: 'Institution', color: 'Response' },
+            title: 'Confidence in US institutions',
+            baseSize: { width, height: 300 },
+        },
+        theme_spec: 'swiss',
+    } as any) as any;
+
+    const legendOf = (node: any): any => {
+        if (!node || typeof node !== 'object') return undefined;
+        if (node.encoding?.color?.legend) return node.encoding.color.legend;
+        for (const key of Object.keys(node)) {
+            const found = legendOf(node[key]);
+            if (found) return found;
+        }
+        return undefined;
+    };
+
+    it('leaves a row alone when the names it carries actually fit', () => {
+        // One long name and three short ones. Ruled into equal columns this
+        // asked for 4 × the width of "A great deal" and wrapped to three;
+        // packed, the four sit in one row with room to spare.
+        expect(legendOf(survey(likert, 400))?.columns).toBeUndefined();
+    });
+
+    it('still wraps a key that genuinely overruns its block', () => {
+        const columns = legendOf(survey(many, 400))?.columns;
+        expect(columns).toBeGreaterThan(0);
+        expect(columns).toBeLessThan(many.length);
+    });
+
+    it('wraps harder as the block narrows', () => {
+        const wide = legendOf(survey(many, 900))?.columns ?? many.length;
+        const narrow = legendOf(survey(many, 400))?.columns ?? many.length;
+        expect(narrow).toBeLessThanOrEqual(wide);
+    });
+});

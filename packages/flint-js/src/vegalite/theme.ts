@@ -3163,15 +3163,35 @@ function wrapWideKeys(
             const labelFS = enc.legend?.labelFontSize ?? l.label.fontSize ?? 10;
             const symbolArea = enc.legend?.symbolSize;
             const symbol = symbolArea ? 2 * Math.sqrt(symbolArea / Math.PI) : 10;
-            const entryWidth = entries.reduce(
-                (m, e) => Math.max(m, symbol + 4 + e.length * labelFS * 0.55 + 10), 0);
+            // Vega-Lite packs a legend row: each entry takes the width of its
+            // own name, not the width of the longest one. Measuring the row as
+            // `count × widest` therefore charges every short name the price of
+            // the longest, and a four-key Likert scale — one long name and
+            // three short ones — was wrapped to three columns with a third of
+            // the block still empty. (Verified by rendering: forced to one
+            // row, the entries sit tight and the row clears the block.)
+            const widthOf = (e: string) => symbol + 4 + e.length * labelFS * 0.55 + 10;
             // A top or bottom legend flows across the whole chart, not just the
             // plot the marks occupy. A five-bar stacked column is ~90px wide
             // yet its key has the full canvas to spread over, so a narrow plot
             // must not force the key into one column (and, below, into a cap
             // that would then hide entries).
             const usableBlock = Math.max(block, MIN_HORIZONTAL_LEGEND_BLOCK);
-            const columns = Math.max(1, Math.floor(usableBlock / entryWidth));
+            // The widest run of `n` consecutive entries is what has to clear
+            // the block, since that is the row Vega-Lite will actually draw.
+            const widths = entries.map(widthOf);
+            const rowFits = (n: number) => {
+                for (let i = 0; i < widths.length; i += n) {
+                    let sum = 0;
+                    for (let j = i; j < Math.min(i + n, widths.length); j += 1) sum += widths[j];
+                    if (sum > usableBlock) return false;
+                }
+                return true;
+            };
+            let columns = 1;
+            for (let n = entries.length; n >= 1; n -= 1) {
+                if (rowFits(n)) { columns = n; break; }
+            }
             if (entries.length <= columns) continue;
             enc.legend = { ...(enc.legend ?? {}), columns };
             // A folded key is already the bounded top-K + "Others (N)" list the
