@@ -15,7 +15,7 @@ import { Illustrations } from './playground/Illustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
-import { ThemeMosaic } from './playground/ThemeMosaic';
+import { ThemeWall } from './playground/ThemeWall';
 import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
@@ -57,7 +57,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
-          <Route path="theme-mosaic" element={<ThemeMosaic />} />
+          <Route path="theme-wall" element={<ThemeWall />} />
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-real" element={<ThemeLabReal />} />

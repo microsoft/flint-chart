@@ -134,6 +134,9 @@ function buildCases(): PreviewCase[] {
         license: 'US-gov facts (public domain) — courtesy citation',
         semantic_types: { Year: 'Year', 'Miles/person': 'Quantity', 'Gas price': 'Quantity' },
         encodings: { x: 'Miles/person', y: 'Gas price', order: 'Year' },
+        // A trajectory, not a magnitude: the shape of the path is the message, so
+        // both axes frame the data rather than reaching down to zero.
+        chartProperties: { includeZero_x: false, includeZero_y: false },
         data: DRIVING.map(([Year, miles, gas]) => ({ Year, 'Miles/person': miles, 'Gas price': gas })),
     });
 
@@ -235,20 +238,32 @@ function buildCases(): PreviewCase[] {
         id: 'population-waterfall',
         chartType: 'Waterfall Chart',
         title: 'World population growth 1950 → 2020, by region contribution',
-        blurb: 'A bridge from 2.5B to ~7.8B people, broken down by each region\'s addition.',
-        source: 'UN World Population Prospects 2022 (regional deltas)',
+        blurb: 'A bridge from 2.5B to ~7.8B people, one step per UN sub-region.',
+        source: 'UN World Population Prospects 2022 (sub-regional deltas, 1950–2020)',
         license: 'CC-BY 4.0 (attribute UN)',
         semantic_types: { Step: 'Category', 'Population (M)': 'Quantity' },
         encodings: { x: 'Step', y: 'Population (M)' },
+        // Broken out to UN sub-region rather than continent: the same bridge, but
+        // it separates the two very different Asian contributions instead of
+        // hiding them in one bar.
         data: [
             { Step: '1950', 'Population (M)': 2536 },
-            { Step: 'Asia', 'Population (M)': 3237 },
-            { Step: 'Africa', 'Population (M)': 1134 },
-            { Step: 'Americas', 'Population (M)': 684 },
+            { Step: 'South-Central Asia', 'Population (M)': 1515 },
+            { Step: 'Eastern Asia', 'Population (M)': 1007 },
+            { Step: 'Sub-Saharan Africa', 'Population (M)': 956 },
+            { Step: 'South-Eastern Asia', 'Population (M)': 503 },
+            { Step: 'Latin America', 'Population (M)': 484 },
+            { Step: 'Western Asia', 'Population (M)': 229 },
+            { Step: 'Northern Africa', 'Population (M)': 199 },
+            { Step: 'Northern America', 'Population (M)': 199 },
             { Step: 'Europe', 'Population (M)': 199 },
             { Step: 'Oceania', 'Population (M)': 32 },
+            { Step: '2020', 'Population (M)': 7859 },
         ],
-        chartProperties: { totals: 'last' },
+        // Both ends are anchors: 1950 is the starting stock and 2020 the closing
+        // one, so each is drawn as a full bar to zero with the regional deltas
+        // floating between them.
+        chartProperties: { totals: 'both' },
     });
 
     cases.push({
@@ -456,12 +471,12 @@ function buildCases(): PreviewCase[] {
         id: 'co2-lollipop',
         chartType: 'Lollipop Chart',
         title: 'CO₂ emissions per capita, 2022 (tonnes)',
-        blurb: 'Per-person emissions vary ~20× across countries.',
+        blurb: 'Per-person emissions vary ~40× across sixteen countries.',
         source: 'Our World in Data (Global Carbon Project)',
         license: 'CC-BY (OWID)',
         semantic_types: { Country: 'Country', 'Tonnes/person': 'Quantity' },
         encodings: { x: 'Country', y: 'Tonnes/person' },
-        data: [['Qatar', 37], ['UAE', 22], ['United States', 15], ['Canada', 14], ['Russia', 11], ['Japan', 8.5], ['China', 8.0], ['Germany', 8.0], ['UK', 5.0], ['France', 4.6], ['Brazil', 2.3], ['India', 2.0]].map(([Country, v]) => ({ Country, 'Tonnes/person': v })),
+        data: [['Qatar', 37], ['UAE', 22], ['Australia', 15], ['United States', 15], ['Canada', 14], ['South Korea', 12], ['Russia', 11], ['Japan', 8.5], ['China', 8.0], ['Germany', 8.0], ['South Africa', 6.7], ['UK', 5.0], ['France', 4.6], ['Mexico', 3.3], ['Brazil', 2.3], ['India', 2.0]].map(([Country, v]) => ({ Country, 'Tonnes/person': v })),
     });
 
     // Pyramid — US population by age & sex.
@@ -622,13 +637,23 @@ function buildCases(): PreviewCase[] {
         id: 'temp-heatmap',
         chartType: 'Heatmap',
         title: 'Average monthly temperature by city (°C)',
-        blurb: 'Warm bands for the tropics, cold winters for Moscow.',
+        blurb: 'Warm bands for the tropics, a cold Moscow winter, and Sydney running the year backwards.',
         source: 'Climate normals (approx.)',
         license: 'Illustrative',
         semantic_types: { Month: 'Category', City: 'Category', 'Temp (°C)': 'Quantity' },
         encodings: { x: 'Month', y: 'City', color: 'Temp (°C)' },
         data: (() => {
-            const t: Record<string, number[]> = { Singapore: [26, 27, 28, 28, 28, 28, 27, 27, 27, 27, 26, 26], Cairo: [14, 15, 18, 22, 26, 28, 29, 29, 27, 24, 20, 16], Moscow: [-9, -7, -1, 7, 13, 17, 19, 17, 11, 5, -1, -6], Seattle: [5, 6, 8, 10, 13, 16, 19, 19, 16, 11, 7, 4] };
+            // Six cities, not four: enough rows that the matrix reads as a block
+            // rather than a strip, and Sydney puts a southern-hemisphere summer
+            // against Moscow's winter in the same column.
+            const t: Record<string, number[]> = {
+                Singapore: [26, 27, 28, 28, 28, 28, 27, 27, 27, 27, 26, 26],
+                Delhi: [14, 17, 23, 29, 33, 34, 31, 30, 29, 26, 20, 15],
+                Cairo: [14, 15, 18, 22, 26, 28, 29, 29, 27, 24, 20, 16],
+                Sydney: [23, 23, 22, 19, 16, 13, 13, 14, 17, 19, 21, 22],
+                Seattle: [5, 6, 8, 10, 13, 16, 19, 19, 16, 11, 7, 4],
+                Moscow: [-9, -7, -1, 7, 13, 17, 19, 17, 11, 5, -1, -6],
+            };
             const rows: Record<string, unknown>[] = [];
             for (const [City, arr] of Object.entries(t)) arr.forEach((v, i) => rows.push({ City, Month: MO[i], 'Temp (°C)': v }));
             return rows;
@@ -961,9 +986,11 @@ function buildCases(): PreviewCase[] {
         encodings: { x: 'Share (%)', y: 'Institution', color: 'Response' },
         chartProperties: { stackMode: 'center' },
         data: ([
+            ['Small business', [42, 45, 10, 3]],
             ['Scientists', [39, 45, 12, 4]],
             ['The military', [32, 43, 18, 7]],
             ['The police', [26, 44, 21, 9]],
+            ['The Supreme Court', [18, 40, 27, 15]],
             ['The press', [11, 32, 34, 23]],
             ['Congress', [8, 30, 38, 24]],
         ] as [string, number[]][]).flatMap(([Institution, vals]) =>
