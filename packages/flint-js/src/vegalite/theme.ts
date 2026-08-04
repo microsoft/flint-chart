@@ -4512,9 +4512,16 @@ function bandEndLabels(
     // A name can only be knocked out of a band wide and thick enough to hold
     // it. Where the band ends as a sliver — Oceania under four other
     // continents — or climbs away from under its own label, the name goes
-    // outside the plot in its own ink instead. And a chart with half its names
-    // in and half out reads as a mistake: past one exception they all go out,
-    // where they line up as a single list.
+    // outside the plot in its own ink instead.
+    //
+    // `seriesEnd` is a preference for the *inset* position, not a per-series
+    // choice, so it is honoured all or nothing. A chart that knocks four names
+    // out of their bands and hangs the fifth in the margin reads as a mistake:
+    // the two positions carry different ink and sit on different sides of the
+    // plot edge, so the odd one out looks like a different kind of label rather
+    // than the same label with less room. One band that cannot hold its name is
+    // therefore enough to send every name outset, where they line up as a
+    // single list and the set stays comparable.
     const t = d.legend.label;
     const along = domainChannel === 'x' ? (body.width ?? spec.width) : (body.height ?? spec.height);
     const across = valueChannel === 'y' ? (body.height ?? spec.height) : (body.width ?? spec.width);
@@ -4534,7 +4541,7 @@ function bandEndLabels(
         acrossPx: typeof across === 'number' ? across : 254,
         fontSize: t.fontSize ?? 10,
     });
-    const outside = homeless.length > 1 ? order : homeless;
+    const outside = homeless.length ? order : [];
     const outsideList = JSON.stringify(outside);
     const belongs = (inside: boolean) =>
         `indexof(${outsideList}, datum[${JSON.stringify(seriesField)}] + '') ${inside ? '<' : '>='} 0`;
@@ -4545,11 +4552,21 @@ function bandEndLabels(
     // A normalized stack redraws every band as a share of its column, and the
     // axis is read in per cent. The field still holds what it always held —
     // 9,420 TWh of coal — so printing it beside the name puts a number on the
-    // chart that the chart does not draw anywhere. The name goes alone.
+    // chart that the chart does not draw anywhere.
+    //
+    // The reading is also dropped once the names are pushed outset. Inset, the
+    // name lies on the band at the reading it quotes, so the number annotates
+    // something: this band, here, is 4,641. Outset it is a list in the margin —
+    // a legend, naming which colour is which — and a legend that quotes numbers
+    // is quoting them about a place the reader cannot see. It would also widen
+    // the margin by the length of the longest *number* for no reading gained.
+    //
+    // Either way, the name goes alone.
     const normalized = value.stack === 'normalize';
-    const name = normalized
-        ? `datum[${JSON.stringify(seriesField)}] + ''`
-        : `datum[${JSON.stringify(seriesField)}] + ' ' + ${shown}`;
+    const withValue = !normalized && !outside.length;
+    const name = withValue
+        ? `datum[${JSON.stringify(seriesField)}] + ' ' + ${shown}`
+        : `datum[${JSON.stringify(seriesField)}] + ''`;
     // The band is an `area` mark, which Vega-Lite stacks on its own; a `text`
     // mark is not stacked unless told to. Left implicit, every label lands at
     // its series' *raw* reading and the whole set piles up at the foot of the
@@ -4608,15 +4625,20 @@ function bandEndLabels(
             ...(inside ? knockedOut : inSeriesInk),
         },
     });
-    if (outside.length < order.length) appendLayer(body, endLayer(true));
+    // Exactly one of the two layers is drawn: `outside` is now all of the
+    // series or none of them, never a subset.
+    if (!outside.length) appendLayer(body, endLayer(true));
     if (outside.length) {
         appendLayer(body, endLayer(false));
-        const longest = Math.max(...outside.map((s) => s.length)) + 8;
+        // Name only out here, so the margin is measured off the longest name
+        // plus a little air — not off a name-and-number pair that is no longer
+        // drawn.
+        const longest = Math.max(...outside.map((s) => s.length)) + 2;
         growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
         say('legend.placement',
-            outside.length === order.length
+            homeless.length === order.length
                 ? 'the bands climb away from their own labels — the names sit outside the plot in series ink, as a list'
-                : `${outside.length === 1 ? 'one band is' : `${outside.length} bands are`} too thin at the end to hold a name — those sit outside the plot in their own ink`);
+                : `${homeless.length === 1 ? 'one band is' : `${homeless.length} bands are`} too thin at the end to hold a name — the inset position is all or nothing, so every name sits outside the plot rather than splitting the set between two positions`);
     }
     // Layers share their scales, so without this the label's colour scale is
     // the band's and the name comes out tinted the colour of the shape it is
