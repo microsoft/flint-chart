@@ -65,6 +65,41 @@ function maxMagnitude(values: number[]): number {
     return max;
 }
 
+/**
+ * The decimals it takes for the printed labels to keep the distinctions the
+ * marks are already showing.
+ *
+ * Precision chosen from magnitude alone answers "how big is this number", but
+ * a value label is read *against its neighbours*, and what a reader wants from
+ * it is often the difference. Eight bars of visibly different height captioned
+ * `100` eight times, or a row of fractions all captioned `0`, is a caption the
+ * chart itself contradicts — the worst thing a label can be, because the
+ * reader trusts the number over the pixels.
+ *
+ * So the series gets whatever decimals it takes to keep two values that differ
+ * printing differently, and to keep a value that is not zero from printing as
+ * zero. Never more than the data carries, and never more than six: past that
+ * the distinction is too fine to have been the point of the chart.
+ */
+function decimalsToDistinguish(values: number[], cap: number): number {
+    const distinct = new Set<number>();
+    for (const v of values) if (Number.isFinite(v)) distinct.add(v);
+    if (distinct.size === 0) return 0;
+    const list = [...distinct];
+    for (let d = 0; d <= cap; d += 1) {
+        const scale = 10 ** d;
+        const printed = new Set<number>();
+        let zeroedOut = false;
+        for (const v of list) {
+            const r = Math.round(v * scale) / scale;
+            if (r === 0 && v !== 0) zeroedOut = true;
+            printed.add(r);
+        }
+        if (!zeroedOut && printed.size === list.length) return d;
+    }
+    return cap;
+}
+
 /** Whether a d3 format pattern already states a precision (`.2f`, `.3~s`). */
 function statesPrecision(pattern: string): boolean {
     return /\.\d/.test(pattern);
@@ -77,7 +112,13 @@ function statesPrecision(pattern: string): boolean {
  * someone made. But a house states a *style* — "use a k/M suffix", "group the
  * thousands" — and a style says nothing about precision, which is why
  * `~s` prints `1.23457M`. Where the house left the precision open, it is
- * filled in from the data; where the house stated one, it is left alone.
+ * filled in from the data.
+ *
+ * Where the house stated one it is kept, with a single exception: a stated
+ * precision that would print two different values the same, or a value that
+ * is not zero as zero, is raised until it does not. `precision: 'integer'` is
+ * a house saying how numbers should read, not a house asking for eight bars
+ * of different heights all captioned `100`.
  *
  * With no house at all the whole pattern is inferred, because the alternative
  * is Vega-Lite's raw rendering, and that is the case this exists to fix.
@@ -85,10 +126,27 @@ function statesPrecision(pattern: string): boolean {
 export function inferValueLabelFormat(values: number[], house: string | undefined): string | undefined {
     const nums = values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
     if (nums.length === 0) return house;
-    if (house && statesPrecision(house)) return house;
 
     const max = maxMagnitude(nums);
     const sign = house?.startsWith('+') ? '+' : '';
+    // What it would take for the labels to stay as distinct as the marks.
+    // This is a floor on precision, not a target: it is consulted both when
+    // the house left the precision open and when it stated one, because a
+    // stated precision is a preference about how numbers should read, not a
+    // licence to print one the chart contradicts.
+    const needed = decimalsToDistinguish(nums, dataDecimals(nums));
+    if (house && statesPrecision(house)) {
+        // A suffix format states *significant* digits, not decimals, and
+        // shortens by design; the two rules do not compose, so it is left as
+        // the house wrote it.
+        if (/[se]$/.test(house)) return house;
+        const stated = Number(/\.(\d+)/.exec(house)?.[1] ?? 0);
+        if (stated >= needed) return house;
+        // Keep everything the house said — sign, grouping, suffix-free `f` —
+        // and raise only the digits, with `~` so the values that did not need
+        // them are not padded out with zeros.
+        return house.replace(/\.\d+~?f$/, `.${needed}~f`);
+    }
     // A house that asked for a suffix keeps its suffix; it is only the number
     // of digits in front of it that was left open. But a suffix means `k` and
     // `M` — the house is asking to shorten large numbers, not to reach for SI
@@ -102,7 +160,16 @@ export function inferValueLabelFormat(values: number[], house: string | undefine
         if (a > 0) smallest = Math.min(smallest, a);
     }
     const suffixIsSafe = max >= 1000 && (smallest === Infinity || smallest >= 1);
-    const wantsSuffix = (house ? /s$/.test(house) : max >= SUFFIX_ABOVE) && suffixIsSafe;
+    // A suffix is a deliberate shortening, but not to the point of printing
+    // two different bars the same. Three significant figures separate
+    // 123M from 988M; they do not separate 1,000,000 from 1,000,400.
+    const sigFigsHold = (() => {
+        const distinct = new Set(nums);
+        const rounded = new Set<number>();
+        for (const v of distinct) rounded.add(Number(v.toPrecision(SIGNIFICANT_DIGITS)));
+        return rounded.size === distinct.size;
+    })();
+    const wantsSuffix = (house ? /s$/.test(house) : max >= SUFFIX_ABOVE) && suffixIsSafe && sigFigsHold;
     if (wantsSuffix) return `${sign}.${SIGNIFICANT_DIGITS}~s`;
 
     // Three significant digits at the top of the scale. `1999.9` keeps none of
@@ -125,7 +192,9 @@ export function inferValueLabelFormat(values: number[], house: string | undefine
     if (max > 0 && max < 1e-4) return `${sign}.2~e`;
 
     // Never invent precision the data does not have: whole numbers stay whole.
-    const decimals = Math.max(0, Math.min(Math.max(wanted, floor), dataDecimals(nums), 6));
+    // `needed` is the exception that is not an exception — it is already
+    // bounded by what the data carries, so honouring it never invents a digit.
+    const decimals = Math.max(0, Math.min(Math.max(wanted, floor), dataDecimals(nums), 6), needed);
     return decimals === 0 ? `${sign}${grouping}d` : `${sign}${grouping}.${decimals}~f`;
 }
 

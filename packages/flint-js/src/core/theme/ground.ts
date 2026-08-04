@@ -1048,6 +1048,10 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         ? 4
         : longestLabelChars(labelValues, numberFormat);
     const valueLabelWidthPx = (valueLabel.fontSize ?? 10) * 0.62 * labelChars + 12;
+    // The ink alone, without the breathing room a label wants when it has to
+    // sit *inside* something. Two labels floating above their own bars only
+    // need to clear each other.
+    const labelTextPx = (valueLabel.fontSize ?? 10) * 0.62 * labelChars;
 
     // Both policies read fit from the same two facts — room enough to stand a
     // number in, and few enough marks that the numbers do not pile up — and
@@ -1079,12 +1083,18 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // `false` rather than absent when nothing was stated.
     const stacked = ctx.stacked || ctx.positional?.stacked;
     // On a vertical bar the number lies across the band, so the band has to be
-    // at least as wide as the number is. A single-series bar can escape a
-    // narrow band by moving the label above itself (below); a dodged or
-    // stacked one cannot — above the bar belongs to another series or to the
-    // whole stack — so for those the width is a condition of labelling at all.
-    const widthIsBinding = bindings.categoricalChannel === 'x' && (dodged || Boolean(stacked));
-    const slotHoldsNumber = !widthIsBinding || labelSlot >= valueLabelWidthPx;
+    // at least as wide as the number is — and that holds whether or not the
+    // bar shares its band. Moving the label above the bar buys height, not
+    // width: the label above bar B still runs into the label above bar C.
+    // `,.0f` on nine-digit revenues drew `987,654,321` across three bands and
+    // off both plot edges, which is the case this closes.
+    const widthIsBinding = bindings.categoricalChannel === 'x';
+    // A label sharing its band — dodged or stacked — has to stand in the room
+    // it is given, gutter and all. One floating above its own bar only has to
+    // clear its neighbour: labels are centred on the band, so two of them
+    // touch exactly when the printed string is wider than the step.
+    const widthNeeded = (dodged || Boolean(stacked)) ? valueLabelWidthPx : labelTextPx;
+    const slotHoldsNumber = !widthIsBinding || labelSlot >= widthNeeded;
     // A stacked bar shares its band between the segments the *other* way: the
     // band is whole, but each segment's own thickness is what has to hold a
     // line of text. Segments thinner than that are dropped one by one further

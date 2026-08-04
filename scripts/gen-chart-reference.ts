@@ -99,7 +99,7 @@ const PARAM_DESCRIPTIONS: Record<string, string> = {
     interpolate: 'Line or area interpolation method.',
     showPoints: 'Overlay point markers on the line.',
     showTextLabels: 'Render value labels on the marks (legacy spelling of showValueLabels).',
-    showValueLabels: 'Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long, so the mark carries a number rather than a transcription.',
+    showValueLabels: 'Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription.',
     showPercent: 'Show each value as a percentage of the total.',
     stackMode: 'Stacking strategy for overlapping series.',
     binCount: 'Maximum bin cap; Auto lets the backend choose.',

@@ -72,6 +72,47 @@ describe('value label precision', () => {
     });
   });
 
+  describe('a label may not contradict the mark it sits on', () => {
+    it('raises a stated precision that would print every bar the same', () => {
+      // McKinsey states `precision: 'integer'`. On eight bars of visibly
+      // different height that printed `100` eight times — a caption the
+      // chart itself refutes, and the reader believes the number.
+      const near = [100.1, 100.2, 100.15, 100.05, 100.25, 100.12, 100.18, 100.08];
+      expect(inferValueLabelFormat(near, ',.0f')).toBe(',.2~f');
+      // The house's grouping and sign survive; only the digits move.
+      expect(inferValueLabelFormat(near, '+,.0f')).toBe('+,.2~f');
+    });
+
+    it('raises a stated precision that would print a value as zero', () => {
+      expect(inferValueLabelFormat([0.45, 0.82, 0.13], ',.0f')).toBe(',.1~f');
+      expect(inferValueLabelFormat([0.00123456, 0.0034, 0.0021], ',.0f')).toBe(',.3~f');
+    });
+
+    it('leaves a stated precision alone when the labels stay distinct', () => {
+      expect(inferValueLabelFormat([1234, 5678, 4321], ',.0f')).toBe(',.0f');
+      // A real zero is allowed to print as zero.
+      expect(inferValueLabelFormat([0, 17, 25], ',.0f')).toBe(',.0f');
+    });
+
+    it('finds the digits an inferred format needs, not just the ones its magnitude suggests', () => {
+      // Three significant figures off the largest value gives `100` here;
+      // the information in this series lives two digits further down.
+      expect(inferValueLabelFormat([100.1, 100.2, 100.15, 100.05], undefined)).toBe(',.2~f');
+    });
+
+    it('drops the suffix when three significant figures would collapse the values', () => {
+      // `.3~s` prints both of these `1M`.
+      expect(inferValueLabelFormat([1000000, 1000400], undefined)).toBe(',d');
+      // Where they stay apart, the suffix is still the shorter read.
+      expect(inferValueLabelFormat([123456789, 987654321], undefined)).toBe('.3~s');
+    });
+
+    it('never invents a digit the data does not carry', () => {
+      expect(inferValueLabelFormat([3, 17, 42], ',.0f')).toBe(',.0f');
+      expect(inferValueLabelFormat([3, 17, 42], undefined)).toBe(',d');
+    });
+  });
+
   describe('measuring the label that will actually be drawn', () => {
     /**
      * Verified against real d3-format: every pattern/value pair below was
@@ -123,19 +164,30 @@ describe('value label precision', () => {
       theme_spec: 'nyt',
     }) as any;
 
-    it('a wide label is moved off the bar; a narrow one is not', () => {
+    it('a wide label is withheld where a narrow one is printed', () => {
       // Same bar count, same room. Only the printed width differs: `13` sits
-      // in the band, `0.0016` does not. The old estimate measured both as
-      // their rounded integer — one character each — and left the wide one
-      // sitting across its neighbours.
+      // in the band, `0.00123` does not — it is nearly twice the band wide,
+      // and there is nowhere on a vertical bar chart to put a number that
+      // wide without laying it across its neighbours. The old estimate
+      // measured both as their rounded integer — one character each — and
+      // printed the wide one anyway.
       const narrow: any = assembleVegaLite(bars(Array.from({ length: 14 }, (_, i) => 10 + i)));
       const wide: any = assembleVegaLite(bars(Array.from({ length: 14 }, (_, i) => 0.00123456 + i * 0.0001)));
-      expect(narrow._theme?.decisions?.dataLabels?.placement).toBe('atMark');
-      expect(wide._theme?.decisions?.dataLabels?.placement).toBe('outsideMark');
-      // ...and both are still printed. Widening the measurement is not an
-      // excuse to withhold the labels.
       expect(narrow._theme?.decisions?.dataLabels?.show).toBe(true);
-      expect(wide._theme?.decisions?.dataLabels?.show).toBe(true);
+      expect(narrow._theme?.decisions?.dataLabels?.placement).toBe('atMark');
+      expect(wide._theme?.decisions?.dataLabels?.show).toBe(false);
+      // ...and given room, the same wide labels are printed. The width is the
+      // reason, not the digits.
+      const roomy: any = assembleVegaLite({
+        ...bars(Array.from({ length: 14 }, (_, i) => 0.00123456 + i * 0.0001)),
+        chart_spec: {
+          chartType: 'Bar Chart',
+          encodings: { x: 'cat', y: 'val' },
+          baseSize: { width: 1400, height: 400 },
+          chartProperties: { showValueLabels: true },
+        },
+      });
+      expect(roomy._theme?.decisions?.dataLabels?.show).toBe(true);
     });
 
     it('gives an unthemed chart a format too, rather than the raw number', () => {
@@ -170,7 +222,7 @@ describe('value label precision', () => {
       chart_spec: {
         chartType: 'Bar Chart',
         encodings: horizontal ? { y: 'cat', x: 'val' } : { x: 'cat', y: 'val' },
-        baseSize: { width: 460, height: 320 },
+        baseSize: { width: 700, height: 320 },
         chartProperties: { showValueLabels: true },
       },
       theme_spec: 'economist',
