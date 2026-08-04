@@ -22,8 +22,33 @@ export const DEFAULT_FONT_FAMILY = 'Liberation Sans';
 export const CHART_FONT_FAMILY =
   "Arial, 'Helvetica Neue', Helvetica, 'Liberation Sans', Roboto, sans-serif";
 
-/** Generic/aliased family names the bundled Arial-metric font answers to. */
-const SANS_ALIASES = ['sans-serif', 'Arial', 'Helvetica', 'Liberation Sans'];
+/**
+ * Generic/aliased family names the bundled Arial-metric font answers to.
+ *
+ * This list is what keeps text measurement and rasterisation agreeing. The two
+ * are done by different engines — `@napi-rs/canvas` measures, resvg draws —
+ * and each resolves a CSS font stack against its own view of the system. Where
+ * they disagree, Vega reserves a box using one font's width and resvg fills it
+ * with another's, so a title measured narrow and drawn wide runs off the edge
+ * of the canvas and is clipped. Registering the bundled face under a name
+ * forces the measuring side onto it, and the bundled faces are also the ones
+ * handed to resvg, so both sides land on the same metrics.
+ *
+ * That is why the platform sans names are here rather than left to the system.
+ * `Helvetica Neue` is the one that bites on macOS: it ships as a `.ttc`
+ * collection, which resvg's font database will not open, so resvg fell back to
+ * the bundled face while the canvas happily measured the real thing — 26px
+ * narrower over a chart title, and every house leading with that stack had its
+ * headline shaved off. Naming it here is not a preference about how the chart
+ * should look; it is the bundled Arial-metric face standing in for a
+ * platform-specific one, which is the same job it already does for `Helvetica`
+ * and `Arial`.
+ *
+ * A family only belongs here when resvg cannot draw it. Georgia and Comic Sans
+ * MS are deliberately absent: both engines find them, they agree to within a
+ * pixel, and adding them would throw away a house's typeface for nothing.
+ */
+const SANS_ALIASES = ['sans-serif', 'Arial', 'Helvetica', 'Helvetica Neue', 'Liberation Sans'];
 
 /** Arial-metric primary faces (registered for layout + rendering). */
 const SANS_FONTS = [
