@@ -3108,14 +3108,31 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
 
     // A key to *values* is sampled, not enumerated: the renderer will happily
     // print every tick it can fit, and a row of nine bubbles reads as data. The
-    // house says how many it is worth spending; the values are chosen round so
-    // the reader can interpolate between them.
-    if (l.maxSwatches) {
+    // values are chosen round so the reader can interpolate between them.
+    //
+    // A size key is capped whether or not the house asked for it. How many
+    // anchors an area scale needs is a fact about reading areas, not a house
+    // style: a size key is a ruler calibration, not a lookup table. A nominal
+    // colour key has to enumerate, because nothing lets you interpolate a hue
+    // into a category; a size key is read by comparing a bubble to its nearest
+    // anchors, so it only needs enough of them to fix the mapping and show its
+    // curvature. Two anchors fix the ends but sqrt-area is not linear, so
+    // mid-range reads skew; three show the curve. Past three, every extra
+    // symbol is horizontal space taken from the plot — on a small canvas the
+    // size key is the widest thing in the chart.
+    //
+    // Colour and opacity ramps stay opt-in. `roundSample` spaces its samples
+    // quadratically and drops anything non-positive, which is right for an area
+    // scale and wrong for a ramp that crosses zero.
+    {
         let capped = false;
+        let cappedAt = 0;
         walk(spec, (node) => {
             for (const channel of ['size', 'color', 'opacity'] as const) {
                 const enc = node.encoding?.[channel];
                 if (!enc?.field || enc.type !== 'quantitative' || enc.legend === null) continue;
+                const cap = channel === 'size' ? (l.maxSwatches ?? SIZE_KEY_SWATCHES) : l.maxSwatches;
+                if (!cap) continue;
                 if (channel === 'color' && !enc.scale?.type) continue;
                 // Discretizing colour scales (quantize/quantile/threshold) already
                 // render one swatch per bin — sampling round tick values collapses
@@ -3123,15 +3140,16 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 if (channel === 'color'
                     && ['quantize', 'quantile', 'threshold', 'bin-ordinal'].includes(enc.scale?.type)) continue;
                 if (enc.legend?.values) continue;
-                const values = roundSample(table, enc.field, l.maxSwatches!);
+                const values = roundSample(table, enc.field, cap);
                 if (!values) continue;
                 enc.legend = { ...(enc.legend ?? {}), values };
                 capped = true;
+                cappedAt = cap;
             }
         });
         if (capped) {
             say('legend.maxSwatches',
-                `the key to values is sampled at ${l.maxSwatches} round sizes — a swatch for every tick reads as data, not as a key`);
+                `the key to values is sampled at ${cappedAt} round sizes — a swatch for every tick reads as data, not as a key`);
         }
     }
 
@@ -3293,6 +3311,15 @@ function keyWidths(spec: any, table: any[], fontSize: number): number[] {
 }
 
 /** A few round numbers spanning what a field holds, largest last. */
+/**
+ * How many anchors a size key spends when the house has not said.
+ *
+ * Three: enough to fix the mapping and show that area, not radius, carries the
+ * value; few enough that the key stays a key. See the call site for why this is
+ * the engine's default rather than a house preference.
+ */
+const SIZE_KEY_SWATCHES = 3;
+
 function roundSample(table: any[], field: string, count: number): number[] | undefined {
     let max = -Infinity;
     let min = Infinity;
