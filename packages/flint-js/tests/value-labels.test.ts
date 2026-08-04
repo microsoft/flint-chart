@@ -249,9 +249,13 @@ describe('showValueLabels on templates that print their own labels', () => {
     const text = spec.layer.find((layer: any) => layer.mark?.type === 'text');
     expect(text.encoding.x.field).toBe('Product Group');
     expect(text.encoding.y.field).toBe('Sales Month');
-    expect(text.encoding.color.condition.test)
+    const conditions = Array.isArray(text.encoding.color.condition)
+      ? text.encoding.color.condition
+      : [text.encoding.color.condition];
+    const contrastTest = conditions.map((condition: any) => condition.test).join(' ');
+    expect(contrastTest)
       .toContain('datum["Gross Margin %"]');
-    expect(text.encoding.color.condition.test)
+    expect(contrastTest)
       .not.toContain('datum.Gross Margin %');
   });
 

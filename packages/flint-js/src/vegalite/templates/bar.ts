@@ -454,10 +454,21 @@ export const heatmapDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'color',
     ownsValueLabels: true,
-    declareLayoutMode: (_cs, _table, chartProperties) => {
+    declareLayoutMode: (channelSemantics, _table, chartProperties) => {
         const showTextLabels = !!chartProperties?.showTextLabels;
+        const isDiscrete = (type: string | undefined) =>
+            type === 'nominal' || type === 'ordinal';
         return {
-            axisFlags: { x: { banded: true }, y: { banded: true } },
+            // A categorical matrix uses bands. A temporal heatmap does not:
+            // dates remain on a true time scale and rect sizing follows their
+            // observed interval. Treating time as "continuous-as-discrete"
+            // makes a six-month example look banded, but scales disastrously to
+            // dense calendars (60 × 40 dates = 2,400 cells) and lets the
+            // pseudo-bands interfere with a transposed Y axis.
+            axisFlags: {
+                x: { banded: isDiscrete(channelSemantics.x?.type) },
+                y: { banded: isDiscrete(channelSemantics.y?.type) },
+            },
             // Labels need slightly larger cells so the value text isn't crushed,
             // but we keep this close to the unlabeled defaults (minStep 6 /
             // defaultBandSize 20) so a labeled heatmap doesn't balloon. The small
@@ -561,6 +572,7 @@ export const heatmapDef: ChartTemplateDef = {
             const yEncoding = baseEncoding.y;
             const colorValue = `datum[${JSON.stringify(colorField)}]`;
             const validValue = `isValid(${colorValue}) && ${colorValue} !== ''`;
+            const missingValue = `!(${validValue})`;
             const span = effectiveMax - effectiveMin;
 
             const cellMinDim = Math.min(ctx.layout.xStep || 50, ctx.layout.yStep || 50);
@@ -578,98 +590,85 @@ export const heatmapDef: ChartTemplateDef = {
                     : effectiveMin + span * 0.6)
                 : undefined;
 
-            const layers: any[] = [
-                {
-                    ...(hasMissingValues ? { transform: [{ filter: validValue }] } : {}),
+            if (hasMissingValues) {
+                // Keep no-data styling on the original rect encoding. A
+                // separate missing-value layer owns its own X/Y definitions;
+                // even with shared scales, that layer then participates in
+                // axis inference and can disturb a transposed temporal axis.
+                spec.encoding.color = {
+                    ...spec.encoding.color,
+                    condition: { test: missingValue, value: '#8c8c8c' },
+                };
+                spec.encoding.opacity = {
+                    condition: { test: missingValue, value: 0.32 },
+                    value: 1,
+                };
+            }
+
+            if (showTextLabels) {
+                const defaultTextColor = isDiverging
+                    ? 'black'
+                    : (highIsLight ? 'white' : 'black');
+                const textColorConditions: any[] = [
+                    ...(hasMissingValues
+                        ? [{ test: missingValue, value: '#8c8c8c' }]
+                        : []),
+                    ...(strongThreshold == null
+                        ? []
+                        : [{
+                            test: isDiverging
+                                ? `${colorValue} > ${strongThreshold} || ${colorValue} < ${-strongThreshold}`
+                                : `${colorValue} >= ${strongThreshold}`,
+                            value: isDiverging
+                                ? 'white'
+                                : (highIsLight ? 'black' : 'white'),
+                        }]),
+                ];
+                const layers: any[] = [{
                     mark: spec.mark,
                     encoding: {
                         ...(xEncoding ? { x: xEncoding } : {}),
                         ...(yEncoding ? { y: yEncoding } : {}),
-                        ...(baseEncoding.color ? { color: baseEncoding.color } : {}),
+                        ...(baseEncoding.color ? { color: spec.encoding.color } : {}),
+                        ...(spec.encoding.opacity ? { opacity: spec.encoding.opacity } : {}),
                     },
-                },
-            ];
-
-            if (hasMissingValues) {
-                layers.push({
-                    transform: [{ filter: `!(${validValue})` }],
-                    mark: setMarkProp(
-                        setMarkProp(spec.mark, 'color', '#8c8c8c'),
-                        'opacity',
-                        0.32,
-                    ),
-                    encoding: {
-                        ...(xEncoding ? { x: xEncoding } : {}),
-                        ...(yEncoding ? { y: yEncoding } : {}),
-                    },
-                });
-            }
-
-            if (showTextLabels) {
-                layers.push({
-                    ...(hasMissingValues ? { transform: [{ filter: validValue }] } : {}),
+                }, {
                     mark: {
                         type: 'text',
                         align: 'center',
                         baseline: 'middle',
                         fontSize: labelFontSize,
+                        clip: true,
                     },
                     encoding: {
                         ...(xEncoding ? { x: xEncoding } : {}),
                         ...(yEncoding ? { y: yEncoding } : {}),
                         text: {
+                            ...(hasMissingValues
+                                ? { condition: { test: missingValue, value: '—' } }
+                                : {}),
                             field: colorField,
                             type: 'quantitative',
                             format: labelFormat,
                         },
-                        color: strongThreshold == null
-                            ? { value: 'black' }
-                            : {
-                                condition: {
-                                    test: isDiverging
-                                        ? `${colorValue} > ${strongThreshold} || ${colorValue} < ${-strongThreshold}`
-                                        : `${colorValue} >= ${strongThreshold}`,
-                                    value: isDiverging
-                                        ? 'white'
-                                        : (highIsLight ? 'black' : 'white'),
-                                },
-                                value: isDiverging
-                                    ? 'black'
-                                    : (highIsLight ? 'white' : 'black'),
-                            },
+                        color: textColorConditions.length > 0
+                            ? { condition: textColorConditions, value: defaultTextColor }
+                            : { value: defaultTextColor },
                     },
-                });
-                if (hasMissingValues) {
-                    layers.push({
-                        transform: [{ filter: `!(${validValue})` }],
-                        mark: {
-                            type: 'text',
-                            align: 'center',
-                            baseline: 'middle',
-                            fontSize: labelFontSize,
-                        },
-                        encoding: {
-                            ...(xEncoding ? { x: xEncoding } : {}),
-                            ...(yEncoding ? { y: yEncoding } : {}),
-                            text: { value: '—' },
-                            color: { value: '#8c8c8c' },
-                        },
-                    });
-                }
+                }];
+
+                spec.layer = layers;
+                delete spec.mark;
+
+                // Facets remain shared by the layered unit, but X/Y/color now
+                // live on the individual layers.
+                const sharedEncoding = {
+                    ...(baseEncoding.column ? { column: baseEncoding.column } : {}),
+                    ...(baseEncoding.row ? { row: baseEncoding.row } : {}),
+                };
+                if (Object.keys(sharedEncoding).length > 0) spec.encoding = sharedEncoding;
+                else delete spec.encoding;
             }
-
-            spec.layer = layers;
-            delete spec.mark;
-
-            // Facets remain shared by the layered unit, but X/Y/color now live
-            // on the individual layers. Leaving them here as well makes every
-            // child inherit a second copy of the same channel definition.
-            const sharedEncoding = {
-                ...(baseEncoding.column ? { column: baseEncoding.column } : {}),
-                ...(baseEncoding.row ? { row: baseEncoding.row } : {}),
-            };
-            if (Object.keys(sharedEncoding).length > 0) spec.encoding = sharedEncoding;
-            else delete spec.encoding;
         }
     },
     properties: [
