@@ -42,27 +42,31 @@ export const powerbi: ThemePreset = {
             },
             "series": {
                 "single": "#118dff",
+                // Power BI themes name dataColors explicitly; the classic
+                // defaults are for a light report canvas. This dark set keeps
+                // the product's azure/orange/magenta character while every
+                // swatch clears 3:1 against both the plot and panel.
                 "categorical": [
                     "#118dff",
-                    "#12239e",
                     "#e66c37",
-                    "#6b007b",
+                    "#3bd1c7",
                     "#e044a7",
-                    "#744ec2"
+                    "#d9b300",
+                    "#8764b8"
                 ],
                 "categoricalExtended": [
                     "#118dff",
-                    "#12239e",
                     "#e66c37",
-                    "#6b007b",
+                    "#3bd1c7",
                     "#e044a7",
-                    "#744ec2",
                     "#d9b300",
+                    "#8764b8",
                     "#d64550",
-                    "#197278",
-                    "#5c2e91",
+                    "#4a9c2d",
+                    "#6677d9",
+                    "#b146c2",
                     "#ff9d3b",
-                    "#4a9c2d"
+                    "#25797f"
                 ],
                 // Continuous measure on a dark canvas: dim blue at the low end
                 // (never the background) rising to bright azure, so "more"

@@ -87,7 +87,7 @@
       "surface": "#1b1a19",
       "ink": "#f3f2f1",
       "accent": "#118dff",
-      "swatches": ["#118dff", "#12239e", "#e66c37", "#6b007b", "#e044a7", "#d9b300"],
+      "swatches": ["#118dff", "#e66c37", "#3bd1c7", "#e044a7", "#d9b300", "#8764b8"],
       "intent": "A tile in a grid of tiles that refreshes every hour. Geometry has to stay stable as the data changes, and the whole thing has to work in dark mode.",
       "signature": [
         "Dark card surface; ink and grid tuned for #1B1A19",

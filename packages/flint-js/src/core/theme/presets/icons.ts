@@ -127,7 +127,7 @@ export const POWERBI_ICON = tile(
     '#1b1a19',
     '#3b3a39',
     rule(2.6, 7.6, 13.4, '#3b3a39') +
-        bars(['#118dff', '#12239e', '#e66c37'], [6.5, 8.5, 5]) +
+        bars(['#118dff', '#e66c37', '#3bd1c7'], [6.5, 8.5, 5]) +
         rule(2.6, BASELINE, 13.4, '#3b3a39'),
 );
 

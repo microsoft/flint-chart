@@ -1273,6 +1273,23 @@ describe('legibility on the house surface', () => {
     const surfaceOf = (spec: any): string =>
         spec.config?.view?.fill ?? spec.config?.background ?? spec.background ?? '#ffffff';
 
+    it('keeps every Power BI dark data colour legible on its plot and panel', () => {
+        const spec = THEME_PRESETS.powerbi.spec;
+        const surfaces = [spec.ink?.surface?.plot, spec.ink?.surface?.panel];
+        const palettes = [
+            spec.ink?.series?.categorical ?? [],
+            spec.ink?.series?.categoricalExtended ?? [],
+        ];
+
+        for (const palette of palettes) {
+            for (const ink of palette) {
+                for (const surface of surfaces) {
+                    expect(contrast(ink, surface!)).toBeGreaterThanOrEqual(3);
+                }
+            }
+        }
+    });
+
     const boxRows = ['Eng', 'Sales', 'HR'].flatMap((dept) =>
         ['L1', 'L2'].flatMap((level) =>
             [90, 100, 110, 120].map((v, i) => ({ Department: dept, Level: level, Comp: v * 1000 + i })),
