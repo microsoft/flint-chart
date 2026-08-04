@@ -417,8 +417,12 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     exampleKey: 'facetedLine',
     generator: 'Omni: Line',
     index: 0,
+    // Four regions, so two columns is a 2x2 block. Four columns would be a
+    // single row: it compiles to a 2.62 aspect against a pane of 1.21 and fills
+    // only 46% of the pane's height, where 2x2 fills 95%.
     defaultChartProperties: { facetColumns: 2 },
-  },  {
+  },
+  {
     id: 'heatmap',
     exampleKey: 'heatmap',
     generator: 'Omni: Heatmap',
