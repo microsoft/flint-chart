@@ -228,6 +228,14 @@ export function vlApplyLayoutToSpec(
         labelFontSize: layout.yLabel.fontSize,
         titleFontSize: layout.titleFontSize,
     };
+    // Vega drops a tick label only once its box *overlaps* its neighbour's, so
+    // two numbers whose boxes merely abut both survive and are read as one:
+    // `20,000` beside `30,000` prints `20,00030,000`. Numbers need a
+    // character's worth of air between them before they read as two. Bands are
+    // exempt — their labels are spaced by the scale, and thinning them drops a
+    // category rather than a tick.
+    if (!xIsDiscrete) axisXConfig.labelSeparation = Math.round(layout.xLabel.fontSize * 0.6);
+    if (!yIsDiscrete) axisYConfig.labelSeparation = Math.round(layout.yLabel.fontSize * 0.6);
 
     vgObj.config = {
         view: {

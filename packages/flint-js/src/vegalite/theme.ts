@@ -417,6 +417,17 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         if (axis.label.angle != null) themed.labelAngle = axis.label.angle;
         if (axis.tickCount != null) themed.tickCount = axis.tickCount;
 
+        // Vega drops a tick label only once its box *overlaps* its neighbour's,
+        // so two numbers whose boxes merely abut both survive and are read as
+        // one: `20,000` beside `30,000` prints `20,00030,000`. Numbers need a
+        // character's worth of air between them before they read as two, and
+        // that is what a separation states. Bands are exempt — their labels are
+        // spaced by the scale, and thinning them drops categories.
+        if (!bandedAxis(spec, channel)) {
+            const size = typeof themed.labelFontSize === 'number' ? themed.labelFontSize : BASE_LABEL_FONT_SIZE;
+            themed.labelSeparation = Math.round(size * 0.6);
+        }
+
         // Flint's layout pass owns label rotation/anchoring when the theme has
         // no opinion — those are fit decisions, not style ones.
         const existing = config[key] ?? {};

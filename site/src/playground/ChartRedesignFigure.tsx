@@ -54,48 +54,66 @@ const correlationValues = foodNames.flatMap((rowFood) =>
 type RedesignVariant = 'sparkline' | 'heatmap' | 'theme';
 
 /**
- * A Likert survey, which is where a house has the most to say: the type scale,
- * the palette a diverging scale is cut from, the grid, and the numbers on the
- * segments all change together. A single-series bar would make the switch look
- * like a recolouring.
+ * Gapminder, which is where a house has the most to say: the type scale, the
+ * palette a continent scale is cut from, the grid, the axis furniture and the
+ * shape of a point — fill, outline and how big a bubble is allowed to get —
+ * all move together. A single-series chart would make the switch look like a
+ * recolouring.
  */
-const likertValues = ([
-  ['Scientists', [39, 45, 12, 4]],
-  ['The military', [32, 43, 18, 7]],
-  ['The police', [26, 44, 21, 9]],
-  ['The press', [11, 32, 34, 23]],
-  ['Congress', [8, 30, 38, 24]],
-] as [string, number[]][]).flatMap(([institution, shares]) =>
-  ['A great deal', 'Some', 'Not much', 'None at all'].map((response, i) => ({
-    institution,
-    response,
-    share: shares[i],
-  })),
+const gapminderValues = ([
+  ['Norway', 64800, 82.3, 5.3, 'Europe'],
+  ['United States', 62600, 78.6, 327, 'Americas'],
+  ['Japan', 39300, 84.2, 127, 'Asia'],
+  ['China', 16800, 76.7, 1393, 'Asia'],
+  ['India', 6900, 69.4, 1353, 'Asia'],
+  ['Nigeria', 5300, 54.3, 196, 'Africa'],
+  ['Brazil', 15600, 75.7, 209, 'Americas'],
+  ['Germany', 50900, 81.0, 83, 'Europe'],
+  ['Ethiopia', 2000, 66.2, 109, 'Africa'],
+  ['Russia', 25800, 72.4, 145, 'Europe'],
+  ['Mexico', 19800, 75.0, 126, 'Americas'],
+  ['Indonesia', 12400, 71.5, 268, 'Asia'],
+  ['Qatar', 116900, 80.1, 2.8, 'Asia'],
+  ['South Africa', 13000, 63.9, 57, 'Africa'],
+  ['Bangladesh', 4200, 72.3, 161, 'Asia'],
+] as [string, number, number, number, string][]).map(
+  ([country, income, life, population, continent]) => ({
+    country, income, life, population, continent,
+  }),
 );
 
 function chartInput(variant: RedesignVariant, transformed: boolean): ChartAssemblyInput {
   if (variant === 'theme') {
     return {
-      data: { values: likertValues },
+      data: { values: gapminderValues },
       semantic_types: {
-        institution: 'Category',
-        response: 'Category',
-        share: 'Quantity',
+        country: 'Country',
+        income: 'Quantity',
+        life: 'Quantity',
+        population: 'Quantity',
+        continent: 'Category',
       },
       chart_spec: {
-        chartType: 'Stacked Bar Chart',
+        chartType: 'Scatter Plot',
         encodings: {
-          x: { field: 'share' },
-          y: { field: 'institution' },
-          color: { field: 'response' },
+          x: { field: 'income' },
+          y: { field: 'life' },
+          size: { field: 'population' },
+          color: { field: 'continent' },
         },
-        title: 'Confidence in US institutions',
-        subtitle: '% of adults, 2023',
-        chartProperties: { stackMode: 'center' },
+        title: 'Wealth and health of nations',
+        subtitle: 'Life expectancy vs income per capita, 2018',
+        chartProperties: { logScale_x: true },
         baseSize: { width: 400, height: 300 },
         canvasSize: { width: 400, height: 300 },
       },
-      field_display_names: { institution: 'Institution', response: 'Response', share: 'Share (%)' },
+      field_display_names: {
+        country: 'Country',
+        income: 'GDP per capita',
+        life: 'Life expectancy',
+        population: 'Population (M)',
+        continent: 'Continent',
+      },
       ...(transformed ? { theme_spec: 'swiss' } : {}),
     };
   }
