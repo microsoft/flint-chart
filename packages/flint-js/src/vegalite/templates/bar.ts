@@ -475,9 +475,17 @@ export const heatmapDef: ChartTemplateDef = {
         const colorField = spec.encoding?.color?.field;
         const colorVals = colorField
             ? ctx.table
-                .map((r: any) => Number(r[colorField]))
+                .map((r: any) => r[colorField])
+                .filter((v: any) => v != null && v !== '')
+                .map((v: any) => Number(v))
                 .filter((v: number) => Number.isFinite(v))
             : [];
+        const hasMissingValues = colorField
+            ? ctx.table.some((r: any) => {
+                const value = r[colorField];
+                return value == null || value === '' || !Number.isFinite(Number(value));
+            })
+            : false;
         const observedMin = colorVals.length > 0 ? Math.min(...colorVals) : 0;
         const observedMax = colorVals.length > 0 ? Math.max(...colorVals) : 1;
         const existingScheme = spec.encoding?.color?.scale?.scheme;
@@ -547,10 +555,12 @@ export const heatmapDef: ChartTemplateDef = {
         adjustBarMarks(spec, ctx);
         adjustRectTiling(spec, ctx);
 
-        if (showTextLabels && spec.encoding?.color?.field) {
+        if ((showTextLabels || hasMissingValues) && spec.encoding?.color?.field) {
             const baseEncoding = spec.encoding || {};
             const xEncoding = baseEncoding.x;
             const yEncoding = baseEncoding.y;
+            const colorValue = `datum[${JSON.stringify(colorField)}]`;
+            const validValue = `isValid(${colorValue}) && ${colorValue} !== ''`;
             const span = effectiveMax - effectiveMin;
 
             const cellMinDim = Math.min(ctx.layout.xStep || 50, ctx.layout.yStep || 50);
@@ -567,10 +577,10 @@ export const heatmapDef: ChartTemplateDef = {
                     ? Math.max(Math.abs(effectiveMin), Math.abs(effectiveMax)) * 0.5
                     : effectiveMin + span * 0.6)
                 : undefined;
-            const colorValue = `datum[${JSON.stringify(colorField)}]`;
 
-            spec.layer = [
+            const layers: any[] = [
                 {
+                    ...(hasMissingValues ? { transform: [{ filter: validValue }] } : {}),
                     mark: spec.mark,
                     encoding: {
                         ...(xEncoding ? { x: xEncoding } : {}),
@@ -578,7 +588,26 @@ export const heatmapDef: ChartTemplateDef = {
                         ...(baseEncoding.color ? { color: baseEncoding.color } : {}),
                     },
                 },
-                {
+            ];
+
+            if (hasMissingValues) {
+                layers.push({
+                    transform: [{ filter: `!(${validValue})` }],
+                    mark: setMarkProp(
+                        setMarkProp(spec.mark, 'color', '#8c8c8c'),
+                        'opacity',
+                        0.32,
+                    ),
+                    encoding: {
+                        ...(xEncoding ? { x: xEncoding } : {}),
+                        ...(yEncoding ? { y: yEncoding } : {}),
+                    },
+                });
+            }
+
+            if (showTextLabels) {
+                layers.push({
+                    ...(hasMissingValues ? { transform: [{ filter: validValue }] } : {}),
                     mark: {
                         type: 'text',
                         align: 'center',
@@ -609,9 +638,38 @@ export const heatmapDef: ChartTemplateDef = {
                                     : (highIsLight ? 'white' : 'black'),
                             },
                     },
-                },
-            ];
+                });
+                if (hasMissingValues) {
+                    layers.push({
+                        transform: [{ filter: `!(${validValue})` }],
+                        mark: {
+                            type: 'text',
+                            align: 'center',
+                            baseline: 'middle',
+                            fontSize: labelFontSize,
+                        },
+                        encoding: {
+                            ...(xEncoding ? { x: xEncoding } : {}),
+                            ...(yEncoding ? { y: yEncoding } : {}),
+                            text: { value: '—' },
+                            color: { value: '#8c8c8c' },
+                        },
+                    });
+                }
+            }
+
+            spec.layer = layers;
             delete spec.mark;
+
+            // Facets remain shared by the layered unit, but X/Y/color now live
+            // on the individual layers. Leaving them here as well makes every
+            // child inherit a second copy of the same channel definition.
+            const sharedEncoding = {
+                ...(baseEncoding.column ? { column: baseEncoding.column } : {}),
+                ...(baseEncoding.row ? { row: baseEncoding.row } : {}),
+            };
+            if (Object.keys(sharedEncoding).length > 0) spec.encoding = sharedEncoding;
+            else delete spec.encoding;
         }
     },
     properties: [

@@ -81,6 +81,22 @@ describe('heatmap color defaults', () => {
     expect(spec.encoding.color.scale.domainMid).toBe(0);
   });
 
+  it('renders null values as intentional no-data cells', () => {
+    const input = heatmapInput({ showValueLabels: true }) as any;
+    input.data.values[0].value = null;
+
+    const spec = assembleVegaLite(input) as any;
+    expect(spec.encoding).toBeUndefined();
+    expect(spec.layer).toHaveLength(4);
+    expect(spec.layer[0].transform[0].filter).toContain('isValid(datum["value"])');
+    expect(spec.layer[1].mark).toMatchObject({
+      type: 'rect',
+      color: '#8c8c8c',
+      opacity: 0.32,
+    });
+    expect(spec.layer[3].encoding.text).toEqual({ value: '—' });
+  });
+
   it('uses light-to-dark blues for ECharts heatmaps by default', () => {
     const option = assembleECharts(heatmapInput()) as any;
     const colors = option.visualMap.inRange.color;

@@ -13,22 +13,17 @@ const trendValues = foodPrices.values.map(({ month, item, price }) => ({
 // A correlation matrix is symmetric: swapping its axes produces the same
 // picture and makes a working transpose control look broken. Use a rectangular
 // food-by-month grid here so the two arrangements are visibly distinct.
-const heatmapItemCount = new Set(foodPrices.values.map(({ item }) => item)).size;
-const heatmapRowsByMonth = new Map<string, number>();
-for (const { month, annualChange } of foodPrices.values) {
-  if (annualChange === null) continue;
-  heatmapRowsByMonth.set(month, (heatmapRowsByMonth.get(month) ?? 0) + 1);
-}
-let heatmapMonths: string[] = [];
-let completeMonthRun: string[] = [];
-for (const [month, rowCount] of heatmapRowsByMonth) {
-  completeMonthRun = rowCount === heatmapItemCount ? [...completeMonthRun, month] : [];
-  if (completeMonthRun.length >= 6) heatmapMonths = completeMonthRun.slice(-6);
-}
-const heatmapMonthSet = new Set(heatmapMonths);
-const heatmapValues = foodPrices.values
-  .filter(({ month, annualChange }) => heatmapMonthSet.has(month) && annualChange !== null)
-  .map(({ month, item, annualChange }) => ({ month, item, annualChange }));
+const heatmapItems = [...new Set(foodPrices.values.map(({ item }) => item))];
+const heatmapMonths = [...new Set(foodPrices.values.map(({ month }) => month))].slice(-6);
+const heatmapRows = new Map(
+  foodPrices.values.map((row) => [`${row.item}\0${row.month}`, row]),
+);
+const heatmapValues = heatmapItems.flatMap((item) =>
+  heatmapMonths.map((month) => {
+    const row = heatmapRows.get(`${item}\0${month}`);
+    return { month, item, annualChange: row?.annualChange ?? null };
+  }),
+);
 
 type RedesignVariant = 'sparkline' | 'heatmap' | 'theme';
 
