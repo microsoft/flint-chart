@@ -199,7 +199,6 @@
     "prevExample": "Previous example",
     "nextExample": "Next example",
     "exampleAria": "Example",
-    "openInEditor": "Open this example in the editor",
     "seeGallery": "See more in the gallery",
     "closingTitle": "Start building with Flint.",
     "closingBody": "Open source and ready to use. Start from GitHub or browse examples in the gallery.",
@@ -230,31 +229,45 @@
     "examples": {
       "facetedLine": {
         "label": "Faceted line chart",
-        "caption": "Monthly active users by region, laid out as small multiples over time."
+        "caption": "Monthly active users by region, laid out as small multiples over time.",
+        "title": "Monthly active users by region",
+        "subtitle": "Players per month in 2025, one panel per region, by platform"
       },
       "heatmap": {
         "label": "Diverging heatmap",
-        "caption": "Net user gains and losses by region and month, shown with zero-centered color."
+        "caption": "Net user gains and losses by region and month, shown with zero-centered color.",
+        "title": "Which titles gained players, and when",
+        "subtitle": "Net new players per game per month in 2025; blue is a gain, red a loss"
       },
       "waterfall": {
         "label": "Waterfall",
-        "caption": "Monthly gains and losses accumulated into the running user total for the year."
+        "caption": "Monthly gains and losses accumulated into the running user total for the year.",
+        "title": "How the player base moved through 2025",
+        "subtitle": "Net new players each month, accumulating into the year's total"
       },
       "sunburst": {
         "label": "Sunburst",
-        "caption": "User activity broken into a three-level hierarchy: region, game type, and game."
+        "caption": "User activity broken into a three-level hierarchy: region, game type, and game.",
+        "title": "Where the players are",
+        "subtitle": "Monthly active users by region, then platform, then title"
       },
       "donut": {
         "label": "Donut chart",
-        "caption": "Film ratings as proportional slices, with an inner radius applied from the chart spec."
+        "caption": "Film ratings as proportional slices, with an inner radius applied from the chart spec.",
+        "title": "Films by MPAA rating",
+        "subtitle": "Share of releases carrying each certificate"
       },
       "regression": {
         "label": "Regression scatter",
-        "caption": "Critic and audience scores with a fitted trend line to reveal their relationship."
+        "caption": "Critic and audience scores with a fitted trend line to reveal their relationship.",
+        "title": "Critics and audiences broadly agree",
+        "subtitle": "IMDB rating against Rotten Tomatoes score, one point per film, with a fitted trend"
       },
       "sortedBar": {
         "label": "Sorted bar chart",
-        "caption": "Film genres ordered by count, from the most common to the least."
+        "caption": "Film genres ordered by count, from the most common to the least.",
+        "title": "Films by genre",
+        "subtitle": "Number of releases, most common to least"
       }
     }
   },

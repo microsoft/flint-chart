@@ -1,17 +1,15 @@
-import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
-import { useLocale } from '../i18n/LocaleContext';
-import { LOCALE_URL_SEGMENT } from '../i18n/locales';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
+import { THEME_PRESETS } from 'flint-chart';
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
-import { buildGalleryEditorHref, openEditorWithPayload } from '../shared/editor-payload';
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
@@ -399,16 +397,28 @@ function moviesSortedBar(): TestCase {
   };
 }
 
+/**
+ * The canvas every showcase example is drawn on.
+ *
+ * `ScaleToFit` only ever scales a chart *down*, so a chart authored smaller
+ * than the pane sits at its own size in the middle of it with the surrounding
+ * space wasted. Handing the compiler a canvas of roughly the pane's own
+ * proportions is what makes the chart fill it — and it is the compiler, not a
+ * CSS stretch, that decides what to do with the room, so the charts stay in
+ * proportion. Measured against the real 561 × 465 pane box, 560 × 440 fills it
+ * best across all seven: 68–100% of its width and 79–100% of its height,
+ * against 56–87% and as little as 17% before.
+ */
+const SHOWCASE_CANVAS = { width: 560, height: 440 };
+
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
     id: 'line',
     exampleKey: 'facetedLine',
     generator: 'Omni: Line',
     index: 0,
-    canvasSize: { width: 800, height: 400 },
     defaultChartProperties: { facetColumns: 2 },
-  },
-  {
+  },  {
     id: 'heatmap',
     exampleKey: 'heatmap',
     generator: 'Omni: Heatmap',
@@ -487,17 +497,30 @@ function HeroCTA({
 
 function HeroShowcase() {
   const { t } = useTranslation();
-  const { locale } = useLocale();
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
-  // The house the showcase chart is drawn in. Only Vega-Lite reads
-  // `theme_spec`, so the switch is offered only on that backend.
+  // The house every showcase chart is drawn in. It is deliberately *not* reset
+  // as the carousel moves: the point of a house is that it holds across a set
+  // of charts, so a reader who picks one sees the whole carousel answer to it.
+  // Only Vega-Lite reads `theme_spec`, so the switch is offered on that backend
+  // alone — an inert switch reads as a bug in the theme.
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
   const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
   const exampleCaption = t(`landing.examples.${example.exampleKey}.caption`);
+  // What the chart says, in words. Every example carries one: a chart of bare
+  // numbers names nothing on its own, and several houses drop axis titles on
+  // the understanding that this line is carrying the subject.
+  const headline = useMemo(
+    () => ({
+      title: t(`landing.examples.${example.exampleKey}.title`),
+      subtitle: t(`landing.examples.${example.exampleKey}.subtitle`),
+    }),
+    [t, example.exampleKey],
+  );
+  const canvasSize = example.canvasSize ?? SHOWCASE_CANVAS;
   const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0);
   const testCase = example.testCase ?? galleryTestCase;
   const supported = useMemo(
@@ -516,17 +539,33 @@ function HeroShowcase() {
 
   const canTheme = backend === 'vegalite';
   const activeTheme = canTheme ? themeId : undefined;
+
+  // A house that paints its own canvas draws a coloured rectangle of the
+  // chart's *own* size, and `ScaleToFit` centres that rectangle in a pane it
+  // rarely fills exactly — so a dark house reads as a dark card floating on
+  // white paper, with the space around it belonging to the site rather than to
+  // the chart. Carrying the house's canvas colour out to the pane closes the
+  // gap: the chart's surface and the room around it become one surface, which
+  // is what the house is actually claiming. Only the viewport is painted — the
+  // options bar below it is site furniture, and site-coloured text on a dark
+  // house would be unreadable.
+  const houseCanvas = useMemo(
+    () => (activeTheme ? THEME_PRESETS[activeTheme]?.spec?.ink?.surface?.canvas : undefined),
+    [activeTheme],
+  );
+
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = withHouse(testCaseToAssemblyInput(testCase), activeTheme);
+    const base = withHouse(testCaseToAssemblyInput(testCase, canvasSize), activeTheme);
     return {
       ...base,
       chart_spec: {
         ...base.chart_spec,
+        ...headline,
         chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
       },
     };
-  }, [testCase, effectiveOptions, activeTheme]);
+  }, [testCase, effectiveOptions, activeTheme, canvasSize, headline]);
 
   // A house can change what a chart *is*, not only how it looks — the NYT puts
   // points on a line. Those are defaults, so they yield to anything the bar has
@@ -566,24 +605,13 @@ function HeroShowcase() {
           <div className="landing-spec-pane" style={{ ...showcasePaneStyle, ...specPaneStyle }}>
             <div style={paneHeaderRowStyle}>
               <span style={paneLabelStyle}>{t('landing.flintSpec')}</span>
-              <OpenEditorButton
-                href={
-                  example.generator
-                    ? buildGalleryEditorHref(example.generator, example.index ?? 0, locale)
-                    : undefined
-                }
-                onActivate={
-                  example.generator
-                    ? undefined
-                    : () => openEditorWithPayload(testCaseToAssemblyInput(testCase), locale)
-                }
-              />
             </div>
             <FlintSpecCode
               testCase={testCase}
-              canvasSize={example.canvasSize}
+              canvasSize={canvasSize}
               chartPropertyOverrides={effectiveOptions}
               themeId={activeTheme}
+              headline={headline}
             />
           </div>
 
@@ -612,14 +640,22 @@ function HeroShowcase() {
               </div>
             </div>
             <div className="landing-chart-canvas" style={chartCanvasStyle}>
-              <div style={chartViewportStyle}>
-                <ScaleToFit fill height={410} padding={8}>
+              <div
+                style={{
+                  ...chartViewportStyle,
+                  ...(houseCanvas
+                    ? { background: houseCanvas, borderRadius: siteTheme.radius }
+                    : {}),
+                }}
+              >
+                <ScaleToFit fill height={465} padding={8}>
                   <WallChart
                     testCase={testCase}
                     backend={backend}
-                    canvasSize={example.canvasSize}
+                    canvasSize={canvasSize}
                     chartPropertyOverrides={effectiveOptions}
                     themeId={activeTheme}
+                    headline={headline}
                   />
                 </ScaleToFit>
               </div>
@@ -702,58 +738,25 @@ function ChevronIcon({ dir }: { dir: 'left' | 'right' }) {
   );
 }
 
-function OpenEditorButton({
-  href,
-  onActivate,
-}: {
-  href?: string;
-  onActivate?: () => string;
-}) {
-  const { t } = useTranslation();
-  const { locale } = useLocale();
-  const [active, setActive] = useState(false);
-  const defaultHref = useMemo(() => {
-    const segment = LOCALE_URL_SEGMENT[locale];
-    const base = segment ? `/${segment}/editor` : '/editor';
-    return `#${base}`;
-  }, [locale]);
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (onActivate) {
-      e.preventDefault();
-      window.location.hash = onActivate();
-    }
-  };
-  return (
-    <a
-      href={href ?? defaultHref}
-      style={openEditorBtnStyle(active)}
-      title={t('landing.openInEditor')}
-      onClick={handleClick}
-      onMouseEnter={() => setActive(true)}
-      onMouseLeave={() => setActive(false)}
-      onFocus={() => setActive(true)}
-      onBlur={() => setActive(false)}
-    >
-      {t('modal.openInEditor')}
-    </a>
-  );
-}
-
 function FlintSpecCode({
   testCase,
   canvasSize,
   chartPropertyOverrides,
   themeId,
+  headline,
 }: {
   testCase: TestCase;
   canvasSize?: { width: number; height: number };
   chartPropertyOverrides?: Record<string, unknown>;
   themeId?: string;
+  headline?: { title?: string; subtitle?: string };
 }) {
   const text = useMemo(() => {
     const summary = testCaseToFlintSummary(testCase);
     const chartSpec = {
       ...summary.chart_spec,
+      ...(headline?.title ? { title: headline.title } : {}),
+      ...(headline?.subtitle ? { subtitle: headline.subtitle } : {}),
       ...(canvasSize ? { baseSize: canvasSize } : {}),
       ...(chartPropertyOverrides && Object.keys(chartPropertyOverrides).length > 0
         ? {
@@ -767,7 +770,7 @@ function FlintSpecCode({
     const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId);
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
-  }, [testCase, canvasSize, chartPropertyOverrides, themeId]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, headline?.title, headline?.subtitle]);
   return <pre style={specPreStyle}>{text}</pre>;
 }
 
@@ -1438,8 +1441,8 @@ const landingInteractiveStyles = `
 
   @media (min-width: 901px) {
     .landing-showcase-card {
-      grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.7fr);
-      height: 460px;
+      grid-template-columns: minmax(300px, 1.05fr) minmax(0, 1.55fr);
+      height: 560px;
     }
 
     .landing-showcase-card > .landing-spec-pane,
@@ -1666,8 +1669,8 @@ const showcasePaneStyle: CSSProperties = {
 };
 
 const specPaneStyle: CSSProperties = {
-  flex: '0.72 1 300px',
-  minWidth: 280,
+  flex: '0.9 1 320px',
+  minWidth: 300,
 };
 
 /** The compiled-chart pane gets extra width so wide charts render larger. */
@@ -1718,22 +1721,6 @@ const paneLabelStyle: CSSProperties = {
   textTransform: 'uppercase',
   color: siteTheme.textMuted,
 };
-
-function openEditorBtnStyle(active: boolean): CSSProperties {
-  return {
-    margin: '6px 10px 0 0',
-    padding: '4px 10px',
-    fontSize: 12,
-    fontWeight: 600,
-    color: active ? siteTheme.text : siteTheme.textMuted,
-    background: active ? NEUTRAL_FILL : 'transparent',
-    border: `1px solid ${HAIRLINE}`,
-    borderRadius: siteTheme.radius,
-    textDecoration: 'none',
-    whiteSpace: 'nowrap',
-    transition: 'background 0.15s, color 0.15s',
-  };
-}
 
 const backendToggleStyle: CSSProperties = {
   display: 'inline-flex',
@@ -1854,8 +1841,15 @@ const specPreStyle: CSSProperties = {
   margin: 0,
   padding: '4px 16px 16px',
   fontFamily: siteTheme.fontMono,
-  fontSize: 12.5,
-  lineHeight: 1.55,
+  // Sized so the whole spec is *visible*, not scrolled. The pane hides its
+  // scrollbar, so a spec that overflows looks truncated rather than scrollable —
+  // and the point of the panel is that the reader can see the entire spec next
+  // to the chart it produced. The longest of the seven runs 27 raw lines and
+  // wraps to 28 in this pane; at 12/1.4 that is 470px against a 515px budget.
+  // Line *count* dominates, not wrapping, so widening the pane alone cannot buy
+  // the room — the leading has to give.
+  fontSize: 12,
+  lineHeight: 1.4,
   color: siteTheme.text,
   background: PAPER,
   whiteSpace: 'pre-wrap',

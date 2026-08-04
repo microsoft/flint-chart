@@ -124,6 +124,13 @@ const THEME_CHOICES: { id: string | undefined; label: string; icon: string; desc
  * decision on the chart: it settles the surface, the ink and the type that
  * everything the other controls touch is then drawn in.
  *
+ * It is the one control in the bar that names itself rather than going by icon
+ * alone. The others switch a property whose name is already on the chart — a
+ * stack, a sort, a chart type you can see — but a house is read off the drawing
+ * as a whole, and two houses can look alike at 15px. Spelling it out is also
+ * what makes the control legible as a *list of houses* rather than a mystery
+ * glyph the reader has to open to understand.
+ *
  * Only Vega-Lite reads `theme_spec`, so on the other backends the control is
  * absent rather than inert — a switch that does nothing reads as a bug in the
  * theme, which is exactly what themes must never look like.
@@ -179,6 +186,18 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
         }}
       >
         <img src={iconUrl(current.icon)} alt="" style={{ width: 15, height: 15, display: 'block', flex: '0 0 auto' }} />
+        <span
+          style={{
+            fontSize: 12,
+            fontFamily: siteTheme.fontSans,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 110,
+          }}
+        >
+          {current.label}
+        </span>
         <Chevron color={siteTheme.textMuted} />
       </button>
 

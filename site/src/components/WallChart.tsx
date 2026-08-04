@@ -20,6 +20,7 @@ export function WallChart({
   canvasSize,
   chartPropertyOverrides,
   themeId,
+  headline,
 }: {
   testCase: TestCase;
   backend: PreviewBackend;
@@ -34,21 +35,26 @@ export function WallChart({
    * `theme_spec`, so it is left off elsewhere rather than passed and ignored.
    */
   themeId?: string;
+  /**
+   * What the chart says, in words. Test cases carry a developer's name for the
+   * case ("Phase 1 — Line: MAU trend…"), not a headline a reader would want, so
+   * the caller supplies one where the chart is shown to readers.
+   */
+  headline?: { title?: string; subtitle?: string };
 }) {
   const input = useMemo(() => {
     const base = testCaseToAssemblyInput(testCase, canvasSize ?? thumbnailCanvasSize(testCase));
     const themed: any = withHouse(base, themeId && backend === 'vegalite' ? themeId : undefined);
-    if (!chartPropertyOverrides || Object.keys(chartPropertyOverrides).length === 0) {
-      return themed;
-    }
-    return {
-      ...themed,
-      chart_spec: {
-        ...themed.chart_spec,
-        chartProperties: { ...themed.chart_spec.chartProperties, ...chartPropertyOverrides },
-      },
+    const spec = {
+      ...themed.chart_spec,
+      ...(headline?.title ? { title: headline.title } : {}),
+      ...(headline?.subtitle ? { subtitle: headline.subtitle } : {}),
+      ...(chartPropertyOverrides && Object.keys(chartPropertyOverrides).length > 0
+        ? { chartProperties: { ...themed.chart_spec.chartProperties, ...chartPropertyOverrides } }
+        : {}),
     };
-  }, [testCase, canvasSize, chartPropertyOverrides, themeId, backend]);
+    return { ...themed, chart_spec: spec };
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, backend, headline?.title, headline?.subtitle]);
 
   const compiled = useMemo(() => {
     try {

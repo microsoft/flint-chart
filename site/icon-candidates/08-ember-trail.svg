@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Cut flint with ember trail</title>
+  <path d="m7 51 9-30L34 9l15 12-3 24-20 13L7 51Z" fill="#202a33"/>
+  <path d="M16 21 34 9l-5 20L7 51l9-30Z" fill="#394956"/>
+  <path d="m29 29 5-20 15 12-12 12-8-4Z" fill="#5c6b77"/>
+  <path d="m29 29 8 4 9 12-20 13 3-29Z" fill="#10171e"/>
+  <path d="m44 11 1.8 4.2L50 17l-4.2 1.8L44 23l-1.8-4.2L38 17l4.2-1.8L44 11Z" fill="#f4b41a"/>
+  <path d="m53 7 1.1 2.9L57 11l-2.9 1.1L53 15l-1.1-2.9L49 11l2.9-1.1L53 7ZM59 15l.7 1.8 1.8.7-1.8.7L59 20l-.7-1.8-1.8-.7 1.8-.7L59 15ZM55 24l.8 2.2 2.2.8-2.2.8L55 30l-.8-2.2L52 27l2.2-.8L55 24Z" fill="#e4572e"/>
+</svg>

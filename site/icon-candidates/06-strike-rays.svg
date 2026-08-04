@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Sharp flint with strike rays</title>
+  <path d="m10 52 8-33L38 8l10 19-7 24-18 7-13-6Z" fill="#202a33"/>
+  <path d="m18 19 20-11-9 23-19 21 8-33Z" fill="#40505d"/>
+  <path d="m29 31 9-23 10 19-11 9-8-5Z" fill="#60707c"/>
+  <path d="m29 31 8 5 4 15-18 7 6-27Z" fill="#10171e"/>
+  <circle cx="48" cy="18" r="3" fill="#f4b41a"/>
+  <path d="M48 5v7M48 24v7M35 18h7M54 18h7M39 9l5 5M52 22l5 5M57 9l-5 5" fill="none" stroke="#e4572e" stroke-width="2.5" stroke-linecap="square"/>
+</svg>
