@@ -22,22 +22,6 @@ export function ScaleToFit({
   adaptiveHeight = false,
   minHeight = 0,
   fill = false,
-  /**
-   * Fill the box and crop what hangs off, instead of fitting the whole chart
-   * inside it. A mosaic is showing a style rather than a chart, and there the
-   * tile is the unit: a chart that stops short of its edges leaves a hole in
-   * the wall. Cropping is anchored top-left, where the title, the deck and the
-   * value axis are — what gets cut is the tail of a legend or an axis.
-   */
-  cover = false,
-  /** How far the chart may be scaled up. */
-  maxScale = 1,
-  /**
-   * How far it may be scaled *down*. On a wall this is the tighter constraint:
-   * type that shrinks by a fifth on one tile and not on its neighbour reads as
-   * sloppiness, not as a house.
-   */
-  minScale = 0,
   children,
 }: {
   /** Bounding-box height in px. With `adaptiveHeight` this is the *max* height. */
@@ -56,12 +40,6 @@ export function ScaleToFit({
    * `height`.
    */
   fill?: boolean;
-  /** Fill and crop rather than fit inside; anchored top-left. */
-  cover?: boolean;
-  /** Cap on scaling *up*; 1 means a chart is never drawn larger than designed. */
-  maxScale?: number;
-  /** Floor on scaling *down*; overflow beyond it is cropped when `cover`. */
-  minScale?: number;
   children: ReactNode;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
@@ -80,9 +58,7 @@ export function ScaleToFit({
       if (!natW || !natH) return;
       const boxW = outer.clientWidth - padding * 2;
       const boxH = (fill ? outer.clientHeight : height) - padding * 2;
-      const next = cover
-        ? Math.min(Math.max(Math.max(boxW / natW, boxH / natH), minScale), maxScale)
-        : Math.min(boxW / natW, boxH / natH, maxScale);
+      const next = Math.min(boxW / natW, boxH / natH, 1);
       if (Number.isFinite(next) && next > 0) {
         setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev));
         if (adaptiveHeight) {
@@ -97,7 +73,7 @@ export function ScaleToFit({
     ro.observe(inner);
     ro.observe(outer);
     return () => ro.disconnect();
-  }, [height, padding, adaptiveHeight, minHeight, fill, cover, maxScale, minScale]);
+  }, [height, padding, adaptiveHeight, minHeight, fill]);
 
   return (
     <div
@@ -107,17 +83,16 @@ export function ScaleToFit({
         ...(fill ? { inset: 0 } : { width: '100%', height: adaptiveHeight ? boxHeight : height }),
         overflow: 'hidden',
         display: 'flex',
-        alignItems: cover ? 'flex-start' : 'center',
-        justifyContent: cover ? 'flex-start' : 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         ref={innerRef}
         style={{
           position: 'absolute',
-          ...(cover ? { left: 0, top: 0 } : {}),
           transform: `scale(${scale})`,
-          transformOrigin: cover ? 'top left' : 'center center',
+          transformOrigin: 'center center',
         }}
       >
         {children}
