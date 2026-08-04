@@ -13,11 +13,18 @@ const trendValues = foodPrices.values.map(({ month, item, price }) => ({
 // A correlation matrix is symmetric: swapping its axes produces the same
 // picture and makes a working transpose control look broken. Use a rectangular
 // food-by-month grid here so the two arrangements are visibly distinct.
-const heatmapMonths = [...new Set(
-  foodPrices.values
-    .filter(({ annualChange }) => annualChange !== null)
-    .map(({ month }) => month),
-)].slice(-6);
+const heatmapItemCount = new Set(foodPrices.values.map(({ item }) => item)).size;
+const heatmapRowsByMonth = new Map<string, number>();
+for (const { month, annualChange } of foodPrices.values) {
+  if (annualChange === null) continue;
+  heatmapRowsByMonth.set(month, (heatmapRowsByMonth.get(month) ?? 0) + 1);
+}
+let heatmapMonths: string[] = [];
+let completeMonthRun: string[] = [];
+for (const [month, rowCount] of heatmapRowsByMonth) {
+  completeMonthRun = rowCount === heatmapItemCount ? [...completeMonthRun, month] : [];
+  if (completeMonthRun.length >= 6) heatmapMonths = completeMonthRun.slice(-6);
+}
 const heatmapMonthSet = new Set(heatmapMonths);
 const heatmapValues = foodPrices.values
   .filter(({ month, annualChange }) => heatmapMonthSet.has(month) && annualChange !== null)
