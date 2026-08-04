@@ -670,6 +670,24 @@ export function FlintAppInner(props: {
   }, [current, chartWidth]);
 
   const model = useMemo(() => buildPanelModel(current), [current]);
+
+  // The frame the chart sits in takes the chart's own paper.
+  //
+  // A house that paints a canvas — Swiss's cream, PowerBI's near black — puts
+  // that colour inside the SVG, and the SVG is only as big as the graphic. The
+  // frame is not: it holds a floor height and centres what it is given, so the
+  // painted rectangle ends up floating in a white surround with a hard edge
+  // around it, looking like a picture pasted onto the page rather than the
+  // surface the chart is drawn on.
+  //
+  // Reading the colour back off the assembled spec rather than the house is
+  // deliberate. `background` is where the theme records its resolved surface,
+  // so this follows houses that defer the decision to their host as well as
+  // ones that make it themselves, and it needs no list of which is which.
+  const surface = typeof render?.vlSpec?.background === 'string'
+    ? render.vlSpec.background
+    : undefined;
+
   const canReset = useMemo(
     () =>
       JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec) ||
@@ -748,7 +766,11 @@ export function FlintAppInner(props: {
         ) : (
           // The frame is always mounted, so its size is known before the first
           // render and the chart can be assembled to fit it straight away.
-          <div className="chart" ref={measureChartBox}>
+          <div
+            className="chart"
+            ref={measureChartBox}
+            style={surface ? { background: surface } : undefined}
+          >
             {render
               ? <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
               : <span className="chart-pending">Rendering…</span>}
