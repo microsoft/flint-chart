@@ -10,46 +10,18 @@ const trendValues = foodPrices.values.map(({ month, item, price }) => ({
   price,
 }));
 
-const foodNames = [...new Set(foodPrices.values.map(({ item }) => item))];
-const changesByFood = new Map<string, Map<string, number>>();
-for (const { month, item, annualChange } of foodPrices.values) {
-  if (annualChange === null) continue;
-  const series = changesByFood.get(item) ?? new Map<string, number>();
-  series.set(month, annualChange);
-  changesByFood.set(item, series);
-}
-
-function pearsonCorrelation(left: Map<string, number>, right: Map<string, number>): number {
-  const pairs = [...left].flatMap(([month, leftValue]) => {
-    const rightValue = right.get(month);
-    return rightValue === undefined ? [] : [[leftValue, rightValue] as const];
-  });
-  const leftMean = pairs.reduce((sum, [value]) => sum + value, 0) / pairs.length;
-  const rightMean = pairs.reduce((sum, [, value]) => sum + value, 0) / pairs.length;
-  let covariance = 0;
-  let leftVariance = 0;
-  let rightVariance = 0;
-  for (const [leftValue, rightValue] of pairs) {
-    const leftDelta = leftValue - leftMean;
-    const rightDelta = rightValue - rightMean;
-    covariance += leftDelta * rightDelta;
-    leftVariance += leftDelta ** 2;
-    rightVariance += rightDelta ** 2;
-  }
-  const denominator = Math.sqrt(leftVariance * rightVariance);
-  return denominator === 0 ? 0 : covariance / denominator;
-}
-
-const correlationValues = foodNames.flatMap((rowFood) =>
-  foodNames.map((columnFood) => ({
-    rowFood,
-    columnFood,
-    correlation: pearsonCorrelation(
-      changesByFood.get(rowFood) ?? new Map(),
-      changesByFood.get(columnFood) ?? new Map(),
-    ),
-  })),
-);
+// A correlation matrix is symmetric: swapping its axes produces the same
+// picture and makes a working transpose control look broken. Use a rectangular
+// food-by-month grid here so the two arrangements are visibly distinct.
+const heatmapMonths = [...new Set(
+  foodPrices.values
+    .filter(({ annualChange }) => annualChange !== null)
+    .map(({ month }) => month),
+)].slice(-6);
+const heatmapMonthSet = new Set(heatmapMonths);
+const heatmapValues = foodPrices.values
+  .filter(({ month, annualChange }) => heatmapMonthSet.has(month) && annualChange !== null)
+  .map(({ month, item, annualChange }) => ({ month, item, annualChange }));
 
 type RedesignVariant = 'sparkline' | 'heatmap' | 'theme';
 
@@ -144,27 +116,27 @@ function chartInput(variant: RedesignVariant, transformed: boolean): ChartAssemb
   }
 
   return {
-    data: { values: correlationValues },
+    data: { values: heatmapValues },
     semantic_types: {
-      rowFood: 'Category',
-      columnFood: 'Category',
-      correlation: 'Correlation',
+      month: 'YearMonth',
+      item: 'Category',
+      annualChange: 'Percentage',
     },
     chart_spec: {
       chartType: 'Heatmap',
       encodings: {
-        x: { field: 'columnFood' },
-        y: { field: 'rowFood' },
-        color: { field: 'correlation' },
+        x: { field: 'month' },
+        y: { field: 'item' },
+        color: { field: 'annualChange' },
       },
-      chartProperties: { showTextLabels: transformed },
+      chartProperties: { showValueLabels: transformed },
       baseSize: { width: 390, height: 300 },
       canvasSize: { width: 390, height: 300 },
     },
     field_display_names: {
-      rowFood: 'Food',
-      columnFood: 'Food',
-      correlation: 'Price correlation',
+      month: 'Month',
+      item: 'Food',
+      annualChange: 'Annual price change (%)',
     },
   };
 }
@@ -202,7 +174,7 @@ function McpView({
       } else {
         const controls = root.querySelectorAll<HTMLElement>('.opt');
         for (const control of controls) {
-          if (control.querySelector('.opt-label')?.textContent?.trim() === 'Labels') {
+          if (control.querySelector('.opt-label')?.textContent?.trim() === 'Values') {
             control.classList.add('redesign-pointer-target', 'redesign-property-target');
           }
         }
