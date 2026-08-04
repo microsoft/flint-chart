@@ -3042,7 +3042,47 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 `the ramp runs ${length}px — under half the ${block}px block, so the key stays a caption to the chart`);
         }
     }
-    if (!l.title) config.legend.title = null;
+    // Two kinds of key can share one chart, and "does this key need a title?"
+    // has different answers for them.
+    //
+    // `whenAmbiguous` asks whether the labels say what they are. `Europe`,
+    // `Asia`, `Africa` plainly do, so writing `Continent` over them repeats
+    // what the reader can already see. `200`, `600`, `1,000` do not — a number
+    // is an instance of nothing until the key names what it counts, and a
+    // bubble key with no title leaves the reader asking "200 what?".
+    //
+    // The question was being asked once, of the series channel, and its answer
+    // applied to every key on the chart. On the Gapminder shape — a continent
+    // colour and a population size on the same plot — the colour key answered
+    // "my labels name themselves" and the size key lost its title on the
+    // strength of it. Both came out bare, in all nine houses.
+    //
+    // So the suppression is now aimed at the key it was reasoned about. A
+    // value key keeps its title whatever the series key concluded. That is
+    // also what seaborn does when one legend carries both: each block keeps
+    // the variable name as a heading, because the heading is the only thing
+    // telling a row of sizes apart from a row of colours.
+    if (!l.title) {
+        let valueKeys = 0;
+        walk(spec, (node) => {
+            for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity'] as const) {
+                const enc = node.encoding?.[channel];
+                if (!enc?.field || enc.legend === null) continue;
+                // A value key is the ruler kind: size and opacity carrying a
+                // number. Everything else on this list is naming series.
+                const isValueKey = (channel === 'size' || channel === 'opacity')
+                    && enc.type === 'quantitative';
+                if (isValueKey) { valueKeys++; continue; }
+                enc.legend = { ...(enc.legend ?? {}), title: null };
+            }
+        });
+        if (valueKeys === 0) config.legend.title = null;
+        else {
+            say('legend.title',
+                `the series key names its own labels and drops its title; ${valueKeys === 1 ? 'the value key keeps' : `${valueKeys} value keys keep`} `
+                + 'theirs, because a number names nothing until the key says what it counts');
+        }
+    }
     // A vertical-axis title laid flat sits at the plot's top-left corner; a key
     // riding along the top of that same plot lands its last row in the very
     // strip the title occupies, and on a multi-row key the two collide. Push
@@ -3174,6 +3214,19 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
             };
             say('legend.placement',
                 `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`);
+
+            // Stacked, each key that still has a title spends a line on it, so
+            // two keys cost four lines above a plot that is only a couple of
+            // hundred pixels tall. The title moves onto the entries' own line
+            // instead — `Population (M)  ○ 200 ○ 600 ○ 1,000` — which reads
+            // the way a journalistic key does and hands the row back to the
+            // chart. It is only offered here because it is only free here:
+            // stacked keys have the width to spare, whereas keys sharing a row
+            // are already short of it, and a leading title on each would push
+            // them apart rather than pull them up.
+            config.legend.titleOrient = 'left';
+            say('legend.titleOrient',
+                'stacked keys put their title on the same line as their entries — the row is already paid for');
         }
     }
 
