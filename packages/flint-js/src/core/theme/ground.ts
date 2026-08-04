@@ -975,19 +975,31 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // segment, which is the one thing a stacked bar otherwise makes hard to
     // get at. Whether each segment is thick enough to hold that number is a
     // separate question, settled below.
+    //
+    // A line or an area is the exception the part-to-whole test would
+    // otherwise let through: a normalized stacked area *is* a part of a whole,
+    // but it is drawn as a continuous ribbon with no slot to print into, so
+    // the numbers land on the vertices — which are sampling points, not marks
+    // a reader is meant to read off one at a time. And on a normalized chart
+    // they name a quantity the axis does not carry: the axis is a percentage
+    // and the number is a raw total.
+    const continuousMark = ctx.markTypes.some((m) => m === 'area' || m === 'line' || m === 'trail');
     const labelable = ((signals.hasBandedAxis && (bindings.measureChannels.length > 0 || gridCells))
         || signals.isPartToWhole)
         && !signals.isSummarised
+        && !continuousMark
         && !MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType);
     if (dlShow && !labelable) {
         dlShow = false;
         say('dataLabels.show', signals.isSummarised
             ? 'the chart summarises a distribution — each band holds a sample, not one quantity to print'
-            : MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType)
-                ? 'the mark carries several measures at once — there is no single value to print, and the measure axis stays as the only reading of them'
-                : signals.hasBandedAxis
-                    ? 'the measure is not on an axis — there is no position to print a value at'
-                    : 'no banded axis to key values to — one number per datum would be noise, not a label');
+            : continuousMark
+                ? 'the mark is a continuous line or ribbon — its vertices are sampling points, not marks to read off one at a time'
+                : MULTI_VALUE_GLYPH_CHARTS.has(ctx.chartType)
+                    ? 'the mark carries several measures at once — there is no single value to print, and the measure axis stays as the only reading of them'
+                    : signals.hasBandedAxis
+                        ? 'the measure is not on an axis — there is no position to print a value at'
+                        : 'no banded axis to key values to — one number per datum would be noise, not a label');
     }
 
     // How wide the printed number itself is. Needed before the fit checks

@@ -3668,6 +3668,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // of it rather than at its end.
     let stackedKeepTest: string | undefined;
     let stackedTransform: any[] | undefined;
+    let stackOrderTransform: any | undefined;
     if (stackedSegments) {
         labelEncoding[measureChannel] = {
             ...labelEncoding[measureChannel],
@@ -3684,10 +3685,35 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
             // segments in a different order from the bars and every number
             // lands on a neighbour's segment. Stating the order the bars
             // already use puts them back — and stating it only here leaves
-            // the drawn bars exactly as they were. The two axes run opposite
-            // ways: a stack grows up the y axis but rightward along the x, so
-            // the order that matches the bars flips with the orientation.
-            labelEncoding.order = { ...key, sort: horizontal ? 'ascending' : 'descending' };
+            // the drawn bars exactly as they were.
+            //
+            // Which order that is cannot be assumed. Sorting the field
+            // alphabetically matches only when the colour scale takes its
+            // domain from the field's natural order; a template that pins an
+            // explicit domain — as the stacked-bar template does, to keep a
+            // Likert scale in its own order — stacks in *that* order instead,
+            // and an alphabetical label order then lands every number on the
+            // wrong segment. So the domain is read off the scale where it is
+            // stated, and the position of each row within it is what the
+            // labels are ordered by: one rule that follows the bars in both
+            // cases. The two axes run opposite ways — a stack grows up the y
+            // axis but rightward along the x — so the direction still flips
+            // with the orientation.
+            const stated = enc.color.scale?.domain;
+            const domain = Array.isArray(stated) && stated.length > 0
+                ? stated
+                : Array.from(new Set(table.map((r) => r?.[enc.color.field])
+                    .filter((v) => v !== undefined && v !== null)))
+                    .sort((a, b) => (String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0));
+            stackOrderTransform = {
+                calculate: `indexof(${JSON.stringify(domain)}, datum[${JSON.stringify(enc.color.field)}])`,
+                as: '__flintStackOrder',
+            };
+            labelEncoding.order = {
+                field: '__flintStackOrder',
+                type: 'quantitative',
+                sort: horizontal ? 'ascending' : 'descending',
+            };
         }
         // A segment shorter than a line of text cannot hold its number. How
         // much of the plot a segment occupies is its value over the tallest
@@ -3742,6 +3768,24 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         }
     }
 
+    // The label sits on the mark body and the mark's fill comes from a
+    // categorical scale: each entry in that scale is a different background,
+    // so each needs its own ink. Mirroring the fill encoding — same field,
+    // same sort, no legend — makes Vega-Lite derive the same domain, so range
+    // entry *i* is the ink for fill *i* without the domain ever being named.
+    const fillRange: unknown = enc.color?.scale?.range;
+    const perCategoryInk = (!outside && onMarkBody && enc.color?.field
+        && Array.isArray(fillRange) && fillRange.length > 0
+        && fillRange.every((c) => typeof c === 'string'))
+        ? {
+            field: enc.color.field,
+            type: enc.color.type ?? 'nominal',
+            ...(enc.color.sort !== undefined ? { sort: enc.color.sort } : {}),
+            scale: { range: (fillRange as string[]).map((fill) => readableOn(fill, d.text.inverse, d.text.primary)) },
+            legend: null,
+        }
+        : undefined;
+
     if (cells) {
         // The cell under the number is the ramp, so the ink follows the ramp.
         const values = table.map((r) => r?.[measure.field]).filter((v) => typeof v === 'number');
@@ -3749,6 +3793,16 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         labelEncoding.color = inkOnRamp(measure.field, stops, values, d.text.inverse, d.text.primary);
     } else if (d.dataLabels.inkMode === 'matchSeries' && enc.color?.field) {
         labelEncoding.color = { ...enc.color, legend: null };
+    } else if (perCategoryInk) {
+        // A number sitting *inside* a mark that draws from a categorical
+        // palette has as many backgrounds as the palette has entries, so one
+        // ink cannot serve them all: Swiss prints a near-black label, and on
+        // its near-black series the number simply vanishes. The ink is a fact
+        // about the segment it lands on, so it is resolved per segment —
+        // by giving the label its own colour scale over the same field, with
+        // the same sort, so Vega-Lite derives the identical domain and the
+        // two ranges line up entry for entry.
+        labelEncoding.color = perCategoryInk;
     } else if (d.dataLabels.inkMode === 'contrastWithMark' && !outside && onMarkBody) {
         const seriesInk = d.series.mode === 'single' ? d.series.single : d.series.categorical[0] ?? d.series.single;
         markDef.color = readableOn(seriesInk, d.text.inverse, d.text.primary);
@@ -3767,7 +3821,25 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     if (stackedKeepTest) {
         labelEncoding.opacity = { condition: { test: stackedKeepTest, value: 1 }, value: 0 };
     }
-    if (stackedTransform) layer.transform = stackedTransform;
+    // The order index has to exist before the stack is computed, so it goes
+    // in front of whatever else the label layer derives.
+    const labelTransforms = [
+        ...(stackOrderTransform ? [stackOrderTransform] : []),
+        ...(stackedTransform ?? []),
+    ];
+    if (labelTransforms.length > 0) layer.transform = labelTransforms;
+    if (perCategoryInk) {
+        // Vega-Lite merges scales of the same channel across a layer, so the
+        // label's ink range and the mark's fill range are two answers to one
+        // question and the fill wins — leaving the number painted its own
+        // background. Resolving colour independently lets the two coexist.
+        // The label's scale carries `legend: null`, so the legend still comes
+        // from the marks alone.
+        body.resolve = {
+            ...(body.resolve ?? {}),
+            scale: { ...(body.resolve?.scale ?? {}), color: 'independent' },
+        };
+    }
     appendLayer(body, layer);
 
     if (radial) {

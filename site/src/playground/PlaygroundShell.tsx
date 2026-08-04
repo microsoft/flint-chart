@@ -10,6 +10,7 @@ const pages: NavEntry[] = [
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },
   { to: 'demo-wall', label: 'Demo wall' },
+  { to: 'number-lab', label: 'Number lab' },
   {
     group: 'Theme labs',
     children: [

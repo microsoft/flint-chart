@@ -336,14 +336,82 @@ describe('value labels on bars that share a band', () => {
     it('stacks its labels in the same order as the bars', () => {
       // Vega-Lite reads stack order off the colour field, which the label
       // layer does not carry; without a stated order every number lands on a
-      // neighbour's segment. The two axes run opposite ways, so the order that
-      // matches the bars flips with the orientation.
+      // neighbour's segment. The order is stated as a position within the
+      // colour scale's domain rather than as a sort of the field itself,
+      // because those two differ whenever a template pins its own domain.
+      // The two axes run opposite ways, so the direction flips with the
+      // orientation.
       const vertical = labelLayer(assembleVegaLite(
         sharedBar('Stacked Bar Chart', 6, 3, { props: { showValueLabels: true } })));
-      expect(vertical.encoding.order).toMatchObject({ field: 'grp', sort: 'descending' });
+      expect(vertical.encoding.order).toMatchObject({ field: '__flintStackOrder', sort: 'descending' });
       const horizontal = labelLayer(assembleVegaLite(
         sharedBar('Stacked Bar Chart', 6, 3, { horizontal: true, props: { showValueLabels: true } })));
-      expect(horizontal.encoding.order).toMatchObject({ field: 'grp', sort: 'ascending' });
+      expect(horizontal.encoding.order).toMatchObject({ field: '__flintStackOrder', sort: 'ascending' });
+    });
+
+    it('takes the order from the domain the bars stack by, not the alphabet', () => {
+      // A Likert scale is pinned to its own order — "A great deal", "Some",
+      // "Not much", "None at all" — which is not alphabetical. Sorting the
+      // colour field instead put every number on the wrong segment: `Some`
+      // sorts last but stacks second.
+      const responses = ['A great deal', 'Some', 'Not much', 'None at all'];
+      const values = [['Scientists', [39, 45, 12, 4]], ['Congress', [8, 30, 38, 24]]] as [string, number[]][];
+      const spec: any = assembleVegaLite({
+        data: {
+          values: values.flatMap(([Institution, vals]) =>
+            responses.map((Response, i) => ({ Institution, Response, Share: vals[i] }))),
+        },
+        semantic_types: { Institution: 'Category', Response: 'Category', Share: 'Quantity' },
+        chart_spec: {
+          chartType: 'Stacked Bar Chart',
+          encodings: { x: 'Share', y: 'Institution', color: 'Response' },
+          baseSize: { width: 600, height: 380 },
+          chartProperties: { showValueLabels: true },
+        },
+        theme_spec: 'swiss',
+      } as any);
+      const bar = (spec.layer ?? []).find((l: any) => (l.mark?.type ?? l.mark) === 'bar');
+      const domain = bar.encoding.color.scale.domain;
+      expect(domain).toEqual(responses);
+      // The label layer indexes into exactly that domain.
+      const order = (labelLayer(spec).transform ?? [])
+        .find((t: any) => t.as === '__flintStackOrder');
+      expect(order).toBeTruthy();
+      expect(order.calculate).toContain(JSON.stringify(domain));
+    });
+
+    it('picks the ink per segment, so a dark series does not swallow its number', () => {
+      // Swiss puts a near-black in its categorical palette and prints its
+      // labels in a near-black ink: on that one series the number vanished.
+      // One ink cannot serve a palette, so the label carries its own colour
+      // scale over the same field — same sort, so the domains line up — and
+      // each entry is the ink readable on the matching fill.
+      const responses = ['A great deal', 'Some', 'Not much', 'None at all'];
+      const spec: any = assembleVegaLite({
+        data: {
+          values: [['Scientists', [39, 45, 12, 4]], ['Congress', [8, 30, 38, 24]]]
+            .flatMap(([Institution, vals]: any) =>
+              responses.map((Response, i) => ({ Institution, Response, Share: vals[i] }))),
+        },
+        semantic_types: { Institution: 'Category', Response: 'Category', Share: 'Quantity' },
+        chart_spec: {
+          chartType: 'Stacked Bar Chart',
+          encodings: { x: 'Share', y: 'Institution', color: 'Response' },
+          baseSize: { width: 600, height: 380 },
+          chartProperties: { showValueLabels: true },
+        },
+        theme_spec: 'swiss',
+      } as any);
+      const bar = (spec.layer ?? []).find((l: any) => (l.mark?.type ?? l.mark) === 'bar');
+      const fills: string[] = bar.encoding.color.scale.range;
+      const inks: string[] = labelLayer(spec).encoding.color.scale.range;
+      expect(inks.length).toBe(fills.length);
+      // Not one ink repeated: the palette spans light and dark, so the inks
+      // must too, or one of them is sitting on its own colour.
+      expect(new Set(inks).size).toBeGreaterThan(1);
+      // And the two scales must not be merged into one by Vega-Lite, or the
+      // fill range wins and the number is painted its own background.
+      expect(spec.resolve?.scale?.color).toBe('independent');
     });
 
     it('drops the number from segments too thin to hold it', () => {
@@ -377,6 +445,49 @@ describe('value labels on bars that share a band', () => {
         value: wide, props: { valueFormat: 'raw', showValueLabels: true },
       });
       expect(countTextMarks(assembleVegaLite(on))).toBe(0);
+    });
+  });
+
+  describe('a ribbon is not a set of marks', () => {
+    const stackedArea = (normalized: boolean) => {
+      const values = ([[1990, [4430, 1780, 2160]], [2000, [5990, 2760, 2620]],
+        [2010, [8670, 4760, 3440]], [2020, [9420, 6270, 4360]]] as [number, number[]][])
+        .flatMap(([Year, vals]) => ['Coal', 'Gas', 'Hydro']
+          .map((Source, i) => ({ Year, Source, TWh: vals[i] })));
+      return {
+        data: { values },
+        semantic_types: { Year: 'Year', Source: 'Category', TWh: 'Quantity' },
+        chart_spec: {
+          chartType: 'Area Chart',
+          encodings: { x: 'Year', y: 'TWh', color: 'Source' },
+          baseSize: { width: 600, height: 380 },
+          ...(normalized ? { chartProperties: { stackMode: 'normalize' } } : {}),
+        },
+        theme_spec: 'swiss',
+      } as any;
+    };
+
+    it('does not print values on a normalized stacked area', () => {
+      // `isPartToWhole` is true here — a normalized stack *is* parts of a
+      // whole — but that test was written for wedges, which have a slot each.
+      // An area is one continuous ribbon: the numbers land on the vertices,
+      // which are sampling points rather than marks to read off one at a
+      // time. Worse, on a normalized chart the axis is a percentage while the
+      // number is a raw total, so it names a quantity nothing on the chart
+      // draws.
+      const spec: any = assembleVegaLite(stackedArea(true));
+      expect(spec._theme?.decisions?.dataLabels?.possible).toBe(false);
+      expect(countTextMarks(spec)).toBe(0);
+    });
+
+    it('does not print them on a plain stacked area either', () => {
+      const spec: any = assembleVegaLite(stackedArea(false));
+      expect(countTextMarks(spec)).toBe(0);
+    });
+
+    it('withholds the toggle rather than offering it inert', () => {
+      const offered = getChartOptions(stackedArea(true)).map((o: any) => o.key);
+      expect(offered).not.toContain('showValueLabels');
     });
   });
 });
