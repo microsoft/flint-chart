@@ -9,24 +9,24 @@
  * of it at once. It is built to be screenshotted, which is why the switch is
  * the only chrome.
  *
- * The layout is a justified gallery, the same construction a photo wall uses:
- * every chart is laid out to a common height, the row takes as many charts as
- * fit, and the row is scaled so it fills the wall exactly. Nothing is cropped
- * to make it fit and nothing is left short — a chart that stops before the
- * edge leaves a hole, and a chart that runs past it loses an axis.
+ * The wall is a justified gallery, the construction a photo wall uses: each
+ * chart is a picture with a shape of its own, a row takes as many pictures as
+ * fit, and the row is set to the height that makes them meet both edges.
+ * Nothing is cropped and nothing stops short of the edge.
  *
- * The reason a chart *can* be laid out to a common height is that its height
- * responds to the size it is asked for almost exactly one-for-one: the title,
- * the axis and the legend are a fixed cost on top of the plot, so asking for
- * `target − overhead` lands on `target`. Width does not behave that way. A
- * legend or a column of category labels is as wide as its text no matter how
- * small the plot gets, so width is measured rather than chosen, and the row is
- * what absorbs the slack.
+ * Two things follow from treating a chart as a picture. It is never reshaped —
+ * a chart is made bigger or smaller, never taller without also being wider,
+ * because a heatmap stretched to twice its height is a different chart. And
+ * the sizing is done by changing the size the chart is *asked* for and letting
+ * it lay itself out again, not by scaling a finished picture: a chart asked
+ * for less room drops a gridline and tightens its ticks, where a shrunk
+ * picture just has smaller type. Scaling is left to do what it is good for —
+ * the last few percent that squares a row against the edge.
  *
- * Two walls of the same house are not expected to match tile for tile. The
- * charts are the same and the order is the same, but the houses set type at
- * different sizes and put their legends in different places, so the rows break
- * where that house's widths say they should.
+ * Two walls of the same charts are not expected to match row for row. Houses
+ * set type at different sizes and put their legends in different places, so
+ * the rows break where that house's own shapes say they should, which is
+ * itself something the wall is showing.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -37,33 +37,22 @@ import { ThemePicker } from './ThemePicker';
 import { PREVIEW_CASES, type PreviewCase } from './new-case-preview-data';
 
 /**
- * The openers run at double height. A bubble scatter carries a palette, a size
- * key, a log axis and a type scale at once; the heatmap is the only place a
- * house's sequential ramp is shown as a field of colour rather than a line;
- * the band is where its fills and its rules are seen together. They are also
- * the only tiles with room for a deck, so they are where the full type scale —
- * headline against subhead — can actually be read.
- */
-const FEATURE_IDS = ['gapminder-bubble', 'temp-heatmap', 'seattle-range'];
-
-/**
- * Eighteen more, no two of them the same mark: line, connected scatter, band,
- * box, stem, slope, dumbbell, bar, stacked area, rank, radar, histogram,
- * strip, diverging bar, waterfall, violin, stream and wedge. A house that only
- * knows how to style a bar chart has nowhere to hide.
+ * Twenty-one cases, no two of them the same mark: line, connected scatter,
+ * band, matrix, box, wedge, stem, slope, dumbbell, ribbon, bar, stacked area,
+ * rank, radar, histogram, strip, diverging bar, waterfall, violin, stream and
+ * bubble. A house that only knows how to style a bar chart has nowhere to hide.
  *
  * Every one is a Vega-Lite case. A Plotly fallback ignores `theme_spec`, and
  * one tile that refused to change with the switch would say something false
  * about the house.
  */
-const REST_IDS = [
-    'keeling', 'driving', 'us-pyramid', 'penguins-box',
-    'co2-lollipop', 'life-expectancy', 'lifeexp-dumbbell', 'big-mac', 'electricity-mix-area',
-    'olympic-bump', 'nutrition-radar', 'faithful-hist', 'iris-strip', 'trust-likert',
-    'population-waterfall', 'penguins-violin', 'population-stream', 'browser-pie',
+const IDS = [
+    'keeling', 'driving', 'us-pyramid', 'temp-heatmap', 'penguins-box',
+    'browser-pie', 'co2-lollipop', 'life-expectancy', 'lifeexp-dumbbell', 'seattle-range',
+    'big-mac', 'electricity-mix-area', 'olympic-bump', 'nutrition-radar', 'faithful-hist',
+    'iris-strip', 'trust-likert', 'population-waterfall', 'penguins-violin', 'population-stream',
+    'gapminder-bubble',
 ];
-
-const ALL_IDS = [...FEATURE_IDS, ...REST_IDS];
 
 /** The hairline of the house's own paper between two tiles. */
 const GAP = 4;
@@ -71,20 +60,23 @@ const GAP = 4;
 /** Where the wall stops growing, so a wide screen does not stretch the type. */
 const MAX_WALL = 1600;
 
-/** A row is about a seventh of the wall, which puts 4–5 charts in it. */
-const ROW_RATIO = 210 / 1600;
+/** A row is about a seventh of the wall, which puts four or five charts in it. */
+const ROW_RATIO = 230 / 1600;
+
+/** The shape a chart is asked for before it is sized; it answers with its own. */
+const ASK_W = 320;
+const ASK_H = 210;
 
 /**
- * How far a row may be scaled to justify it. Type that is a fifth larger in
- * one row than the next reads as sloppiness rather than as a house, so the
- * band is narrow — and it is only ever reached by a chart that cannot be laid
- * out to the row height at all.
+ * How far a row may be scaled off the nominal height to justify it. This is
+ * the last few percent only — the sizing proper is done by asking the chart
+ * for a different size, not by scaling the result.
  */
-const S_MIN = 0.85;
-const S_MAX = 1.15;
+const S_MIN = 0.82;
+const S_MAX = 1.18;
 
-/** How many measure-and-correct rounds to give the solver before settling. */
-const MAX_PASSES = 5;
+/** Rounds of ask-and-measure before a chart is taken as settled. */
+const MAX_PASSES = 6;
 
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 
@@ -92,19 +84,16 @@ const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
  * A gallery title is written to be read on its own — "Life expectancy gap,
  * male vs female (2021)" — and at a tile's width that is three lines of
  * headline over a plot with no room left. But it is already two things: a
- * subject, and the qualification that pins it down. The houses that
- * distinguish a headline from a deck are exactly the ones this wall is for, so
- * the title is split where it already breaks — at the dash, or the first comma
- * — rather than a second set of short titles being invented alongside the real
- * ones.
+ * subject, and the qualification that pins it down, so the title is cut where
+ * it already breaks rather than a second set of short titles being invented
+ * alongside the real ones.
  */
-function headAndDeck(title: string): { title: string; subtitle?: string } {
+function shortTitle(title: string): string {
     const split = title.match(/^(.*?)\s+—\s+(.*)$/) ?? title.match(/^([^,]{6,}?),\s+(.*)$/);
-    return split ? { title: split[1], subtitle: split[2] } : { title };
+    return split ? split[1] : title;
 }
 
-function buildInput(c: PreviewCase, themeId: string | undefined, w: number, h: number, deck: boolean) {
-    const { title, subtitle } = headAndDeck(c.title);
+function buildInput(c: PreviewCase, themeId: string | undefined, w: number, h: number) {
     return {
         data: { values: c.data },
         semantic_types: c.semantic_types,
@@ -112,8 +101,7 @@ function buildInput(c: PreviewCase, themeId: string | undefined, w: number, h: n
             chartType: c.chartType,
             encodings: c.encodings,
             baseSize: { width: Math.round(w), height: Math.round(h) },
-            title,
-            ...(deck && subtitle ? { subtitle } : {}),
+            title: shortTitle(c.title),
             ...(c.chartProperties ? { chartProperties: c.chartProperties } : {}),
         },
         ...(themeId ? { theme_spec: themeId } : {}),
@@ -121,33 +109,48 @@ function buildInput(c: PreviewCase, themeId: string | undefined, w: number, h: n
 }
 
 /**
- * A title longer than its own chart is cut off, because the chart is only as
- * wide as it was asked to be and the heading is drawn inside it. So the title
- * is measured in the house's own face and treated as a floor on the width.
+ * A heading is drawn inside the chart, so a chart narrower than its own title
+ * loses the end of it. The title is measured in the house's own face and used
+ * as a floor on how narrow the chart may be.
  */
-let textCanvas: CanvasRenderingContext2D | null = null;
-function measureTitle(spec: any, text: string): number {
-    if (!textCanvas) textCanvas = document.createElement('canvas').getContext('2d');
+let textCtx: CanvasRenderingContext2D | null | undefined;
+function titleWidth(spec: any, text: string): number {
+    if (textCtx === undefined) textCtx = document.createElement('canvas').getContext('2d');
     const t = spec?.config?.title ?? {};
     const size = t.fontSize ?? 13;
-    const family = t.font ?? spec?.config?.font ?? 'sans-serif';
-    if (!textCanvas) return text.length * size * 0.55;
-    textCanvas.font = `${t.fontWeight ?? 'bold'} ${size}px ${family}`;
-    return textCanvas.measureText(text).width;
+    if (!textCtx) return text.length * size * 0.55;
+    textCtx.font = `${t.fontWeight ?? 'bold'} ${size}px ${t.font ?? spec?.config?.font ?? 'sans-serif'}`;
+    return textCtx.measureText(text).width;
 }
 
-type Solved = { id: string; spec: any; w: number; h: number; scale: number };
+type Ask = { t: number; extra: number };
+type Shot = { id: string; spec: any; w: number; h: number };
 
-/** Partition an ordered list into `rows` contiguous rows, keeping every row's scale near 1. */
-function partition(items: Solved[], width: number, rows: number): { items: Solved[]; s: number }[] {
+/** A row of pictures, and the height at which they meet both edges. */
+type Band = { items: Shot[]; h: number };
+
+/**
+ * Cut the pictures into `rows` rows, choosing the cuts so that no row has to be
+ * set far off the nominal height and no picture in it has to be scaled far off
+ * its own size.
+ *
+ * A row of pictures at a common height `H` is `H × Σaspect` wide, so the height
+ * that justifies a row follows from which pictures are in it. That is the whole
+ * layout: pick the cuts, and the heights fall out.
+ */
+function partition(items: Shot[], width: number, rows: number, nominal: number): Band[] {
     const n = items.length;
-    const w = items.map((it) => it.w * it.scale);
-    const span = (i: number, j: number) => w.slice(i, j).reduce((a, b) => a + b, 0);
-    const scaleOf = (i: number, j: number) => (width - GAP * (j - i - 1)) / span(i, j);
+    const aspect = items.map((it) => it.w / it.h);
+    const heightOf = (i: number, j: number) =>
+        (width - GAP * (j - i - 1)) / aspect.slice(i, j).reduce((a, b) => a + b, 0);
     const cost = (i: number, j: number) => {
-        const s = scaleOf(i, j);
-        // a row that cannot be justified inside the band is not merely worse, it is wrong
-        return (s - 1) ** 2 * (s > S_MAX || s < S_MIN ? 40 : 1);
+        const h = heightOf(i, j);
+        let worst = 1;
+        for (let k = i; k < j; k++) worst = Math.max(worst, Math.max(h / items[k].h, items[k].h / h));
+        const off = h / nominal;
+        // a row that cannot be justified without over-scaling a picture is not
+        // merely worse than its neighbours, it is wrong
+        return (off - 1) ** 2 + (worst - 1) ** 2 * (worst > S_MAX ? 60 : 1);
     };
     const dp = Array.from({ length: rows + 1 }, () => new Array(n + 1).fill(Infinity));
     const cut = Array.from({ length: rows + 1 }, () => new Array(n + 1).fill(-1));
@@ -161,33 +164,13 @@ function partition(items: Solved[], width: number, rows: number): { items: Solve
             }
         }
     }
-    const out: Solved[][] = [];
+    const out: Shot[][] = [];
     let j = n;
     for (let r = rows; r >= 1; r--) { const i = cut[r][j]; out.unshift(items.slice(i, j)); j = i; }
     return out.map((row) => {
         const i0 = items.indexOf(row[0]);
-        const s = scaleOf(i0, i0 + row.length);
-        return { items: row, s: Math.max(S_MIN, Math.min(S_MAX, s)) };
+        return { items: row, h: heightOf(i0, i0 + row.length) };
     });
-}
-
-function rowCount(items: Solved[], width: number): number {
-    const total = items.reduce((a, b) => a + b.w * b.scale, 0);
-    return Math.max(1, Math.round(total / width));
-}
-
-/** One chart, drawn at the size the row settled on. */
-function Tile({ item, s, rowH }: { item: Solved; s: number; rowH: number }) {
-    const k = item.scale * s;
-    const w = item.w * k;
-    const h = item.h * k;
-    return (
-        <div style={{ width: w, height: Math.min(h, rowH), overflow: 'hidden', flex: '0 0 auto' }}>
-            <div style={{ transform: `scale(${k})`, transformOrigin: 'top left', width: item.w, height: item.h }}>
-                <VegaLiteView spec={item.spec} />
-            </div>
-        </div>
-    );
 }
 
 function useWallWidth(): [React.RefObject<HTMLDivElement>, number] {
@@ -198,7 +181,7 @@ function useWallWidth(): [React.RefObject<HTMLDivElement>, number] {
         if (!el) return;
         const measure = () => {
             const next = Math.min(MAX_WALL, Math.round(el.clientWidth - GAP * 2));
-            setW((prev) => (Math.abs(prev - next) > 4 ? next : prev));
+            setW((prev) => (Math.abs(prev - next) > 8 ? next : prev));
         };
         measure();
         const ro = new ResizeObserver(measure);
@@ -211,7 +194,7 @@ function useWallWidth(): [React.RefObject<HTMLDivElement>, number] {
 export function ThemeMosaic() {
     const [themeId, setThemeId] = useState<string | undefined>(undefined);
     const [hostRef, wallW] = useWallWidth();
-    const rowH = Math.max(150, Math.min(240, Math.round(wallW * ROW_RATIO)));
+    const rowH = Math.max(160, Math.min(260, Math.round(wallW * ROW_RATIO)));
 
     return (
         <div className="dev-page" style={{ alignItems: 'stretch' }}>
@@ -226,95 +209,99 @@ export function ThemeMosaic() {
 }
 
 /**
- * Remounted per house so the solve starts clean: the previous house's widths
- * are the wrong starting point, and a half-corrected request would show as a
- * row that does not reach the edge.
+ * Remounted per house, because the previous house's sizes are the wrong place
+ * to start and a half-corrected ask would show as a row that misses the edge.
  */
 function Wall({ themeId, wallW, rowH }: { themeId: string | undefined; wallW: number; rowH: number }) {
-    const featH = rowH * 2 + GAP;
-    const [req, setReq] = useState<Record<string, { w: number; h: number }>>(() => {
-        const r: Record<string, { w: number; h: number }> = {};
-        for (const id of ALL_IDS) r[id] = { w: 320, h: (FEATURE_IDS.includes(id) ? featH : rowH) - 80 };
-        return r;
-    });
-    const [passes, setPasses] = useState<Record<string, number>>({});
-    const [solved, setSolved] = useState<Record<string, Solved>>({});
+    const [ask, setAsk] = useState<Record<string, Ask>>(() =>
+        Object.fromEntries(IDS.map((id) => [id, { t: 1, extra: 0 }])));
+    const [pass, setPass] = useState<Record<string, number>>({});
+    const [shot, setShot] = useState<Record<string, Shot>>({});
 
     const specs = useMemo(() => {
         const out: Record<string, any> = {};
-        for (const id of ALL_IDS) {
-            if (solved[id]) continue;
+        for (const id of IDS) {
+            if (shot[id]) continue;
             const c = CASE_BY_ID.get(id);
             if (!c) continue;
+            const a = ask[id];
             try {
-                out[id] = BACKENDS.vegalite.assemble(buildInput(c, themeId, req[id].w, req[id].h, FEATURE_IDS.includes(id)));
+                out[id] = BACKENDS.vegalite.assemble(buildInput(c, themeId, ASK_W * a.t + a.extra, ASK_H * a.t));
             } catch { /* a case that will not assemble simply does not join the wall */ }
         }
         return out;
-    }, [themeId, req, solved]);
+    }, [themeId, ask, shot]);
 
     const onMeasured = (id: string, w: number, h: number) => {
         const spec = specs[id];
-        if (!spec || solved[id]) return;
+        if (!spec || shot[id]) return;
         const c = CASE_BY_ID.get(id)!;
-        const feature = FEATURE_IDS.includes(id);
-        const target = feature ? featH : rowH;
-        const maxW = feature ? 760 : 560;
-        const need = Math.ceil(measureTitle(spec, headAndDeck(c.title).title)) + 12;
-        const dh = target - h;
-        const dw = Math.max(0, Math.min(need, maxW) - w);
-        const pass = passes[id] ?? 0;
-        if ((Math.abs(dh) <= 2 && dw <= 0) || pass >= MAX_PASSES) {
-            const scale = Math.max(S_MIN, Math.min(S_MAX, target / h));
-            setSolved((p) => ({ ...p, [id]: { id, spec, w, h, scale } }));
+        const a = ask[id];
+        const n = pass[id] ?? 0;
+        const factor = rowH / h;
+        const need = Math.ceil(titleWidth(spec, shortTitle(c.title))) + 12;
+        const short = Math.max(0, need - w);
+        if ((Math.abs(1 - factor) < 0.02 && short === 0) || n >= MAX_PASSES) {
+            setShot((p) => ({ ...p, [id]: { id, spec, w, h } }));
             return;
         }
-        setPasses((p) => ({ ...p, [id]: pass + 1 }));
-        setReq((p) => ({ ...p, [id]: { w: Math.min(maxW, p[id].w + dw * 1.6), h: Math.max(40, p[id].h + dh) } }));
+        setPass((p) => ({ ...p, [id]: n + 1 }));
+        setAsk((p) => ({
+            ...p,
+            // the chart is asked to be bigger or smaller, never taller alone;
+            // the one thing given back on its own is width the title needs
+            [id]: Math.abs(1 - factor) >= 0.02
+                ? { t: Math.max(0.25, Math.min(4, p[id].t * factor)), extra: p[id].extra }
+                : { t: p[id].t, extra: p[id].extra + short * 1.6 },
+        }));
     };
 
-    const ready = ALL_IDS.every((id) => solved[id] || !specs[id]);
-    const canvas = (solved[FEATURE_IDS[0]]?.spec ?? Object.values(specs)[0])?.config?.background ?? '#ffffff';
+    const ready = IDS.every((id) => shot[id] || !specs[id]);
+    const canvas = (Object.values(shot)[0]?.spec ?? Object.values(specs)[0])?.config?.background ?? '#ffffff';
 
     const bands = useMemo(() => {
         if (!ready) return null;
-        const feat = FEATURE_IDS.map((id) => solved[id]).filter(Boolean);
-        const rest = REST_IDS.map((id) => solved[id]).filter(Boolean);
-        const featRows = partition(feat, wallW, rowCount(feat, wallW));
-        const restRows = partition(rest, wallW, rowCount(rest, wallW));
-        const mid = Math.ceil(restRows.length / 2);
-        // the openers sit in the middle, the way a spread carries its opener
-        return [
-            ...restRows.slice(0, mid).map((r) => ({ r, h: rowH * r.s })),
-            ...featRows.map((r) => ({ r, h: featH * r.s })),
-            ...restRows.slice(mid).map((r) => ({ r, h: rowH * r.s })),
-        ];
-    }, [ready, solved, wallW, rowH, featH]);
+        const items = IDS.map((id) => shot[id]).filter(Boolean);
+        if (!items.length) return [];
+        const rows = Math.max(1, Math.round(items.reduce((a, b) => a + b.w, 0) / wallW));
+        return partition(items, wallW, rows, rowH);
+    }, [ready, shot, wallW, rowH]);
 
     return (
         <>
-            {/* offscreen, where each chart is laid out until it lands on the row height */}
+            {/* offscreen, where each chart is asked for a size until it answers with the right one */}
             <div style={{ position: 'fixed', left: -20000, top: 0, visibility: 'hidden' }} aria-hidden>
-                {ALL_IDS.filter((id) => specs[id]).map((id) => (
-                    <Measure key={`${id}:${passes[id] ?? 0}`} id={id} spec={specs[id]} onMeasured={onMeasured} />
+                {IDS.filter((id) => specs[id]).map((id) => (
+                    <Measure key={`${id}:${pass[id] ?? 0}`} id={id} spec={specs[id]} onMeasured={onMeasured} />
                 ))}
             </div>
             {!bands ? (
                 <div style={{ color: siteTheme.textMuted, fontSize: 13, padding: '24px 0' }}>
-                    Laying out {ALL_IDS.length - Object.keys(solved).length} more charts…
+                    Sizing {IDS.length - Object.keys(shot).length} more charts…
                 </div>
             ) : (
                 <div style={{ background: canvas, padding: GAP, display: 'flex', flexDirection: 'column', gap: GAP, width: wallW + GAP * 2 }}>
                     {bands.map((b, i) => (
                         <div key={i} style={{ display: 'flex', gap: GAP, height: b.h }}>
-                            {b.r.items.map((it) => (
-                                <Tile key={it.id} item={it} s={b.r.s} rowH={b.h} />
+                            {b.items.map((it) => (
+                                <Tile key={it.id} item={it} k={Math.max(S_MIN, Math.min(S_MAX, b.h / it.h))} />
                             ))}
                         </div>
                     ))}
                 </div>
             )}
         </>
+    );
+}
+
+/** One chart, set to the height its row settled on. The scale is uniform: a picture keeps its shape. */
+function Tile({ item, k }: { item: Shot; k: number }) {
+    return (
+        <div style={{ width: item.w * k, height: item.h * k, flex: '0 0 auto', overflow: 'hidden' }}>
+            <div style={{ transform: `scale(${k})`, transformOrigin: 'top left', width: item.w, height: item.h }}>
+                <VegaLiteView spec={item.spec} />
+            </div>
+        </div>
     );
 }
 
@@ -326,9 +313,8 @@ function Measure({ id, spec, onMeasured }: { id: string; spec: any; onMeasured: 
         if (!el) return;
         let done = false;
         let timer: number | undefined;
-        let last = '';
         // vega renders asynchronously and the host grows in more than one step,
-        // so a size is only believed once it has stopped changing.
+        // so a size is only believed once it has stopped changing
         const check = () => {
             if (done) return;
             const w = el.offsetWidth;
@@ -341,12 +327,11 @@ function Measure({ id, spec, onMeasured }: { id: string; spec: any; onMeasured: 
                 done = true;
                 onMeasured(id, w, h);
             }, 120);
-            last = seen;
         };
         const ro = new ResizeObserver(check);
         ro.observe(el);
         check();
-        return () => { ro.disconnect(); window.clearTimeout(timer); void last; };
+        return () => { ro.disconnect(); window.clearTimeout(timer); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, spec]);
     return (
