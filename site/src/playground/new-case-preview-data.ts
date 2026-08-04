@@ -471,7 +471,7 @@ function buildCases(): PreviewCase[] {
         id: 'co2-lollipop',
         chartType: 'Lollipop Chart',
         title: 'CO₂ emissions per capita, 2022 (tonnes)',
-        blurb: 'Per-person emissions vary ~40× across sixteen countries.',
+        blurb: 'Per-person emissions vary ~20× across sixteen countries.',
         source: 'Our World in Data (Global Carbon Project)',
         license: 'CC-BY (OWID)',
         semantic_types: { Country: 'Country', 'Tonnes/person': 'Quantity' },
