@@ -59,6 +59,54 @@ const IDS = [
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 
 /**
+ * Where the headline lives — a toggle, because it is a real design question
+ * and not a styling preference.
+ *
+ * `chart_spec.title` is not decoration to the compiler. A house whose
+ * `axisTitles` policy is `omit` is leaning on the headline to name the
+ * measure, and a chart authored without one gets its axis titles put back
+ * (core/theme/ground.ts — "omit is a delegation, not a deletion"). Measured
+ * across the wall, giving the charts a headline drops a further 11–19 axis
+ * titles under nyt, economist, datawrapper, mckinsey and powerbi. So a wall
+ * with the titles outside is showing six of the nine houses in a mode they
+ * were not designed for. Being able to flip is the only way to see it.
+ *
+ * The deck is the loose part. Measured, a headline alone costs +30px of chart
+ * height; a headline with its deck costs +47px, because the deck is a full
+ * sentence that wraps inside the canvas and then takes the house's title-block
+ * gap on top. Hence `split`, which is usually the one you want: the short
+ * headline goes through the theme where it does its structural work, and the
+ * sentence stays in HTML underneath where it costs the canvas nothing.
+ *
+ *   below  — title and description in HTML; the house never sees a headline
+ *   split  — headline through the theme, description still in HTML
+ *   inside — headline and deck both through the theme, nothing in HTML
+ *   off    — no headline anywhere, the marks alone
+ *
+ * Every mode is budgeted to the same total tile height, so switching compares
+ * like with like instead of turning into a comparison of sizes.
+ */
+export type TitleMode = 'below' | 'split' | 'inside' | 'off';
+
+/** HTML caption metrics: title row 6 + 12×1.3; blurb row 2 + 10.5×1.35×2. */
+const TITLE_H = 22;
+const BLURB_H = 30;
+const CHART_H = 168;
+
+const TITLE_MODES: { id: TitleMode; label: string; hint: string }[] = [
+    { id: 'below', label: 'Below', hint: 'Title and description in HTML — the house never sees a headline' },
+    { id: 'split', label: 'Split', hint: 'Headline styled by the house; description stays in HTML below' },
+    { id: 'inside', label: 'In chart', hint: 'Headline and deck both styled by the house' },
+    { id: 'off', label: 'Off', hint: 'No headline anywhere — just the marks' },
+];
+
+/** What each mode puts in the canvas, and what it leaves to HTML. */
+const inChartTitle = (m: TitleMode) => m === 'split' || m === 'inside';
+const inChartDeck = (m: TitleMode) => m === 'inside';
+const htmlTitle = (m: TitleMode) => m === 'below';
+const htmlBlurb = (m: TitleMode) => m === 'below' || m === 'split';
+
+/**
  * Wall-specific captions, because a tile is not a gallery entry.
  *
  * A case's own title has to stand alone on the gallery page, so it carries the
@@ -100,7 +148,8 @@ const CAPTIONS: Record<string, { title: string; blurb: string }> = {
 
 const captionFor = (c: PreviewCase) => CAPTIONS[c.id] ?? { title: c.title, blurb: c.blurb };
 
-function buildInput(c: PreviewCase, themeId: string | undefined) {
+function buildInput(c: PreviewCase, themeId: string | undefined, mode: TitleMode) {
+    const caption = captionFor(c);
     return {
         data: { values: c.data },
         semantic_types: c.semantic_types,
@@ -108,22 +157,29 @@ function buildInput(c: PreviewCase, themeId: string | undefined) {
             chartType: c.chartType,
             encodings: c.encodings,
             baseSize: { width: 300, height: 200 },
+            ...(inChartTitle(mode) ? { title: caption.title } : {}),
+            ...(inChartDeck(mode) ? { subtitle: caption.blurb } : {}),
             ...(c.chartProperties ? { chartProperties: c.chartProperties } : {}),
         },
         ...(themeId ? { theme_spec: themeId } : {}),
     } as any;
 }
 
-function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
+function Tile({ c, themeId, mode }: { c: PreviewCase; themeId: string | undefined; mode: TitleMode }) {
     const compiled = useMemo(() => {
         try {
-            return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(c, themeId)) };
+            return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(c, themeId, mode)) };
         } catch (err) {
             return { ok: false as const, err };
         }
-    }, [c, themeId]);
+    }, [c, themeId, mode]);
 
     const caption = captionFor(c);
+    // The chart takes back whatever the HTML caption is not using, so every
+    // mode costs the same total tile height. Without this, moving the headline
+    // into the canvas would just look like a smaller chart and the comparison
+    // would be about size rather than style.
+    const chartHeight = CHART_H + (htmlTitle(mode) ? 0 : TITLE_H) + (htmlBlurb(mode) ? 0 : BLURB_H);
 
     return (
         <article
@@ -132,7 +188,7 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
             onMouseEnter={(e) => (e.currentTarget.style.background = siteTheme.hover)}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
         >
-            <ScaleToFit height={168} minHeight={110} adaptiveHeight padding={2}>
+            <ScaleToFit height={chartHeight} minHeight={110} adaptiveHeight padding={2}>
                 {compiled.ok ? (
                     <VegaLiteView spec={compiled.value} />
                 ) : (
@@ -142,45 +198,54 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
                 )}
             </ScaleToFit>
             {/* Both captions are measured to fit — one line of title, at most two
-                of blurb — and both reserve their height so the tiles below stay
-                on a common baseline. The clamps are a backstop for a font
-                fallback or a very narrow column, not the expected case. */}
-            <div
-                style={{
-                    marginTop: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    lineHeight: 1.3,
-                    color: siteTheme.text,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                }}
-            >
-                {caption.title}
-            </div>
-            <div
-                style={{
-                    marginTop: 2,
-                    fontSize: 10.5,
-                    lineHeight: 1.35,
-                    color: siteTheme.navInactive,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    minHeight: `${Math.round(10.5 * 1.35 * 2)}px`,
-                }}
-            >
-                {caption.blurb}
-            </div>
+                of blurb — and both reserve their height so the tiles stay on a
+                common baseline. The clamps are a backstop for a font fallback or
+                a very narrow column, not the expected case. */}
+            {htmlTitle(mode) && (
+                <div
+                    style={{
+                        marginTop: 6,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                        color: siteTheme.text,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                    }}
+                >
+                    {caption.title}
+                </div>
+            )}
+            {htmlBlurb(mode) && (
+                <div
+                    style={{
+                        marginTop: 2,
+                        fontSize: 10.5,
+                        lineHeight: 1.35,
+                        color: siteTheme.navInactive,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        minHeight: `${BLURB_H - 2}px`,
+                    }}
+                >
+                    {caption.blurb}
+                </div>
+            )}
         </article>
     );
 }
 
 export function ThemeWall() {
     const [themeId, setThemeId] = useState<string | undefined>(undefined);
+    // `split` by default: measured, it gets exactly the same axis-title
+    // delegation as putting everything in the canvas (37 titles dropped either
+    // way, across all five `omit` houses) for 17px less chart height, and it
+    // still leaves a description under every tile.
+    const [mode, setMode] = useState<TitleMode>('split');
     const cases = useMemo(
         () => IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c)),
         [],
@@ -195,8 +260,46 @@ export function ThemeWall() {
                         ({cases.length} chart types, one house)
                     </span>
                 </h1>
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: 10, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                     <ThemePicker themeId={themeId} onTheme={setThemeId} />
+                    <div
+                        role="radiogroup"
+                        aria-label="Headline placement"
+                        style={{
+                            display: 'inline-flex',
+                            gap: 2,
+                            padding: 3,
+                            borderRadius: 8,
+                            background: 'rgba(0, 0, 0, 0.05)',
+                        }}
+                    >
+                        {TITLE_MODES.map((m) => {
+                            const selected = m.id === mode;
+                            return (
+                                <button
+                                    key={m.id}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={selected}
+                                    title={m.hint}
+                                    onClick={() => setMode(m.id)}
+                                    style={{
+                                        height: 26,
+                                        padding: '0 10px',
+                                        cursor: 'pointer',
+                                        fontSize: 12,
+                                        fontWeight: selected ? 600 : 400,
+                                        borderRadius: 6,
+                                        border: selected ? `1px solid ${siteTheme.accent}` : '1px solid transparent',
+                                        background: selected ? siteTheme.surface : 'transparent',
+                                        color: selected ? siteTheme.text : siteTheme.navInactive,
+                                    }}
+                                >
+                                    {m.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </header>
             <div
@@ -208,7 +311,7 @@ export function ThemeWall() {
                 }}
             >
                 {cases.map((c) => (
-                    <Tile key={c.id} c={c} themeId={themeId} />
+                    <Tile key={c.id} c={c} themeId={themeId} mode={mode} />
                 ))}
             </div>
         </div>
