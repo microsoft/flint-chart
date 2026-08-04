@@ -18,12 +18,11 @@ const heatmapMonths = [...new Set(foodPrices.values.map(({ month }) => month))].
 const heatmapRows = new Map(
   foodPrices.values.map((row) => [`${row.item}\0${row.month}`, row]),
 );
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const heatmapValues = heatmapItems.flatMap((item) =>
   heatmapMonths.map((month) => {
     const row = heatmapRows.get(`${item}\0${month}`);
     return {
-      month: monthNames[Number(month.slice(5, 7)) - 1],
+      month,
       item,
       annualChange: row?.annualChange ?? null,
     };
@@ -132,10 +131,7 @@ function chartInput(variant: RedesignVariant, transformed: boolean): ChartAssemb
     chart_spec: {
       chartType: 'Heatmap',
       encodings: {
-        // Six named columns are a categorical matrix in this illustration.
-        // Dense heatmaps over time keep `temporal`; this one explicitly asks
-        // for bands so transposing it yields six clean rows.
-        x: { field: 'month', type: 'ordinal' },
+        x: { field: 'month' },
         y: { field: 'item' },
         color: { field: 'annualChange' },
       },

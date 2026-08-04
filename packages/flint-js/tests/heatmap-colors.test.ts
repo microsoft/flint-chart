@@ -122,6 +122,9 @@ describe('heatmap color defaults', () => {
     const spec = assembleVegaLite(input) as any;
     expect(spec.layer[0].encoding.x).toMatchObject({ field: 'food', type: 'nominal' });
     expect(spec.layer[0].encoding.y).toMatchObject({ field: 'month', type: 'temporal' });
+    expect(spec.layer[0].encoding.y.scale.domain).toHaveLength(2);
+    expect(spec.layer[1].encoding.y.scale.domain)
+      .toEqual(spec.layer[0].encoding.y.scale.domain);
   });
 
   it('retains two true temporal axes for a dense 2,400-cell time heatmap', () => {
@@ -129,8 +132,8 @@ describe('heatmap color defaults', () => {
     for (let x = 0; x < 60; x += 1) {
       for (let y = 0; y < 40; y += 1) {
         values.push({
-          xDate: new Date(Date.UTC(2018, 0, 1 + x)).toISOString().slice(0, 10),
-          yDate: new Date(Date.UTC(2020, 0, 1 + y)).toISOString().slice(0, 10),
+          xDate: new Date(Date.UTC(2018, 0, 1 + x * 27)).toISOString().slice(0, 10),
+          yDate: new Date(Date.UTC(2020, 0, 1 + y * 27)).toISOString().slice(0, 10),
           value: (x + y) % 100,
         });
       }
@@ -142,8 +145,8 @@ describe('heatmap color defaults', () => {
       chart_spec: {
         chartType: 'Heatmap',
         encodings: {
-          x: { field: 'xDate', type: 'temporal' },
-          y: { field: 'yDate', type: 'temporal' },
+          x: { field: 'xDate' },
+          y: { field: 'yDate' },
           color: 'value',
         },
         baseSize: { width: 400, height: 300 },
@@ -155,6 +158,10 @@ describe('heatmap color defaults', () => {
     expect(spec.mark).toMatchObject({ type: 'rect' });
     expect(spec.mark.width).toBeGreaterThan(0);
     expect(spec.mark.height).toBeGreaterThan(0);
+    expect(spec._width).toBeLessThanOrEqual(500);
+    expect(spec._height).toBeLessThanOrEqual(400);
+    expect(spec.config.axisX.labelFontSize).toBeLessThanOrEqual(8);
+    expect(spec.config.axisY.labelFontSize).toBeLessThanOrEqual(8);
   });
 
   it('uses light-to-dark blues for ECharts heatmaps by default', () => {

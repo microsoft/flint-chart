@@ -454,21 +454,14 @@ export const heatmapDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'color',
     ownsValueLabels: true,
-    declareLayoutMode: (channelSemantics, _table, chartProperties) => {
+    declareLayoutMode: (_channelSemantics, _table, chartProperties) => {
         const showTextLabels = !!chartProperties?.showTextLabels;
-        const isDiscrete = (type: string | undefined) =>
-            type === 'nominal' || type === 'ordinal';
         return {
-            // A categorical matrix uses bands. A temporal heatmap does not:
-            // dates remain on a true time scale and rect sizing follows their
-            // observed interval. Treating time as "continuous-as-discrete"
-            // makes a six-month example look banded, but scales disastrously to
-            // dense calendars (60 × 40 dates = 2,400 cells) and lets the
-            // pseudo-bands interfere with a transposed Y axis.
-            axisFlags: {
-                x: { banded: isDiscrete(channelSemantics.x?.type) },
-                y: { banded: isDiscrete(channelSemantics.y?.type) },
-            },
+            // Heatmap positions are cells, regardless of whether their labels
+            // are categories, numbers, or dates. Temporal axes keep a temporal
+            // scale for tick semantics while the dynamic layout budgets one
+            // discrete slot per observed value (continuous-as-discrete).
+            axisFlags: { x: { banded: true }, y: { banded: true } },
             // Labels need slightly larger cells so the value text isn't crushed,
             // but we keep this close to the unlabeled defaults (minStep 6 /
             // defaultBandSize 20) so a labeled heatmap doesn't balloon. The small
