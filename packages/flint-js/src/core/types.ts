@@ -944,6 +944,13 @@ export interface ChartTemplateDef {
     properties?: ChartPropertyDef[];
 
     /**
+     * This template draws its own value text instead of using the generic
+     * theme label layer. The public control is still `showValueLabels`;
+     * templates may retain older internal/input spellings for compatibility.
+     */
+    ownsValueLabels?: boolean;
+
+    /**
      * Opt out of a backend's *generic* column/row facet-splitting pass, even
      * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
      * alone would not exempt it).

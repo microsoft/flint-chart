@@ -453,6 +453,7 @@ export const heatmapDef: ChartTemplateDef = {
     template: { mark: "rect", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'color',
+    ownsValueLabels: true,
     declareLayoutMode: (_cs, _table, chartProperties) => {
         const showTextLabels = !!chartProperties?.showTextLabels;
         return {
@@ -566,6 +567,7 @@ export const heatmapDef: ChartTemplateDef = {
                     ? Math.max(Math.abs(effectiveMin), Math.abs(effectiveMax)) * 0.5
                     : effectiveMin + span * 0.6)
                 : undefined;
+            const colorValue = `datum[${JSON.stringify(colorField)}]`;
 
             spec.layer = [
                 {
@@ -596,8 +598,8 @@ export const heatmapDef: ChartTemplateDef = {
                             : {
                                 condition: {
                                     test: isDiverging
-                                        ? `datum.${colorField} > ${strongThreshold} || datum.${colorField} < ${-strongThreshold}`
-                                        : `datum.${colorField} >= ${strongThreshold}`,
+                                        ? `${colorValue} > ${strongThreshold} || ${colorValue} < ${-strongThreshold}`
+                                        : `${colorValue} >= ${strongThreshold}`,
                                     value: isDiverging
                                         ? 'white'
                                         : (highIsLight ? 'black' : 'white'),
@@ -613,7 +615,7 @@ export const heatmapDef: ChartTemplateDef = {
         }
     },
     properties: [
-        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
+        { key: 'showValueLabels', label: 'Values', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
     // Color scheme is an encoding-level edit (writes encoding.scheme on the
     // color channel), so it is exposed as a Category-B encoding action rather

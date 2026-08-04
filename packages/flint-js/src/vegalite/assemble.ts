@@ -157,12 +157,11 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         : [];
 
     // One toggle, whichever way the template draws the numbers. A few charts
-    // print their own value labels from a boolean of their own (`showTextLabels`
-    // on waterfall and heatmap) instead of going through the theme's data-label
-    // layer. Translating the reader's answer into that boolean here means a host
-    // offers `showValueLabels` and never has to know which kind of chart it is
-    // looking at. Silence stays silent: with no answer the template keeps its
-    // own default, which a house can still move via `chartDefaults`.
+    // print their own value labels instead of going through the theme's
+    // data-label layer. They expose the same `showValueLabels` control as every
+    // other chart; translating it to the older internal `showTextLabels`
+    // boolean keeps saved inputs compatible without publishing two controls.
+    // Silence stays silent: with no answer the template keeps its own default.
     if (chartProperties && templateOwnsValueLabels(chartTemplate)) {
         const choice = resolveValueLabelChoice(chartProperties);
         if (choice) chartProperties.showTextLabels = choice === 'on';
@@ -836,6 +835,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         chartProperties,
     };
     const ownsLabels = templateOwnsValueLabels(chartTemplate);
+    const valueLabelChoice = resolveValueLabelChoice(chartProperties);
+    const explicitValueLabels = valueLabelChoice == null
+        ? undefined
+        : valueLabelChoice === 'on';
     const layoutCoupledRecommendation: Record<string, any> = {
         independentYAxis: computedIndependentYAxis,
         // Seed the labels toggle from what the house and the density actually
@@ -843,7 +846,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         // re-seeds when the reader switches theme. Where the template owns its
         // labels, its own boolean is the honest answer.
         showValueLabels: ownsLabels
-            ? chartProperties?.showTextLabels === true
+            ? explicitValueLabels ?? design?.dataLabels?.show
             : design?.dataLabels?.show,
     };
     // Whether offering a labels control means anything is a question about the
@@ -923,10 +926,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
  */
 /**
  * Does this template print its own value labels, rather than leaving them to
- * the theme's data-label layer? Waterfall and heatmap do, via `showTextLabels`.
+ * the theme's data-label layer?
  */
 function templateOwnsValueLabels(template: ChartTemplateDef): boolean {
-    return (template.properties ?? []).some((p) => p.key === 'showTextLabels');
+    return template.ownsValueLabels === true;
 }
 
 function resolveValueLabelChoice(

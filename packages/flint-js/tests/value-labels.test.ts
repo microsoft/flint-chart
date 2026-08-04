@@ -211,11 +211,49 @@ describe('showValueLabels on templates that print their own labels', () => {
 
     it(`${name} offers one labels control, not two`, () => {
       const shown = getChartOptions(build())
-        .filter((o: any) => o.applicable && /label/i.test(o.key))
+        .filter((o: any) => /label/i.test(o.key))
         .map((o: any) => o.key);
       expect(shown).toEqual(['showValueLabels']);
     });
   }
+
+  it('keeps heatmap label expressions valid after swapping fields with display names', () => {
+    const input = {
+      data: {
+        values: [
+          { 'Product Group': 'North', 'Sales Month': 'Jan', 'Gross Margin %': 62 },
+          { 'Product Group': 'South', 'Sales Month': 'Jan', 'Gross Margin %': 37 },
+        ],
+      },
+      semantic_types: {
+        'Product Group': 'Category',
+        'Sales Month': 'Month',
+        'Gross Margin %': 'Percentage',
+      },
+      chart_spec: {
+        chartType: 'Heatmap',
+        encodings: {
+          x: 'Sales Month',
+          y: 'Product Group',
+          color: 'Gross Margin %',
+        },
+        chartProperties: {
+          arrange: 'flip:x-y',
+          showValueLabels: true,
+        },
+      },
+      theme_spec: 'cartoon',
+    } as any;
+
+    const spec = assembleVegaLite(input) as any;
+    const text = spec.layer.find((layer: any) => layer.mark?.type === 'text');
+    expect(text.encoding.x.field).toBe('Product Group');
+    expect(text.encoding.y.field).toBe('Sales Month');
+    expect(text.encoding.color.condition.test)
+      .toContain('datum["Gross Margin %"]');
+    expect(text.encoding.color.condition.test)
+      .not.toContain('datum.Gross Margin %');
+  });
 
   it('is withheld where the template already writes its own text', () => {
     // A rose prints its own text on the marks, so the label layer stands down.

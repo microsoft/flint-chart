@@ -20,6 +20,7 @@ export const waterfallChartDef: ChartTemplateDef = {
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    ownsValueLabels: true,
     declareLayoutMode: () => ({
         axisFlags: { x: { banded: true } },
     }),
@@ -302,6 +303,6 @@ export const waterfallChartDef: ChartTemplateDef = {
             // template (see chart-types/waterfall.ts resolveTotalsMode).
             check: (ctx) => ({ applicable: !ctx.encodings?.color?.field }),
         },
-        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
+        { key: 'showValueLabels', label: 'Values', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
 };
