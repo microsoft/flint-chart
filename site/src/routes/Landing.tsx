@@ -59,7 +59,7 @@ export function Landing() {
                     backends: BACKEND_ROSTER_LINKS.length,
                   })}
                 </LeadHighlight>
-                .
+                . {t('landing.themeLead')}
               </p>
 
               <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
@@ -128,6 +128,11 @@ export function Landing() {
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
+                <HeroCTA
+                  to="/themes"
+                  label={t('landing.ctaThemes')}
+                  variant="secondary"
+                />
                 <HeroCTA to="/gallery" label={t('landing.ctaGallery')} variant="secondary" />
                 <HeroCTA to="/mcp" label={t('landing.ctaMcp')} variant="secondary" />
                 <HeroCTA
@@ -218,7 +223,8 @@ export function Landing() {
           <PipelineDiagram />
           <div style={featureGridStyle}>
             {features.map((feature, i) => (
-              <article key={feature.id} style={featureGridItemStyle}>
+              <article key={feature.id} style={{ ...featureGridItemStyle, position: 'relative' }}>
+                {feature.isNew ? <span aria-hidden="true" style={featureNewDotStyle} /> : null}
                 <div style={featureGridTextStyle}>
                   <h2 style={featureTitleStyle}>
                     <span style={featureNumberStyle}>{i + 1}.</span>
@@ -838,6 +844,7 @@ interface Feature {
   example?: string;
   // Before/after demo shown alongside the text, illustrating the feature.
   demo?: () => FeatureDemoConfig;
+  isNew?: boolean;
 }
 
 function getFeatures(t: TFunction): Feature[] {
@@ -873,6 +880,14 @@ function getFeatures(t: TFunction): Feature[] {
       example: t('landing.features.backends.example'),
       demo: demoBackends,
     },
+    {
+      id: 'themes',
+      title: t('landing.features.themes.title'),
+      body: t('landing.features.themes.body'),
+      example: t('landing.features.themes.example'),
+      demo: demoThemes,
+      isNew: true,
+    },
   ];
 }
 
@@ -899,7 +914,14 @@ function useTestCase(generator: string, index = 0): TestCase | null {
 
 type DemoStage =
   | { kind: 'spec'; label: string; testCase: TestCase }
-  | { kind: 'chart'; label: string; testCase: TestCase; backend: PreviewBackend };
+  | {
+      kind: 'chart';
+      label: string;
+      testCase: TestCase;
+      backend: PreviewBackend;
+      themeId?: string;
+      headline?: { title?: string; subtitle?: string };
+    };
 
 interface FeatureDemoConfig {
   before: DemoStage;
@@ -1040,6 +1062,62 @@ function demoBackends(): FeatureDemoConfig {
   };
 }
 
+// Card 5: the data and ChartSpec stay fixed; only the formal theme changes.
+// A grouped bar exposes the whole system at once: palette, bar geometry,
+// axes/grid, legend, labels, typography, and spacing.
+function demoThemes(): FeatureDemoConfig {
+  const grouped = themedRevenue();
+  const headline = {
+    title: 'Quarterly revenue by region',
+    subtitle: 'Three product lines across six markets',
+  };
+  return {
+    before: {
+      kind: 'chart',
+      label: 'Economist',
+      testCase: grouped,
+      backend: 'vegalite',
+      themeId: 'economist',
+      headline,
+    },
+    after: {
+      kind: 'chart',
+      label: 'Swiss',
+      testCase: grouped,
+      backend: 'vegalite',
+      themeId: 'swiss',
+      headline,
+    },
+  };
+}
+
+function themedRevenue(): TestCase {
+  const markets = ['North America', 'Europe', 'East Asia', 'South Asia', 'Latin America', 'Africa'];
+  const products = ['Cloud', 'Devices', 'Services'];
+  const data = markets.flatMap((market, marketIndex) =>
+    products.map((product, productIndex) => ({
+      Market: market,
+      Product: product,
+      Revenue: Math.round(28 + 54 * Math.abs(Math.sin(marketIndex * 0.83 + productIndex * 1.61 + 0.4))),
+    })),
+  );
+  return {
+    title: 'Quarterly revenue by region',
+    description: '',
+    tags: [],
+    chartType: 'Grouped Bar Chart',
+    data,
+    fields: [makeField('Market'), makeField('Product'), makeField('Revenue')],
+    metadata: buildMetadata(data),
+    encodingMap: {
+      x: makeEncodingItem('Market'),
+      y: makeEncodingItem('Revenue'),
+      color: makeEncodingItem('Product'),
+      group: makeEncodingItem('Product'),
+    },
+  };
+}
+
 /** Pick the requested backend, or the first one that supports the chart type. */
 function pickBackend(t: TestCase, want: PreviewBackend): PreviewBackend {
   const supported = getSupportedBackends(t.chartType);
@@ -1092,7 +1170,12 @@ function DemoStageContent({ stage }: { stage: DemoStage }) {
   }
   return (
     <ScaleToFit height={250} padding={6}>
-      <WallChart testCase={stage.testCase} backend={pickBackend(stage.testCase, stage.backend)} />
+      <WallChart
+        testCase={stage.testCase}
+        backend={pickBackend(stage.testCase, stage.backend)}
+        themeId={stage.themeId}
+        headline={stage.headline}
+      />
     </ScaleToFit>
   );
 }
@@ -1999,6 +2082,17 @@ const featureBodyStyle: CSSProperties = {
   margin: 0,
 };
 
+const featureNewDotStyle: CSSProperties = {
+  position: 'absolute',
+  top: 3,
+  right: 3,
+  width: 7,
+  height: 7,
+  borderRadius: '50%',
+  background: '#d4a72c',
+  boxShadow: '0 0 0 3px rgba(212, 167, 44, 0.13)',
+};
+
 function featureExampleRowStyle(): CSSProperties {
   return {
     display: 'flex',
@@ -2052,6 +2146,7 @@ const secondaryBtn: CSSProperties = {
 
 function heroCtaStyle(variant: 'primary' | 'secondary', active: boolean): CSSProperties {
   const base: CSSProperties = {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

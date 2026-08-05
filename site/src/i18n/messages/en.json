@@ -301,6 +301,8 @@
     "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
     "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
     "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
+    "themeLead": "Formal theme specifications let the compiler carry layout behavior, semantic presentation, and visual identity across charts.",
+    "ctaThemes": "Explore Themes",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
@@ -367,6 +369,11 @@
         "title": "Render with different backends",
         "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface.",
         "example": "Switch backends to use their native strengths: ECharts for hierarchical sunbursts, Plotly for statistical and analytical traces, or Excel for editable charts embedded in a workbook."
+      },
+      "themes": {
+        "title": "Render with different themes",
+        "body": "A Flint theme is a formal specification, not a cosmetic skin. It guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
+        "example": "The same grouped-bar spec becomes an Economist print graphic or a Swiss typographic composition. The data and encodings stay fixed while the compiler changes spacing, structure, labels, marks, type, and color."
       }
     },
     "examples": {

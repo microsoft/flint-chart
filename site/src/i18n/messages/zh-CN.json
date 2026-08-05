@@ -301,6 +301,8 @@
     "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
     "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
     "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例。",
+    "themeLead": "正式的主题规范让编译器在不同图表中延续布局行为、语义表现和视觉识别。",
+    "ctaThemes": "探索主题",
     "ctaGallery": "浏览图表示例",
     "ctaMcp": "使用 MCP 服务器",
     "ctaGithub": "访问 GitHub",
@@ -367,6 +369,11 @@
         "title": "一份规范，多种渲染后端",
         "body": "Flint 支持通过 Vega-Lite、ECharts、Chart.js 和 Plotly 渲染 {{chartTypes}} 种图表，图表示例中收录了 {{examples}} 个后端专属示例，还可通过 Office.js 生成原生 Excel 图表。不同后端的 API 和编程模型各不相同，Flint 则以统一接口抹平差异。",
         "example": "按需切换后端以发挥其原生优势：ECharts 适合层级旭日图，Plotly 擅长统计和分析图表，Excel 则可生成工作簿中可继续编辑的原生图表。"
+      },
+      "themes": {
+        "title": "用不同主题呈现",
+        "body": "Flint 主题是一套正式规范，而不是简单的外观。它会引导布局算法，根据语义角色应用表现规则，并将几何、字体和颜色组织成统一的视觉系统。",
+        "example": "同一份分组柱状图规范可以呈现为 Economist 印刷图表或 Swiss 排版构成。数据与编码保持不变，编译器会调整间距、结构、标签、图形、字体和颜色。"
       }
     },
     "examples": {
