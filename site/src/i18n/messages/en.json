@@ -179,8 +179,7 @@
       }
     },
     "generalization": "Because these rules are global, they work across chart types, data shapes, and canvas sizes. Add a chart or change the data, and the compiler carries the same behavior and identity forward.",
-    "usageBefore": "Apply a theme by adding",
-    "usageAfter": "to your chart request.",
+    "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "descriptions": {

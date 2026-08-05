@@ -25,9 +25,10 @@
 
 import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
+import { LocaleLink } from '../i18n/LocaleLink';
 import { BACKENDS } from '../shared/supported-backends';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
@@ -312,6 +313,14 @@ export function Themes() {
             <p style={{ margin: '14px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.generalization')}
             </p>
+            <p style={{ margin: '8px 0 0', fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+              <Trans
+                i18nKey="themes.docsPointer"
+                components={{
+                  docs: <LocaleLink className="site-text-link" to="/documentation/theme-spec" />,
+                }}
+              />
+            </p>
           </header>
 
           {/* Sticky, because the whole page is a before-and-after: the reader
@@ -332,15 +341,6 @@ export function Themes() {
               <strong>{selectedTheme.label}.</strong>{' '}
               <span style={{ color: siteTheme.textMuted }}>{selectedTheme.description}</span>
             </p>
-            {/* The switch is a preview of one line of spec, so the page shows
-                that line and keeps it in step with the buttons. Otherwise the
-                reader leaves having enjoyed the wall without learning the one
-                thing they need to reproduce it. */}
-            <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.usageBefore')}{' '}
-              <code style={codeStyle}>"theme_spec": {JSON.stringify(themeId ?? 'theme-id')}</code>{' '}
-              {t('themes.usageAfter')}
-            </p>
           </div>
 
           <div
@@ -360,15 +360,6 @@ export function Themes() {
     </SiteShell>
   );
 }
-
-const codeStyle: CSSProperties = {
-  padding: '2px 6px',
-  borderRadius: 5,
-  fontFamily: siteTheme.fontMono,
-  fontSize: 12,
-  color: siteTheme.text,
-  background: 'rgba(0, 0, 0, 0.05)',
-};
 
 /**
  * Six columns, fixed.

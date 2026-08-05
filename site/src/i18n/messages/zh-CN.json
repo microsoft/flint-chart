@@ -179,8 +179,7 @@
       }
     },
     "generalization": "这些规则全局生效，因此能适用于不同图表类型、数据形态和画布尺寸。新增图表或更换数据时，编译器仍会延续同一套行为和视觉识别。",
-    "usageBefore": "在图表请求中加入",
-    "usageAfter": "即可应用主题。",
+    "docsPointer": "有关应用和自定义主题的方法，请参阅<docs>使用主题</docs>。",
     "flintDefault": "Flint 默认",
     "switchAria": "主题",
     "descriptions": {
