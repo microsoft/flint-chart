@@ -83,7 +83,11 @@ export function Landing() {
                   {THEME_ROSTER_PREVIEW.map((theme, index) => (
                     <span key={theme.id} style={backendRosterItemStyle}>
                       {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                      <LocaleLink className="landing-backend-link" to="/themes" style={backendRosterLinkStyle}>
+                      <LocaleLink
+                        className="landing-backend-link"
+                        to={`/themes?theme=${theme.id}`}
+                        style={backendRosterLinkStyle}
+                      >
                         {theme.label}
                       </LocaleLink>
                     </span>
@@ -856,7 +860,7 @@ const BACKEND_ROSTER_LINKS = [
   { label: 'Plotly', to: '/documentation/reference-plotly' },
   { label: 'Excel', to: '/gallery/excel' },
 ] as const;
-const THEME_ROSTER_PREVIEW = Object.values(THEME_PRESETS).slice(0, 3);
+const THEME_ROSTER_PREVIEW = Object.values(THEME_PRESETS).slice(0, 5);
 const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,

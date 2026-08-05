@@ -26,6 +26,7 @@
 import { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { BACKENDS } from '../shared/supported-backends';
 import { VegaLiteView } from '../components/VegaLiteView';
@@ -231,7 +232,15 @@ function ThemeBar({
 
 export function Themes() {
   const { t } = useTranslation();
-  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTheme = searchParams.get('theme') ?? undefined;
+  const themeId = requestedTheme && THEME_PRESETS[requestedTheme] ? requestedTheme : undefined;
+  const setThemeId = (id: string | undefined) => {
+    const next = new URLSearchParams(searchParams);
+    if (id) next.set('theme', id);
+    else next.delete('theme');
+    setSearchParams(next, { replace: true });
+  };
 
   // "Flint default" is a choice in the row rather than an empty slot, because
   // not theming is the baseline every house is read against.
