@@ -289,26 +289,31 @@ export function Themes() {
               {(['layout', 'semantics', 'identity'] as const).map((principle) => (
                 <div
                   key={principle}
-                  style={{ display: 'grid', gridTemplateColumns: '8px minmax(0, 1fr)', gap: 9, alignItems: 'start' }}
+                  style={{
+                    position: 'relative',
+                    paddingLeft: 15,
+                    borderLeft: `2px solid ${siteTheme.border}`,
+                  }}
                 >
                   <span
                     aria-hidden="true"
                     style={{
-                      width: 7,
-                      height: 7,
-                      marginTop: 6,
+                      position: 'absolute',
+                      top: 5,
+                      left: -5,
+                      width: 8,
+                      height: 8,
                       borderRadius: '50%',
                       background: siteTheme.accent,
+                      boxShadow: `0 0 0 3px ${siteTheme.surface}`,
                     }}
                   />
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: 3, fontSize: 13.5, color: siteTheme.text }}>
-                      {t(`themes.principles.${principle}.title`)}
-                    </strong>
-                    <span style={{ fontSize: 12.5, lineHeight: 1.5, color: siteTheme.textMuted }}>
-                      {t(`themes.principles.${principle}.body`)}
-                    </span>
-                  </div>
+                  <strong style={{ display: 'block', marginBottom: 3, fontSize: 13.5, color: siteTheme.text }}>
+                    {t(`themes.principles.${principle}.title`)}
+                  </strong>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: siteTheme.textMuted }}>
+                    {t(`themes.principles.${principle}.body`)}
+                  </span>
                 </div>
               ))}
             </div>
