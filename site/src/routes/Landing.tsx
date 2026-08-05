@@ -131,6 +131,7 @@ export function Landing() {
                 <HeroCTA
                   to="/themes"
                   label={t('landing.ctaThemes')}
+                  attention
                   variant="secondary"
                 />
                 <HeroCTA to="/gallery" label={t('landing.ctaGallery')} variant="secondary" />
@@ -471,6 +472,7 @@ function HeroCTA({
   href,
   variant,
   className,
+  attention,
 }: {
   label: string;
   icon?: ReactNode;
@@ -478,6 +480,7 @@ function HeroCTA({
   href?: string;
   variant: 'primary' | 'secondary';
   className?: string;
+  attention?: boolean;
 }) {
   const [active, setActive] = useState(false);
   const handlers = {
@@ -493,6 +496,7 @@ function HeroCTA({
       <a className={ctaClassName} href={href} style={heroCtaStyle(variant, active)} target="_blank" rel="noreferrer" {...handlers}>
         {icon}
         {label}
+        {attention ? <span aria-hidden="true" style={ctaAttentionDotStyle} /> : null}
       </a>
     );
   }
@@ -501,6 +505,7 @@ function HeroCTA({
     <LocaleLink className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
       {icon}
       {label}
+      {attention ? <span aria-hidden="true" style={ctaAttentionDotStyle} /> : null}
     </LocaleLink>
   );
 }
@@ -2089,8 +2094,19 @@ const featureNewDotStyle: CSSProperties = {
   width: 7,
   height: 7,
   borderRadius: '50%',
-  background: '#d4a72c',
-  boxShadow: '0 0 0 3px rgba(212, 167, 44, 0.13)',
+  background: '#ffc400',
+  boxShadow: '0 0 0 3px rgba(255, 196, 0, 0.18), 0 0 9px rgba(255, 196, 0, 0.72)',
+};
+
+const ctaAttentionDotStyle: CSSProperties = {
+  position: 'absolute',
+  top: 6,
+  right: 7,
+  width: 6,
+  height: 6,
+  borderRadius: '50%',
+  background: '#ffc400',
+  boxShadow: '0 0 0 3px rgba(255, 196, 0, 0.18), 0 0 8px rgba(255, 196, 0, 0.72)',
 };
 
 function featureExampleRowStyle(): CSSProperties {
