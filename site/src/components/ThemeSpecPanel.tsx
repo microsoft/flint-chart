@@ -37,7 +37,7 @@ export function ThemeSpecPanel() {
     [mode, presetId, t],
   );
   const display = useMemo(
-    () => displaySource(input.theme_spec),
+    () => displaySource(input),
     [input],
   );
   const compiled = useMemo(
@@ -96,14 +96,6 @@ export function ThemeSpecPanel() {
         ) : null}
       </div>
 
-      <p style={descriptionStyle}>
-        {mode === 'custom'
-          ? t('docs.themeSpecPanel.customDescription')
-          : mode === 'inherit'
-            ? t('docs.themeSpecPanel.inheritDescription', { name: preset.label })
-            : t(`themes.descriptions.${preset.id}`)}
-      </p>
-
       <div className="theme-spec-example-grid" style={exampleGridStyle}>
         <CodeBlock
           language="javascript"
@@ -113,9 +105,8 @@ export function ThemeSpecPanel() {
         >
           {display.source}
         </CodeBlock>
-        <div style={previewStyle}>
-          <div style={previewLabelStyle}>{t('docs.themeSpecPanel.preview')}</div>
-          <div style={{ background: previewCanvas }}>
+        <div style={chartColumnStyle}>
+          <div style={{ overflow: 'hidden', borderRadius: siteTheme.radius, background: previewCanvas }}>
             <ScaleToFit height={410} padding={8}>
               {compiled.ok ? (
                 <VegaLiteView spec={compiled.value} renderer="svg" />
@@ -127,6 +118,13 @@ export function ThemeSpecPanel() {
               )}
             </ScaleToFit>
           </div>
+          <p style={chartDescriptionStyle}>
+            {mode === 'custom'
+              ? t('docs.themeSpecPanel.customDescription')
+              : mode === 'inherit'
+                ? t('docs.themeSpecPanel.inheritDescription', { name: preset.label })
+                : t(`themes.descriptions.${preset.id}`)}
+          </p>
           <div style={sourceStyle}>
             {t('docs.themeSpecPanel.exampleSource', { source: LIFE_EXPECTANCY.source })}
           </div>
@@ -227,29 +225,41 @@ function exampleFor(
  * the subject of this lesson. This is display-only; the preview compiles the
  * complete input above.
  */
-function displaySource(themeSpec: unknown): { source: string; highlightLines: number[] } {
-  const themeLines = JSON.stringify(themeSpec, null, 2).split('\n');
+function displaySource(input: Record<string, unknown>): { source: string; highlightLines: number[] } {
   const lines = [
     '{',
+    '  "data": { ... },',
     '  "semantic_types": { ... },',
-    '  "chart_spec": { ... },',
   ];
-
-  if (themeLines.length === 1) {
-    lines.push(`  "theme_spec": ${themeLines[0]}`);
-  } else {
-    lines.push(`  "theme_spec": ${themeLines[0]}`);
-    lines.push(...themeLines.slice(1, -1).map((line) => `  ${line}`));
-    lines.push(`  ${themeLines.at(-1)}`);
-  }
+  appendProperty(lines, 'chart_spec', input.chart_spec, true);
+  const themeStart = lines.length + 1;
+  appendProperty(lines, 'theme_spec', input.theme_spec, false);
+  const themeEnd = lines.length;
   lines.push('}');
 
   return {
     source: lines.join('\n'),
-    // One-based line numbers; the root object's final brace is not part of
-    // theme_spec and therefore stays unhighlighted.
-    highlightLines: Array.from({ length: lines.length - 4 }, (_, index) => index + 4),
+    highlightLines: Array.from(
+      { length: themeEnd - themeStart + 1 },
+      (_, index) => themeStart + index,
+    ),
   };
+}
+
+function appendProperty(
+  lines: string[],
+  key: string,
+  value: unknown,
+  comma: boolean,
+): void {
+  const valueLines = JSON.stringify(value, null, 2).split('\n');
+  if (valueLines.length === 1) {
+    lines.push(`  "${key}": ${valueLines[0]}${comma ? ',' : ''}`);
+    return;
+  }
+  lines.push(`  "${key}": ${valueLines[0]}`);
+  lines.push(...valueLines.slice(1, -1).map((line) => `  ${line}`));
+  lines.push(`  ${valueLines.at(-1)}${comma ? ',' : ''}`);
 }
 
 const panelStyle: CSSProperties = {
@@ -305,13 +315,6 @@ const selectStyle: CSSProperties = {
   fontSize: 12.5,
 };
 
-const descriptionStyle: CSSProperties = {
-  margin: '10px 2px 0',
-  color: siteTheme.textMuted,
-  fontSize: 13,
-  lineHeight: 1.5,
-};
-
 const codeStyle: CSSProperties = {
   height: 470,
   overflow: 'auto',
@@ -330,30 +333,23 @@ const exampleGridStyle: CSSProperties = {
   marginTop: 10,
 };
 
-const previewStyle: CSSProperties = {
+const chartColumnStyle: CSSProperties = {
   minWidth: 0,
-  overflow: 'hidden',
-  border: `1px solid ${siteTheme.border}`,
-  borderRadius: siteTheme.radius,
-  background: '#ffffff',
-};
-
-const previewLabelStyle: CSSProperties = {
-  padding: '8px 10px',
-  borderBottom: `1px solid ${siteTheme.border}`,
-  color: siteTheme.textMuted,
-  fontSize: 11.5,
-  fontWeight: 700,
-  letterSpacing: '0.05em',
-  textTransform: 'uppercase',
+  alignSelf: 'start',
 };
 
 const sourceStyle: CSSProperties = {
-  padding: '7px 10px 9px',
-  borderTop: `1px solid ${siteTheme.border}`,
+  marginTop: 4,
   color: siteTheme.textMuted,
   fontSize: 11,
   lineHeight: 1.4,
+};
+
+const chartDescriptionStyle: CSSProperties = {
+  margin: '10px 0 0',
+  color: siteTheme.textMuted,
+  fontSize: 12.5,
+  lineHeight: 1.5,
 };
 
 const errorStyle: CSSProperties = {
