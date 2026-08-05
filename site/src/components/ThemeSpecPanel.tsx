@@ -29,7 +29,7 @@ export function ThemeSpecPanel() {
   const preset = THEME_PRESETS[presetId];
   const previewCanvas =
     mode === 'custom'
-      ? '#fffaf2'
+      ? '#e7f1f8'
       : preset.spec.ink?.surface?.canvas ?? '#ffffff';
 
   const input = useMemo(
@@ -168,9 +168,9 @@ function exampleFor(
             id: 'our-brand',
             label: 'Our brand',
             ink: {
-              surface: { canvas: '#fffaf2', plot: '#fffaf2' },
+              surface: { canvas: '#e7f1f8', plot: '#e7f1f8' },
               text: { primary: '#202124', secondary: '#5f6368' },
-              structure: { grid: '#ded8ce', axis: '#202124' },
+              structure: { grid: '#bfd2df', axis: '#202124' },
               series: {
                 single: '#6b3fa0',
                 categorical: ['#6b3fa0', '#c4558c', '#e48b5d', '#3f8f8b', '#d5aa3d', '#4f7899'],
