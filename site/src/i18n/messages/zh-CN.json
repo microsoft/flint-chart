@@ -38,7 +38,12 @@
         "inherit": "继承"
       },
       "customDescription": "直接在 theme_spec 中编写完整的设计系统。所有区块都是可选的。",
-      "inheritDescription": "从 {{name}} 开始，只覆盖你的品牌需要改变的决策。"
+      "inheritDescription": "从 {{name}} 开始，只覆盖你的品牌需要改变的决策。",
+      "preview": "预览",
+      "renderError": "无法渲染：",
+      "exampleTitle": "预期寿命，2000–2021",
+      "exampleSubtitle": "出生时预期寿命。多数国家有所提高，美国则出现下降。",
+      "exampleSource": "来源：{{source}}"
     },
     "groups": {
       "quick-start": "快速开始",

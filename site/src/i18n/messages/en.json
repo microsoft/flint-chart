@@ -38,7 +38,12 @@
         "inherit": "Inherit"
       },
       "customDescription": "A complete design system written directly in theme_spec. Every block is optional.",
-      "inheritDescription": "Start with {{name}}, then override only the decisions your brand changes."
+      "inheritDescription": "Start with {{name}}, then override only the decisions your brand changes.",
+      "preview": "Preview",
+      "renderError": "Could not render:",
+      "exampleTitle": "Life expectancy, 2000–2021",
+      "exampleSubtitle": "Years at birth. Most countries improved while the United States declined.",
+      "exampleSource": "Source: {{source}}"
     },
     "groups": {
       "quick-start": "Quick start",

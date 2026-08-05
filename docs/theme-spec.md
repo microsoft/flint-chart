@@ -8,7 +8,7 @@ A Flint theme is part of compilation, not a skin applied after a chart is render
 
 ## Three ways to use `theme_spec`
 
-Use the tabs below to compare the three accepted forms. Each panel shows a complete Flint input.
+Use the tabs below to compare the three accepted forms on a World Bank life-expectancy chart. The snippet omits the data and folds the unchanged semantic and chart specifications to keep `theme_spec` in focus; the preview still compiles the complete input.
 
 ```flint-theme-spec
 theme-spec
