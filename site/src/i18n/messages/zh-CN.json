@@ -473,10 +473,10 @@
     }
   },
   "mcp": {
-    "heroTitle": "让智能体通过 Flint MCP 创建图表",
+    "heroTitle": "让智能体通过 Flint MCP 创建图表与主题",
     "leadBefore": "将 <code>flint-chart-mcp</code> 配置为",
     "leadMcpLink": "Model Context Protocol",
-    "leadAfter": "服务器后，智能体便能创建图表，并以交互式 MCP App 呈现结果。Flint 默认打开可交互的图表视图；需要导出结果时，也可以返回静态图片，或生成可供 Vega-Lite、ECharts 和 Chart.js 直接使用的规范。",
+    "leadAfter": "服务器后，智能体既能创建交互式图表，也能编写可复用的视觉主题。Flint 默认打开可交互的图表视图；也可以导出静态结果，并引导智能体通过正式的 ThemeSpec 定义视觉设计。",
     "quickStart": "让 AI 智能体帮你配置：",
     "quickStartBody": "把下面这段请求发给智能体即可。若想手动配置，请参阅",
     "localSetupTitle": "本地服务器",
@@ -495,13 +495,13 @@
     "step3Title": "查看并调整结果。",
     "step3Body": "如果你的 MCP 客户端支持 MCP Apps，Flint 会直接打开实时 SVG 预览，并提供图表选项供你调整。需要导出时，也可以生成 PNG、SVG，或可供各渲染后端直接使用的规范。",
     "provides": "功能一览",
-    "providesBody": "服务器提供一组精简而明确的工具和资源：你可以交互式查看图表，也可以进行静态渲染、规范校验，或让智能体进一步了解 Flint 支持的图表类型和写法。",
+    "providesBody": "服务器将执行与编写分开：工具负责渲染、校验和查询 Flint 能力，随包提供的技能则指导智能体编写语义图表规范和可复用的 ThemeSpec。",
     "installTitle": "安装与配置",
     "installBody": "手动配置时，服务器通过 <strong>stdio</strong> 通信，并可直接通过 <code>npx</code> 运行，无需预先安装。将下面的服务器配置添加到 MCP 客户端：",
     "dataBody": "调用工具时，可以通过 <code>data.values</code> 直接传入数据行，也可以通过 <code>data.url</code> 读取本地 CSV、TSV 或 JSON 文件。Flint 不会获取远程 URL。如果服务器运行在不受信任的环境中，请传入 <code>--disable-file-reference</code> 禁用本地文件引用，此时只接受内联的 <code>data.values</code>：",
     "reference": "延伸阅读",
     "referenceBody": "配置文档完整介绍了 MCP 工作流；包 README 则提供工具参数、CLI 选项和客户端配置的快速参考。",
-    "skillNote": "想把 Flint 集成到自己的应用中？独立的 <skillLink>Flint Agent Skill</skillLink> 可以指导编程智能体编写 Flint 规范并完成集成。",
+    "skillNote": "想在 MCP 之外使用 Flint？独立的<skillLink>图表编写技能</skillLink>可指导智能体创建和集成图表规范，<themeSkillLink>主题编写技能</themeSkillLink>则可将视觉识别转换成 ThemeSpec。",
     "readSetupDocs": "查看配置文档",
     "tools": {
       "create_chart_view": "打开交互式 MCP App，提供实时 SVG 预览和图表选项。需要查看图表时优先使用。",
@@ -509,9 +509,12 @@
       "compile_chart": "生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范，并返回编译警告。",
       "validate_chart": "检查规范是否有效，报告警告或错误，并返回计算得到的图表尺寸。",
       "list_chart_types": "列出可用的图表类型和编码通道，也可按渲染后端筛选。",
-      "agentSkill": "随包提供的编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
+      "list_themes": "列出 Flint 内置的视觉主题；传入主题 id 后，还可获取使用或扩展该设计语言的指南。",
+      "agentSkill": "随包提供的图表编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
+      "themeSkill": "随包提供的 ThemeSpec 编写指南，帮助智能体将视觉识别转换成可复用的正式规范。",
       "chartTypes": "覆盖所有渲染后端的图表类型和编码通道目录，可直接浏览查询。",
-      "authorPrompt": "在支持提示词的客户端中，于调用图表工具前加载 Flint 编写指南。"
+      "authorPrompt": "在支持提示词的客户端中，于调用图表工具前加载图表编写技能。",
+      "themeAuthorPrompt": "当用户提出创建、转换、完善或审查 ThemeSpec 时，加载主题编写技能。"
     },
     "tags": {
       "toolPreferred": "工具 · 首选",

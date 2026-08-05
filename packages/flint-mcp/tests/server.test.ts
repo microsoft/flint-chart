@@ -189,6 +189,18 @@ describe('MCP server', () => {
     expect(skillText).toContain('validate_chart');
   });
 
+  it('exposes the bundled theme-author skill as a resource', async () => {
+    const { resources } = await client.listResources();
+    const skill = resources.find((r) => r.uri === 'flint://theme-skill');
+    expect(skill?.mimeType).toBe('text/markdown');
+    expect(skill?.annotations?.audience).toContain('assistant');
+
+    const read = await client.readResource({ uri: 'flint://theme-skill' });
+    const skillText = resourceText(read.contents[0]);
+    expect(skillText).toContain('# Flint ThemeSpec authoring');
+    expect(skillText).toContain('bare `ThemeSpec`');
+  });
+
   it('registers the create_chart_view MCP App tool linked to its UI resource', async () => {
     const { tools } = await client.listTools();
     const view = tools.find((t) => t.name === 'create_chart_view');
@@ -225,6 +237,19 @@ describe('MCP server', () => {
     }
   });
 
+  it('exposes a prompt that embeds the theme-author skill', async () => {
+    const { prompts } = await client.listPrompts();
+    expect(prompts.map((p) => p.name)).toContain('author_flint_theme');
+
+    const prompt = await client.getPrompt({ name: 'author_flint_theme' });
+    const resourceMessage = prompt.messages.find((m) => m.content.type === 'resource');
+    expect(resourceMessage?.content.type).toBe('resource');
+    if (resourceMessage?.content.type === 'resource') {
+      expect(resourceMessage.content.resource.uri).toBe('flint://theme-skill');
+      expect(resourceText(resourceMessage.content.resource)).toContain('ThemeSpec');
+    }
+  });
+
   it('keeps the bundled MCP skill asset in sync with the repo skill', () => {
     const repoSkill = readFileSync(
       new URL('../../../agent-skills/flint-chart-author/SKILL.md', import.meta.url),
@@ -232,6 +257,18 @@ describe('MCP server', () => {
     );
     const bundledSkill = readFileSync(
       new URL('../assets/flint-chart-author.SKILL.md', import.meta.url),
+      'utf8',
+    );
+    expect(bundledSkill).toBe(repoSkill);
+  });
+
+  it('keeps the bundled theme skill asset in sync with the repo skill', () => {
+    const repoSkill = readFileSync(
+      new URL('../../../agent-skills/flint-theme-author/SKILL.md', import.meta.url),
+      'utf8',
+    );
+    const bundledSkill = readFileSync(
+      new URL('../assets/flint-theme-author.SKILL.md', import.meta.url),
       'utf8',
     );
     expect(bundledSkill).toBe(repoSkill);

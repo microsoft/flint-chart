@@ -336,15 +336,18 @@ function themeIconUrl(svg: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-const THEME_CHOICES: { id: string | undefined; label: string; icon: string; description: string }[] = [
+type ThemeValue = ChartAssemblyInput['theme_spec'];
+type ThemeChoice = { value: ThemeValue; label: string; icon: string; description: string };
+
+const THEME_CHOICES: ThemeChoice[] = [
   {
-    id: undefined,
+    value: undefined,
     label: 'Flint default',
     icon: DEFAULT_THEME_ICON,
     description: "Flint's own defaults \u2014 no house applied.",
   },
   ...Object.values(THEME_PRESETS).map((preset) => ({
-    id: preset.id,
+    value: preset.id,
     label: preset.label,
     icon: preset.icon,
     description: preset.description,
@@ -361,11 +364,30 @@ const THEME_CHOICES: { id: string | undefined; label: string; icon: string; desc
  * and giving them different shapes would suggest they are different kinds of
  * control.
  */
-function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string | undefined) => void }) {
-  const { themeId, onTheme } = props;
+function ThemeControl(props: {
+  themeSpec: ThemeValue;
+  customTheme?: Exclude<ThemeValue, string | undefined>;
+  onTheme: (theme: ThemeValue) => void;
+}) {
+  const { themeSpec, customTheme, onTheme } = props;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const current = THEME_CHOICES.find((choice) => choice.id === themeId) ?? THEME_CHOICES[0];
+  const retainedCustom = customTheme ?? (typeof themeSpec === 'object' ? themeSpec : undefined);
+  const inheritedPreset = retainedCustom?.extends
+    ? THEME_PRESETS[retainedCustom.extends]
+    : undefined;
+  const customChoice: ThemeChoice | undefined = retainedCustom
+    ? {
+        value: retainedCustom,
+        label: retainedCustom.label ?? retainedCustom.id ?? 'Custom theme',
+        icon: inheritedPreset?.icon ?? DEFAULT_THEME_ICON,
+        description: 'Custom ThemeSpec supplied with this chart.',
+      }
+    : undefined;
+  const choices = customChoice ? [customChoice, ...THEME_CHOICES] : THEME_CHOICES;
+  const current = typeof themeSpec === 'object'
+    ? customChoice ?? THEME_CHOICES[0]
+    : THEME_CHOICES.find((choice) => choice.value === themeSpec) ?? THEME_CHOICES[0];
 
   useEffect(() => {
     if (!open) return;
@@ -395,17 +417,17 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
 
       {open && (
         <ul className="tc-menu" role="listbox" aria-label="Theme">
-          {THEME_CHOICES.map((choice) => {
-            const selected = choice.id === current.id;
+          {choices.map((choice) => {
+            const selected = choice === current;
             return (
               <li
-                key={choice.id ?? 'default'}
+                key={typeof choice.value === 'string' ? choice.value : choice.value ? 'custom' : 'default'}
                 role="option"
                 aria-selected={selected}
                 title={choice.description}
                 className={selected ? 'tc-opt tc-opt-selected' : 'tc-opt'}
                 onClick={() => {
-                  onTheme(choice.id);
+                  onTheme(choice.value);
                   setOpen(false);
                 }}
               >
@@ -493,6 +515,7 @@ function ActionButton(props: {
 
 function OptionsBar(props: {
   input: ChartAssemblyInput;
+  customTheme?: Exclude<ChartAssemblyInput['theme_spec'], string | undefined>;
   model: PanelModel;
   onInput: (next: ChartAssemblyInput) => void;
   onReset: () => void;
@@ -501,7 +524,7 @@ function OptionsBar(props: {
   copyStatus: 'idle' | 'copying' | 'copied' | 'downloaded' | 'error';
   copyError: string | null;
 }) {
-  const { input, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
+  const { input, customTheme, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
   const gridRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
   const transformRef = useRef<HTMLDivElement>(null);
@@ -604,8 +627,9 @@ function OptionsBar(props: {
       <div className="optionsbar-grid" ref={gridRef}>
         <div className="optionsbar-pinned" ref={themeRef}>
           <ThemeControl
-            themeId={typeof input.theme_spec === 'string' ? input.theme_spec : undefined}
-            onTheme={(id) => onInput(withTheme(input, id))}
+            themeSpec={input.theme_spec}
+            customTheme={customTheme}
+            onTheme={(theme) => onInput(withTheme(input, theme))}
           />
         </div>
         {hasTransform && (
@@ -896,6 +920,7 @@ export function FlintAppInner(props: {
 
       <OptionsBar
         input={current}
+        customTheme={typeof input.theme_spec === 'object' ? input.theme_spec : undefined}
         model={model}
         onInput={setCurrent}
         onReset={() => setCurrent(input)}

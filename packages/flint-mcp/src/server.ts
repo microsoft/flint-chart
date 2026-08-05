@@ -29,7 +29,9 @@ export const VERSION = JSON.parse(
 ).version as string;
 
 export const AGENT_SKILL_RESOURCE_URI = 'flint://agent-skill';
+export const THEME_SKILL_RESOURCE_URI = 'flint://theme-skill';
 const AGENT_SKILL_ASSET = new URL('../assets/flint-chart-author.SKILL.md', import.meta.url);
+const THEME_SKILL_ASSET = new URL('../assets/flint-theme-author.SKILL.md', import.meta.url);
 
 /** URI linking the chart-view tool to its bundled UI resource. */
 export const CHART_VIEW_RESOURCE_URI = 'ui://flint-chart/chart-view.html';
@@ -43,6 +45,10 @@ packages/flint-mcp to generate it.</body></html>`;
 
 function readAgentSkill(): string {
   return readFileSync(AGENT_SKILL_ASSET, 'utf8');
+}
+
+function readThemeSkill(): string {
+  return readFileSync(THEME_SKILL_ASSET, 'utf8');
 }
 
 /** Read the bundled chart-view HTML, tolerating a not-yet-built asset. */
@@ -143,8 +149,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'validate_chart to check a spec, and list_chart_types to discover chart ' +
         'types and their channels. Use list_themes to discover visual themes; ' +
         'prefer a preset id, and use an `extends` override only when the user ' +
-        'asks to customize it. Before authoring specs, read the ' +
-        'flint://agent-skill resource or use the author_flint_chart prompt.' +
+        'asks to customize it. Before authoring chart specs, read the ' +
+        'flint://agent-skill resource or use the author_flint_chart prompt. ' +
+        'When the user asks to create, translate, or substantially customize a ' +
+        'ThemeSpec, read flint://theme-skill or use author_flint_theme.' +
         dataAccessNote(options),
     },
   );
@@ -435,6 +443,61 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
               'Use these Flint instructions when creating chart specs. Generate ChartAssemblyInput ' +
               'inputs with chart_spec and semantic_types, validate before rendering when tools are available, ' +
               'and call the Flint MCP tools only after the spec follows the authoring contract.',
+          },
+        },
+      ],
+    }),
+  );
+
+  server.registerResource(
+    'theme-skill',
+    THEME_SKILL_RESOURCE_URI,
+    {
+      title: 'Flint theme-author skill',
+      description: 'Bundled instructions for creating valid reusable Flint ThemeSpecs.',
+      mimeType: 'text/markdown',
+      annotations: { audience: ['assistant'], priority: 1 },
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'text/markdown',
+          text: readThemeSkill(),
+        },
+      ],
+    }),
+  );
+
+  server.registerPrompt(
+    'author_flint_theme',
+    {
+      title: 'Author a Flint theme',
+      description:
+        'Load the Flint theme-author skill before creating, translating, refining, reviewing, or validating a ThemeSpec.',
+    },
+    async () => ({
+      description: 'Use the bundled Flint theme-author skill to produce a valid ThemeSpec.',
+      messages: [
+        {
+          role: 'user' as const,
+          content: {
+            type: 'resource' as const,
+            resource: {
+              uri: THEME_SKILL_RESOURCE_URI,
+              mimeType: 'text/markdown',
+              text: readThemeSkill(),
+            },
+          },
+        },
+        {
+          role: 'user' as const,
+          content: {
+            type: 'text' as const,
+            text:
+              'Use these Flint instructions when creating or reviewing a ThemeSpec. ' +
+              'Use list_themes when preset discovery or preset-specific guidance is needed. ' +
+              'Return the bare reusable ThemeSpec and do not change chart semantics.',
           },
         },
       ],

@@ -294,10 +294,13 @@ function withoutEchoedProperties(input: ChartAssemblyInput): ChartAssemblyInput 
  * go of the values it is only holding by inheritance before the new house can
  * speak. See {@link withoutEchoedProperties}.
  */
-export function withTheme(input: ChartAssemblyInput, themeId: string | undefined): ChartAssemblyInput {
+export function withTheme(
+  input: ChartAssemblyInput,
+  theme: ChartAssemblyInput['theme_spec'],
+): ChartAssemblyInput {
   const next = cloneInput(withoutEchoedProperties(input));
-  if (themeId === undefined) delete next.theme_spec;
-  else next.theme_spec = themeId;
+  if (theme === undefined) delete next.theme_spec;
+  else next.theme_spec = theme;
   return next;
 }
 

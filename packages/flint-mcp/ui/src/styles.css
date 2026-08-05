@@ -436,8 +436,10 @@ body {
   padding: 4px;
   list-style: none;
   min-width: 180px;
-  max-height: 320px;
+  max-height: min(240px, 42vh);
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
   border: 1px solid var(--hairline);
   border-radius: 10px;
   background: var(--paper);
@@ -599,8 +601,10 @@ select {
   margin: 0;
   padding: 4px;
   min-width: 150px;
-  max-height: 240px;
+  max-height: min(200px, 38vh);
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
   list-style: none;
   border: 1px solid var(--hairline);
   border-radius: 10px;

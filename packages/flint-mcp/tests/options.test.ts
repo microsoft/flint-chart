@@ -61,4 +61,20 @@ describe('house defaults reach the options bar', () => {
     withTheme(setProperty(lines, 'showPoints', false), 'nyt');
     expect(JSON.stringify(lines)).toBe(before);
   });
+
+  it('can restore a custom ThemeSpec after previewing a preset', () => {
+    const custom = {
+      extends: 'datawrapper',
+      id: 'rive-gauche',
+      label: 'Rive Gauche',
+      ink: { accent: '#ef4135' },
+    };
+    const customInput = withTheme(lines, custom);
+    const presetInput = withTheme(customInput, 'nyt');
+    const restored = withTheme(presetInput, custom);
+
+    expect(presetInput.theme_spec).toBe('nyt');
+    expect(restored.theme_spec).toEqual(custom);
+    expect(customInput.theme_spec).toEqual(custom);
+  });
 });

@@ -14,9 +14,12 @@ const SURFACE_ITEMS = [
   { tagKey: 'tool', name: 'compile_chart', descKey: 'compile_chart' },
   { tagKey: 'tool', name: 'validate_chart', descKey: 'validate_chart' },
   { tagKey: 'tool', name: 'list_chart_types', descKey: 'list_chart_types' },
+  { tagKey: 'tool', name: 'list_themes', descKey: 'list_themes' },
   { tagKey: 'resource', name: 'flint://agent-skill', descKey: 'agentSkill' },
+  { tagKey: 'resource', name: 'flint://theme-skill', descKey: 'themeSkill' },
   { tagKey: 'resource', name: 'flint://chart-types', descKey: 'chartTypes' },
   { tagKey: 'prompt', name: 'author_flint_chart', descKey: 'authorPrompt' },
+  { tagKey: 'prompt', name: 'author_flint_theme', descKey: 'themeAuthorPrompt' },
 ] as const;
 
 /** Dedicated page for the Flint MCP server, matching the landing page canvas. */
@@ -87,6 +90,15 @@ export function McpServer() {
                 skillLink: (
                   <a
                     href="https://skills.sh/microsoft/flint-chart/flint-chart-author"
+                    className="mcp-link"
+                    style={setupInlineLinkStyle}
+                    target="_blank"
+                    rel="noreferrer"
+                  />
+                ),
+                themeSkillLink: (
+                  <a
+                    href="https://skills.sh/microsoft/flint-chart/flint-theme-author"
                     className="mcp-link"
                     style={setupInlineLinkStyle}
                     target="_blank"
