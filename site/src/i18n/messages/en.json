@@ -374,7 +374,7 @@
       },
       "themes": {
         "title": "Render with different themes",
-        "body": "A Flint theme is a formal specification, not a cosmetic skin. It guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
+        "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
         "example": "The same grouped-bar spec becomes an Economist print graphic or a Swiss typographic composition. The data and encodings stay fixed while the compiler changes spacing, structure, labels, marks, type, and color."
       }
     },
