@@ -270,12 +270,25 @@ export function Themes() {
         <div style={{ maxWidth: 1500, margin: '0 auto', padding: '36px 40px 96px' }}>
           <header style={{ marginBottom: 4 }}>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>{t('themes.title')}</h1>
-            <p style={{ margin: '10px 0 0', maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.lead')}
-            </p>
-            <p style={{ margin: '8px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.concept')}
-            </p>
+            <ul
+              style={{
+                maxWidth: 900,
+                margin: '10px 0 0',
+                paddingLeft: 20,
+                color: siteTheme.accent,
+              }}
+            >
+              <li style={{ paddingLeft: 3 }}>
+                <p style={{ margin: 0, maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+                  {t('themes.lead')}
+                </p>
+              </li>
+              <li style={{ marginTop: 8, paddingLeft: 3 }}>
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+                  {t('themes.concept')}
+                </p>
+              </li>
+            </ul>
             <div
               className="themes-principles"
               style={{
@@ -290,24 +303,10 @@ export function Themes() {
                 <div
                   key={principle}
                   style={{
-                    position: 'relative',
                     paddingLeft: 15,
                     borderLeft: `2px solid ${siteTheme.border}`,
                   }}
                 >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      top: 5,
-                      left: -5,
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: siteTheme.accent,
-                      boxShadow: `0 0 0 3px ${siteTheme.surface}`,
-                    }}
-                  />
                   <strong style={{ display: 'block', marginBottom: 3, fontSize: 13.5, color: siteTheme.text }}>
                     {t(`themes.principles.${principle}.title`)}
                   </strong>
