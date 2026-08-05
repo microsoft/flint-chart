@@ -61,7 +61,7 @@ const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 const BLURB_H = 30;
 const CHART_H = 190;
 
-type ThemeChoice = { id: string | undefined; label: string; icon: string };
+type ThemeChoice = { id: string | undefined; label: string; icon: string; description: string };
 
 const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
@@ -237,11 +237,22 @@ export function Themes() {
   // not theming is the baseline every house is read against.
   const choices = useMemo<ThemeChoice[]>(
     () => [
-      { id: undefined, label: t('themes.flintDefault'), icon: DEFAULT_THEME_ICON },
-      ...Object.values(THEME_PRESETS).map((p) => ({ id: p.id, label: p.label, icon: p.icon })),
+      {
+        id: undefined,
+        label: t('themes.flintDefault'),
+        icon: DEFAULT_THEME_ICON,
+        description: t('themes.descriptions.default'),
+      },
+      ...Object.values(THEME_PRESETS).map((p) => ({
+        id: p.id,
+        label: p.label,
+        icon: p.icon,
+        description: t(`themes.descriptions.${p.id}`),
+      })),
     ],
     [t],
   );
+  const selectedTheme = choices.find((choice) => choice.id === themeId) ?? choices[0];
 
   const cases = useMemo(
     () => IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c)),
@@ -278,6 +289,10 @@ export function Themes() {
             }}
           >
             <ThemeBar themeId={themeId} onTheme={setThemeId} choices={choices} />
+            <p style={{ margin: '10px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.55, color: siteTheme.text }}>
+              <strong>{selectedTheme.label}.</strong>{' '}
+              <span style={{ color: siteTheme.textMuted }}>{selectedTheme.description}</span>
+            </p>
             {/* The switch is a preview of one line of spec, so the page shows
                 that line and keeps it in step with the buttons. Otherwise the
                 reader leaves having enjoyed the wall without learning the one
