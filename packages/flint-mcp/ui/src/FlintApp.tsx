@@ -36,6 +36,8 @@ type ControlSpec =
   | { type: 'discrete'; options: { value: unknown; label: string }[] }
   | { type: 'binary' };
 
+type ToolbarControl = { key: string; label: string; spec: ControlSpec; value: unknown };
+
 function compactSelectLabel(label: string): string {
   const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();
   if (withoutHint.length <= 16) return withoutHint;
@@ -500,6 +502,15 @@ function OptionsBar(props: {
   copyError: string | null;
 }) {
   const { input, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
+  const gridRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLSpanElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreRootRef = useRef<HTMLDivElement>(null);
+  const controlRefs = useRef(new Map<string, HTMLDivElement>());
+  const [visibleControlCount, setVisibleControlCount] = useState(Number.MAX_SAFE_INTEGER);
+  const [moreOpen, setMoreOpen] = useState(false);
   const copyFeedback = {
     idle: 'Copy PNG',
     copying: 'Copying PNG…',
@@ -512,7 +523,7 @@ function OptionsBar(props: {
   // properties plus encoding actions (sort, …) — inline below the chart,
   // mirroring Data Formulator's quick-config strip. Deliberately no chart-type
   // switch or field→channel binding; the agent owns those, the bar fine-tunes.
-  const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
+  const controls: ToolbarControl[] = [
     ...model.properties.map((option: ChartOption) => ({
       key: option.key,
       label: option.label,
@@ -526,43 +537,138 @@ function OptionsBar(props: {
       value: action.value,
     })),
   ];
+  const hasTransform = Boolean(
+    (model.chartType && model.chartType.length > 1) ||
+    (model.arrange && model.arrange.length > 1),
+  );
+  const layoutKey = controls.map((control) => `${control.key}:${control.label}:${control.spec.type}`).join('|');
+
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const measure = () => {
+      const controlWidths = controls.map((control) => controlRefs.current.get(control.key)?.getBoundingClientRect().width ?? 0);
+      if (controlWidths.some((width) => width === 0)) return;
+
+      const pinned = [themeRef.current, hasTransform ? transformRef.current : null, actionsRef.current]
+        .filter((element): element is HTMLElement => Boolean(element));
+      const pinnedWidth = pinned.reduce((sum, element) => sum + element.getBoundingClientRect().width, 0);
+      const moreWidth = moreRef.current?.getBoundingClientRect().width ?? 0;
+      const gap = 8;
+      let nextVisible = controls.length;
+
+      for (let count = controls.length; count >= 0; count -= 1) {
+        const needsMore = count < controls.length;
+        const itemCount = pinned.length + count + (needsMore ? 1 : 0);
+        const total = pinnedWidth + controlWidths.slice(0, count).reduce((sum, width) => sum + width, 0)
+          + (needsMore ? moreWidth : 0) + Math.max(0, itemCount - 1) * gap;
+        if (total <= grid.clientWidth) {
+          nextVisible = count;
+          break;
+        }
+      }
+
+      setVisibleControlCount(nextVisible);
+      if (nextVisible === controls.length) setMoreOpen(false);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [hasTransform, layoutKey]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (event: MouseEvent) => {
+      if (moreRootRef.current && !moreRootRef.current.contains(event.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [moreOpen]);
+
+  const renderControl = (control: ToolbarControl) => (
+    <ControlRow
+      label={control.label}
+      spec={control.spec}
+      value={control.value}
+      width={optionWidth(control.label, control.spec.type)}
+      onChange={(value) => onInput(setProperty(input, control.key, value))}
+    />
+  );
+  const hiddenControls = controls.slice(Math.min(visibleControlCount, controls.length));
 
   return (
     <div className="optionsbar" role="toolbar" aria-label={`${input.chart_spec.chartType} options`}>
-      <div className="optionsbar-grid">
-        <ThemeControl
-          themeId={typeof input.theme_spec === 'string' ? input.theme_spec : undefined}
-          onTheme={(id) => onInput(withTheme(input, id))}
-        />
-        {((model.chartType && model.chartType.length > 1) ||
-          (model.arrange && model.arrange.length > 1)) && (
-          <TransformControl
-            chartType={model.chartType}
-            arrange={model.arrange}
-            onChartType={(id) => onInput(setProperty(input, model.chartType!.key, id))}
-            onArrange={(id) => onInput(setProperty(input, model.arrange!.key, id))}
+      <div className="optionsbar-grid" ref={gridRef}>
+        <div className="optionsbar-pinned" ref={themeRef}>
+          <ThemeControl
+            themeId={typeof input.theme_spec === 'string' ? input.theme_spec : undefined}
+            onTheme={(id) => onInput(withTheme(input, id))}
           />
+        </div>
+        {hasTransform && (
+          <div className="optionsbar-pinned" ref={transformRef}>
+            <TransformControl
+              chartType={model.chartType}
+              arrange={model.arrange}
+              onChartType={(id) => onInput(setProperty(input, model.chartType!.key, id))}
+              onArrange={(id) => onInput(setProperty(input, model.arrange!.key, id))}
+            />
+          </div>
         )}
         {controls.length === 0 ? (
-          !(
-            (model.chartType && model.chartType.length > 1) ||
-            (model.arrange && model.arrange.length > 1)
-          ) && (
+          !hasTransform && (
             <span className="opt-empty">No adjustable options for this chart.</span>
           )
         ) : (
-          controls.map((control) => (
-            <ControlRow
+          controls.map((control, index) => (
+            <div
               key={control.key}
-              label={control.label}
-              spec={control.spec}
-              value={control.value}
-              width={optionWidth(control.label, control.spec.type)}
-              onChange={(v) => onInput(setProperty(input, control.key, v))}
-            />
+              ref={(element) => {
+                if (element) controlRefs.current.set(control.key, element);
+                else controlRefs.current.delete(control.key);
+              }}
+              className={index < visibleControlCount ? 'optionsbar-control' : 'optionsbar-control optionsbar-control-measure'}
+              aria-hidden={index >= visibleControlCount || undefined}
+            >
+              {renderControl(control)}
+            </div>
           ))
         )}
-        <span className="bar-actions">
+        <div
+          className={hiddenControls.length > 0 ? 'optionsbar-more' : 'optionsbar-more optionsbar-more-measure'}
+          ref={moreRef}
+        >
+          <div ref={moreRootRef}>
+            <button
+              type="button"
+              className="bar-link optionsbar-more-trigger"
+              aria-label={`More options (${hiddenControls.length})`}
+              title="More options"
+              aria-haspopup="true"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((open) => !open)}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="3" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="13" cy="8" r="1.2" fill="currentColor" />
+              </svg>
+            </button>
+            {moreOpen && hiddenControls.length > 0 && (
+              <div className="optionsbar-more-menu" role="group" aria-label="More chart options">
+                {hiddenControls.map((control) => (
+                  <div className="optionsbar-more-control" key={control.key}>
+                    {renderControl(control)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <span className="bar-actions" ref={actionsRef}>
           <ActionButton
             className="bar-reset"
             onClick={onReset}

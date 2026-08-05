@@ -57,6 +57,12 @@ const IDS = [
   'faithful-hist', 'trust-likert', 'population-waterfall', 'us-pyramid', 'gapminder-bubble', 'earnings-education',
 ];
 
+/** Two rows of six, selected for distinct silhouettes in a wide editorial crop. */
+const BANNER_IDS = [
+  'keeling', 'driving', 'seattle-range', 'temp-heatmap', 'browser-pie', 'co2-lollipop',
+  'life-expectancy', 'lifeexp-dumbbell', 'electricity-mix-area', 'big-mac', 'olympic-bump', 'nutrition-radar',
+];
+
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 
 /** HTML caption metrics: blurb row 2 + 10.5×1.35×2. */
@@ -64,7 +70,7 @@ const BLURB_H = 30;
 const CHART_H = 190;
 
 type ThemeChoice = { id: string | undefined; label: string; icon: string; description: string };
-type WallLayout = 'grid' | 'scatter';
+type WallLayout = 'grid' | 'scatter' | 'banner';
 
 const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
@@ -399,7 +405,7 @@ function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (lay
   const { t } = useTranslation();
   return (
     <div className="themes-layout-toggle" role="radiogroup" aria-label={t('themes.layoutToggle.aria')}>
-      {(['grid', 'scatter'] as const).map((choice) => {
+      {(['grid', 'scatter', 'banner'] as const).map((choice) => {
         const selected = choice === layout;
         return (
           <button
@@ -435,7 +441,10 @@ export function Themes() {
   const [openCase, setOpenCase] = useState<PreviewCase | null>(null);
   const requestedTheme = searchParams.get('theme') ?? undefined;
   const themeId = requestedTheme && THEME_PRESETS[requestedTheme] ? requestedTheme : undefined;
-  const layout: WallLayout = searchParams.get('layout') === 'grid' ? 'grid' : 'scatter';
+  const requestedLayout = searchParams.get('layout');
+  const layout: WallLayout = requestedLayout === 'grid' || requestedLayout === 'banner'
+    ? requestedLayout
+    : 'scatter';
   const setThemeId = (id: string | undefined) => {
     const next = new URLSearchParams(searchParams);
     if (id) next.set('theme', id);
@@ -444,7 +453,7 @@ export function Themes() {
   };
   const setLayout = (nextLayout: WallLayout) => {
     const next = new URLSearchParams(searchParams);
-    if (nextLayout === 'grid') next.set('layout', 'grid');
+    if (nextLayout === 'grid' || nextLayout === 'banner') next.set('layout', nextLayout);
     else next.delete('layout');
     setSearchParams(next, { replace: true });
   };
@@ -474,6 +483,9 @@ export function Themes() {
     () => IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c)),
     [],
   );
+  const visibleCases = layout === 'banner'
+    ? BANNER_IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c))
+    : cases;
 
   return (
     <SiteShell>
@@ -591,7 +603,7 @@ export function Themes() {
               gap: 10,
             }}
           >
-            {cases.map((c) => (
+            {visibleCases.map((c) => (
               <Tile key={c.id} c={c} themeId={themeId} onOpen={() => setOpenCase(c)} />
             ))}
           </div>
@@ -634,13 +646,13 @@ const wallStyles = `
     outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;
   }
-  .themes-wall--scatter {
+  :is(.themes-wall--scatter, .themes-wall--banner) {
     padding: 30px 34px 38px;
     column-gap: 2px !important;
     row-gap: 0 !important;
     overflow: visible;
   }
-  .themes-wall--scatter .themes-tile {
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile {
     --scatter-x: 0px;
     --scatter-y: 0px;
     --scatter-r: 0deg;
@@ -657,21 +669,23 @@ const wallStyles = `
     transform-origin: 50% 50%;
     transition: transform 180ms ease, box-shadow 180ms ease;
   }
-  .themes-wall--scatter .themes-tile:hover,
-  .themes-wall--scatter .themes-tile:focus-visible {
+  .themes-wall--banner .themes-tile { margin-bottom: -42px; }
+  .themes-wall--banner .themes-tile:nth-last-child(-n + 6) { margin-bottom: -3px; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:hover,
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:focus-visible {
     z-index: 20;
     background: #fff;
     box-shadow: 0 8px 18px rgba(31, 35, 40, 0.2), 0 18px 34px rgba(31, 35, 40, 0.1);
     transform: translate3d(var(--scatter-x), calc(var(--scatter-y) - 7px), 0) rotate(0deg);
   }
-  .themes-wall--scatter .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }
-  .themes-wall--scatter .themes-tile:nth-child(6n + 2) { --scatter-x: -4px; --scatter-y: -7px; --scatter-r: 1.4deg; }
-  .themes-wall--scatter .themes-tile:nth-child(6n + 3) { --scatter-x: 5px;  --scatter-y: 9px;  --scatter-r: -0.8deg; }
-  .themes-wall--scatter .themes-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px;  --scatter-r: 2.3deg; }
-  .themes-wall--scatter .themes-tile:nth-child(6n + 5) { --scatter-x: 3px;  --scatter-y: -5px; --scatter-r: -1.5deg; }
-  .themes-wall--scatter .themes-tile:nth-child(6n)     { --scatter-x: -6px; --scatter-y: 8px;  --scatter-r: 1deg; }
-  .themes-wall--scatter .themes-tile:nth-child(8n + 3) { --scatter-r: 2.7deg; }
-  .themes-wall--scatter .themes-tile:nth-child(11n + 1) { --scatter-y: -9px; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 2) { --scatter-x: -4px; --scatter-y: -7px; --scatter-r: 1.4deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 3) { --scatter-x: 5px;  --scatter-y: 9px;  --scatter-r: -0.8deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px;  --scatter-r: 2.3deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 5) { --scatter-x: 3px;  --scatter-y: -5px; --scatter-r: -1.5deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n)     { --scatter-x: -6px; --scatter-y: 8px;  --scatter-r: 1deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(8n + 3) { --scatter-r: 2.7deg; }
+  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(11n + 1) { --scatter-y: -9px; }
   @media (max-width: 840px)  {
     .themes-intro { grid-template-columns: minmax(0, 1fr) !important; gap: 26px !important; }
     .themes-title-row { align-items: flex-start; }
@@ -684,6 +698,7 @@ const wallStyles = `
   }
   @media (max-width: 1330px) {
     .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    .themes-wall--banner { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
   }
   @media (max-width: 910px)  {
     .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
@@ -695,11 +710,11 @@ const wallStyles = `
     .themes-wall { grid-template-columns: minmax(0, 1fr) !important; }
   }
   @media (max-width: 700px) {
-    .themes-wall--scatter { padding: 22px 20px 30px; }
-    .themes-wall--scatter .themes-tile { margin: -1px -2px -16px; }
+    :is(.themes-wall--scatter, .themes-wall--banner) { padding: 22px 20px 30px; }
+    :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile { margin: -1px -2px -16px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .themes-wall--scatter .themes-tile { transition: none; }
+    :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile { transition: none; }
   }
   @media (max-width: 900px)  {
     .theme-chart-modal { height: min(900px, 94vh) !important; }

@@ -8,17 +8,18 @@
 
 **Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**Visual Themes**](https://microsoft.github.io/flint-chart/#/themes) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
 
-Flint is a visualization intermediate language that lets **AI agents create
-expressive, polished visualizations from simple, human-editable chart specs**.
-Instead of asking agents or developers to tune verbose chart configuration
-details such as scales, axes, spacing, labels, and layout, the Flint compiler
-derives optimized chart settings from the data, semantic types, chart type, and
-encodings. The result is a compact chart specification that agents can produce
-reliably, people can edit directly, and multiple backends can render as native
+Flint is a visualization intermediate language that lets **AI agents turn
+simple, human-editable chart specs into expressive, polished visualizations**.
+Rather than requiring agents or developers to tune verbose settings for scales,
+axes, spacing, labels, and layout, Flint derives those decisions from the data,
+semantic types, chart type, encodings, and an optional visual theme. Users can
+use a compact spec to create visually polished, brand-consistent charts rendered
+as native
 [Vega-Lite](https://vega.github.io/vega-lite/),
 [ECharts](https://echarts.apache.org/),
-[Chart.js](https://www.chartjs.org/), or
-[Plotly](https://plotly.com/javascript/) specs, and native Excel charts through Office.js.
+[Chart.js](https://www.chartjs.org/),
+[Plotly](https://plotly.com/javascript/) specs, or as native Excel charts
+through Office.js.
 
 This repo contains two main components:
 
@@ -52,6 +53,11 @@ This repo contains two main components:
 
 ## Updates
 
+- **August 5, 2026** — Flint 0.5.0 introduces a [formal theme specification](https://microsoft.github.io/flint-chart/#/themes)
+  that allows designers and users to define a visual system once and apply it
+  consistently across an entire chart library. It includes ten presets: New
+  York Times, Economist, Swiss, Nature, McKinsey, Datawrapper, Power BI, Power
+  BI Light, Pop, and Cartoon. ([v0.5.0](https://github.com/microsoft/flint-chart/releases/tag/0.5.0))
 - **July 24, 2026** — Flint 0.4.0 adds 38 Plotly chart types and 18 native,
   editable Excel chart templates. ([v0.4.0](https://github.com/microsoft/flint-chart/releases/tag/0.4.0))
 - **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart
@@ -120,7 +126,7 @@ means, while the theme defines how that meaning is presented. A theme can guide
 layout, labels, legends, axes, mark geometry, typography, and color as one
 coherent visual system.
 
-Use one of Flint's nine built-in presets:
+Use one of Flint's ten built-in presets:
 
 ```ts
 const themedSpec = assembleVegaLite({
@@ -146,9 +152,25 @@ const brandedSpec = assembleVegaLite({
 
 Nested objects merge; arrays and scalar values replace the inherited value.
 ThemeSpec currently affects Vega-Lite output. Compare all presets on the
-[theme wall](https://microsoft.github.io/flint-chart/#/themes) and see
+[theme explorer](https://microsoft.github.io/flint-chart/#/themes). See
 [Using themes](docs/theme-spec.md) for the complete custom and inherited-theme
 reference.
+
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=economist&amp;layout=banner">
+    <img src="docs/figs/flint-theme-economist.png" alt="Twelve charts rendered with Flint's Economist theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Economist</strong> — compact editorial graphics with a strong red accent.</sub>
+</p>
+
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=swiss&amp;layout=banner">
+    <img src="docs/figs/flint-theme-swiss.png" alt="Twelve charts rendered with Flint's Swiss theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Swiss</strong> — typographic structure, restrained color, and a clear visual grid.</sub>
+</p>
 
 See the [API reference](docs/api-reference.md), backend references for
 [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
@@ -168,7 +190,7 @@ For setup, start with the
 includes client configuration, usage examples, and links to deeper references.
 
 <p align="center">
-  <img src="docs/figs/flint-mcp-experience.png" alt="Agent chat showing Flint Chart as an MCP App with a grouped bar chart preview and chart options." width="100%">
+  <img src="docs/figs/flint-mcp-experience.png" alt="Agent chat showing Flint Chart as an MCP App with a grouped bar chart preview and chart options." width="720">
 </p>
 
 MCP calls let agents embed rows directly as `data.values`, or read local JSON,

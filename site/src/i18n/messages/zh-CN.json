@@ -188,7 +188,9 @@
       "grid": "网格",
       "gridTitle": "将图表排列为规整的对比网格",
       "scatter": "散落",
-      "scatterTitle": "将图表像照片一样散落排列，便于制作编辑截图"
+      "scatterTitle": "将图表像照片一样散落排列，便于制作编辑截图",
+      "banner": "横幅",
+      "bannerTitle": "将十二张图表紧密排列为两行博客横幅"
     },
     "descriptions": {
       "default": "均衡、中性的默认样式，适用于各种图表类型。",
@@ -320,7 +322,7 @@
       "release050": {
         "date": "2026 年 8 月 5 日",
         "dateTime": "2026-08-05",
-        "text": "Flint 0.5.0 引入正式的视觉主题系统，包含九种预设、自定义 ThemeSpec 与预设继承。"
+        "text": "Flint 0.5.0 引入正式的视觉主题系统，包含十种预设、自定义 ThemeSpec 与预设继承。"
       },
       "release040": {
         "date": "2026 年 7 月 24 日",

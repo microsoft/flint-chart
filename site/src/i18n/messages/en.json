@@ -188,7 +188,9 @@
       "grid": "Grid",
       "gridTitle": "Arrange charts in a regular comparison grid",
       "scatter": "Scatter",
-      "scatterTitle": "Scatter charts like photographs for editorial screenshots"
+      "scatterTitle": "Scatter charts like photographs for editorial screenshots",
+      "banner": "Banner",
+      "bannerTitle": "Arrange twelve charts in a tight two-row blog banner"
     },
     "descriptions": {
       "default": "Balanced, neutral defaults designed to work across chart types.",

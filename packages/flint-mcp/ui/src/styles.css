@@ -148,10 +148,65 @@ body {
 
 .optionsbar-grid {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px 8px;
+  gap: 8px;
   min-width: 0;
+  position: relative;
+}
+
+.optionsbar-pinned,
+.optionsbar-control,
+.optionsbar-more {
+  display: inline-flex;
+  flex: none;
+}
+
+.optionsbar-control-measure,
+.optionsbar-more-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.optionsbar-more {
+  position: relative;
+}
+
+.optionsbar-more-trigger[aria-expanded="true"] {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+}
+
+.optionsbar-more-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 5px);
+  z-index: 70;
+  display: grid;
+  gap: 5px;
+  min-width: 180px;
+  max-width: min(260px, calc(100vw - 20px));
+  padding: 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.optionsbar-more-control,
+.optionsbar-more-control > .opt {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.optionsbar-more-control > .opt {
+  justify-content: space-between;
+}
+
+.optionsbar-more-control .select-trigger {
+  width: 100%;
+  justify-content: space-between;
 }
 
 .opt-empty {

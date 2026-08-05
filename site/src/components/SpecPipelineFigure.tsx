@@ -112,6 +112,7 @@ function ArrowColumn({ orientation }: { orientation: FigureOrientation }) {
 
 const figureStyle: React.CSSProperties = {
   width: 1400,
+  maxWidth: '100%',
   minHeight: 680,
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr) 34px minmax(0, 1.1fr) 34px minmax(0, 1.55fr)',

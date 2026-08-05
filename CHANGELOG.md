@@ -11,12 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-05
+
 ### Added
 
 - Formal visual themes for Vega-Lite through the new top-level `theme_spec`
-  field. Callers can select one of nine built-in presets, provide a custom
+  field. Callers can select one of ten built-in presets, provide a custom
   `ThemeSpec`, or inherit a preset with `extends` and override selected fields.
   Nested objects merge while arrays and scalar values replace inherited values.
+- The `pop` preset, a high-energy extension of Swiss with process colors,
+  strong structure, and chart-aware grid and heatmap treatment.
 - A semantic theme-grounding system that applies layout behavior, presentation
   rules, mark geometry, typography, color, labels, legends, axes, annotations,
   and chart furniture as one visual system across chart types and data shapes.
@@ -24,7 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `listThemePresets()`, and `resolveThemeSpec()`.
 - Theme discovery in the MCP server through `list_themes`, plus preset selection
   in the interactive MCP App.
-- A public visual-theme wall, a complete **Using themes** guide, and
+- A public visual-theme explorer with regular grid and screenshot-friendly
+  scattered-poster layouts, a compact two-row banner composition, large
+  chart/spec previews, a complete **Using themes** guide, and
   preset/custom/inherited live examples on the Flint project site.
 
 ### Changed
@@ -32,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vega-Lite assembly now grounds the selected theme before layout and realizes
   its decisions throughout compilation instead of applying a post-render style
   layer. Existing inputs without `theme_spec` retain Flint's default behavior.
+- Vega-Lite logarithmic axes choose readable powers-of-ten or 1/2/5 tick and
+  grid spacing from the transformed scale span and available pixels on either
+  axis. Two-position line axes suppress asymmetric endpoint guides, while
+  heatmaps use cell boundaries instead of redundant axis grids.
 
 ## [0.4.1] - 2026-07-27
 
