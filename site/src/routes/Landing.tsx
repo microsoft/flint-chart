@@ -62,18 +62,39 @@ export function Landing() {
                 . {t('landing.themeLead')}
               </p>
 
-              <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
-                <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
-                  {t('landing.backendRosterLabel')}
-                </span>
-                {BACKEND_ROSTER_LINKS.map((backend, index) => (
-                  <span key={backend.label} style={backendRosterItemStyle}>
-                    {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                    <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
-                      {backend.label}
+              <div style={rostersStyle}>
+                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
+                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                    {t('landing.backendRosterLabel')}
+                  </span>
+                  {BACKEND_ROSTER_LINKS.map((backend, index) => (
+                    <span key={backend.label} style={backendRosterItemStyle}>
+                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                      <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
+                        {backend.label}
+                      </LocaleLink>
+                    </span>
+                  ))}
+                </div>
+                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.themeRosterLabel')}>
+                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                    {t('landing.themeRosterLabel')}
+                  </span>
+                  {THEME_ROSTER_PREVIEW.map((theme, index) => (
+                    <span key={theme.id} style={backendRosterItemStyle}>
+                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                      <LocaleLink className="landing-backend-link" to="/themes" style={backendRosterLinkStyle}>
+                        {theme.label}
+                      </LocaleLink>
+                    </span>
+                  ))}
+                  <span style={backendRosterItemStyle}>
+                    <span aria-hidden="true" style={backendRosterSeparatorStyle} />
+                    <LocaleLink className="landing-backend-link" to="/themes" style={backendRosterMoreLinkStyle}>
+                      {t('landing.themeRosterMore', { count: THEME_ROSTER_REMAINDER })}
                     </LocaleLink>
                   </span>
-                ))}
+                </div>
               </div>
 
               <div style={installLinesStyle}>
@@ -835,6 +856,8 @@ const BACKEND_ROSTER_LINKS = [
   { label: 'Plotly', to: '/documentation/reference-plotly' },
   { label: 'Excel', to: '/gallery/excel' },
 ] as const;
+const THEME_ROSTER_PREVIEW = Object.values(THEME_PRESETS).slice(0, 3);
+const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,
   0,
@@ -1435,10 +1458,17 @@ const backendRosterStyle: CSSProperties = {
   alignItems: 'baseline',
   flexWrap: 'wrap',
   gap: '5px 0',
-  marginTop: 13,
   color: siteTheme.textMuted,
   minHeight: 18,
   lineHeight: '18px',
+};
+
+const rostersStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  flexWrap: 'wrap',
+  gap: '5px 26px',
+  marginTop: 13,
 };
 
 const backendRosterLabelStyle: CSSProperties = {
@@ -1467,6 +1497,12 @@ const backendRosterLinkStyle: CSSProperties = {
   textDecorationThickness: '1px',
   textUnderlineOffset: '3px',
   transition: 'color 120ms ease, text-decoration-color 120ms ease',
+};
+
+const backendRosterMoreLinkStyle: CSSProperties = {
+  ...backendRosterLinkStyle,
+  color: siteTheme.textMuted,
+  fontWeight: 500,
 };
 
 const backendRosterSeparatorStyle: CSSProperties = {
@@ -2094,8 +2130,7 @@ const featureNewDotStyle: CSSProperties = {
   width: 7,
   height: 7,
   borderRadius: '50%',
-  background: '#ffc400',
-  boxShadow: '0 0 0 3px rgba(255, 196, 0, 0.18), 0 0 9px rgba(255, 196, 0, 0.72)',
+  background: '#ffdd00',
 };
 
 const ctaAttentionDotStyle: CSSProperties = {
@@ -2105,8 +2140,7 @@ const ctaAttentionDotStyle: CSSProperties = {
   width: 6,
   height: 6,
   borderRadius: '50%',
-  background: '#ffc400',
-  boxShadow: '0 0 0 3px rgba(255, 196, 0, 0.18), 0 0 8px rgba(255, 196, 0, 0.72)',
+  background: '#ffdd00',
 };
 
 function featureExampleRowStyle(): CSSProperties {

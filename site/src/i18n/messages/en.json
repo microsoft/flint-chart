@@ -338,6 +338,8 @@
     "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
     "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface",
     "backendRosterLabel": "Backends",
+    "themeRosterLabel": "Themes",
+    "themeRosterMore": "+ {{count}} more",
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
     "backendAria": "Rendering backend",
