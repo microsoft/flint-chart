@@ -148,9 +148,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `0` | always | Corner radius for supported marks. |
 | `totals` | choice | `auto` (Auto), `none` (None), `first` (First), `last` (Last), `both` (Both) | `auto` | conditional | Totals |
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks (legacy spelling of showValueLabels). |
+| `showValueLabels` | toggle | on / off | `false` | always | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
-| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-gantt.svg) Gantt Chart
 
@@ -407,11 +406,10 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks (legacy spelling of showValueLabels). |
+| `showValueLabels` | toggle | on / off | `false` | always | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
-| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 
