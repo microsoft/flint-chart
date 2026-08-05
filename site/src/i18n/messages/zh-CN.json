@@ -301,7 +301,7 @@
     "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
     "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
     "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例。",
-    "themeLead": "Flint 采用正式的主题规范，让设计师只需定义一次视觉识别，就能在整个图表库中统一应用。",
+    "themeLead": "Flint 采用正式的主题规范，让设计师只需编码一次视觉决策，就能在整个图表库中统一、连贯地应用，形成一致且易于识别的品牌形象。",
     "ctaThemes": "探索主题",
     "ctaGallery": "浏览图表示例",
     "ctaMcp": "使用 MCP 服务器",
