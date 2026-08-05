@@ -284,7 +284,7 @@ export function Themes() {
                 thing they need to reproduce it. */}
             <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.usageBefore')}{' '}
-              <code style={codeStyle}>"theme_spec": {JSON.stringify(themeId ?? null)}</code>{' '}
+              <code style={codeStyle}>"theme_spec": {JSON.stringify(themeId ?? 'theme-id')}</code>{' '}
               {t('themes.usageAfter')}
             </p>
           </div>

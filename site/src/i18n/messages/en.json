@@ -130,9 +130,9 @@
   },
   "themes": {
     "title": "Explore themes",
-    "lead": "Use the theme picker to explore themes. Every chart below is the same spec drawn by a different house, so the styling is the only thing that moves.",
-    "usageBefore": "To use one, add",
-    "usageAfter": "to your chart request — the picker above is setting exactly that field.",
+    "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
+    "usageBefore": "Apply a theme by adding",
+    "usageAfter": "to your chart request.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "cases": {

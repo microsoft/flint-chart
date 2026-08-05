@@ -130,9 +130,9 @@
   },
   "themes": {
     "title": "探索主题",
-    "lead": "用主题选择器探索各种主题。下面每张图都是同一份 spec 由不同风格绘制，因此只有样式在变。",
-    "usageBefore": "要使用某个主题，在图表请求中加入",
-    "usageAfter": "——上方的选择器设置的正是这个字段。",
+    "lead": "使用主题选择器，查看不同主题如何呈现同一组图表。",
+    "usageBefore": "在图表请求中加入",
+    "usageAfter": "即可应用主题。",
     "flintDefault": "Flint 默认",
     "switchAria": "主题",
     "cases": {
