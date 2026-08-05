@@ -24,12 +24,12 @@ import { cartoon } from './presets/cartoon';
 export const THEME_PRESETS: Record<string, ThemePreset> = {
     nyt,
     economist,
+    swiss,
     nature,
     mckinsey,
     datawrapper,
     powerbi,
     'powerbi-light': powerbiLight,
-    swiss,
     cartoon,
 };
 
