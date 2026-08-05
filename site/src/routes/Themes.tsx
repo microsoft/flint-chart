@@ -278,7 +278,7 @@ export function Themes() {
             charts are still legible; at 1180 the tiles come out 159px and the
             marks stop being readable. Prose stays capped at 720. */}
         <div style={{ maxWidth: 1500, margin: '0 auto', padding: '36px 40px 96px' }}>
-          <header style={{ marginBottom: 4 }}>
+          <header style={{ maxWidth: 1180, margin: '0 auto 4px' }}>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>{t('themes.title')}</h1>
             <p style={{ margin: '10px 0 0', maxWidth: 900, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.concept')}
