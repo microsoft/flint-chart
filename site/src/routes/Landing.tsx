@@ -548,8 +548,6 @@ function HeroShowcase() {
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
-  const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
-  const exampleCaption = t(`landing.examples.${example.exampleKey}.caption`);
   // What the chart says, in words. Every example carries one: a chart of bare
   // numbers names nothing on its own, and several houses drop axis titles on
   // the understanding that this line is carrying the subject.
@@ -737,11 +735,6 @@ function HeroShowcase() {
           <ChevronIcon dir="right" />
         </button>
       </div>
-      <p style={showcaseCaptionStyle}>
-        <strong style={{ color: siteTheme.text, fontWeight: 600 }}>{exampleLabel}.</strong>{' '}
-        {exampleCaption}
-      </p>
-
       {/* Example pager dots */}
       <div style={{ ...dotsRowStyle, marginTop: 16 }} role="tablist" aria-label={t('landing.exampleAria')}>
         {SHOWCASE_EXAMPLES.map((ex, i) => {
@@ -1959,15 +1952,6 @@ function dotStyle(active: boolean): CSSProperties {
     transition: 'width 0.15s ease, background 0.15s ease',
   };
 }
-
-const showcaseCaptionStyle: CSSProperties = {
-  maxWidth: 760,
-  margin: '16px auto 0',
-  textAlign: 'center',
-  color: siteTheme.text,
-  fontSize: 14.5,
-  lineHeight: 1.55,
-};
 
 const specPreStyle: CSSProperties = {
   margin: 0,

@@ -58,6 +58,8 @@ const IDS = [
 
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 
+/** HTML caption metrics: blurb row 2 + 10.5×1.35×2. */
+const BLURB_H = 30;
 const CHART_H = 190;
 
 type ThemeChoice = { id: string | undefined; label: string; icon: string; description: string };
@@ -65,6 +67,8 @@ type ThemeChoice = { id: string | undefined; label: string; icon: string; descri
 const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
 /**
+ * The headline goes through the theme; the description stays in HTML.
+ *
  * `chart_spec.title` is not decoration to the compiler. A house whose
  * `axisTitles` policy is `omit` is leaning on the headline to name the
  * measure, and a chart authored without one gets its axis titles put back
@@ -73,6 +77,13 @@ const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`
  * titles under nyt, economist, datawrapper, mckinsey and powerbi — so a wall
  * with the titles in HTML would be showing six of the nine houses in a mode
  * they were not designed for.
+ *
+ * The deck is the loose part, and it stays out. Measured, a headline alone
+ * costs +30px of chart height; a headline with its deck costs +47px, because
+ * the deck is a full sentence that wraps inside the canvas and then takes the
+ * house's title-block gap on top. Splitting them buys the same axis-title
+ * delegation (37 titles dropped either way, across all five `omit` houses) for
+ * 17px less chart height, and still leaves a description under every tile.
  */
 function buildInput(c: PreviewCase, title: string, themeId: string | undefined) {
   return {
@@ -98,8 +109,10 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
   // and two-line titles are the thing that makes a wall look untidy: the
   // captions stop being a quiet baseline under the charts and start competing
   // with them, which is backwards on a page whose whole subject is what the
-  // charts look like. So each tile gets a short, self-contained title.
+  // charts look like. So each tile gets a short title, and the units and dates
+  // move down into the blurb, which had room.
   const title = t(`themes.cases.${c.id}.title`, c.title);
+  const blurb = t(`themes.cases.${c.id}.blurb`, c.blurb);
 
   const compiled = useMemo(() => {
     try {
@@ -111,7 +124,7 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
 
   return (
     <article
-      title={`${c.title}\n${c.source} · ${c.license} · ${c.data.length} rows`}
+      title={`${c.title}\n${c.blurb}\n${c.source} · ${c.license} · ${c.data.length} rows`}
       style={{ padding: 8, borderRadius: 10, minWidth: 0, transition: 'background 120ms ease' }}
       onMouseEnter={(e) => (e.currentTarget.style.background = siteTheme.hover)}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -125,6 +138,24 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
           </pre>
         )}
       </ScaleToFit>
+      {/* Measured to fit in at most two lines, and reserving its height so the
+          tiles stay on a common baseline. The clamp is a backstop for a font
+          fallback or a very narrow column, not the expected case. */}
+      <div
+        style={{
+          marginTop: 2,
+          fontSize: 10.5,
+          lineHeight: 1.35,
+          color: siteTheme.navInactive,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          minHeight: `${BLURB_H - 2}px`,
+        }}
+      >
+        {blurb}
+      </div>
     </article>
   );
 }
