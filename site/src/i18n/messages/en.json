@@ -375,7 +375,7 @@
       "themes": {
         "title": "Render with different themes",
         "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
-        "example": "The same grouped-bar spec becomes an Economist print graphic or a Swiss typographic composition. The data and encodings stay fixed while the compiler changes spacing, structure, labels, marks, type, and color."
+        "example": "When changing the visual theme from Economist to Swiss, the data and encodings remain fixed while spacing, structure, labels, marks, typography, and color adapt to reflect each theme’s visual language."
       }
     },
     "examples": {
