@@ -309,6 +309,11 @@
     "ctaDocs": "阅读文档",
     "news": {
       "title": "更新",
+      "release050": {
+        "date": "2026 年 8 月 5 日",
+        "dateTime": "2026-08-05",
+        "text": "Flint 0.5.0 引入正式的视觉主题系统，包含九种预设、自定义 ThemeSpec 与预设继承。"
+      },
       "release040": {
         "date": "2026 年 7 月 24 日",
         "dateTime": "2026-07-24",

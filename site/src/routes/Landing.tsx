@@ -201,9 +201,9 @@ export function Landing() {
           <h2 style={newsHeadingStyle}>{t('landing.news.title')}</h2>
           <div style={newsListStyle}>
             {([
+              { key: 'release050', href: `${GITHUB_REPO}/releases/tag/0.5.0`, linkLabel: 'v0.5.0' },
               { key: 'release040', href: `${GITHUB_REPO}/releases/tag/0.4.0`, linkLabel: 'v0.4.0' },
               { key: 'dynamicWidgets', href: `${GITHUB_REPO}/releases/tag/0.3.0`, linkLabel: 'v0.3.0' },
-              { key: 'release022', href: null, linkLabel: null },
             ] as const).map((update) => (
               <article className="landing-news-item" style={newsItemStyle} key={update.key}>
                 <time style={newsDateStyle} dateTime={t(`landing.news.${update.key}.dateTime`)}>
