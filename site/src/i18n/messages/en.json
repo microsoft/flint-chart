@@ -131,22 +131,22 @@
   "themes": {
     "title": "Explore themes",
     "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
-    "concept": "Flint themes are formal specifications for how charts behave. They do more than set colors and fonts.",
+    "concept": "A Flint theme is a formal specification for how a chart system behaves, not a cosmetic skin. It works at three levels.",
     "principles": {
       "layout": {
-        "title": "Layout behavior",
-        "body": "Sets spacing and density. Decides how elements relate and when labels, legends, axes, and annotations move or appear."
+        "title": "Layout algorithm",
+        "body": "Changes how the compiler allocates space and relates elements. It controls density and breathing room, and decides when labels, legends, axes, and annotations move, appear, or give way."
       },
       "semantics": {
-        "title": "Semantic relationships",
-        "body": "Uses field roles, order, groups, and hierarchy to choose contrast, emphasis, series identity, and representation."
+        "title": "Semantic roles",
+        "body": "Sets presentation rules by meaning. Field roles, order, groups, and hierarchy drive contrast, emphasis, series identity, and representation."
       },
       "identity": {
-        "title": "Visual identity",
-        "body": "Sets type, color, surfaces, line weight, and marks so every chart carries the same brand."
+        "title": "Geometry and typography",
+        "body": "Defines type, color, surfaces, line weight, corners, and mark shapes. Together, these choices give every chart a consistent brand."
       }
     },
-    "generalization": "These rules work across chart types, data, and sizes. Add a chart or change the data, and the compiler applies the same layout logic and visual identity.",
+    "generalization": "Because these rules are global, they work across chart types, data shapes, and canvas sizes. Add a chart or change the data, and the compiler carries the same behavior and identity forward.",
     "usageBefore": "Apply a theme by adding",
     "usageAfter": "to your chart request.",
     "flintDefault": "Flint default",
