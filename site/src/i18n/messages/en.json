@@ -302,7 +302,7 @@
     "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
     "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
     "themeLead": "Flint employs a formal theme specification so designers can define a visual identity once and apply it consistently across an entire chart library.",
-    "ctaThemes": "Explore Themes",
+    "ctaThemes": "Visual Themes",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
