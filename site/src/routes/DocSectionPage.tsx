@@ -114,7 +114,7 @@ export function DocSectionPage({ section }: { section: DocSection }) {
                       icon={doc.icon}
                       dataAttr={{ 'data-doc-nav': doc.slug }}
                     >
-                      {t(`docs.entries.${doc.slug}.title`)}
+                      {t(`docs.entries.${doc.slug}.title`, { defaultValue: doc.title })}
                     </SidebarNavItem>
                   );
                 })}
@@ -186,7 +186,7 @@ function MobileDocPicker({
           <optgroup key={group.id} label={t(`docs.groups.${group.id}`)}>
             {group.docs.map((doc) => (
               <option key={doc.slug} value={doc.slug}>
-                {t(`docs.entries.${doc.slug}.title`)}
+                {t(`docs.entries.${doc.slug}.title`, { defaultValue: doc.title })}
               </option>
             ))}
           </optgroup>

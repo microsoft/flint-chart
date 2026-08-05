@@ -90,9 +90,21 @@
         "title": "Chart.js 图表",
         "description": "全部 Chart.js 图表类型、通道与可配置参数。"
       },
+      "reference-plotly": {
+        "title": "Plotly 图表",
+        "description": "全部 Plotly 图表类型、通道与可配置参数。"
+      },
+      "reference-excel": {
+        "title": "Excel 图表",
+        "description": "全部原生 Excel 图表类型、通道与 Office.js 映射。"
+      },
       "development": {
         "title": "开发指南",
         "description": "Monorepo 搭建、日常命令与测试策略。"
+      },
+      "test-plan": {
+        "title": "图表引擎测试计划",
+        "description": "共享视觉案例、覆盖矩阵与后端接入流程。"
       },
       "adding-a-semantic-type": {
         "title": "扩展语义类型",

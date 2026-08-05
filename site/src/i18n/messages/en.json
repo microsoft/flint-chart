@@ -90,9 +90,21 @@
         "title": "Chart.js charts",
         "description": "Every Chart.js chart type, its channels, and configurable parameters."
       },
+      "reference-plotly": {
+        "title": "Plotly charts",
+        "description": "Every Plotly chart type, its channels, and configurable parameters."
+      },
+      "reference-excel": {
+        "title": "Excel charts",
+        "description": "Every native Excel chart type, its channels, and Office.js mapping."
+      },
       "development": {
         "title": "Development guide",
         "description": "Monorepo setup, daily commands, and test strategy."
+      },
+      "test-plan": {
+        "title": "Chart engine test plan",
+        "description": "Shared visual cases, coverage matrices, and backend bring-up workflow."
       },
       "adding-a-semantic-type": {
         "title": "Extending semantic types",
