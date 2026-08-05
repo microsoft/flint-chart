@@ -131,35 +131,35 @@
   "themes": {
     "title": "Explore themes",
     "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
-    "concept": "A Flint theme is a formal specification for how a chart system behaves—not a cosmetic skin applied after rendering.",
+    "concept": "Flint themes are formal specifications for how charts behave. They do more than set colors and fonts.",
     "principles": {
       "layout": {
         "title": "Layout behavior",
-        "body": "Controls density and breathing room, how elements relate, and when labels, legends, axes, or annotations move, appear, or give way."
+        "body": "Sets spacing and density. Decides how elements relate and when labels, legends, axes, and annotations move or appear."
       },
       "semantics": {
         "title": "Semantic relationships",
-        "body": "Uses field roles, ordering, grouping, and hierarchy to choose contrast, emphasis, series identity, and the right representation for each element."
+        "body": "Uses field roles, order, groups, and hierarchy to choose contrast, emphasis, series identity, and representation."
       },
       "identity": {
         "title": "Visual identity",
-        "body": "Defines typography, color, surfaces, line weight, and mark treatment to give every chart a consistent, recognizable voice."
+        "body": "Sets type, color, surfaces, line weight, and marks so every chart carries the same brand."
       }
     },
-    "generalization": "Because these rules are semantic and global, they generalize across chart types, data shapes, and canvas sizes. Add a chart or change the data, and the compiler carries the same layout logic and visual identity forward.",
+    "generalization": "These rules work across chart types, data, and sizes. Add a chart or change the data, and the compiler applies the same layout logic and visual identity.",
     "usageBefore": "Apply a theme by adding",
     "usageAfter": "to your chart request.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "descriptions": {
       "default": "Balanced, neutral defaults designed to work across chart types.",
-      "nyt": "Newsroom graphics with finding-led headlines, values on marks, and series labels at their endpoints.",
+      "nyt": "Newsroom graphics with headlines that state the finding, values on marks, and labels at the end of each series.",
       "economist": "Compact print graphics with flat headlines, explanatory decks, and units repeated along the axis.",
       "nature": "Journal figures with compact panels, explicit units, and statistics placed beside fitted lines.",
       "mckinsey": "Presentation-ready charts with broad bands, prominent values, and takeaway-led headlines.",
       "datawrapper": "Clean web graphics with narrow layouts, plain typography, and restrained rules.",
-      "powerbi": "Dark dashboard tiles with compact layouts, right-side legends, and emphasis on the latest value.",
-      "powerbi-light": "Light dashboard tiles with a white canvas, fine gridlines, and right-side legends.",
+      "powerbi": "Dark dashboard tiles with compact layouts, legends on the right, and emphasis on the latest value.",
+      "powerbi-light": "Light dashboard tiles with a white canvas, fine gridlines, and legends on the right.",
       "swiss": "International Typographic Style with a visible grid, strong black structure, and a single red accent.",
       "cartoon": "Playful charts with warm paper, rounded type, bold outlines, bright colors, and a soft dashed grid."
     },
