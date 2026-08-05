@@ -106,7 +106,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .union([z.string(), z.record(z.string(), z.any())])
       .optional()
       .describe(
-        'Visual theme: the name of a preset Flint ships (see list_themes, e.g. "economist"), a custom ThemeSpec, or an object that extends a preset and overrides selected fields. Vega-Lite only.',
+        'Visual theme for Vega-Lite. Prefer a preset id from list_themes (e.g. "economist"). To customize it, pass an object with `extends` plus a small set of overrides. Full guide: https://microsoft.github.io/flint-chart/#/documentation/theme-spec',
       ),
     options: z
       .record(z.string(), z.any())

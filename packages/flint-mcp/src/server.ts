@@ -141,7 +141,9 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'when the host has no App UI support or the user explicitly wants a ' +
         'static image. Use compile_chart for the backend spec JSON, ' +
         'validate_chart to check a spec, and list_chart_types to discover chart ' +
-        'types and their channels. Before authoring specs, read the ' +
+        'types and their channels. Use list_themes to discover visual themes; ' +
+        'prefer a preset id, and use an `extends` override only when the user ' +
+        'asks to customize it. Before authoring specs, read the ' +
         'flint://agent-skill resource or use the author_flint_chart prompt.' +
         dataAccessNote(options),
     },
@@ -277,9 +279,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'List themes',
       description:
-        'List the design languages Flint ships, to be named in `theme_spec` ' +
-        '(e.g. theme_spec: "economist"). Pass an `id` to get that house\'s ' +
-        'authoring guidance — what the spec must supply for it to work.',
+        'List Flint visual theme presets for `theme_spec` (for example, ' +
+        '`theme_spec: "economist"`). Pass an `id` for preset-specific authoring ' +
+        'guidance. To customize a preset, use an object with `extends` and a ' +
+        'small set of overrides.',
       inputSchema: {
         id: z.string().optional(),
       },

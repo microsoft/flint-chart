@@ -95,7 +95,7 @@ interface ChartAssemblyInput {
   };
   options?: Record<string, any>;              // global layout options (rarely needed)
   field_display_names?: Record<string, string>; // field → readable axis/legend title
-  theme_spec?: string | ThemeSpec;            // design language, e.g. "economist" (Vega-Lite only)
+  theme_spec?: string | { extends: string; [key: string]: any }; // preset or preset override (Vega-Lite only)
 }
 ```
 
@@ -186,9 +186,14 @@ the headline is where they get named. Leave it out only where the chart is not
 read on its own — a sparkline in a cell, a tile under its own caption. Nothing
 breaks: with no headline to lean on, the compiler keeps the axis titles instead.
 
-## Design languages (`theme_spec`)
+## Visual themes (`theme_spec`)
 
-Name a house Flint ships and the compiler styles the chart to it:
+Use one of two forms. Prefer a preset unless the user asks for a specific
+brand adjustment.
+
+### 1. Use a preset
+
+Call `list_themes` to choose an id, then place it beside `chart_spec`:
 
 ```json
 { "chart_spec": { ... }, "theme_spec": "economist" }
@@ -206,13 +211,36 @@ Name a house Flint ships and the compiler styles the chart to it:
 | `powerbi-light` | Light dashboard tile: white canvas, fine gridlines, and bright categorical color. |
 | `cartoon` | Playful illustration: warm paper, rounded type, bold outlines, and bright color. |
 
-A house governs the visual only — you still choose the fields, the aggregation
-and the sort. Where a house depends on something only you can supply, it says
-so: call `list_themes` with an `id` for that house's guidance, and read it
-*before* writing the chart spec, since it may change how you prepare the data.
-Vega-Lite only for now. You can also pass a custom `ThemeSpec`, or use
-`{ "extends": "economist", ... }` to inherit a preset and override selected
-fields.
+### 2. Override a preset
+
+Keep overrides narrow and state only what the user wants to change:
+
+```json
+{
+  "theme_spec": {
+    "extends": "economist",
+    "id": "our-brand",
+    "ink": {
+      "series": {
+        "single": "#6b3fa0"
+      }
+    }
+  }
+}
+```
+
+Common simple overrides are `ink.surface.canvas`, `ink.series.single`,
+`ink.series.categorical`, `type.headline.family`, and `layout.density`
+(`"compact"`, `"normal"`, or `"airy"`). If replacing
+`ink.series.categorical`, also replace `categoricalExtended` so charts with
+many series keep the requested brand palette.
+
+Do not copy an entire preset or invent theme keys. A theme controls
+presentation; fields, aggregation, filtering, and sorting still belong in the
+chart input. ThemeSpec currently affects Vega-Lite only.
+
+Full reference:
+https://microsoft.github.io/flint-chart/#/documentation/theme-spec
 
 ## Step 1 — pick `chartType`
 

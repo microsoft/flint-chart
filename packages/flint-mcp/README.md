@@ -28,6 +28,31 @@ renders **locally**.
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
 | `create_chart_view` | spec | interactive chart **UI** (MCP App): live SVG preview + customization panel |
 
+## Visual themes
+
+For Vega-Lite charts, agents should use a preset id from `list_themes`:
+
+```json
+{ "theme_spec": "economist" }
+```
+
+When the user requests a brand adjustment, extend a preset and keep the
+override small:
+
+```json
+{
+  "theme_spec": {
+    "extends": "economist",
+    "id": "our-brand",
+    "ink": { "series": { "single": "#6b3fa0" } }
+  }
+}
+```
+
+See the full
+[ThemeSpec guide](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
+for supported fields and merge behavior.
+
 ## MCP App: interactive chart view
 
 In hosts that support MCP App UIs (e.g. Claude Desktop), `create_chart_view`
