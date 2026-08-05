@@ -163,22 +163,22 @@
   },
   "themes": {
     "title": "Explore themes",
-    "concept": "A Flint theme is a formal specification that shapes a chart throughout its creation. It influences the compiler at three levels.",
+    "concept": "A Flint theme formally defines a coherent visual identity for an entire chart library.",
     "principles": {
       "layout": {
-        "title": "Layout algorithm",
-        "body": "Changes how the compiler allocates space and relates elements. It controls density and breathing room, and decides when labels, legends, axes, and annotations move, appear, or give way."
+        "title": "Layout",
+        "body": "Controls spacing, density, and the placement of axes, legends, labels, and annotations."
       },
       "semantics": {
-        "title": "Semantic roles",
-        "body": "Sets presentation rules by meaning. Field roles, order, groups, and hierarchy drive contrast, emphasis, series identity, and representation."
+        "title": "Semantic presentation",
+        "body": "Uses field roles, order, groups, and hierarchy to determine contrast, emphasis, and series identity."
       },
       "identity": {
-        "title": "Geometry and typography",
-        "body": "Defines type, color, surfaces, line weight, corners, and mark shapes. Together, these choices give every chart a consistent brand."
+        "title": "Visual system",
+        "body": "Defines typography, color, surfaces, line weight, corners, and mark shapes as one recognizable system."
       }
     },
-    "generalization": "Because these rules are global, they work across chart types, data shapes, and canvas sizes. Add a chart or change the data, and the compiler carries the same behavior and identity forward.",
+    "generalization": "The compiler applies the theme’s layout behavior, semantic presentation, and visual identity across chart types, data shapes, and canvas sizes.",
     "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",

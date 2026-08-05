@@ -278,49 +278,66 @@ export function Themes() {
             charts are still legible; at 1180 the tiles come out 159px and the
             marks stop being readable. Prose stays capped at 720. */}
         <div style={{ maxWidth: 1500, margin: '0 auto', padding: '36px 40px 96px' }}>
-          <header style={{ maxWidth: 1180, margin: '0 auto 4px' }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>{t('themes.title')}</h1>
-            <p style={{ margin: '10px 0 0', maxWidth: 900, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.concept')}
-            </p>
+          <header
+            className="themes-intro"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(280px, 0.8fr) minmax(0, 1.45fr)',
+              columnGap: 72,
+              rowGap: 16,
+              maxWidth: 1180,
+              margin: '0 auto 20px',
+              alignItems: 'start',
+            }}
+          >
+            <h1 style={{ gridColumn: '1 / -1', margin: 0, fontSize: 32, lineHeight: 1.2, fontWeight: 600 }}>
+              {t('themes.title')}
+            </h1>
+            <div>
+              <p style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: siteTheme.text }}>
+                {t('themes.concept')}
+              </p>
+              <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.65, color: siteTheme.textMuted }}>
+                {t('themes.generalization')}
+              </p>
+              <p style={{ margin: '9px 0 0', fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+                <Trans
+                  i18nKey="themes.docsPointer"
+                  components={{
+                    docs: <LocaleLink className="site-text-link" to="/documentation/theme-spec" />,
+                  }}
+                />
+              </p>
+            </div>
             <div
               className="themes-principles"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: 20,
-                maxWidth: 1080,
-                marginTop: 16,
+                gridTemplateColumns: 'minmax(0, 1fr)',
+                borderTop: `1px solid ${siteTheme.border}`,
               }}
             >
               {(['layout', 'semantics', 'identity'] as const).map((principle) => (
                 <div
+                  className="themes-principle"
                   key={principle}
                   style={{
-                    paddingLeft: 15,
-                    borderLeft: `2px solid ${siteTheme.border}`,
+                    display: 'grid',
+                    gridTemplateColumns: '150px minmax(0, 1fr)',
+                    gap: 22,
+                    padding: '15px 0',
+                    borderBottom: `1px solid ${siteTheme.border}`,
                   }}
                 >
-                  <strong style={{ display: 'block', marginBottom: 3, fontSize: 13.5, color: siteTheme.text }}>
+                  <strong style={{ fontSize: 13.5, lineHeight: 1.5, color: siteTheme.text }}>
                     {t(`themes.principles.${principle}.title`)}
                   </strong>
-                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: siteTheme.textMuted }}>
+                  <span style={{ fontSize: 13, lineHeight: 1.55, color: siteTheme.textMuted }}>
                     {t(`themes.principles.${principle}.body`)}
                   </span>
                 </div>
               ))}
             </div>
-            <p style={{ margin: '14px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.generalization')}
-            </p>
-            <p style={{ margin: '8px 0 0', fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              <Trans
-                i18nKey="themes.docsPointer"
-                components={{
-                  docs: <LocaleLink className="site-text-link" to="/documentation/theme-spec" />,
-                }}
-              />
-            </p>
           </header>
 
           {/* Sticky, because the whole page is a before-and-after: the reader
@@ -336,11 +353,13 @@ export function Themes() {
               background: siteTheme.surface,
             }}
           >
-            <ThemeBar themeId={themeId} onTheme={setThemeId} choices={choices} />
-            <p style={{ margin: '10px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.55, color: siteTheme.text }}>
-              <strong>{selectedTheme.label}.</strong>{' '}
-              <span style={{ color: siteTheme.textMuted }}>{selectedTheme.description}</span>
-            </p>
+            <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+              <ThemeBar themeId={themeId} onTheme={setThemeId} choices={choices} />
+              <p style={{ margin: '10px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.55, color: siteTheme.text }}>
+                <strong>{selectedTheme.label}.</strong>{' '}
+                <span style={{ color: siteTheme.textMuted }}>{selectedTheme.description}</span>
+              </p>
+            </div>
           </div>
 
           <div
@@ -374,7 +393,12 @@ export function Themes() {
  * gaps.
  */
 const wallStyles = `
-  @media (max-width: 760px)  { .themes-principles { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; } }
+  @media (max-width: 840px)  {
+    .themes-intro { grid-template-columns: minmax(0, 1fr) !important; gap: 26px !important; }
+  }
+  @media (max-width: 520px)  {
+    .themes-principle { grid-template-columns: minmax(0, 1fr) !important; gap: 4px !important; }
+  }
   @media (max-width: 1330px) { .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
   @media (max-width: 910px)  { .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
   @media (max-width: 700px)  { .themes-wall { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
