@@ -273,6 +273,9 @@ export function Themes() {
             <p style={{ margin: '10px 0 0', maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.lead')}
             </p>
+            <p style={{ margin: '8px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+              {t('themes.concept')}
+            </p>
           </header>
 
           {/* Sticky, because the whole page is a before-and-after: the reader

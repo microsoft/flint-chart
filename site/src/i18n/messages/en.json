@@ -131,6 +131,7 @@
   "themes": {
     "title": "Explore themes",
     "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
+    "concept": "Flint describes each theme with a formal specification—not a cosmetic skin. It guides compiler decisions such as label and legend placement, axis treatment, mark styling, and layout, then defines the visual language through color, typography, lines, and surfaces. The chart’s data and meaning remain unchanged.",
     "usageBefore": "Apply a theme by adding",
     "usageAfter": "to your chart request.",
     "flintDefault": "Flint default",
