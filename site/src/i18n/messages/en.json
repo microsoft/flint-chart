@@ -27,6 +27,19 @@
     "mobileLabel": "Documentation",
     "mobileAria": "Choose documentation page",
     "fallbackNote": "Chinese translation is not available yet; showing the English version.",
+    "themeSpecPanel": {
+      "aria": "ThemeSpec examples",
+      "modeAria": "ThemeSpec form",
+      "preset": "Preset",
+      "base": "Base theme",
+      "modes": {
+        "preset": "Preset",
+        "custom": "Custom",
+        "inherit": "Inherit"
+      },
+      "customDescription": "A complete design system written directly in theme_spec. Every block is optional.",
+      "inheritDescription": "Start with {{name}}, then override only the decisions your brand changes."
+    },
     "groups": {
       "quick-start": "Quick start",
       "introduction": "Language design",
@@ -73,6 +86,10 @@
       "layout-model": {
         "title": "Auto Layout Algorithm",
         "description": "Spring, gas-pressure, radial, and area sizing models."
+      },
+      "theme-spec": {
+        "title": "ThemeSpec",
+        "description": "Use a preset, define a design system, or inherit and override a shipped theme."
       },
       "api-reference": {
         "title": "API reference",

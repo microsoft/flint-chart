@@ -20,6 +20,7 @@ import { powerbi } from './presets/powerbi';
 import { powerbiLight } from './presets/powerbi-light';
 import { swiss } from './presets/swiss';
 import { cartoon } from './presets/cartoon';
+import { deepMerge } from './merge.js';
 
 export const THEME_PRESETS: Record<string, ThemePreset> = {
     nyt,
@@ -53,18 +54,28 @@ export function listThemePresets(): Array<Pick<ThemePreset, 'id' | 'label' | 'de
 /**
  * Take what the caller put in `theme_spec` and hand back a ThemeSpec.
  *
- * A string names a house Flint ships; an object is the caller's own. An
- * unknown name is an error rather than a silent fallback to no theme: a chart
- * that quietly ignores the house it was asked for looks like a bug in the
- * house.
+ * A string names a house Flint ships; an object is the caller's own. An object
+ * may also `extend` one of those houses and state only its overrides. Nested
+ * policy objects merge, while arrays and scalar values replace the preset.
+ *
+ * An unknown name is an error rather than a silent fallback to no theme: a
+ * chart that quietly ignores the house it was asked for looks like a bug in
+ * the house.
  */
 export function resolveThemeSpec(theme: ThemeSpec | string | undefined): ThemeSpec | undefined {
     if (theme === undefined) return undefined;
-    if (typeof theme !== 'string') return theme;
-    const preset = THEME_PRESETS[theme];
+    if (typeof theme === 'string') return presetSpec(theme);
+    if (theme.extends === undefined) return theme;
+
+    const { extends: presetId, ...overrides } = theme;
+    return deepMerge(presetSpec(presetId), overrides);
+}
+
+function presetSpec(id: string): ThemeSpec {
+    const preset = THEME_PRESETS[id];
     if (!preset) {
         throw new Error(
-            `Unknown theme \`${theme}\`. Flint ships: ${Object.keys(THEME_PRESETS).join(', ')}.`,
+            `Unknown theme \`${id}\`. Flint ships: ${Object.keys(THEME_PRESETS).join(', ')}.`,
         );
     }
     return preset.spec;

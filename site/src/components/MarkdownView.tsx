@@ -9,6 +9,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { CodeBlock, PlainTextBlock, resolveCodeLanguage } from './CodeBlock';
 import { SizingPlayground } from './SizingPlayground';
 import { DocChart } from './DocChart';
+import { ThemeSpecPanel } from './ThemeSpecPanel';
 import { useLocale } from '../i18n/LocaleContext';
 import { resolveMarkdownHref, resolveMarkdownImageSrc } from '../shared/load-docs';
 import { DOC_SCROLL_TO_KEY, scrollToHeading } from '../shared/scroll-to-heading';
@@ -158,6 +159,13 @@ export function MarkdownView({
           : null;
         const json = backend ? text.slice(newlineAt + 1) : text;
         return <DocChart source={json} backend={backend ?? 'vegalite'} />;
+      }
+
+      // Interactive ThemeSpec forms: preset id, custom object, and inherited
+      // preset with overrides. The fence content is intentionally empty; the
+      // panel owns complete, valid examples and keeps its selector in sync.
+      if (className?.includes('language-flint-theme-spec')) {
+        return <ThemeSpecPanel />;
       }
 
       const language = resolveCodeLanguage(className);

@@ -27,6 +27,19 @@
     "mobileLabel": "文档",
     "mobileAria": "选择文档页面",
     "fallbackNote": "暂无中文译本，正在显示英文原文。",
+    "themeSpecPanel": {
+      "aria": "ThemeSpec 示例",
+      "modeAria": "ThemeSpec 形式",
+      "preset": "预设",
+      "base": "基础主题",
+      "modes": {
+        "preset": "预设",
+        "custom": "自定义",
+        "inherit": "继承"
+      },
+      "customDescription": "直接在 theme_spec 中编写完整的设计系统。所有区块都是可选的。",
+      "inheritDescription": "从 {{name}} 开始，只覆盖你的品牌需要改变的决策。"
+    },
     "groups": {
       "quick-start": "快速开始",
       "introduction": "语言设计",
@@ -73,6 +86,10 @@
       "layout-model": {
         "title": "自动布局算法",
         "description": "弹簧、气压、径向与面积等尺寸模型。"
+      },
+      "theme-spec": {
+        "title": "ThemeSpec",
+        "description": "使用预设、定义设计系统，或继承并覆盖内置主题。"
       },
       "api-reference": {
         "title": "API 参考",

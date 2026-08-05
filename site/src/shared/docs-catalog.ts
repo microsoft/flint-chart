@@ -96,6 +96,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/design-stretch-model.md',
       },
       {
+        slug: 'theme-spec',
+        title: 'ThemeSpec',
+        description: 'Use a preset, define a design system, or inherit and override a shipped theme.',
+        file: '../../../docs/theme-spec.md',
+      },
+      {
         slug: 'api-reference',
         title: 'API reference',
         description: 'ChartAssemblyInput, assemblers, encodings, options, and exports.',

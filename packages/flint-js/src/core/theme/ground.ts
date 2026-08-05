@@ -42,6 +42,7 @@ import {
 import { CURRENCY_MAP } from '../field-semantics.js';
 import { getRegistryEntry } from '../type-registry.js';
 import { inferValueLabelFormat, longestLabelChars } from './value-label-format.js';
+import { deepMerge } from './merge.js';
 
 // ---------------------------------------------------------------------------
 // Input
@@ -256,20 +257,6 @@ function tokenToPx(size: SizeToken | undefined): number | undefined {
 // ---------------------------------------------------------------------------
 // Variant resolution
 // ---------------------------------------------------------------------------
-
-function isPlainObject(v: any): boolean {
-    return v != null && typeof v === 'object' && !Array.isArray(v);
-}
-
-function deepMerge<T>(base: T, patch: any): T {
-    if (!isPlainObject(patch)) return (patch === undefined ? base : patch) as T;
-    const out: any = isPlainObject(base) ? { ...(base as any) } : {};
-    for (const k of Object.keys(patch)) {
-        const pv = (patch as any)[k];
-        out[k] = isPlainObject(pv) ? deepMerge(out[k], pv) : pv;
-    }
-    return out as T;
-}
 
 function numericGuardHolds(g: NumericGuard, value: number): boolean {
     if (g.eq != null && value !== g.eq) return false;

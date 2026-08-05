@@ -1114,11 +1114,12 @@ export interface ChartAssemblyInput {
      * Theme — describes *how it should look*.
      *
      * Either the name of a house Flint ships (`'economist'`, `'nature'`, …see
-     * `listThemePresets()`) or a `ThemeSpec` of your own: a portable design
-     * language (ink, type, structure, marks, chrome policy), stated without
-     * ever naming a chart type, a channel, a mark type, a field, or a backend
-     * property. The compiler grounds it against this chart and then realizes
-     * it in the target backend.
+     * `listThemePresets()`), a `ThemeSpec` of your own, or a `ThemeSpec` that
+     * `extends` a shipped house and overrides selected fields. A ThemeSpec is a
+     * portable design language (ink, type, structure, marks, chrome policy),
+     * stated without ever naming a channel, field, or backend property. The
+     * compiler grounds it against this chart and then realizes it in the
+     * target backend.
      *
      * Sits beside `chart_spec` rather than inside it because the same theme
      * applies to every chart and the same chart accepts any theme — nesting it

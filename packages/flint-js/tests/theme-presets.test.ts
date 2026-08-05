@@ -77,6 +77,51 @@ describe('naming a house Flint ships', () => {
         }
     });
 
+    it('deep-merges overrides into a named house without changing the preset', () => {
+        const original = THEME_PRESETS.economist.spec;
+        const inherited = resolveThemeSpec({
+            extends: 'economist',
+            id: 'our-economist',
+            ink: {
+                series: { single: '#6b3fa0' },
+            },
+            structure: {
+                grid: { measure: 'omit' },
+            },
+        });
+
+        expect(inherited).not.toBe(original);
+        expect(inherited?.id).toBe('our-economist');
+        expect(inherited?.ink?.series?.single).toBe('#6b3fa0');
+        expect(inherited?.ink?.surface).toEqual(original.ink?.surface);
+        expect(inherited?.structure?.grid?.measure).toBe('omit');
+        expect(inherited?.structure?.grid?.category).toBe(original.structure?.grid?.category);
+        expect(original.ink?.series?.single).not.toBe('#6b3fa0');
+    });
+
+    it('replaces arrays rather than inventing a merged palette', () => {
+        const categorical = ['#111111', '#eeeeee'];
+        const inherited = resolveThemeSpec({
+            extends: 'nyt',
+            ink: { series: { categorical } },
+        });
+        expect(inherited?.ink?.series?.categorical).toEqual(categorical);
+    });
+
+    it('rejects an unknown inherited house', () => {
+        expect(() => resolveThemeSpec({ extends: 'the-guardian' })).toThrow(/Unknown theme/);
+    });
+
+    it('assembles an inherited house through the public input', () => {
+        const spec = build({
+            extends: 'economist',
+            id: 'our-economist',
+            ink: { series: { single: '#6b3fa0' } },
+        });
+        expect(spec._theme?.id).toBe('our-economist');
+        expect(spec._theme?.decisions?.series?.single).toBe('#6b3fa0');
+    });
+
     /**
      * The guidance names a number of colours, and a number in prose drifts the
      * moment the palette beside it changes. It is the same number, so it has to

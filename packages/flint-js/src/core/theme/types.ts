@@ -432,7 +432,7 @@ export interface NumericGuard {
 export interface ThemeVariant {
     when: ThemeGuard;
     /** Policy blocks only — `ink` and `type` may not vary. */
-    then: Partial<Omit<ThemeSpec, 'id' | 'label' | 'ink' | 'type' | 'variants'>>;
+    then: Partial<Omit<ThemeSpec, 'extends' | 'id' | 'label' | 'ink' | 'type' | 'variants'>>;
     /** Required: a variant without a stated reason is an inconsistency. */
     because?: string;
 }
@@ -481,6 +481,12 @@ export interface ThemeCompileDefaults extends Partial<AssembleOptions> {
  * second, parallel set of rules for the untheme'd case.
  */
 export interface ThemeSpec {
+    /**
+     * Start from a theme Flint ships, then override only the fields this
+     * specification states. Nested objects merge; arrays and scalar values
+     * replace the preset value.
+     */
+    extends?: string;
     id?: string;
     label?: string;
     ink?: ThemeInk;
