@@ -1,8 +1,14 @@
 # agent-skills/
 
-Agent skill for **flint-chart** — teaches LLMs and IDE agents how to produce
-correct, idiomatic `ChartAssemblyInput` JSON, then use it in the right
-workflow: MCP rendering, project integration, or backend compilation.
+Agent skills for **flint-chart** teach LLMs and IDE agents how to author
+portable chart and theme specifications.
+
+- [flint-chart-author/SKILL.md](flint-chart-author/SKILL.md) covers
+    `ChartAssemblyInput`, MCP rendering, project integration, and backend
+    compilation.
+- [flint-theme-author/SKILL.md](flint-theme-author/SKILL.md) translates brand
+    guidelines, websites, slide decks, and publication references into reusable
+    custom `ThemeSpec` JSON.
 
 ## How agents should use flint-chart
 
@@ -24,5 +30,5 @@ When the user wants more than a spec, the skill also tells the agent how to:
 - call `assembleVegaLite`, `assembleECharts`, or `assembleChartjs` in JS/TS;
 - use the Python package when it is published in a later release.
 
-See [flint-chart-author/SKILL.md](flint-chart-author/SKILL.md) for the full
-contract, worked examples, and the validation checklist.
+See the relevant skill for its full output contract, references, worked
+examples, and validation checklist.

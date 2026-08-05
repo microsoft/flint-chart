@@ -58,13 +58,6 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         icon: agentIcon,
         file: '../../../docs/tutorials/agent-workflows.md',
       },
-      {
-        slug: 'chart-sizing',
-        title: 'Example: Auto Layout',
-        description:
-          'See how Flint automatically resizes charts as data gets denser or layout slots get constrained.',
-        file: '../../../docs/tutorials/chart-sizing.md',
-      },
     ],
   },
   {

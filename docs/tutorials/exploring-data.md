@@ -306,7 +306,7 @@ If labels crowd or facets overflow, tune layout via `options` (optional):
 ```
 
 These control the spring / pressure sizing models — see
-[Example: Auto Layout](/documentation/chart-sizing) for a quick walkthrough or
+[Example: Auto Layout](/playgrounds/auto-layout) for a quick walkthrough or
 [Auto Layout Algorithm](/documentation/layout-model) for the full model. Most
 tutorials and gallery examples work with defaults.
 

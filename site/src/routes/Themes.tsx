@@ -24,7 +24,6 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
@@ -57,12 +56,6 @@ const IDS = [
   'faithful-hist', 'trust-likert', 'population-waterfall', 'us-pyramid', 'gapminder-bubble', 'earnings-education',
 ];
 
-/** Two rows of six, selected for distinct silhouettes in a wide editorial crop. */
-const BANNER_IDS = [
-  'keeling', 'driving', 'seattle-range', 'temp-heatmap', 'browser-pie', 'co2-lollipop',
-  'life-expectancy', 'lifeexp-dumbbell', 'electricity-mix-area', 'big-mac', 'olympic-bump', 'nutrition-radar',
-];
-
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((c) => [c.id, c]));
 
 /** HTML caption metrics: blurb row 2 + 10.5×1.35×2. */
@@ -70,7 +63,7 @@ const BLURB_H = 30;
 const CHART_H = 190;
 
 type ThemeChoice = { id: string | undefined; label: string; icon: string; description: string };
-type WallLayout = 'grid' | 'scatter' | 'banner';
+type WallLayout = 'grid' | 'scatter';
 
 const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
@@ -96,7 +89,7 @@ const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`
 function buildInput(
   c: PreviewCase,
   title: string,
-  themeId: string | undefined,
+  theme: string | undefined,
   baseSize = { width: 300, height: 200 },
 ) {
   return {
@@ -109,17 +102,17 @@ function buildInput(
       title,
       ...(c.chartProperties ? { chartProperties: c.chartProperties } : {}),
     },
-    ...(themeId ? { theme_spec: themeId } : {}),
+    ...(theme ? { theme_spec: theme } : {}),
   } as any;
 }
 
 function Tile({
   c,
-  themeId,
+  theme,
   onOpen,
 }: {
   c: PreviewCase;
-  themeId: string | undefined;
+  theme: string | undefined;
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
@@ -137,11 +130,11 @@ function Tile({
 
   const compiled = useMemo(() => {
     try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(c, title, themeId)) };
+      return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(c, title, theme)) };
     } catch (err) {
       return { ok: false as const, err };
     }
-  }, [c, title, themeId]);
+  }, [c, title, theme]);
 
   return (
     <article
@@ -192,19 +185,19 @@ function Tile({
 
 function ThemeChartModal({
   c,
-  themeId,
+  theme,
   onClose,
 }: {
   c: PreviewCase;
-  themeId: string | undefined;
+  theme: string | undefined;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const title = t(`themes.cases.${c.id}.title`, c.title);
   const blurb = t(`themes.cases.${c.id}.blurb`, c.blurb);
   const input = useMemo(
-    () => buildInput(c, title, themeId, { width: 720, height: 520 }),
-    [c, title, themeId],
+    () => buildInput(c, title, theme, { width: 720, height: 520 }),
+    [c, title, theme],
   );
   const compiled = useMemo(() => {
     try {
@@ -402,11 +395,11 @@ function ThemeBar({
 }
 
 function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (layout: WallLayout) => void }) {
-  const { t } = useTranslation();
   return (
-    <div className="themes-layout-toggle" role="radiogroup" aria-label={t('themes.layoutToggle.aria')}>
-      {(['grid', 'scatter', 'banner'] as const).map((choice) => {
+    <div className="themes-layout-toggle" role="radiogroup" aria-label="Chart wall layout">
+      {(['grid', 'scatter'] as const).map((choice) => {
         const selected = choice === layout;
+        const label = choice === 'grid' ? 'Grid' : 'Scatter';
         return (
           <button
             key={choice}
@@ -414,7 +407,7 @@ function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (lay
             role="radio"
             aria-checked={selected}
             onClick={() => onLayout(choice)}
-            title={t(`themes.layoutToggle.${choice}Title`)}
+            title={`Show charts in a ${choice} layout`}
             style={{
               height: 30,
               padding: '0 11px',
@@ -427,7 +420,7 @@ function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (lay
               cursor: 'pointer',
             }}
           >
-            {t(`themes.layoutToggle.${choice}`)}
+            {label}
           </button>
         );
       })}
@@ -441,10 +434,7 @@ export function Themes() {
   const [openCase, setOpenCase] = useState<PreviewCase | null>(null);
   const requestedTheme = searchParams.get('theme') ?? undefined;
   const themeId = requestedTheme && THEME_PRESETS[requestedTheme] ? requestedTheme : undefined;
-  const requestedLayout = searchParams.get('layout');
-  const layout: WallLayout = requestedLayout === 'grid' || requestedLayout === 'banner'
-    ? requestedLayout
-    : 'scatter';
+  const layout: WallLayout = searchParams.get('layout') === 'grid' ? 'grid' : 'scatter';
   const setThemeId = (id: string | undefined) => {
     const next = new URLSearchParams(searchParams);
     if (id) next.set('theme', id);
@@ -453,7 +443,7 @@ export function Themes() {
   };
   const setLayout = (nextLayout: WallLayout) => {
     const next = new URLSearchParams(searchParams);
-    if (nextLayout === 'grid' || nextLayout === 'banner') next.set('layout', nextLayout);
+    if (nextLayout === 'grid') next.set('layout', 'grid');
     else next.delete('layout');
     setSearchParams(next, { replace: true });
   };
@@ -483,9 +473,6 @@ export function Themes() {
     () => IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c)),
     [],
   );
-  const visibleCases = layout === 'banner'
-    ? BANNER_IDS.map((id) => CASE_BY_ID.get(id)).filter((c): c is PreviewCase => Boolean(c))
-    : cases;
 
   return (
     <SiteShell>
@@ -521,19 +508,19 @@ export function Themes() {
             }}
           >
             <div className="themes-title-row" style={{ gridColumn: '1 / -1' }}>
-              <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.2, fontWeight: 600 }}>
+              <h1 style={{ margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 700, letterSpacing: '-0.02em' }}>
                 {t('themes.title')}
               </h1>
               <LayoutToggle layout={layout} onLayout={setLayout} />
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: siteTheme.text }}>
+              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: siteTheme.text }}>
                 {t('themes.concept')}
               </p>
-              <p style={{ margin: '14px 0 0', fontSize: 13.5, lineHeight: 1.65, color: siteTheme.textMuted }}>
+              <p style={{ margin: '12px 0 0', fontSize: 15, lineHeight: 1.65, color: siteTheme.text }}>
                 {t('themes.generalization')}
               </p>
-              <p style={{ margin: '9px 0 0', fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+              <p style={{ margin: '8px 0 0', fontSize: 15, lineHeight: 1.65, color: siteTheme.text }}>
                 <Trans
                   i18nKey="themes.docsPointer"
                   components={{
@@ -541,6 +528,15 @@ export function Themes() {
                   }}
                 />
               </p>
+              <LocaleLink className="themes-lab-cta" to="/theme-lab">
+                <svg className="themes-lab-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 3h6M10 3v6.2l-5.4 8.3A2.3 2.3 0 0 0 6.5 21h11a2.3 2.3 0 0 0 1.9-3.5L14 9.2V3M7.8 15h8.4" />
+                </svg>
+                <Trans
+                  i18nKey="themes.themeLabCta"
+                  components={{ lab: <strong /> }}
+                />
+              </LocaleLink>
             </div>
             <div
               className="themes-principles"
@@ -587,7 +583,13 @@ export function Themes() {
             }}
           >
             <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-              <ThemeBar themeId={themeId} onTheme={setThemeId} choices={choices} />
+              <div className="themes-controls-row">
+                <ThemeBar
+                  themeId={themeId}
+                  onTheme={setThemeId}
+                  choices={choices}
+                />
+              </div>
               <p style={{ margin: '10px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.55, color: siteTheme.text }}>
                 <strong>{selectedTheme.label}.</strong>{' '}
                 <span style={{ color: siteTheme.textMuted }}>{selectedTheme.description}</span>
@@ -603,13 +605,13 @@ export function Themes() {
               gap: 10,
             }}
           >
-            {visibleCases.map((c) => (
-              <Tile key={c.id} c={c} themeId={themeId} onOpen={() => setOpenCase(c)} />
+            {cases.map((c) => (
+              <Tile key={c.id} c={c} theme={themeId} onOpen={() => setOpenCase(c)} />
             ))}
           </div>
         </div>
       </div>
-      {openCase && <ThemeChartModal c={openCase} themeId={themeId} onClose={() => setOpenCase(null)} />}
+      {openCase && <ThemeChartModal c={openCase} theme={themeId} onClose={() => setOpenCase(null)} />}
     </SiteShell>
   );
 }
@@ -627,6 +629,55 @@ export function Themes() {
  * gaps.
  */
 const wallStyles = `
+  .themes-lab-cta {
+    width: fit-content;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 8px 12px;
+    border: 1px solid rgba(0, 102, 204, 0.28);
+    border-radius: 7px;
+    background: rgba(0, 102, 204, 0.065);
+    color: ${siteTheme.text};
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  }
+  .themes-lab-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    fill: none;
+    stroke: ${siteTheme.accent};
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .themes-lab-cta strong {
+    color: ${siteTheme.accent};
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .themes-lab-cta:hover,
+  .themes-lab-cta:focus-visible {
+    border-color: ${siteTheme.accent};
+    background: rgba(0, 102, 204, 0.105);
+    transform: translateY(-1px);
+  }
+  .themes-lab-cta:focus-visible {
+    outline: 2px solid ${siteTheme.accent};
+    outline-offset: 2px;
+  }
+  .themes-controls-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
   .themes-title-row {
     display: flex;
     align-items: center;
@@ -646,13 +697,13 @@ const wallStyles = `
     outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;
   }
-  :is(.themes-wall--scatter, .themes-wall--banner) {
+  .themes-wall--scatter {
     padding: 30px 34px 38px;
     column-gap: 2px !important;
     row-gap: 0 !important;
     overflow: visible;
   }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile {
+  .themes-wall--scatter .themes-tile {
     --scatter-x: 0px;
     --scatter-y: 0px;
     --scatter-r: 0deg;
@@ -669,23 +720,21 @@ const wallStyles = `
     transform-origin: 50% 50%;
     transition: transform 180ms ease, box-shadow 180ms ease;
   }
-  .themes-wall--banner .themes-tile { margin-bottom: -42px; }
-  .themes-wall--banner .themes-tile:nth-last-child(-n + 6) { margin-bottom: -3px; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:hover,
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:focus-visible {
+  .themes-wall--scatter .themes-tile:hover,
+  .themes-wall--scatter .themes-tile:focus-visible {
     z-index: 20;
     background: #fff;
     box-shadow: 0 8px 18px rgba(31, 35, 40, 0.2), 0 18px 34px rgba(31, 35, 40, 0.1);
     transform: translate3d(var(--scatter-x), calc(var(--scatter-y) - 7px), 0) rotate(0deg);
   }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 2) { --scatter-x: -4px; --scatter-y: -7px; --scatter-r: 1.4deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 3) { --scatter-x: 5px;  --scatter-y: 9px;  --scatter-r: -0.8deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px;  --scatter-r: 2.3deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n + 5) { --scatter-x: 3px;  --scatter-y: -5px; --scatter-r: -1.5deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(6n)     { --scatter-x: -6px; --scatter-y: 8px;  --scatter-r: 1deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(8n + 3) { --scatter-r: 2.7deg; }
-  :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile:nth-child(11n + 1) { --scatter-y: -9px; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 2) { --scatter-x: -4px; --scatter-y: -7px; --scatter-r: 1.4deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 3) { --scatter-x: 5px;  --scatter-y: 9px;  --scatter-r: -0.8deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px;  --scatter-r: 2.3deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 5) { --scatter-x: 3px;  --scatter-y: -5px; --scatter-r: -1.5deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n)     { --scatter-x: -6px; --scatter-y: 8px;  --scatter-r: 1deg; }
+  .themes-wall--scatter .themes-tile:nth-child(8n + 3) { --scatter-r: 2.7deg; }
+  .themes-wall--scatter .themes-tile:nth-child(11n + 1) { --scatter-y: -9px; }
   @media (max-width: 840px)  {
     .themes-intro { grid-template-columns: minmax(0, 1fr) !important; gap: 26px !important; }
     .themes-title-row { align-items: flex-start; }
@@ -698,7 +747,9 @@ const wallStyles = `
   }
   @media (max-width: 1330px) {
     .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-    .themes-wall--banner { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  }
+  @media (max-width: 1120px) {
+    .themes-controls-row { flex-direction: column; }
   }
   @media (max-width: 910px)  {
     .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
@@ -710,11 +761,11 @@ const wallStyles = `
     .themes-wall { grid-template-columns: minmax(0, 1fr) !important; }
   }
   @media (max-width: 700px) {
-    :is(.themes-wall--scatter, .themes-wall--banner) { padding: 22px 20px 30px; }
-    :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile { margin: -1px -2px -16px; }
+    .themes-wall--scatter { padding: 22px 20px 30px; }
+    .themes-wall--scatter .themes-tile { margin: -1px -2px -16px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    :is(.themes-wall--scatter, .themes-wall--banner) .themes-tile { transition: none; }
+    .themes-wall--scatter .themes-tile { transition: none; }
   }
   @media (max-width: 900px)  {
     .theme-chart-modal { height: min(900px, 94vh) !important; }

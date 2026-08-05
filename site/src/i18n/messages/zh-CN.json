@@ -5,7 +5,10 @@
     "themes": "主题",
     "gallery": "图表示例",
     "documentation": "文档",
+    "playgrounds": "实验室",
     "editor": "在线编辑器",
+    "themeLab": "主题实验室",
+    "autoLayoutPlayground": "自动布局",
     "github": "GitHub",
     "githubAria": "GitHub 仓库",
     "githubAriaStars": "GitHub 仓库，{{count}} 星",
@@ -14,6 +17,35 @@
     "langEn": "EN",
     "langZh": "中文",
     "langSwitchAria": "切换语言"
+  },
+  "themeLab": {
+    "title": "主题实验室",
+    "lead": "试验并完善你的主题，将视觉设计转化为可复用的规范，与更多人分享。",
+    "steps": {
+      "generate": "复制提示词并连同网站、幻灯片或品牌指南等参考资料交给智能体，让它生成主题。",
+      "preview": "在下方编辑并预览主题效果。",
+      "shareReady": "准备好分享了吗？",
+      "shareLink": "分享你的设计",
+      "shareSuffix": "。"
+    },
+    "docsPointer": "请参阅<docsLink>文档：使用主题</docsLink>了解详情。",
+    "copyPrompt": "复制提示词",
+    "copied": "已复制",
+    "prompt": "帮我为 Flint Chart 创建一个自定义 ThemeSpec。\n\n开始之前，请阅读并遵循 Flint ThemeSpec 编写技能：\nhttps://raw.githubusercontent.com/microsoft/flint-chart/main/agent-skills/flint-theme-author/SKILL.md\n\n如果原始文件链接不可用，请改用 GitHub 页面：\nhttps://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-theme-author/SKILL.md\n\n请使用我提供的参考资料，只询问会实质影响设计的重要缺失信息，并遵循技能中规定的架构、语义边界、无障碍指南、输出约定和验证清单。请返回一个完整的 ThemeSpec JSON 对象，让我可以直接粘贴到 Flint 主题实验室中。",
+    "demoAria": "示例主题",
+    "inspiration": "需要灵感？",
+    "demos": {
+      "signal-studio": "信号工作室",
+      "microsoft-fluent": "Microsoft Fluent",
+      "peoples-daily": "人民日报"
+    },
+    "editorAria": "自定义主题编辑器",
+    "formatJson": "格式化 JSON",
+    "validSpec": "ThemeSpec 有效",
+    "objectError": "ThemeSpec 必须是 JSON 对象。",
+    "close": "关闭",
+    "rows": "{{count}} 行",
+    "flintSpec": "Flint 规范"
   },
   "footer": {
     "copyright": "© 2026 Microsoft",
@@ -181,6 +213,7 @@
     },
     "generalization": "编译器会将主题的布局行为、语义表现和视觉识别应用到不同的图表类型、数据形态和画布尺寸中。",
     "docsPointer": "有关应用和自定义主题的方法，请参阅<docs>使用主题</docs>。",
+    "themeLabCta": "有灵感了？前往<lab>主题实验室</lab>创作主题",
     "flintDefault": "Flint 默认",
     "switchAria": "主题",
     "layoutToggle": {
@@ -310,8 +343,9 @@
     "attribution": "Microsoft Research 项目",
     "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
     "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
-    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例。",
+    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例，或比较<themesLink>视觉主题</themesLink>。",
     "themeLead": "Flint 的正式主题规范让设计师只需定义一次视觉识别，就能在整个图表库中统一应用。",
+    "installThemeLab": "在<themeLabLink>主题实验室</themeLabLink>中创建自定义视觉系统。",
     "ctaThemes": "视觉主题",
     "ctaGallery": "浏览图表示例",
     "ctaMcp": "使用 MCP 服务器",

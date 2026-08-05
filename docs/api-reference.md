@@ -171,7 +171,7 @@ legend headers. Keep encodings bound to the original field names:
 > **base vs. canvas, in one line:** `baseSize` is what the chart *aims for*;
 > `canvasSize` is what it *may never exceed*. Use `canvasSize` for a fixed slot,
 > and `baseSize` for a comfortable target that may grow for dense data. See the
-> [Example: Auto Layout](/documentation/chart-sizing).
+> [Example: Auto Layout](/playgrounds/auto-layout).
 
 ---
 

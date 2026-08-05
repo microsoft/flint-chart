@@ -10,6 +10,8 @@ import { ExcelGallery } from './routes/ExcelGallery';
 import { Editor } from './routes/Editor';
 import { McpServer } from './routes/McpServer';
 import { Themes } from './routes/Themes';
+import { ThemeLab as PublicThemeLab } from './routes/ThemeLab';
+import { AutoLayoutPlayground } from './routes/AutoLayoutPlayground';
 import { DocSectionPage } from './routes/DocSectionPage';
 import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
@@ -49,6 +51,9 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="editor" element={<Editor />} />
         <Route path="mcp" element={<McpServer />} />
         <Route path="themes" element={<Themes />} />
+        <Route path="theme-lab" element={<PublicThemeLab />} />
+        <Route path="playgrounds/auto-layout" element={<AutoLayoutPlayground />} />
+        <Route path="themes/lab" element={<Navigate to={localePath('/theme-lab', locale)} replace />} />
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
@@ -77,6 +82,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
         />
         <Route path="tutorials/:slug" element={<TutorialRedirect />} />
         <Route path="documentation" element={<DocSectionPage section="documentation" />} />
+        <Route
+          path="documentation/chart-sizing"
+          element={<Navigate to={localePath('/playgrounds/auto-layout', locale)} replace />}
+        />
         <Route path="documentation/:slug" element={<DocSectionPage section="documentation" />} />
         <Route path="*" element={<Navigate to={localePath('/', locale)} replace />} />
       </Routes>

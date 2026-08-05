@@ -5,7 +5,10 @@
     "themes": "Themes",
     "gallery": "Gallery",
     "documentation": "Documentation",
+    "playgrounds": "Playgrounds",
     "editor": "Online Editor",
+    "themeLab": "Theme Lab",
+    "autoLayoutPlayground": "Auto Layout",
     "github": "GitHub",
     "githubAria": "GitHub repository",
     "githubAriaStars": "GitHub repository, {{count}} stars",
@@ -14,6 +17,35 @@
     "langEn": "EN",
     "langZh": "中文",
     "langSwitchAria": "Switch language"
+  },
+  "themeLab": {
+    "title": "Theme Lab",
+    "lead": "Experiment and refine your theme. Turn your design into a reusable spec and share it with everyone.",
+    "steps": {
+      "generate": "Copy the prompt to your agent with reference materials, such as websites, slide decks, or brand guidelines, to generate a theme.",
+      "preview": "Tweak and preview it in the playground below.",
+      "shareReady": "Ready to share?",
+      "shareLink": "Share your design",
+      "shareSuffix": "."
+    },
+    "docsPointer": "See <docsLink>Doc: Using themes</docsLink> for guidance.",
+    "copyPrompt": "Copy prompt",
+    "copied": "Copied",
+    "prompt": "Help me create a custom ThemeSpec for Flint Chart.\n\nBefore you begin, read and follow the Flint ThemeSpec authoring skill:\nhttps://raw.githubusercontent.com/microsoft/flint-chart/main/agent-skills/flint-theme-author/SKILL.md\n\nIf the raw URL is unavailable, open the GitHub page instead:\nhttps://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-theme-author/SKILL.md\n\nUse the reference materials I provide, ask only for important missing design decisions, and follow the skill's schema, semantic boundaries, accessibility guidance, output contract, and validation checklist. Return one complete ThemeSpec JSON object that I can paste directly into Flint Theme Lab.",
+    "demoAria": "Demo themes",
+    "inspiration": "Need inspiration?",
+    "demos": {
+      "signal-studio": "Signal Studio",
+      "microsoft-fluent": "Microsoft Fluent",
+      "peoples-daily": "People's Daily"
+    },
+    "editorAria": "Custom theme editor",
+    "formatJson": "Format JSON",
+    "validSpec": "Valid ThemeSpec",
+    "objectError": "ThemeSpec must be a JSON object.",
+    "close": "Close",
+    "rows": "{{count}} rows",
+    "flintSpec": "Flint spec"
   },
   "footer": {
     "copyright": "© 2026 Microsoft",
@@ -181,6 +213,7 @@
     },
     "generalization": "The compiler applies the theme’s layout behavior, semantic presentation, and visual identity across chart types, data shapes, and canvas sizes.",
     "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
+    "themeLabCta": "Feeling creative? Create a theme in <lab>Theme Lab</lab>",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "layoutToggle": {
@@ -310,8 +343,9 @@
     "attribution": "A Microsoft Research project",
     "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
     "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
-    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
+    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>, or compare <themesLink>visual themes</themesLink>.",
     "themeLead": "Flint employs a formal theme specification so designers can define a visual identity once and apply it consistently across an entire chart library.",
+    "installThemeLab": "Create a custom visual system in <themeLabLink>Theme Lab</themeLabLink>.",
     "ctaThemes": "Visual Themes",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",

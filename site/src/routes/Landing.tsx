@@ -4,7 +4,7 @@ import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
 import { THEME_PRESETS } from 'flint-chart';
-import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
+import { SiteNavBar, MicrosoftDisclosures, GitHubIcon, LabIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GalleryOptionsBar, ThemeControl } from '../components/GalleryOptionsBar';
@@ -145,6 +145,22 @@ export function Landing() {
                     components={{
                       galleryLink: (
                         <LocaleLink to="/gallery" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
+                      themesLink: (
+                        <LocaleLink to="/themes" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
+                    }}
+                  />
+                </div>
+                <div style={installLineStyle}>
+                  <span style={{ ...promptMarkStyle, display: 'inline-flex', verticalAlign: '-2px' }} aria-hidden="true">
+                    <LabIcon size={14} />
+                  </span>{' '}
+                  <Trans
+                    i18nKey="landing.installThemeLab"
+                    components={{
+                      themeLabLink: (
+                        <LocaleLink to="/theme-lab" className="landing-skill-link" style={installLineLinkStyle} />
                       ),
                     }}
                   />
@@ -442,12 +458,13 @@ function moviesSortedBar(): TestCase {
  * against 56–87% and as little as 17% before.
  */
 const SHOWCASE_CANVAS = { width: 560, height: 440 };
+const WELCOME_THEME = 'pop';
 
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
-    id: 'heatmap',
-    exampleKey: 'heatmap',
-    generator: 'Omni: Heatmap',
+    id: 'waterfall',
+    exampleKey: 'waterfall',
+    generator: 'Omni: Waterfall',
     index: 0,
   },
   {
@@ -461,9 +478,9 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     defaultChartProperties: { facetColumns: 2 },
   },
   {
-    id: 'waterfall',
-    exampleKey: 'waterfall',
-    generator: 'Omni: Waterfall',
+    id: 'heatmap',
+    exampleKey: 'heatmap',
+    generator: 'Omni: Heatmap',
     index: 0,
   },
   {
@@ -545,7 +562,7 @@ function HeroShowcase() {
   // of charts, so a reader who picks one sees the whole carousel answer to it.
   // Only Vega-Lite reads `theme_spec`, so the switch is offered on that backend
   // alone — an inert switch reads as a bug in the theme.
-  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const [themeId, setThemeId] = useState<string | undefined>(WELCOME_THEME);
   const [previewTheme, setPreviewTheme] = useState<{ id: string | undefined } | null>(null);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
@@ -720,10 +737,10 @@ function HeroShowcase() {
                   <GalleryOptionsBar
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
-                    canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
+                    canReset={Object.keys(tempOptions).length > 0 || themeId !== WELCOME_THEME}
                     onReset={() => {
                       setTempOptions({});
-                      setThemeId(undefined);
+                      setThemeId(WELCOME_THEME);
                     }}
                     onChange={(key, value) =>
                       setTempOptions((current) => {

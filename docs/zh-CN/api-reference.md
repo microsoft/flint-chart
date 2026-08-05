@@ -141,7 +141,7 @@ interface ChartAssemblyInput {
 | `canvasSize` | **硬上限：** 图表可达到的最大尺寸，含分面网格。若省略，上限为 `baseSize × options.maxStretch`（默认 1.5×）。各维度上限为 `βx = canvasSize.width / baseSize.width`、`βy = canvasSize.height / baseSize.height`（均 ≥ 1）。基准会被钳制到上限，因此单独设置 `canvasSize` 即相当于固定框，图表会填充并缩小以适配而不溢出。 |
 | `chartProperties` | 模板特定开关（例如 `orient`、`opacity`） |
 
-> **base 与 canvas，一句话：** `baseSize` 是图表*瞄准*的尺寸；`canvasSize` 是*绝不超过*的尺寸。固定插槽用 `canvasSize`，舒适目标且密集数据可增长用 `baseSize`。见[示例：自动布局](/documentation/chart-sizing)。
+> **base 与 canvas，一句话：** `baseSize` 是图表*瞄准*的尺寸；`canvasSize` 是*绝不超过*的尺寸。固定插槽用 `canvasSize`，舒适目标且密集数据可增长用 `baseSize`。见[示例：自动布局](/playgrounds/auto-layout)。
 
 ---
 

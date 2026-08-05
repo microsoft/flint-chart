@@ -2,7 +2,7 @@
 
 Physics-based models for automatically sizing chart axes when data outgrows the available canvas.
 
-New to Flint sizing? Start with [Example: Auto Layout](/documentation/chart-sizing), then return here for the complete algorithm.
+New to Flint sizing? Start with [Example: Auto Layout](/playgrounds/auto-layout), then return here for the complete algorithm.
 
 **How to read this document:** [§1](#1-layout-mode-classification) classifies banded vs continuous axes and routes to the right model. [§2](#2-discrete-axis-elastic-budget-model)–[§5](#5-area-layout-2d-pressure-model) describe the four geometry-specific models. [§6](#6-unified-summary) collects the shared pressure–stretch pattern, decision tree, and implementation map.
 

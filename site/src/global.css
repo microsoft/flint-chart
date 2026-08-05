@@ -22,6 +22,12 @@
   text-decoration-color: currentColor !important;
 }
 
+.site-nav-menu-item:hover,
+.site-nav-menu-item:focus-visible {
+  background: rgba(0, 0, 0, 0.055);
+  outline: none;
+}
+
 /* Shared site slider. The explicit class prevents embedded MCP App styles from
    changing site controls when documentation examples load their stylesheet. */
 input[type='range'].site-range {

@@ -123,7 +123,7 @@ Full input schema: [API reference](/documentation/api-reference).
 | **Code generator** | Phase 2 — `template.instantiate()` | `vegalite/`, `echarts/`, `chartjs/` |
 
 1. **Frontend** — derives encoding type, format, aggregation, scale, domain, color, and sort from dataSpec + data
-2. **Optimizer** — chooses axis span, band step, facet grid, and aspect ratio with physics-based sizing; start with [Example: Auto Layout](/documentation/chart-sizing), then use [Auto Layout Algorithm](/documentation/layout-model) for the equations
+2. **Optimizer** — chooses axis span, band step, facet grid, and aspect ratio with physics-based sizing; start with [Example: Auto Layout](/playgrounds/auto-layout), then use [Auto Layout Algorithm](/documentation/layout-model) for the equations
 3. **Code generator** — uses dynamic templates for each `chartType` to emit library-native specs
 
 Pipeline detail: [Architecture](/documentation/architecture).
