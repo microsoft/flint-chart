@@ -26,6 +26,7 @@
  *   powerbi        the dark canvas
  *   powerbi-light  the same bright series on white, with a faint grid
  *   swiss          heavy structural black rules on warm paper
+ *   pop            process-colour quadrants divided by heavy black ink
  *   cartoon        rounded bar tops and a thick soft outline
  *
  * Each is a complete SVG document so a caller can put it straight in an `<img>`
@@ -147,6 +148,16 @@ export const SWISS_ICON = tile(
     bars(['#e2231a', '#1a1a1a', '#0067a5'], [6.2, 8.2, 4.8]) +
         `<path d="M3 3V${BASELINE}H13.4" fill="none" stroke="#1a1a1a" stroke-width="1.6"/>`,
     0,
+);
+
+/** Process-colour blocks and heavy black divisions: Swiss turned up to eleven. */
+export const POP_ICON = tile(
+    '#fff200',
+    '#111111',
+    '<rect x="2.5" y="3" width="5.5" height="5" fill="#ff1493" stroke="#111111" stroke-width="1.5"/>' +
+        '<rect x="8" y="3" width="5.5" height="5" fill="#00d9ff" stroke="#111111" stroke-width="1.5"/>' +
+        '<rect x="2.5" y="8" width="5.5" height="5" fill="#7a3cff" stroke="#111111" stroke-width="1.5"/>' +
+        '<rect x="8" y="8" width="5.5" height="5" fill="#ff5a1f" stroke="#111111" stroke-width="1.5"/>',
 );
 
 /** Rounded tops and a thick soft rule: the drawn-by-hand register. */

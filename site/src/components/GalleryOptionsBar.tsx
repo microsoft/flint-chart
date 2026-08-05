@@ -104,7 +104,14 @@ function iconUrl(svg: string): string {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-const THEME_CHOICES: { id: string | undefined; label: string; icon: string; description: string }[] = [
+interface ThemeChoice {
+  id: string | undefined;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+const THEME_CHOICES: ThemeChoice[] = [
   {
     id: undefined,
     label: 'Flint default',
@@ -135,41 +142,79 @@ const THEME_CHOICES: { id: string | undefined; label: string; icon: string; desc
  * absent rather than inert — a switch that does nothing reads as a bug in the
  * theme, which is exactly what themes must never look like.
  */
-function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string | undefined) => void }) {
-  const { themeId, onTheme } = props;
+export function ThemeControl(props: {
+  themeId: string | undefined;
+  onTheme: (id: string | undefined) => void;
+  onPreview?: (id: string | undefined) => void;
+  onPreviewEnd?: () => void;
+  placement?: 'top' | 'bottom';
+  prominent?: boolean;
+}) {
+  const {
+    themeId,
+    onTheme,
+    onPreview,
+    onPreviewEnd,
+    placement = 'top',
+    prominent = false,
+  } = props;
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const current = THEME_CHOICES.find((choice) => choice.id === themeId) ?? THEME_CHOICES[0];
+  const choices = THEME_CHOICES;
+  const current = choices.find((choice) => choice.id === themeId) ?? choices[0];
+
+  const closeMenu = () => {
+    setOpen(false);
+    onPreviewEnd?.();
+  };
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (event: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) closeMenu();
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
+  }, [open, onPreviewEnd]);
 
   return (
     <div
       ref={rootRef}
-      style={{ position: 'relative', display: 'inline-flex', borderRadius: 8, background: 'rgba(0, 0, 0, 0.05)' }}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: prominent ? 6 : 0,
+        margin: prominent ? '6px 0 0 10px' : 0,
+        border: 'none',
+        borderRadius: 8,
+        background: prominent ? 'transparent' : 'rgba(0, 0, 0, 0.05)',
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && open) {
           event.preventDefault();
           event.stopPropagation();
-          setOpen(false);
+          closeMenu();
         }
       }}
     >
+      {prominent && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
+          <span aria-hidden="true" style={{ color: '#b26a00', fontSize: 12, lineHeight: 1 }}>★</span>
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Theme:</span>
+        </span>
+      )}
       <button
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={`Theme: ${current.label}`}
         title={`Theme: ${current.label}`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (open) closeMenu();
+          else setOpen(true);
+        }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
@@ -182,7 +227,9 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
           cursor: 'pointer',
           outline: 'none',
           color: siteTheme.text,
-          background: open || hover ? 'rgba(0, 0, 0, 0.07)' : 'transparent',
+          background: open || hover
+            ? 'rgba(0, 0, 0, 0.07)'
+            : prominent ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
         }}
       >
         <img src={iconUrl(current.icon)} alt="" style={{ width: 15, height: 15, display: 'block', flex: '0 0 auto' }} />
@@ -205,10 +252,13 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
         <ul
           role="listbox"
           aria-label="Theme"
+          onMouseLeave={onPreviewEnd}
           style={{
             position: 'absolute',
-            bottom: 'calc(100% + 5px)',
-            left: 0,
+            ...(placement === 'top'
+              ? { bottom: 'calc(100% + 5px)' }
+              : { top: 'calc(100% + 5px)' }),
+            left: prominent ? 57 : 0,
             zIndex: 60,
             margin: 0,
             padding: 4,
@@ -222,7 +272,7 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
             boxShadow: '0 -8px 24px rgba(0,0,0,0.14)',
           }}
         >
-          {THEME_CHOICES.map((choice) => {
+          {choices.map((choice) => {
             const selected = choice.id === current.id;
             return (
               <li
@@ -232,8 +282,9 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
                 title={choice.description}
                 onClick={() => {
                   onTheme(choice.id);
-                  setOpen(false);
+                  closeMenu();
                 }}
+                onFocus={() => onPreview?.(choice.id)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -246,6 +297,7 @@ function ThemeControl(props: { themeId: string | undefined; onTheme: (id: string
                   background: selected ? 'rgba(0,0,0,0.06)' : 'transparent',
                 }}
                 onMouseEnter={(e) => {
+                  onPreview?.(choice.id);
                   if (!selected) (e.currentTarget as HTMLLIElement).style.background = 'rgba(0,0,0,0.04)';
                 }}
                 onMouseLeave={(e) => {

@@ -23,7 +23,7 @@
  * more here than a wall with no seams.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -64,6 +64,7 @@ const BLURB_H = 30;
 const CHART_H = 190;
 
 type ThemeChoice = { id: string | undefined; label: string; icon: string; description: string };
+type WallLayout = 'grid' | 'scatter';
 
 const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
@@ -86,14 +87,19 @@ const iconUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`
  * delegation (37 titles dropped either way, across all five `omit` houses) for
  * 17px less chart height, and still leaves a description under every tile.
  */
-function buildInput(c: PreviewCase, title: string, themeId: string | undefined) {
+function buildInput(
+  c: PreviewCase,
+  title: string,
+  themeId: string | undefined,
+  baseSize = { width: 300, height: 200 },
+) {
   return {
     data: { values: c.data },
     semantic_types: c.semantic_types,
     chart_spec: {
       chartType: c.chartType,
       encodings: c.encodings,
-      baseSize: { width: 300, height: 200 },
+      baseSize,
       title,
       ...(c.chartProperties ? { chartProperties: c.chartProperties } : {}),
     },
@@ -101,7 +107,15 @@ function buildInput(c: PreviewCase, title: string, themeId: string | undefined) 
   } as any;
 }
 
-function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
+function Tile({
+  c,
+  themeId,
+  onOpen,
+}: {
+  c: PreviewCase;
+  themeId: string | undefined;
+  onOpen: () => void;
+}) {
   const { t } = useTranslation();
   // Wall-specific captions, because a tile is not a gallery entry. A case's own
   // title has to stand alone on the gallery page, so it carries the subject,
@@ -125,10 +139,19 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
 
   return (
     <article
+      className="themes-tile"
       title={`${c.title}\n${c.blurb}\n${c.source} · ${c.license} · ${c.data.length} rows`}
-      style={{ padding: 8, borderRadius: 10, minWidth: 0, transition: 'background 120ms ease' }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = siteTheme.hover)}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      role="button"
+      tabIndex={0}
+      aria-label={`${title}. ${blurb}`}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+      style={{ padding: 8, borderRadius: 10, minWidth: 0, transition: 'background 120ms ease', cursor: 'zoom-in' }}
     >
       <ScaleToFit height={CHART_H} minHeight={110} adaptiveHeight padding={2}>
         {compiled.ok ? (
@@ -158,6 +181,147 @@ function Tile({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
         {blurb}
       </div>
     </article>
+  );
+}
+
+function ThemeChartModal({
+  c,
+  themeId,
+  onClose,
+}: {
+  c: PreviewCase;
+  themeId: string | undefined;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const title = t(`themes.cases.${c.id}.title`, c.title);
+  const blurb = t(`themes.cases.${c.id}.blurb`, c.blurb);
+  const input = useMemo(
+    () => buildInput(c, title, themeId, { width: 720, height: 520 }),
+    [c, title, themeId],
+  );
+  const compiled = useMemo(() => {
+    try {
+      return { ok: true as const, value: BACKENDS.vegalite.assemble(input) };
+    } catch (err) {
+      return { ok: false as const, err };
+    }
+  }, [input]);
+  const specText = useMemo(
+    () => JSON.stringify({ ...input, data: '__FLINT_DATA__' }, null, 2).replace('"__FLINT_DATA__"', '{...}'),
+    [input],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="theme-chart-modal-title"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        background: 'rgba(0, 0, 0, 0.42)',
+      }}
+    >
+      <div
+        className="theme-chart-modal"
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          width: 'min(1320px, 96vw)',
+          height: 'min(820px, 92vh)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          border: `1px solid ${siteTheme.border}`,
+          borderRadius: 10,
+          background: siteTheme.surface,
+        }}
+      >
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '12px 16px',
+            borderBottom: `1px solid ${siteTheme.border}`,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h2 id="theme-chart-modal-title" style={{ margin: 0, fontSize: 17, lineHeight: 1.3, fontWeight: 600 }}>
+              {title}
+            </h2>
+            <div style={{ marginTop: 2, fontSize: 12.5, color: siteTheme.textMuted }}>{blurb}</div>
+          </div>
+          <div style={{ flex: 1 }} />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            title="Close"
+            style={{
+              width: 32,
+              height: 32,
+              flex: '0 0 auto',
+              border: 0,
+              borderRadius: 6,
+              background: 'transparent',
+              color: siteTheme.text,
+              fontSize: 22,
+              lineHeight: 1,
+              cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="theme-chart-modal-body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.45fr) minmax(320px, 0.8fr)', flex: 1, minHeight: 0 }}>
+          <div style={{ minWidth: 0, minHeight: 0, padding: 20, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+              <ScaleToFit fill height={650} padding={8}>
+                {compiled.ok ? (
+                  <VegaLiteView spec={compiled.value} />
+                ) : (
+                  <pre style={{ color: siteTheme.error, whiteSpace: 'pre-wrap' }}>
+                    {String((compiled.err as Error)?.message ?? compiled.err)}
+                  </pre>
+                )}
+              </ScaleToFit>
+            </div>
+            <div style={{ paddingTop: 10, fontSize: 11.5, lineHeight: 1.45, color: siteTheme.textMuted }}>
+              {c.source} · {c.license} · {c.data.length} rows
+            </div>
+          </div>
+          <section style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${siteTheme.border}` }}>
+            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${siteTheme.border}`, fontSize: 12, fontWeight: 600, color: siteTheme.textMuted }}>
+              Flint spec
+            </div>
+            <pre style={{ margin: 0, padding: 16, flex: 1, overflow: 'auto', fontFamily: siteTheme.fontMono, fontSize: 12, lineHeight: 1.5, color: siteTheme.text, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {specText}
+            </pre>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -231,15 +395,57 @@ function ThemeBar({
   );
 }
 
+function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (layout: WallLayout) => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="themes-layout-toggle" role="radiogroup" aria-label={t('themes.layoutToggle.aria')}>
+      {(['grid', 'scatter'] as const).map((choice) => {
+        const selected = choice === layout;
+        return (
+          <button
+            key={choice}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onLayout(choice)}
+            title={t(`themes.layoutToggle.${choice}Title`)}
+            style={{
+              height: 30,
+              padding: '0 11px',
+              border: selected ? `1px solid ${siteTheme.accent}` : '1px solid transparent',
+              borderRadius: 7,
+              background: selected ? siteTheme.surface : 'transparent',
+              color: selected ? siteTheme.text : siteTheme.navInactive,
+              fontSize: 12.5,
+              fontWeight: selected ? 600 : 400,
+              cursor: 'pointer',
+            }}
+          >
+            {t(`themes.layoutToggle.${choice}`)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Themes() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [openCase, setOpenCase] = useState<PreviewCase | null>(null);
   const requestedTheme = searchParams.get('theme') ?? undefined;
   const themeId = requestedTheme && THEME_PRESETS[requestedTheme] ? requestedTheme : undefined;
+  const layout: WallLayout = searchParams.get('layout') === 'grid' ? 'grid' : 'scatter';
   const setThemeId = (id: string | undefined) => {
     const next = new URLSearchParams(searchParams);
     if (id) next.set('theme', id);
     else next.delete('theme');
+    setSearchParams(next, { replace: true });
+  };
+  const setLayout = (nextLayout: WallLayout) => {
+    const next = new URLSearchParams(searchParams);
+    if (nextLayout === 'grid') next.set('layout', 'grid');
+    else next.delete('layout');
     setSearchParams(next, { replace: true });
   };
 
@@ -272,7 +478,19 @@ export function Themes() {
   return (
     <SiteShell>
       <style>{wallStyles}</style>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: siteTheme.surface }}>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          backgroundColor: siteTheme.surface,
+          backgroundImage: `
+            linear-gradient(90deg, ${siteTheme.grid} 1px, transparent 1px),
+            linear-gradient(0deg, ${siteTheme.grid} 1px, transparent 1px)
+          `,
+          backgroundSize: '24px 24px',
+        }}
+      >
         {/* Wider than the site's 1180px text column on purpose. Eighteen tiles
             only read as a 6×3 wall if six of them fit a row at a size where the
             charts are still legible; at 1180 the tiles come out 159px and the
@@ -290,9 +508,12 @@ export function Themes() {
               alignItems: 'start',
             }}
           >
-            <h1 style={{ gridColumn: '1 / -1', margin: 0, fontSize: 32, lineHeight: 1.2, fontWeight: 600 }}>
-              {t('themes.title')}
-            </h1>
+            <div className="themes-title-row" style={{ gridColumn: '1 / -1' }}>
+              <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.2, fontWeight: 600 }}>
+                {t('themes.title')}
+              </h1>
+              <LayoutToggle layout={layout} onLayout={setLayout} />
+            </div>
             <div>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.65, color: siteTheme.text }}>
                 {t('themes.concept')}
@@ -363,7 +584,7 @@ export function Themes() {
           </div>
 
           <div
-            className="themes-wall"
+            className={`themes-wall themes-wall--${layout}`}
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
@@ -371,11 +592,12 @@ export function Themes() {
             }}
           >
             {cases.map((c) => (
-              <Tile key={c.id} c={c} themeId={themeId} />
+              <Tile key={c.id} c={c} themeId={themeId} onOpen={() => setOpenCase(c)} />
             ))}
           </div>
         </div>
       </div>
+      {openCase && <ThemeChartModal c={openCase} themeId={themeId} onClose={() => setOpenCase(null)} />}
     </SiteShell>
   );
 }
@@ -393,14 +615,95 @@ export function Themes() {
  * gaps.
  */
 const wallStyles = `
+  .themes-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .themes-layout-toggle {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 3px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.04);
+  }
+  .themes-tile:hover { background: ${siteTheme.hover}; }
+  .themes-wall [role="button"]:focus-visible {
+    outline: 2px solid ${siteTheme.accent};
+    outline-offset: 2px;
+  }
+  .themes-wall--scatter {
+    padding: 30px 34px 38px;
+    column-gap: 2px !important;
+    row-gap: 0 !important;
+    overflow: visible;
+  }
+  .themes-wall--scatter .themes-tile {
+    --scatter-x: 0px;
+    --scatter-y: 0px;
+    --scatter-r: 0deg;
+    position: relative;
+    align-self: start;
+    z-index: 1;
+    margin: -3px -4px -28px;
+    padding: 10px 10px 15px !important;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 2px !important;
+    background: #fff;
+    box-shadow: 0 3px 9px rgba(31, 35, 40, 0.15), 0 12px 24px rgba(31, 35, 40, 0.07);
+    transform: translate3d(var(--scatter-x), var(--scatter-y), 0) rotate(var(--scatter-r));
+    transform-origin: 50% 50%;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+  .themes-wall--scatter .themes-tile:hover,
+  .themes-wall--scatter .themes-tile:focus-visible {
+    z-index: 20;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(31, 35, 40, 0.2), 0 18px 34px rgba(31, 35, 40, 0.1);
+    transform: translate3d(var(--scatter-x), calc(var(--scatter-y) - 7px), 0) rotate(0deg);
+  }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 2) { --scatter-x: -4px; --scatter-y: -7px; --scatter-r: 1.4deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 3) { --scatter-x: 5px;  --scatter-y: 9px;  --scatter-r: -0.8deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px;  --scatter-r: 2.3deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n + 5) { --scatter-x: 3px;  --scatter-y: -5px; --scatter-r: -1.5deg; }
+  .themes-wall--scatter .themes-tile:nth-child(6n)     { --scatter-x: -6px; --scatter-y: 8px;  --scatter-r: 1deg; }
+  .themes-wall--scatter .themes-tile:nth-child(8n + 3) { --scatter-r: 2.7deg; }
+  .themes-wall--scatter .themes-tile:nth-child(11n + 1) { --scatter-y: -9px; }
   @media (max-width: 840px)  {
     .themes-intro { grid-template-columns: minmax(0, 1fr) !important; gap: 26px !important; }
+    .themes-title-row { align-items: flex-start; }
+  }
+  @media (max-width: 520px)  {
+    .themes-title-row { flex-direction: column; }
   }
   @media (max-width: 520px)  {
     .themes-principle { grid-template-columns: minmax(0, 1fr) !important; gap: 4px !important; }
   }
-  @media (max-width: 1330px) { .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
-  @media (max-width: 910px)  { .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
-  @media (max-width: 700px)  { .themes-wall { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-  @media (max-width: 490px)  { .themes-wall { grid-template-columns: minmax(0, 1fr) !important; } }
+  @media (max-width: 1330px) {
+    .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  }
+  @media (max-width: 910px)  {
+    .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  }
+  @media (max-width: 700px)  {
+    .themes-wall { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  }
+  @media (max-width: 490px)  {
+    .themes-wall { grid-template-columns: minmax(0, 1fr) !important; }
+  }
+  @media (max-width: 700px) {
+    .themes-wall--scatter { padding: 22px 20px 30px; }
+    .themes-wall--scatter .themes-tile { margin: -1px -2px -16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .themes-wall--scatter .themes-tile { transition: none; }
+  }
+  @media (max-width: 900px)  {
+    .theme-chart-modal { height: min(900px, 94vh) !important; }
+    .theme-chart-modal-body { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(300px, 1.15fr) minmax(240px, 0.85fr); overflow: auto; }
+    .theme-chart-modal-body > section { border-left: 0 !important; border-top: 1px solid ${siteTheme.border}; }
+  }
 `;

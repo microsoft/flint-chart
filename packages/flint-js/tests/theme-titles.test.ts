@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite } from '../src';
+import { assembleVegaLite, THEME_PRESETS } from '../src';
 import type { ThemeSpec } from '../src/core/theme/types';
 
 /**
@@ -71,6 +71,32 @@ describe('axis titles', () => {
         expect(axisTitle(spec, 'y')).not.toBeNull();
         const report = spec._theme.report.map((r: any) => r.path);
         expect(report).toContain('annotation.axisTitles');
+    });
+});
+
+describe('title block position', () => {
+    it('places a title below the chart when the house treats it as a caption', () => {
+        const spec = bars({
+            ...house({ axisTitles: 'always' }),
+            layout: { titleBlock: { position: 'bottom' } },
+        }, 'Monthly rainfall');
+
+        expect(spec.config.title.orient).toBe('bottom');
+        expect(spec._theme.decisions.title.position).toBe('bottom');
+    });
+
+    it('keeps titles above the chart by default', () => {
+        const spec = bars(house({ axisTitles: 'always' }), 'Monthly rainfall');
+
+        expect(spec.config.title.orient).toBe('top');
+        expect(spec._theme.decisions.title.position).toBe('top');
+    });
+
+    it('places the Nature title as a centered caption below the figure', () => {
+        const spec = bars(THEME_PRESETS.nature.spec, 'Monthly rainfall');
+
+        expect(spec.config.title.orient).toBe('bottom');
+        expect(spec.config.title.anchor).toBe('middle');
     });
 });
 

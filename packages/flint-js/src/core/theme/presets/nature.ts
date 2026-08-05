@@ -209,7 +209,8 @@ export const nature: ThemePreset = {
             "density": "compact",
             "targetWidth": 252,
             "titleBlock": {
-                "anchor": "start",
+                "anchor": "middle",
+                "position": "bottom",
                 "gap": "tight",
                 "deckGap": "tight"
             },

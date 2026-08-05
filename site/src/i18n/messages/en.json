@@ -183,6 +183,13 @@
     "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
+    "layoutToggle": {
+      "aria": "Chart arrangement",
+      "grid": "Grid",
+      "gridTitle": "Arrange charts in a regular comparison grid",
+      "scatter": "Scatter",
+      "scatterTitle": "Scatter charts like photographs for editorial screenshots"
+    },
     "descriptions": {
       "default": "Balanced, neutral defaults designed to work across chart types.",
       "nyt": "Newsroom graphics with headlines that state the finding, values on marks, and labels at the end of each series.",
@@ -193,6 +200,7 @@
       "powerbi": "Dark dashboard tiles with compact layouts, legends on the right, and emphasis on the latest value.",
       "powerbi-light": "Light dashboard tiles with a white canvas, fine gridlines, and legends on the right.",
       "swiss": "International Typographic Style with a visible grid, strong black structure, and a single red accent.",
+      "pop": "A pop-art remix of Swiss with electric process colors, heavy black structure, and punchy display type.",
       "cartoon": "Playful charts with warm paper, rounded type, bold outlines, bright colors, and a soft dashed grid."
     },
     "cases": {
@@ -312,7 +320,7 @@
       "release050": {
         "date": "August 5, 2026",
         "dateTime": "2026-08-05",
-        "text": "Flint 0.5.0 introduces formal visual themes with nine presets, custom ThemeSpec authoring, and preset inheritance."
+        "text": "Flint 0.5.0 introduces formal visual themes with ten presets, custom ThemeSpec authoring, and preset inheritance."
       },
       "release040": {
         "date": "July 24, 2026",

@@ -7,7 +7,7 @@ import { THEME_PRESETS } from 'flint-chart';
 import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
+import { GalleryOptionsBar, ThemeControl } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
 import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
 import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
@@ -249,11 +249,11 @@ export function Landing() {
           <PipelineDiagram />
           <div style={featureGridStyle}>
             {features.map((feature, i) => (
-              <article key={feature.id} style={{ ...featureGridItemStyle, position: 'relative' }}>
-                {feature.isNew ? <span aria-hidden="true" style={featureNewDotStyle} /> : null}
+              <article key={feature.id} style={featureGridItemStyle}>
                 <div style={featureGridTextStyle}>
                   <h2 style={featureTitleStyle}>
                     <span style={featureNumberStyle}>{i + 1}.</span>
+                    {feature.isNew ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
                     {feature.title}
                   </h2>
                   <p style={featureBodyStyle}>{feature.body}</p>
@@ -445,6 +445,12 @@ const SHOWCASE_CANVAS = { width: 560, height: 440 };
 
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
+    id: 'heatmap',
+    exampleKey: 'heatmap',
+    generator: 'Omni: Heatmap',
+    index: 0,
+  },
+  {
     id: 'line',
     exampleKey: 'facetedLine',
     generator: 'Omni: Line',
@@ -453,12 +459,6 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
     // single row: it compiles to a 2.62 aspect against a pane of 1.21 and fills
     // only 46% of the pane's height, where 2x2 fills 95%.
     defaultChartProperties: { facetColumns: 2 },
-  },
-  {
-    id: 'heatmap',
-    exampleKey: 'heatmap',
-    generator: 'Omni: Heatmap',
-    index: 0,
   },
   {
     id: 'waterfall',
@@ -520,8 +520,8 @@ function HeroCTA({
     return (
       <a className={ctaClassName} href={href} style={heroCtaStyle(variant, active)} target="_blank" rel="noreferrer" {...handlers}>
         {icon}
+        {attention ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
         {label}
-        {attention ? <span aria-hidden="true" style={ctaAttentionDotStyle} /> : null}
       </a>
     );
   }
@@ -529,8 +529,8 @@ function HeroCTA({
   return (
     <LocaleLink className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
       {icon}
+      {attention ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
       {label}
-      {attention ? <span aria-hidden="true" style={ctaAttentionDotStyle} /> : null}
     </LocaleLink>
   );
 }
@@ -546,6 +546,7 @@ function HeroShowcase() {
   // Only Vega-Lite reads `theme_spec`, so the switch is offered on that backend
   // alone — an inert switch reads as a bug in the theme.
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const [previewTheme, setPreviewTheme] = useState<{ id: string | undefined } | null>(null);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
   // What the chart says, in words. Every example carries one: a chart of bare
@@ -573,10 +574,13 @@ function HeroShowcase() {
     [example.defaultChartProperties, tempOptions],
   );
 
-  useEffect(() => setTempOptions({}), [exampleIdx, backend]);
+  useEffect(() => {
+    setTempOptions({});
+    setPreviewTheme(null);
+  }, [exampleIdx, backend]);
 
   const canTheme = backend === 'vegalite';
-  const activeTheme = canTheme ? themeId : undefined;
+  const activeTheme = canTheme ? (previewTheme ? previewTheme.id : themeId) : undefined;
 
   // A house that paints its own canvas draws a coloured rectangle of the
   // chart's *own* size, and `ScaleToFit` centres that rectangle in a pane it
@@ -594,7 +598,7 @@ function HeroShowcase() {
 
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = withHouse(testCaseToAssemblyInput(testCase, canvasSize), activeTheme);
+    const base = withHouse(testCaseToAssemblyInput(testCase, canvasSize), activeTheme, canTheme);
     return {
       ...base,
       chart_spec: {
@@ -603,7 +607,7 @@ function HeroShowcase() {
         chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
       },
     };
-  }, [testCase, effectiveOptions, activeTheme, canvasSize, headline]);
+  }, [testCase, effectiveOptions, activeTheme, canTheme, canvasSize, headline]);
 
   // A house can change what a chart *is*, not only how it looks — the NYT puts
   // points on a line. Those are defaults, so they yield to anything the bar has
@@ -612,6 +616,7 @@ function HeroShowcase() {
   const chooseTheme = (next: string | undefined) => {
     if (displayInput) setTempOptions((options) => withoutEchoedOverrides(displayInput, options));
     setThemeId(next);
+    setPreviewTheme(null);
   };
 
   const panelModel = useMemo(
@@ -649,13 +654,25 @@ function HeroShowcase() {
               canvasSize={canvasSize}
               chartPropertyOverrides={effectiveOptions}
               themeId={activeTheme}
+              useThemeCanvas={canTheme}
               headline={headline}
             />
           </div>
 
           <div className="landing-chart-pane" style={{ ...showcasePaneStyle, ...chartPaneStyle, borderLeft: `1px solid ${HAIRLINE}` }}>
             <div className="landing-pane-header" style={paneHeaderRowStyle}>
-              <span style={paneLabelStyle}>{t('landing.compiledChart')}</span>
+              {canTheme ? (
+                <ThemeControl
+                  themeId={themeId}
+                  onTheme={chooseTheme}
+                  onPreview={(id) => setPreviewTheme({ id })}
+                  onPreviewEnd={() => setPreviewTheme(null)}
+                  placement="bottom"
+                  prominent
+                />
+              ) : (
+                <span style={paneLabelStyle}>{BACKEND_LABELS[backend]}</span>
+              )}
               <div className="landing-backend-toggle" style={backendToggleStyle} role="tablist" aria-label={t('landing.backendAria')}>
                 {ALL_BACKENDS.map((b) => {
                   const isSupported = supported.includes(b);
@@ -693,6 +710,7 @@ function HeroShowcase() {
                     canvasSize={canvasSize}
                     chartPropertyOverrides={effectiveOptions}
                     themeId={activeTheme}
+                    useThemeCanvas={canTheme}
                     headline={headline}
                   />
                 </ScaleToFit>
@@ -702,8 +720,6 @@ function HeroShowcase() {
                   <GalleryOptionsBar
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
-                    themeId={themeId}
-                    onTheme={canTheme ? chooseTheme : undefined}
                     canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
                     onReset={() => {
                       setTempOptions({});
@@ -776,12 +792,14 @@ function FlintSpecCode({
   canvasSize,
   chartPropertyOverrides,
   themeId,
+  useThemeCanvas,
   headline,
 }: {
   testCase: TestCase;
   canvasSize?: { width: number; height: number };
   chartPropertyOverrides?: Record<string, unknown>;
   themeId?: string;
+  useThemeCanvas?: boolean;
   headline?: { title?: string; subtitle?: string };
 }) {
   const text = useMemo(() => {
@@ -800,10 +818,10 @@ function FlintSpecCode({
           }
         : {}),
     };
-    const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId);
+    const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId, useThemeCanvas);
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
-  }, [testCase, canvasSize, chartPropertyOverrides, themeId, headline?.title, headline?.subtitle]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, useThemeCanvas, headline?.title, headline?.subtitle]);
   return <pre style={specPreStyle}>{text}</pre>;
 }
 
@@ -853,7 +871,10 @@ const BACKEND_ROSTER_LINKS = [
   { label: 'Plotly', to: '/documentation/reference-plotly' },
   { label: 'Excel', to: '/gallery/excel' },
 ] as const;
-const THEME_ROSTER_PREVIEW = Object.values(THEME_PRESETS).slice(0, 5);
+const THEME_ROSTER_PREVIEW = [
+  ...Object.values(THEME_PRESETS).slice(0, 5),
+  THEME_PRESETS.pop,
+];
 const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,
@@ -2111,24 +2132,11 @@ const featureBodyStyle: CSSProperties = {
   margin: 0,
 };
 
-const featureNewDotStyle: CSSProperties = {
-  position: 'absolute',
-  top: 3,
-  right: 3,
-  width: 7,
-  height: 7,
-  borderRadius: '50%',
-  background: '#ffdd00',
-};
-
-const ctaAttentionDotStyle: CSSProperties = {
-  position: 'absolute',
-  top: 6,
-  right: 7,
-  width: 6,
-  height: 6,
-  borderRadius: '50%',
-  background: '#ffdd00',
+const attentionStarStyle: CSSProperties = {
+  flex: '0 0 auto',
+  color: '#b26a00',
+  fontSize: 13,
+  lineHeight: 1,
 };
 
 function featureExampleRowStyle(): CSSProperties {

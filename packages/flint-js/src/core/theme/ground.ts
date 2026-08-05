@@ -525,6 +525,13 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
 
     const bindings = bindRoles(ctx);
     const signals = deriveSignals(ctx, bindings);
+    // A cell matrix already supplies both positional structures through its
+    // tiles. Axis grids add no location cue and can show through painted cell
+    // gaps, so they stand down while the theme's tile policy separates cells.
+    const gridCells = signals.markChannel === 'color'
+        && ctx.axisFlags?.x?.banded === true
+        && ctx.axisFlags?.y?.banded === true
+        && Boolean(ctx.positional?.x && ctx.positional?.y);
 
     // --- variants -----------------------------------------------------------
     let theme: ThemeSpec = themeIn;
@@ -750,7 +757,9 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 size: ticksRule.show ? tickLen : 0,
                 offset: inward ? -tickLen : 0,
             },
-            grid: indexing ? categoryGrid : measureGrid,
+            grid: gridCells
+                ? rule('omit', structureInk.grid, 'omit', gridWeight)
+                : indexing ? categoryGrid : measureGrid,
             label: {
                 ...axisLabelText,
                 limit: truncation === 'never' ? 0 : undefined,
@@ -942,10 +951,6 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // column, and the number goes in the middle of it — the measure being on
     // colour is the reason the number is worth printing, not a reason to
     // withhold it.
-    const gridCells = signals.markChannel === 'color'
-        && bindings.measureChannels.length === 0
-        && Boolean(ctx.positional?.x && ctx.positional?.y);
-
     // A printed value has to be *keyed* to something the eye can separate — a
     // band, a slice, a discrete step. On a continuous-by-continuous plot there
     // is no such anchor: every datum would get its own floating number and the
@@ -1481,6 +1486,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         font: bodyFamily,
         title: {
             anchor: theme.layout?.titleBlock?.anchor ?? 'start',
+            position: theme.layout?.titleBlock?.position ?? 'top',
             headline,
             deck,
             offset: Math.round((headline.fontSize ?? 14) * TITLE_GAP[theme.layout?.titleBlock?.gap ?? 'normal']),

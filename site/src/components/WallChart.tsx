@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { ThemeSpec } from 'flint-chart';
 import type { TestCase } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
 import { EChartsView } from './EChartsView';
@@ -20,6 +21,8 @@ export function WallChart({
   canvasSize,
   chartPropertyOverrides,
   themeId,
+  themeSpec,
+  useThemeCanvas = false,
   headline,
 }: {
   testCase: TestCase;
@@ -35,6 +38,10 @@ export function WallChart({
    * `theme_spec`, so it is left off elsewhere rather than passed and ignored.
    */
   themeId?: string;
+  /** Inline custom house; takes precedence over `themeId`. */
+  themeSpec?: ThemeSpec;
+  /** Use the house/default native base size with the shared 720px ceiling. */
+  useThemeCanvas?: boolean;
   /**
    * What the chart says, in words. Test cases carry a developer's name for the
    * case ("Phase 1 — Line: MAU trend…"), not a headline a reader would want, so
@@ -44,7 +51,11 @@ export function WallChart({
 }) {
   const input = useMemo(() => {
     const base = testCaseToAssemblyInput(testCase, canvasSize ?? thumbnailCanvasSize(testCase));
-    const themed: any = withHouse(base, themeId && backend === 'vegalite' ? themeId : undefined);
+    const themed: any = withHouse(
+      base,
+      backend === 'vegalite' ? (themeSpec ?? themeId) : undefined,
+      useThemeCanvas && backend === 'vegalite',
+    );
     const spec = {
       ...themed.chart_spec,
       ...(headline?.title ? { title: headline.title } : {}),
@@ -54,7 +65,7 @@ export function WallChart({
         : {}),
     };
     return { ...themed, chart_spec: spec };
-  }, [testCase, canvasSize, chartPropertyOverrides, themeId, backend, headline?.title, headline?.subtitle]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, themeSpec, useThemeCanvas, backend, headline?.title, headline?.subtitle]);
 
   const compiled = useMemo(() => {
     try {

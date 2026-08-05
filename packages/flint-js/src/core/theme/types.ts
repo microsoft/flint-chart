@@ -398,6 +398,8 @@ export interface ThemeLayout {
     targetWidth?: number;
     titleBlock?: {
         anchor?: 'start' | 'middle' | 'end';
+        /** Place the semantic title above the chart or as a caption below it. */
+        position?: 'top' | 'bottom';
         /**
          * The vertical gap between the title block and the chart below it — a
          * house's whitespace personality reaching the headline. `tight` packs
@@ -754,6 +756,7 @@ export interface DesignDecisions {
     font?: string;
     title: {
         anchor: 'start' | 'middle' | 'end';
+        position: 'top' | 'bottom';
         headline: ResolvedText;
         deck: ResolvedText;
         /** Gap from the title block to the chart, in px. */

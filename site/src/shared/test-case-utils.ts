@@ -1,4 +1,5 @@
 import type { TestCase } from 'flint-chart/test-data';
+import type { ThemeSpec } from 'flint-chart';
 
 /** Keys that, when present, mean an encoding carries more than a bare field. */
 const ENCODING_OVERRIDE_KEYS = ['type', 'aggregate', 'sortOrder', 'sortBy', 'scheme'] as const;
@@ -169,22 +170,24 @@ const THEMED_CANVAS_CEILING: CanvasSize = { width: 720, height: 720 };
 
 /**
  * Name a house on an assembly input, and stand the gallery's own sizing down.
+ * `useCanvasCeiling` applies the same treatment to Flint's default house.
  *
- * A house states the footprint its style was measured against — the
+ * A named house states the footprint its style was measured against — the
  * Economist's wide print column, Nature's narrow single-column figure — and
- * its type scale is read off that footprint. The gallery's per-chart-type
+ * Flint default falls back to the compiler's native base. The gallery's per-chart-type
  * canvas is a tile-shaping convenience, not a decision anyone made about this
  * chart, so when a house is chosen it steps aside and becomes a ceiling
  * instead. That is exactly what the Theme Lab does, which is why the two agree.
  */
 export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
   input: T,
-  themeId: string | undefined,
+  theme: string | ThemeSpec | undefined,
+  useCanvasCeiling = false,
 ): T {
-  if (!themeId) return input;
+  if (!theme && !useCanvasCeiling) return input;
   return {
     ...input,
     chart_spec: { ...input.chart_spec, baseSize: undefined, canvasSize: THEMED_CANVAS_CEILING },
-    theme_spec: themeId,
+    ...(theme ? { theme_spec: theme } : {}),
   } as T;
 }

@@ -45,7 +45,7 @@
         "Column-width geometry: 8.5pt type, hairlines, tight padding",
         "Black L-shaped spines, outward ticks, no gridlines",
         "Okabe–Ito palette; colour is never the only cue",
-        "Terse title — the caption lives in the body text",
+        "Terse semantic title centred below the panel like a figure caption",
         "Units mandatory in every axis title"
       ]
     },

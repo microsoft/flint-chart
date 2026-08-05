@@ -334,6 +334,7 @@ function applyTypography(config: any, d: DesignDecisions): void {
         ...(h.fontStyle ? { fontStyle: h.fontStyle } : {}),
         color: h.color,
         anchor: d.title.anchor,
+        orient: d.title.position,
         offset: d.title.offset,
         subtitleFont: deck.font,
         subtitleFontSize: deck.fontSize,
@@ -410,6 +411,12 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
             titleColor: axis.title.color,
             titleFontWeight: axis.title.fontWeight ?? 'normal',
         };
+        if (axis.grid.show && twoPositionLineAxis(spec, channel, table)) {
+            themed.grid = false;
+            themed.gridWidth = 0;
+            say(`axes.${channel}.grid`,
+                'the line has exactly two banded positions — endpoint guides would either merge with a plot boundary or leave one column looking singled out, so both stand down');
+        }
         if (axis.grid.dash) themed.gridDash = axis.grid.dash;
         if (axis.ticks.offset) themed.tickOffset = axis.ticks.offset;
         if (axis.label.show === false) themed.labels = false;
@@ -528,14 +535,20 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
             // prunes the *labels* that collide, not the lines under them. Where
             // the house draws a grid on such a scale, the ticks are cut back to
             // the decades — the ones that will still carry a number.
-            if (axis.grid.show && NONLINEAR_SCALES.has(enc.scale?.type)
+            if (themed.grid && NONLINEAR_SCALES.has(enc.scale?.type)
                 && (enc.axis?.tickCount ?? enc.axis?.values) == null) {
-                const decades = decadeTicks(table, enc.field);
-                if (decades) {
-                    enc.axis = { ...(enc.axis ?? {}), values: decades };
+                const size = channel === 'x' ? (node.width ?? spec.width) : (node.height ?? spec.height);
+                const span = typeof size === 'number' ? size : (channel === 'x' ? 600 : 300);
+                const ticks = enc.scale?.type === 'log'
+                    ? logTicks(table, enc.field, span)
+                    : decadeTicks(table, enc.field);
+                if (ticks) {
+                    enc.axis = { ...(enc.axis ?? {}), values: ticks };
                     if (!saidGrid) {
                         say(`axes.${channel}.grid`,
-                            `the ${enc.scale.type} scale offers a line at every step of every decade — the grid is cut back to the ${decades.length} it can label`);
+                            enc.scale.type === 'log'
+                                ? `the log scale is ticked at ${ticks.length} readable 1/2/5 steps across its decades, chosen from the transformed pixel spacing`
+                                : `the ${enc.scale.type} scale offers a line at every step of every decade — the grid is cut back to the ${ticks.length} it can label`);
                         saidGrid = true;
                     }
                 }
@@ -627,6 +640,22 @@ function bandedAxis(spec: any, channel: 'x' | 'y'): boolean {
         if (enc.type === 'nominal' || enc.type === 'ordinal') banded = true;
     });
     return banded;
+}
+
+/** A line joining exactly two discrete columns; partial grid thinning would make the pair asymmetric. */
+function twoPositionLineAxis(spec: any, channel: 'x' | 'y', table: any[]): boolean {
+    if (!bandedAxis(spec, channel)) return false;
+    let field: string | undefined;
+    let line = false;
+    walk(spec, (node) => {
+        if (isLiteralMark(node) || markTypeOf(node.mark) !== 'line') return;
+        const enc = node.encoding?.[channel];
+        if (!enc?.field || (enc.type !== 'nominal' && enc.type !== 'ordinal')) return;
+        field ??= enc.field;
+        line = true;
+    });
+    if (!line || !field) return false;
+    return new Set(table.map((row) => row?.[field!]).filter((value) => value != null)).size === 2;
 }
 
 /**
@@ -756,6 +785,37 @@ function decadeTicks(table: any[], field: string | undefined): number[] | undefi
     const out: number[] = [];
     for (let k = lo; k <= hi; k++) out.push(10 ** k);
     return out;
+}
+
+/**
+ * Readable ticks for a base-10 log scale.
+ *
+ * Powers of ten always stand. The 2× and 5× positions join them only when the
+ * narrowest transformed interval is at least 32px, so a wide log plot gains
+ * useful interpolation without a compact one turning into a picket fence.
+ */
+function logTicks(table: any[], field: string | undefined, span: number): number[] | undefined {
+    if (!field || !Array.isArray(table) || table.length === 0 || span <= 0) return undefined;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const row of table) {
+        const value = Number(row?.[field]);
+        if (!Number.isFinite(value) || value <= 0) continue;
+        if (value < min) min = value;
+        if (value > max) max = value;
+    }
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) return undefined;
+
+    const logSpan = Math.log10(max) - Math.log10(min);
+    const decadePixels = span / logSpan;
+    const multipliers = decadePixels * Math.log10(2) >= 32 ? [1, 2, 5] : [1];
+    const lo = Math.floor(Math.log10(min));
+    const hi = Math.ceil(Math.log10(max));
+    const ticks: number[] = [];
+    for (let exponent = lo; exponent <= hi; exponent++) {
+        for (const multiplier of multipliers) ticks.push(multiplier * 10 ** exponent);
+    }
+    return ticks;
 }
 
 /**
@@ -1758,18 +1818,15 @@ function harmonizeLinePoints(
 
 /**
  * A cell of a grid — a heatmap, a calendar, a matrix. Both of its axes are
- * spent on position, so unlike a bar it has no free axis to be thinned along:
- * the gap has to be cut out of the shape. Binned axes count as discrete here,
- * because a binned rect is a cell whose category happens to be a range.
+ * spent on position and its colour carries the reading, so unlike a bar it has
+ * no free axis to be thinned along: the gap has to be cut out of the shape.
+ * A heatmap template may keep a temporal or quantitative scale for tick
+ * semantics while budgeting one band per observed value, so semantic axis
+ * types alone cannot identify cells.
  */
 function isGridCell(node: any, enc: any): boolean {
     if (markTypeOf(node.mark) !== 'rect') return false;
-    const gridded = (['x', 'y'] as const).filter((channel) => {
-        const e = enc[channel];
-        if (!e?.field) return false;
-        return e.type === 'nominal' || e.type === 'ordinal' || e.bin != null;
-    });
-    return gridded.length === 2;
+    return Boolean(enc.x?.field && enc.y?.field && enc.color?.field);
 }
 
 /**

@@ -73,8 +73,17 @@ describe('naming a house Flint ships', () => {
 
     it('lists every house it can resolve', () => {
         for (const { id } of listThemePresets()) {
-            expect(resolveThemeSpec(id)).toBe(THEME_PRESETS[id].spec);
+            expect(resolveThemeSpec(id)).toEqual(resolveThemeSpec(THEME_PRESETS[id].spec));
         }
+    });
+
+    it('resolves inheritance inside a shipped house', () => {
+        const resolved = resolveThemeSpec('pop');
+
+        expect(THEME_PRESETS.pop.spec.extends).toBe('swiss');
+        expect(resolved?.id).toBe('pop');
+        expect(resolved?.ink?.surface?.canvas).toBe('#fff200');
+        expect(resolved?.labels).toEqual(THEME_PRESETS.swiss.spec.labels);
     });
 
     it('deep-merges overrides into a named house without changing the preset', () => {
@@ -838,6 +847,96 @@ describe('what a connector joins, and what a dot has to carry alone', () => {
         expect(dotSize(shaped)).toBe(45);
 
         expect(plain.config.line.point.size).toBe(45);
+    });
+});
+
+describe('pop positional structure', () => {
+    it('makes the indexing grid secondary to the measure grid', () => {
+        const spec = assembleVegaLite({
+            data: { values: [{ X: 1, Y: 3 }, { X: 2, Y: 5 }, { X: 3, Y: 4 }] },
+            semantic_types: { X: 'Quantity', Y: 'Quantity' },
+            chart_spec: { chartType: 'Scatter Plot', encodings: { x: 'X', y: 'Y' } },
+            theme_spec: 'pop',
+        } as any) as any;
+
+        expect(spec.config.axisX.grid).toBe(true);
+        expect(spec.config.axisX.gridWidth).toBe(0.5);
+        expect(spec.config.axisY.grid).toBe(true);
+        expect(spec.config.axisY.gridWidth).toBe(1);
+        for (const axis of [spec.config.axisX, spec.config.axisY]) {
+            expect(axis.gridColor).not.toBe('#111111');
+            expect(axis.gridColor).not.toBe('#fff200');
+        }
+    });
+
+    it('uses readable 1/2/5 spacing on a wide log scale', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Income: 1_000, Years: 55 },
+                { Income: 5_000, Years: 68 },
+                { Income: 20_000, Years: 76 },
+                { Income: 100_000, Years: 82 },
+            ] },
+            semantic_types: { Income: 'Quantity', Years: 'Quantity' },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'Income', y: 'Years' },
+                baseSize: { width: 720, height: 520 },
+                chartProperties: { logScale_x: true },
+            },
+            theme_spec: 'pop',
+        } as any) as any;
+
+        expect(spec.encoding.x.scale.type).toBe('log');
+        expect(spec.encoding.x.axis.values).toEqual(expect.arrayContaining([
+            1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000,
+        ]));
+    });
+
+    it('hides both guides on a two-position slope axis', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Country: 'A', Year: 2000, Life: 62 },
+                { Country: 'A', Year: 2021, Life: 67 },
+                { Country: 'B', Year: 2000, Life: 72 },
+                { Country: 'B', Year: 2021, Life: 78 },
+            ] },
+            semantic_types: { Country: 'Category', Year: 'Year', Life: 'Quantity' },
+            chart_spec: {
+                chartType: 'Slope Chart',
+                encodings: { x: 'Year', y: 'Life', color: 'Country' },
+            },
+            theme_spec: 'pop',
+        } as any) as any;
+
+        expect(spec.config.axisX.grid).toBe(false);
+        expect(spec.config.axisX.gridWidth).toBe(0);
+        expect(spec.config.axisY.grid).toBe(true);
+    });
+
+    it('outlines observed heatmap cells without restoring axis grids', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { City: 'Cairo', Month: '2025-01', Temp: 14 },
+                { City: 'Cairo', Month: '2025-02', Temp: 15 },
+                { City: 'Moscow', Month: '2025-01', Temp: -9 },
+                { City: 'Moscow', Month: '2025-02', Temp: -7 },
+            ] },
+            semantic_types: { City: 'Category', Month: 'YearMonth', Temp: 'Quantity' },
+            chart_spec: { chartType: 'Heatmap', encodings: { x: 'Month', y: 'City', color: 'Temp' } },
+            theme_spec: 'pop',
+        } as any) as any;
+        let cell: any;
+        JSON.stringify(spec, (_key, value) => {
+            if (!cell && value?.type === 'rect') cell = value;
+            return value;
+        });
+
+        expect(cell.stroke).not.toBe('#fff200');
+        expect(cell.stroke).not.toBe('#111111');
+        expect(cell.strokeWidth).toBe(1);
+        expect(spec.config.axisX.grid).toBe(false);
+        expect(spec.config.axisY.grid).toBe(false);
     });
 });
 

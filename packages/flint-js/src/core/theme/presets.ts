@@ -19,6 +19,7 @@ import { datawrapper } from './presets/datawrapper';
 import { powerbi } from './presets/powerbi';
 import { powerbiLight } from './presets/powerbi-light';
 import { swiss } from './presets/swiss';
+import { pop } from './presets/pop';
 import { cartoon } from './presets/cartoon';
 import { deepMerge } from './merge.js';
 
@@ -31,6 +32,7 @@ export const THEME_PRESETS: Record<string, ThemePreset> = {
     datawrapper,
     powerbi,
     'powerbi-light': powerbiLight,
+    pop,
     cartoon,
 };
 
@@ -64,11 +66,11 @@ export function listThemePresets(): Array<Pick<ThemePreset, 'id' | 'label' | 'de
  */
 export function resolveThemeSpec(theme: ThemeSpec | string | undefined): ThemeSpec | undefined {
     if (theme === undefined) return undefined;
-    if (typeof theme === 'string') return presetSpec(theme);
+    if (typeof theme === 'string') return resolveThemeSpec(presetSpec(theme));
     if (theme.extends === undefined) return theme;
 
     const { extends: presetId, ...overrides } = theme;
-    return deepMerge(presetSpec(presetId), overrides);
+    return deepMerge(resolveThemeSpec(presetSpec(presetId))!, overrides);
 }
 
 function presetSpec(id: string): ThemeSpec {

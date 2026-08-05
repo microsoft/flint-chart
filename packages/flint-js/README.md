@@ -51,7 +51,7 @@ const themedSpec = assembleVegaLite({
 });
 ```
 
-Flint ships nine presets and also accepts a custom `ThemeSpec`, or an object
+Flint ships ten presets and also accepts a custom `ThemeSpec`, or an object
 that `extends` a preset and overrides selected fields. ThemeSpec currently
 affects Vega-Lite output. See
 [Using themes](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
