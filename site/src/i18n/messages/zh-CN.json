@@ -92,7 +92,7 @@
         "description": "弹簧、气压、径向与面积等尺寸模型。"
       },
       "theme-spec": {
-        "title": "ThemeSpec",
+        "title": "使用主题",
         "description": "使用预设、定义设计系统，或继承并覆盖内置主题。"
       },
       "api-reference": {

@@ -1,4 +1,4 @@
-# ThemeSpec
+# Using themes
 
 A theme in Flint is a formal specification that describes how a chart system behaves throughout creation. It is not a cosmetic skin applied after rendering. It works at three levels:
 

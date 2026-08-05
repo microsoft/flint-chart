@@ -38,7 +38,7 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
       },
       {
         slug: 'theme-spec',
-        title: 'ThemeSpec',
+        title: 'Using themes',
         description: 'Use a preset, define a design system, or inherit and override a shipped theme.',
         file: '../../../docs/theme-spec.md',
       },
