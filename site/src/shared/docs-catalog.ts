@@ -37,6 +37,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/tutorials/data-story.md',
       },
       {
+        slug: 'theme-spec',
+        title: 'ThemeSpec',
+        description: 'Use a preset, define a design system, or inherit and override a shipped theme.',
+        file: '../../../docs/theme-spec.md',
+      },
+      {
         slug: 'setup-flint-mcp',
         title: 'Set up Flint MCP',
         description:
@@ -94,12 +100,6 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         title: 'Auto Layout Algorithm',
         description: 'Spring, gas-pressure, radial, and area sizing models.',
         file: '../../../docs/design-stretch-model.md',
-      },
-      {
-        slug: 'theme-spec',
-        title: 'ThemeSpec',
-        description: 'Use a preset, define a design system, or inherit and override a shipped theme.',
-        file: '../../../docs/theme-spec.md',
       },
       {
         slug: 'api-reference',
