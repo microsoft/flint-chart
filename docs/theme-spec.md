@@ -1,6 +1,12 @@
 # ThemeSpec
 
-A Flint theme is part of compilation, not a skin applied after a chart is rendered. It can change how the layout algorithm allocates space, how semantic roles are presented, and how geometry, type, and color carry a visual identity.
+A theme in Flint is a formal specification that describes how a chart system behaves throughout creation. It is not a cosmetic skin applied after rendering. It works at three levels:
+
+- **Layout algorithm.** Controls how the compiler allocates space, relates elements, and adapts labels, legends, axes, and annotations.
+- **Semantic roles.** Sets presentation rules by meaning, so field roles, order, grouping, and hierarchy drive contrast, emphasis, and representation.
+- **Geometry and typography.** Defines type, color, surfaces, line weight, corners, and mark shapes to carry a consistent visual identity.
+
+[Explore themes](/themes) applies these three levels to the same set of charts so you can compare their effects directly.
 
 `theme_spec` sits beside `chart_spec` in a `ChartAssemblyInput`. The chart spec says **what the chart means**. The theme spec says **how that meaning should be presented**.
 
