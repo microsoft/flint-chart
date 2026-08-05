@@ -130,7 +130,6 @@
   },
   "themes": {
     "title": "Explore themes",
-    "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
     "concept": "A Flint theme is a formal specification that shapes a chart throughout its creation. It influences the compiler at three levels.",
     "principles": {
       "layout": {

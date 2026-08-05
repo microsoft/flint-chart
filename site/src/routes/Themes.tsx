@@ -270,10 +270,7 @@ export function Themes() {
         <div style={{ maxWidth: 1500, margin: '0 auto', padding: '36px 40px 96px' }}>
           <header style={{ marginBottom: 4 }}>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>{t('themes.title')}</h1>
-            <p style={{ margin: '10px 0 0', maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.lead')}
-            </p>
-            <p style={{ margin: '8px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+            <p style={{ margin: '10px 0 0', maxWidth: 900, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.concept')}
             </p>
             <div
