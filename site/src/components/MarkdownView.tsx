@@ -10,6 +10,7 @@ import { CodeBlock, PlainTextBlock, resolveCodeLanguage } from './CodeBlock';
 import { SizingPlayground } from './SizingPlayground';
 import { DocChart } from './DocChart';
 import { ThemeSpecPanel } from './ThemeSpecPanel';
+import { ThemePresetList } from './ThemePresetList';
 import { useLocale } from '../i18n/LocaleContext';
 import { resolveMarkdownHref, resolveMarkdownImageSrc } from '../shared/load-docs';
 import { DOC_SCROLL_TO_KEY, scrollToHeading } from '../shared/scroll-to-heading';
@@ -166,6 +167,13 @@ export function MarkdownView({
       // panel owns complete, valid examples and keeps its selector in sync.
       if (className?.includes('language-flint-theme-spec')) {
         return <ThemeSpecPanel />;
+      }
+
+      // The live catalogue includes each preset's own SVG icon and reads the
+      // same metadata as the pickers, so adding a house cannot leave a stale
+      // hand-written table in the guide.
+      if (className?.includes('language-flint-theme-presets')) {
+        return <ThemePresetList />;
       }
 
       const language = resolveCodeLanguage(className);

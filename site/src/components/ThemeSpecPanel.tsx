@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { THEME_PRESETS } from 'flint-chart';
 import { CodeBlock } from './CodeBlock';
+import { ThemePresetIcon } from './ThemePresetList';
 import { ScaleToFit } from './ScaleToFit';
 import { VegaLiteView } from './VegaLiteView';
 import { BACKENDS } from '../shared/supported-backends';
@@ -26,6 +27,7 @@ export function ThemeSpecPanel() {
   const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>('preset');
   const [presetId, setPresetId] = useState('economist');
+  const pickerRef = useRef<HTMLDetailsElement>(null);
   const preset = THEME_PRESETS[presetId];
   const previewCanvas =
     mode === 'custom'
@@ -79,20 +81,43 @@ export function ThemeSpecPanel() {
         </div>
 
         {mode !== 'custom' ? (
-          <label style={selectLabelStyle}>
+          <div style={selectLabelStyle}>
             <span>{mode === 'inherit' ? t('docs.themeSpecPanel.base') : t('docs.themeSpecPanel.preset')}</span>
-            <select
-              value={presetId}
-              onChange={(event) => setPresetId(event.currentTarget.value)}
-              style={selectStyle}
-            >
-              {Object.values(THEME_PRESETS).map((choice) => (
-                <option key={choice.id} value={choice.id}>
-                  {choice.label} ({choice.id})
-                </option>
-              ))}
-            </select>
-          </label>
+            <details ref={pickerRef} style={pickerStyle}>
+              <summary className="theme-preset-summary" style={pickerSummaryStyle}>
+                <ThemePresetIcon icon={preset.icon} size={15} />
+                <span style={{ flex: 1 }}>{preset.label}</span>
+                <code style={pickerIdStyle}>{preset.id}</code>
+                <span aria-hidden="true" style={{ color: siteTheme.textMuted }}>▾</span>
+              </summary>
+              <div role="listbox" aria-label={t('docs.themeSpecPanel.preset')} style={pickerMenuStyle}>
+                {Object.values(THEME_PRESETS).map((choice) => {
+                  const selected = choice.id === presetId;
+                  return (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setPresetId(choice.id);
+                        pickerRef.current?.removeAttribute('open');
+                      }}
+                      style={{
+                        ...pickerOptionStyle,
+                        background: selected ? siteTheme.hover : 'transparent',
+                        color: selected ? siteTheme.text : siteTheme.textMuted,
+                      }}
+                    >
+                      <ThemePresetIcon icon={choice.icon} size={15} />
+                      <span style={{ flex: 1, textAlign: 'left' }}>{choice.label}</span>
+                      <code style={pickerIdStyle}>{choice.id}</code>
+                    </button>
+                  );
+                })}
+              </div>
+            </details>
+          </div>
         ) : null}
       </div>
 
@@ -304,15 +329,61 @@ const selectLabelStyle: CSSProperties = {
   fontSize: 12.5,
 };
 
-const selectStyle: CSSProperties = {
+const pickerStyle: CSSProperties = {
+  position: 'relative',
+  minWidth: 190,
+};
+
+const pickerSummaryStyle: CSSProperties = {
   minHeight: 32,
-  padding: '4px 28px 4px 9px',
+  boxSizing: 'border-box',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 7,
+  padding: '4px 8px',
   border: `1px solid ${siteTheme.border}`,
   borderRadius: 6,
   background: siteTheme.surface,
   color: siteTheme.text,
+  cursor: 'pointer',
+  listStyle: 'none',
+  fontSize: 12.5,
+};
+
+const pickerMenuStyle: CSSProperties = {
+  position: 'absolute',
+  zIndex: 5,
+  top: 'calc(100% + 4px)',
+  right: 0,
+  width: 240,
+  maxHeight: 310,
+  overflowY: 'auto',
+  boxSizing: 'border-box',
+  padding: 4,
+  border: `1px solid ${siteTheme.border}`,
+  borderRadius: 7,
+  background: siteTheme.surface,
+  boxShadow: '0 8px 24px rgba(31, 35, 40, 0.16)',
+};
+
+const pickerOptionStyle: CSSProperties = {
+  width: '100%',
+  minHeight: 32,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '5px 7px',
+  border: 0,
+  borderRadius: 5,
+  cursor: 'pointer',
   font: 'inherit',
   fontSize: 12.5,
+};
+
+const pickerIdStyle: CSSProperties = {
+  color: siteTheme.textMuted,
+  fontFamily: siteTheme.fontMono,
+  fontSize: 10.5,
 };
 
 const codeStyle: CSSProperties = {
@@ -361,6 +432,9 @@ const errorStyle: CSSProperties = {
 };
 
 const responsiveStyles = `
+  .theme-preset-summary::-webkit-details-marker {
+    display: none;
+  }
   @media (max-width: 760px) {
     .theme-spec-example-grid {
       grid-template-columns: minmax(0, 1fr) !important;

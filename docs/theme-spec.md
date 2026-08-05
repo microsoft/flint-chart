@@ -32,17 +32,9 @@ Use a preset ID when one of Flint's built-in design systems fits your product. T
 
 Flint currently ships these presets:
 
-| ID | Designed for |
-| --- | --- |
-| `nyt` | Newsroom graphics with finding-led headlines and direct series labels |
-| `economist` | Compact print graphics with strong rulers and explicit units |
-| `swiss` | A modular grid, strong black structure, and one signal-red accent |
-| `nature` | Compact journal figures with explicit units and statistical annotation |
-| `mckinsey` | Presentation-ready charts with prominent values and takeaway headlines |
-| `datawrapper` | Clean, restrained web graphics for narrow editorial columns |
-| `powerbi` | Compact dark dashboard tiles |
-| `powerbi-light` | Compact light dashboard tiles |
-| `cartoon` | Playful charts with bold outlines, rounded type, and bright color |
+```flint-theme-presets
+presets
+```
 
 Preset IDs are stable API values. Use `listThemePresets()` when a product needs to build its own picker.
 

@@ -32,17 +32,9 @@ theme-spec
 
 Flint 目前提供以下预设：
 
-| ID | 适用场景 |
-| --- | --- |
-| `nyt` | 以结论为标题并直接标注系列的新闻图表 |
-| `economist` | 坐标结构清晰、单位明确的紧凑印刷图表 |
-| `swiss` | 模块网格、强烈黑色结构与单一红色强调 |
-| `nature` | 单位明确并带统计注释的紧凑学术图表 |
-| `mckinsey` | 突出数值和核心结论的演示文稿图表 |
-| `datawrapper` | 适合窄幅编辑栏目的简洁网页图表 |
-| `powerbi` | 紧凑的深色仪表板卡片 |
-| `powerbi-light` | 紧凑的浅色仪表板卡片 |
-| `cartoon` | 带粗描边、圆润字体和明亮色彩的活泼图表 |
+```flint-theme-presets
+presets
+```
 
 预设 ID 是稳定的 API 值。产品需要构建自己的选择器时，可以调用 `listThemePresets()`。
 
