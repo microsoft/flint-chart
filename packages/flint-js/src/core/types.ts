@@ -1125,7 +1125,8 @@ export interface ChartAssemblyInput {
      * applies to every chart and the same chart accepts any theme — nesting it
      * would make that independence unstatable.
      *
-     * @experimental Vega-Lite only.
+     * Currently realized by the Vega-Lite assembler only. Other assemblers
+     * accept the shared input field but do not apply it.
      */
     theme_spec?: ThemeSpec | string;
 

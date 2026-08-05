@@ -198,16 +198,21 @@ Name a house Flint ships and the compiler styles the chart to it:
 | --- | --- |
 | `nyt` | Newsroom graphics: headline states the finding, values on the marks, series named at their ends. |
 | `economist` | Print weekly: compact, flat headline over a deck, units repeated down the ruler. |
+| `swiss` | International Typographic Style: strong grid structure, black typography, and a focused red accent. |
 | `nature` | Journal figure: small panel, axis titles with units, statistics beside the fit. |
 | `mckinsey` | Consulting deck: wide bands, every value printed, headline states the takeaway. |
 | `datawrapper` | Embedded web chart: narrow column, plain headline and deck, rule under the footer. |
 | `powerbi` | Dashboard tile: compact, legend to the right, latest point emphasised. |
+| `powerbi-light` | Light dashboard tile: white canvas, fine gridlines, and bright categorical color. |
+| `cartoon` | Playful illustration: warm paper, rounded type, bold outlines, and bright color. |
 
 A house governs the visual only — you still choose the fields, the aggregation
 and the sort. Where a house depends on something only you can supply, it says
 so: call `list_themes` with an `id` for that house's guidance, and read it
 *before* writing the chart spec, since it may change how you prepare the data.
-Vega-Lite only for now. You can also pass a `ThemeSpec` object of your own.
+Vega-Lite only for now. You can also pass a custom `ThemeSpec`, or use
+`{ "extends": "economist", ... }` to inherit a preset and override selected
+fields.
 
 ## Step 1 — pick `chartType`
 

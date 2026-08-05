@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Formal visual themes for Vega-Lite through the new top-level `theme_spec`
+  field. Callers can select one of nine built-in presets, provide a custom
+  `ThemeSpec`, or inherit a preset with `extends` and override selected fields.
+  Nested objects merge while arrays and scalar values replace inherited values.
+- A semantic theme-grounding system that applies layout behavior, presentation
+  rules, mark geometry, typography, color, labels, legends, axes, annotations,
+  and chart furniture as one visual system across chart types and data shapes.
+- Public theme APIs: `ThemeSpec`, `ThemePreset`, `THEME_PRESETS`,
+  `listThemePresets()`, and `resolveThemeSpec()`.
+- Theme discovery in the MCP server through `list_themes`, plus preset selection
+  in the interactive MCP App.
+- A public visual-theme wall, a complete **Using themes** guide, and
+  preset/custom/inherited live examples on the Flint project site.
+
+### Changed
+
+- Vega-Lite assembly now grounds the selected theme before layout and realizes
+  its decisions throughout compilation instead of applying a post-render style
+  layer. Existing inputs without `theme_spec` retain Flint's default behavior.
+
 ## [0.4.1] - 2026-07-27
 
 ### Changed

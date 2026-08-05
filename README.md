@@ -6,7 +6,7 @@
 [![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
+**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**Visual Themes**](https://microsoft.github.io/flint-chart/#/themes) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
 
 Flint is a visualization intermediate language that lets **AI agents create
 expressive, polished visualizations from simple, human-editable chart specs**.
@@ -38,6 +38,9 @@ This repo contains two main components:
   semantic types such as `Rank`, `Temperature`, `Price`, or `Country`.
 - **Automatic layout.** Flint adapts sizing, spacing, labels, marks, and legends
   to the data cardinality, chart design, and canvas constraints.
+- **Formal visual themes.** Define layout behavior, semantic presentation, and
+  visual identity once, then apply them across a chart library with a preset,
+  custom `ThemeSpec`, or inherited theme.
 - **Multiple backends.** Compile one input to backend-native output across
   [Vega-Lite](https://vega.github.io/vega-lite/),
   [ECharts](https://echarts.apache.org/),
@@ -110,6 +113,43 @@ const plotlyFigure = assemblePlotly(input);
 const excelArtifact = assembleExcel(input);
 ```
 
+## Apply Visual Themes
+
+`theme_spec` sits beside `chart_spec`: the chart spec defines what the chart
+means, while the theme defines how that meaning is presented. A theme can guide
+layout, labels, legends, axes, mark geometry, typography, and color as one
+coherent visual system.
+
+Use one of Flint's nine built-in presets:
+
+```ts
+const themedSpec = assembleVegaLite({
+  ...input,
+  theme_spec: 'economist',
+});
+```
+
+Or inherit a preset and override only the decisions that belong to your brand:
+
+```ts
+const brandedSpec = assembleVegaLite({
+  ...input,
+  theme_spec: {
+    extends: 'economist',
+    id: 'our-brand',
+    ink: {
+      series: { single: '#6b3fa0' },
+    },
+  },
+});
+```
+
+Nested objects merge; arrays and scalar values replace the inherited value.
+ThemeSpec currently affects Vega-Lite output. Compare all presets on the
+[theme wall](https://microsoft.github.io/flint-chart/#/themes) and see
+[Using themes](docs/theme-spec.md) for the complete custom and inherited-theme
+reference.
+
 See the [API reference](docs/api-reference.md), backend references for
 [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
 [Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
@@ -160,6 +200,7 @@ flint-chart/
 The [project site](https://microsoft.github.io/flint-chart/) is the main entry
 point for examples, the live editor, and concept docs. For source-level
 references, start with the [API reference](docs/api-reference.md), the
+[theme guide](docs/theme-spec.md), the
 [Flint MCP project page](https://microsoft.github.io/flint-chart/#/mcp), or the
 [Development guide](docs/DEVELOPMENT.md). See the [changelog](CHANGELOG.md) for
 notable changes in each release.

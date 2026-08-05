@@ -1,6 +1,6 @@
 # Using themes
 
-A theme in Flint is a formal specification that describes how a chart system behaves throughout creation. It is not a cosmetic skin applied after rendering. It works at three levels:
+A theme in Flint is a formal specification that describes how a chart system behaves throughout creation. It works at three levels:
 
 - **Layout algorithm.** Controls how the compiler allocates space, relates elements, and adapts labels, legends, axes, and annotations.
 - **Semantic roles.** Sets presentation rules by meaning, so field roles, order, grouping, and hierarchy drive contrast, emphasis, and representation.

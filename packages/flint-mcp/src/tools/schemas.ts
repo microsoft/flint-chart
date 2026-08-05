@@ -106,7 +106,7 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .union([z.string(), z.record(z.string(), z.any())])
       .optional()
       .describe(
-        'Design language: the name of a house Flint ships (see list_themes, e.g. "economist") or a ThemeSpec object of your own. Vega-Lite only.',
+        'Visual theme: the name of a preset Flint ships (see list_themes, e.g. "economist"), a custom ThemeSpec, or an object that extends a preset and overrides selected fields. Vega-Lite only.',
       ),
     options: z
       .record(z.string(), z.any())

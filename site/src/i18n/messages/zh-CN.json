@@ -158,7 +158,8 @@
     "backends": {
       "vegalite": "将 Flint 规范编译为干净的 Vega-Lite 规范——适合用 Vega 渲染清晰、出版级的统计图形。",
       "echarts": "将 Flint 规范编译为 Apache ECharts option——适合交互式仪表盘与丰富视觉效果。",
-      "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。"
+      "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。",
+      "plotly": "将 Flint 规范编译为 Plotly.js figure——适合带有原生悬停、缩放和图例交互的分析图表。"
     }
   },
   "themes": {

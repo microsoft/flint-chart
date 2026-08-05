@@ -42,6 +42,21 @@ const input: ChartAssemblyInput = {
 const vegaLiteSpec = assembleVegaLite(input);
 ```
 
+Add a formal visual theme without changing the chart's data or encodings:
+
+```ts
+const themedSpec = assembleVegaLite({
+  ...input,
+  theme_spec: 'economist',
+});
+```
+
+Flint ships nine presets and also accepts a custom `ThemeSpec`, or an object
+that `extends` a preset and overrides selected fields. ThemeSpec currently
+affects Vega-Lite output. See
+[Using themes](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
+and the [live theme wall](https://microsoft.github.io/flint-chart/#/themes).
+
 The same `ChartAssemblyInput` compiles to any backend:
 
 ```ts
@@ -84,6 +99,7 @@ The Excel backend instead produces a native-chart artifact: use
 ## Documentation
 
 - [Project overview & docs](https://github.com/microsoft/flint-chart#readme)
+- [Using themes](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
 - [Semantic-type model & rationale](src/docs/design-semantics.md)
 - [Stretch / banking layout model](src/docs/design-stretch-model.md)
 - [Agent authoring skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-chart-author/SKILL.md)

@@ -597,7 +597,7 @@ function BackendIntro({
 
 const ${resultNames[category.id]} = ${category.fn}(input);`;
 
-  const backendDesc = t(`gallery.backends.${category.id}`);
+  const backendDesc = t(`gallery.backends.${category.id}`, { defaultValue: category.description });
 
   return (
     <div className="gallery-intro" data-gallery-intro="" style={{ marginTop: 22 }}>

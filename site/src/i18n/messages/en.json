@@ -158,7 +158,8 @@
     "backends": {
       "vegalite": "Compiles a Flint spec into a clean Vega-Lite specification — ideal for crisp, publication-quality statistical graphics rendered with Vega.",
       "echarts": "Compiles a Flint spec into an Apache ECharts option — well suited to interactive dashboards and rich visual effects.",
-      "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps."
+      "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps.",
+      "plotly": "Compiles a Flint spec into a Plotly.js figure — well suited to analytical charts with native hover, zoom, and legend interactions."
     }
   },
   "themes": {

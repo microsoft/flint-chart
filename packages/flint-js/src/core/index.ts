@@ -195,7 +195,7 @@ export {
     resolveSortDirection,
 } from './field-semantics';
 
-// ThemeSpec (experimental): level 1 vocabulary + level 2 grounding
+// ThemeSpec: public visual-system vocabulary and chart-specific grounding
 export {
     type ThemeSpec,
     type ThemePreset,

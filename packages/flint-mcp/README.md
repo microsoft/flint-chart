@@ -14,7 +14,7 @@ execution counterpart: it compiles, validates, and renders that one spec.
 Most chart MCP servers expose one tool per chart type (26+ tools) because every
 chart has a different schema, and they upload your config to a remote render
 service. Flint has **one schema** (`ChartAssemblyInput`) spanning ~40 chart
-types × multiple backends, so this server exposes **five focused tools** and
+types × multiple backends, so this server exposes **six focused tools** and
 renders **locally**.
 
 ## Tools
@@ -25,6 +25,7 @@ renders **locally**.
 | `compile_chart` | spec + `backend` | backend-native spec JSON + warnings |
 | `validate_chart` | spec + `backend` | validity, warnings/errors, computed size |
 | `list_chart_types` | `backend?` | chart types + encoding channels per backend |
+| `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
 | `create_chart_view` | spec | interactive chart **UI** (MCP App): live SVG preview + customization panel |
 
 ## MCP App: interactive chart view
@@ -33,9 +34,10 @@ In hosts that support MCP App UIs (e.g. Claude Desktop), `create_chart_view`
 opens an interactive view that renders the spec live (Vega-Lite → SVG) and shows
 a customization panel built from Flint's own option model — chart type, channel
 bindings, chart properties (corner radius, stack mode, donut hole, …), and
-encoding actions (sort). Rendering and edits run entirely in the host UI; no
-data leaves the host. The UI is a single self-contained HTML bundle served as
-the `ui://flint-chart/chart-view.html` resource and built with `npm run build:ui`.
+encoding actions (sort), plus Flint's visual theme presets. Rendering and edits
+run entirely in the host UI; no data leaves the host. The UI is a single
+self-contained HTML bundle served as the
+`ui://flint-chart/chart-view.html` resource and built with `npm run build:ui`.
 
 ## Resources and prompt
 

@@ -913,7 +913,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     let dlPlacement = dl.placement ?? 'outsideMark';
     // A label placed *on* a mark sits on the mark's fill, whatever the house
     // said about ink. Contrast is a legibility floor, not a style choice.
-    let dlInkMode = dl.inkMode
+    const dlInkMode = dl.inkMode
         ?? (dlPlacement === 'atMark' ? 'contrastWithMark' : 'fixed');
     if (!dl.inkMode && dlInkMode === 'contrastWithMark') {
         say('dataLabels.inkMode',
@@ -1003,7 +1003,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // it drew and its labels were offered straight into a pile.
     let valueMaxAbs = 0;
     let measureField: string | undefined;
-    let labelValues: number[] = [];
+    const labelValues: number[] = [];
     {
         const mch = bindings.measureChannels[0];
         measureField = mch
