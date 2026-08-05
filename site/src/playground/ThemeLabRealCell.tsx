@@ -17,7 +17,7 @@ import { THEME_PRESETS, assembleVegaLite } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
-import type { PreviewCase } from './new-case-preview-data';
+import type { PreviewCase } from '../shared/preview-cases';
 
 export const REAL_COLUMNS = ['flint', ...Object.keys(THEME_PRESETS)] as const;
 export type RealColumn = (typeof REAL_COLUMNS)[number];

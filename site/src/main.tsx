@@ -9,13 +9,13 @@ import { ChartWall } from './routes/ChartWall';
 import { ExcelGallery } from './routes/ExcelGallery';
 import { Editor } from './routes/Editor';
 import { McpServer } from './routes/McpServer';
+import { Themes } from './routes/Themes';
 import { DocSectionPage } from './routes/DocSectionPage';
 import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
-import { ThemeWall } from './playground/ThemeWall';
 import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
@@ -48,6 +48,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="wall/:backend" element={<WallRedirect />} />
         <Route path="editor" element={<Editor />} />
         <Route path="mcp" element={<McpServer />} />
+        <Route path="themes" element={<Themes />} />
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
@@ -57,7 +58,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
-          <Route path="theme-wall" element={<ThemeWall />} />
+          {/* The theme wall graduated to the public /themes page. */}
+          <Route path="theme-wall" element={<Navigate to={localePath('/themes', locale)} replace />} />
           <Route path="theme-labs" element={<ThemeLab />} />
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-real" element={<ThemeLabReal />} />

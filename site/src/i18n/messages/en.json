@@ -2,6 +2,7 @@
   "nav": {
     "about": "About",
     "mcp": "MCP Server",
+    "themes": "Themes",
     "gallery": "Gallery",
     "documentation": "Documentation",
     "editor": "Online Editor",
@@ -125,6 +126,86 @@
       "vegalite": "Compiles a Flint spec into a clean Vega-Lite specification — ideal for crisp, publication-quality statistical graphics rendered with Vega.",
       "echarts": "Compiles a Flint spec into an Apache ECharts option — well suited to interactive dashboards and rich visual effects.",
       "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps."
+    }
+  },
+  "themes": {
+    "title": "Themes",
+    "lead": "One house, {{count}} chart types, all on screen at once. Switch houses and watch every chart change together — the styling is the only thing these charts have in common, so it is the only thing that moves.",
+    "flintDefault": "Flint default",
+    "switchAria": "Theme",
+    "cases": {
+      "keeling": {
+        "title": "Keeling Curve",
+        "blurb": "Atmospheric CO₂ at Mauna Loa, 316 ppm to 421 and still climbing."
+      },
+      "driving": {
+        "title": "Driving shifts into reverse",
+        "blurb": "Miles driven per person against the price of gas, 1956–2010."
+      },
+      "seattle-range": {
+        "title": "Seattle temperature range",
+        "blurb": "Average daily low to high, month by month."
+      },
+      "temp-heatmap": {
+        "title": "Monthly temperature by city",
+        "blurb": "Tropics warm all year, Moscow frozen, Sydney running backwards."
+      },
+      "browser-pie": {
+        "title": "Desktop browser share",
+        "blurb": "Chrome takes two thirds; Safari and Edge tie far behind."
+      },
+      "co2-lollipop": {
+        "title": "CO₂ emissions per person",
+        "blurb": "Sixteen countries spanning a twentyfold range, in tonnes."
+      },
+      "life-expectancy": {
+        "title": "Life expectancy, 2000 to 2021",
+        "blurb": "Almost every country rose. The US line dips through COVID."
+      },
+      "lifeexp-dumbbell": {
+        "title": "The female–male life gap",
+        "blurb": "Each bar spans male to female life expectancy in one country."
+      },
+      "electricity-mix-area": {
+        "title": "World electricity mix",
+        "blurb": "Coal holds its share for thirty years as wind and solar arrive."
+      },
+      "big-mac": {
+        "title": "The Big Mac index",
+        "blurb": "One burger, priced worldwide: a rough gauge of what money buys."
+      },
+      "olympic-bump": {
+        "title": "Olympic medal-table rank",
+        "blurb": "Four Summer Games, 2012 to 2024, with first place on top."
+      },
+      "nutrition-radar": {
+        "title": "Almonds, oats and yogurt",
+        "blurb": "Five nutrients per 100 g; each food traces its own polygon."
+      },
+      "faithful-hist": {
+        "title": "Old Faithful eruptions",
+        "blurb": "Two humps, near two minutes and four and a half. A mean hides both."
+      },
+      "trust-likert": {
+        "title": "Confidence in US institutions",
+        "blurb": "Centred on the neutral split: trust left, doubt right."
+      },
+      "population-waterfall": {
+        "title": "World population, 1950 to 2020",
+        "blurb": "A bridge from 2.5 to 7.9 billion, one step per UN sub-region."
+      },
+      "us-pyramid": {
+        "title": "US population by age and sex",
+        "blurb": "Age bands stacked upward, the sexes mirrored either side of zero."
+      },
+      "gapminder-bubble": {
+        "title": "Wealth against health",
+        "blurb": "Rosling’s bubbles: size is population, colour is continent."
+      },
+      "earnings-education": {
+        "title": "Earnings by education and sex",
+        "blurb": "Two gaps at once: the ladder, and the gap inside every rung."
+      }
     }
   },
   "modal": {

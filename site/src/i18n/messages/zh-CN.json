@@ -2,6 +2,7 @@
   "nav": {
     "about": "关于",
     "mcp": "MCP 服务器",
+    "themes": "主题",
     "gallery": "图表示例",
     "documentation": "文档",
     "editor": "在线编辑器",
@@ -125,6 +126,86 @@
       "vegalite": "将 Flint 规范编译为干净的 Vega-Lite 规范——适合用 Vega 渲染清晰、出版级的统计图形。",
       "echarts": "将 Flint 规范编译为 Apache ECharts option——适合交互式仪表盘与丰富视觉效果。",
       "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。"
+    }
+  },
+  "themes": {
+    "title": "主题",
+    "lead": "一种风格，{{count}} 种图表类型，同屏呈现。切换风格，看所有图表一同改变——这些图表唯一的共同点就是样式，因此也只有样式会变。",
+    "flintDefault": "Flint 默认",
+    "switchAria": "主题",
+    "cases": {
+      "keeling": {
+        "title": "基林曲线",
+        "blurb": "莫纳罗亚的大气二氧化碳，从 316 ppm 升至 421，仍在攀升。"
+      },
+      "driving": {
+        "title": "开车里程掉头向下",
+        "blurb": "人均行驶里程与油价的对照，1956–2010 年。"
+      },
+      "seattle-range": {
+        "title": "西雅图气温区间",
+        "blurb": "逐月的日均最低到最高气温。"
+      },
+      "temp-heatmap": {
+        "title": "各城市月度气温",
+        "blurb": "热带全年温暖，莫斯科冰封，悉尼季节相反。"
+      },
+      "browser-pie": {
+        "title": "桌面浏览器份额",
+        "blurb": "Chrome 占去三分之二，Safari 与 Edge 远远落后且旗鼓相当。"
+      },
+      "co2-lollipop": {
+        "title": "人均二氧化碳排放",
+        "blurb": "十六个国家，相差二十倍，单位为吨。"
+      },
+      "life-expectancy": {
+        "title": "预期寿命，2000 至 2021",
+        "blurb": "几乎每个国家都在上升，美国的线在疫情期间下探。"
+      },
+      "lifeexp-dumbbell": {
+        "title": "男女寿命差距",
+        "blurb": "每条线连接一个国家男性与女性的预期寿命。"
+      },
+      "electricity-mix-area": {
+        "title": "全球发电结构",
+        "blurb": "风能与太阳能登场的三十年里，煤炭份额岿然不动。"
+      },
+      "big-mac": {
+        "title": "巨无霸指数",
+        "blurb": "同一个汉堡的全球价格：衡量货币购买力的粗略标尺。"
+      },
+      "olympic-bump": {
+        "title": "奥运奖牌榜排名",
+        "blurb": "四届夏季奥运会，2012 至 2024，第一名居顶。"
+      },
+      "nutrition-radar": {
+        "title": "杏仁、燕麦与酸奶",
+        "blurb": "每 100 克的五项营养素，每种食物各自勾出一个多边形。"
+      },
+      "faithful-hist": {
+        "title": "老忠实泉喷发",
+        "blurb": "两个峰，约两分钟与四分半，平均值会把两者都藏起来。"
+      },
+      "trust-likert": {
+        "title": "美国民众对机构的信心",
+        "blurb": "以中立点对齐：信任在左，怀疑在右。"
+      },
+      "population-waterfall": {
+        "title": "世界人口，1950 至 2020",
+        "blurb": "从 25 亿到 79 亿的一座桥，每一级是一个联合国次区域。"
+      },
+      "us-pyramid": {
+        "title": "美国人口的年龄与性别",
+        "blurb": "年龄段向上堆叠，两性以零为轴左右对照。"
+      },
+      "gapminder-bubble": {
+        "title": "财富与健康",
+        "blurb": "罗斯林的气泡图：大小是人口，颜色是洲。"
+      },
+      "earnings-education": {
+        "title": "按学历与性别看收入",
+        "blurb": "同时呈现两种差距：阶梯本身，以及每一级内部的差距。"
+      }
     }
   },
   "modal": {

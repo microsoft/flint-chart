@@ -6,7 +6,7 @@
  *
  * The R2 page drives the houses with synthetic gallery generators (clean
  * cardinalities, tidy labels). This page drives them with the *real-world*
- * datasets in `new-case-preview-data.ts` (the r1 theme-lab set): real category
+ * datasets in `shared/preview-cases.ts` (the r1 theme-lab set): real category
  * names, real distributions, negatives and long labels. It is the browser twin
  * of the `audit-out/real/` contact sheets (`scripts/theme-real.ts`).
  *
@@ -19,7 +19,7 @@
 import { useState, type ReactNode } from 'react';
 import { vlGetTemplateDef } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
-import { PREVIEW_CASES, type PreviewCase } from './new-case-preview-data';
+import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 import { RealCell, REAL_COLUMNS } from './ThemeLabRealCell';
 
 /** VL-supported real cases (Plotly-only cases have no ThemeSpec path). */

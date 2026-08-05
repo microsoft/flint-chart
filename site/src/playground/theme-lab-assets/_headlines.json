@@ -11,7 +11,7 @@
     "What differs between the two columns is typography, anchoring, spacing and colour —",
     "never the information.",
     "",
-    "Cases with no entry here fall back to the corpus title from new-case-preview-data.ts",
+    "Cases with no entry here fall back to the corpus title from shared/preview-cases.ts",
     "and get no subtitle. Duplicating strings that also live in the corpus is deliberate:",
     "the theme lab owns its own text so specs can be tuned without touching the gallery."
   ],

@@ -3,7 +3,7 @@ import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import { THEME_PRESETS, assembleVegaLite, vlGetTemplateDef } from 'flint-chart';
-import { PREVIEW_CASES } from './new-case-preview-data';
+import { PREVIEW_CASES } from '../shared/preview-cases';
 import THEME_META from './theme-lab-assets/_themes.json';
 import HEADLINES from './theme-lab-assets/_headlines.json';
 import THEME_SPECS from './theme-lab-assets/_themespecs.json';

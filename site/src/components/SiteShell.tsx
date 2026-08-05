@@ -67,6 +67,9 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         <NavLink to="/mcp" active={logical.startsWith('/mcp')}>
           {t('nav.mcp')}
         </NavLink>
+        <NavLink to="/themes" active={logical.startsWith('/themes')}>
+          {t('nav.themes')}
+        </NavLink>
         <NavLink to="/gallery" active={logical.startsWith('/gallery') || logical.startsWith('/wall')}>
           {t('nav.gallery')}
         </NavLink>

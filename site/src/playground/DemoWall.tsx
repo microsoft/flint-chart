@@ -5,7 +5,7 @@ import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import { ThemePicker } from './ThemePicker';
-import { PREVIEW_CASES, type PreviewCase } from './new-case-preview-data';
+import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 
 /** VL if it has a template for the chart type, else fall back to Plotly. */
 function pickBackend(chartType: string): 'vegalite' | 'plotly' {
