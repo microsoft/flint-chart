@@ -273,8 +273,32 @@ export function Themes() {
             <p style={{ margin: '10px 0 0', maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.lead')}
             </p>
-            <p style={{ margin: '8px 0 0', maxWidth: 820, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+            <p style={{ margin: '8px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
               {t('themes.concept')}
+            </p>
+            <div
+              className="themes-principles"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 20,
+                maxWidth: 1080,
+                marginTop: 16,
+              }}
+            >
+              {(['layout', 'semantics', 'identity'] as const).map((principle) => (
+                <div key={principle} style={{ paddingLeft: 12, borderLeft: `2px solid ${siteTheme.border}` }}>
+                  <strong style={{ display: 'block', marginBottom: 3, fontSize: 13.5, color: siteTheme.text }}>
+                    {t(`themes.principles.${principle}.title`)}
+                  </strong>
+                  <span style={{ fontSize: 12.5, lineHeight: 1.5, color: siteTheme.textMuted }}>
+                    {t(`themes.principles.${principle}.body`)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: '14px 0 0', maxWidth: 900, fontSize: 13.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
+              {t('themes.generalization')}
             </p>
           </header>
 
@@ -347,6 +371,7 @@ const codeStyle: CSSProperties = {
  * gaps.
  */
 const wallStyles = `
+  @media (max-width: 760px)  { .themes-principles { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; } }
   @media (max-width: 1330px) { .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
   @media (max-width: 910px)  { .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
   @media (max-width: 700px)  { .themes-wall { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }

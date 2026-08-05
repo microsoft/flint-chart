@@ -131,7 +131,22 @@
   "themes": {
     "title": "Explore themes",
     "lead": "Use the theme picker to see how each theme transforms the same set of charts.",
-    "concept": "Flint describes each theme with a formal specification—not a cosmetic skin. It guides compiler decisions such as label and legend placement, axis treatment, mark styling, and layout, then defines the visual language through color, typography, lines, and surfaces. The chart’s data and meaning remain unchanged.",
+    "concept": "A Flint theme is a formal specification for how a chart system behaves—not a cosmetic skin applied after rendering.",
+    "principles": {
+      "layout": {
+        "title": "Layout behavior",
+        "body": "Controls density and breathing room, how elements relate, and when labels, legends, axes, or annotations move, appear, or give way."
+      },
+      "semantics": {
+        "title": "Semantic relationships",
+        "body": "Uses field roles, ordering, grouping, and hierarchy to choose contrast, emphasis, series identity, and the right representation for each element."
+      },
+      "identity": {
+        "title": "Visual identity",
+        "body": "Defines typography, color, surfaces, line weight, and mark treatment to give every chart a consistent, recognizable voice."
+      }
+    },
+    "generalization": "Because these rules are semantic and global, they generalize across chart types, data shapes, and canvas sizes. Add a chart or change the data, and the compiler carries the same layout logic and visual identity forward.",
     "usageBefore": "Apply a theme by adding",
     "usageAfter": "to your chart request.",
     "flintDefault": "Flint default",
