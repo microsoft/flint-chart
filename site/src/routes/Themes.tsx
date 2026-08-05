@@ -24,13 +24,14 @@
  */
 
 import { useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { BACKENDS } from '../shared/supported-backends';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteShell } from '../components/SiteShell';
-import { siteTheme, CONTENT_MAX_WIDTH } from '../shared/theme';
+import { siteTheme } from '../shared/theme';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 
 /**
@@ -249,12 +250,17 @@ export function Themes() {
 
   return (
     <SiteShell>
+      <style>{wallStyles}</style>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: siteTheme.surface }}>
-        <div style={{ maxWidth: CONTENT_MAX_WIDTH, margin: '0 auto', padding: '36px 40px 96px' }}>
-          <header style={{ marginBottom: 16 }}>
+        {/* Wider than the site's 1180px text column on purpose. Eighteen tiles
+            only read as a 6×3 wall if six of them fit a row at a size where the
+            charts are still legible; at 1180 the tiles come out 159px and the
+            marks stop being readable. Prose stays capped at 720. */}
+        <div style={{ maxWidth: 1500, margin: '0 auto', padding: '36px 40px 96px' }}>
+          <header style={{ marginBottom: 4 }}>
             <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600 }}>{t('themes.title')}</h1>
             <p style={{ margin: '10px 0 0', maxWidth: 720, fontSize: 14.5, lineHeight: 1.6, color: siteTheme.textMuted }}>
-              {t('themes.lead', { count: cases.length })}
+              {t('themes.lead')}
             </p>
           </header>
 
@@ -267,17 +273,27 @@ export function Themes() {
               position: 'sticky',
               top: 0,
               zIndex: 2,
-              padding: '8px 0 12px',
+              padding: '12px 0',
               background: siteTheme.surface,
             }}
           >
             <ThemeBar themeId={themeId} onTheme={setThemeId} choices={choices} />
+            {/* The switch is a preview of one line of spec, so the page shows
+                that line and keeps it in step with the buttons. Otherwise the
+                reader leaves having enjoyed the wall without learning the one
+                thing they need to reproduce it. */}
+            <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.6, color: siteTheme.textMuted }}>
+              {t('themes.usageBefore')}{' '}
+              <code style={codeStyle}>"theme_spec": {JSON.stringify(themeId ?? null)}</code>{' '}
+              {t('themes.usageAfter')}
+            </p>
           </div>
 
           <div
+            className="themes-wall"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+              gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
               gap: 10,
             }}
           >
@@ -290,3 +306,31 @@ export function Themes() {
     </SiteShell>
   );
 }
+
+const codeStyle: CSSProperties = {
+  padding: '2px 6px',
+  borderRadius: 5,
+  fontFamily: siteTheme.fontMono,
+  fontSize: 12,
+  color: siteTheme.text,
+  background: 'rgba(0, 0, 0, 0.05)',
+};
+
+/**
+ * Six columns, fixed.
+ *
+ * The wall is a grid of eighteen and reads as 6×3 — three rows the eye can
+ * take in without scrolling far, which is what makes it a *wall* rather than a
+ * list. An auto-fill track would let the column count drift with the viewport,
+ * and at seven or five columns the last row goes ragged and the shape stops
+ * being legible. So the count is fixed, and steps down only where a tile would
+ * otherwise fall below ~200px and take its chart with it. Each breakpoint is
+ * that threshold solved for the column count, given 40px page padding and 10px
+ * gaps.
+ */
+const wallStyles = `
+  @media (max-width: 1330px) { .themes-wall { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+  @media (max-width: 910px)  { .themes-wall { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
+  @media (max-width: 700px)  { .themes-wall { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+  @media (max-width: 490px)  { .themes-wall { grid-template-columns: minmax(0, 1fr) !important; } }
+`;

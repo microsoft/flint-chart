@@ -129,8 +129,10 @@
     }
   },
   "themes": {
-    "title": "Themes",
-    "lead": "One house, {{count}} chart types, all on screen at once. Switch houses and watch every chart change together — the styling is the only thing these charts have in common, so it is the only thing that moves.",
+    "title": "Explore themes",
+    "lead": "Use the theme picker to explore themes. Every chart below is the same spec drawn by a different house, so the styling is the only thing that moves.",
+    "usageBefore": "To use one, add",
+    "usageAfter": "to your chart request — the picker above is setting exactly that field.",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "cases": {
