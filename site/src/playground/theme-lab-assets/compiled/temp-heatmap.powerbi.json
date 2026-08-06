@@ -1,0 +1,442 @@
+{
+  "mark": {
+    "type": "rect",
+    "stroke": "#1b1a19",
+    "strokeWidth": 1
+  },
+  "encoding": {
+    "x": {
+      "field": "Month",
+      "type": "nominal",
+      "sort": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "axis": {
+        "title": null
+      }
+    },
+    "y": {
+      "field": "City",
+      "type": "nominal",
+      "sort": null,
+      "axis": {
+        "title": null
+      }
+    },
+    "color": {
+      "field": "Temp (°C)",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          -29,
+          29
+        ],
+        "range": [
+          "#118dff",
+          "#5aa9f0",
+          "#4a4948",
+          "#e08a4a",
+          "#d64550"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelAngle": 0
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "labelPadding": 7,
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#c8c6c4",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "right",
+      "direction": "vertical",
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#a19f9d",
+      "gradientLength": 90,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "width": {
+    "step": 32
+  },
+  "height": {
+    "step": 32
+  },
+  "title": {
+    "text": "Average monthly temperature",
+    "subtitle": [
+      "°C, climate normals, four cities"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "City": "Singapore",
+        "Month": "Jan",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Feb",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Mar",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Apr",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "May",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jul",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Aug",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Oct",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Nov",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Dec",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jan",
+        "Temp (°C)": 14
+      },
+      {
+        "City": "Cairo",
+        "Month": "Feb",
+        "Temp (°C)": 15
+      },
+      {
+        "City": "Cairo",
+        "Month": "Mar",
+        "Temp (°C)": 18
+      },
+      {
+        "City": "Cairo",
+        "Month": "Apr",
+        "Temp (°C)": 22
+      },
+      {
+        "City": "Cairo",
+        "Month": "May",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jul",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Aug",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Cairo",
+        "Month": "Oct",
+        "Temp (°C)": 24
+      },
+      {
+        "City": "Cairo",
+        "Month": "Nov",
+        "Temp (°C)": 20
+      },
+      {
+        "City": "Cairo",
+        "Month": "Dec",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jan",
+        "Temp (°C)": -9
+      },
+      {
+        "City": "Moscow",
+        "Month": "Feb",
+        "Temp (°C)": -7
+      },
+      {
+        "City": "Moscow",
+        "Month": "Mar",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Apr",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Moscow",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jun",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Moscow",
+        "Month": "Aug",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Sep",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Moscow",
+        "Month": "Oct",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Moscow",
+        "Month": "Nov",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Dec",
+        "Temp (°C)": -6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jan",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Seattle",
+        "Month": "Feb",
+        "Temp (°C)": 6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Mar",
+        "Temp (°C)": 8
+      },
+      {
+        "City": "Seattle",
+        "Month": "Apr",
+        "Temp (°C)": 10
+      },
+      {
+        "City": "Seattle",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jun",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Aug",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Sep",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Oct",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Seattle",
+        "Month": "Nov",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Seattle",
+        "Month": "Dec",
+        "Temp (°C)": 4
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "axes.x.label.angle",
+      "message": "the widest name needs ~18px and the band is 32px — at the house's label size they read straight"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false (band 32px, 100 marks)"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.bandFraction",
+      "message": "the marks are cells in a grid, not bars in a row — band occupancy is a bar rule and does not apply"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.tile",
+      "message": "the cells are cut apart by 1px — the grid reads as a table of separate readings rather than one continuous field"
+    }
+  ]
+}

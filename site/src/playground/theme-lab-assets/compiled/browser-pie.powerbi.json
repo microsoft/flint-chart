@@ -1,0 +1,174 @@
+{
+  "width": 340,
+  "height": 292,
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "right",
+      "direction": "vertical",
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelColor": "#c8c6c4",
+      "titleFont": "'Segoe UI', system-ui, sans-serif",
+      "titleColor": "#a19f9d",
+      "gradientLength": 90,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": 8,
+  "transform": [
+    {
+      "calculate": "datum[\"Share\"] + '' + \"%\"",
+      "as": "__flintValueWithUnit"
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "#1b1a19",
+        "strokeWidth": 1.5
+      },
+      "encoding": {}
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "'Segoe UI', system-ui, sans-serif",
+        "fontSize": 10.5,
+        "radius": 105.11999999999999,
+        "color": "#1b1a19"
+      },
+      "encoding": {
+        "text": {
+          "field": "__flintValueWithUnit",
+          "type": "nominal"
+        },
+        "color": {
+          "value": "#1b1a19"
+        }
+      }
+    }
+  ],
+  "encoding": {
+    "theta": {
+      "field": "Share",
+      "type": "quantitative",
+      "stack": true
+    },
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          "#118dff",
+          "#12239e",
+          "#e66c37",
+          "#6b007b",
+          "#e044a7"
+        ]
+      }
+    },
+    "order": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": "ascending"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1.5px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.unit",
+      "message": "each printed value carries its unit `%` — there is no axis left to state it on"
+    }
+  ]
+}

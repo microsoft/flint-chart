@@ -1,0 +1,170 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Share (%)",
+      "type": "quantitative",
+      "stack": "center",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Institution",
+      "type": "nominal",
+      "sort": null
+    },
+    "color": {
+      "field": "Response",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10",
+        "domain": [
+          "A great deal",
+          "Some",
+          "Not much",
+          "None at all"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "title": {
+    "text": "Confidence in US institutions",
+    "subtitle": [
+      "% of adults expressing each level of confidence"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Institution": "Scientists",
+        "Response": "A great deal",
+        "Share (%)": 39
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "Some",
+        "Share (%)": 45
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "Not much",
+        "Share (%)": 12
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "None at all",
+        "Share (%)": 4
+      },
+      {
+        "Institution": "The military",
+        "Response": "A great deal",
+        "Share (%)": 32
+      },
+      {
+        "Institution": "The military",
+        "Response": "Some",
+        "Share (%)": 43
+      },
+      {
+        "Institution": "The military",
+        "Response": "Not much",
+        "Share (%)": 18
+      },
+      {
+        "Institution": "The military",
+        "Response": "None at all",
+        "Share (%)": 7
+      },
+      {
+        "Institution": "The police",
+        "Response": "A great deal",
+        "Share (%)": 26
+      },
+      {
+        "Institution": "The police",
+        "Response": "Some",
+        "Share (%)": 44
+      },
+      {
+        "Institution": "The police",
+        "Response": "Not much",
+        "Share (%)": 21
+      },
+      {
+        "Institution": "The police",
+        "Response": "None at all",
+        "Share (%)": 9
+      },
+      {
+        "Institution": "The press",
+        "Response": "A great deal",
+        "Share (%)": 11
+      },
+      {
+        "Institution": "The press",
+        "Response": "Some",
+        "Share (%)": 32
+      },
+      {
+        "Institution": "The press",
+        "Response": "Not much",
+        "Share (%)": 34
+      },
+      {
+        "Institution": "The press",
+        "Response": "None at all",
+        "Share (%)": 23
+      },
+      {
+        "Institution": "Congress",
+        "Response": "A great deal",
+        "Share (%)": 8
+      },
+      {
+        "Institution": "Congress",
+        "Response": "Some",
+        "Share (%)": 30
+      },
+      {
+        "Institution": "Congress",
+        "Response": "Not much",
+        "Share (%)": 38
+      },
+      {
+        "Institution": "Congress",
+        "Response": "None at all",
+        "Share (%)": 24
+      }
+    ]
+  }
+}

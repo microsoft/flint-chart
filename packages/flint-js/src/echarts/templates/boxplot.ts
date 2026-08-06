@@ -79,19 +79,44 @@ function findOutliers(values: number[]): number[] {
     return values.filter(v => v < lo || v > hi);
 }
 
-function boxplotLaneOffset(bandWidth: number, laneCount: number, laneIndex: number): number {
+/** Lane centre offset and box width, in pixels, within one category band. */
+function boxplotLaneGeometry(bandWidth: number, laneCount: number, laneIndex: number) {
     const availableWidth = bandWidth * 0.8 - 2;
     const boxGap = availableWidth / laneCount * 0.3;
     const boxWidth = (availableWidth - boxGap * (laneCount - 1)) / laneCount;
-    return boxWidth / 2 - availableWidth / 2 + laneIndex * (boxGap + boxWidth);
+    return {
+        offset: boxWidth / 2 - availableWidth / 2 + laneIndex * (boxGap + boxWidth),
+        boxWidth,
+    };
 }
 
-function makeOutlierSeries(
+// Half-width of the raw-observation jitter cloud, as a fraction of one box.
+const POINT_JITTER_FRACTION = 0.35;
+
+/**
+ * Deterministic jitter in [-1, 1]. A golden-ratio sequence spreads successive
+ * points evenly instead of clumping the way independent random draws do, and
+ * being deterministic keeps a re-render pixel-identical.
+ */
+function jitterAt(index: number): number {
+    return ((index * 0.6180339887498949) % 1) * 2 - 1;
+}
+
+/**
+ * Scatter overlay drawn on top of the boxes — either just the outliers, or
+ * every raw observation when `showPoints` is on.
+ *
+ * ECharts has no per-point band offset, so this is a `custom` series that
+ * resolves the lane (and the jitter carried as the datum's third element)
+ * against the live band width at render time.
+ */
+function makePointSeries(
     name: string,
     data: any[],
     laneIndex: number,
     laneCount: number,
     horizontal: boolean,
+    fullSample = false,
 ): any {
     return {
         name,
@@ -100,23 +125,35 @@ function makeOutlierSeries(
         data,
         encode: { tooltip: [0, 1] },
         z: 3,
+        // Marks this as an overlay belonging to the boxplot series before it, so
+        // palette assignment gives it that box's colour instead of a new slot.
+        _companion: true,
         renderItem: (_params: any, api: any) => {
             const category = Number(api.value(0));
             const value = Number(api.value(1));
+            const jitter = Number(api.value(2)) || 0;
             const point = horizontal
                 ? api.coord([value, category])
                 : api.coord([category, value]);
             const size = api.size(horizontal ? [0, 1] : [1, 0]);
             const bandWidth = Math.abs(horizontal ? size[1] : size[0]);
-            const offset = boxplotLaneOffset(bandWidth, laneCount, laneIndex);
+            const lane = boxplotLaneGeometry(bandWidth, laneCount, laneIndex);
+            const offset = lane.offset + jitter * lane.boxWidth * POINT_JITTER_FRACTION;
+            const color = api.visual('color');
             return {
                 type: 'circle',
                 shape: {
                     cx: point[0] + (horizontal ? 0 : offset),
                     cy: point[1] + (horizontal ? offset : 0),
-                    r: 2,
+                    r: fullSample ? Math.max(1.6, Math.min(3.2, lane.boxWidth * 0.08)) : 2,
                 },
-                style: { fill: api.visual('color') },
+                // With the whole sample drawn the box goes hollow and the points
+                // become the mark that spends saturated ink, so they carry the
+                // group colour. Slight transparency lets dense regions read as
+                // density; the hairline halo keeps overlaps countable.
+                style: fullSample
+                    ? { fill: color, opacity: 0.7, stroke: '#ffffff', lineWidth: 0.5 }
+                    : { fill: color },
             };
         },
     };
@@ -187,8 +224,11 @@ export const ecBoxplotDef: ChartTemplateDef = {
         // whiskers, outliers are drawn as a scatter overlay unless suppressed.
         const whiskerMethod: 'iqr' | 'minmax' =
             ctx.chartProperties?.whiskerMethod === 'minmax' ? 'minmax' : 'iqr';
+        // `showPoints` overlays every raw observation instead — which makes the
+        // separate outlier marks redundant, since they are drawn too.
+        const showPoints = ctx.chartProperties?.showPoints === true;
         const showOutliers =
-            whiskerMethod === 'iqr' && ctx.chartProperties?.showOutliers !== false;
+            !showPoints && whiskerMethod === 'iqr' && ctx.chartProperties?.showOutliers !== false;
 
         // Determine which axis is categorical and which is quantitative
         const xIsDiscrete = isDiscrete(xCS.type);
@@ -274,7 +314,7 @@ export const ecBoxplotDef: ChartTemplateDef = {
             const catGroups = groupBy(table, catField);
             for (let lane = 0; lane < maxPerBand; lane++) {
                 const boxData: ({ value: [number, number, number, number, number]; itemStyle: any } | '-')[] = [];
-                const outlierData: any[] = [];
+                const pointData: any[] = [];
                 for (let i = 0; i < categories.length; i++) {
                     const cat = categories[i];
                     const g = perBand.get(cat)?.[lane];
@@ -283,15 +323,24 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     const values = rows.map((r: any) => Number(r[valField])).filter((v: number) => isFinite(v));
                     if (!values.length) { boxData.push('-'); continue; }
                     const c = colorFor(g);
-                    boxData.push({ value: fiveNumberSummary(values, whiskerMethod), itemStyle: { color: c, borderColor: c } });
-                    if (showOutliers) {
-                        for (const o of findOutliers(values)) outlierData.push({ value: [i, o], itemStyle: { color: c } });
+                    boxData.push({
+                        value: fiveNumberSummary(values, whiskerMethod),
+                        // Hollow box when the sample is drawn (see makePointSeries).
+                        itemStyle: { color: showPoints ? 'transparent' : c, borderColor: c },
+                    });
+                    if (showPoints) {
+                        values.forEach((v, k) => pointData.push([i, v, jitterAt(k)]));
+                    } else if (showOutliers) {
+                        for (const o of findOutliers(values)) pointData.push({ value: [i, o], itemStyle: { color: c } });
                     }
                 }
-                option.series.push({ name: `__lane${lane}`, type: 'boxplot', data: boxData });
-                if (outlierData.length > 0) {
-                    option.series.push(makeOutlierSeries(
-                        `__lane${lane} (outliers)`, outlierData, lane, maxPerBand, isHorizontal,
+                option.series.push({
+                    name: `__lane${lane}`, type: 'boxplot', data: boxData,
+                    ...(showPoints ? { itemStyle: { borderWidth: 1.5 } } : {}),
+                });
+                if (pointData.length > 0) {
+                    option.series.push(makePointSeries(
+                        `__lane${lane} (points)`, pointData, lane, maxPerBand, isHorizontal, showPoints,
                     ));
                 }
             }
@@ -305,8 +354,8 @@ export const ecBoxplotDef: ChartTemplateDef = {
 
             for (let cIdx = 0; cIdx < colorCategories.length; cIdx++) {
                 const colorName = colorCategories[cIdx];
-                const boxData: ([number, number, number, number, number] | '-')[] = [];
-                const outlierData: [number, number][] = [];
+                const boxData: any[] = [];
+                const pointData: number[][] = [];
 
                 for (let i = 0; i < categories.length; i++) {
                     const cat = categories[i];
@@ -319,11 +368,21 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     // flat box at 0 in every unoccupied lane (the sparse-dodge
                     // zero-box bug). ECharts boxplot does not accept `null`
                     // data items; `'-'` is its missing-value sentinel.
-                    boxData.push(values.length ? fiveNumberSummary(values, whiskerMethod) : '-');
+                    // A per-datum transparent fill hollows the box when the raw
+                    // sample is drawn; the palette still owns the outline, which
+                    // `instantiate-spec` assigns at series level.
+                    boxData.push(
+                        !values.length ? '-'
+                            : showPoints
+                                ? { value: fiveNumberSummary(values, whiskerMethod), itemStyle: { color: 'transparent' } }
+                                : fiveNumberSummary(values, whiskerMethod),
+                    );
 
-                    if (showOutliers) {
+                    if (showPoints) {
+                        values.forEach((v, k) => pointData.push([i, v, jitterAt(k)]));
+                    } else if (showOutliers) {
                         for (const o of findOutliers(values)) {
-                            outlierData.push([i, o]);
+                            pointData.push([i, o]);
                         }
                     }
                 }
@@ -332,11 +391,12 @@ export const ecBoxplotDef: ChartTemplateDef = {
                     name: colorName,
                     type: 'boxplot',
                     data: boxData,
+                    ...(showPoints ? { itemStyle: { borderWidth: 1.5 } } : {}),
                     // itemStyle 由 ecApplyLayoutToSpec 按 colorDecisions 填充
                 });
-                if (outlierData.length > 0) {
-                    option.series.push(makeOutlierSeries(
-                        colorName + ' (outliers)', outlierData, cIdx, colorCategories.length, isHorizontal,
+                if (pointData.length > 0) {
+                    option.series.push(makePointSeries(
+                        colorName + ' (points)', pointData, cIdx, colorCategories.length, isHorizontal, showPoints,
                     ));
                 }
             }
@@ -346,18 +406,21 @@ export const ecBoxplotDef: ChartTemplateDef = {
         } else {
             // Single boxplot series (no color grouping)
             const catGroups = groupBy(table, catField);
-            const boxData: [number, number, number, number, number][] = [];
-            const outlierData: [number, number][] = [];
+            const boxData: any[] = [];
+            const pointData: number[][] = [];
 
             for (let i = 0; i < categories.length; i++) {
                 const cat = categories[i];
                 const rows = catGroups.get(cat) || [];
                 const values = rows.map((r: any) => Number(r[valField])).filter((v: number) => isFinite(v));
-                boxData.push(fiveNumberSummary(values, whiskerMethod));
+                const summary = fiveNumberSummary(values, whiskerMethod);
+                boxData.push(showPoints ? { value: summary, itemStyle: { color: 'transparent' } } : summary);
 
-                if (showOutliers) {
+                if (showPoints) {
+                    values.forEach((v, k) => pointData.push([i, v, jitterAt(k)]));
+                } else if (showOutliers) {
                     for (const o of findOutliers(values)) {
-                        outlierData.push([i, o]);
+                        pointData.push([i, o]);
                     }
                 }
             }
@@ -365,10 +428,11 @@ export const ecBoxplotDef: ChartTemplateDef = {
             option.series.push({
                 type: 'boxplot',
                 data: boxData,
+                ...(showPoints ? { itemStyle: { borderWidth: 1.5 } } : {}),
                 // 单系列颜色由 ecApplyLayoutToSpec 使用 cat10[0] 等统一默认
             });
-            if (outlierData.length > 0) {
-                option.series.push(makeOutlierSeries('Outliers', outlierData, 0, 1, isHorizontal));
+            if (pointData.length > 0) {
+                option.series.push(makePointSeries('Points', pointData, 0, 1, isHorizontal, showPoints));
             }
         }
 
@@ -386,8 +450,23 @@ export const ecBoxplotDef: ChartTemplateDef = {
             defaultValue: 'iqr',
         } as ChartPropertyDef,
         {
+            key: 'showPoints', label: 'Points', type: 'binary', defaultValue: false,
+            // Jitter needs a band to scatter within, so this is only meaningful
+            // once one position axis is discrete.
+            check: (ctx) => ({
+                applicable: isDiscrete(ctx.channelSemantics?.x?.type)
+                    || isDiscrete(ctx.channelSemantics?.y?.type),
+            }),
+        } as ChartPropertyDef,
+        {
             key: 'showOutliers', label: 'Outliers', type: 'binary', defaultValue: true,
-            check: (ctx) => ({ applicable: ctx.chartProperties?.whiskerMethod !== 'minmax' }),
+            // Outliers exist only with Tukey whiskers; min–max whiskers absorb
+            // every point. And once every observation is drawn, the outlier
+            // marks are just duplicates.
+            check: (ctx) => ({
+                applicable: ctx.chartProperties?.whiskerMethod !== 'minmax'
+                    && ctx.chartProperties?.showPoints !== true,
+            }),
         } as ChartPropertyDef,
         {
             key: 'dodge', label: 'Dodge', type: 'discrete',

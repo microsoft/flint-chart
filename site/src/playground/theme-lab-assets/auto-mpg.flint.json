@@ -1,0 +1,186 @@
+{
+  "layer": [
+    {
+      "mark": "circle",
+      "encoding": {
+        "x": {
+          "field": "Horsepower",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y": {
+          "field": "MPG",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "color": {},
+        "size": {}
+      }
+    },
+    {
+      "mark": {
+        "type": "line",
+        "color": "red"
+      },
+      "transform": [
+        {
+          "regression": "MPG",
+          "on": "Horsepower"
+        }
+      ],
+      "encoding": {
+        "x": {
+          "field": "Horsepower",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y": {
+          "field": "MPG",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "encoding": {},
+  "config": {
+    "view": {
+      "continuousWidth": 313,
+      "continuousHeight": 250
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "Power against fuel economy",
+    "subtitle": [
+      "Ordinary least squares fit; each point is one car model"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Horsepower": 130,
+        "MPG": 18
+      },
+      {
+        "Horsepower": 165,
+        "MPG": 15
+      },
+      {
+        "Horsepower": 150,
+        "MPG": 18
+      },
+      {
+        "Horsepower": 150,
+        "MPG": 16
+      },
+      {
+        "Horsepower": 140,
+        "MPG": 17
+      },
+      {
+        "Horsepower": 198,
+        "MPG": 15
+      },
+      {
+        "Horsepower": 220,
+        "MPG": 14
+      },
+      {
+        "Horsepower": 215,
+        "MPG": 14
+      },
+      {
+        "Horsepower": 97,
+        "MPG": 22
+      },
+      {
+        "Horsepower": 85,
+        "MPG": 26
+      },
+      {
+        "Horsepower": 88,
+        "MPG": 25
+      },
+      {
+        "Horsepower": 46,
+        "MPG": 26
+      },
+      {
+        "Horsepower": 90,
+        "MPG": 25
+      },
+      {
+        "Horsepower": 95,
+        "MPG": 24
+      },
+      {
+        "Horsepower": 68,
+        "MPG": 29
+      },
+      {
+        "Horsepower": 70,
+        "MPG": 27
+      },
+      {
+        "Horsepower": 52,
+        "MPG": 30
+      },
+      {
+        "Horsepower": 65,
+        "MPG": 31
+      },
+      {
+        "Horsepower": 67,
+        "MPG": 30
+      },
+      {
+        "Horsepower": 48,
+        "MPG": 43
+      },
+      {
+        "Horsepower": 66,
+        "MPG": 32
+      },
+      {
+        "Horsepower": 100,
+        "MPG": 22
+      }
+    ]
+  }
+}

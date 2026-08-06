@@ -5,6 +5,7 @@ import type { ZeroDecision, ColorSchemeRecommendation } from './semantic-types';
 import type { LabelSizingDecision } from './decisions';
 import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint } from './field-semantics';
 import type { ColorDecisionResult } from './color-decisions';
+import type { ThemeSpec } from './theme/types';
 
 /**
  * Core types for the chart engine library.
@@ -943,6 +944,13 @@ export interface ChartTemplateDef {
     properties?: ChartPropertyDef[];
 
     /**
+     * This template draws its own value text instead of using the generic
+     * theme label layer. The public control is still `showValueLabels`;
+     * templates may retain older internal/input spellings for compatibility.
+     */
+    ownsValueLabels?: boolean;
+
+    /**
      * Opt out of a backend's *generic* column/row facet-splitting pass, even
      * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
      * alone would not exempt it).
@@ -1061,6 +1069,19 @@ export interface ChartAssemblyInput {
     chart_spec: {
         /** Template name, e.g. `"Scatter Plot"`, `"Bar Chart"` */
         chartType: string;
+        /**
+         * The headline — what this chart says, in words.
+         *
+         * Not decoration. A chart of bare numbers names nothing on its own, and
+         * the headline is where the measure gets named: `Male` and `75+` say
+         * what they are, `35 30 25` does not. Design languages that drop axis
+         * titles are leaning on this line to carry the subject, so a chart
+         * authored without one loses the naming altogether — the compiler
+         * notices, and puts the axis titles back.
+         */
+        title?: string;
+        /** The deck: the reading of the headline — what is measured, of whom, when, in what units. */
+        subtitle?: string;
         /** Channel → encoding map (e.g., `{ x: { field: 'weight' }, y: { field: 'mpg' } }`).
          * A bare string is shorthand for `{ field: <string> }` (e.g. `{ x: 'weight' }`). */
         encodings: Record<string, RawEncodingValue>;
@@ -1088,6 +1109,26 @@ export interface ChartAssemblyInput {
         /** Template-specific configurable properties (e.g., bar corner radius, show labels) */
         chartProperties?: Record<string, any>;
     };
+
+    /**
+     * Theme — describes *how it should look*.
+     *
+     * Either the name of a house Flint ships (`'economist'`, `'nature'`, …see
+     * `listThemePresets()`), a `ThemeSpec` of your own, or a `ThemeSpec` that
+     * `extends` a shipped house and overrides selected fields. A ThemeSpec is a
+     * portable design language (ink, type, structure, marks, chrome policy),
+     * stated without ever naming a channel, field, or backend property. The
+     * compiler grounds it against this chart and then realizes it in the
+     * target backend.
+     *
+     * Sits beside `chart_spec` rather than inside it because the same theme
+     * applies to every chart and the same chart accepts any theme — nesting it
+     * would make that independence unstatable.
+     *
+     * Currently realized by the Vega-Lite assembler only. Other assemblers
+     * accept the shared input field but do not apply it.
+     */
+    theme_spec?: ThemeSpec | string;
 
     /**
      * Options for the assembler — layout tuning, tooltips, etc.
@@ -1205,6 +1246,20 @@ export interface AssembleOptions {
      */
     defaultBandSize?: number;
     /**
+     * Chart-specific **floor** on the per-category band step (at a 300px
+     * baseline canvas), which a house's `layout.bandStep` may grow but not
+     * undercut. Ordinary charts have no such floor: a compact house is right
+     * to print thin bars. But a few chart types are only legible above a
+     * minimum band width regardless of house — a slopegraph draws its whole
+     * meaning from the angle of two columns, and a house that packs them 46px
+     * apart turns every slope near-vertical and leaves no room for the end
+     * labels. Such a template states the width its read needs here, and the
+     * house is held to it as a minimum while still free to spread wider.
+     *
+     * Unset for most templates (no floor). Set via paramOverrides.
+     */
+    minBandStep?: number;
+    /**
      * Maximum pixels per discrete category at a 300px baseline canvas,
      * scaled proportionally with canvas size (like {@link defaultBandSize}).
      *
@@ -1222,6 +1277,22 @@ export interface AssembleOptions {
      * Defaults to {@link defaultBandSize} (no expansion beyond the base band).
      */
     maxBandSize?: number;
+    /**
+     * When a discrete axis is **grouped** (dodged lanes within each category
+     * band), by default the band's elastic stretch target is the *per-item*
+     * step — so a category holding N lanes is only sized as if it held one.
+     * For thin marks (grouped bars) that's fine: 4 lanes share a ~66px band
+     * comfortably. But wide marks — a box-and-whisker glyph — need real room
+     * per lane, and the per-item target leaves grouped boxplots compressed on
+     * an otherwise roomy canvas.
+     *
+     * When set, the grouped band instead targets `itemsPerGroup × step`, so
+     * the category band stretches to give each lane its full width (still
+     * bounded by `maxBandSize × itemsPerGroup` and the canvas budget). Scoped
+     * to templates whose grouped glyph is wide (boxplot); left off for bars so
+     * their tuned grouped spacing does not change.
+     */
+    groupBandFillsLanes?: boolean;
     /**
      * Backend-native base font size (px) for axis **tick labels**, at a 300px
      * reference canvas. The core scales it subtly with canvas size and uses it

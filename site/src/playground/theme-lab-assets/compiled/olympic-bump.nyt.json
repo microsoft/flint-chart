@@ -1,0 +1,377 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Four Games, four different stories",
+    "subtitle": [
+      "Rank in the Summer Olympics medal table, 2012–2024"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 12,
+    "right": 92,
+    "top": 12,
+    "bottom": 12
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "point": {
+          "stroke": "#ffffff",
+          "strokeWidth": 1.5
+        },
+        "interpolate": "linear",
+        "strokeWidth": 2
+      },
+      "encoding": {
+        "x": {
+          "field": "Games",
+          "type": "temporal",
+          "scale": {
+            "padding": 10,
+            "type": "utc"
+          },
+          "axis": {
+            "title": null,
+            "values": [
+              {
+                "year": 2012,
+                "utc": true
+              },
+              {
+                "year": 2016,
+                "utc": true
+              },
+              {
+                "year": 2020,
+                "utc": true
+              },
+              {
+                "year": 2024,
+                "utc": true
+              }
+            ],
+            "format": "%Y"
+          }
+        },
+        "y": {
+          "field": "Rank",
+          "type": "quantitative",
+          "scale": {
+            "reverse": true,
+            "domain": [
+              1,
+              7
+            ],
+            "zero": false,
+            "nice": false,
+            "padding": 14
+          },
+          "axis": {
+            "values": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "tickCount": 7,
+            "format": ",.12~g",
+            "title": null
+          }
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#2f6b9a",
+              "#c2352b",
+              "#4a8b6f",
+              "#7f6a9e"
+            ]
+          },
+          "legend": null
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "__seriesEndRank"
+            }
+          ],
+          "sort": [
+            {
+              "field": "Games",
+              "order": "descending"
+            }
+          ],
+          "groupby": [
+            "Country"
+          ]
+        },
+        {
+          "filter": "datum.__seriesEndRank === 1"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "dy": 0,
+        "font": "Helvetica, Arial, sans-serif",
+        "fontSize": 10
+      },
+      "encoding": {
+        "x": {
+          "field": "Games",
+          "type": "temporal"
+        },
+        "y": {
+          "field": "Rank",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Country",
+          "type": "nominal"
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#2f6b9a",
+              "#c2352b",
+              "#4a8b6f",
+              "#7f6a9e"
+            ]
+          },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Games": "2012",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2016",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2020",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2024",
+        "Country": "United States",
+        "Rank": 1
+      },
+      {
+        "Games": "2012",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2016",
+        "Country": "China",
+        "Rank": 3
+      },
+      {
+        "Games": "2020",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2024",
+        "Country": "China",
+        "Rank": 2
+      },
+      {
+        "Games": "2012",
+        "Country": "Great Britain",
+        "Rank": 3
+      },
+      {
+        "Games": "2016",
+        "Country": "Great Britain",
+        "Rank": 2
+      },
+      {
+        "Games": "2020",
+        "Country": "Great Britain",
+        "Rank": 4
+      },
+      {
+        "Games": "2024",
+        "Country": "Great Britain",
+        "Rank": 7
+      },
+      {
+        "Games": "2012",
+        "Country": "Japan",
+        "Rank": 6
+      },
+      {
+        "Games": "2016",
+        "Country": "Japan",
+        "Rank": 6
+      },
+      {
+        "Games": "2020",
+        "Country": "Japan",
+        "Rank": 5
+      },
+      {
+        "Games": "2024",
+        "Country": "Japan",
+        "Rank": 3
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Bump Chart.interpolate",
+      "message": "house rule: `interpolate` set to \"linear\""
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.point.halo",
+      "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.redundantEncoding",
+      "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the line already shows every observation — a second dot at the end would say nothing new"
+    }
+  ]
+}

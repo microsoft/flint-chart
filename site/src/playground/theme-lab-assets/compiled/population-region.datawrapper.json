@@ -1,0 +1,356 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "World population by region",
+    "subtitle": [
+      "1950–2020, millions of people"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "mark": "area",
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "axis": {
+            "title": null,
+            "values": [
+              {
+                "year": 1950,
+                "utc": true
+              },
+              {
+                "year": 1970,
+                "utc": true
+              },
+              {
+                "year": 1990,
+                "utc": true
+              },
+              {
+                "year": 2010,
+                "utc": true
+              },
+              {
+                "year": 2020,
+                "utc": true
+              }
+            ],
+            "format": "%Y"
+          },
+          "scale": {
+            "type": "utc"
+          }
+        },
+        "y": {
+          "field": "Population",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        },
+        "color": {
+          "field": "Region",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "domain": [
+              "Asia",
+              "Africa",
+              "Europe",
+              "Americas",
+              "Oceania"
+            ],
+            "range": [
+              "#18a1cd",
+              "#e2a233",
+              "#c04a4a",
+              "#2d8659",
+              "#7e5aa2"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 330,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ]
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 149,
+      "title": null
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1950",
+        "Region": "Asia",
+        "Population": 1404
+      },
+      {
+        "Year": "1950",
+        "Region": "Africa",
+        "Population": 227
+      },
+      {
+        "Year": "1950",
+        "Region": "Europe",
+        "Population": 549
+      },
+      {
+        "Year": "1950",
+        "Region": "Americas",
+        "Population": 339
+      },
+      {
+        "Year": "1950",
+        "Region": "Oceania",
+        "Population": 13
+      },
+      {
+        "Year": "1970",
+        "Region": "Asia",
+        "Population": 2142
+      },
+      {
+        "Year": "1970",
+        "Region": "Africa",
+        "Population": 365
+      },
+      {
+        "Year": "1970",
+        "Region": "Europe",
+        "Population": 657
+      },
+      {
+        "Year": "1970",
+        "Region": "Americas",
+        "Population": 512
+      },
+      {
+        "Year": "1970",
+        "Region": "Oceania",
+        "Population": 20
+      },
+      {
+        "Year": "1990",
+        "Region": "Asia",
+        "Population": 3226
+      },
+      {
+        "Year": "1990",
+        "Region": "Africa",
+        "Population": 630
+      },
+      {
+        "Year": "1990",
+        "Region": "Europe",
+        "Population": 721
+      },
+      {
+        "Year": "1990",
+        "Region": "Americas",
+        "Population": 724
+      },
+      {
+        "Year": "1990",
+        "Region": "Oceania",
+        "Population": 27
+      },
+      {
+        "Year": "2010",
+        "Region": "Asia",
+        "Population": 4194
+      },
+      {
+        "Year": "2010",
+        "Region": "Africa",
+        "Population": 1039
+      },
+      {
+        "Year": "2010",
+        "Region": "Europe",
+        "Population": 736
+      },
+      {
+        "Year": "2010",
+        "Region": "Americas",
+        "Population": 934
+      },
+      {
+        "Year": "2010",
+        "Region": "Oceania",
+        "Population": 37
+      },
+      {
+        "Year": "2020",
+        "Region": "Asia",
+        "Population": 4641
+      },
+      {
+        "Year": "2020",
+        "Region": "Africa",
+        "Population": 1361
+      },
+      {
+        "Year": "2020",
+        "Region": "Europe",
+        "Population": 748
+      },
+      {
+        "Year": "2020",
+        "Region": "Americas",
+        "Population": 1023
+      },
+      {
+        "Year": "2020",
+        "Region": "Oceania",
+        "Population": 45
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 5 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 330px — not a fixed stub"
+    }
+  ]
+}

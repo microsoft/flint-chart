@@ -1,0 +1,301 @@
+{
+  "mark": {
+    "type": "line",
+    "interpolate": "step-after",
+    "point": false,
+    "color": "#0072b2"
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "count",
+          "field": "Score",
+          "as": "__ecdf_count"
+        }
+      ],
+      "sort": [
+        {
+          "field": "Score",
+          "order": "ascending"
+        }
+      ],
+      "frame": [
+        null,
+        0
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "field": "Score",
+          "as": "__ecdf_total"
+        }
+      ]
+    },
+    {
+      "calculate": "datum['__ecdf_count'] / datum['__ecdf_total']",
+      "as": "__ecdf"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Score",
+      "type": "quantitative",
+      "scale": {
+        "nice": false,
+        "zero": false
+      },
+      "title": "Score",
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "__ecdf",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          0,
+          1
+        ]
+      },
+      "title": "Cumulative proportion",
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "tickCount": 8
+    },
+    "axisY": {
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Empirical distribution of exam scores",
+    "subtitle": [
+      "n = 30; each step is one score"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Score": 55
+      },
+      {
+        "Score": 62
+      },
+      {
+        "Score": 68
+      },
+      {
+        "Score": 71
+      },
+      {
+        "Score": 73
+      },
+      {
+        "Score": 74
+      },
+      {
+        "Score": 76
+      },
+      {
+        "Score": 77
+      },
+      {
+        "Score": 78
+      },
+      {
+        "Score": 79
+      },
+      {
+        "Score": 80
+      },
+      {
+        "Score": 81
+      },
+      {
+        "Score": 82
+      },
+      {
+        "Score": 83
+      },
+      {
+        "Score": 84
+      },
+      {
+        "Score": 85
+      },
+      {
+        "Score": 85
+      },
+      {
+        "Score": 86
+      },
+      {
+        "Score": 87
+      },
+      {
+        "Score": 88
+      },
+      {
+        "Score": 88
+      },
+      {
+        "Score": 89
+      },
+      {
+        "Score": 90
+      },
+      {
+        "Score": 91
+      },
+      {
+        "Score": 92
+      },
+      {
+        "Score": 93
+      },
+      {
+        "Score": 94
+      },
+      {
+        "Score": 95
+      },
+      {
+        "Score": 97
+      },
+      {
+        "Score": 99
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point",
+      "message": "28 readings on one line is past the 12 a reader can take one at a time, so the house's dots stand down and the line keeps its shape"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    }
+  ]
+}

@@ -173,43 +173,47 @@ export function vlApplyLayoutToSpec(
         const bandedCount = axis === 'x' ? layout.xContinuousAsDiscrete : layout.yContinuousAsDiscrete;
         if (bandedCount <= 1) continue;
 
-        const enc = vgObj.encoding?.[axis] || vgObj.spec?.encoding?.[axis];
-        if (!enc) continue;
+        // Labelled heatmaps move X/Y onto rect and text layers. Looking only at
+        // the top-level encoding skips both, so temporal edge cells lose their
+        // half-step domain and are clipped against the axis. Apply the same
+        // domain to every matching layer target; shared scales then resolve
+        // consistently and neither layer introduces a competing boundary.
+        for (const enc of collectEncodingTargets(axis)) {
+            // Skip binned encodings — VL handles bin domain automatically
+            if (enc.bin) continue;
 
-        // Skip binned encodings — VL handles bin domain automatically
-        if (enc.bin) continue;
+            const isTemporal = enc.type === 'temporal';
+            const isContinuous = enc.type === 'quantitative' || isTemporal;
+            if (!isContinuous) continue;
+            if (enc.scale?.domain) continue;
 
-        const isTemporal = enc.type === 'temporal';
-        const isContinuous = enc.type === 'quantitative' || isTemporal;
-        if (!isContinuous) continue;
-        if (enc.scale?.domain) continue;
+            const numericVals = context.table
+                .map((r: any) => {
+                    const raw = r[enc.field];
+                    if (raw == null) return NaN;
+                    if (isTemporal) return +new Date(raw);
+                    return +raw;
+                })
+                .filter((v: number) => !isNaN(v));
+            if (numericVals.length <= 1) continue;
 
-        const numericVals = context.table
-            .map((r: any) => {
-                const raw = r[enc.field];
-                if (raw == null) return NaN;
-                if (isTemporal) return +new Date(raw);
-                return +raw;
-            })
-            .filter((v: number) => !isNaN(v));
-        if (numericVals.length <= 1) continue;
+            const minVal = Math.min(...numericVals);
+            const maxVal = Math.max(...numericVals);
+            const dataRange = maxVal - minVal;
+            if (dataRange === 0) continue;
 
-        const minVal = Math.min(...numericVals);
-        const maxVal = Math.max(...numericVals);
-        const dataRange = maxVal - minVal;
-        if (dataRange === 0) continue;
+            const pad = dataRange / (bandedCount - 1) / 2;
+            if (!enc.scale) enc.scale = {};
+            enc.scale.nice = false;
 
-        const pad = dataRange / (bandedCount - 1) / 2;
-        if (!enc.scale) enc.scale = {};
-        enc.scale.nice = false;
-
-        if (isTemporal) {
-            enc.scale.domain = [
-                new Date(minVal - pad).toISOString(),
-                new Date(maxVal + pad).toISOString(),
-            ];
-        } else {
-            enc.scale.domain = [minVal - pad, maxVal + pad];
+            if (isTemporal) {
+                enc.scale.domain = [
+                    new Date(minVal - pad).toISOString(),
+                    new Date(maxVal + pad).toISOString(),
+                ];
+            } else {
+                enc.scale.domain = [minVal - pad, maxVal + pad];
+            }
         }
     }
 
@@ -228,6 +232,14 @@ export function vlApplyLayoutToSpec(
         labelFontSize: layout.yLabel.fontSize,
         titleFontSize: layout.titleFontSize,
     };
+    // Vega drops a tick label only once its box *overlaps* its neighbour's, so
+    // two numbers whose boxes merely abut both survive and are read as one:
+    // `20,000` beside `30,000` prints `20,00030,000`. Numbers need a
+    // character's worth of air between them before they read as two. Bands are
+    // exempt — their labels are spaced by the scale, and thinning them drops a
+    // category rather than a tick.
+    if (!xIsDiscrete) axisXConfig.labelSeparation = Math.round(layout.xLabel.fontSize * 0.6);
+    if (!yIsDiscrete) axisYConfig.labelSeparation = Math.round(layout.yLabel.fontSize * 0.6);
 
     vgObj.config = {
         view: {

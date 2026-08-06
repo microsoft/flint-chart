@@ -11,20 +11,40 @@ function createMockExcel() {
         numberFormat: null as unknown,
         image: null as unknown,
         labels: {} as Record<string, unknown>,
+        typography: {} as Record<string, unknown>,
         fillColor: '',
+        deletedSeries: 0,
+        addedSeries: [] as Array<{ name: string | undefined; index: number | undefined }>,
+        xBindings: [] as unknown[],
+        valueBindings: [] as unknown[],
         clears: 0,
         syncs: 0,
     };
     const series = {
+        delete: () => { calls.deletedSeries += 1; },
+        setXAxisValues: (value: unknown) => { calls.xBindings.push(value); },
+        setValues: (value: unknown) => { calls.valueBindings.push(value); },
         format: {
             fill: { setSolidColor: (color: string) => { calls.fillColor = color; } },
             line: {},
         },
     };
     const chart = {
-        series: { getItemAt: () => series },
-        title: {},
-        legend: {},
+        series: {
+            items: [series],
+            load: vi.fn(),
+            add: (name?: string, index?: number) => {
+                calls.addedSeries.push({ name, index });
+                return series;
+            },
+            getItemAt: () => series,
+        },
+        title: { format: { font: {
+            set size(value: number) { calls.typography.chartTitle = value; },
+        } } },
+        legend: { format: { font: {
+            set size(value: number) { calls.typography.legend = value; },
+        } } },
         dataLabels: {
             format: { font: {} },
             set visible(value: boolean) { calls.labels.visible = value; },
@@ -63,6 +83,8 @@ function createMockExcel() {
             calls.rangeAddress = address;
             return range;
         },
+        getRangeByIndexes: (row: number, column: number, rowCount: number, columnCount: number) =>
+            ({ row, column, rowCount, columnCount }),
     };
     const run = vi.fn(async (callback: (context: unknown) => Promise<unknown>) => callback({
         workbook: { worksheets: { getActiveWorksheet: () => sheet } },
@@ -109,6 +131,7 @@ describe('renderExcelChart', () => {
             fontSize: 11,
         });
         expect(calls.fillColor).toBe('#4472C4');
+        expect(calls.typography).toEqual({ chartTitle: 18 });
         expect(calls.image).toEqual({ width: 1280, height: 853, mode: 'fit' });
         expect(calls.clears).toBe(1);
         expect(result).toEqual({ pngBase64: 'iVBORw0KGgoMOCK', inspection: null });
@@ -120,5 +143,32 @@ describe('renderExcelChart', () => {
             'Unsupported Excel chart type: funnel.',
         );
         expect(run).not.toHaveBeenCalled();
+    });
+
+    it('rebuilds explicitly bound series instead of relying on Excel inference', async () => {
+        const { excel, calls } = createMockExcel();
+        await renderExcelChart(excel, {
+            ...artifact,
+            chartType: 'ColumnStacked',
+            data: [['Bin', 'Male', 'Female'], ['150-160', 7, 40]],
+            series: [
+                { name: 'Male', xColumn: 0, yColumn: 1, rowCount: 1 },
+                { name: 'Female', xColumn: 0, yColumn: 2, rowCount: 1 },
+            ],
+        });
+
+        expect(calls.deletedSeries).toBe(1);
+        expect(calls.addedSeries).toEqual([
+            { name: 'Male', index: 0 },
+            { name: 'Female', index: 1 },
+        ]);
+        expect(calls.xBindings).toEqual([
+            { row: 1, column: 0, rowCount: 1, columnCount: 1 },
+            { row: 1, column: 0, rowCount: 1, columnCount: 1 },
+        ]);
+        expect(calls.valueBindings).toEqual([
+            { row: 1, column: 1, rowCount: 1, columnCount: 1 },
+            { row: 1, column: 2, rowCount: 1, columnCount: 1 },
+        ]);
     });
 });

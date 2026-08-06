@@ -1,0 +1,326 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Where the power comes from",
+    "subtitle": [
+      "World electricity generation by source, % of total"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "mark": "area",
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "axis": {
+            "title": null
+          }
+        },
+        "y": {
+          "field": "Generation (TWh)",
+          "type": "quantitative",
+          "stack": "normalize",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "orient": "right"
+          }
+        },
+        "color": {
+          "field": "Source",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "domain": [
+              "Coal",
+              "Gas",
+              "Hydro",
+              "Nuclear",
+              "Wind & solar",
+              "Other"
+            ],
+            "range": [
+              "#3f5661",
+              "#a1655a",
+              "#006ba2",
+              "#7ba7b8",
+              "#3ebcd2",
+              "#c8b88a"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121317",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#d8dfe4",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8b9196",
+      "gradientLength": 149,
+      "title": null
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1990",
+        "Source": "Coal",
+        "Generation (TWh)": 4430
+      },
+      {
+        "Year": "1990",
+        "Source": "Gas",
+        "Generation (TWh)": 1780
+      },
+      {
+        "Year": "1990",
+        "Source": "Hydro",
+        "Generation (TWh)": 2160
+      },
+      {
+        "Year": "1990",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2000
+      },
+      {
+        "Year": "1990",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 10
+      },
+      {
+        "Year": "1990",
+        "Source": "Other",
+        "Generation (TWh)": 1580
+      },
+      {
+        "Year": "2000",
+        "Source": "Coal",
+        "Generation (TWh)": 5990
+      },
+      {
+        "Year": "2000",
+        "Source": "Gas",
+        "Generation (TWh)": 2760
+      },
+      {
+        "Year": "2000",
+        "Source": "Hydro",
+        "Generation (TWh)": 2620
+      },
+      {
+        "Year": "2000",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2590
+      },
+      {
+        "Year": "2000",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 80
+      },
+      {
+        "Year": "2000",
+        "Source": "Other",
+        "Generation (TWh)": 1310
+      },
+      {
+        "Year": "2010",
+        "Source": "Coal",
+        "Generation (TWh)": 8670
+      },
+      {
+        "Year": "2010",
+        "Source": "Gas",
+        "Generation (TWh)": 4760
+      },
+      {
+        "Year": "2010",
+        "Source": "Hydro",
+        "Generation (TWh)": 3440
+      },
+      {
+        "Year": "2010",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2760
+      },
+      {
+        "Year": "2010",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 380
+      },
+      {
+        "Year": "2010",
+        "Source": "Other",
+        "Generation (TWh)": 1520
+      },
+      {
+        "Year": "2020",
+        "Source": "Coal",
+        "Generation (TWh)": 9420
+      },
+      {
+        "Year": "2020",
+        "Source": "Gas",
+        "Generation (TWh)": 6270
+      },
+      {
+        "Year": "2020",
+        "Source": "Hydro",
+        "Generation (TWh)": 4360
+      },
+      {
+        "Year": "2020",
+        "Source": "Nuclear",
+        "Generation (TWh)": 2700
+      },
+      {
+        "Year": "2020",
+        "Source": "Wind & solar",
+        "Generation (TWh)": 2720
+      },
+      {
+        "Year": "2020",
+        "Source": "Other",
+        "Generation (TWh)": 1610
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "variants",
+      "message": "applied variant {\"isPartToWhole\":true} — Measured: electricity-mix-area puts y on the right, seattle-range does not. Both are area marks, so markChannel cannot separate them; isPartToWhole can. On a pie the policy is inert."
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "the right margin holds the value axis, so a name too big for its band has nowhere to stand — the key is drawn `top` instead"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 149px — under half the 330px block, so the key stays a caption to the chart"
+    }
+  ]
+}

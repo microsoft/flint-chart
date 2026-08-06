@@ -1,0 +1,153 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Type floor raised: 11pt axis labels and 11pt legend against Flint's 10pt. A civic chart has to survive being downscaled onto a phone.",
+    "Legend moved to the top with 100-unit square symbols and no title — it reads as a colour key strip rather than a boxed sidebar on the right.",
+    "Stack order pinned to the sequence the baseline already produces (Asia → Africa → Europe → Americas → Oceania) rather than left to 'sort: null', so the spec states the sequence instead of inheriting it from row order. The sequence itself is unchanged.",
+    "Scheme replaced by an explicit five-colour domain/range pair, so a region keeps the same colour across every chart in a story.",
+    "Gridlines switched to a light dashed rule (#DCDCDC, [2,2]) that reads behind the areas; the chart frame and y-axis domain are removed, but the x baseline is kept in near-black for contrast.",
+    "Y-axis title rotated flat to a bare unit ('millions'); x-axis title deleted and years formatted %Y.",
+    "A hairline footer rule is appended as a second vconcat row — it closes the chart block visually and is the anchor a source line would attach to."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 14, "bottom": 8 },
+  "title": {
+    "text": "World population by region",
+    "subtitle": ["1950–2020, millions of people"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "width": 280,
+      "height": 190,
+      "data": {
+        "values": [
+          { "Year": "1950", "Region": "Asia", "Population": 1404 },
+          { "Year": "1950", "Region": "Africa", "Population": 227 },
+          { "Year": "1950", "Region": "Europe", "Population": 549 },
+          { "Year": "1950", "Region": "Americas", "Population": 339 },
+          { "Year": "1950", "Region": "Oceania", "Population": 13 },
+          { "Year": "1970", "Region": "Asia", "Population": 2142 },
+          { "Year": "1970", "Region": "Africa", "Population": 365 },
+          { "Year": "1970", "Region": "Europe", "Population": 657 },
+          { "Year": "1970", "Region": "Americas", "Population": 512 },
+          { "Year": "1970", "Region": "Oceania", "Population": 20 },
+          { "Year": "1990", "Region": "Asia", "Population": 3226 },
+          { "Year": "1990", "Region": "Africa", "Population": 630 },
+          { "Year": "1990", "Region": "Europe", "Population": 721 },
+          { "Year": "1990", "Region": "Americas", "Population": 724 },
+          { "Year": "1990", "Region": "Oceania", "Population": 27 },
+          { "Year": "2010", "Region": "Asia", "Population": 4194 },
+          { "Year": "2010", "Region": "Africa", "Population": 1039 },
+          { "Year": "2010", "Region": "Europe", "Population": 736 },
+          { "Year": "2010", "Region": "Americas", "Population": 934 },
+          { "Year": "2010", "Region": "Oceania", "Population": 37 },
+          { "Year": "2020", "Region": "Asia", "Population": 4641 },
+          { "Year": "2020", "Region": "Africa", "Population": 1361 },
+          { "Year": "2020", "Region": "Europe", "Population": 748 },
+          { "Year": "2020", "Region": "Americas", "Population": 1023 },
+          { "Year": "2020", "Region": "Oceania", "Population": 45 }
+        ]
+      },
+      "mark": { "type": "area", "line": false, "opacity": 1 },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "title": null,
+          "axis": { "format": "%Y", "tickCount": 5, "domain": true, "domainColor": "#333333", "grid": false }
+        },
+        "y": {
+          "field": "Population",
+          "type": "quantitative",
+          "stack": "zero",
+          "title": "millions",
+          "axis": {
+            "format": ",.0f",
+            "tickCount": 4,
+            "grid": true,
+            "gridColor": "#dcdcdc",
+            "gridDash": [2, 2],
+            "domain": false,
+            "ticks": false,
+            "titleAngle": 0,
+            "titleAlign": "left",
+            "titleAnchor": "start",
+            "titleBaseline": "bottom",
+            "titleY": -8,
+            "titlePadding": 0
+          }
+        },
+        "color": {
+          "field": "Region",
+          "type": "nominal",
+          "title": null,
+          "sort": ["Asia", "Africa", "Europe", "Americas", "Oceania"],
+          "scale": {
+            "domain": ["Asia", "Africa", "Europe", "Americas", "Oceania"],
+            "range": ["#18a1cd", "#e2a233", "#2d8659", "#c04a4a", "#7e5aa2"]
+          },
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "symbolType": "square",
+            "symbolSize": 100,
+            "columnPadding": 12,
+            "offset": 4,
+            "padding": 0
+          }
+        },
+        "order": {
+          "field": "Region",
+          "type": "nominal",
+          "sort": ["Asia", "Africa", "Europe", "Americas", "Oceania"]
+        }
+      }
+    },
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#dcdcdc", "stroke": null },
+      "width": 300,
+      "height": 1,
+      "view": { "stroke": null }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "lineHeight": 18,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "subtitleLineHeight": 15
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "labelPadding": 5,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10.5,
+      "titleFontWeight": 400,
+      "titleColor": "#767676",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333"
+    }
+  }
+}

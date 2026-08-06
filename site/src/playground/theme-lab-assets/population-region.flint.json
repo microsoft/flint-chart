@@ -1,0 +1,191 @@
+{
+  "mark": "area",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Population",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Region",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10",
+        "domain": [
+          "Asia",
+          "Africa",
+          "Europe",
+          "Americas",
+          "Oceania"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "World population by region",
+    "subtitle": [
+      "1950–2020, millions of people"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1950",
+        "Region": "Asia",
+        "Population": 1404
+      },
+      {
+        "Year": "1950",
+        "Region": "Africa",
+        "Population": 227
+      },
+      {
+        "Year": "1950",
+        "Region": "Europe",
+        "Population": 549
+      },
+      {
+        "Year": "1950",
+        "Region": "Americas",
+        "Population": 339
+      },
+      {
+        "Year": "1950",
+        "Region": "Oceania",
+        "Population": 13
+      },
+      {
+        "Year": "1970",
+        "Region": "Asia",
+        "Population": 2142
+      },
+      {
+        "Year": "1970",
+        "Region": "Africa",
+        "Population": 365
+      },
+      {
+        "Year": "1970",
+        "Region": "Europe",
+        "Population": 657
+      },
+      {
+        "Year": "1970",
+        "Region": "Americas",
+        "Population": 512
+      },
+      {
+        "Year": "1970",
+        "Region": "Oceania",
+        "Population": 20
+      },
+      {
+        "Year": "1990",
+        "Region": "Asia",
+        "Population": 3226
+      },
+      {
+        "Year": "1990",
+        "Region": "Africa",
+        "Population": 630
+      },
+      {
+        "Year": "1990",
+        "Region": "Europe",
+        "Population": 721
+      },
+      {
+        "Year": "1990",
+        "Region": "Americas",
+        "Population": 724
+      },
+      {
+        "Year": "1990",
+        "Region": "Oceania",
+        "Population": 27
+      },
+      {
+        "Year": "2010",
+        "Region": "Asia",
+        "Population": 4194
+      },
+      {
+        "Year": "2010",
+        "Region": "Africa",
+        "Population": 1039
+      },
+      {
+        "Year": "2010",
+        "Region": "Europe",
+        "Population": 736
+      },
+      {
+        "Year": "2010",
+        "Region": "Americas",
+        "Population": 934
+      },
+      {
+        "Year": "2010",
+        "Region": "Oceania",
+        "Population": 37
+      },
+      {
+        "Year": "2020",
+        "Region": "Asia",
+        "Population": 4641
+      },
+      {
+        "Year": "2020",
+        "Region": "Africa",
+        "Population": 1361
+      },
+      {
+        "Year": "2020",
+        "Region": "Europe",
+        "Population": 748
+      },
+      {
+        "Year": "2020",
+        "Region": "Americas",
+        "Population": 1023
+      },
+      {
+        "Year": "2020",
+        "Region": "Oceania",
+        "Population": 45
+      }
+    ]
+  }
+}

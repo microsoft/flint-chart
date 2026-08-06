@@ -1,0 +1,475 @@
+{
+  "spacing": 0,
+  "resolve": {
+    "scale": {
+      "y": "shared"
+    }
+  },
+  "hconcat": [
+    {
+      "transform": [
+        {
+          "filter": {
+            "field": "Sex",
+            "equal": "Male"
+          }
+        }
+      ],
+      "title": {
+        "text": "Male",
+        "anchor": "middle",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#18a1cd"
+      },
+      "width": 209,
+      "height": 230,
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5
+          },
+          "encoding": {
+            "y": {
+              "field": "Age",
+              "type": "nominal",
+              "sort": null,
+              "axis": {
+                "title": null
+              },
+              "scale": {
+                "paddingInner": 0.33999999999999997
+              }
+            },
+            "x": {
+              "scale": {
+                "reverse": true,
+                "domain": [
+                  0,
+                  34
+                ]
+              },
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative",
+              "axis": {
+                "title": null
+              }
+            },
+            "opacity": {
+              "value": 0.9
+            },
+            "color": {
+              "value": "#18a1cd"
+            }
+          }
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "right",
+            "baseline": "middle",
+            "dx": -5,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": {
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "x": {
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Age",
+              "type": "nominal",
+              "sort": null
+            }
+          },
+          "transform": [
+            {
+              "filter": "abs(datum[\"Population\"]) <= 30.88657142857143"
+            }
+          ]
+        },
+        {
+          "__themeSynthetic": true,
+          "transform": [
+            {
+              "filter": "abs(datum[\"Population\"]) > 30.88657142857143"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "left",
+            "baseline": "middle",
+            "dx": 4,
+            "color": "#ffffff"
+          },
+          "encoding": {
+            "text": {
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "x": {
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Age",
+              "type": "nominal",
+              "sort": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "transform": [
+        {
+          "filter": {
+            "field": "Sex",
+            "equal": "Female"
+          }
+        }
+      ],
+      "title": {
+        "text": "Female",
+        "anchor": "middle",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#e2a233"
+      },
+      "width": 209,
+      "height": 230,
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5
+          },
+          "encoding": {
+            "y": {
+              "axis": null,
+              "field": "Age",
+              "type": "nominal",
+              "sort": null,
+              "scale": {
+                "paddingInner": 0.33999999999999997
+              }
+            },
+            "x": {
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative",
+              "scale": {
+                "domain": [
+                  0,
+                  34
+                ]
+              },
+              "axis": {
+                "title": null
+              }
+            },
+            "opacity": {
+              "value": 0.9
+            },
+            "color": {
+              "value": "#e2a233"
+            }
+          }
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "left",
+            "baseline": "middle",
+            "dx": 4,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": {
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "x": {
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Age",
+              "type": "nominal",
+              "sort": null
+            }
+          },
+          "transform": [
+            {
+              "filter": "abs(datum[\"Population\"]) <= 30.88657142857143"
+            }
+          ]
+        },
+        {
+          "__themeSynthetic": true,
+          "transform": [
+            {
+              "filter": "abs(datum[\"Population\"]) > 30.88657142857143"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "right",
+            "baseline": "middle",
+            "dx": -5,
+            "color": "#ffffff"
+          },
+          "encoding": {
+            "text": {
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "x": {
+              "stack": null,
+              "field": "Population",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Age",
+              "type": "nominal",
+              "sort": null
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "tickCount": 6
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 101,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "title": {
+    "text": "A pyramid that is no longer a pyramid",
+    "subtitle": [
+      "United States population by age and sex, 2020, millions"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 45,
+    "right": 45,
+    "top": 12,
+    "bottom": 12
+  },
+  "data": {
+    "values": [
+      {
+        "Age": "75+",
+        "Sex": "Male",
+        "Population": 10
+      },
+      {
+        "Age": "75+",
+        "Sex": "Female",
+        "Population": 15
+      },
+      {
+        "Age": "60–74",
+        "Sex": "Male",
+        "Population": 26
+      },
+      {
+        "Age": "60–74",
+        "Sex": "Female",
+        "Population": 28
+      },
+      {
+        "Age": "45–59",
+        "Sex": "Male",
+        "Population": 30
+      },
+      {
+        "Age": "45–59",
+        "Sex": "Female",
+        "Population": 31
+      },
+      {
+        "Age": "30–44",
+        "Sex": "Male",
+        "Population": 33
+      },
+      {
+        "Age": "30–44",
+        "Sex": "Female",
+        "Population": 33
+      },
+      {
+        "Age": "15–29",
+        "Sex": "Male",
+        "Population": 34
+      },
+      {
+        "Age": "15–29",
+        "Sex": "Female",
+        "Population": 32
+      },
+      {
+        "Age": "0–14",
+        "Sex": "Male",
+        "Population": 31
+      },
+      {
+        "Age": "0–14",
+        "Sex": "Female",
+        "Population": 30
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "ink.series",
+      "message": "the series is carried by the panels of a concatenation rather than a colour channel — the house set is assigned across the panels"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 101px — under half the 224px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "facets.header",
+      "message": "the panel names are set in their own panel's ink — the name is the swatch, so no key is drawn beside it"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks that reach the end of the scale print their label inside instead"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "not drawn — the chart is already a concatenation"
+    }
+  ]
+}

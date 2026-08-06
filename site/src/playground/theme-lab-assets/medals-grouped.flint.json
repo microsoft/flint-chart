@@ -1,0 +1,141 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Count",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Medal",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    },
+    "xOffset": {
+      "field": "Medal",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 68,
+    "for": "position"
+  },
+  "title": {
+    "text": "Paris 2024 Olympic medals — top nations"
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "United States",
+        "Medal": "Gold",
+        "Count": 40
+      },
+      {
+        "Country": "United States",
+        "Medal": "Silver",
+        "Count": 44
+      },
+      {
+        "Country": "United States",
+        "Medal": "Bronze",
+        "Count": 42
+      },
+      {
+        "Country": "China",
+        "Medal": "Gold",
+        "Count": 40
+      },
+      {
+        "Country": "China",
+        "Medal": "Silver",
+        "Count": 27
+      },
+      {
+        "Country": "China",
+        "Medal": "Bronze",
+        "Count": 24
+      },
+      {
+        "Country": "Japan",
+        "Medal": "Gold",
+        "Count": 20
+      },
+      {
+        "Country": "Japan",
+        "Medal": "Silver",
+        "Count": 12
+      },
+      {
+        "Country": "Japan",
+        "Medal": "Bronze",
+        "Count": 13
+      },
+      {
+        "Country": "Australia",
+        "Medal": "Gold",
+        "Count": 18
+      },
+      {
+        "Country": "Australia",
+        "Medal": "Silver",
+        "Count": 19
+      },
+      {
+        "Country": "Australia",
+        "Medal": "Bronze",
+        "Count": 16
+      },
+      {
+        "Country": "France",
+        "Medal": "Gold",
+        "Count": 16
+      },
+      {
+        "Country": "France",
+        "Medal": "Silver",
+        "Count": 26
+      },
+      {
+        "Country": "France",
+        "Medal": "Bronze",
+        "Count": 22
+      }
+    ]
+  }
+}

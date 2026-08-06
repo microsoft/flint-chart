@@ -19,8 +19,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Flint Render" />
   <Description DefaultValue="Renders Flint Excel artifacts to PNG via Office.js." />
-  <IconUrl DefaultValue="https://localhost:3000/officejs/icon-32.png?v=3" />
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/officejs/icon-80.png?v=3" />
+  <IconUrl DefaultValue="https://localhost:3000/officejs/icon-32.png?v=4" />
+  <HighResolutionIconUrl DefaultValue="https://localhost:3000/officejs/icon-80.png?v=4" />
   <SupportUrl DefaultValue="https://localhost:3000/taskpane.html" />
   <AppDomains>
     <AppDomain>https://localhost:3000</AppDomain>
@@ -29,8 +29,8 @@
     <Host Name="Workbook" />
   </Hosts>
   <Requirements>
-    <Sets DefaultMinVersion="1.2">
-      <Set Name="ExcelApi" MinVersion="1.2" />
+    <Sets DefaultMinVersion="1.7">
+      <Set Name="ExcelApi" MinVersion="1.7" />
     </Sets>
   </Requirements>
   <DefaultSettings>
@@ -74,9 +74,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Flint.Icon16" DefaultValue="https://localhost:3000/officejs/icon-16.png?v=3" />
-        <bt:Image id="Flint.Icon32" DefaultValue="https://localhost:3000/officejs/icon-32.png?v=3" />
-        <bt:Image id="Flint.Icon80" DefaultValue="https://localhost:3000/officejs/icon-80.png?v=3" />
+        <bt:Image id="Flint.Icon16" DefaultValue="https://localhost:3000/officejs/icon-16.png?v=4" />
+        <bt:Image id="Flint.Icon32" DefaultValue="https://localhost:3000/officejs/icon-32.png?v=4" />
+        <bt:Image id="Flint.Icon80" DefaultValue="https://localhost:3000/officejs/icon-80.png?v=4" />
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Flint.Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html" />

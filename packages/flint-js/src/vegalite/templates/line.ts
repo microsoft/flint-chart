@@ -28,9 +28,36 @@ export function applyInterpolate(mark: any, config?: Record<string, any>): any {
     return setMarkProp(mark, 'interpolate', config.interpolate);
 }
 
-function applyShowPoints(mark: any, config?: Record<string, any>): any {
-    if (!config?.showPoints) return mark;
+function applyShowPoints(mark: any, ctx: InstantiateContext): any {
+    if (!ctx.chartProperties?.showPoints) return mark;
+    // Points on a line name where a value was measured. Past the density at
+    // which they touch, they stop being points and become a texture that buries
+    // the line under them — a house habit meeting a fact about fit. Yield the
+    // overlay when the readings pack tighter than a small dot can sit apart.
+    if (pointsTooDense(ctx)) return mark;
     return setMarkProp(mark, 'point', true);
+}
+
+/**
+ * True when a line carries more readings per series than can be drawn as
+ * separate dots: the per-series point spacing falls below the width a small
+ * dot needs to read as one. Measured at the base width (the honest floor before
+ * any stretch), against the densest reasonable series estimate (rows ÷ series).
+ */
+function pointsTooDense(ctx: InstantiateContext): boolean {
+    const rows = ctx.table?.length ?? 0;
+    if (rows === 0) return false;
+    const seriesField = ctx.resolvedEncodings?.color?.field ?? ctx.resolvedEncodings?.detail?.field;
+    let series = 1;
+    if (seriesField) {
+        const seen = new Set<unknown>();
+        for (const r of ctx.table) seen.add(r[seriesField]);
+        series = Math.max(1, seen.size);
+    }
+    const pointsPerSeries = rows / series;
+    const width = ctx.canvasSize?.width ?? 300;
+    const spacing = width / Math.max(1, pointsPerSeries);
+    return spacing < 8;
 }
 
 function isContinuousColor(ctx: InstantiateContext): boolean {
@@ -101,7 +128,7 @@ export const lineChartDef: ChartTemplateDef = {
         }
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         spec.mark = applyInterpolate(spec.mark, ctx.chartProperties);
-        spec.mark = applyShowPoints(spec.mark, ctx.chartProperties);
+        spec.mark = applyShowPoints(spec.mark, ctx);
     },
     properties: [interpolateConfigProperty, showPointsProperty],
     // No `transpose`: a line pins its domain to `x` (never a vertical line, for any

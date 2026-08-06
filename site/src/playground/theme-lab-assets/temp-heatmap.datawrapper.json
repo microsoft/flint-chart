@@ -1,0 +1,396 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Ramp cut into five explicit bands at −2, 6, 14 and 22°C rather than left continuous — the same treatment the house gives a choropleth, because a reader can match a swatch to a cell but cannot read a position off a gradient.",
+    "Key becomes a row of five square swatches above the plot, labelled at the breaks — −2, 6, 14 and 22°C — rather than at the bin centres. The open lower bin carries no label because it has no lower bound to name.",
+    "Blue-to-red steps with a light neutral at the freezing break, so the crossing point lands on a swatch boundary rather than somewhere inside a gradient.",
+    "11pt type floor throughout — the chart has to survive being embedded at half width on a phone.",
+    "Axis domains and ticks deleted; month labels horizontal at 11pt, city names left-aligned in near-black #333.",
+    "A hairline footer rule closes the chart block, and 1.5px white gutters separate the cells.",
+    "Label overlap removal switched off on the key. Vega drops colliding tick labels by default, which silently deleted one of the five breaks and left the reader unable to tell which band was which."
+  ],
+  "background": "#ffffff",
+  "padding": {
+    "left": 10,
+    "top": 8,
+    "right": 12,
+    "bottom": 6
+  },
+  "title": {
+    "text": "Average monthly temperature",
+    "subtitle": [
+      "°C, climate normals, four cities"
+    ],
+    "anchor": "start",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "fontSize": 15,
+    "fontWeight": "bold",
+    "color": "#333333",
+    "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "subtitleFontSize": 11.5,
+    "subtitleColor": "#666666",
+    "offset": 10
+  },
+  "data": {
+    "values": [
+      {
+        "City": "Singapore",
+        "Month": "Jan",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Feb",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Mar",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Apr",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "May",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Singapore",
+        "Month": "Jul",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Aug",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Oct",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Singapore",
+        "Month": "Nov",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Singapore",
+        "Month": "Dec",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jan",
+        "Temp (°C)": 14
+      },
+      {
+        "City": "Cairo",
+        "Month": "Feb",
+        "Temp (°C)": 15
+      },
+      {
+        "City": "Cairo",
+        "Month": "Mar",
+        "Temp (°C)": 18
+      },
+      {
+        "City": "Cairo",
+        "Month": "Apr",
+        "Temp (°C)": 22
+      },
+      {
+        "City": "Cairo",
+        "Month": "May",
+        "Temp (°C)": 26
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jun",
+        "Temp (°C)": 28
+      },
+      {
+        "City": "Cairo",
+        "Month": "Jul",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Aug",
+        "Temp (°C)": 29
+      },
+      {
+        "City": "Cairo",
+        "Month": "Sep",
+        "Temp (°C)": 27
+      },
+      {
+        "City": "Cairo",
+        "Month": "Oct",
+        "Temp (°C)": 24
+      },
+      {
+        "City": "Cairo",
+        "Month": "Nov",
+        "Temp (°C)": 20
+      },
+      {
+        "City": "Cairo",
+        "Month": "Dec",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jan",
+        "Temp (°C)": -9
+      },
+      {
+        "City": "Moscow",
+        "Month": "Feb",
+        "Temp (°C)": -7
+      },
+      {
+        "City": "Moscow",
+        "Month": "Mar",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Apr",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Moscow",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jun",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Moscow",
+        "Month": "Aug",
+        "Temp (°C)": 17
+      },
+      {
+        "City": "Moscow",
+        "Month": "Sep",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Moscow",
+        "Month": "Oct",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Moscow",
+        "Month": "Nov",
+        "Temp (°C)": -1
+      },
+      {
+        "City": "Moscow",
+        "Month": "Dec",
+        "Temp (°C)": -6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jan",
+        "Temp (°C)": 5
+      },
+      {
+        "City": "Seattle",
+        "Month": "Feb",
+        "Temp (°C)": 6
+      },
+      {
+        "City": "Seattle",
+        "Month": "Mar",
+        "Temp (°C)": 8
+      },
+      {
+        "City": "Seattle",
+        "Month": "Apr",
+        "Temp (°C)": 10
+      },
+      {
+        "City": "Seattle",
+        "Month": "May",
+        "Temp (°C)": 13
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jun",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Jul",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Aug",
+        "Temp (°C)": 19
+      },
+      {
+        "City": "Seattle",
+        "Month": "Sep",
+        "Temp (°C)": 16
+      },
+      {
+        "City": "Seattle",
+        "Month": "Oct",
+        "Temp (°C)": 11
+      },
+      {
+        "City": "Seattle",
+        "Month": "Nov",
+        "Temp (°C)": 7
+      },
+      {
+        "City": "Seattle",
+        "Month": "Dec",
+        "Temp (°C)": 4
+      }
+    ]
+  },
+  "vconcat": [
+    {
+      "width": 300,
+      "height": 116,
+      "mark": {
+        "type": "rect",
+        "stroke": "#ffffff",
+        "strokeWidth": 1.5
+      },
+      "encoding": {
+        "x": {
+          "field": "Month",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ],
+          "axis": {
+            "domain": false,
+            "ticks": false,
+            "grid": false,
+            "labelAngle": 0,
+            "labelPadding": 5,
+            "labelFontSize": 11,
+            "labelColor": "#666666"
+          }
+        },
+        "y": {
+          "field": "City",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "Singapore",
+            "Cairo",
+            "Moscow",
+            "Seattle"
+          ],
+          "axis": {
+            "domain": false,
+            "ticks": false,
+            "grid": false,
+            "labelPadding": 7,
+            "labelFontSize": 11,
+            "labelColor": "#333333"
+          }
+        },
+        "color": {
+          "field": "Temp (°C)",
+          "type": "quantitative",
+          "title": null,
+          "scale": {
+            "type": "quantize",
+            "domain": [
+              -10,
+              30
+            ],
+            "range": [
+              "#2f7fa8",
+              "#a9d3e6",
+              "#f0ece4",
+              "#e8ac70",
+              "#c04a4a"
+            ]
+          },
+          "legend": {
+            "orient": "top",
+            "direction": "horizontal",
+            "type": "symbol",
+            "symbolType": "square",
+            "symbolSize": 170,
+            "columnPadding": 4,
+            "offset": 2,
+            "padding": 0,
+            "labelOverlap": false,
+            "format": ".0f",
+            "labelExpr": "isValid(datum.label) ? datum.label + '°' : ''",
+            "labelFontSize": 11,
+            "labelColor": "#333333"
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#dcdcdc",
+        "stroke": null
+      },
+      "width": 300,
+      "height": 1,
+      "view": {
+        "stroke": null
+      }
+    }
+  ],
+  "spacing": 8,
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  }
+}

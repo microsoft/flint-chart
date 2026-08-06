@@ -1,0 +1,363 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": [
+      "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 12,
+    "right": 92,
+    "top": 12,
+    "bottom": 12
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "point": {
+          "stroke": "#ffffff",
+          "strokeWidth": 1.5
+        }
+      },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal",
+          "axis": {
+            "title": null,
+            "values": [
+              {
+                "year": 2018,
+                "utc": true
+              },
+              {
+                "year": 2020,
+                "utc": true
+              },
+              {
+                "year": 2022,
+                "utc": true
+              },
+              {
+                "year": 2023,
+                "utc": true
+              }
+            ],
+            "format": "%Y"
+          },
+          "scale": {
+            "type": "utc"
+          }
+        },
+        "y": {
+          "field": "EV share (%)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "labelExpr": "datum.index === 1 ? datum.label + \"%\" : datum.label"
+          }
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#2f6b9a",
+              "#c2352b",
+              "#4a8b6f",
+              "#7f6a9e"
+            ]
+          },
+          "legend": null
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "__seriesEndRank"
+            }
+          ],
+          "sort": [
+            {
+              "field": "Year",
+              "order": "descending"
+            }
+          ],
+          "groupby": [
+            "Country"
+          ]
+        },
+        {
+          "filter": "datum.__seriesEndRank === 1"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "dy": 0,
+        "font": "Helvetica, Arial, sans-serif",
+        "fontSize": 10
+      },
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "temporal"
+        },
+        "y": {
+          "field": "EV share (%)",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Country",
+          "type": "nominal"
+        },
+        "color": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#2f6b9a",
+              "#c2352b",
+              "#4a8b6f",
+              "#7f6a9e"
+            ]
+          },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Year": "2018",
+        "Country": "Norway",
+        "EV share (%)": 49
+      },
+      {
+        "Year": "2020",
+        "Country": "Norway",
+        "EV share (%)": 75
+      },
+      {
+        "Year": "2022",
+        "Country": "Norway",
+        "EV share (%)": 88
+      },
+      {
+        "Year": "2023",
+        "Country": "Norway",
+        "EV share (%)": 93
+      },
+      {
+        "Year": "2018",
+        "Country": "China",
+        "EV share (%)": 4
+      },
+      {
+        "Year": "2020",
+        "Country": "China",
+        "EV share (%)": 6
+      },
+      {
+        "Year": "2022",
+        "Country": "China",
+        "EV share (%)": 29
+      },
+      {
+        "Year": "2023",
+        "Country": "China",
+        "EV share (%)": 38
+      },
+      {
+        "Year": "2018",
+        "Country": "Germany",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "Germany",
+        "EV share (%)": 13
+      },
+      {
+        "Year": "2022",
+        "Country": "Germany",
+        "EV share (%)": 31
+      },
+      {
+        "Year": "2023",
+        "Country": "Germany",
+        "EV share (%)": 25
+      },
+      {
+        "Year": "2018",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2022",
+        "Country": "United States",
+        "EV share (%)": 8
+      },
+      {
+        "Year": "2023",
+        "Country": "United States",
+        "EV share (%)": 10
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Line Chart.showPoints",
+      "message": "house rule: `showPoints` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.point.halo",
+      "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.redundantEncoding",
+      "message": "`whenNeeded` withheld — the house has a distinct ink for every series"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.tickLabels",
+      "message": "sparse labels — the axis is ticked at 4 of the dates the data holds, not at round numbers between them"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "the unit `%` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+    },
+    {
+      "stage": "realize",
+      "path": "annotation.pointEmphasis",
+      "message": "the line already shows every observation — a second dot at the end would say nothing new"
+    }
+  ]
+}

@@ -102,6 +102,24 @@ That is the core workflow. The DataSpec says what the data *is*. The ChartSpec
 says how you want to *look at it*. Paste the JSON into the [online editor](/editor)
 to edit it live.
 
+### Optional: choose a theme
+
+Add `theme_spec` beside `chart_spec` to apply one of Flint's design systems:
+
+```json
+{
+  "theme_spec": "economist"
+}
+```
+
+A Flint theme is a formal specification that influences layout, semantic
+presentation, and visual identity during compilation. It is more than a color
+or font preset. ThemeSpec currently applies to Vega-Lite output.
+
+See [Using themes](/documentation/theme-spec) to browse the presets, create a
+theme, or inherit one and override selected rules. [Explore themes](/themes)
+shows the same charts under every preset.
+
 ## Compile it
 
 In JavaScript or TypeScript, pass the same input to an assembler:
@@ -164,6 +182,8 @@ Python support will use the same input shape and is planned for a later release.
 
 - [Example: a data story](/documentation/data-story) shows why the split matters:
   one DataSpec becomes five different charts by changing only the ChartSpec.
+- [Using themes](/documentation/theme-spec) explains preset, custom, and
+  inherited ThemeSpecs.
 - [Set up Flint MCP](/documentation/setup-flint-mcp) shows how to connect the
   MCP server when you want an agent to render charts from chat or an IDE.
 - [Agent workflows](/documentation/agent-workflows) shows how to embed Flint's

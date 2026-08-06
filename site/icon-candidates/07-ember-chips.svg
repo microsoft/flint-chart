@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Low flint with ember chips</title>
+  <path d="m5 46 14-25 24-7 9 16-10 21-24 7L5 46Z" fill="#202a33"/>
+  <path d="m19 21 24-7-12 20L5 46l14-25Z" fill="#435360"/>
+  <path d="m31 34 12-20 9 16-12 10-9-6Z" fill="#63727d"/>
+  <path d="m31 34 9 6 2 11-24 7 13-24Z" fill="#111820"/>
+  <path d="m46 9 6 3-4 6-5-4 3-5Z" fill="#f4b41a"/>
+  <path d="m55 6 4 1-1 4-4-1 1-4ZM55 18l5 2-3 4-4-2 2-4ZM47 23l4 3-4 3-3-3 3-3Z" fill="#e4572e"/>
+</svg>

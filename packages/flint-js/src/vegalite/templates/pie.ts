@@ -108,7 +108,26 @@ export const pieChartDef: ChartTemplateDef = {
     ] as ChartPropertyDef[],
 };
 
+/** The hole a Donut Chart gets when the caller sets no `innerRadius`. */
+const DONUT_DEFAULT_INNER_RADIUS = 50;
+
 export const donutChartDef: ChartTemplateDef = {
     ...pieChartDef,
     chart: "Donut Chart",
+    // A donut is a pie with a hole. Property defaults are not merged into
+    // `chartProperties` at assemble time (only discrete options are coerced),
+    // so a Donut Chart authored without an explicit `innerRadius` would inherit
+    // the pie's hole-less 0 and render as a full pie. Carry a non-zero default
+    // and apply it here before delegating to the pie's instantiate.
+    properties: (pieChartDef.properties ?? []).map((p) =>
+        p.key === 'innerRadius' ? { ...p, defaultValue: DONUT_DEFAULT_INNER_RADIUS } : p,
+    ) as ChartPropertyDef[],
+    instantiate: (spec, ctx) => {
+        const innerRadius = ctx.chartProperties?.innerRadius;
+        const withHole =
+            innerRadius == null
+                ? { ...ctx, chartProperties: { ...(ctx.chartProperties ?? {}), innerRadius: DONUT_DEFAULT_INNER_RADIUS } }
+                : ctx;
+        pieChartDef.instantiate(spec, withHole);
+    },
 };

@@ -68,5 +68,7 @@ Start with the guide that matches the surface you want to extend:
 ## Test coverage
 
 - **Smoke tests:** `packages/flint-js/tests/smoke.test.ts`
-- **Visual coverage:** [Gallery](/gallery), driven by `TEST_GENERATORS` in test-data
+- **Complete visual coverage:** [Full test cases](/playground/full-test-cases), driven by `TEST_GENERATORS` in `packages/flint-js/src/test-data/`
+- **Curated examples:** [Gallery](/gallery)
 - **Shared fixtures:** `shared/test-data/`, consumed by JS and Python tests
+- **Coverage matrices and authoring workflow:** [Chart engine test plan](/documentation/test-plan)

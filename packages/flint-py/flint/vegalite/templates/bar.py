@@ -14,6 +14,7 @@ from .utils import (
     detect_banded_axis_from_semantics,
     detect_banded_axis_force_discrete,
     resolve_as_discrete,
+    align_stack_order_to_color_order,
 )
 
 
@@ -156,6 +157,7 @@ def _stacked_bar_instantiate(spec, ctx):
             if ae and (ae.get("type") == "quantitative" or ae.get("aggregate")):
                 encoding[axis]["stack"] = None if config["stackMode"] == "layered" else config["stackMode"]
                 break
+    align_stack_order_to_color_order(spec, ctx)
     adjust_bar_marks(spec, ctx)
 
 

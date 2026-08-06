@@ -1,0 +1,91 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "The value axis is deleted outright and every bar carries its own number. Flint's axis reads to about a hundred thousand deaths at best, which cannot separate the bottom of the list — chronic liver disease at 55 and self-harm at 49 are six thousand deaths apart, roughly a pixel of bar. Ten numbers on ten bars settle that, and they cost less ink than an axis plus a grid.",
+    "Which leaves no grid to draw. This is the opposite of the Economist row on the same data, which keeps a top axis and refuses per-bar numbers, and the disagreement is the point: both are defensible, and neither follows from the data.",
+    "The category gutter is given whatever width the names need instead of a fixed one. Flint reserves a gutter and clips what exceeds it — 'Cerebrovascular disea…', 'Nephritis, nephrotic …', 'Intentional self-harm…' — so five of ten rows cannot be read. Setting 'labelLimit: 0' removes the cap; the cost is that roughly two fifths of the frame is now type rather than bar, which is the honest price of a list whose longest name runs forty-three characters.",
+    "One measure, one ink: every bar in #2F6B9A. The bars are the only saturated element on the page — the type is #121212 and #6B6B6B, and the house red is not spent here because nothing in this chart is being singled out.",
+    "Row order left exactly as the baseline has it — the source arrived ranked, so the bars descend without a theme touching the sort.",
+    "Serif headline over sans labels — the house signature, and the only place the two typefaces meet."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 18, "bottom": 8 },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": ["Leading causes of death, United States, 2022, thousands of deaths"]
+  },
+  "width": 260,
+  "height": 250,
+  "data": {
+    "values": [
+      { "Cause": "Diseases of heart", "Deaths (thousands)": 703 },
+      { "Cause": "Malignant neoplasms", "Deaths (thousands)": 608 },
+      { "Cause": "Unintentional injuries", "Deaths (thousands)": 227 },
+      { "Cause": "Cerebrovascular diseases", "Deaths (thousands)": 165 },
+      { "Cause": "Chronic lower respiratory diseases", "Deaths (thousands)": 148 },
+      { "Cause": "Alzheimer disease", "Deaths (thousands)": 120 },
+      { "Cause": "Diabetes mellitus", "Deaths (thousands)": 102 },
+      { "Cause": "Nephritis, nephrotic syndrome and nephrosis", "Deaths (thousands)": 58 },
+      { "Cause": "Chronic liver disease and cirrhosis", "Deaths (thousands)": 55 },
+      { "Cause": "Intentional self-harm (suicide)", "Deaths (thousands)": 49 }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "Cause",
+      "type": "nominal",
+      "title": null,
+      "sort": null,
+      "axis": {
+        "labelLimit": 0,
+        "labelFontSize": 10,
+        "labelColor": "#121212",
+        "labelPadding": 6,
+        "domain": false,
+        "ticks": false,
+        "grid": false
+      }
+    },
+    "x": {
+      "field": "Deaths (thousands)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 810] },
+      "axis": null
+    }
+  },
+  "layer": [
+    { "mark": { "type": "bar", "color": "#2f6b9a", "height": { "band": 0.62 } } },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "fontSize": 10,
+        "color": "#121212"
+      },
+      "encoding": {
+        "text": { "field": "Deaths (thousands)", "type": "quantitative", "format": "d" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', Times, serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null }
+  }
+}

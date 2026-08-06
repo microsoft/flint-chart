@@ -2,9 +2,13 @@
   "nav": {
     "about": "About",
     "mcp": "MCP Server",
+    "themes": "Themes",
     "gallery": "Gallery",
     "documentation": "Documentation",
+    "playgrounds": "Playgrounds",
     "editor": "Online Editor",
+    "themeLab": "Theme Lab",
+    "autoLayoutPlayground": "Auto Layout",
     "github": "GitHub",
     "githubAria": "GitHub repository",
     "githubAriaStars": "GitHub repository, {{count}} stars",
@@ -13,6 +17,35 @@
     "langEn": "EN",
     "langZh": "中文",
     "langSwitchAria": "Switch language"
+  },
+  "themeLab": {
+    "title": "Theme Lab",
+    "lead": "Experiment and refine your theme. Turn your design into a reusable spec and share it with everyone.",
+    "steps": {
+      "generate": "Copy the prompt to your agent with reference materials, such as websites, slide decks, or brand guidelines, to generate a theme.",
+      "preview": "Tweak and preview it in the playground below.",
+      "shareReady": "Ready to share?",
+      "shareLink": "Share your design",
+      "shareSuffix": "."
+    },
+    "docsPointer": "See <docsLink>Doc: Using themes</docsLink> for guidance.",
+    "copyPrompt": "Copy prompt",
+    "copied": "Copied",
+    "prompt": "Help me create a custom ThemeSpec for Flint Chart.\n\nBefore you begin, read and follow the Flint ThemeSpec authoring skill:\nhttps://raw.githubusercontent.com/microsoft/flint-chart/main/agent-skills/flint-theme-author/SKILL.md\n\nIf the raw URL is unavailable, open the GitHub page instead:\nhttps://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-theme-author/SKILL.md\n\nUse the reference materials I provide, ask only for important missing design decisions, and follow the skill's schema, semantic boundaries, accessibility guidance, output contract, and validation checklist. Return one complete ThemeSpec JSON object that I can paste directly into Flint Theme Lab.",
+    "demoAria": "Demo themes",
+    "inspiration": "Need inspiration?",
+    "demos": {
+      "signal-studio": "Signal Studio",
+      "microsoft-fluent": "Microsoft Fluent",
+      "peoples-daily": "People's Daily"
+    },
+    "editorAria": "Custom theme editor",
+    "formatJson": "Format JSON",
+    "validSpec": "Valid ThemeSpec",
+    "objectError": "ThemeSpec must be a JSON object.",
+    "close": "Close",
+    "rows": "{{count}} rows",
+    "flintSpec": "Flint spec"
   },
   "footer": {
     "copyright": "© 2026 Microsoft",
@@ -26,6 +59,23 @@
     "mobileLabel": "Documentation",
     "mobileAria": "Choose documentation page",
     "fallbackNote": "Chinese translation is not available yet; showing the English version.",
+    "themeSpecPanel": {
+      "aria": "ThemeSpec examples",
+      "modeAria": "ThemeSpec form",
+      "preset": "Preset",
+      "base": "Base theme",
+      "modes": {
+        "preset": "Preset",
+        "custom": "Custom",
+        "inherit": "Inherit"
+      },
+      "customDescription": "A complete design system written directly in theme_spec. Every block is optional.",
+      "inheritDescription": "Start with {{name}}, then override only the decisions your brand changes.",
+      "renderError": "Could not render:",
+      "exampleTitle": "Life expectancy, 2000–2021",
+      "exampleSubtitle": "Years at birth. Most countries improved while the United States declined.",
+      "exampleSource": "Source: {{source}}"
+    },
     "groups": {
       "quick-start": "Quick start",
       "introduction": "Language design",
@@ -73,6 +123,10 @@
         "title": "Auto Layout Algorithm",
         "description": "Spring, gas-pressure, radial, and area sizing models."
       },
+      "theme-spec": {
+        "title": "Using themes",
+        "description": "Use a preset, define a design system, or inherit and override a shipped theme."
+      },
       "api-reference": {
         "title": "API reference",
         "description": "ChartAssemblyInput, assemblers, encodings, options, and exports."
@@ -89,9 +143,21 @@
         "title": "Chart.js charts",
         "description": "Every Chart.js chart type, its channels, and configurable parameters."
       },
+      "reference-plotly": {
+        "title": "Plotly charts",
+        "description": "Every Plotly chart type, its channels, and configurable parameters."
+      },
+      "reference-excel": {
+        "title": "Excel charts",
+        "description": "Every native Excel chart type, its channels, and Office.js mapping."
+      },
       "development": {
         "title": "Development guide",
         "description": "Monorepo setup, daily commands, and test strategy."
+      },
+      "test-plan": {
+        "title": "Chart engine test plan",
+        "description": "Shared visual cases, coverage matrices, and backend bring-up workflow."
       },
       "adding-a-semantic-type": {
         "title": "Extending semantic types",
@@ -124,7 +190,127 @@
     "backends": {
       "vegalite": "Compiles a Flint spec into a clean Vega-Lite specification — ideal for crisp, publication-quality statistical graphics rendered with Vega.",
       "echarts": "Compiles a Flint spec into an Apache ECharts option — well suited to interactive dashboards and rich visual effects.",
-      "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps."
+      "chartjs": "Compiles a Flint spec into a Chart.js config — a lightweight choice for embedding charts in everyday web apps.",
+      "plotly": "Compiles a Flint spec into a Plotly.js figure — well suited to analytical charts with native hover, zoom, and legend interactions."
+    }
+  },
+  "themes": {
+    "title": "Explore themes",
+    "concept": "A Flint theme formally defines a coherent visual identity for an entire chart library.",
+    "principles": {
+      "layout": {
+        "title": "Layout",
+        "body": "Controls spacing, density, and the placement of axes, legends, labels, and annotations."
+      },
+      "semantics": {
+        "title": "Semantic presentation",
+        "body": "Uses field roles, order, groups, and hierarchy to determine contrast, emphasis, and series identity."
+      },
+      "identity": {
+        "title": "Visual system",
+        "body": "Defines typography, color, surfaces, line weight, corners, and mark shapes as one recognizable system."
+      }
+    },
+    "generalization": "The compiler applies the theme’s layout behavior, semantic presentation, and visual identity across chart types, data shapes, and canvas sizes.",
+    "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
+    "themeLabCta": "Feeling creative? Create a theme in <lab>Theme Lab</lab>",
+    "flintDefault": "Flint default",
+    "switchAria": "Theme",
+    "layoutToggle": {
+      "aria": "Chart arrangement",
+      "grid": "Grid",
+      "gridTitle": "Arrange charts in a regular comparison grid",
+      "scatter": "Scatter",
+      "scatterTitle": "Scatter charts like photographs for editorial screenshots",
+      "banner": "Banner",
+      "bannerTitle": "Arrange twelve charts in a tight two-row blog banner"
+    },
+    "descriptions": {
+      "default": "Balanced, neutral defaults designed to work across chart types.",
+      "nyt": "Newsroom graphics with headlines that state the finding, values on marks, and labels at the end of each series.",
+      "economist": "Compact print graphics with flat headlines, explanatory decks, and units repeated along the axis.",
+      "nature": "Journal figures with compact panels, explicit units, and statistics placed beside fitted lines.",
+      "mckinsey": "Presentation-ready charts with broad bands, prominent values, and takeaway-led headlines.",
+      "datawrapper": "Clean web graphics with narrow layouts, plain typography, and restrained rules.",
+      "powerbi": "Dark dashboard tiles with compact layouts, legends on the right, and emphasis on the latest value.",
+      "powerbi-light": "Light dashboard tiles with a white canvas, fine gridlines, and legends on the right.",
+      "swiss": "International Typographic Style with a visible grid, strong black structure, and a single red accent.",
+      "pop": "A pop-art remix of Swiss with electric process colors, heavy black structure, and punchy display type.",
+      "cartoon": "Playful charts with warm paper, rounded type, bold outlines, bright colors, and a soft dashed grid."
+    },
+    "cases": {
+      "keeling": {
+        "title": "Keeling Curve",
+        "blurb": "Atmospheric CO₂ at Mauna Loa, 316 ppm to 421 and still climbing."
+      },
+      "driving": {
+        "title": "Driving shifts into reverse",
+        "blurb": "Miles driven per person against the price of gas, 1956–2010."
+      },
+      "seattle-range": {
+        "title": "Seattle temperature range",
+        "blurb": "Average daily low to high, month by month."
+      },
+      "temp-heatmap": {
+        "title": "Monthly temperature by city",
+        "blurb": "Tropics warm all year, Moscow frozen, Sydney running backwards."
+      },
+      "browser-pie": {
+        "title": "Desktop browser share",
+        "blurb": "Chrome takes two thirds; Safari and Edge tie far behind."
+      },
+      "co2-lollipop": {
+        "title": "CO₂ emissions per person",
+        "blurb": "Sixteen countries spanning a twentyfold range, in tonnes."
+      },
+      "life-expectancy": {
+        "title": "Life expectancy, 2000 to 2021",
+        "blurb": "Almost every country rose. The US line dips through COVID."
+      },
+      "lifeexp-dumbbell": {
+        "title": "The female–male life gap",
+        "blurb": "Each bar spans male to female life expectancy in one country."
+      },
+      "electricity-mix-area": {
+        "title": "World electricity mix",
+        "blurb": "Coal holds its share for thirty years as wind and solar arrive."
+      },
+      "big-mac": {
+        "title": "The Big Mac index",
+        "blurb": "One burger, priced worldwide: a rough gauge of what money buys."
+      },
+      "olympic-bump": {
+        "title": "Olympic medal-table rank",
+        "blurb": "Four Summer Games, 2012 to 2024, with first place on top."
+      },
+      "nutrition-radar": {
+        "title": "Almonds, oats and yogurt",
+        "blurb": "Five nutrients per 100 g; each food traces its own polygon."
+      },
+      "faithful-hist": {
+        "title": "Old Faithful eruptions",
+        "blurb": "Two humps, near two minutes and four and a half. A mean hides both."
+      },
+      "trust-likert": {
+        "title": "Confidence in US institutions",
+        "blurb": "Centred on the neutral split: trust left, doubt right."
+      },
+      "population-waterfall": {
+        "title": "World population, 1950 to 2020",
+        "blurb": "A bridge from 2.5 to 7.9 billion, one step per UN sub-region."
+      },
+      "us-pyramid": {
+        "title": "US population by age and sex",
+        "blurb": "Age bands stacked upward, the sexes mirrored either side of zero."
+      },
+      "gapminder-bubble": {
+        "title": "Wealth against health",
+        "blurb": "Rosling’s bubbles: size is population, colour is continent."
+      },
+      "earnings-education": {
+        "title": "Earnings by education and sex",
+        "blurb": "Two gaps at once: the ladder, and the gap inside every rung."
+      }
     }
   },
   "modal": {
@@ -157,13 +343,21 @@
     "attribution": "A Microsoft Research project",
     "installNpm": "Install Flint with <npmLink>npm</npmLink> (TypeScript / JavaScript).",
     "installMcp": "For agents, use the <mcpLink>MCP server</mcpLink>; see the <skillLink>Agent Skill</skillLink> for standalone guidance.",
-    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>.",
+    "installGallery": "Explore {{chartTypes}} chart types and {{examples}} examples in the <galleryLink>gallery</galleryLink>, or compare <themesLink>visual themes</themesLink>.",
+    "themeLead": "Flint employs a formal theme specification so designers can define a visual identity once and apply it consistently across an entire chart library.",
+    "installThemeLab": "Create a custom visual system in <themeLabLink>Theme Lab</themeLabLink>.",
+    "ctaThemes": "Visual Themes",
     "ctaGallery": "Explore Gallery",
     "ctaMcp": "Get MCP Server",
     "ctaGithub": "Visit GitHub",
     "ctaDocs": "Read the docs",
     "news": {
       "title": "Updates",
+      "release050": {
+        "date": "August 5, 2026",
+        "dateTime": "2026-08-05",
+        "text": "Flint 0.5.0 introduces formal visual themes with ten presets, custom ThemeSpec authoring, and preset inheritance."
+      },
       "release040": {
         "date": "July 24, 2026",
         "dateTime": "2026-07-24",
@@ -193,13 +387,14 @@
     "leadMiddle": ". Instead of requiring verbose low-level parameters such as scales, axes, spacing, and layout, the Flint compiler derives optimized chart settings from the data, semantic types, chart type, and encodings.",
     "leadHighlight2": "Flint supports {{chartTypes}} chart types across {{backends}} rendering backends through one unified interface",
     "backendRosterLabel": "Backends",
+    "themeRosterLabel": "Themes",
+    "themeRosterMore": "+ {{count}} more",
     "flintSpec": "Flint spec",
     "compiledChart": "Compiled chart",
     "backendAria": "Rendering backend",
     "prevExample": "Previous example",
     "nextExample": "Next example",
     "exampleAria": "Example",
-    "openInEditor": "Open this example in the editor",
     "seeGallery": "See more in the gallery",
     "closingTitle": "Start building with Flint.",
     "closingBody": "Open source and ready to use. Start from GitHub or browse examples in the gallery.",
@@ -225,36 +420,55 @@
         "title": "Render with different backends",
         "body": "Flint supports {{chartTypes}} chart types across Vega-Lite, ECharts, Chart.js, and Plotly, with {{examples}} backend-specific examples in the gallery, and can emit native Excel charts through Office.js. Despite their different APIs and programming models, Flint hides them behind a unified interface.",
         "example": "Switch backends to use their native strengths: ECharts for hierarchical sunbursts, Plotly for statistical and analytical traces, or Excel for editable charts embedded in a workbook."
+      },
+      "themes": {
+        "title": "Render with different themes",
+        "body": "A Flint theme is a formal specification that guides the layout algorithm, applies presentation rules by semantic role, and defines geometry, typography, and color as one visual system.",
+        "example": "When changing the visual theme from Economist to Swiss, the data and encodings remain fixed while spacing, structure, labels, marks, typography, and color adapt to reflect each theme’s visual language."
       }
     },
     "examples": {
       "facetedLine": {
         "label": "Faceted line chart",
-        "caption": "Monthly active users by region, laid out as small multiples over time."
+        "caption": "Monthly active users by region, laid out as small multiples over time.",
+        "title": "Monthly active users by region",
+        "subtitle": "Players per month in 2025, one panel per region, by platform"
       },
       "heatmap": {
         "label": "Diverging heatmap",
-        "caption": "Net user gains and losses by region and month, shown with zero-centered color."
+        "caption": "Net user gains and losses by region and month, shown with zero-centered color.",
+        "title": "Which titles gained players, and when",
+        "subtitle": "Net new players per game per month in 2025; positive values are gains, negative values are losses"
       },
       "waterfall": {
         "label": "Waterfall",
-        "caption": "Monthly gains and losses accumulated into the running user total for the year."
+        "caption": "Monthly gains and losses accumulated into the running user total for the year.",
+        "title": "How the player base moved through 2025",
+        "subtitle": "Net new players each month, accumulating into the year's total"
       },
       "sunburst": {
         "label": "Sunburst",
-        "caption": "User activity broken into a three-level hierarchy: region, game type, and game."
+        "caption": "User activity broken into a three-level hierarchy: region, game type, and game.",
+        "title": "Where the players are",
+        "subtitle": "Monthly active users by region, then platform, then title"
       },
       "donut": {
         "label": "Donut chart",
-        "caption": "Film ratings as proportional slices, with an inner radius applied from the chart spec."
+        "caption": "Film ratings as proportional slices, with an inner radius applied from the chart spec.",
+        "title": "Films by MPAA rating",
+        "subtitle": "Share of releases carrying each certificate"
       },
       "regression": {
         "label": "Regression scatter",
-        "caption": "Critic and audience scores with a fitted trend line to reveal their relationship."
+        "caption": "Critic and audience scores with a fitted trend line to reveal their relationship.",
+        "title": "Critics and audiences broadly agree",
+        "subtitle": "IMDB rating against Rotten Tomatoes score, one point per film, with a fitted trend"
       },
       "sortedBar": {
         "label": "Sorted bar chart",
-        "caption": "Film genres ordered by count, from the most common to the least."
+        "caption": "Film genres ordered by count, from the most common to the least.",
+        "title": "Films by genre",
+        "subtitle": "Number of releases, most common to least"
       }
     }
   },
@@ -262,7 +476,7 @@
     "heroTitle": "Use Flint as an MCP server for your agent",
     "leadBefore": "Install <code>flint-chart-mcp</code> as a",
     "leadMcpLink": "Model Context Protocol",
-    "leadAfter": "server and your agent can create charts as an interactive MCP app. By default it opens an interactive Flint chart view; when you need artifacts, it can also return static images or backend-native specs.",
+    "leadAfter": "server and your agent can create interactive charts or author reusable visual themes. By default it opens an interactive Flint chart view; it can also return static artifacts and guide agents through a formal ThemeSpec.",
     "quickStart": "Quick start:",
     "quickStartBody": "paste this setup request into your agent and let it configure Flint for the current project. For manual setup, see",
     "localSetupTitle": "Local server",
@@ -281,13 +495,13 @@
     "step3Title": "Review the interactive result.",
     "step3Body": "In hosts with MCP Apps, the preferred tool opens a live SVG preview with chart options. When an artifact is needed, Flint can return a PNG, SVG, or compiled backend spec instead.",
     "provides": "What it provides",
-    "providesBody": "The server keeps the tool surface small: one preferred interactive tool, supporting tools for static render and validation, plus resources that teach the agent Flint's chart vocabulary.",
+    "providesBody": "The server separates execution from authoring: tools render, validate, and discover Flint capabilities, while bundled skills teach agents to create semantic chart specs and reusable ThemeSpecs.",
     "installTitle": "Install & configure",
     "installBody": "For manual setup, the server speaks <strong>stdio</strong> and runs zero-install with <code>npx</code>. Point your MCP client at the package:",
     "dataBody": "Tool calls can embed rows directly with <code>data.values</code>. The agent can also chart a local CSV, TSV, or JSON file by <code>data.url</code> out of the box. Remote URLs are never fetched. For an untrusted deployment, pass <code>--disable-file-reference</code> to reject local file references and accept only inline <code>data.values</code>:",
     "reference": "Reference",
     "referenceBody": "The docs cover the full MCP workflow. The package README is the shortest reference for tool inputs, CLI flags, and client config.",
-    "skillNote": "Adding Flint to your own app? The standalone <skillLink>Flint Agent Skill</skillLink> teaches coding agents to author specs and integrate Flint.",
+    "skillNote": "Using Flint beyond MCP? The standalone <skillLink>chart-author skill</skillLink> teaches agents to create and integrate chart specs, while the <themeSkillLink>theme-author skill</themeSkillLink> translates visual identities into ThemeSpecs.",
     "readSetupDocs": "Read setup docs",
     "tools": {
       "create_chart_view": "Opens the interactive MCP App: live SVG preview plus chart options. Use this whenever the user wants to see a chart.",
@@ -295,9 +509,12 @@
       "compile_chart": "Returns the backend-native spec JSON for Vega-Lite, ECharts, or Chart.js, along with assembly warnings.",
       "validate_chart": "Checks whether a spec is valid, reports warnings or errors, and returns the computed chart size.",
       "list_chart_types": "Lists chart types and encoding channels, optionally scoped to one backend.",
-      "agentSkill": "Bundled authoring instructions for producing valid ChartAssemblyInput specs.",
+      "list_themes": "Lists shipped visual theme presets. Pass an id for guidance on using or extending that design language.",
+      "agentSkill": "Bundled chart-authoring instructions for producing valid ChartAssemblyInput specs.",
+      "themeSkill": "Bundled ThemeSpec instructions for translating a visual identity into a reusable formal specification.",
       "chartTypes": "A browsable catalog of chart types and encoding channels across all backends.",
-      "authorPrompt": "Loads the Flint authoring skill in prompt-aware clients before chart tool calls."
+      "authorPrompt": "Loads the chart-author skill in prompt-aware clients before chart tool calls.",
+      "themeAuthorPrompt": "Loads the theme-author skill when a user asks to create, translate, refine, or review a ThemeSpec."
     },
     "tags": {
       "toolPreferred": "tool · preferred",

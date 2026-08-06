@@ -104,7 +104,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `totals` | choice | `auto` (Auto), `none` (None), `first` (First only), `last` (Last only), `both` (First and last) | `auto` | always | Totals |
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
+| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks (legacy spelling of showValueLabels). |
 
 ### ![](chart-icon-pyramid.svg) Pyramid Chart
 
@@ -128,7 +128,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `showOutliers` | toggle | on / off | `true` | always | Outliers |
+| `showPoints` | toggle | on / off | `false` | conditional | Overlay point markers on the line. |
+| `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 
 ### ![](chart-icon-violin.svg) Violin Plot
 

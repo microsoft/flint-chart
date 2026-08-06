@@ -95,7 +95,7 @@ export function prepareExcelArtifact(value: unknown): PreparedExcelArtifact {
         rangeA1: `A1:${excelColumnLetter(columns - 1)}${rows}`,
         chartType,
         numericAxis: /XYScatter|Bubble/i.test(chartType),
-        dateAxis: /Stock/i.test(chartType),
+        dateAxis: /Stock/i.test(chartType) || spec.categoryAxis?.categoryType === 'DateAxis',
         hasAxes: !/Pie|Doughnut|Treemap|Sunburst|Funnel/i.test(chartType),
         isBar: /Bar|Column/i.test(chartType),
         isLine: /Line/i.test(chartType),

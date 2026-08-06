@@ -1,0 +1,256 @@
+{
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#1a1a1a",
+        "stroke": "#2f2f2f",
+        "strokeWidth": 1,
+        "cornerRadius": 8,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 13
+        },
+        "x2": {
+          "value": 327
+        },
+        "y": {
+          "value": 14
+        },
+        "y2": {
+          "value": 229
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 22,
+        "fontWeight": 500,
+        "fill": "#cfcfcf",
+        "align": "center",
+        "baseline": "top",
+        "text": "Renewable share",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 45
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 68,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "align": "center",
+        "baseline": "middle",
+        "text": "30.3",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 113
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 18,
+        "fontWeight": 400,
+        "fill": "#b3b3b3",
+        "align": "center",
+        "baseline": "top",
+        "text": "67% of 45",
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 170
+        },
+        "y": {
+          "value": 165
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#2f2f2f",
+        "cornerRadius": 3.5,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 34
+        },
+        "x2": {
+          "value": 306
+        },
+        "y": {
+          "value": 192
+        },
+        "y2": {
+          "value": 199
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rect",
+        "fill": "#5b8def",
+        "cornerRadius": 3.5,
+        "tooltip": null
+      },
+      "encoding": {
+        "x": {
+          "value": 34
+        },
+        "x2": {
+          "value": 217.14666666666668
+        },
+        "y": {
+          "value": 192
+        },
+        "y2": {
+          "value": 199
+        }
+      }
+    }
+  ],
+  "width": 340,
+  "height": 243,
+  "resolve": {
+    "scale": {
+      "x": "independent",
+      "y": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 243,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#1b1a19",
+    "font": "'Segoe UI', system-ui, sans-serif",
+    "title": {
+      "font": "'Segoe UI', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "'Segoe UI', system-ui, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#c8c6c4",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.2,
+      "strokeCap": "square"
+    },
+    "trail": {
+      "size": 2.2
+    },
+    "rule": {
+      "strokeCap": "square"
+    },
+    "header": {
+      "labelFont": "'Segoe UI', system-ui, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#c8c6c4",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Renewables supply 30% of the world's electricity",
+    "subtitle": [
+      "Share of global electricity generation, 2023, against a 45% target"
+    ]
+  },
+  "background": "#1b1a19",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Metric": "Renewable share",
+        "Share (%)": 30.3,
+        "Target": 45
+      }
+    ]
+  },
+  "__theme__": "powerbi",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "ink.series",
+      "message": "the template drew its own furniture in literal colours — those keep their role and are re-toned against the surface"
+    }
+  ]
+}

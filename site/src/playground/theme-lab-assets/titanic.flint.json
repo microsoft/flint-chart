@@ -1,0 +1,99 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Class",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Survival (%)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Sex",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    },
+    "xOffset": {
+      "field": "Sex",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11,
+      "labelAngle": 0,
+      "labelAlign": "center",
+      "labelBaseline": "top"
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 46,
+    "for": "position"
+  },
+  "title": {
+    "text": "Titanic survival rate by class and sex"
+  },
+  "data": {
+    "values": [
+      {
+        "Class": "1st",
+        "Sex": "Female",
+        "Survival (%)": 97
+      },
+      {
+        "Class": "1st",
+        "Sex": "Male",
+        "Survival (%)": 34
+      },
+      {
+        "Class": "2nd",
+        "Sex": "Female",
+        "Survival (%)": 89
+      },
+      {
+        "Class": "2nd",
+        "Sex": "Male",
+        "Survival (%)": 15
+      },
+      {
+        "Class": "3rd",
+        "Sex": "Female",
+        "Survival (%)": 49
+      },
+      {
+        "Class": "3rd",
+        "Sex": "Male",
+        "Survival (%)": 15
+      }
+    ]
+  }
+}

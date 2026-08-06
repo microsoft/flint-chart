@@ -1,0 +1,154 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Dash pattern re-authored so 'Observed' is solid and 'Projected' is a [5,4] dash on the same colour. Flint's default dash scale gives both series a dash and both a legend entry, which reads as two measures rather than one measure in two states.",
+    "Colour held constant across the two series and the legend deleted; the difference is carried entirely by line texture, which is the convention for observed-versus-forecast.",
+    "Series labelled at the line ends instead of in a key, using the existing Series field. This is not annotation — it is the legend, moved onto the marks so the eye never leaves the plot.",
+    "Y scale forced through zero with a 0–6000 domain and thousands-suffixed labels, because a capacity total is a magnitude and a truncated axis would exaggerate the projected climb.",
+    "Axis reduced to a horizontal grid of #E4E4E4 hairlines with no y domain and no ticks, plus a solid black x baseline — the newspaper's standard time-series frame.",
+    "Y title flattened to a single unit word ('GW') sitting horizontally at the top of the axis, replacing the rotated 'Capacity (GW)'.",
+    "Georgia for the headline and deck, Helvetica for everything numeric; line weight raised to 2.4px with a round cap.",
+    "The join point at 2023 is drawn once as a filled dot so the handoff between the two states has a visible pivot instead of an ambiguous overlap."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 46, "bottom": 6 },
+  "width": 300,
+  "height": 210,
+  "title": {
+    "text": "Global renewable capacity",
+    "subtitle": ["Gigawatts installed, observed to 2023 and projected to 2030"]
+  },
+  "data": {
+    "values": [
+      { "Year": "2015", "Series": "Observed", "Capacity (GW)": 785 },
+      { "Year": "2017", "Series": "Observed", "Capacity (GW)": 1080 },
+      { "Year": "2019", "Series": "Observed", "Capacity (GW)": 1440 },
+      { "Year": "2021", "Series": "Observed", "Capacity (GW)": 1900 },
+      { "Year": "2023", "Series": "Observed", "Capacity (GW)": 2560 },
+      { "Year": "2023", "Series": "Projected", "Capacity (GW)": 2560 },
+      { "Year": "2025", "Series": "Projected", "Capacity (GW)": 3400 },
+      { "Year": "2027", "Series": "Projected", "Capacity (GW)": 4300 },
+      { "Year": "2030", "Series": "Projected", "Capacity (GW)": 5800 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "format": "%Y",
+        "values": ["2015", "2020", "2025", "2030"],
+        "labelFlush": true,
+        "grid": false,
+        "domain": true,
+        "domainColor": "#000000",
+        "domainWidth": 1,
+        "ticks": true,
+        "tickColor": "#000000",
+        "tickSize": 4,
+        "labelPadding": 3
+      }
+    },
+    "y": {
+      "field": "Capacity (GW)",
+      "type": "quantitative",
+      "title": "GW",
+      "scale": { "domain": [0, 6000] },
+      "axis": {
+        "tickCount": 4,
+        "labelExpr": "datum.value === 0 ? '0' : datum.value / 1000 + ',000'",
+        "grid": true,
+        "gridColor": "#e4e4e4",
+        "gridWidth": 1,
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 5,
+        "titleAngle": 0,
+        "titleAlign": "left",
+        "titleX": -4,
+        "titleY": -10,
+        "titleBaseline": "bottom"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "color": "#1a1a1a",
+        "strokeWidth": 2.4,
+        "strokeCap": "round",
+        "strokeJoin": "round"
+      },
+      "encoding": {
+        "strokeDash": {
+          "field": "Series",
+          "type": "nominal",
+          "scale": { "domain": ["Observed", "Projected"], "range": [[1, 0], [5, 4]] },
+          "legend": null
+        }
+      }
+    },
+    {
+      "transform": [
+        { "filter": "datum.Series === 'Observed'" },
+        { "window": [{ "op": "row_number", "as": "__rank" }], "sort": [{ "field": "Year", "order": "descending" }] },
+        { "filter": "datum.__rank === 1" }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 55,
+        "color": "#1a1a1a"
+      }
+    },
+    {
+      "transform": [
+        { "window": [{ "op": "row_number", "as": "__rank" }], "groupby": ["Series"], "sort": [{ "field": "Year", "order": "descending" }] },
+        { "filter": "datum.__rank === 1" }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 7,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600,
+        "color": "#1a1a1a"
+      },
+      "encoding": {
+        "text": { "field": "Series", "type": "nominal" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Georgia, 'Times New Roman', serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 8
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10,
+      "titleColor": "#666666",
+      "titleFontWeight": 400
+    }
+  }
+}

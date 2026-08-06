@@ -94,6 +94,24 @@ import { normalizeChartProperties } from '../core/normalize-properties';
  *
  * @returns An ECharts option object with optional `_warnings` and `_width`/`_height` hints
  */
+function applyFieldDisplayNames(option: any, names: Record<string, string> | undefined): void {
+    if (!names) return;
+    const displayName = (value: unknown) => typeof value === 'string' ? names[value] ?? value : value;
+    for (const axisKey of ['xAxis', 'yAxis', 'singleAxis']) {
+        const axes = Array.isArray(option[axisKey]) ? option[axisKey] : [option[axisKey]];
+        for (const axis of axes) {
+            if (axis?.name) axis.name = displayName(axis.name);
+        }
+    }
+    for (const series of option.series ?? []) {
+        if (series?.name) series.name = displayName(series.name);
+    }
+    const graphics = Array.isArray(option.graphic) ? option.graphic : option.graphic ? [option.graphic] : [];
+    for (const graphic of graphics) {
+        if (graphic?.style?.text) graphic.style.text = displayName(graphic.style.text);
+    }
+}
+
 export function assembleECharts(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -533,6 +551,8 @@ export function assembleECharts(input: ChartAssemblyInput): any {
 
     // Clean internal-only props
     delete ecOption._legendWidth;
+
+    applyFieldDisplayNames(ecOption, input.field_display_names);
 
     return ecOption;
 }

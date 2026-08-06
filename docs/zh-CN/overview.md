@@ -123,7 +123,7 @@ data  +  semantic_types  +  chart_spec  →  assemble*()  →  后端配置
 | **代码生成器** | Phase 2 — `template.instantiate()` | `vegalite/`、`echarts/`、`chartjs/` |
 
 1. **前端** — 从 dataSpec + data 推导编码类型、格式、聚合、比例尺、域、颜色和排序
-2. **优化器** — 用基于物理的尺寸选择坐标轴跨度、带宽步长、分面网格和宽高比；先从[示例：自动布局](/documentation/chart-sizing)入手，再用[自动布局算法](/documentation/layout-model)了解公式
+2. **优化器** — 用基于物理的尺寸选择坐标轴跨度、带宽步长、分面网格和宽高比；先从[示例：自动布局](/playgrounds/auto-layout)入手，再用[自动布局算法](/documentation/layout-model)了解公式
 3. **代码生成器** — 根据 `chartType` 选择模板，生成对应后端的配置
 
 流水线详情见[架构](/documentation/architecture)。

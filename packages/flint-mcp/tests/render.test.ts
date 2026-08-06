@@ -18,6 +18,11 @@ const sales: ChartAssemblyInput = {
   chart_spec: {
     chartType: 'Bar Chart',
     encodings: { x: { field: 'region' }, y: { field: 'revenue' } },
+    // Real calls carry a headline: it is the first thing a house styles, and
+    // some (the Economist's masthead tab) hang furniture off it. A titleless
+    // fixture exercises a chart nobody actually asks for.
+    title: 'Revenue by region',
+    subtitle: 'FY2024, $m',
     baseSize: { width: 360, height: 240 },
   },
 };
@@ -114,5 +119,31 @@ describe('input guards', () => {
     } finally {
       rmSync(dataDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('house styling survives the render', () => {
+  // The Economist's red masthead tab is anchored to the graphic frame, not the
+  // plot, so Vega-Lite cannot draw it — the theme records its coordinates and
+  // the renderer paints it on afterwards. That last step is easy to lose (the
+  // spec still looks correct), so it is asserted on the artifact.
+  it('paints canvas-anchored furniture into the SVG', async () => {
+    const plain = await renderChart(sales, 'vegalite', { format: 'svg' });
+    const themed = await renderChart(
+      { ...sales, theme_spec: 'economist' },
+      'vegalite',
+      { format: 'svg' },
+    );
+    expect(plain.svg).not.toContain('#e3120b');
+    expect(themed.svg).toContain('#e3120b');
+  });
+
+  it('carries the tab through to the PNG', async () => {
+    const themed = await renderChart(
+      { ...sales, theme_spec: 'economist' },
+      'vegalite',
+      { format: 'png' },
+    );
+    expect(themed.buffer!.length).toBeGreaterThan(1000);
   });
 });

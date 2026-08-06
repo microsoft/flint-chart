@@ -5,8 +5,8 @@ import { JsonCodeMirror } from './JsonCodeMirror';
 import { ScaleToFit } from './ScaleToFit';
 import { WallChart } from './WallChart';
 import { GalleryOptionsBar } from './GalleryOptionsBar';
-import { testCaseToAssemblyInput } from '../shared/test-case-utils';
-import { buildPanelModel } from '../shared/chart-options';
+import { testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
+import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { buildGalleryEditorHref } from '../shared/editor-payload';
 import { useLocale } from '../i18n/LocaleContext';
 import { humanizeVariants } from '../shared/wall-title';
@@ -49,6 +49,10 @@ export function ChartCodeModal({
   // Temporary, display-only overrides driven by the options bar. These tweak
   // the shown Flint spec JSON without mutating any underlying test case.
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
+  // The house the preview is drawn in. Only Vega-Lite reads `theme_spec`, so
+  // the switch is offered only there.
+  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const canTheme = chart.backend === 'vegalite';
 
   const testCase = tests[index];
 
@@ -62,7 +66,7 @@ export function ChartCodeModal({
   // actions are stored). Display only — never persisted.
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = testCaseToAssemblyInput(testCase);
+    const base = withHouse(testCaseToAssemblyInput(testCase), canTheme ? themeId : undefined);
     return {
       ...base,
       chart_spec: {
@@ -70,7 +74,16 @@ export function ChartCodeModal({
         chartProperties: { ...base.chart_spec.chartProperties, ...tempOptions },
       },
     };
-  }, [testCase, tempOptions]);
+  }, [testCase, tempOptions, themeId, canTheme]);
+
+  // A house can change what a chart *is*, not only how it looks — the NYT puts
+  // points on a line. Those are defaults, so they yield to anything the bar has
+  // stated, and a value the reader never really chose would silently outrank
+  // the new house. Let go of the ones that were only echoing the old one.
+  const chooseTheme = (next: string | undefined) => {
+    if (displayInput) setTempOptions((options) => withoutEchoedOverrides(displayInput, options));
+    setThemeId(next);
+  };
 
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, chart.backend) : null),
@@ -234,6 +247,7 @@ export function ChartCodeModal({
                     testCase={testCase}
                     backend={chart.backend}
                     chartPropertyOverrides={tempOptions}
+                    themeId={themeId}
                   />
                 </ScaleToFit>
               )}
@@ -266,8 +280,13 @@ export function ChartCodeModal({
               <GalleryOptionsBar
                 model={panelModel}
                 chartType={displayInput.chart_spec.chartType}
-                canReset={Object.keys(tempOptions).length > 0}
-                onReset={() => setTempOptions({})}
+                themeId={themeId}
+                onTheme={canTheme ? chooseTheme : undefined}
+                canReset={Object.keys(tempOptions).length > 0 || themeId !== undefined}
+                onReset={() => {
+                  setTempOptions({});
+                  setThemeId(undefined);
+                }}
                 onChange={(key, value) =>
                   setTempOptions((prev) => {
                     const next = { ...prev };

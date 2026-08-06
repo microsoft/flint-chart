@@ -2,7 +2,7 @@
 
 当数据超出可用画布时，用于自动调整图表坐标轴尺寸的基于物理的模型。
 
-初次接触 Flint 尺寸？请从[示例：自动布局](/documentation/chart-sizing)开始，然后回到此处阅读完整算法。
+初次接触 Flint 尺寸？请从[示例：自动布局](/playgrounds/auto-layout)开始，然后回到此处阅读完整算法。
 
 **如何阅读本文档：** [§1](#1-layout-mode-classification) 区分 banded 与 continuous 轴并路由到正确模型。[§2](#2-discrete-axis-elastic-budget-model)–[§5](#5-area-layout-2d-pressure-model) 描述四种几何特定模型。[§6](#6-unified-summary) 汇总共享的 pressure–stretch 模式、决策树和实现映射。
 

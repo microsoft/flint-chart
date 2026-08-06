@@ -106,6 +106,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
@@ -115,6 +116,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-column-stacked.svg) Stacked Bar Chart
 
@@ -124,6 +126,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center) | — | conditional | Stacking strategy for overlapping series. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
 
@@ -135,6 +138,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-waterfall.svg) Waterfall Chart
 
@@ -144,7 +148,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `0` | always | Corner radius for supported marks. |
 | `totals` | choice | `auto` (Auto), `none` (None), `first` (First), `last` (Last), `both` (Both) | `auto` | conditional | Totals |
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
+| `showValueLabels` | toggle | on / off | `false` | always | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-gantt.svg) Gantt Chart
@@ -210,6 +214,10 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `bandwidth` | number | 0.05 – 2 (step 0.05) | `0` | always | Kernel-density bandwidth (0 = auto). |
+| `showPoints` | toggle | on / off | `false` | always | Overlay point markers on the line. |
+| `showMedian` | toggle | on / off | `false` | always | Median rule |
+| `showContour` | toggle | on / off | `false` | always | Contour |
+| `medianWidth` | number | 0.2 – 1 (step 0.05) | `0.6` | conditional | Median width |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 
 ### ![](chart-icon-box-plot.svg) Boxplot
@@ -219,6 +227,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `whiskerMethod` | choice | `iqr` (Tukey (1.5 × IQR)), `minmax` (Min–Max) | `iqr` | always | Whiskers |
+| `showPoints` | toggle | on / off | `false` | conditional | Overlay point markers on the line. |
 | `showOutliers` | toggle | on / off | `true` | conditional | Outliers |
 | `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
@@ -231,7 +240,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-candlestick.svg) Candlestick Chart
 
@@ -283,6 +294,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
@@ -295,6 +307,8 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
+| `showText` | toggle | on / off | `false` | always | Values |
+| `showSeriesInLabel` | toggle | on / off | `false` | conditional | Name in label |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
 | `logScale_y` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the y-axis. |
@@ -344,6 +358,7 @@ _No template-specific parameters._
 | `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
@@ -351,9 +366,10 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
+| `innerRadius` | number | 0 – 100 (step 5) | `50` | always | Inner radius as a percentage of the outer radius. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
 
@@ -365,6 +381,7 @@ _No template-specific parameters._
 | `alignment` | choice | `left` (Left (default)), `center` (Center) | — | always | Segment alignment for radial charts. |
 | `sortSlices` | choice | `none` (Data order), `descending` (Largest first), `ascending` (Smallest first) | `none` | always | Sort slices |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
+| `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 
 ### ![](chart-icon-radar.svg) Radar Chart
 
@@ -389,7 +406,7 @@ _No template-specific parameters._
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
-| `showTextLabels` | toggle | on / off | `false` | always | Render value labels on the marks. |
+| `showValueLabels` | toggle | on / off | `false` | always | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |

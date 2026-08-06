@@ -1,0 +1,198 @@
+{
+  "mark": "circle",
+  "encoding": {
+    "x": {
+      "field": "Duration (min)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Waiting (min)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 310,
+      "continuousHeight": 253
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "Old Faithful eruptions — waiting time vs duration"
+  },
+  "data": {
+    "values": [
+      {
+        "Duration (min)": 3.6,
+        "Waiting (min)": 79
+      },
+      {
+        "Duration (min)": 1.8,
+        "Waiting (min)": 54
+      },
+      {
+        "Duration (min)": 3.333,
+        "Waiting (min)": 74
+      },
+      {
+        "Duration (min)": 2.283,
+        "Waiting (min)": 62
+      },
+      {
+        "Duration (min)": 4.533,
+        "Waiting (min)": 85
+      },
+      {
+        "Duration (min)": 2.883,
+        "Waiting (min)": 55
+      },
+      {
+        "Duration (min)": 4.7,
+        "Waiting (min)": 88
+      },
+      {
+        "Duration (min)": 3.6,
+        "Waiting (min)": 85
+      },
+      {
+        "Duration (min)": 1.95,
+        "Waiting (min)": 51
+      },
+      {
+        "Duration (min)": 4.35,
+        "Waiting (min)": 85
+      },
+      {
+        "Duration (min)": 1.833,
+        "Waiting (min)": 54
+      },
+      {
+        "Duration (min)": 3.917,
+        "Waiting (min)": 84
+      },
+      {
+        "Duration (min)": 4.2,
+        "Waiting (min)": 78
+      },
+      {
+        "Duration (min)": 1.75,
+        "Waiting (min)": 47
+      },
+      {
+        "Duration (min)": 4.7,
+        "Waiting (min)": 83
+      },
+      {
+        "Duration (min)": 2.167,
+        "Waiting (min)": 52
+      },
+      {
+        "Duration (min)": 1.75,
+        "Waiting (min)": 62
+      },
+      {
+        "Duration (min)": 4.8,
+        "Waiting (min)": 84
+      },
+      {
+        "Duration (min)": 1.6,
+        "Waiting (min)": 52
+      },
+      {
+        "Duration (min)": 4.25,
+        "Waiting (min)": 79
+      },
+      {
+        "Duration (min)": 1.8,
+        "Waiting (min)": 51
+      },
+      {
+        "Duration (min)": 1.75,
+        "Waiting (min)": 47
+      },
+      {
+        "Duration (min)": 3.45,
+        "Waiting (min)": 78
+      },
+      {
+        "Duration (min)": 3.067,
+        "Waiting (min)": 69
+      },
+      {
+        "Duration (min)": 4.533,
+        "Waiting (min)": 74
+      },
+      {
+        "Duration (min)": 3.6,
+        "Waiting (min)": 83
+      },
+      {
+        "Duration (min)": 1.967,
+        "Waiting (min)": 55
+      },
+      {
+        "Duration (min)": 4.083,
+        "Waiting (min)": 76
+      },
+      {
+        "Duration (min)": 3.85,
+        "Waiting (min)": 78
+      },
+      {
+        "Duration (min)": 4.433,
+        "Waiting (min)": 79
+      },
+      {
+        "Duration (min)": 4.3,
+        "Waiting (min)": 73
+      },
+      {
+        "Duration (min)": 4.467,
+        "Waiting (min)": 77
+      },
+      {
+        "Duration (min)": 3.367,
+        "Waiting (min)": 66
+      },
+      {
+        "Duration (min)": 4.033,
+        "Waiting (min)": 80
+      },
+      {
+        "Duration (min)": 3.833,
+        "Waiting (min)": 74
+      },
+      {
+        "Duration (min)": 2.017,
+        "Waiting (min)": 52
+      }
+    ]
+  }
+}

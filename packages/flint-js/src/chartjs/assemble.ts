@@ -62,6 +62,17 @@ import { normalizeChartProperties } from '../core/normalize-properties';
  *
  * @returns A Chart.js config object with optional `_warnings` and `_width`/`_height` hints
  */
+function applyFieldDisplayNames(config: any, names: Record<string, string> | undefined): void {
+    if (!names) return;
+    const displayName = (value: unknown) => typeof value === 'string' ? names[value] ?? value : value;
+    for (const scale of Object.values(config.options?.scales ?? {}) as any[]) {
+        if (scale?.title?.text) scale.title.text = displayName(scale.title.text);
+    }
+    for (const dataset of config.data?.datasets ?? []) {
+        if (dataset?.label) dataset.label = displayName(dataset.label);
+    }
+}
+
 export function assembleChartjs(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -443,6 +454,8 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     if (legacyPivot.surface) {
         cjsConfig._pivot = legacyPivot.surface;
     }
+
+    applyFieldDisplayNames(cjsConfig, input.field_display_names);
 
     return cjsConfig;
 }

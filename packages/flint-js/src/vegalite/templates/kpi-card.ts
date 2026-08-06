@@ -372,6 +372,10 @@ export const kpiCardDef: ChartTemplateDef = {
                         : PROGRESS_ON_TRACK;
 
                 layers.push({
+                    // Only the exceeded state paints this line a status hue;
+                    // otherwise it is ordinary caption grey and re-tones with
+                    // the rest of the card's text.
+                    ...(isExceeded ? { __themeRole: 'positive' } : {}),
                     data: { values: [{}] },
                     mark: {
                         type: 'text',
@@ -410,6 +414,11 @@ export const kpiCardDef: ChartTemplateDef = {
                 // that the goal was exceeded.
                 const fillEnd = barLeft + Math.min(1, pct) * barWidth;
                 layers.push({
+                    // The bar is the only part of the card that carries a
+                    // measurement, so it takes the house's ink: its accent
+                    // where the reading is simply in progress, and the
+                    // house's status inks where the reading has a verdict.
+                    __themeRole: isExceeded ? 'positive' : isBehind ? 'negative' : 'accent',
                     data: { values: [{}] },
                     mark: {
                         type: 'rect',

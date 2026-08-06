@@ -1,0 +1,116 @@
+{
+  "mark": "circle",
+  "encoding": {
+    "x": {
+      "field": "GDP per capita",
+      "type": "quantitative",
+      "scale": {
+        "type": "log"
+      },
+      "axis": {
+        "gridColor": "#e8e8e8",
+        "gridOpacity": 0.5,
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Happiness score",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 312,
+      "continuousHeight": 251
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "World Happiness vs income per capita (2023)"
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Finland",
+        "GDP per capita": 54000,
+        "Happiness score": 7.8
+      },
+      {
+        "Country": "Denmark",
+        "GDP per capita": 68000,
+        "Happiness score": 7.6
+      },
+      {
+        "Country": "United States",
+        "GDP per capita": 76000,
+        "Happiness score": 6.9
+      },
+      {
+        "Country": "Germany",
+        "GDP per capita": 51000,
+        "Happiness score": 7
+      },
+      {
+        "Country": "Japan",
+        "GDP per capita": 34000,
+        "Happiness score": 6.1
+      },
+      {
+        "Country": "Brazil",
+        "GDP per capita": 9000,
+        "Happiness score": 6.1
+      },
+      {
+        "Country": "China",
+        "GDP per capita": 12800,
+        "Happiness score": 5.8
+      },
+      {
+        "Country": "Mexico",
+        "GDP per capita": 11000,
+        "Happiness score": 6.3
+      },
+      {
+        "Country": "India",
+        "GDP per capita": 2400,
+        "Happiness score": 4
+      },
+      {
+        "Country": "Nigeria",
+        "GDP per capita": 2200,
+        "Happiness score": 4.9
+      },
+      {
+        "Country": "Kenya",
+        "GDP per capita": 2100,
+        "Happiness score": 4.5
+      },
+      {
+        "Country": "Costa Rica",
+        "GDP per capita": 12500,
+        "Happiness score": 7.1
+      }
+    ]
+  }
+}

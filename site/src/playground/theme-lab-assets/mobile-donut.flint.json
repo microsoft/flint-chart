@@ -1,0 +1,60 @@
+{
+  "mark": "arc",
+  "encoding": {
+    "theta": {
+      "field": "Share",
+      "type": "quantitative"
+    },
+    "color": {
+      "field": "OS",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    }
+  },
+  "width": 346,
+  "height": 346,
+  "config": {
+    "view": {
+      "continuousWidth": 346,
+      "continuousHeight": 346
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Mobile OS market share, 2024"
+  },
+  "data": {
+    "values": [
+      {
+        "OS": "Android",
+        "Share": 71
+      },
+      {
+        "OS": "iOS",
+        "Share": 28
+      },
+      {
+        "OS": "Other",
+        "Share": 1
+      }
+    ]
+  }
+}

@@ -302,8 +302,175 @@ export const violinPlotDef: ChartTemplateDef = {
             spec.width = panelW;
             spec.height = panelH;
         }
+
+        // --- What the smoothing hides ------------------------------------
+        // A kernel density is an *inference*: it draws a curve where there
+        // were points, and with twelve birds per species the curve says more
+        // than the sample can support. Houses that publish distributions in
+        // print answer that by drawing the evidence next to the estimate —
+        // every observation, and the one summary the eye cannot read off a
+        // smooth shape, the median.
+        const wantPoints = config?.showPoints === true;
+        const wantMedian = config?.showMedian === true;
+        // A density estimate has an edge, and whether that edge is drawn is a
+        // real choice: a wash with no contour reads as a cloud, a contour reads
+        // as a measured shape. Houses that print distributions draw the line.
+        const wantContour = config?.showContour === true;
+        const medianWidth = typeof config?.medianWidth === 'number' && config.medianWidth > 0
+            ? Math.min(1, config.medianWidth)
+            : 0.6;
+        if (wantPoints || wantMedian || wantContour) {
+            // A centre stack does not centre on zero — it centres every shape
+            // on half the widest density in the panel set, so zero sits at the
+            // left edge and anything drawn at zero misses the violin. The
+            // mirror is therefore cut by hand, half the density either side of
+            // zero, which puts the centre line where the jitter expects it.
+            const baseX = { ...(spec.encoding.x || {}) };
+            delete baseX.stack;
+            delete baseX.impute;
+            delete baseX.field;
+            const layers: any[] = [{
+                transform: [
+                    ...(spec.transform || []),
+                    { calculate: 'datum.density / 2', as: '__violinHalf' },
+                    { calculate: '-datum.density / 2', as: '__violinNegHalf' },
+                ],
+                // A solid shape drawn over the evidence hides it: the estimate
+                // steps back to a wash so the observations read through it.
+                mark: wantPoints
+                    ? { ...(typeof spec.mark === 'string' ? { type: spec.mark } : spec.mark), fillOpacity: 0.35 }
+                    : spec.mark,
+                encoding: {
+                    y: spec.encoding.y,
+                    x: { ...baseX, field: '__violinHalf', type: 'quantitative', stack: null },
+                    x2: { field: '__violinNegHalf' },
+                },
+            }];
+            if (wantContour) {
+                // An area mark fills a shape; it does not draw one, and its
+                // `line` overlay follows only the leading edge — half a
+                // silhouette on a mirrored density. So the contour is two
+                // lines, one down each side, both riding the same colour scale
+                // as the wash they enclose. `point: false` is not decoration:
+                // a house that puts a dot on every line vertex would otherwise
+                // bead two hundred kernel samples along the outline.
+                for (const edge of ['__violinHalf', '__violinNegHalf']) {
+                    layers.push({
+                        transform: [
+                            ...(spec.transform || []),
+                            { calculate: 'datum.density / 2', as: '__violinHalf' },
+                            { calculate: '-datum.density / 2', as: '__violinNegHalf' },
+                        ],
+                        mark: {
+                            type: 'line', orient: 'horizontal', strokeWidth: 1,
+                            opacity: 0.9, point: false,
+                        },
+                        encoding: {
+                            y: spec.encoding.y,
+                            x: { ...baseX, field: edge, type: 'quantitative', stack: null },
+                        },
+                    });
+                }
+            }
+            if (wantPoints) {
+                // A normal kernel peaks at ~0.4 / bandwidth, and the mirror
+                // seats half of that on each side of the centre line, so a
+                // quarter of the peak is a strip of jitter that stays well
+                // inside the shape it belongs to — and it is measured in the
+                // same density units, so it rides the violin's own scale.
+                const peak = effectiveBw > 0 ? 0.4 / effectiveBw : 0;
+                const jitter = peak * 0.25;
+                layers.push({
+                    transform: [{
+                        calculate: jitter > 0 ? `(random() - 0.5) * ${jitter}` : '0',
+                        as: '__violinJitter',
+                    }],
+                    mark: { type: 'point', filled: true, size: 16, opacity: 0.9 },
+                    encoding: {
+                        y: {
+                            field: measureField, type: 'quantitative', title: measureField,
+                            // The violin is a window on the distribution, not a
+                            // length measured from nothing — a point mark would
+                            // otherwise drag the axis down to zero.
+                            scale: { zero: false },
+                        },
+                        x: {
+                            field: '__violinJitter', type: 'quantitative', title: null,
+                            axis: null, stack: null,
+                        },
+                    },
+                });
+            }
+            if (wantMedian) {
+                // A rule drawn the full width of the panel is not a summary of
+                // *this* shape, it is a line across the page that happens to
+                // pass through the median. The mirror puts the widest a violin
+                // can ever get at half the kernel peak, so the rule is cut to a
+                // fraction of that — the same width in every panel, always
+                // inside the widest shape, and visibly a mark on the violin
+                // rather than a graticule behind it.
+                const peakHalf = effectiveBw > 0 ? (0.4 / effectiveBw) / 2 : 0;
+                const half = peakHalf * medianWidth;
+                layers.push({
+                    transform: [{
+                        aggregate: [{ op: 'median', field: measureField, as: '__violinMedian' }],
+                        groupby,
+                    }],
+                    mark: { type: 'rule', strokeWidth: 1.5 },
+                    encoding: {
+                        y: {
+                            field: '__violinMedian', type: 'quantitative', title: measureField,
+                            scale: { zero: false },
+                        },
+                        ...(half > 0
+                            ? { x: { datum: -half, type: 'quantitative' }, x2: { datum: half } }
+                            : {}),
+                    },
+                });
+            }
+            // Vega-Lite ignores a facet *channel* on a layered spec, so the
+            // per-category panels move to the facet operator: the panels wrap
+            // the layers instead of sitting beside them.
+            const enc = spec.encoding;
+            const wrap = enc.facet;
+            const shared = { ...enc };
+            delete shared.facet;
+            delete shared.column;
+            delete shared.row;
+            // Position belongs to each layer — a shared x would push its stack
+            // onto the observations and its field onto the median rule.
+            delete shared.x;
+            delete shared.y;
+            const inner: any = { layer: layers, encoding: shared };
+            if (spec.width != null) inner.width = spec.width;
+            if (spec.height != null) inner.height = spec.height;
+            if (wrap) {
+                const { columns, ...def } = wrap;
+                spec.facet = def;
+                if (columns != null) spec.columns = columns;
+            } else {
+                spec.facet = {
+                    ...(enc.column ? { column: enc.column } : {}),
+                    ...(enc.row ? { row: enc.row } : {}),
+                };
+            }
+            spec.spec = inner;
+            delete spec.mark;
+            delete spec.transform;
+            delete spec.encoding;
+            delete spec.width;
+            delete spec.height;
+        }
     },
     properties: [
         { key: 'bandwidth', label: 'Bandwidth', type: 'continuous', min: 0.05, max: 2, step: 0.05, defaultValue: 0 },
+        { key: 'showPoints', label: 'Observations', type: 'binary', defaultValue: false },
+        { key: 'showMedian', label: 'Median rule', type: 'binary', defaultValue: false },
+        { key: 'showContour', label: 'Contour', type: 'binary', defaultValue: false },
+        {
+            key: 'medianWidth', label: 'Median width', type: 'continuous',
+            min: 0.2, max: 1, step: 0.05, defaultValue: 0.6,
+            check: (ctx: any) => ({ applicable: ctx.chartProperties?.showMedian === true }),
+        },
     ] as ChartPropertyDef[],
 };

@@ -190,3 +190,66 @@ export function genBulletTests(): TestCase[] {
         ...realBulletCases(),
     ];
 }
+
+// ---------------------------------------------------------------------------
+// KPI Card — big-number tiles, each measured against its own goal
+// ---------------------------------------------------------------------------
+
+/** metric, value, goal — chosen to land one tile in each verdict state. */
+const QUARTER_KPIS: Array<[string, number, number]> = [
+    ['Revenue ($k)', 1284, 1200],  // exceeded  — at or above goal
+    ['New customers', 372, 500],   // on track  — between the two
+    ['Churn saves', 41, 120],      // behind    — well short of goal
+    ['NPS', 54, 50],               // exceeded
+];
+
+const ADOPTION_KPIS: Array<[string, number, number]> = [
+    ['Weekly actives (k)', 88, 120],
+    ['Seats licensed (k)', 143, 140],
+];
+
+export function genKpiCardTests(): TestCase[] {
+    const quarter = QUARTER_KPIS.map(([metric, value, goal]) => ({ metric, value, goal }));
+    const adoption = ADOPTION_KPIS.map(([metric, value, goal]) => ({ metric, value, goal }));
+    const meta = {
+        metric: { type: Type.String, semanticType: 'Category', levels: [] },
+        value: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+        goal: { type: Type.Number, semanticType: 'Quantity', levels: [] },
+    };
+    const encodingMap = {
+        metric: makeEncodingItem('metric'),
+        value: makeEncodingItem('value'),
+        goal: makeEncodingItem('goal'),
+    };
+    const fields = [makeField('metric'), makeField('value'), makeField('goal')];
+    return [
+        {
+            title: 'Quarterly KPIs vs goal',
+            description:
+                'Four big-number tiles, each with a progress bar against its own '
+                + 'goal. The four deliberately span every verdict the card can '
+                + 'reach — two that beat their goal, one still in progress and one '
+                + 'well short — so a theme\u2019s accent and its status inks all '
+                + 'appear on a single sheet and can be told apart.',
+            tags: ['kpi', 'card', 'big-number', 'target', 'gallery'],
+            chartType: 'KPI Card',
+            data: quarter,
+            fields,
+            metadata: meta,
+            encodingMap,
+        },
+        {
+            title: 'Adoption against plan',
+            description:
+                'A two-tile card: one metric short of plan and one just past it, '
+                + 'at the width where the tiles are widest and the big number has '
+                + 'the most room.',
+            tags: ['kpi', 'card', 'big-number', 'target', 'gallery'],
+            chartType: 'KPI Card',
+            data: adoption,
+            fields,
+            metadata: meta,
+            encodingMap,
+        },
+    ];
+}

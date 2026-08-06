@@ -1,0 +1,195 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "Every observation drawn on top of its own density curve. A kernel density estimate from eleven penguins is a smooth curve asserting a shape that eleven points cannot establish; a figure panel has to let the reviewer see how much sample the curve was built from.",
+    "n stated per panel in the facet header. Flint labels each panel with the species name alone, which is the one thing the reader could already infer from the axis.",
+    "Density extent rounded to [2700, 6500] g. The baseline inherits an extent of [2702.9783569331094, 6447.021643066891] — a number no methods section could reproduce and no reader could justify.",
+    "Violins given a pale fill with a 0.8px black outline instead of a solid hue. Shape has to survive greyscale reproduction, so the outline carries the form and the colour is redundant reinforcement rather than the only cue.",
+    "Okabe–Ito palette replacing Flint's category default, and the same three hues used for both the fill and the points so a species reads as one object across the two marks.",
+    "Median marked with a short black rule inside each violin — the single summary statistic a distribution figure is normally asked for, and the one thing a density curve makes hardest to locate.",
+    "Black L-shaped spines with outward ticks, no gridlines, 8.5pt type, units mandatory in the axis title, and the density axis left unlabelled because its units are arbitrary and labelling them would invite a comparison that is not meaningful."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 6, "bottom": 4 },
+  "title": {
+    "text": "Body mass by penguin species",
+    "subtitle": ["Kernel density with all observations overlaid; horizontal rule marks the median"]
+  },
+  "data": {
+    "values": [
+      { "Species": "Adelie", "Body mass (g)": 3750 },
+      { "Species": "Adelie", "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Body mass (g)": 3250 },
+      { "Species": "Adelie", "Body mass (g)": 3450 },
+      { "Species": "Adelie", "Body mass (g)": 3650 },
+      { "Species": "Adelie", "Body mass (g)": 3625 },
+      { "Species": "Adelie", "Body mass (g)": 4675 },
+      { "Species": "Adelie", "Body mass (g)": 3200 },
+      { "Species": "Adelie", "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Body mass (g)": 4400 },
+      { "Species": "Adelie", "Body mass (g)": 3700 },
+      { "Species": "Chinstrap", "Body mass (g)": 3500 },
+      { "Species": "Chinstrap", "Body mass (g)": 3900 },
+      { "Species": "Chinstrap", "Body mass (g)": 3650 },
+      { "Species": "Chinstrap", "Body mass (g)": 3525 },
+      { "Species": "Chinstrap", "Body mass (g)": 3950 },
+      { "Species": "Chinstrap", "Body mass (g)": 3800 },
+      { "Species": "Chinstrap", "Body mass (g)": 3300 },
+      { "Species": "Chinstrap", "Body mass (g)": 4800 },
+      { "Species": "Chinstrap", "Body mass (g)": 4050 },
+      { "Species": "Chinstrap", "Body mass (g)": 3550 },
+      { "Species": "Gentoo", "Body mass (g)": 4500 },
+      { "Species": "Gentoo", "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Body mass (g)": 4450 },
+      { "Species": "Gentoo", "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Body mass (g)": 5400 },
+      { "Species": "Gentoo", "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Body mass (g)": 4800 },
+      { "Species": "Gentoo", "Body mass (g)": 5000 },
+      { "Species": "Gentoo", "Body mass (g)": 4650 },
+      { "Species": "Gentoo", "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Body mass (g)": 5950 },
+      { "Species": "Gentoo", "Body mass (g)": 5250 }
+    ]
+  },
+  "transform": [
+    { "joinaggregate": [{ "op": "count", "as": "__n" }], "groupby": ["Species"] },
+    { "calculate": "datum.Species + ' (n = ' + datum.__n + ')'", "as": "__panel" }
+  ],
+  "facet": {
+    "field": "__panel",
+    "type": "nominal",
+    "sort": ["Adelie (n = 11)", "Chinstrap (n = 10)", "Gentoo (n = 12)"],
+    "title": null,
+    "header": {
+      "labelOrient": "bottom",
+      "labelPadding": 4,
+      "labelFontSize": 8.5,
+      "labelColor": "#000000"
+    }
+  },
+  "columns": 3,
+  "spacing": 4,
+  "resolve": { "scale": { "x": "shared" } },
+  "spec": {
+    "width": 68,
+    "height": 175,
+    "encoding": {
+      "y": {
+        "field": "Body mass (g)",
+        "type": "quantitative",
+        "title": "Body mass (g)",
+        "scale": { "zero": false, "nice": false, "domain": [2700, 6500] },
+        "axis": { "tickCount": 5, "format": ",d" }
+      },
+      "color": {
+        "field": "Species",
+        "type": "nominal",
+        "legend": null,
+        "scale": {
+          "domain": ["Adelie", "Chinstrap", "Gentoo"],
+          "range": ["#0072b2", "#e69f00", "#009e73"]
+        }
+      }
+    },
+    "layer": [
+      {
+        "transform": [
+          {
+            "density": "Body mass (g)",
+            "groupby": ["Species"],
+            "extent": [2700, 6500],
+            "as": ["__value", "__density"]
+          },
+          { "calculate": "-datum.__density / 2", "as": "__xLeft" },
+          { "calculate": "datum.__density / 2", "as": "__xRight" }
+        ],
+        "mark": {
+          "type": "area",
+          "orient": "horizontal",
+          "opacity": 0.28,
+          "stroke": "#000000",
+          "strokeWidth": 0.8,
+          "strokeOpacity": 1
+        },
+        "encoding": {
+          "y": { "field": "__value", "type": "quantitative" },
+          "x": {
+            "field": "__xLeft",
+            "type": "quantitative",
+            "title": null,
+            "scale": { "nice": false, "domain": [-0.0006, 0.0006] },
+            "axis": null
+          },
+          "x2": { "field": "__xRight" }
+        }
+      },
+      {
+        "transform": [{ "calculate": "(random() * 2 - 1) * 0.00019", "as": "__jx" }],
+        "mark": {
+          "type": "point",
+          "filled": true,
+          "size": 14,
+          "opacity": 0.85,
+          "stroke": "#ffffff",
+          "strokeWidth": 0.4
+        },
+        "encoding": {
+          "x": { "field": "__jx", "type": "quantitative", "axis": null }
+        }
+      },
+      {
+        "transform": [
+          { "aggregate": [{ "op": "median", "field": "Body mass (g)", "as": "__median" }], "groupby": ["Species"] }
+        ],
+        "mark": { "type": "rule", "color": "#000000", "strokeWidth": 1.2 },
+        "encoding": {
+          "y": { "field": "__median", "type": "quantitative" },
+          "x": { "datum": -0.00028, "type": "quantitative", "axis": null },
+          "x2": { "datum": 0.00028 }
+        }
+      }
+    ]
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "labelPadding": 2,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "titlePadding": 4,
+      "grid": false,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 3.5
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif"
+    }
+  }
+}

@@ -1,0 +1,357 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labels": false,
+      "labelAngle": 0,
+      "tickCount": 8
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "labelAngle": 0
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8a969d",
+      "gradientLength": 164,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 59,
+    "for": "position"
+  },
+  "title": {
+    "text": "Median weekly earnings by education and sex, 2023",
+    "subtitle": [
+      "US dollars, full-time wage and salary workers"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 20,
+    "right": 58,
+    "top": 20,
+    "bottom": 20
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      },
+      "encoding": {
+        "x": {
+          "field": "Weekly earnings ($)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        },
+        "y": {
+          "field": "Education",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.4
+          }
+        },
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#051c2c",
+              "#2251ff"
+            ]
+          }
+        },
+        "yOffset": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12.5,
+        "fontWeight": 600,
+        "align": "left",
+        "baseline": "middle",
+        "dx": 4,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "text": {
+          "field": "Weekly earnings ($)",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
+        "x": {
+          "field": "Weekly earnings ($)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Education",
+          "type": "nominal",
+          "sort": null
+        },
+        "yOffset": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null
+        }
+      },
+      "transform": [
+        {
+          "filter": "abs(datum[\"Weekly earnings ($)\"]) <= 1886.8235294117646"
+        }
+      ]
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "filter": "abs(datum[\"Weekly earnings ($)\"]) > 1886.8235294117646"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12.5,
+        "fontWeight": 600,
+        "align": "right",
+        "baseline": "middle",
+        "dx": -5,
+        "color": "#ffffff"
+      },
+      "encoding": {
+        "text": {
+          "field": "Weekly earnings ($)",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
+        "x": {
+          "field": "Weekly earnings ($)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Education",
+          "type": "nominal",
+          "sort": null
+        },
+        "yOffset": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Education": "Advanced degree",
+        "Sex": "Men",
+        "Weekly earnings ($)": 2160
+      },
+      {
+        "Education": "Advanced degree",
+        "Sex": "Women",
+        "Weekly earnings ($)": 1600
+      },
+      {
+        "Education": "Bachelor's degree",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1700
+      },
+      {
+        "Education": "Bachelor's degree",
+        "Sex": "Women",
+        "Weekly earnings ($)": 1290
+      },
+      {
+        "Education": "Some college",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1120
+      },
+      {
+        "Education": "Some college",
+        "Sex": "Women",
+        "Weekly earnings ($)": 890
+      },
+      {
+        "Education": "High school",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1000
+      },
+      {
+        "Education": "High school",
+        "Sex": "Women",
+        "Weekly earnings ($)": 790
+      },
+      {
+        "Education": "Less than high school",
+        "Sex": "Men",
+        "Weekly earnings ($)": 780
+      },
+      {
+        "Education": "Less than high school",
+        "Sex": "Women",
+        "Weekly earnings ($)": 620
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`inline` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.suppressWhenValuesPrinted",
+      "message": "legend kept — the values are printed but nothing else names the series"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.measure.suppressWhenValuesPrinted",
+      "message": "measure axis removed — every mark prints its own value"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks that reach the end of the scale print their label inside instead"
+    }
+  ]
+}

@@ -194,3 +194,18 @@ export {
     resolveStackable,
     resolveSortDirection,
 } from './field-semantics';
+
+// ThemeSpec: public visual-system vocabulary and chart-specific grounding
+export {
+    type ThemeSpec,
+    type ThemePreset,
+    type DesignDecisions,
+    type ThemeReport,
+    type Presence,
+    type GroundingContext,
+    groundTheme,
+    THEME_PRESETS,
+    DEFAULT_THEME_ICON,
+    listThemePresets,
+    resolveThemeSpec,
+} from './theme';

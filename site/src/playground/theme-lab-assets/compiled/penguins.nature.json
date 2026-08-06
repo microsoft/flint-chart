@@ -1,0 +1,351 @@
+{
+  "mark": {
+    "type": "point"
+  },
+  "encoding": {
+    "x": {
+      "field": "Flipper length (mm)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Body mass (g)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          "#0072b2",
+          "#e69f00",
+          "#009e73"
+        ]
+      }
+    },
+    "shape": {
+      "field": "Species",
+      "type": "nominal"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 306,
+      "continuousHeight": 256,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "tickCount": 7
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "right",
+      "direction": "vertical",
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#8c8c8c",
+      "title": null
+    },
+    "facet": {
+      "spacing": 26
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 11,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 6,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Flipper length versus body mass in three penguin species",
+    "subtitle": [
+      "Palmer Archipelago, Antarctica; n = 33"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 181,
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 186,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 195,
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 193,
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 190,
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 181,
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 195,
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 182,
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 191,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 198,
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Flipper length (mm)": 185,
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 192,
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 196,
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 193,
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 188,
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 197,
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 198,
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 178,
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 207,
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 201,
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Flipper length (mm)": 191,
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 211,
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 230,
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 210,
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 218,
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 215,
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 219,
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 209,
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 215,
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 214,
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 216,
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 221,
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Flipper length (mm)": 217,
+        "Body mass (g)": 5250
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    }
+  ]
+}

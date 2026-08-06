@@ -30,12 +30,18 @@ import type {
   RawEncodingValue,
 } from 'flint-chart';
 import { BACKENDS, type PreviewBackend } from './supported-backends';
+import { themeOwnsContinuousColor } from './theme-color';
 
 /** Control descriptor shared by chart properties and encoding actions. */
 export type ControlSpec =
   | { type: 'continuous'; min: number; max: number; step?: number }
   | { type: 'discrete'; options: { value: unknown; label: string }[] }
   | { type: 'binary' };
+
+/** Stable string key for an arbitrary option value (handles undefined/objects). */
+export function valueKey(value: unknown): string {
+  return JSON.stringify(value ?? null);
+}
 
 /** A resolved encoding action ready for rendering (control + current value). */
 export interface ResolvedAction {
@@ -222,6 +228,11 @@ export function buildPanelModel(
     chartProperties: input.chart_spec.chartProperties,
   };
   const actions: ResolvedAction[] = (actionSource?.encodingActions ?? [])
+    .filter((action) => !(
+      backend === 'vegalite'
+      && themeOwnsContinuousColor(input.theme_spec)
+      && action.key === 'colorScheme'
+    ))
     .filter((a) => (a.isApplicable ? a.isApplicable(ctx) : true))
     .map((a) => ({
       key: a.key,
@@ -250,4 +261,49 @@ export function buildPanelModel(
   }
 
   return { properties, actions, pivot, chartType: chartTypeSurface, arrange };
+}
+
+/**
+ * Drop the option overrides that only restate what the chart would have chosen
+ * anyway.
+ *
+ * A control the reader nudged and a control that happens to sit where it was
+ * put are stored the same way — as an explicit value — so once written, a value
+ * outranks every house forever. That is right when it is a decision and wrong
+ * when it is an echo, and after a theme change the difference is visible: the
+ * reader picks a house whose line carries points and gets a bare line, because
+ * a `showPoints: false` identical to the old house's default is still sitting
+ * there outranking it.
+ *
+ * A value that agrees with what the chart would have done unaided says nothing,
+ * so it is not carried across a house change. Anything that disagrees is a real
+ * choice and stays.
+ */
+export function withoutEchoedOverrides(
+  input: ChartAssemblyInput,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> {
+  const keys = Object.keys(overrides ?? {});
+  if (!keys.length) return overrides;
+  const stated = { ...(input.chart_spec.chartProperties ?? {}), ...overrides };
+  const kept: Record<string, unknown> = {};
+  for (const key of keys) {
+    const rest = { ...stated };
+    delete rest[key];
+    const unaided = {
+      ...input,
+      chart_spec: { ...input.chart_spec, chartProperties: rest },
+    } as ChartAssemblyInput;
+    let fallback: unknown;
+    try {
+      fallback = getChartOptions(unaided).find((option) => option.key === key)?.value;
+    } catch {
+      // The chart does not compile without it — not ours to judge; keep it.
+      fallback = undefined;
+    }
+    if (fallback === undefined || valueKey(fallback) !== valueKey(overrides[key])) {
+      kept[key] = overrides[key];
+    }
+  }
+  return kept;
 }

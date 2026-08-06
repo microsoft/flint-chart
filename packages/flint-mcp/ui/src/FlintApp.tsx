@@ -15,12 +15,15 @@ import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
+import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 
 import { renderFlintSvg, type FlintRenderResult } from './render';
 import { chartIconFor } from './chart-icons';
 import {
   buildPanelModel,
   setProperty,
+  valueKey,
+  withTheme,
   type PanelModel,
   type ResolvedAction,
 } from './options';
@@ -33,10 +36,7 @@ type ControlSpec =
   | { type: 'discrete'; options: { value: unknown; label: string }[] }
   | { type: 'binary' };
 
-/** Stable string key for an arbitrary option value (handles undefined/objects). */
-function valueKey(value: unknown): string {
-  return JSON.stringify(value ?? null);
-}
+type ToolbarControl = { key: string; label: string; spec: ControlSpec; value: unknown };
 
 function compactSelectLabel(label: string): string {
   const withoutHint = label.replace(/\s*\([^)]*\)\s*$/u, '').trim();
@@ -267,7 +267,7 @@ function TransformControl(props: {
         (canSwitchType ? (
           <button
             type="button"
-            className="tc-type"
+            className="tc-type tc-type-chart"
             aria-haspopup="listbox"
             aria-expanded={open}
             aria-label={`${chartType.label}: ${curName ?? ''}`}
@@ -322,6 +322,117 @@ function TransformControl(props: {
               >
                 {ic && <img className="tc-opt-icon" src={ic} alt="" />}
                 <span>{lbl}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** A theme preset's icon as an `<img>`-ready URL. */
+function themeIconUrl(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+type ThemeValue = ChartAssemblyInput['theme_spec'];
+type ThemeChoice = { value: ThemeValue; label: string; icon: string; description: string };
+
+const THEME_CHOICES: ThemeChoice[] = [
+  {
+    value: undefined,
+    label: 'Flint default',
+    icon: DEFAULT_THEME_ICON,
+    description: "Flint's own defaults \u2014 no house applied.",
+  },
+  ...Object.values(THEME_PRESETS).map((preset) => ({
+    value: preset.id,
+    label: preset.label,
+    icon: preset.icon,
+    description: preset.description,
+  })),
+];
+
+/**
+ * The house switch, first in the bar. A theme is the outermost decision on the
+ * chart — it settles the surface, the ink and the type that everything the
+ * other controls touch is then drawn in — so it reads left of them.
+ *
+ * It borrows the chart-type switch's chrome rather than growing its own: the
+ * two are the same gesture (a small picture of the result, a caret, a list),
+ * and giving them different shapes would suggest they are different kinds of
+ * control.
+ */
+function ThemeControl(props: {
+  themeSpec: ThemeValue;
+  customTheme?: Exclude<ThemeValue, string | undefined>;
+  onTheme: (theme: ThemeValue) => void;
+}) {
+  const { themeSpec, customTheme, onTheme } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const retainedCustom = customTheme ?? (typeof themeSpec === 'object' ? themeSpec : undefined);
+  const inheritedPreset = retainedCustom?.extends
+    ? THEME_PRESETS[retainedCustom.extends]
+    : undefined;
+  const customChoice: ThemeChoice | undefined = retainedCustom
+    ? {
+        value: retainedCustom,
+        label: retainedCustom.label ?? retainedCustom.id ?? 'Custom theme',
+        icon: inheritedPreset?.icon ?? DEFAULT_THEME_ICON,
+        description: 'Custom ThemeSpec supplied with this chart.',
+      }
+    : undefined;
+  const choices = customChoice ? [customChoice, ...THEME_CHOICES] : THEME_CHOICES;
+  const current = typeof themeSpec === 'object'
+    ? customChoice ?? THEME_CHOICES[0]
+    : THEME_CHOICES.find((choice) => choice.value === themeSpec) ?? THEME_CHOICES[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div className="transform-control tc-theme" ref={rootRef}>
+      <button
+        type="button"
+        className="tc-type tc-type-theme"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Theme: ${current.label}`}
+        title={`Theme: ${current.label}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <img className="tc-icon" src={themeIconUrl(current.icon)} alt="" />
+        <svg className="tc-caret" width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 4.5 L6 7.5 L9 4.5" />
+        </svg>
+      </button>
+
+      {open && (
+        <ul className="tc-menu" role="listbox" aria-label="Theme">
+          {choices.map((choice) => {
+            const selected = choice === current;
+            return (
+              <li
+                key={typeof choice.value === 'string' ? choice.value : choice.value ? 'custom' : 'default'}
+                role="option"
+                aria-selected={selected}
+                title={choice.description}
+                className={selected ? 'tc-opt tc-opt-selected' : 'tc-opt'}
+                onClick={() => {
+                  onTheme(choice.value);
+                  setOpen(false);
+                }}
+              >
+                <img className="tc-opt-icon" src={themeIconUrl(choice.icon)} alt="" />
+                <span>{choice.label}</span>
               </li>
             );
           })}
@@ -404,6 +515,7 @@ function ActionButton(props: {
 
 function OptionsBar(props: {
   input: ChartAssemblyInput;
+  customTheme?: Exclude<ChartAssemblyInput['theme_spec'], string | undefined>;
   model: PanelModel;
   onInput: (next: ChartAssemblyInput) => void;
   onReset: () => void;
@@ -412,7 +524,16 @@ function OptionsBar(props: {
   copyStatus: 'idle' | 'copying' | 'copied' | 'downloaded' | 'error';
   copyError: string | null;
 }) {
-  const { input, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
+  const { input, customTheme, model, onInput, onReset, canReset, onCopyPng, copyStatus, copyError } = props;
+  const gridRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLSpanElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const moreRootRef = useRef<HTMLDivElement>(null);
+  const controlRefs = useRef(new Map<string, HTMLDivElement>());
+  const [visibleControlCount, setVisibleControlCount] = useState(Number.MAX_SAFE_INTEGER);
+  const [moreOpen, setMoreOpen] = useState(false);
   const copyFeedback = {
     idle: 'Copy PNG',
     copying: 'Copying PNG…',
@@ -425,7 +546,7 @@ function OptionsBar(props: {
   // properties plus encoding actions (sort, …) — inline below the chart,
   // mirroring Data Formulator's quick-config strip. Deliberately no chart-type
   // switch or field→channel binding; the agent owns those, the bar fine-tunes.
-  const controls: { key: string; label: string; spec: ControlSpec; value: unknown }[] = [
+  const controls: ToolbarControl[] = [
     ...model.properties.map((option: ChartOption) => ({
       key: option.key,
       label: option.label,
@@ -439,39 +560,139 @@ function OptionsBar(props: {
       value: action.value,
     })),
   ];
+  const hasTransform = Boolean(
+    (model.chartType && model.chartType.length > 1) ||
+    (model.arrange && model.arrange.length > 1),
+  );
+  const layoutKey = controls.map((control) => `${control.key}:${control.label}:${control.spec.type}`).join('|');
+
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const measure = () => {
+      const controlWidths = controls.map((control) => controlRefs.current.get(control.key)?.getBoundingClientRect().width ?? 0);
+      if (controlWidths.some((width) => width === 0)) return;
+
+      const pinned = [themeRef.current, hasTransform ? transformRef.current : null, actionsRef.current]
+        .filter((element): element is HTMLElement => Boolean(element));
+      const pinnedWidth = pinned.reduce((sum, element) => sum + element.getBoundingClientRect().width, 0);
+      const moreWidth = moreRef.current?.getBoundingClientRect().width ?? 0;
+      const gap = 8;
+      let nextVisible = controls.length;
+
+      for (let count = controls.length; count >= 0; count -= 1) {
+        const needsMore = count < controls.length;
+        const itemCount = pinned.length + count + (needsMore ? 1 : 0);
+        const total = pinnedWidth + controlWidths.slice(0, count).reduce((sum, width) => sum + width, 0)
+          + (needsMore ? moreWidth : 0) + Math.max(0, itemCount - 1) * gap;
+        if (total <= grid.clientWidth) {
+          nextVisible = count;
+          break;
+        }
+      }
+
+      setVisibleControlCount(nextVisible);
+      if (nextVisible === controls.length) setMoreOpen(false);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [hasTransform, layoutKey]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (event: MouseEvent) => {
+      if (moreRootRef.current && !moreRootRef.current.contains(event.target as Node)) setMoreOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [moreOpen]);
+
+  const renderControl = (control: ToolbarControl) => (
+    <ControlRow
+      label={control.label}
+      spec={control.spec}
+      value={control.value}
+      width={optionWidth(control.label, control.spec.type)}
+      onChange={(value) => onInput(setProperty(input, control.key, value))}
+    />
+  );
+  const hiddenControls = controls.slice(Math.min(visibleControlCount, controls.length));
 
   return (
     <div className="optionsbar" role="toolbar" aria-label={`${input.chart_spec.chartType} options`}>
-      <div className="optionsbar-grid">
-        {((model.chartType && model.chartType.length > 1) ||
-          (model.arrange && model.arrange.length > 1)) && (
-          <TransformControl
-            chartType={model.chartType}
-            arrange={model.arrange}
-            onChartType={(id) => onInput(setProperty(input, model.chartType!.key, id))}
-            onArrange={(id) => onInput(setProperty(input, model.arrange!.key, id))}
+      <div className="optionsbar-grid" ref={gridRef}>
+        <div className="optionsbar-pinned" ref={themeRef}>
+          <ThemeControl
+            themeSpec={input.theme_spec}
+            customTheme={customTheme}
+            onTheme={(theme) => onInput(withTheme(input, theme))}
           />
+        </div>
+        {hasTransform && (
+          <div className="optionsbar-pinned" ref={transformRef}>
+            <TransformControl
+              chartType={model.chartType}
+              arrange={model.arrange}
+              onChartType={(id) => onInput(setProperty(input, model.chartType!.key, id))}
+              onArrange={(id) => onInput(setProperty(input, model.arrange!.key, id))}
+            />
+          </div>
         )}
         {controls.length === 0 ? (
-          !(
-            (model.chartType && model.chartType.length > 1) ||
-            (model.arrange && model.arrange.length > 1)
-          ) && (
+          !hasTransform && (
             <span className="opt-empty">No adjustable options for this chart.</span>
           )
         ) : (
-          controls.map((control) => (
-            <ControlRow
+          controls.map((control, index) => (
+            <div
               key={control.key}
-              label={control.label}
-              spec={control.spec}
-              value={control.value}
-              width={optionWidth(control.label, control.spec.type)}
-              onChange={(v) => onInput(setProperty(input, control.key, v))}
-            />
+              ref={(element) => {
+                if (element) controlRefs.current.set(control.key, element);
+                else controlRefs.current.delete(control.key);
+              }}
+              className={index < visibleControlCount ? 'optionsbar-control' : 'optionsbar-control optionsbar-control-measure'}
+              aria-hidden={index >= visibleControlCount || undefined}
+            >
+              {renderControl(control)}
+            </div>
           ))
         )}
-        <span className="bar-actions">
+        <div
+          className={hiddenControls.length > 0 ? 'optionsbar-more' : 'optionsbar-more optionsbar-more-measure'}
+          ref={moreRef}
+        >
+          <div ref={moreRootRef}>
+            <button
+              type="button"
+              className="bar-link optionsbar-more-trigger"
+              aria-label={`More options (${hiddenControls.length})`}
+              title="More options"
+              aria-haspopup="true"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((open) => !open)}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="3" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="13" cy="8" r="1.2" fill="currentColor" />
+              </svg>
+            </button>
+            {moreOpen && hiddenControls.length > 0 && (
+              <div className="optionsbar-more-menu" role="group" aria-label="More chart options">
+                {hiddenControls.map((control) => (
+                  <div className="optionsbar-more-control" key={control.key}>
+                    {renderControl(control)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <span className="bar-actions" ref={actionsRef}>
           <ActionButton
             className="bar-reset"
             onClick={onReset}
@@ -517,6 +738,35 @@ export function FlintAppInner(props: {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'downloaded' | 'error'>('idle');
   const [copyError, setCopyError] = useState<string | null>(null);
   const renderSeq = useRef(0);
+  // The width the chart actually has. Rendering into the real width means the
+  // finished SVG is shown at 1:1 rather than being scaled down to fit, which
+  // is what otherwise shrinks every label below the app's own chrome. Height
+  // is deliberately not measured: the frame grows to the chart.
+  const [chartWidth, setChartWidth] = useState<number | null>(null);
+  const chartBoxObserver = useRef<ResizeObserver | null>(null);
+
+  // Measure the chart frame, quantised so a scrollbar appearing and vanishing
+  // cannot start an oscillation between two neighbouring sizes.
+  const measureChartBox = useCallback((node: HTMLDivElement | null) => {
+    chartBoxObserver.current?.disconnect();
+    chartBoxObserver.current = null;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const read = () => {
+      const style = window.getComputedStyle(node);
+      // `clientWidth` already excludes any scrollbar, so the reading does not
+      // shrink in response to the chart it is measuring.
+      const width = node.clientWidth
+        - parseFloat(style.paddingLeft || '0') - parseFloat(style.paddingRight || '0');
+      if (!(width > 0)) return;
+      const next = Math.max(0, Math.floor(width / 8) * 8);
+      setChartWidth((prev) => (prev === next ? prev : next));
+    };
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(node);
+    chartBoxObserver.current = observer;
+  }, []);
+  useEffect(() => () => chartBoxObserver.current?.disconnect(), []);
 
   // Re-seed when a new tool input arrives from the host.
   useEffect(() => setCurrent(input), [input]);
@@ -533,7 +783,7 @@ export function FlintAppInner(props: {
     const seq = ++renderSeq.current;
     setCopyStatus('idle');
     const handle = setTimeout(() => {
-      renderFlintSvg(current)
+      renderFlintSvg(current, undefined, chartWidth ? { width: chartWidth } : undefined)
         .then((result) => {
           if (seq === renderSeq.current) {
             setRender(result);
@@ -547,12 +797,32 @@ export function FlintAppInner(props: {
         });
     }, 100);
     return () => clearTimeout(handle);
-  }, [current]);
+  }, [current, chartWidth]);
 
   const model = useMemo(() => buildPanelModel(current), [current]);
+
+  // The frame the chart sits in takes the chart's own paper.
+  //
+  // A house that paints a canvas — Swiss's cream, PowerBI's near black — puts
+  // that colour inside the SVG, and the SVG is only as big as the graphic. The
+  // frame is not: it holds a floor height and centres what it is given, so the
+  // painted rectangle ends up floating in a white surround with a hard edge
+  // around it, looking like a picture pasted onto the page rather than the
+  // surface the chart is drawn on.
+  //
+  // Reading the colour back off the assembled spec rather than the house is
+  // deliberate. `background` is where the theme records its resolved surface,
+  // so this follows houses that defer the decision to their host as well as
+  // ones that make it themselves, and it needs no list of which is which.
+  const surface = typeof render?.vlSpec?.background === 'string'
+    ? render.vlSpec.background
+    : undefined;
+
   const canReset = useMemo(
-    () => JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec),
-    [current.chart_spec, input.chart_spec],
+    () =>
+      JSON.stringify(current.chart_spec) !== JSON.stringify(input.chart_spec) ||
+      JSON.stringify(current.theme_spec ?? null) !== JSON.stringify(input.theme_spec ?? null),
+    [current.chart_spec, input.chart_spec, current.theme_spec, input.theme_spec],
   );
 
   const handleCopyPng = useCallback(async () => {
@@ -623,10 +893,18 @@ export function FlintAppInner(props: {
             <strong>Could not render chart</strong>
             <pre>{error}</pre>
           </div>
-        ) : render ? (
-          <div className="chart" dangerouslySetInnerHTML={{ __html: render.svg }} />
         ) : (
-          <div className="placeholder">Rendering…</div>
+          // The frame is always mounted, so its size is known before the first
+          // render and the chart can be assembled to fit it straight away.
+          <div
+            className="chart"
+            ref={measureChartBox}
+            style={surface ? { background: surface } : undefined}
+          >
+            {render
+              ? <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
+              : <span className="chart-pending">Rendering…</span>}
+          </div>
         )}
 
         {warnings.length > 0 && (
@@ -642,6 +920,7 @@ export function FlintAppInner(props: {
 
       <OptionsBar
         input={current}
+        customTheme={typeof input.theme_spec === 'object' ? input.theme_spec : undefined}
         model={model}
         onInput={setCurrent}
         onReset={() => setCurrent(input)}

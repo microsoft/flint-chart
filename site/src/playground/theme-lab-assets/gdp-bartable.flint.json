@@ -1,0 +1,284 @@
+{
+  "spacing": 8,
+  "resolve": {
+    "scale": {
+      "y": "shared"
+    }
+  },
+  "hconcat": [
+    {
+      "data": {
+        "name": "__bt_displayTable"
+      },
+      "width": 180,
+      "height": 230,
+      "title": {
+        "text": "Country",
+        "anchor": "start",
+        "offset": 6,
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#999"
+      },
+      "mark": {
+        "type": "bar",
+        "height": {
+          "band": 0.842
+        }
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": [
+            "United States",
+            "China",
+            "Germany",
+            "Japan",
+            "India",
+            "UK",
+            "France",
+            "Brazil"
+          ],
+          "axis": {
+            "title": null,
+            "domain": false,
+            "ticks": false,
+            "labelFontSize": 13,
+            "labelAlign": "left",
+            "labelPadding": 105,
+            "labelLimit": 105
+          }
+        },
+        "x": {
+          "field": "GDP ($T)",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "nice": false
+          }
+        },
+        "color": {
+          "field": "GDP ($T)",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "range": [
+              "#cdebd3",
+              "#41a25f"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "__bt_displayTable"
+      },
+      "width": 66,
+      "height": 230,
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "sum",
+              "field": "GDP ($T)",
+              "as": "__bt_val"
+            },
+            {
+              "op": "min",
+              "field": "__bt_sort",
+              "as": "__bt_sort"
+            },
+            {
+              "op": "max",
+              "field": "__bt_others_num",
+              "as": "__bt_others_num"
+            }
+          ],
+          "groupby": [
+            "Country"
+          ]
+        }
+      ],
+      "title": {
+        "text": "GDP ($T)",
+        "anchor": "end",
+        "offset": 6,
+        "limit": 62,
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#999"
+      },
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "fontSize": 12
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": [
+            "United States",
+            "China",
+            "Germany",
+            "Japan",
+            "India",
+            "UK",
+            "France",
+            "Brazil"
+          ],
+          "axis": null
+        },
+        "x": {
+          "datum": 1,
+          "axis": null,
+          "scale": {
+            "type": "linear",
+            "domain": [
+              0,
+              1
+            ]
+          }
+        },
+        "text": {
+          "field": "__bt_val",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "#666"
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "datasets": {
+    "__bt_displayTable": [
+      {
+        "Country": "United States",
+        "GDP ($T)": 27.4,
+        "__bt_sort": 0,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "China",
+        "GDP ($T)": 17.8,
+        "__bt_sort": 1,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Germany",
+        "GDP ($T)": 4.5,
+        "__bt_sort": 2,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Japan",
+        "GDP ($T)": 4.2,
+        "__bt_sort": 3,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "India",
+        "GDP ($T)": 3.9,
+        "__bt_sort": 4,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "UK",
+        "GDP ($T)": 3.3,
+        "__bt_sort": 5,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "France",
+        "GDP ($T)": 3,
+        "__bt_sort": 6,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Brazil",
+        "GDP ($T)": 2.2,
+        "__bt_sort": 7,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      }
+    ]
+  },
+  "height": {
+    "step": 27
+  },
+  "title": {
+    "text": "America and China lap the field",
+    "subtitle": [
+      "Gross domestic product, 2023, trillion US dollars"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "United States",
+        "GDP ($T)": 27.4
+      },
+      {
+        "Country": "China",
+        "GDP ($T)": 17.8
+      },
+      {
+        "Country": "Germany",
+        "GDP ($T)": 4.5
+      },
+      {
+        "Country": "Japan",
+        "GDP ($T)": 4.2
+      },
+      {
+        "Country": "India",
+        "GDP ($T)": 3.9
+      },
+      {
+        "Country": "UK",
+        "GDP ($T)": 3.3
+      },
+      {
+        "Country": "France",
+        "GDP ($T)": 3
+      },
+      {
+        "Country": "Brazil",
+        "GDP ($T)": 2.2
+      }
+    ]
+  }
+}

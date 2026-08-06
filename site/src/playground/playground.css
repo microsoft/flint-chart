@@ -62,48 +62,57 @@
   background: rgba(0, 0, 0, 0.075);
 }
 
+/* Grouped nav item (e.g. "Theme labs") with a hover/focus dropdown. */
+.dev-nav-group {
+  position: relative;
+  display: inline-flex;
+}
+
+.dev-nav-group-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-nav-caret {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.dev-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 6px;
+  gap: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dev-nav-group:hover .dev-nav-dropdown,
+.dev-nav-group:focus-within .dev-nav-dropdown {
+  display: flex;
+}
+
+.dev-nav-dropdown .dev-nav-link {
+  white-space: nowrap;
+}
+
 .dev-content {
   box-sizing: border-box;
   width: 100%;
   padding: 28px 24px 48px;
-}
-
-.dev-workbench-note {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: min(100%, 960px);
-  margin: 0 auto 12px;
-  color: #66707d;
-  font-size: 13px;
-  line-height: 1.5;
-  animation: dev-note-enter 480ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
-}
-
-.dev-workbench-note::before {
-  content: '';
-  width: 9px;
-  height: 12px;
-  flex: 0 0 9px;
-  border: 1px solid #7f8b99;
-  border-radius: 2px 2px 0 0;
-  background:
-    radial-gradient(circle at 72% 52%, #6f7b88 0 1px, transparent 1.5px),
-    linear-gradient(90deg, #d5dce4, #b8c3ce);
-  box-shadow: inset -2px 0 rgba(88, 103, 119, 0.16);
-  transform-origin: left center;
-  animation: dev-secret-door 3.6s ease-in-out infinite;
-}
-
-@keyframes dev-note-enter {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @keyframes dev-secret-door {
@@ -155,12 +164,5 @@
 
   .dev-content {
     padding: 20px 14px 36px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dev-workbench-note,
-  .dev-workbench-note::before {
-    animation: none;
   }
 }

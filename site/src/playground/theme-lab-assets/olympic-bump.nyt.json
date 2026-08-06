@@ -1,0 +1,134 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Legend replaced by a direct label at the end of every line. On a bump chart the legend is the worst possible key — it forces a colour lookup for each of four lines at each of four columns, when the country name can simply sit where the line ends. Labels go on the right only; a matching set on the left collided with the rank axis, and the axis already states where each line starts.",
+    "Rank axis relabelled as ordinals (1st, 2nd, …) instead of the bare integers Flint prints. The numbers are ranks, not a quantity, and 'zero: true' on a rank scale — which the baseline sets — reserves space below 1st for a rank that cannot exist.",
+    "Tick set pinned to the ranks actually occupied (1–7) so no line lands between gridlines, and the axis title deleted: once the labels read '1st', the word 'rank' is redundant.",
+    "Palette cut from set2 to four NYT swatches used at full ink for the two constant leaders and desaturated grey for none of them — every series is a real answer to 'who finished where', so nothing here earns being greyed out.",
+    "Monotone interpolation dropped for straight segments. A bump chart's slope is its message; a spline invents curvature between two Games where nothing was measured.",
+    "Frame removed, gridlines turned horizontal-only and pushed to #ededed, and the x axis reduced to four Games labels on a black baseline."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 8, "bottom": 6 },
+  "width": 210,
+  "height": 200,
+  "title": {
+    "text": "Four Games, four different stories",
+    "subtitle": ["Rank in the Summer Olympics medal table, 2012–2024"]
+  },
+  "data": {
+    "values": [
+      { "Games": "2012", "Country": "United States", "Rank": 1 },
+      { "Games": "2016", "Country": "United States", "Rank": 1 },
+      { "Games": "2020", "Country": "United States", "Rank": 1 },
+      { "Games": "2024", "Country": "United States", "Rank": 1 },
+      { "Games": "2012", "Country": "China", "Rank": 2 },
+      { "Games": "2016", "Country": "China", "Rank": 3 },
+      { "Games": "2020", "Country": "China", "Rank": 2 },
+      { "Games": "2024", "Country": "China", "Rank": 2 },
+      { "Games": "2012", "Country": "Great Britain", "Rank": 3 },
+      { "Games": "2016", "Country": "Great Britain", "Rank": 2 },
+      { "Games": "2020", "Country": "Great Britain", "Rank": 4 },
+      { "Games": "2024", "Country": "Great Britain", "Rank": 7 },
+      { "Games": "2012", "Country": "Japan", "Rank": 6 },
+      { "Games": "2016", "Country": "Japan", "Rank": 6 },
+      { "Games": "2020", "Country": "Japan", "Rank": 5 },
+      { "Games": "2024", "Country": "Japan", "Rank": 3 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Games",
+      "type": "ordinal",
+      "title": null,
+      "scale": { "padding": 0.12 },
+      "axis": { "labelAngle": 0, "labelPadding": 6 }
+    },
+    "y": {
+      "field": "Rank",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "reverse": true, "zero": false, "nice": false, "domain": [1, 7], "padding": 14 },
+      "axis": {
+        "values": [1, 2, 3, 4, 5, 6, 7],
+        "labelExpr": "datum.value == 1 ? '1st' : datum.value == 2 ? '2nd' : datum.value == 3 ? '3rd' : datum.value + 'th'"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "domain": ["United States", "China", "Great Britain", "Japan"],
+        "range": ["#c2352b", "#2f6b9a", "#7f6a9e", "#4a8b6f"]
+      }
+    }
+  },
+  "layer": [
+    { "mark": { "type": "line", "strokeWidth": 2, "strokeJoin": "round", "strokeCap": "round" } },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 34,
+        "stroke": "#ffffff",
+        "strokeWidth": 1.4
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.Games === '2024'" }],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 8,
+        "fontSize": 10,
+        "fontWeight": 600
+      },
+      "encoding": { "text": { "field": "Country", "type": "nominal" } }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', Times, serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    },
+    "axisY": {
+      "grid": true,
+      "gridColor": "#ededed",
+      "gridWidth": 1,
+      "labelPadding": 6,
+      "labelFontWeight": 600,
+      "labelColor": "#121212"
+    },
+    "axisX": {
+      "grid": false,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#121212",
+      "tickSize": 4
+    }
+  }
+}

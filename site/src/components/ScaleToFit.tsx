@@ -22,6 +22,7 @@ export function ScaleToFit({
   adaptiveHeight = false,
   minHeight = 0,
   fill = false,
+  maxScale = 1,
   children,
 }: {
   /** Bounding-box height in px. With `adaptiveHeight` this is the *max* height. */
@@ -40,6 +41,8 @@ export function ScaleToFit({
    * `height`.
    */
   fill?: boolean;
+  /** Maximum scale factor. Increase only when small source charts may be enlarged. */
+  maxScale?: number;
   children: ReactNode;
 }) {
   const outerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +61,7 @@ export function ScaleToFit({
       if (!natW || !natH) return;
       const boxW = outer.clientWidth - padding * 2;
       const boxH = (fill ? outer.clientHeight : height) - padding * 2;
-      const next = Math.min(boxW / natW, boxH / natH, 1);
+      const next = Math.min(boxW / natW, boxH / natH, maxScale);
       if (Number.isFinite(next) && next > 0) {
         setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev));
         if (adaptiveHeight) {
@@ -73,7 +76,7 @@ export function ScaleToFit({
     ro.observe(inner);
     ro.observe(outer);
     return () => ro.disconnect();
-  }, [height, padding, adaptiveHeight, minHeight, fill]);
+  }, [height, padding, adaptiveHeight, minHeight, fill, maxScale]);
 
   return (
     <div

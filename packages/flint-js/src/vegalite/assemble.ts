@@ -66,6 +66,9 @@ import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deri
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { resolveThemeSpec } from '../core/theme/presets';
+import { realizeThemeVegaLite, realizeValueLabelsVegaLite, collectMarkTypes, collectPositional } from './theme';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -109,14 +112,21 @@ const escapeVlFieldName = (name: string): string =>
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
+    // `theme_spec` may name a house Flint ships rather than spell one out.
+    const themeSpec = resolveThemeSpec(input.theme_spec);
+    // A house may prefer a size, a stretch budget, a facet gap. Those settle
+    // before anything is measured, and in a fixed order: the chart spec first,
+    // the theme's presets under it, flint's own defaults under that.
+    const themePresets = resolveCompileDefaults(themeSpec, input.options);
     // Internal layout targets the base (target) size; the optional canvasSize
     // ceiling is applied as per-dimension stretch caps once options resolve.
     // The base is clamped to the ceiling so a smaller canvasSize shrinks the
     // chart to fit rather than overflowing it.
-    const sizeCeiling = input.chart_spec.canvasSize;
-    const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
+    const housePresets = themeSpec?.compileDefaults;
+    const sizeCeiling = input.chart_spec.canvasSize ?? housePresets?.canvasSize;
+    const baseSize = resolveBaseSize(input.chart_spec.baseSize ?? housePresets?.baseSize, sizeCeiling);
     const canvasSize = baseSize;
-    const options = input.options ?? {};
+    const options = themePresets.options ?? {};
     let chartTemplate = vlGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
         throw new Error(`Unknown chart type: ${chartType}`);
@@ -131,8 +141,31 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const normalizedProps = normalizeChartProperties(
         chartTemplate.properties, input.chart_spec.chartProperties,
     );
-    const chartProperties = normalizedProps.chartProperties;
+    let chartProperties = normalizedProps.chartProperties;
     warnings.push(...normalizedProps.warnings);
+
+    // A house's rules about the chart itself — points on a line, a bump chart
+    // left unsmoothed — change what is drawn, not how it is dressed, so they
+    // are folded in here, before the pipeline reads the properties. Anything
+    // the caller stated already is left alone.
+    if (themeSpec && !chartProperties) chartProperties = {};
+    const chartDefaultsReport = chartProperties
+        ? resolveChartDefaults(
+            themeSpec, chartType, chartTemplate.properties,
+            input.chart_spec.chartProperties, chartProperties,
+        )
+        : [];
+
+    // One toggle, whichever way the template draws the numbers. A few charts
+    // print their own value labels instead of going through the theme's
+    // data-label layer. They expose the same `showValueLabels` control as every
+    // other chart; translating it to the older internal `showTextLabels`
+    // boolean keeps saved inputs compatible without publishing two controls.
+    // Silence stays silent: with no answer the template keeps its own default.
+    if (chartProperties && templateOwnsValueLabels(chartTemplate)) {
+        const choice = resolveValueLabelChoice(chartProperties);
+        if (choice) chartProperties.showTextLabels = choice === 'on';
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
@@ -346,6 +379,42 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         ...options,
         ...(declaration.paramOverrides || {}),
     };
+
+    // How much room one category gets is a house decision — a journal that
+    // prints three wide boxes and a dashboard that prints thirty thin bars are
+    // both right about their own page. A template's band size is a guess made
+    // without knowing the house, so the house's number replaces it; a caller
+    // who states one outranks both.
+    //
+    // But a band step is a statement about bar thickness, and where *both* axes
+    // are banded there are no bars: the marks are cells, and a cell's size is
+    // fixed by the two counts and the room they share. A house that asks for
+    // 80px categories would print a grid of stripes. That one the layout keeps.
+    const houseBandStep = themeSpec?.layout?.bandStep;
+    const cellGrid = declaration.axisFlags?.x?.banded === true
+        && declaration.axisFlags?.y?.banded === true;
+    // A template may state a floor its read cannot go below (a slopegraph needs
+    // its two columns spread wide however compact the house). The house sets
+    // the band step, but not below that floor.
+    const minBandStep = (declaration.paramOverrides as AssembleOptions | undefined)?.minBandStep;
+    if (houseBandStep && options.defaultBandSize == null && !cellGrid) {
+        const step = minBandStep ? Math.max(houseBandStep, minBandStep) : houseBandStep;
+        effectiveOptions.defaultBandSize = step;
+        effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStep',
+            message: minBandStep && step > houseBandStep
+                ? `the house gives each category ${houseBandStep}px, but this chart reads only above ${minBandStep}px — held to ${step}px`
+                : `the house gives each category ${houseBandStep}px`,
+        });
+    } else if (houseBandStep && cellGrid) {
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStep',
+            message: `the house asks for ${houseBandStep}px categories, but both axes are banded — the marks are cells, whose size the grid settles, not the house`,
+        });
+    }
 
     const {
         addTooltips: addTooltipsOpt = false,
@@ -659,10 +728,87 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // HEADLINE
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Written before theming, because whether the chart has a headline is a
+    // fact the theme reasons about: a house that omits axis titles is leaning
+    // on this line to name the measure.
+    const headline = input.chart_spec.title?.trim();
+    const deck = input.chart_spec.subtitle?.trim();
+    if (headline || deck) {
+        vgObj.title = {
+            text: headline ?? '',
+            ...(deck ? { subtitle: [deck] } : {}),
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // THEME (level 2 grounding → level 3 realization)
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Runs last, deliberately. `vlApplyLayoutToSpec` builds `config` wholesale
+    // from fit decisions; the theme is a style layer over a chart that already
+    // fits, so it must see the finished spec.
+    //
+    // Grounding runs whether or not a house was named — with the neutral house
+    // when it was not. Some design questions are Flint's own and want answering
+    // either way: whether this chart can carry its values, and at this density
+    // whether it should. A house enhances that answer (it may prefer values on,
+    // or tolerate a tighter chart); it does not own it. Only *realization* is
+    // gated, so an untheme'd chart gets its numbers without also getting a
+    // house's ink, type and furniture.
+    const markTypes = collectMarkTypes(vgObj);
+    // Some templates write their own text on the marks. Where they do, the
+    // label layer stands down (it will not print a second number beside the
+    // template's), so the toggle would be a control that changes nothing.
+    // Asked before realization, because realization is what adds the label
+    // layer — asked after, every labelled chart would look like this.
+    const templateDrawsOwnText = markTypes.includes('text');
+    const stackedChannel = (vgObj.spec?.encoding ?? vgObj.encoding ?? {});
+    const stacked = stackedChannel.y?.stack ?? stackedChannel.x?.stack;
+    const design = groundTheme(themeSpec ?? {}, {
+        chartType,
+        markChannel: chartTemplate.markCognitiveChannel,
+        markTypes,
+        namesOnMarks: (chartProperties as any)?.showSeriesInLabel === true,
+        channelSemantics,
+        resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
+        axisFlags: declaration.axisFlags,
+        positional: collectPositional(vgObj),
+        layout: layoutResult,
+        table: values,
+        canvasSize,
+        stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
+        partToWhole: markTypes.includes('arc'),
+        titled: Boolean(vgObj.title),
+        hostSurface: (input.options as any)?.background,
+        valueLabels: resolveValueLabelChoice(chartProperties),
+    });
+
+    let themeDecisions: any;
+    if (themeSpec) {
+        const realizeReport = realizeThemeVegaLite(vgObj, design, values);
+        themeDecisions = {
+            ...design,
+            report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],
+        };
+    } else {
+        realizeValueLabelsVegaLite(vgObj, design, values);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // RESULT
     // ═══════════════════════════════════════════════════════════════════════
 
     const result: any = { ...vgObj, data: vgObj.data ?? { values } };
+    if (themeDecisions) {
+        result._theme = {
+            id: themeDecisions.themeId,
+            report: themeDecisions.report,
+            decisions: themeDecisions,
+        };
+    }
     if (warnings.length > 0) {
         result._warnings = warnings;
     }
@@ -688,13 +834,40 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         data,
         chartProperties,
     };
+    const ownsLabels = templateOwnsValueLabels(chartTemplate);
+    const valueLabelChoice = resolveValueLabelChoice(chartProperties);
+    const explicitValueLabels = valueLabelChoice == null
+        ? undefined
+        : valueLabelChoice === 'on';
     const layoutCoupledRecommendation: Record<string, any> = {
         independentYAxis: computedIndependentYAxis,
+        // Seed the labels toggle from what the house and the density actually
+        // decided, so an untouched control shows the theme's own habit and
+        // re-seeds when the reader switches theme. Where the template owns its
+        // labels, its own boolean is the honest answer.
+        showValueLabels: ownsLabels
+            ? explicitValueLabels ?? design?.dataLabels?.show
+            : design?.dataLabels?.show,
+    };
+    // Whether offering a labels control means anything is a question about the
+    // resolved layout — is there anything to key a number to, and is there room
+    // to print it — so only the grounded design can answer it. A chart too
+    // dense to read numbers on cannot be argued into it, and neither can one
+    // whose template already writes its own text. Templates that print labels
+    // *on request* are the exception: they answer to the toggle themselves.
+    const designCoupledApplicability: Record<string, boolean> = {
+        showValueLabels: ownsLabels
+            || (design?.dataLabels?.possible === true && !templateDrawsOwnText),
+        // The older spelling stays an accepted *input* for compatibility, but a
+        // host should be shown one switch, not two that fight.
+        showTextLabels: false,
     };
 
     result._options = (chartTemplate.properties ?? []).map((def): ChartOption => {
         const ev = def.check?.(evalCtx);
-        const applicable = ev ? ev.applicable : true;
+        const applicable = def.key in designCoupledApplicability
+            ? designCoupledApplicability[def.key]
+            : ev ? ev.applicable : true;
         const recommended = layoutCoupledRecommendation[def.key] ?? ev?.recommendedValue;
         const value = chartProperties?.[def.key] ?? recommended ?? def.defaultValue;
         // Strip the `check` rule — a ChartOption is the resolved, serializable
@@ -740,6 +913,34 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         result._pivot = legacyPivot.surface;
     }
     return result;
+}
+
+/**
+ * What the caller asked for on value labels, in one word.
+ *
+ * `showValueLabels` is the control; `showTextLabels` is the older boolean some
+ * templates and hosts still pass, and it keeps working — `true` means print,
+ * `false` means the caller never touched it (it was the key's default), so it
+ * reads as `auto` rather than as a demand for silence. Only the tri-state can
+ * say "off".
+ */
+/**
+ * Does this template print its own value labels, rather than leaving them to
+ * the theme's data-label layer?
+ */
+function templateOwnsValueLabels(template: ChartTemplateDef): boolean {
+    return template.ownsValueLabels === true;
+}
+
+function resolveValueLabelChoice(
+    chartProperties: Record<string, any> | undefined,
+): 'on' | 'off' | undefined {
+    const choice = chartProperties?.showValueLabels;
+    if (typeof choice === 'boolean') return choice ? 'on' : 'off';
+    // `showTextLabels` is the older, template-owned spelling of the same wish.
+    // Only `true` is meaningful: it was the opt-in for charts that print their
+    // own numbers, so `false` means "never asked", not "asked for silence".
+    return chartProperties?.showTextLabels === true ? 'on' : undefined;
 }
 
 /**
@@ -887,6 +1088,10 @@ function buildVLEncodings(
             // Legend sizing for high-cardinality nominal color/group
             if (encodingObj.type === "nominal" && (channel === 'color' || channel === 'group')) {
                 const actualDomain = [...new Set(data.map(r => r[fieldName]))];
+                // Threshold kept in sync with HIGH_CARDINALITY_LEGEND_MIN in
+                // vegalite/theme.ts: when a theme later folds the key to a short
+                // top-K + Others list, that pass recomputes this shrink against
+                // the folded count so short legends are not squeezed to 8px.
                 if (actualDomain.length >= 16) {
                     if (!encodingObj.legend) encodingObj.legend = {};
                     encodingObj.legend.symbolSize = 12;

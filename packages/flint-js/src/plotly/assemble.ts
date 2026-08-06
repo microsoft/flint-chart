@@ -65,6 +65,28 @@ import { normalizeChartProperties } from '../core/normalize-properties';
  *
  * @returns A Plotly figure with optional `_warnings` and `_width`/`_height` hints
  */
+function applyFieldDisplayNames(figure: any, names: Record<string, string> | undefined): void {
+    if (!names) return;
+    const displayName = (value: unknown) => typeof value === 'string' ? names[value] ?? value : value;
+    for (const [key, axis] of Object.entries(figure.layout ?? {}) as Array<[string, any]>) {
+        if (/^[xy]axis\d*$/.test(key) && axis?.title?.text) {
+            axis.title.text = displayName(axis.title.text);
+        }
+    }
+    if (figure.layout?.legend?.title?.text) {
+        figure.layout.legend.title.text = displayName(figure.layout.legend.title.text);
+    }
+    for (const trace of figure.data ?? []) {
+        if (trace?.name) trace.name = displayName(trace.name);
+        if (trace?.marker?.colorbar?.title?.text) {
+            trace.marker.colorbar.title.text = displayName(trace.marker.colorbar.title.text);
+        }
+        if (trace?.colorbar?.title?.text) {
+            trace.colorbar.title.text = displayName(trace.colorbar.title.text);
+        }
+    }
+}
+
 export function assemblePlotly(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -415,6 +437,8 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     if (legacyPivot.surface) {
         figure._pivot = legacyPivot.surface;
     }
+
+    applyFieldDisplayNames(figure, input.field_display_names);
 
     return figure;
 }

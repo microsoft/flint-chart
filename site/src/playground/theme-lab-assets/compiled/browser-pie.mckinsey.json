@@ -1,0 +1,218 @@
+{
+  "width": 340,
+  "height": 292,
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 292,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8a969d",
+      "gradientLength": 164,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": [
+      "Desktop browser share, 2024, per cent"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 20,
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "#ffffff",
+        "strokeWidth": 1
+      },
+      "encoding": {}
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 12.5,
+        "fontWeight": 600,
+        "radius": 160,
+        "color": "#051c2c"
+      },
+      "encoding": {
+        "text": {
+          "field": "Share",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
+        "color": {
+          "value": "#051c2c"
+        }
+      }
+    }
+  ],
+  "encoding": {
+    "theta": {
+      "field": "Share",
+      "type": "quantitative",
+      "stack": true
+    },
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "range": [
+          "#051c2c",
+          "#5b82ab",
+          "#9db8d2",
+          "#cfdcea",
+          "#e2e7ec"
+        ]
+      }
+    },
+    "order": {
+      "field": "Browser",
+      "type": "nominal",
+      "sort": "ascending"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Browser": "Chrome",
+        "Share": 65
+      },
+      {
+        "Browser": "Safari",
+        "Share": 12
+      },
+      {
+        "Browser": "Edge",
+        "Share": 12
+      },
+      {
+        "Browser": "Firefox",
+        "Share": 6
+      },
+      {
+        "Browser": "Other",
+        "Share": 5
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "ink.series.endpointsAgainstSurface",
+      "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`inline` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.suppressWhenValuesPrinted",
+      "message": "legend kept — the values are printed but nothing else names the series"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.measure.suppressWhenValuesPrinted",
+      "message": "measure axis removed — every mark prints its own value"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.slice.gap",
+      "message": "a 1px rule cuts the wedges apart — two arcs of the same size read as two shapes, not one"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 164px — under half the 364px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "`column` approximated as `outsideMark` — Vega-Lite has no label gutter"
+    }
+  ]
+}

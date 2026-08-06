@@ -241,6 +241,19 @@ export function deriveStretchCaps(
 // ---------------------------------------------------------------------------
 
 /**
+ * The size a cell in a grid wants to be, before the room has its say. Larger
+ * than a bar's band because a tone needs area to be compared: below about
+ * twenty pixels a patch reads as grout between its neighbours.
+ */
+const CELL_BAND_SIZE = 28;
+
+/**
+ * How much of the wider step squaring a grid may cost. At 1.5 a 30px step will
+ * give way to a 20px square, but not to a 15px one.
+ */
+const SQUARE_CELL_TOLERANCE = 1.5;
+
+/**
  * Phase 1: Compute layout decisions.
  *
  * Takes channel semantics, template layout declaration, data, canvas size,
@@ -819,7 +832,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, elasticParamsX);
+        const groupElasticX = options.groupBandFillsLanes
+            ? { ...elasticParamsX, defaultStepSize: elasticParamsX.defaultStepSize * itemsPerGroup }
+            : elasticParamsX;
+        const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, groupElasticX);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         xStepSize = groupStep;
         xStepUnit = 'group';
@@ -835,7 +851,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, elasticParamsY);
+        const groupElasticY = options.groupBandFillsLanes
+            ? { ...elasticParamsY, defaultStepSize: elasticParamsY.defaultStepSize * itemsPerGroup }
+            : elasticParamsY;
+        const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, groupElasticY);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         yStepSize = groupStep;
         yStepUnit = 'group';
@@ -897,6 +916,76 @@ export function computeLayout(
         const stepSize = axis === 'x' ? xStepSize : yStepSize;
         if (axis === 'x') subplotWidth = Math.round(stepSize * (count + 1));
         else subplotHeight = Math.round(stepSize * (count + 1));
+    }
+
+    // --- Square cells ---
+    // Two banded axes means the marks are cells, not bars. A bar states its
+    // value as a length along one axis, so its thickness is free; a cell states
+    // its value as a tone, and the eye compares tones by area. A grid of
+    // squares reads as a surface; a grid of thin rectangles reads as stripes,
+    // and invites a comparison along the long side that the data does not
+    // support.
+    //
+    // So the two steps are pulled to one size. The caps used here are the ones
+    // the stretch budget already produced, which is what lets a grid spend a
+    // little extra canvas to come out square. Where the categories are too many
+    // for that — where squaring would cut the wider step by more than a third —
+    // the grid stays rectangular: a shape nobody asked for is not worth losing
+    // that much room over.
+    //
+    // A connected mark whose two axes are both discrete — a bump chart, ranks
+    // over time — is the exception: it is a line, not a grid of cells, so it is
+    // neither squared nor stretched to fill the height. The mark declares a
+    // cross-section per axis; the larger one is the run the line travels along
+    // (time), the smaller the stack it crosses (rank). Squaring the two, or
+    // letting the rank axis grow one band per competitor, only makes the panel
+    // taller and every crossing a near-vertical plunge — the shape the eye
+    // reads worst. Instead the rank axis is held to its thin cross-section and
+    // the run axis is stretched to a bounded multiple of it, so the panel comes
+    // out landscape and the slopes sit nearer 45°. Horizontal room is what
+    // untangles a crossing mass of lines, so the run is where the budget is
+    // spent.
+    const isConnectedMark = typeof continuousMarkCrossSection === 'object'
+        && !!continuousMarkCrossSection.seriesCountAxis;
+    const bothDiscreteConnected = isConnectedMark
+        && xTotalNominalCount > 0 && yTotalNominalCount > 0
+        && !xHasGrouping && !yHasGrouping;
+    if (bothDiscreteConnected && typeof continuousMarkCrossSection === 'object') {
+        const csX = continuousMarkCrossSection.x ?? 0;
+        const csY = continuousMarkCrossSection.y ?? 0;
+        if (csX > 0 && csY > 0) {
+            // Cap the run band's advantage over the cross band: past about 2:1
+            // the extra width buys little and the panel just runs off the edge.
+            const RUN_AR_CAP = 2;
+            const runIsX = csX >= csY;
+            const crossCS = runIsX ? csY : csX;
+            const runBudget = runIsX
+                ? Math.floor(maxSubplotW / xTotalNominalCount)
+                : Math.floor(maxSubplotH / yTotalNominalCount);
+            const cross = Math.max(minStepVal,
+                Math.min(runIsX ? yStepSize : xStepSize, crossCS));
+            const ratio = Math.min(RUN_AR_CAP, Math.max(1, Math.max(csX, csY) / Math.min(csX, csY)));
+            const run = Math.max(
+                runIsX ? xStepSize : yStepSize,
+                Math.min(runBudget, Math.round(cross * ratio)));
+            if (runIsX) { xStepSize = run; yStepSize = cross; }
+            else { yStepSize = run; xStepSize = cross; }
+        }
+    }
+    if (xTotalNominalCount > 0 && yTotalNominalCount > 0 && !xHasGrouping && !yHasGrouping
+        && !bothDiscreteConnected) {
+        const capX = Math.floor(maxSubplotW / xTotalNominalCount);
+        const capY = Math.floor(maxSubplotH / yTotalNominalCount);
+        const generous = Math.round(CELL_BAND_SIZE * Math.max(1, sizeRatio));
+        // The square is the narrower of the two steps — that one already fits —
+        // grown to the generous size if there is room for it on both axes.
+        const wanted = Math.max(generous, Math.min(xStepSize, yStepSize));
+        const square = Math.min(capX, capY, wanted);
+        const widest = Math.max(xStepSize, yStepSize);
+        if (square >= minStepVal && square * SQUARE_CELL_TOLERANCE >= widest) {
+            xStepSize = square;
+            yStepSize = square;
+        }
     }
 
     // --- Nominal discrete subplot sizing ---

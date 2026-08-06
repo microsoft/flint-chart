@@ -15,6 +15,11 @@ const barChart = {
   chart_spec: {
     chartType: 'Bar Chart',
     encodings: { x: { field: 'region' }, y: { field: 'revenue' } },
+    // Real calls carry a headline: it is the first thing a house styles, and
+    // some (the Economist's masthead tab) hang furniture off it. A titleless
+    // fixture exercises a chart nobody actually asks for.
+    title: 'Revenue by region',
+    subtitle: 'FY2024, $m',
     baseSize: { width: 320, height: 220 },
   },
 };
@@ -43,6 +48,7 @@ describe('MCP server over HTTP (stateless streamable transport)', () => {
       'compile_chart',
       'create_chart_view',
       'list_chart_types',
+      'list_themes',
       'render_chart',
       'validate_chart',
     ]);

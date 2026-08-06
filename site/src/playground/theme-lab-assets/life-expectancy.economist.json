@@ -1,0 +1,139 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "Value axis deleted outright and both endpoints printed instead. A slope chart is read as a set of gradients between two labelled columns; the axis exists only so the reader can convert a height back into a number, which the number itself does better.",
+    "Legend replaced by the country name at both ends of every line. Seven lines that cross cannot be traced back to a key, and repeating the name on the right is what makes a crossing survivable.",
+    "Colour reduced from set2 to two house hues carrying a rule, not an identity: Economist blue #006BA2 where life expectancy rose, house red #E3120B where it fell. The rule is computed from the same two numbers already on the page, so it states nothing the chart is not showing.",
+    "Points shrunk to 3px filled dots and the line to 1.4px. Flint's 2px line with default points reads as a time series sampled twice; a slope chart has no time between its columns, so the segment is a connector, not a trend.",
+    "Column padding widened and the two year labels moved to the top, above the values they head — the year is a column heading here, not a measurement axis.",
+    "Red masthead rule, 13.5pt bold headline over a grey deck, 9.5pt labels throughout: the house identity is fixed per publication, not chosen per chart."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 12, "bottom": 6 },
+  "title": {
+    "text": "Two decades of longer lives",
+    "subtitle": ["Life expectancy at birth, years, 2000 and 2021"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 150,
+      "height": 250,
+      "data": {
+        "values": [
+          { "Country": "China", "Year": "2000", "Life expectancy": 72 },
+          { "Country": "China", "Year": "2021", "Life expectancy": 78.2 },
+          { "Country": "India", "Year": "2000", "Life expectancy": 62.5 },
+          { "Country": "India", "Year": "2021", "Life expectancy": 67.2 },
+          { "Country": "United States", "Year": "2000", "Life expectancy": 76.6 },
+          { "Country": "United States", "Year": "2021", "Life expectancy": 76.3 },
+          { "Country": "Nigeria", "Year": "2000", "Life expectancy": 46.6 },
+          { "Country": "Nigeria", "Year": "2021", "Life expectancy": 52.7 },
+          { "Country": "Japan", "Year": "2000", "Life expectancy": 81.1 },
+          { "Country": "Japan", "Year": "2021", "Life expectancy": 84.5 },
+          { "Country": "Russia", "Year": "2000", "Life expectancy": 65.5 },
+          { "Country": "Russia", "Year": "2021", "Life expectancy": 70.1 },
+          { "Country": "Brazil", "Year": "2000", "Life expectancy": 70.1 },
+          { "Country": "Brazil", "Year": "2021", "Life expectancy": 72.8 }
+        ]
+      },
+      "transform": [
+        {
+          "window": [{ "op": "last_value", "field": "Life expectancy", "as": "__end" }],
+          "frame": [null, null],
+          "sort": [{ "field": "Year", "order": "ascending" }],
+          "groupby": ["Country"]
+        },
+        {
+          "window": [{ "op": "first_value", "field": "Life expectancy", "as": "__start" }],
+          "frame": [null, null],
+          "sort": [{ "field": "Year", "order": "ascending" }],
+          "groupby": ["Country"]
+        },
+        { "calculate": "datum.__end >= datum.__start ? 'up' : 'down'", "as": "__direction" },
+        { "calculate": "datum.Country + '  ' + format(datum['Life expectancy'], '.1f')", "as": "__label" }
+      ],
+      "encoding": {
+        "x": {
+          "field": "Year",
+          "type": "ordinal",
+          "sort": ["2000", "2021"],
+          "title": null,
+          "scale": { "padding": 0.5 },
+          "axis": {
+            "orient": "top",
+            "labelAngle": 0,
+            "labelFontSize": 10,
+            "labelFontWeight": 700,
+            "labelColor": "#121317",
+            "labelPadding": 8,
+            "domain": false,
+            "ticks": false,
+            "grid": false
+          }
+        },
+        "y": {
+          "field": "Life expectancy",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": false, "nice": false, "domain": [44, 87] },
+          "axis": null
+        },
+        "color": {
+          "field": "__direction",
+          "type": "nominal",
+          "legend": null,
+          "scale": { "domain": ["up", "down"], "range": ["#006ba2", "#e3120b"] }
+        },
+        "detail": { "field": "Country", "type": "nominal" }
+      },
+      "layer": [
+        { "mark": { "type": "line", "strokeWidth": 1.4 } },
+        { "mark": { "type": "point", "filled": true, "size": 22 } },
+        {
+          "transform": [{ "filter": "datum.Year === '2000'" }],
+          "mark": { "type": "text", "align": "right", "baseline": "middle", "dx": -7, "fontSize": 9 },
+          "encoding": { "text": { "field": "__label", "type": "nominal" } }
+        },
+        {
+          "transform": [{ "filter": "datum.Year === '2021'" }],
+          "mark": { "type": "text", "align": "left", "baseline": "middle", "dx": 7, "fontSize": 9 },
+          "encoding": { "text": { "field": "__label", "type": "nominal" } }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

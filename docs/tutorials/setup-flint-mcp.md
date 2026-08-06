@@ -22,18 +22,25 @@ opens that chart locally.
 | `render_chart` | Render a static PNG or SVG locally when you need an artifact or the host has no MCP App UI. |
 | `compile_chart` | Return backend-native Vega-Lite, ECharts, or Chart.js JSON. |
 | `list_chart_types` | Inspect supported chart types and encoding channels. |
+| `list_themes` | Inspect built-in visual themes and retrieve guidance for a selected preset. |
 
 | Resource or prompt | Use it for |
 |--------------------|------------|
 | `flint://agent-skill` | Load the bundled chart-author instructions. |
+| `flint://theme-skill` | Load the bundled ThemeSpec authoring instructions. |
 | `flint://chart-types` | Browse the supported chart catalog. |
 | `ui://flint-chart/chart-view.html` | Bundled UI resource used by `create_chart_view` in MCP App hosts. |
 | `author_flint_chart` | Start from a prompt that embeds the chart-author skill. |
+| `author_flint_theme` | Start from a prompt that embeds the theme-author skill. |
 
 For best results, have the client load `flint://agent-skill` or run the
 `author_flint_chart` prompt before the agent calls the chart tools. The skill
 teaches the agent the valid `chartType` names, field-to-channel mappings,
 semantic types, data-binding rules, and when to use each rendering tool.
+
+For a custom visual identity, load `flint://theme-skill` or run
+`author_flint_theme`. The theme-author skill produces a reusable ThemeSpec;
+`list_themes` remains the discovery tool for Flint's built-in presets.
 
 ## Requirements
 

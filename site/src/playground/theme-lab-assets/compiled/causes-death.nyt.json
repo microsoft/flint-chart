@@ -1,0 +1,272 @@
+{
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labels": false,
+      "tickCount": 5
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 15.5,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 23
+  },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": [
+      "Leading causes of death, United States, 2022, thousands of deaths"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": {
+    "left": 12,
+    "right": 32,
+    "top": 12,
+    "bottom": 12
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "color": "#2f6b9a"
+      },
+      "encoding": {
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.28
+          }
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "text",
+        "font": "Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 700,
+        "align": "right",
+        "baseline": "middle",
+        "dx": -5,
+        "color": "#ffffff"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "format": "~s"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      },
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) >= 76.82785714285714"
+        }
+      ]
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "filter": "abs(datum[\"Deaths (thousands)\"]) < 76.82785714285714"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "font": "Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 700,
+        "align": "left",
+        "baseline": "middle",
+        "dx": 4,
+        "color": "#121212"
+      },
+      "encoding": {
+        "text": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative",
+          "format": "~s"
+        },
+        "x": {
+          "field": "Deaths (thousands)",
+          "type": "quantitative"
+        },
+        "y": {
+          "field": "Cause",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Cause": "Diseases of heart",
+        "Deaths (thousands)": 703
+      },
+      {
+        "Cause": "Malignant neoplasms",
+        "Deaths (thousands)": 608
+      },
+      {
+        "Cause": "Unintentional injuries",
+        "Deaths (thousands)": 227
+      },
+      {
+        "Cause": "Cerebrovascular diseases",
+        "Deaths (thousands)": 165
+      },
+      {
+        "Cause": "Chronic lower respiratory diseases",
+        "Deaths (thousands)": 148
+      },
+      {
+        "Cause": "Alzheimer disease",
+        "Deaths (thousands)": 120
+      },
+      {
+        "Cause": "Diabetes mellitus",
+        "Deaths (thousands)": 102
+      },
+      {
+        "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+        "Deaths (thousands)": 58
+      },
+      {
+        "Cause": "Chronic liver disease and cirrhosis",
+        "Deaths (thousands)": 55
+      },
+      {
+        "Cause": "Intentional self-harm (suicide)",
+        "Deaths (thousands)": 49
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "structure.axis.measure.suppressWhenValuesPrinted",
+      "message": "measure axis removed — every mark prints its own value"
+    },
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks shorter than their own label print it outside instead"
+    }
+  ]
+}

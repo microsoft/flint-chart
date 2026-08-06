@@ -1,0 +1,331 @@
+{
+  "facet": {
+    "field": "Dataset",
+    "type": "nominal",
+    "sort": null
+  },
+  "columns": 4,
+  "spec": {
+    "layer": [
+      {
+        "mark": "circle",
+        "encoding": {
+          "x": {
+            "field": "X",
+            "type": "quantitative",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "y": {
+            "field": "Y",
+            "type": "quantitative",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "color": {},
+          "size": {}
+        }
+      },
+      {
+        "mark": {
+          "type": "line",
+          "color": "red"
+        },
+        "transform": [
+          {
+            "regression": "Y",
+            "on": "X"
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "X",
+            "type": "quantitative",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "y": {
+            "field": "Y",
+            "type": "quantitative",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          }
+        }
+      }
+    ],
+    "encoding": {}
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 105,
+      "continuousHeight": 154,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "axisY": {
+      "labelFontSize": 8,
+      "titleFontSize": 11,
+      "titleFontWeight": "normal",
+      "titleColor": "#666"
+    },
+    "legend": {
+      "labelFontSize": 9,
+      "titleFontSize": 9
+    },
+    "headerFacet": {
+      "labelLimit": 125
+    },
+    "facet": {
+      "spacing": 11
+    }
+  },
+  "title": {
+    "text": "Anscombe's Quartet — same stats, different shapes"
+  },
+  "data": {
+    "values": [
+      {
+        "Dataset": "I",
+        "X": 10,
+        "Y": 8.04
+      },
+      {
+        "Dataset": "I",
+        "X": 8,
+        "Y": 6.95
+      },
+      {
+        "Dataset": "I",
+        "X": 13,
+        "Y": 7.58
+      },
+      {
+        "Dataset": "I",
+        "X": 9,
+        "Y": 8.81
+      },
+      {
+        "Dataset": "I",
+        "X": 11,
+        "Y": 8.33
+      },
+      {
+        "Dataset": "I",
+        "X": 14,
+        "Y": 9.96
+      },
+      {
+        "Dataset": "I",
+        "X": 6,
+        "Y": 7.24
+      },
+      {
+        "Dataset": "I",
+        "X": 4,
+        "Y": 4.26
+      },
+      {
+        "Dataset": "I",
+        "X": 12,
+        "Y": 10.84
+      },
+      {
+        "Dataset": "I",
+        "X": 7,
+        "Y": 4.82
+      },
+      {
+        "Dataset": "I",
+        "X": 5,
+        "Y": 5.68
+      },
+      {
+        "Dataset": "II",
+        "X": 10,
+        "Y": 9.14
+      },
+      {
+        "Dataset": "II",
+        "X": 8,
+        "Y": 8.14
+      },
+      {
+        "Dataset": "II",
+        "X": 13,
+        "Y": 8.74
+      },
+      {
+        "Dataset": "II",
+        "X": 9,
+        "Y": 8.77
+      },
+      {
+        "Dataset": "II",
+        "X": 11,
+        "Y": 9.26
+      },
+      {
+        "Dataset": "II",
+        "X": 14,
+        "Y": 8.1
+      },
+      {
+        "Dataset": "II",
+        "X": 6,
+        "Y": 6.13
+      },
+      {
+        "Dataset": "II",
+        "X": 4,
+        "Y": 3.1
+      },
+      {
+        "Dataset": "II",
+        "X": 12,
+        "Y": 9.13
+      },
+      {
+        "Dataset": "II",
+        "X": 7,
+        "Y": 7.26
+      },
+      {
+        "Dataset": "II",
+        "X": 5,
+        "Y": 4.74
+      },
+      {
+        "Dataset": "III",
+        "X": 10,
+        "Y": 7.46
+      },
+      {
+        "Dataset": "III",
+        "X": 8,
+        "Y": 6.77
+      },
+      {
+        "Dataset": "III",
+        "X": 13,
+        "Y": 12.74
+      },
+      {
+        "Dataset": "III",
+        "X": 9,
+        "Y": 7.11
+      },
+      {
+        "Dataset": "III",
+        "X": 11,
+        "Y": 7.81
+      },
+      {
+        "Dataset": "III",
+        "X": 14,
+        "Y": 8.84
+      },
+      {
+        "Dataset": "III",
+        "X": 6,
+        "Y": 6.08
+      },
+      {
+        "Dataset": "III",
+        "X": 4,
+        "Y": 5.39
+      },
+      {
+        "Dataset": "III",
+        "X": 12,
+        "Y": 8.15
+      },
+      {
+        "Dataset": "III",
+        "X": 7,
+        "Y": 6.42
+      },
+      {
+        "Dataset": "III",
+        "X": 5,
+        "Y": 5.73
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 6.58
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 5.76
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 7.71
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 8.84
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 8.47
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 7.04
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 5.25
+      },
+      {
+        "Dataset": "IV",
+        "X": 19,
+        "Y": 12.5
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 5.56
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 7.91
+      },
+      {
+        "Dataset": "IV",
+        "X": 8,
+        "Y": 6.89
+      }
+    ]
+  }
+}

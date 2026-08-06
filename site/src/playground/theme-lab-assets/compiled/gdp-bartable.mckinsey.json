@@ -1,0 +1,419 @@
+{
+  "spacing": 8,
+  "resolve": {
+    "scale": {
+      "y": "shared"
+    }
+  },
+  "hconcat": [
+    {
+      "data": {
+        "name": "__bt_displayTable"
+      },
+      "width": 180,
+      "height": 230,
+      "title": {
+        "text": "Country",
+        "anchor": "start",
+        "offset": 6,
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#999"
+      },
+      "mark": {
+        "type": "bar",
+        "height": {
+          "band": 0.842
+        },
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": [
+            "United States",
+            "China",
+            "Germany",
+            "Japan",
+            "India",
+            "UK",
+            "France",
+            "Brazil"
+          ],
+          "axis": {
+            "title": null,
+            "labelAlign": "left",
+            "labelLimit": 105,
+            "labelPadding": 105
+          },
+          "scale": {
+            "paddingInner": 0.4
+          }
+        },
+        "x": {
+          "field": "GDP ($T)",
+          "type": "quantitative",
+          "axis": null,
+          "scale": {
+            "nice": false
+          }
+        },
+        "color": {
+          "field": "GDP ($T)",
+          "type": "quantitative",
+          "legend": null,
+          "scale": {
+            "range": [
+              "#e2e7ec",
+              "#cfdcea",
+              "#9db8d2",
+              "#5b82ab",
+              "#051c2c"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "__bt_displayTable"
+      },
+      "width": 66,
+      "height": 230,
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "sum",
+              "field": "GDP ($T)",
+              "as": "__bt_val"
+            },
+            {
+              "op": "min",
+              "field": "__bt_sort",
+              "as": "__bt_sort"
+            },
+            {
+              "op": "max",
+              "field": "__bt_others_num",
+              "as": "__bt_others_num"
+            }
+          ],
+          "groupby": [
+            "Country"
+          ]
+        }
+      ],
+      "title": {
+        "text": "GDP ($T)",
+        "anchor": "end",
+        "offset": 6,
+        "limit": 62,
+        "fontSize": 12,
+        "fontWeight": "normal",
+        "color": "#999"
+      },
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "fontSize": 12
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": [
+            "United States",
+            "China",
+            "Germany",
+            "Japan",
+            "India",
+            "UK",
+            "France",
+            "Brazil"
+          ],
+          "axis": null
+        },
+        "x": {
+          "datum": 1,
+          "axis": null,
+          "scale": {
+            "type": "linear",
+            "domain": [
+              0,
+              1
+            ]
+          }
+        },
+        "text": {
+          "field": "__bt_val",
+          "type": "quantitative"
+        },
+        "color": {
+          "value": "#666"
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelAngle": 0,
+      "tickCount": 8
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "labelAngle": 0
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8a969d",
+      "gradientLength": 87,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "datasets": {
+    "__bt_displayTable": [
+      {
+        "Country": "United States",
+        "GDP ($T)": 27.4,
+        "__bt_sort": 0,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "China",
+        "GDP ($T)": 17.8,
+        "__bt_sort": 1,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Germany",
+        "GDP ($T)": 4.5,
+        "__bt_sort": 2,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Japan",
+        "GDP ($T)": 4.2,
+        "__bt_sort": 3,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "India",
+        "GDP ($T)": 3.9,
+        "__bt_sort": 4,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "UK",
+        "GDP ($T)": 3.3,
+        "__bt_sort": 5,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "France",
+        "GDP ($T)": 3,
+        "__bt_sort": 6,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      },
+      {
+        "Country": "Brazil",
+        "GDP ($T)": 2.2,
+        "__bt_sort": 7,
+        "__bt_others": false,
+        "__bt_others_num": 0
+      }
+    ]
+  },
+  "height": {
+    "step": 36
+  },
+  "title": {
+    "text": "America and China lap the field",
+    "subtitle": [
+      "Gross domestic product, 2023, trillion US dollars"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 20,
+  "data": {
+    "values": [
+      {
+        "Country": "United States",
+        "GDP ($T)": 27.4
+      },
+      {
+        "Country": "China",
+        "GDP ($T)": 17.8
+      },
+      {
+        "Country": "Germany",
+        "GDP ($T)": 4.5
+      },
+      {
+        "Country": "Japan",
+        "GDP ($T)": 4.2
+      },
+      {
+        "Country": "India",
+        "GDP ($T)": 3.9
+      },
+      {
+        "Country": "UK",
+        "GDP ($T)": 3.3
+      },
+      {
+        "Country": "France",
+        "GDP ($T)": 3
+      },
+      {
+        "Country": "Brazil",
+        "GDP ($T)": 2.2
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "ink.series.endpointsAgainstSurface",
+      "message": "a ramp end sat too close to the surface to be seen as a value — it was pulled away from the page"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`inline` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "the segments are stacked — a value at a segment edge would read as the running total"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.label.padding",
+      "message": "the template holds a 105px gutter for its labels — that is layout, not padding, so it stands"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 87px — under half the 193px block, so the key stays a caption to the chart"
+    }
+  ]
+}

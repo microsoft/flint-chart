@@ -7,6 +7,7 @@ import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javasc
 import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
+import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
 import { siteTheme } from '../shared/theme';
 
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -74,18 +75,39 @@ export function CodeBlock({
   language = 'typescript',
   children,
   customStyle,
+  highlightLines,
+  variant = 'dark',
 }: {
   language?: string;
   children: string;
   customStyle?: CSSProperties;
+  highlightLines?: readonly number[];
+  variant?: 'dark' | 'light';
 }) {
   const Highlighter = SyntaxHighlighter as unknown as React.ElementType;
+  const highlighted = new Set(highlightLines);
   return (
     <Highlighter
-      style={oneDark}
+      style={variant === 'light' ? oneLight : oneDark}
       language={language}
       PreTag="div"
       customStyle={{ ...defaultBlockStyle, ...customStyle }}
+      wrapLines={highlighted.size > 0}
+      lineProps={(lineNumber: number) =>
+        highlighted.has(lineNumber)
+          ? {
+              style: {
+                display: 'block',
+                margin: '0 -14px',
+                padding: '0 11px',
+                borderLeft: `3px solid ${siteTheme.accent}`,
+                background: variant === 'light'
+                  ? 'rgba(9, 105, 218, 0.08)'
+                  : 'rgba(88, 166, 255, 0.12)',
+              },
+            }
+          : {}
+      }
       codeTagProps={{
         style: { fontFamily: siteTheme.fontMono },
       }}

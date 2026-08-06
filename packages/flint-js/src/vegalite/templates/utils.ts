@@ -80,6 +80,16 @@ export function setMarkProp(mark: any, key: string, value: any): any {
 }
 
 /**
+ * Marks whose size came from the coarse coverage estimate in
+ * `applyPointSizeScaling`, which runs at build time against an assumed plot
+ * and the whole table. A theme knows the plot it actually got and how many
+ * panels the rows are spread over, so where both have an opinion the theme's
+ * is the better-informed one — but only for the marks this rule sized, never
+ * for a mark a template fitted to a lane.
+ */
+export const coverageSizedMarks = new WeakSet<object>();
+
+/**
  * Coverage-based point sizing.
  */
 export const applyPointSizeScaling = (
@@ -107,6 +117,7 @@ export const applyPointSizeScaling = (
 
     const size = Math.round(Math.max(minSize, (targetCoverage * plotArea) / n));
     vgSpec.mark = setMarkProp(vgSpec.mark, 'size', size);
+    coverageSizedMarks.add(vgSpec.mark);
     return vgSpec;
 };
 
@@ -149,9 +160,70 @@ function maxNonOverlapSize(
 }
 
 /**
+ * Make a stacked mark's segment order match its colour order.
+ *
+ * The assembler expresses "keep the order the data arrived in" as
+ * `color.sort: null`. That governs the legend, but NOT the stack: Vega-Lite
+ * derives the stack's sort from the colour *scale*, and a scale with no
+ * explicit domain falls back to sorting the field ascending — i.e.
+ * alphabetically. The result is a chart whose legend reads
+ * `A great deal, Some, Not much, None at all` while its bars stack
+ * `A great deal, None at all, Not much, Some`. For any ordered series
+ * (a Likert scale, an age band, a size class) that silently destroys the
+ * meaning of the stack.
+ *
+ * Pinning `scale.domain` to the same order makes Vega-Lite emit a
+ * `_<field>_sort_index` and sort the stack by it, so legend and stack agree.
+ * An explicit `sort` array does NOT achieve this — Vega-Lite applies it to
+ * the legend only — which is why the domain is what gets set here.
+ */
+export function alignStackOrderToColorOrder(spec: any, ctx: InstantiateContext): void {
+    const color = spec.encoding?.color;
+    // Only meaningful for a discrete colour series.
+    if (!color?.field || (color.type !== 'nominal' && color.type !== 'ordinal')) return;
+    // Called from stacked templates, where stacking is implicit unless it has
+    // been explicitly switched off (`stackMode: 'layered'` → `stack: null`).
+    const unstacked = (['x', 'y'] as const).some(
+        (axis) => spec.encoding?.[axis] && 'stack' in spec.encoding[axis] &&
+            (spec.encoding[axis].stack === null || spec.encoding[axis].stack === false),
+    );
+    if (unstacked) return;
+    // An explicit domain already pins the order; don't override the caller.
+    if (color.scale?.domain) return;
+
+    // `sort: null` means data order; an array means that array. Anything else
+    // (a field-driven sort spec, "ascending"/"descending") is left alone.
+    let order: any[];
+    if (color.sort === null) {
+        const seen = new Set<any>();
+        order = [];
+        for (const row of ctx.table ?? []) {
+            const v = row?.[color.field];
+            if (v === undefined || v === null || seen.has(v)) continue;
+            seen.add(v);
+            order.push(v);
+        }
+    } else if (Array.isArray(color.sort)) {
+        order = color.sort;
+    } else {
+        return;
+    }
+    if (order.length < 2) return;
+
+    color.scale = { ...(color.scale ?? {}), domain: order };
+}
+
+/**
  * Adjust bar/rect marks for continuous-as-discrete axes.
  * v2 version: reads layout info from InstantiateContext.
  */
+/**
+ * Fraction of a continuous-banded step a bar fills by default, leaving a 10%
+ * gap. A house that states its own `marks.bandFraction` re-cuts against this
+ * baseline (see theme.ts `bandWalk`), so the two must agree on the number.
+ */
+export const CONTINUOUS_BAR_STEP_FILL = 0.9;
+
 export function adjustBarMarks(spec: any, ctx: InstantiateContext): void {
     const layout = ctx.layout;
     for (const axis of ['x', 'y'] as const) {
@@ -180,7 +252,7 @@ export function adjustBarMarks(spec: any, ctx: InstantiateContext): void {
         const maxSize = enc?.field
             ? maxNonOverlapSize(enc.field, ctx.table, isTemporal, subplotDim, count)
             : Infinity;
-        const cellSize = Math.max(2, Math.min(Math.round(effStep * 0.9), maxSize));
+        const cellSize = Math.max(2, Math.min(Math.round(effStep * CONTINUOUS_BAR_STEP_FILL), maxSize));
 
         if (Array.isArray(spec.layer)) {
             for (const layer of spec.layer) {

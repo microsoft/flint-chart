@@ -1,0 +1,380 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Continuous 'goldgreen' ramp replaced with a five-step quantize scale on a single blue hue. A continuous gradient across fifty small polygons is unreadable — the eye cannot invert a smooth ramp, so the values get binned into classes the reader can actually name.",
+    "Hue reduced to one family (#DCEEF6 → #0B5C82). Two-hue schemes on a choropleth imply a diverging quantity; unemployment has no meaningful midpoint here, so it gets a sequential ramp.",
+    "Legend moved from a right-hand gradient bar to a horizontal row of discrete swatches above the map, so the map itself keeps the full width of the tile.",
+    "Legend labels formatted with a % suffix and the class breaks stated explicitly (2, 3, 4, 5) rather than implied by tick positions on a gradient.",
+    "State boundaries thinned to 0.6px white and a 0.8px white outer edge added, which is what stops dense north-eastern states from merging into one blob.",
+    "Frame, view stroke and all padding removed and the projection given the whole 460×280 box; a map has no axes, so every pixel of chrome was waste.",
+    "Tooltip fields kept but the value formatted to one decimal with a unit, matching the legend so hover and key agree.",
+    "Key breaks relabelled to one decimal with overlap removal switched off. At .0f the five bands read 2%, 3%, 3%, 4%, 4% and Vega then dropped the collisions, so three of the five swatches had no readable break at all."
+  ],
+  "background": "#ffffff",
+  "padding": {
+    "left": 0,
+    "top": 4,
+    "right": 0,
+    "bottom": 4
+  },
+  "title": {
+    "text": "Unemployment rate by state, 2023",
+    "subtitle": [
+      "Annual average, % of the civilian labour force"
+    ]
+  },
+  "width": 460,
+  "height": 280,
+  "data": {
+    "url": "https://vega.github.io/vega-lite/data/us-10m.json",
+    "format": {
+      "type": "topojson",
+      "feature": "states"
+    }
+  },
+  "projection": {
+    "type": "albersUsa"
+  },
+  "transform": [
+    {
+      "lookup": "id",
+      "from": {
+        "data": {
+          "values": [
+            {
+              "State": "Alabama",
+              "Unemployment (%)": 2.3,
+              "__geo_id": 1
+            },
+            {
+              "State": "Alaska",
+              "Unemployment (%)": 4.3,
+              "__geo_id": 2
+            },
+            {
+              "State": "Arizona",
+              "Unemployment (%)": 3.9,
+              "__geo_id": 4
+            },
+            {
+              "State": "Arkansas",
+              "Unemployment (%)": 3.3,
+              "__geo_id": 5
+            },
+            {
+              "State": "California",
+              "Unemployment (%)": 4.8,
+              "__geo_id": 6
+            },
+            {
+              "State": "Colorado",
+              "Unemployment (%)": 3.2,
+              "__geo_id": 8
+            },
+            {
+              "State": "Connecticut",
+              "Unemployment (%)": 3.9,
+              "__geo_id": 9
+            },
+            {
+              "State": "Delaware",
+              "Unemployment (%)": 4.2,
+              "__geo_id": 10
+            },
+            {
+              "State": "Florida",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 12
+            },
+            {
+              "State": "Georgia",
+              "Unemployment (%)": 3.2,
+              "__geo_id": 13
+            },
+            {
+              "State": "Hawaii",
+              "Unemployment (%)": 3,
+              "__geo_id": 15
+            },
+            {
+              "State": "Idaho",
+              "Unemployment (%)": 3.2,
+              "__geo_id": 16
+            },
+            {
+              "State": "Illinois",
+              "Unemployment (%)": 4.5,
+              "__geo_id": 17
+            },
+            {
+              "State": "Indiana",
+              "Unemployment (%)": 3.3,
+              "__geo_id": 18
+            },
+            {
+              "State": "Iowa",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 19
+            },
+            {
+              "State": "Kansas",
+              "Unemployment (%)": 2.8,
+              "__geo_id": 20
+            },
+            {
+              "State": "Kentucky",
+              "Unemployment (%)": 4.2,
+              "__geo_id": 21
+            },
+            {
+              "State": "Louisiana",
+              "Unemployment (%)": 3.5,
+              "__geo_id": 22
+            },
+            {
+              "State": "Maine",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 23
+            },
+            {
+              "State": "Maryland",
+              "Unemployment (%)": 2.1,
+              "__geo_id": 24
+            },
+            {
+              "State": "Massachusetts",
+              "Unemployment (%)": 3.3,
+              "__geo_id": 25
+            },
+            {
+              "State": "Michigan",
+              "Unemployment (%)": 3.9,
+              "__geo_id": 26
+            },
+            {
+              "State": "Minnesota",
+              "Unemployment (%)": 2.8,
+              "__geo_id": 27
+            },
+            {
+              "State": "Mississippi",
+              "Unemployment (%)": 3.2,
+              "__geo_id": 28
+            },
+            {
+              "State": "Missouri",
+              "Unemployment (%)": 3,
+              "__geo_id": 29
+            },
+            {
+              "State": "Montana",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 30
+            },
+            {
+              "State": "Nebraska",
+              "Unemployment (%)": 2.4,
+              "__geo_id": 31
+            },
+            {
+              "State": "Nevada",
+              "Unemployment (%)": 5.3,
+              "__geo_id": 32
+            },
+            {
+              "State": "New Hampshire",
+              "Unemployment (%)": 2.4,
+              "__geo_id": 33
+            },
+            {
+              "State": "New Jersey",
+              "Unemployment (%)": 4.1,
+              "__geo_id": 34
+            },
+            {
+              "State": "New Mexico",
+              "Unemployment (%)": 3.8,
+              "__geo_id": 35
+            },
+            {
+              "State": "New York",
+              "Unemployment (%)": 4.1,
+              "__geo_id": 36
+            },
+            {
+              "State": "North Carolina",
+              "Unemployment (%)": 3.4,
+              "__geo_id": 37
+            },
+            {
+              "State": "North Dakota",
+              "Unemployment (%)": 1.9,
+              "__geo_id": 38
+            },
+            {
+              "State": "Ohio",
+              "Unemployment (%)": 3.6,
+              "__geo_id": 39
+            },
+            {
+              "State": "Oklahoma",
+              "Unemployment (%)": 3,
+              "__geo_id": 40
+            },
+            {
+              "State": "Oregon",
+              "Unemployment (%)": 3.7,
+              "__geo_id": 41
+            },
+            {
+              "State": "Pennsylvania",
+              "Unemployment (%)": 3.4,
+              "__geo_id": 42
+            },
+            {
+              "State": "Rhode Island",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 44
+            },
+            {
+              "State": "South Carolina",
+              "Unemployment (%)": 3,
+              "__geo_id": 45
+            },
+            {
+              "State": "South Dakota",
+              "Unemployment (%)": 1.9,
+              "__geo_id": 46
+            },
+            {
+              "State": "Tennessee",
+              "Unemployment (%)": 3.2,
+              "__geo_id": 47
+            },
+            {
+              "State": "Texas",
+              "Unemployment (%)": 4,
+              "__geo_id": 48
+            },
+            {
+              "State": "Utah",
+              "Unemployment (%)": 2.5,
+              "__geo_id": 49
+            },
+            {
+              "State": "Vermont",
+              "Unemployment (%)": 2.1,
+              "__geo_id": 50
+            },
+            {
+              "State": "Virginia",
+              "Unemployment (%)": 2.8,
+              "__geo_id": 51
+            },
+            {
+              "State": "Washington",
+              "Unemployment (%)": 4.1,
+              "__geo_id": 53
+            },
+            {
+              "State": "West Virginia",
+              "Unemployment (%)": 4,
+              "__geo_id": 54
+            },
+            {
+              "State": "Wisconsin",
+              "Unemployment (%)": 2.9,
+              "__geo_id": 55
+            },
+            {
+              "State": "Wyoming",
+              "Unemployment (%)": 3.1,
+              "__geo_id": 56
+            }
+          ]
+        },
+        "key": "__geo_id",
+        "fields": [
+          "Unemployment (%)",
+          "State"
+        ]
+      }
+    }
+  ],
+  "mark": {
+    "type": "geoshape",
+    "stroke": "#ffffff",
+    "strokeWidth": 0.6
+  },
+  "encoding": {
+    "color": {
+      "field": "Unemployment (%)",
+      "type": "quantitative",
+      "title": null,
+      "scale": {
+        "type": "quantize",
+        "domain": [
+          2,
+          5
+        ],
+        "range": [
+          "#dceef6",
+          "#a9d3e6",
+          "#6aabcc",
+          "#2f7fa8",
+          "#0b5c82"
+        ]
+      },
+      "legend": {
+        "orient": "top",
+        "direction": "horizontal",
+        "type": "symbol",
+        "symbolType": "square",
+        "symbolSize": 130,
+        "format": ".1f",
+        "labelExpr": "isValid(datum.label) ? datum.label + '%' : ''",
+        "columnPadding": 6,
+        "offset": 2,
+        "padding": 0,
+        "labelOverlap": false
+      }
+    },
+    "tooltip": [
+      {
+        "field": "State",
+        "type": "nominal"
+      },
+      {
+        "field": "Unemployment (%)",
+        "type": "quantitative",
+        "format": ".1f"
+      }
+    ]
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#767676",
+      "subtitlePadding": 8
+    },
+    "view": {
+      "stroke": null
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#333333",
+      "symbolStrokeWidth": 0
+    }
+  }
+}

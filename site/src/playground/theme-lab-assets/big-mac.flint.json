@@ -1,0 +1,103 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Price (USD)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 261,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 20
+  },
+  "title": {
+    "text": "The price of a Big Mac",
+    "subtitle": [
+      "2023, converted to US dollars at market exchange rates"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Switzerland",
+        "Price (USD)": 8.1
+      },
+      {
+        "Country": "Norway",
+        "Price (USD)": 6.9
+      },
+      {
+        "Country": "United States",
+        "Price (USD)": 5.7
+      },
+      {
+        "Country": "Euro area",
+        "Price (USD)": 5.5
+      },
+      {
+        "Country": "UK",
+        "Price (USD)": 4.9
+      },
+      {
+        "Country": "Brazil",
+        "Price (USD)": 4.5
+      },
+      {
+        "Country": "Mexico",
+        "Price (USD)": 3.9
+      },
+      {
+        "Country": "China",
+        "Price (USD)": 3.5
+      },
+      {
+        "Country": "Japan",
+        "Price (USD)": 3.2
+      },
+      {
+        "Country": "Egypt",
+        "Price (USD)": 2.7
+      },
+      {
+        "Country": "South Africa",
+        "Price (USD)": 2.6
+      },
+      {
+        "Country": "India",
+        "Price (USD)": 2.5
+      }
+    ]
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "mark": "area",
+  "transform": [
+    {
+      "density": "Duration (min)"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Duration (min)",
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "density",
+      "type": "quantitative",
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Old Faithful — eruption duration density"
+  },
+  "data": {
+    "values": [
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.8
+      },
+      {
+        "Duration (min)": 3.333
+      },
+      {
+        "Duration (min)": 2.283
+      },
+      {
+        "Duration (min)": 4.533
+      },
+      {
+        "Duration (min)": 2.883
+      },
+      {
+        "Duration (min)": 4.7
+      },
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.95
+      },
+      {
+        "Duration (min)": 4.35
+      },
+      {
+        "Duration (min)": 1.833
+      },
+      {
+        "Duration (min)": 3.917
+      },
+      {
+        "Duration (min)": 4.2
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 4.7
+      },
+      {
+        "Duration (min)": 2.167
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 4.8
+      },
+      {
+        "Duration (min)": 1.6
+      },
+      {
+        "Duration (min)": 4.25
+      },
+      {
+        "Duration (min)": 1.8
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 3.45
+      },
+      {
+        "Duration (min)": 3.067
+      },
+      {
+        "Duration (min)": 4.533
+      },
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.967
+      },
+      {
+        "Duration (min)": 4.083
+      },
+      {
+        "Duration (min)": 3.85
+      },
+      {
+        "Duration (min)": 4.433
+      },
+      {
+        "Duration (min)": 4.3
+      },
+      {
+        "Duration (min)": 4.467
+      },
+      {
+        "Duration (min)": 3.367
+      },
+      {
+        "Duration (min)": 4.033
+      },
+      {
+        "Duration (min)": 3.833
+      },
+      {
+        "Duration (min)": 2.017
+      }
+    ]
+  }
+}

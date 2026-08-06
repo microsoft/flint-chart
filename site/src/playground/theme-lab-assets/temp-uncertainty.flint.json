@@ -1,0 +1,121 @@
+{
+  "mark": {
+    "type": "area",
+    "opacity": 0.5,
+    "line": {
+      "strokeWidth": 1
+    }
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Lower (°C)",
+      "type": "quantitative",
+      "scale": {
+        "zero": false,
+        "nice": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y2": {
+      "field": "Upper (°C)"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "The record gets more certain as it gets warmer",
+    "subtitle": [
+      "Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1850",
+        "Anomaly (°C)": -0.42,
+        "Lower (°C)": -0.62,
+        "Upper (°C)": -0.22
+      },
+      {
+        "Year": "1870",
+        "Anomaly (°C)": -0.36,
+        "Lower (°C)": -0.53,
+        "Upper (°C)": -0.19
+      },
+      {
+        "Year": "1890",
+        "Anomaly (°C)": -0.42,
+        "Lower (°C)": -0.56,
+        "Upper (°C)": -0.28
+      },
+      {
+        "Year": "1910",
+        "Anomaly (°C)": -0.44,
+        "Lower (°C)": -0.55,
+        "Upper (°C)": -0.33
+      },
+      {
+        "Year": "1930",
+        "Anomaly (°C)": -0.16,
+        "Lower (°C)": -0.25,
+        "Upper (°C)": -0.07
+      },
+      {
+        "Year": "1950",
+        "Anomaly (°C)": -0.17,
+        "Lower (°C)": -0.24,
+        "Upper (°C)": -0.1
+      },
+      {
+        "Year": "1970",
+        "Anomaly (°C)": -0.08,
+        "Lower (°C)": -0.14,
+        "Upper (°C)": -0.02
+      },
+      {
+        "Year": "1990",
+        "Anomaly (°C)": 0.25,
+        "Lower (°C)": 0.2,
+        "Upper (°C)": 0.3
+      },
+      {
+        "Year": "2010",
+        "Anomaly (°C)": 0.56,
+        "Lower (°C)": 0.52,
+        "Upper (°C)": 0.6
+      },
+      {
+        "Year": "2023",
+        "Anomaly (°C)": 1.11,
+        "Lower (°C)": 1.07,
+        "Upper (°C)": 1.15
+      }
+    ]
+  }
+}

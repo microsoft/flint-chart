@@ -1,0 +1,165 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Whole spec re-based onto a dark card surface (#1B1A19). Every ink value had to be re-derived — labels #C8C6C4, title #F3F2F1, hairlines #3B3A39 — because Flint's defaults assume white paper.",
+    "Colour ramp replaced by an explicit diverging scale pinned at domainMid 0, so 'below freezing' is a readable state and not just a darker blue.",
+    "Legend moved to the bottom as a horizontal gradient with a fixed 90px length — dashboard tiles need the legend in the same place on every visual, at a size that does not reflow when the data changes.",
+    "Data labels layered on each cell with a conditional colour (dark ink on light cells, light ink on dark cells) — the standard product answer to 'I need the number, not just the shade'.",
+    "Category axes stripped of domain, ticks and titles; month labels shortened to 10pt Segoe UI so 12 columns fit in a tile without rotating.",
+    "Cell gaps introduced via a 1px stroke in the surface colour, which reads as a grid on dark backgrounds where gridlines would not.",
+    "Explicit month sort added — the default nominal ordering is data-order, which is stable here but not guaranteed after a refresh."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 8, "right": 12, "bottom": 8 },
+  "width": 288,
+  "height": 130,
+  "title": {
+    "text": "Average monthly temperature",
+    "subtitle": ["°C, climate normals, four cities"]
+  },
+  "data": {
+    "values": [
+      { "City": "Singapore", "Month": "Jan", "Temp (°C)": 26 },
+      { "City": "Singapore", "Month": "Feb", "Temp (°C)": 27 },
+      { "City": "Singapore", "Month": "Mar", "Temp (°C)": 28 },
+      { "City": "Singapore", "Month": "Apr", "Temp (°C)": 28 },
+      { "City": "Singapore", "Month": "May", "Temp (°C)": 28 },
+      { "City": "Singapore", "Month": "Jun", "Temp (°C)": 28 },
+      { "City": "Singapore", "Month": "Jul", "Temp (°C)": 27 },
+      { "City": "Singapore", "Month": "Aug", "Temp (°C)": 27 },
+      { "City": "Singapore", "Month": "Sep", "Temp (°C)": 27 },
+      { "City": "Singapore", "Month": "Oct", "Temp (°C)": 27 },
+      { "City": "Singapore", "Month": "Nov", "Temp (°C)": 26 },
+      { "City": "Singapore", "Month": "Dec", "Temp (°C)": 26 },
+      { "City": "Cairo", "Month": "Jan", "Temp (°C)": 14 },
+      { "City": "Cairo", "Month": "Feb", "Temp (°C)": 15 },
+      { "City": "Cairo", "Month": "Mar", "Temp (°C)": 18 },
+      { "City": "Cairo", "Month": "Apr", "Temp (°C)": 22 },
+      { "City": "Cairo", "Month": "May", "Temp (°C)": 26 },
+      { "City": "Cairo", "Month": "Jun", "Temp (°C)": 28 },
+      { "City": "Cairo", "Month": "Jul", "Temp (°C)": 29 },
+      { "City": "Cairo", "Month": "Aug", "Temp (°C)": 29 },
+      { "City": "Cairo", "Month": "Sep", "Temp (°C)": 27 },
+      { "City": "Cairo", "Month": "Oct", "Temp (°C)": 24 },
+      { "City": "Cairo", "Month": "Nov", "Temp (°C)": 20 },
+      { "City": "Cairo", "Month": "Dec", "Temp (°C)": 16 },
+      { "City": "Moscow", "Month": "Jan", "Temp (°C)": -9 },
+      { "City": "Moscow", "Month": "Feb", "Temp (°C)": -7 },
+      { "City": "Moscow", "Month": "Mar", "Temp (°C)": -1 },
+      { "City": "Moscow", "Month": "Apr", "Temp (°C)": 7 },
+      { "City": "Moscow", "Month": "May", "Temp (°C)": 13 },
+      { "City": "Moscow", "Month": "Jun", "Temp (°C)": 17 },
+      { "City": "Moscow", "Month": "Jul", "Temp (°C)": 19 },
+      { "City": "Moscow", "Month": "Aug", "Temp (°C)": 17 },
+      { "City": "Moscow", "Month": "Sep", "Temp (°C)": 11 },
+      { "City": "Moscow", "Month": "Oct", "Temp (°C)": 5 },
+      { "City": "Moscow", "Month": "Nov", "Temp (°C)": -1 },
+      { "City": "Moscow", "Month": "Dec", "Temp (°C)": -6 },
+      { "City": "Seattle", "Month": "Jan", "Temp (°C)": 5 },
+      { "City": "Seattle", "Month": "Feb", "Temp (°C)": 6 },
+      { "City": "Seattle", "Month": "Mar", "Temp (°C)": 8 },
+      { "City": "Seattle", "Month": "Apr", "Temp (°C)": 10 },
+      { "City": "Seattle", "Month": "May", "Temp (°C)": 13 },
+      { "City": "Seattle", "Month": "Jun", "Temp (°C)": 16 },
+      { "City": "Seattle", "Month": "Jul", "Temp (°C)": 19 },
+      { "City": "Seattle", "Month": "Aug", "Temp (°C)": 19 },
+      { "City": "Seattle", "Month": "Sep", "Temp (°C)": 16 },
+      { "City": "Seattle", "Month": "Oct", "Temp (°C)": 11 },
+      { "City": "Seattle", "Month": "Nov", "Temp (°C)": 7 },
+      { "City": "Seattle", "Month": "Dec", "Temp (°C)": 4 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Month",
+      "type": "nominal",
+      "title": null,
+      "sort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelAngle": 0, "labelPadding": 4 }
+    },
+    "y": {
+      "field": "City",
+      "type": "nominal",
+      "title": null,
+      "sort": ["Singapore", "Cairo", "Moscow", "Seattle"],
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 6 }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "rect", "stroke": "#1b1a19", "strokeWidth": 1 },
+      "encoding": {
+        "color": {
+          "field": "Temp (°C)",
+          "type": "quantitative",
+          "title": "°C",
+          "scale": {
+            "domainMid": 0,
+            "range": ["#118dff", "#5aa9f0", "#4a4948", "#e08a4a", "#d64550"]
+          },
+          "legend": {
+            "orient": "bottom",
+            "direction": "horizontal",
+            "gradientLength": 90,
+            "gradientThickness": 8,
+            "titleOrient": "left",
+            "offset": 6,
+            "format": ".0f"
+          }
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+        "fontSize": 8.5
+      },
+      "encoding": {
+        "text": { "field": "Temp (°C)", "type": "quantitative", "format": ".0f" },
+        "color": {
+          "condition": { "test": "datum['Temp (°C)'] > 4 && datum['Temp (°C)'] < 22", "value": "#f3f2f1" },
+          "value": "#12100f"
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Segoe UI Variable', system-ui, -apple-system, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#a19f9d",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#c8c6c4",
+      "titleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "titleFontSize": 9.5,
+      "titleColor": "#a19f9d",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    },
+    "legend": {
+      "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "labelFontSize": 9,
+      "labelColor": "#c8c6c4",
+      "titleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "titleFontSize": 9,
+      "titleColor": "#a19f9d",
+      "titleFontWeight": 400
+    }
+  }
+}

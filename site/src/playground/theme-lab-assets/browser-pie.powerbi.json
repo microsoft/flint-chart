@@ -1,0 +1,119 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "The key is kept, on the right. A tile is a query result: the category set changes when a slicer moves, and a legend redraws in place where labels pinned to particular wedges have to be re-laid out. The three languages that direct-label here are authoring a fixed picture; this one is describing something that will be filtered.",
+    "Shares printed against the arcs anyway. Safari and Edge are both on 12 per cent and equal angles at different orientations cannot be compared — the one form where no language gets to trust the geometry, since there is no axis to fall back on.",
+    "Palette lifted to survive the dark ground. Flint's tableau10 is mixed for white; at this brightness its mid-tones go muddy and the two 12 per cent slices stop separating.",
+    "Separators drawn in the ground colour rather than white, so the gaps read as the panel showing through instead of as a fifth ring of ink.",
+    "Labels at 9.5pt in #C8C6C4 rather than white: pure white on near-black blooms, and a light grey holds contrast without the halo.",
+    "Slice order left exactly as the baseline has it, clockwise from twelve o'clock in source order."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 8, "right": 12, "bottom": 8 },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": ["Desktop browser share, 2024, per cent"]
+  },
+  "width": 215,
+  "height": 185,
+  "data": {
+    "values": [
+      { "Browser": "Chrome", "Share": 65 },
+      { "Browser": "Safari", "Share": 12 },
+      { "Browser": "Edge", "Share": 12 },
+      { "Browser": "Firefox", "Share": 6 },
+      { "Browser": "Other", "Share": 5 }
+    ]
+  },
+  "transform": [
+    { "window": [{ "op": "row_number", "as": "__i" }], "frame": [null, null] },
+    {
+      "window": [{ "op": "sum", "field": "Share", "as": "__cum" }],
+      "sort": [{ "field": "__i", "order": "ascending" }],
+      "frame": [null, 0]
+    },
+    { "calculate": "(datum.__cum - datum.Share) / 100 * 2 * PI", "as": "__start" },
+    { "calculate": "datum.__cum / 100 * 2 * PI", "as": "__end" },
+    { "calculate": "(datum.__cum - datum.Share / 2) / 100 * 2 * PI", "as": "__mid" },
+    { "calculate": "datum.Share + '%'", "as": "__pct" }
+  ],
+  "encoding": {
+    "color": {
+      "field": "Browser",
+      "type": "nominal",
+      "title": null,
+      "scale": {
+        "domain": ["Chrome", "Safari", "Edge", "Firefox", "Other"],
+        "range": ["#118dff", "#e66c37", "#3bd1c7", "#e044a7", "#8a8886"]
+      },
+      "legend": {
+        "orient": "right",
+        "labelFontSize": 9,
+        "labelColor": "#c8c6c4",
+        "symbolType": "square",
+        "symbolSize": 70,
+        "symbolStrokeWidth": 0,
+        "offset": 6
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "arc", "outerRadius": 62, "stroke": "#1b1a19", "strokeWidth": 1.5 },
+      "encoding": {
+        "theta": {
+          "field": "__start",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "theta2": { "field": "__end" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid < PI" }],
+      "mark": { "type": "text", "radius": 70, "align": "left", "baseline": "middle", "fontSize": 9.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__pct", "type": "nominal" },
+        "color": { "value": "#c8c6c4" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.__mid >= PI" }],
+      "mark": { "type": "text", "radius": 70, "align": "right", "baseline": "middle", "fontSize": 9.5 },
+      "encoding": {
+        "theta": {
+          "field": "__mid",
+          "type": "quantitative",
+          "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+        },
+        "text": { "field": "__pct", "type": "nominal" },
+        "color": { "value": "#c8c6c4" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Segoe UI Variable', system-ui, -apple-system, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#a19f9d",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "legend": { "labelFont": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif" },
+    "text": { "font": "'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif" }
+  }
+}

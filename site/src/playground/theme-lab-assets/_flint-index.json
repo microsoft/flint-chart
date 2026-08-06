@@ -1,0 +1,474 @@
+[
+  {
+    "id": "driving",
+    "chartType": "Connected Scatter Plot",
+    "title": "Driving shifts into reverse",
+    "subtitle": "Miles driven per person against the price of a gallon of gas, United States, 1956–2010",
+    "source": "NYT / Hannah Fairfield (2010), from US FHWA vehicle-miles + EIA/BLS gas prices; via vega-datasets driving.json",
+    "rows": 55
+  },
+  {
+    "id": "penguins",
+    "chartType": "Scatter Plot",
+    "title": "Flipper length versus body mass in three penguin species",
+    "subtitle": "Palmer Archipelago, Antarctica; n = 33",
+    "source": "Horst, Hill & Gorman (2020), Palmer Station LTER — 33-row sample",
+    "rows": 33
+  },
+  {
+    "id": "keeling",
+    "chartType": "Line Chart",
+    "title": "Keeling Curve",
+    "subtitle": "Atmospheric CO₂ at Mauna Loa, annual mean, parts per million",
+    "source": "Scripps CO₂ Program / NOAA GML, Mauna Loa Observatory",
+    "rows": 14
+  },
+  {
+    "id": "population",
+    "chartType": "Bar Chart",
+    "title": "Most populous countries, 2023",
+    "subtitle": "Population in millions",
+    "source": "UN World Population Prospects 2022 / World Bank (2023)",
+    "rows": 10
+  },
+  {
+    "id": "population-region",
+    "chartType": "Area Chart",
+    "title": "World population by region",
+    "subtitle": "1950–2020, millions of people",
+    "source": "UN World Population Prospects 2022",
+    "rows": 25
+  },
+  {
+    "id": "faithful",
+    "chartType": "Scatter Plot",
+    "title": "Old Faithful eruptions — waiting time vs duration",
+    "subtitle": "",
+    "source": "Härdle (1991) / R \"faithful\" dataset — 36-row sample",
+    "rows": 36
+  },
+  {
+    "id": "life-expectancy",
+    "chartType": "Slope Chart",
+    "title": "Two decades of longer lives",
+    "subtitle": "Life expectancy at birth, years, 2000 and 2021",
+    "source": "World Bank / Our World in Data",
+    "rows": 14
+  },
+  {
+    "id": "population-waterfall",
+    "chartType": "Waterfall Chart",
+    "title": "Asia added more people than the world held in 1950",
+    "subtitle": "Contribution to world population growth by region, 1950–2020, millions",
+    "source": "UN World Population Prospects 2022 (regional deltas)",
+    "rows": 6
+  },
+  {
+    "id": "nutrition-radar",
+    "chartType": "Radar Chart",
+    "title": "Nutrition profile per 100 g — Almonds vs Oats vs Greek yogurt",
+    "subtitle": "",
+    "source": "USDA FoodData Central (representative per-100g values)",
+    "rows": 15
+  },
+  {
+    "id": "auto-mpg",
+    "chartType": "Regression",
+    "title": "Power against fuel economy",
+    "subtitle": "Ordinary least squares fit; each point is one car model",
+    "source": "UCI / StatLib Auto MPG dataset (sample)",
+    "rows": 22
+  },
+  {
+    "id": "faithful-hist",
+    "chartType": "Histogram",
+    "title": "Old Faithful eruption durations",
+    "subtitle": "Two clusters, not one: short eruptions near 2 min and long ones near 4 min",
+    "source": "R \"faithful\" dataset (sample)",
+    "rows": 36
+  },
+  {
+    "id": "faithful-density",
+    "chartType": "Density Plot",
+    "title": "Old Faithful — eruption duration density",
+    "subtitle": "",
+    "source": "R \"faithful\" dataset (sample)",
+    "rows": 36
+  },
+  {
+    "id": "penguins-box",
+    "chartType": "Boxplot",
+    "title": "Body mass of three Pygoscelis species",
+    "subtitle": "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds",
+    "source": "Palmer Station LTER (sample)",
+    "rows": 33
+  },
+  {
+    "id": "penguins-violin",
+    "chartType": "Violin Plot",
+    "title": "Body mass by penguin species",
+    "subtitle": "Kernel density with all observations overlaid; horizontal rule marks the median",
+    "source": "Palmer Station LTER (sample)",
+    "rows": 33
+  },
+  {
+    "id": "iris-strip",
+    "chartType": "Strip Plot",
+    "title": "Iris petal length by species",
+    "subtitle": "",
+    "source": "Fisher's Iris (1936), sample",
+    "rows": 30
+  },
+  {
+    "id": "exam-ecdf",
+    "chartType": "ECDF Plot",
+    "title": "Empirical distribution of exam scores",
+    "subtitle": "n = 30; each step is one score",
+    "source": "Illustrative class scores",
+    "rows": 30
+  },
+  {
+    "id": "medals-grouped",
+    "chartType": "Grouped Bar Chart",
+    "title": "Paris 2024 Olympic medals — top nations",
+    "subtitle": "",
+    "source": "IOC, Paris 2024 medal table",
+    "rows": 15
+  },
+  {
+    "id": "electricity-stacked",
+    "chartType": "Stacked Bar Chart",
+    "title": "Electricity generation mix by country, 2023 (%)",
+    "subtitle": "",
+    "source": "Our World in Data / Ember (approx.)",
+    "rows": 15
+  },
+  {
+    "id": "co2-lollipop",
+    "chartType": "Lollipop Chart",
+    "title": "Emissions per person run from 37 tonnes to 2",
+    "subtitle": "Carbon dioxide emissions per capita, 2022, tonnes",
+    "source": "Our World in Data (Global Carbon Project)",
+    "rows": 12
+  },
+  {
+    "id": "us-pyramid",
+    "chartType": "Pyramid Chart",
+    "title": "A pyramid that is no longer a pyramid",
+    "subtitle": "United States population by age and sex, 2020, millions",
+    "source": "US Census 2020 (approx.)",
+    "rows": 12
+  },
+  {
+    "id": "gdp-bartable",
+    "chartType": "Bar Table",
+    "title": "America and China lap the field",
+    "subtitle": "Gross domestic product, 2023, trillion US dollars",
+    "source": "IMF / World Bank 2023",
+    "rows": 8
+  },
+  {
+    "id": "lifeexp-dumbbell",
+    "chartType": "Ranged Dot Plot",
+    "title": "Women outlive men everywhere, but not by the same margin",
+    "subtitle": "Life expectancy at birth by sex, 2021, years",
+    "source": "World Bank 2021",
+    "rows": 12
+  },
+  {
+    "id": "seattle-range",
+    "chartType": "Range Area Chart",
+    "title": "Seattle, month by month",
+    "subtitle": "Average daily high and low temperature, °F, 1991–2020 normals",
+    "source": "NOAA climate normals",
+    "rows": 12
+  },
+  {
+    "id": "olympic-bump",
+    "chartType": "Bump Chart",
+    "title": "Four Games, four different stories",
+    "subtitle": "Rank in the Summer Olympics medal table, 2012–2024",
+    "source": "IOC medal tables",
+    "rows": 16
+  },
+  {
+    "id": "population-stream",
+    "chartType": "Streamgraph",
+    "title": "Where the world's people are",
+    "subtitle": "Population by region, 1950–2020, millions",
+    "source": "UN World Population Prospects 2022",
+    "rows": 25
+  },
+  {
+    "id": "browser-pie",
+    "chartType": "Pie Chart",
+    "title": "Chrome holds two-thirds of the desktop market",
+    "subtitle": "Desktop browser share, 2024, per cent",
+    "source": "StatCounter (approx. 2024)",
+    "rows": 5
+  },
+  {
+    "id": "mobile-donut",
+    "chartType": "Donut Chart",
+    "title": "Mobile OS market share, 2024",
+    "subtitle": "",
+    "source": "StatCounter (approx. 2024)",
+    "rows": 3
+  },
+  {
+    "id": "seattle-rose",
+    "chartType": "Rose Chart",
+    "title": "Seattle monthly rainfall (mm)",
+    "subtitle": "",
+    "source": "NOAA climate normals",
+    "rows": 12
+  },
+  {
+    "id": "stock-candle",
+    "chartType": "Candlestick Chart",
+    "title": "Two weeks of a stock going nowhere",
+    "subtitle": "Daily open, high, low and close, 2–12 January 2024",
+    "source": "Illustrative daily prices",
+    "rows": 9
+  },
+  {
+    "id": "temp-heatmap",
+    "chartType": "Heatmap",
+    "title": "Average monthly temperature",
+    "subtitle": "°C, climate normals, four cities",
+    "source": "Climate normals (approx.)",
+    "rows": 48
+  },
+  {
+    "id": "renewable-kpi",
+    "chartType": "KPI Card",
+    "title": "Renewables supply 30% of the world's electricity",
+    "subtitle": "Share of global electricity generation, 2023, against a 45% target",
+    "source": "Our World in Data / Ember",
+    "rows": 1
+  },
+  {
+    "id": "renewable-bullet",
+    "chartType": "Bullet Chart",
+    "title": "Every country is short of its renewable target",
+    "subtitle": "Renewable share of electricity, 2023, per cent, against national targets",
+    "source": "Our World in Data / Ember (targets illustrative)",
+    "rows": 5
+  },
+  {
+    "id": "cities-map",
+    "chartType": "Map",
+    "title": "World's largest cities (metro population)",
+    "subtitle": "",
+    "source": "UN / city statistics (approx.)",
+    "rows": 10
+  },
+  {
+    "id": "release-gantt",
+    "chartType": "Gantt Chart",
+    "title": "Software release schedule",
+    "subtitle": "",
+    "source": "Illustrative project plan",
+    "rows": 5
+  },
+  {
+    "id": "kpi-sparkline",
+    "chartType": "Sparkline",
+    "title": "Monthly KPIs",
+    "subtitle": "Twelve-month trend and latest value",
+    "source": "Illustrative company metrics",
+    "rows": 36
+  },
+  {
+    "id": "gapminder-bubble",
+    "chartType": "Scatter Plot",
+    "title": "Money buys years, up to a point",
+    "subtitle": "Life expectancy against GDP per capita, 2018; bubble area is population",
+    "source": "Gapminder / World Bank (2018)",
+    "rows": 15
+  },
+  {
+    "id": "anscombe",
+    "chartType": "Regression",
+    "title": "Anscombe's Quartet — same stats, different shapes",
+    "subtitle": "",
+    "source": "F. J. Anscombe (1973)",
+    "rows": 44
+  },
+  {
+    "id": "temp-anomaly",
+    "chartType": "Bar Chart",
+    "title": "Global temperature anomaly by decade",
+    "subtitle": "°C against the 1951–1980 average",
+    "source": "NASA GISTEMP (approx. decadal means)",
+    "rows": 9
+  },
+  {
+    "id": "us-unemployment",
+    "chartType": "Line Chart",
+    "title": "American unemployment",
+    "subtitle": "Annual rate, per cent of the labour force, 2000–2023",
+    "source": "US Bureau of Labor Statistics",
+    "rows": 24
+  },
+  {
+    "id": "titanic",
+    "chartType": "Grouped Bar Chart",
+    "title": "Titanic survival rate by class and sex",
+    "subtitle": "",
+    "source": "Encyclopedia Titanica passenger records",
+    "rows": 6
+  },
+  {
+    "id": "diamonds",
+    "chartType": "Scatter Plot",
+    "title": "Diamonds — carat vs price",
+    "subtitle": "",
+    "source": "ggplot2 \"diamonds\" (sample)",
+    "rows": 20
+  },
+  {
+    "id": "happiness",
+    "chartType": "Scatter Plot",
+    "title": "World Happiness vs income per capita (2023)",
+    "subtitle": "",
+    "source": "World Happiness Report 2023 / World Bank",
+    "rows": 12
+  },
+  {
+    "id": "sunspots",
+    "chartType": "Line Chart",
+    "title": "Sunspot number, 2000–2023",
+    "subtitle": "",
+    "source": "SILSO / Royal Observatory of Belgium (approx.)",
+    "rows": 24
+  },
+  {
+    "id": "marathon-wr",
+    "chartType": "Line Chart",
+    "title": "Men's marathon world record, 1908–2023 (minutes)",
+    "subtitle": "",
+    "source": "World Athletics record progression",
+    "rows": 16
+  },
+  {
+    "id": "ev-share",
+    "chartType": "Line Chart",
+    "title": "Electric cars as a share of new sales",
+    "subtitle": "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales",
+    "source": "Our World in Data / IEA (approx.)",
+    "rows": 16
+  },
+  {
+    "id": "internet-users",
+    "chartType": "Area Chart",
+    "title": "Share of the world online, 1995–2023 (%)",
+    "subtitle": "",
+    "source": "Our World in Data / ITU",
+    "rows": 8
+  },
+  {
+    "id": "big-mac",
+    "chartType": "Bar Chart",
+    "title": "The price of a Big Mac",
+    "subtitle": "2023, converted to US dollars at market exchange rates",
+    "source": "The Economist Big Mac index (approx. 2023)",
+    "rows": 12
+  },
+  {
+    "id": "oecd-unemployment-facet",
+    "chartType": "Line Chart",
+    "title": "Out of work",
+    "subtitle": "Unemployment rate, %, 2000–2022",
+    "source": "OECD Labour Force Statistics (harmonised unemployment rate)",
+    "rows": 24
+  },
+  {
+    "id": "spending-quintile",
+    "chartType": "Stacked Bar Chart",
+    "title": "Where each income group's money goes",
+    "subtitle": "Share of annual household spending, by income quintile",
+    "source": "US Bureau of Labor Statistics, Consumer Expenditure Survey (approx. 2022)",
+    "rows": 25
+  },
+  {
+    "id": "trust-likert",
+    "chartType": "Stacked Bar Chart",
+    "title": "Confidence in US institutions",
+    "subtitle": "% of adults expressing each level of confidence",
+    "source": "Pew Research Center / Gallup confidence-in-institutions series (approx. 2023)",
+    "rows": 20
+  },
+  {
+    "id": "fed-funds-step",
+    "chartType": "Line Chart",
+    "title": "Federal funds target rate",
+    "subtitle": "Upper bound at year end, %",
+    "source": "US Federal Reserve, FOMC target range (year-end upper bound)",
+    "rows": 10
+  },
+  {
+    "id": "renewables-projection",
+    "chartType": "Line Chart",
+    "title": "Global renewable capacity",
+    "subtitle": "Gigawatts installed, observed to 2023 and projected to 2030",
+    "source": "IEA Renewables market report (approx. figures)",
+    "rows": 9
+  },
+  {
+    "id": "earnings-education",
+    "chartType": "Grouped Bar Chart",
+    "title": "Median weekly earnings by education and sex, 2023",
+    "subtitle": "US dollars, full-time wage and salary workers",
+    "source": "US Bureau of Labor Statistics, usual weekly earnings (2023 annual)",
+    "rows": 10
+  },
+  {
+    "id": "electricity-mix-area",
+    "chartType": "Area Chart",
+    "title": "Where the power comes from",
+    "subtitle": "World electricity generation by source, % of total",
+    "source": "IEA / Ember global electricity review (approx. shares)",
+    "rows": 24
+  },
+  {
+    "id": "state-unemployment",
+    "chartType": "Choropleth",
+    "title": "Unemployment rate by state, 2023",
+    "subtitle": "Annual average, % of the civilian labour force",
+    "source": "US Bureau of Labor Statistics, Local Area Unemployment Statistics (2023 annual)",
+    "rows": 50
+  },
+  {
+    "id": "causes-death",
+    "chartType": "Bar Chart",
+    "title": "What Americans die of",
+    "subtitle": "Leading causes of death, United States, 2022, thousands of deaths",
+    "source": "CDC / National Center for Health Statistics, leading causes of death (approx. 2022)",
+    "rows": 10
+  },
+  {
+    "id": "state-jobless",
+    "chartType": "Bar Chart",
+    "title": "Unemployment by state",
+    "subtitle": "Annual average unemployment rate, 50 US states, 2023, per cent",
+    "source": "US Bureau of Labor Statistics, Local Area Unemployment Statistics (2023 annual)",
+    "rows": 50
+  },
+  {
+    "id": "oecd-facet-16",
+    "chartType": "Line Chart",
+    "title": "Sixteen labour markets, one shock",
+    "subtitle": "Harmonised unemployment rate, selected OECD economies, 2000–2023, per cent",
+    "source": "OECD Labour Force Statistics (harmonised unemployment rate, approx.)",
+    "rows": 80
+  },
+  {
+    "id": "temp-uncertainty",
+    "chartType": "Range Area Chart",
+    "title": "The record gets more certain as it gets warmer",
+    "subtitle": "Global mean temperature anomaly against 1961–1990, with 95% confidence interval, °C",
+    "source": "Met Office Hadley Centre / UEA CRU, HadCRUT5 global annual anomaly vs 1961–1990 (approx.)",
+    "rows": 10
+  }
+]

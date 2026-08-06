@@ -73,7 +73,9 @@ describe('grouped boxplot dodging', () => {
       makeGroupedBoxplotInput(['Electronics', 'Clothing', 'Food'], ['Male', 'Female']),
     ) as any;
     const pitch = lanePitch(grouped, subgroups);
-    expect(sizeOf(grouped) / pitch).toBeGreaterThanOrEqual(0.75);
+    // The box fills most of its lane but leaves a legible gap (~30%) between
+    // neighbours so a quartet of boxes does not read as one solid block.
+    expect(sizeOf(grouped) / pitch).toBeGreaterThanOrEqual(0.6);
     expect(sizeOf(grouped)).toBeLessThan(pitch);
   });
 
@@ -94,11 +96,11 @@ describe('grouped boxplot dodging', () => {
     // Each sub-lane (and thus each box) shrinks as subgroups are added.
     expect(stepOf(four) / 4).toBeLessThan(stepOf(two) / 2);
     // Boxes never exceed their lane pitch (no within-group overlap) yet still
-    // fill most of it at both subgroup counts.
+    // fill most of it (leaving a legible gap) at both subgroup counts.
     expect(sizeOf(two)).toBeLessThan(lanePitch(two, 2));
     expect(sizeOf(four)).toBeLessThan(lanePitch(four, 4));
-    expect(sizeOf(two) / lanePitch(two, 2)).toBeGreaterThanOrEqual(0.75);
-    expect(sizeOf(four) / lanePitch(four, 4)).toBeGreaterThanOrEqual(0.75);
+    expect(sizeOf(two) / lanePitch(two, 2)).toBeGreaterThanOrEqual(0.6);
+    expect(sizeOf(four) / lanePitch(four, 4)).toBeGreaterThanOrEqual(0.6);
   });
 
   it('uses yOffset when the categorical axis is y (horizontal boxplot)', () => {
@@ -283,7 +285,7 @@ describe('ECharts sparse grouped boxplot', () => {
 
   it('offsets global outliers onto their boxplot lane', () => {
     const option = assembleECharts(sparseInput('global')) as any;
-    const outliers = option.series.find((series: any) => series.name === 'G1 (outliers)');
+    const outliers = option.series.find((series: any) => series.name === 'G1 (points)');
     expect(outliers?.type).toBe('custom');
 
     const api = {

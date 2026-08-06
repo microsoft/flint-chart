@@ -49,6 +49,36 @@ describe('public API smoke', () => {
     expect(config.type ?? config.data ?? config.options).toBeDefined();
   });
 
+  it('uses field display names across native backend axis and series titles', () => {
+    const input = {
+      data: { values: [
+        { country: 'France', percentageOfCountries: 42 },
+        { country: 'Japan', percentageOfCountries: 47 },
+      ] },
+      semantic_types: { country: 'Country', percentageOfCountries: 'Percent' },
+      field_display_names: {
+        country: 'Country',
+        percentageOfCountries: 'Percentage of countries',
+      },
+      chart_spec: {
+        chartType: 'Line Chart',
+        encodings: { x: 'country', y: 'percentageOfCountries' },
+      },
+    };
+
+    const echarts = assembleECharts(input) as any;
+    expect(echarts.xAxis.name).toBe('Country');
+    expect(echarts.yAxis.name).toBe('Percentage of countries');
+
+    const chartjs = assembleChartjs(input) as any;
+    expect(chartjs.options.scales.x.title.text).toBe('Country');
+    expect(chartjs.options.scales.y.title.text).toBe('Percentage of countries');
+
+    const plotly = assemblePlotly(input) as any;
+    expect(plotly.layout.xaxis.title.text).toBe('Country');
+    expect(plotly.layout.yaxis.title.text).toBe('Percentage of countries');
+  });
+
   it('assembleExcel returns an Excel chart spec with a wide data matrix', () => {
     const spec = assembleExcel(INPUT) as any;
     expect(spec).toBeDefined();
@@ -66,6 +96,29 @@ describe('public API smoke', () => {
       { name: 'EU', xColumn: 4, yColumn: 5, rowCount: 1 },
     ]);
     expect(spec.seriesBy).toBe('Columns');
+  });
+
+  it('assembleExcel uses field display names for native axis titles', () => {
+    const spec = assembleExcel({
+      data: { values: [
+        { year: '2024', percentageOfCountries: 42 },
+        { year: '2025', percentageOfCountries: 47 },
+      ] },
+      semantic_types: { year: 'Category', percentageOfCountries: 'Percent' },
+      field_display_names: {
+        year: 'Year',
+        percentageOfCountries: 'Percentage of countries',
+      },
+      chart_spec: {
+        chartType: 'Line Chart',
+        encodings: { x: 'year', y: 'percentageOfCountries' },
+      },
+    });
+
+    expect(spec.categoryAxis?.title).toBe('Year');
+    expect(spec.valueAxis?.title).toBe('Percentage of countries');
+    expect(spec.data[0]).toEqual(['Year', 'Percentage of countries']);
+    expect(spec.data[1]).toEqual(['2024', 42]);
   });
 
   it('assembleExcel preserves bar-template roles when both axes are quantitative', () => {
@@ -104,7 +157,28 @@ describe('public API smoke', () => {
     expect(spec.chartType).toBe('ColumnClustered');
     expect(spec.data[0]).toEqual(['Value', 'Count']);
     expect(spec.data.slice(1).reduce((sum: number, row: any[]) => sum + row[1], 0)).toBe(3);
-    expect(spec.gapWidth).toBe(0);
+    expect(spec.gapWidth).toBe(20);
+  });
+
+  it('assembleExcel emits grouped histograms as native row series', () => {
+    const spec = assembleExcel({
+      data: { values: [
+        { Height: 160, Gender: 'Male' },
+        { Height: 170, Gender: 'Female' },
+      ] },
+      semantic_types: { Height: 'Quantity', Gender: 'Category' },
+      chart_spec: { chartType: 'Histogram', encodings: { x: 'Height', color: 'Gender' } },
+    });
+
+    expect(spec.chartType).toBe('ColumnStacked');
+    expect(spec.seriesBy).toBe('Rows');
+    expect(spec.series).toBeUndefined();
+    expect(spec.data).toEqual([
+      ['Height', '160-162', '', '162-164', '164-166', '166-168', '168-170'],
+      ['Male', 1, 0, 0, 0, 0, 0],
+      ['Female', 0, 0, 0, 0, 0, 1],
+    ]);
+    expect(spec.gapWidth).toBe(20);
   });
 
   it('assembleExcel emits a native delta Waterfall with connector lines', () => {
@@ -337,7 +411,7 @@ describe('public API smoke', () => {
     expect(spec.data.slice(1).map((row: any[]) => row[0])).toEqual([46024, 46027]);
   });
 
-  it('assembleExcel thins dense Candlestick date labels without dropping OHLC rows', () => {
+  it('assembleExcel uses native date intervals for dense Candlestick labels without dropping OHLC rows', () => {
     const values = Array.from({ length: 90 }, (_, index) => ({
       Date: new Date(Date.UTC(2026, 0, index + 1)).toISOString().slice(0, 10),
       Open: 100 + index,
@@ -356,7 +430,13 @@ describe('public API smoke', () => {
     }) as any;
 
     expect(spec.data).toHaveLength(91);
-    expect(spec.categoryAxis.tickLabelSpacing).toBe(3);
+    expect(spec.categoryAxis).toMatchObject({
+      categoryType: 'DateAxis',
+      baseTimeUnit: 'Days',
+      majorUnit: 20,
+      majorTimeUnitScale: 'Days',
+    });
+    expect(spec.categoryAxis.tickLabelSpacing).toBeUndefined();
   });
 
   it('assembleExcel rejects color-grouped native Boxplots', () => {
@@ -427,7 +507,14 @@ describe('public API smoke', () => {
     }) as any;
 
     expect(spec.data).toHaveLength(values.length + 1);
-    expect(spec.categoryAxis.tickLabelSpacing).toBe(2);
+    expect(spec.data[1][0]).toBe(46023);
+    expect(spec.categoryAxis).toMatchObject({
+      categoryType: 'DateAxis',
+      baseTimeUnit: 'Days',
+      majorUnit: 10,
+      majorTimeUnitScale: 'Days',
+    });
+    expect(spec.categoryAxis.tickLabelSpacing).toBeUndefined();
   });
 
   it('assembleExcel emits grouped bubble series with explicit size ranges', () => {
@@ -657,7 +744,7 @@ describe('public API smoke', () => {
       visible: true,
       numberFormat: undefined,
       fontColor: '#FFFFFF',
-      fontSize: 11,
+      fontSize: 13,
     });
     expect(spec.seriesFormats).toEqual([{ color: '#4472C4' }]);
   });
@@ -827,7 +914,7 @@ describe('public API smoke', () => {
     expect(excel.data.slice(1).map((row: any[]) => row[0])).toEqual(expectedOrder);
     expect(expectedOrder).toEqual(values.slice(0, expectedOrder.length).map((row) => row.Group));
     expect(excel.data.length).toBeLessThan(values.length + 1);
-    expect(excel.categoryAxis.labelFontSize).toBe(5);
+    expect(excel.categoryAxis.labelFontSize).toBe(8);
   });
 
   it('assembleExcel caps dense bars using the selected value sort', () => {
@@ -867,9 +954,9 @@ describe('public API smoke', () => {
 
     expect(spec.data).toEqual([
       ['Date', 'A', 'B'],
-      ['2026-01-01', 10, null],
-      ['2026-01-02', 20, 20],
-      ['2026-01-03', 30, null],
+      [46023, 10, null],
+      [46024, 20, 20],
+      [46025, 30, null],
     ]);
   });
 
@@ -898,9 +985,9 @@ describe('public API smoke', () => {
 
     expect(spec.data).toEqual([
       ['Date', 'actual', 'forecast'],
-      ['2026-01-01', 10, null],
-      ['2026-01-02', 12, 12],
-      ['2026-01-03', null, 15],
+      [46023, 10, null],
+      [46024, 12, 12],
+      [46025, null, 15],
     ]);
     expect(spec.seriesFormats).toEqual([
       { color: '#4472C4', lineStyle: 'Continuous' },

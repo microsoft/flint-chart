@@ -1,0 +1,570 @@
+{
+  "facet": {
+    "field": "Species",
+    "type": "nominal",
+    "sort": null,
+    "spacing": 0,
+    "header": {
+      "titleOrient": "bottom",
+      "labelOrient": "bottom",
+      "labelPadding": 2
+    }
+  },
+  "columns": 3,
+  "spec": {
+    "layer": [
+      {
+        "transform": [
+          {
+            "density": "Body mass (g)",
+            "groupby": [
+              "Species"
+            ],
+            "as": [
+              "value",
+              "density"
+            ],
+            "extent": [
+              2702.9783569331094,
+              6447.021643066891
+            ]
+          },
+          {
+            "calculate": "datum.density / 2",
+            "as": "__violinHalf"
+          },
+          {
+            "calculate": "-datum.density / 2",
+            "as": "__violinNegHalf"
+          }
+        ],
+        "mark": {
+          "type": "area",
+          "orient": "horizontal",
+          "fillOpacity": 0.35,
+          "color": "#0072b2"
+        },
+        "encoding": {
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Body mass (g)",
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x": {
+            "type": "quantitative",
+            "title": null,
+            "axis": {
+              "labels": false,
+              "format": ",.12~g"
+            },
+            "field": "__violinHalf",
+            "stack": null
+          },
+          "x2": {
+            "field": "__violinNegHalf"
+          }
+        }
+      },
+      {
+        "transform": [
+          {
+            "density": "Body mass (g)",
+            "groupby": [
+              "Species"
+            ],
+            "as": [
+              "value",
+              "density"
+            ],
+            "extent": [
+              2702.9783569331094,
+              6447.021643066891
+            ]
+          },
+          {
+            "calculate": "datum.density / 2",
+            "as": "__violinHalf"
+          },
+          {
+            "calculate": "-datum.density / 2",
+            "as": "__violinNegHalf"
+          }
+        ],
+        "mark": {
+          "type": "line",
+          "orient": "horizontal",
+          "strokeWidth": 1,
+          "opacity": 0.9,
+          "point": false,
+          "color": "#0072b2"
+        },
+        "encoding": {
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Body mass (g)",
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x": {
+            "type": "quantitative",
+            "title": null,
+            "axis": {
+              "labels": false,
+              "format": ",.12~g"
+            },
+            "field": "__violinHalf",
+            "stack": null
+          }
+        }
+      },
+      {
+        "transform": [
+          {
+            "density": "Body mass (g)",
+            "groupby": [
+              "Species"
+            ],
+            "as": [
+              "value",
+              "density"
+            ],
+            "extent": [
+              2702.9783569331094,
+              6447.021643066891
+            ]
+          },
+          {
+            "calculate": "datum.density / 2",
+            "as": "__violinHalf"
+          },
+          {
+            "calculate": "-datum.density / 2",
+            "as": "__violinNegHalf"
+          }
+        ],
+        "mark": {
+          "type": "line",
+          "orient": "horizontal",
+          "strokeWidth": 1,
+          "opacity": 0.9,
+          "point": false,
+          "color": "#0072b2"
+        },
+        "encoding": {
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Body mass (g)",
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x": {
+            "type": "quantitative",
+            "title": null,
+            "axis": {
+              "labels": false,
+              "format": ",.12~g"
+            },
+            "field": "__violinNegHalf",
+            "stack": null
+          }
+        }
+      },
+      {
+        "transform": [
+          {
+            "calculate": "(random() - 0.5) * 0.0003017977226794782",
+            "as": "__violinJitter"
+          }
+        ],
+        "mark": {
+          "type": "point",
+          "filled": true,
+          "size": 16,
+          "opacity": 0.9,
+          "color": "#0072b2"
+        },
+        "encoding": {
+          "y": {
+            "field": "Body mass (g)",
+            "type": "quantitative",
+            "title": "Body mass (g)",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x": {
+            "field": "__violinJitter",
+            "type": "quantitative",
+            "title": null,
+            "axis": null,
+            "stack": null
+          }
+        }
+      },
+      {
+        "transform": [
+          {
+            "aggregate": [
+              {
+                "op": "median",
+                "field": "Body mass (g)",
+                "as": "__violinMedian"
+              }
+            ],
+            "groupby": [
+              "Species"
+            ]
+          }
+        ],
+        "mark": {
+          "type": "rule",
+          "strokeWidth": 1.5
+        },
+        "encoding": {
+          "y": {
+            "field": "__violinMedian",
+            "type": "quantitative",
+            "title": "Body mass (g)",
+            "scale": {
+              "zero": false
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x": {
+            "datum": -0.0003621572672153738,
+            "type": "quantitative",
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "x2": {
+            "datum": 0.0003621572672153738
+          }
+        }
+      }
+    ],
+    "encoding": {
+      "color": {
+        "field": "Species",
+        "type": "nominal",
+        "legend": null,
+        "scale": {
+          "range": [
+            "#0072b2",
+            "#e69f00",
+            "#009e73"
+          ]
+        }
+      }
+    },
+    "width": 93,
+    "height": 160
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "width": {
+    "step": 52
+  },
+  "title": {
+    "text": "Body mass by penguin species",
+    "subtitle": [
+      "Kernel density with all observations overlaid; horizontal rule marks the median"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5250
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Violin Plot.showPoints",
+      "message": "house rule: `showPoints` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Violin Plot.showMedian",
+      "message": "house rule: `showMedian` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Violin Plot.showContour",
+      "message": "house rule: `showContour` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.suppressWhenAxisNames",
+      "message": "legend removed — it restated the categorical axis"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.redundantEncoding",
+      "message": "no mark in this chart can carry a redundant channel — colour is on its own"
+    }
+  ]
+}

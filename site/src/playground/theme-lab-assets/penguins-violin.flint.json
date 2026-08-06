@@ -1,0 +1,228 @@
+{
+  "mark": {
+    "type": "area",
+    "orient": "horizontal"
+  },
+  "transform": [
+    {
+      "density": "Body mass (g)",
+      "groupby": [
+        "Species"
+      ],
+      "as": [
+        "value",
+        "density"
+      ],
+      "extent": [
+        2702.9783569331094,
+        6447.021643066891
+      ]
+    }
+  ],
+  "encoding": {
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Body mass (g)",
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "x": {
+      "field": "density",
+      "type": "quantitative",
+      "stack": "center",
+      "impute": null,
+      "title": null,
+      "axis": {
+        "labels": false,
+        "ticks": false,
+        "grid": false,
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Species",
+      "type": "nominal",
+      "legend": null
+    },
+    "facet": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": null,
+      "spacing": 0,
+      "header": {
+        "titleOrient": "bottom",
+        "labelOrient": "bottom",
+        "labelPadding": 2
+      },
+      "columns": 3
+    }
+  },
+  "width": 93,
+  "height": 160,
+  "config": {
+    "view": {
+      "continuousWidth": 93,
+      "continuousHeight": 160
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Body mass by penguin species",
+    "subtitle": [
+      "Kernel density with all observations overlaid; horizontal rule marks the median"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5250
+      }
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "mark": "area",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Internet users (%)",
+      "type": "quantitative",
+      "stack": null,
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 315,
+      "continuousHeight": 248
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "Share of the world online, 1995–2023 (%)"
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "1995",
+        "Internet users (%)": 1
+      },
+      {
+        "Year": "2000",
+        "Internet users (%)": 7
+      },
+      {
+        "Year": "2005",
+        "Internet users (%)": 16
+      },
+      {
+        "Year": "2010",
+        "Internet users (%)": 29
+      },
+      {
+        "Year": "2015",
+        "Internet users (%)": 43
+      },
+      {
+        "Year": "2018",
+        "Internet users (%)": 51
+      },
+      {
+        "Year": "2020",
+        "Internet users (%)": 60
+      },
+      {
+        "Year": "2023",
+        "Internet users (%)": 67
+      }
+    ]
+  }
+}

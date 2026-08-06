@@ -1,0 +1,349 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Money buys years, up to a point",
+    "subtitle": [
+      "Life expectancy against GDP per capita, 2018; bubble area is population"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "mark": "circle",
+      "encoding": {
+        "x": {
+          "field": "GDP per capita",
+          "type": "quantitative",
+          "scale": {
+            "type": "log"
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "y": {
+          "field": "Life expectancy",
+          "type": "quantitative",
+          "scale": {
+            "zero": false
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "size": {
+          "field": "Population (M)",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt",
+            "zero": true,
+            "range": [
+              10,
+              450
+            ]
+          },
+          "legend": {
+            "symbolFillColor": "#8b9196",
+            "values": [
+              200,
+              600,
+              1000
+            ]
+          }
+        },
+        "color": {
+          "field": "Continent",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#3f5661",
+              "#a1655a",
+              "#006ba2",
+              "#7ba7b8"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent",
+      "size": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 309,
+      "continuousHeight": 253,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121317",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "tickCount": 7
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "grid": true,
+      "gridColor": "#d8dfe4",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 6
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 10,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8b9196",
+      "gradientLength": 149,
+      "title": null,
+      "layout": {
+        "top": {
+          "direction": "vertical",
+          "anchor": "start"
+        }
+      }
+    },
+    "facet": {
+      "spacing": 25
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Country": "Norway",
+        "GDP per capita": 64800,
+        "Life expectancy": 82.3,
+        "Population (M)": 5.3,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "United States",
+        "GDP per capita": 62600,
+        "Life expectancy": 78.6,
+        "Population (M)": 327,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Japan",
+        "GDP per capita": 39300,
+        "Life expectancy": 84.2,
+        "Population (M)": 127,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "China",
+        "GDP per capita": 16800,
+        "Life expectancy": 76.7,
+        "Population (M)": 1393,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "India",
+        "GDP per capita": 6900,
+        "Life expectancy": 69.4,
+        "Population (M)": 1353,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "Nigeria",
+        "GDP per capita": 5300,
+        "Life expectancy": 54.3,
+        "Population (M)": 196,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Brazil",
+        "GDP per capita": 15600,
+        "Life expectancy": 75.7,
+        "Population (M)": 209,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Germany",
+        "GDP per capita": 50900,
+        "Life expectancy": 81,
+        "Population (M)": 83,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "Ethiopia",
+        "GDP per capita": 2000,
+        "Life expectancy": 66.2,
+        "Population (M)": 109,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Russia",
+        "GDP per capita": 25800,
+        "Life expectancy": 72.4,
+        "Population (M)": 145,
+        "Continent": "Europe"
+      },
+      {
+        "Country": "Mexico",
+        "GDP per capita": 19800,
+        "Life expectancy": 75,
+        "Population (M)": 126,
+        "Continent": "Americas"
+      },
+      {
+        "Country": "Indonesia",
+        "GDP per capita": 12400,
+        "Life expectancy": 71.5,
+        "Population (M)": 268,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "Qatar",
+        "GDP per capita": 116900,
+        "Life expectancy": 80.1,
+        "Population (M)": 2.8,
+        "Continent": "Asia"
+      },
+      {
+        "Country": "South Africa",
+        "GDP per capita": 13000,
+        "Life expectancy": 63.9,
+        "Population (M)": 57,
+        "Continent": "Africa"
+      },
+      {
+        "Country": "Bangladesh",
+        "GDP per capita": 4200,
+        "Life expectancy": 72.3,
+        "Population (M)": 161,
+        "Continent": "Asia"
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "annotation.axisTitles",
+      "message": "both rulers carry a measure — a headline can name one of them, so the axis titles are kept"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.sizeRange",
+      "message": "sized marks run from 10 to 450px² — the house's range, not the renderer's"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 149px — under half the 331px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "the size key is drawn in neutral ink — beside a colour key, swatches in series ink read as another category"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.maxSwatches",
+      "message": "the key to values is sampled at 3 round sizes — a swatch for every tick reads as data, not as a key"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "2 keys want 402px across a 331px block — they take a row each"
+    }
+  ]
+}

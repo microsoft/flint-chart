@@ -1,6 +1,9 @@
 """Candlestick Chart template."""
 from __future__ import annotations
 
+from ...core import js_round
+from .utils import adjust_bar_marks
+
 
 def _candlestick_declare(cs, table, chart_properties):
     return {"axisFlags": {"x": {"banded": True}}}
@@ -48,32 +51,58 @@ def _candlestick_instantiate(spec, ctx):
         spec["layer"][1]["encoding"]["y2"] = {"field": close["field"]}
 
     if open_ and open_.get("field") and close and close.get("field"):
+        # `<=`, not `<`: a session that closes exactly where it opened has not
+        # fallen, and colouring it as a decline is a false statement.
         spec["encoding"]["color"] = {
             "condition": {
-                "test": f"datum['{open_['field']}'] < datum['{close['field']}']",
+                "test": f"datum['{open_['field']}'] <= datum['{close['field']}']",
                 "value": "#06982d",
             },
             "value": "#ae1325",
         }
 
-    # Compute bar width from x-axis cardinality
-    table = ctx.get("table") or []
-    canvas = ctx.get("canvasSize") or {}
-    plot_width = canvas.get("width") or 400
-    x_field = (spec.get("encoding") or {}).get("x", {}).get("field")
-    if x_field and table:
-        seen = set()
-        for r in table:
-            seen.add(r.get(x_field))
-        cardinality = max(1, len(seen))
-        bar_size = max(2, min(20, round(plot_width * 0.6 / cardinality)))
+    # Body width.
+    #
+    # On a banded *continuous* x -- the usual case, dates -- the slot width is
+    # set by the smallest gap between observations, not by the row count: nine
+    # trading days spanning eleven calendar days occupy eleven slots, two of
+    # which are the weekend. Sizing on cardinality makes every body wider than
+    # its own slot and adjacent candles fuse into a single polygon.
+    # adjust_bar_marks() already performs that min-gap analysis for bar marks,
+    # so use it rather than keep a second, wrong copy of the arithmetic here.
+    #
+    # It returns the largest *non-overlapping* size, and bodies that merely
+    # touch still read as one shape when consecutive sessions move the same
+    # way. A candlestick needs a visible gutter, so take a fraction of it.
+    body_fill = 0.8
+    layout = ctx.get("layout") or {}
+    if (layout.get("xContinuousAsDiscrete") or 0) > 0:
+        adjust_bar_marks(spec, ctx)
+        fitted = (spec["layer"][1].get("mark") or {}).get("size", 14)
+        bar_size = max(2, int(fitted * body_fill))
     else:
-        bar_size = 14
+        step = layout.get("xStep") or 20
+        bar_size = max(2, js_round(step * body_fill))
 
     layer1_mark = spec["layer"][1].get("mark") or {}
     if isinstance(layer1_mark, str):
         layer1_mark = {"type": layer1_mark}
     spec["layer"][1]["mark"] = {**layer1_mark, "size": bar_size}
+
+    # Doji sessions.
+    #
+    # When open == close the open->close bar has zero height and vanishes, so a
+    # flat session renders as a bare wick with no candle on it. Draw it as a
+    # horizontal tick at the shared price, which is the convention and is
+    # exactly what the bar degenerates to.
+    if open_ and open_.get("field") and close and close.get("field"):
+        spec["layer"].append({
+            "transform": [
+                {"filter": f"datum['{open_['field']}'] === datum['{close['field']}']"},
+            ],
+            "mark": {"type": "tick", "size": bar_size, "thickness": 2},
+            "encoding": {"y": {"field": close["field"]}},
+        })
 
 
 candlestick_chart_def = {

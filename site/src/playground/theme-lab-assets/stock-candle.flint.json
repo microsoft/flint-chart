@@ -1,0 +1,171 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Date",
+      "type": "temporal",
+      "scale": {
+        "nice": false,
+        "domain": [
+          "2024-01-01T09:00:00.000Z",
+          "2024-01-12T15:00:00.000Z"
+        ]
+      }
+    },
+    "y": {
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "title": null,
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "condition": {
+        "test": "datum['Open'] <= datum['Close']",
+        "value": "#06982d"
+      },
+      "value": "#ae1325"
+    }
+  },
+  "layer": [
+    {
+      "mark": "rule",
+      "encoding": {
+        "y": {
+          "field": "Low"
+        },
+        "y2": {
+          "field": "High"
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "bar",
+        "size": 16
+      },
+      "encoding": {
+        "y": {
+          "field": "Open"
+        },
+        "y2": {
+          "field": "Close"
+        }
+      }
+    },
+    {
+      "transform": [
+        {
+          "filter": "datum['Open'] === datum['Close']"
+        }
+      ],
+      "mark": {
+        "type": "tick",
+        "size": 16,
+        "thickness": 2
+      },
+      "encoding": {
+        "y": {
+          "field": "Close"
+        }
+      }
+    }
+  ],
+  "title": {
+    "text": "Two weeks of a stock going nowhere",
+    "subtitle": [
+      "Daily open, high, low and close, 2–12 January 2024"
+    ]
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 230,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Date": "2024-01-02",
+        "Open": 187,
+        "High": 188,
+        "Low": 183,
+        "Close": 185
+      },
+      {
+        "Date": "2024-01-03",
+        "Open": 184,
+        "High": 185,
+        "Low": 182,
+        "Close": 184
+      },
+      {
+        "Date": "2024-01-04",
+        "Open": 182,
+        "High": 183,
+        "Low": 180,
+        "Close": 182
+      },
+      {
+        "Date": "2024-01-05",
+        "Open": 182,
+        "High": 182,
+        "Low": 179,
+        "Close": 181
+      },
+      {
+        "Date": "2024-01-08",
+        "Open": 182,
+        "High": 186,
+        "Low": 182,
+        "Close": 185
+      },
+      {
+        "Date": "2024-01-09",
+        "Open": 184,
+        "High": 185,
+        "Low": 183,
+        "Close": 185
+      },
+      {
+        "Date": "2024-01-10",
+        "Open": 184,
+        "High": 186,
+        "Low": 183,
+        "Close": 186
+      },
+      {
+        "Date": "2024-01-11",
+        "Open": 186,
+        "High": 187,
+        "Low": 183,
+        "Close": 186
+      },
+      {
+        "Date": "2024-01-12",
+        "Open": 186,
+        "High": 188,
+        "Low": 185,
+        "Close": 185
+      }
+    ]
+  }
+}

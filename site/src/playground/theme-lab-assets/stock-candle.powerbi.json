@@ -1,0 +1,143 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Trading days made ordinal. Flint puts the dates on a temporal scale, so the weekend between 5 and 8 January opens a two-day hole in a series that has no data on either side of it — the chart draws the absence of trading as a price gap. Nine sessions, nine equal slots, and the body width stated as a fraction of the band rather than in pixels, so it holds at any size.",
+    "Flint's hardcoded temporal domain — '2024-01-01T09:00:00.000Z' to '2024-01-12T15:00:00.000Z', an ISO instant with a UTC offset, on daily bars — deleted with it. It is a padding hack expressed as a timestamp, and it silently shifts every candle if the reader's data is in another zone.",
+    "#06982D / #AE1325 replaced by #22B14C and #E66C37. Saturated green against saturated red is the one pairing that collapses for the roughly 8% of men with a red–green deficiency, and it is exactly the pairing where direction is the entire message. Green against orange survives.",
+    "Flat sessions given a body rather than a hairline. On 3, 4 and 11 January the open equals the close, so the candle has no height of its own; Flint draws the convention, a 2px horizontal tick. On a dark dashboard at this size that reads as an absence, so the body is padded to ±0.09 instead — the same event, stated at the weight of its neighbours.",
+    "Y axis given its unit and a domain pinned to 178–190, so the two-week range is read against a stated scale rather than whatever 'zero: false' happens to produce. Flint's ',.12~g' format — twelve significant digits on a dollar price — replaced by currency.",
+    "Latest close labelled at the right, in the direction colour. On a dashboard the last number is the one being looked for.",
+    "Inverted to the #1B1A19 canvas with 9.5pt Segoe UI and dashed #3B3A39 horizontal gridlines that sit behind the candles instead of competing with them."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 6, "right": 14, "bottom": 8 },
+  "title": {
+    "text": "Two weeks of a stock going nowhere",
+    "subtitle": ["Daily open, high, low and close, 2–12 January 2024"]
+  },
+  "width": 250,
+  "height": 175,
+  "data": {
+    "values": [
+      { "Date": "2024-01-02", "Open": 187, "High": 188, "Low": 183, "Close": 185 },
+      { "Date": "2024-01-03", "Open": 184, "High": 185, "Low": 182, "Close": 184 },
+      { "Date": "2024-01-04", "Open": 182, "High": 183, "Low": 180, "Close": 182 },
+      { "Date": "2024-01-05", "Open": 182, "High": 182, "Low": 179, "Close": 181 },
+      { "Date": "2024-01-08", "Open": 182, "High": 186, "Low": 182, "Close": 185 },
+      { "Date": "2024-01-09", "Open": 184, "High": 185, "Low": 183, "Close": 185 },
+      { "Date": "2024-01-10", "Open": 184, "High": 186, "Low": 183, "Close": 186 },
+      { "Date": "2024-01-11", "Open": 186, "High": 187, "Low": 183, "Close": 186 },
+      { "Date": "2024-01-12", "Open": 186, "High": 188, "Low": 185, "Close": 185 }
+    ]
+  },
+  "transform": [
+    {
+      "calculate": "datum.Open === datum.Close ? datum.Open - 0.09 : min(datum.Open, datum.Close)",
+      "as": "__bodyLo"
+    },
+    {
+      "calculate": "datum.Open === datum.Close ? datum.Open + 0.09 : max(datum.Open, datum.Close)",
+      "as": "__bodyHi"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Date",
+      "type": "ordinal",
+      "title": "January 2024",
+      "scale": { "paddingInner": 0.4 },
+      "axis": {
+        "labelExpr": "toNumber(slice(datum.value, 8))",
+        "labelAngle": 0,
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 4
+      }
+    },
+    "y": {
+      "type": "quantitative",
+      "title": "US dollars",
+      "scale": { "zero": false, "nice": false, "domain": [178, 190] },
+      "axis": {
+        "values": [178, 180, 182, 184, 186, 188, 190],
+        "format": "$d",
+        "grid": true,
+        "gridColor": "#3b3a39",
+        "gridDash": [3, 3],
+        "domain": false,
+        "ticks": false,
+        "titleAngle": 0,
+        "titleAlign": "left",
+        "titleAnchor": "start",
+        "titleBaseline": "bottom",
+        "titleY": -8,
+        "titlePadding": 0
+      }
+    },
+    "color": {
+      "condition": { "test": "datum.Open <= datum.Close", "value": "#22b14c" },
+      "value": "#e66c37"
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "rule", "strokeWidth": 1 },
+      "encoding": {
+        "y": { "field": "Low", "type": "quantitative" },
+        "y2": { "field": "High" }
+      }
+    },
+    {
+      "mark": { "type": "bar", "width": { "band": 0.6 } },
+      "encoding": {
+        "y": { "field": "__bodyLo", "type": "quantitative" },
+        "y2": { "field": "__bodyHi" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.Date === '2024-01-12'" }],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 10,
+        "fontSize": 11,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "y": { "field": "Close", "type": "quantitative" },
+        "text": { "field": "Close", "type": "quantitative", "format": "$d" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "subtitleFontSize": 9.5,
+      "subtitleColor": "#8a8886",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#8a8886",
+      "titleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "titleFontSize": 9.5,
+      "titleColor": "#8a8886",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

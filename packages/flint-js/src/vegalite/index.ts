@@ -16,6 +16,15 @@ export { assembleVegaLite, getChartOptions, getChartPivot, getChartTransform } f
 // VL spec instantiation (Phase 2)
 export { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 
+// Canvas-anchored furniture (branding marks drawn onto the rendered SVG)
+export {
+    type CanvasFurnitureItem,
+    CANVAS_FURNITURE_KEY,
+    readCanvasFurniture,
+    canvasFurnitureMarkup,
+    injectCanvasFurnitureSVG,
+} from './canvas-furniture';
+
 // VL template registry
 export {
     vlTemplateDefs,

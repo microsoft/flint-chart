@@ -248,6 +248,64 @@ def max_non_overlap_size(
     return max(min_size, max_width)
 
 
+def align_stack_order_to_color_order(spec: dict, ctx: dict) -> None:
+    """Make a stacked mark's segment order match its colour order.
+
+    The assembler expresses "keep the order the data arrived in" as
+    ``color.sort: None``. That governs the legend, but NOT the stack:
+    Vega-Lite derives the stack's sort from the colour *scale*, and a scale
+    with no explicit domain falls back to sorting the field ascending — i.e.
+    alphabetically. The result is a chart whose legend reads
+    ``A great deal, Some, Not much, None at all`` while its bars stack
+    ``A great deal, None at all, Not much, Some``. For any ordered series
+    (a Likert scale, an age band, a size class) that silently destroys the
+    meaning of the stack.
+
+    Pinning ``scale.domain`` to the same order makes Vega-Lite emit a
+    ``_<field>_sort_index`` and sort the stack by it, so legend and stack
+    agree. An explicit ``sort`` array does NOT achieve this — Vega-Lite
+    applies it to the legend only — which is why the domain is what gets set.
+    """
+    encoding = spec.get("encoding") or {}
+    color = encoding.get("color")
+    # Only meaningful for a discrete colour series.
+    if not color or not color.get("field"):
+        return
+    if color.get("type") not in ("nominal", "ordinal"):
+        return
+    # Called from stacked templates, where stacking is implicit unless it has
+    # been explicitly switched off (``stackMode: 'layered'`` -> ``stack: None``).
+    for axis in ("x", "y"):
+        ae = encoding.get(axis)
+        if ae and "stack" in ae and ae["stack"] in (None, False):
+            return
+    # An explicit domain already pins the order; don't override the caller.
+    if (color.get("scale") or {}).get("domain"):
+        return
+
+    # ``sort: None`` means data order; a list means that list. Anything else
+    # (a field-driven sort spec, "ascending"/"descending") is left alone.
+    sort = color.get("sort", "__missing__")
+    field = color["field"]
+    if sort is None:
+        order = []
+        seen = set()
+        for row in ctx.get("table") or []:
+            value = (row or {}).get(field)
+            if value is None or value in seen:
+                continue
+            seen.add(value)
+            order.append(value)
+    elif isinstance(sort, list):
+        order = list(sort)
+    else:
+        return
+    if len(order) < 2:
+        return
+
+    color["scale"] = {**(color.get("scale") or {}), "domain": order}
+
+
 def adjust_bar_marks(spec: dict, ctx: dict) -> None:
     """Adjust bar/rect marks for continuous-as-discrete axes."""
     layout = ctx["layout"]

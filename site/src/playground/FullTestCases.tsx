@@ -82,11 +82,6 @@ export function FullTestCases() {
         <div className="dev-page">
             <header className="dev-page-heading">
                 <h1>Full test cases <span style={{ fontSize: 14, fontWeight: 400, color: siteTheme.navInactive }}>({names.length} generators)</span></h1>
-                <p style={{ color: siteTheme.textMuted, maxWidth: 760, fontSize: 13 }}>
-                    Every case from every test-data generator — the complete reference set used for
-                    regression and new-backend bring-up. Expand a generator to render its cases (on
-                    the first backend that supports each chart type). Heavy, so sections render lazily.
-                </p>
             </header>
             {names.map((name) => (
                 <GeneratorSection key={name} name={name} gen={TEST_GENERATORS[name]} />

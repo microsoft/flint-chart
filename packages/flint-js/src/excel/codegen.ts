@@ -1,5 +1,12 @@
 import { prepareExcelArtifact } from './artifact';
 import type { ExcelAxisSpec, ExcelNativeChartSpec } from './types';
+import {
+    EXCEL_AXIS_TITLE_FONT_SIZE,
+    EXCEL_CHART_TITLE_FONT_SIZE,
+    EXCEL_DATA_LABEL_FONT_SIZE,
+    EXCEL_LABEL_FONT_SIZE,
+    EXCEL_LEGEND_FONT_SIZE,
+} from './typography';
 
 export interface OfficeJsCodegenOptions {
     scale?: number;
@@ -21,12 +28,16 @@ export interface GeneratedOfficeJs {
 function axisCode(axisName: 'categoryAxis' | 'valueAxis', axis: ExcelAxisSpec): string[] {
     const target = `chart.axes.${axisName}`;
     const lines: string[] = [];
+    if (axis.categoryType) lines.push(`  ${target}.categoryType = ${JSON.stringify(axis.categoryType)};`);
+    if (axis.baseTimeUnit) lines.push(`  ${target}.baseTimeUnit = ${JSON.stringify(axis.baseTimeUnit)};`);
+    if (axis.majorTimeUnitScale) lines.push(`  ${target}.majorTimeUnitScale = ${JSON.stringify(axis.majorTimeUnitScale)};`);
     if (axis.title) {
         lines.push(`  ${target}.title.text = ${JSON.stringify(axis.title)};`);
         lines.push(`  ${target}.title.visible = true;`);
+        lines.push(`  ${target}.title.format.font.size = ${EXCEL_AXIS_TITLE_FONT_SIZE};`);
     }
     if (axis.numberFormat) lines.push(`  ${target}.numberFormat = ${JSON.stringify(axis.numberFormat)};`);
-    if (axis.labelFontSize !== undefined) lines.push(`  ${target}.format.font.size = ${axis.labelFontSize};`);
+    lines.push(`  ${target}.format.font.size = ${axis.labelFontSize ?? EXCEL_LABEL_FONT_SIZE};`);
     if (axis.tickLabelSpacing !== undefined) lines.push(`  ${target}.tickLabelSpacing = ${axis.tickLabelSpacing};`);
     if (axis.reversePlotOrder !== undefined) lines.push(`  ${target}.reversePlotOrder = ${axis.reversePlotOrder};`);
     if (axis.minimumScale !== undefined) lines.push(`  ${target}.minimum = ${axis.minimumScale};`);
@@ -79,42 +90,47 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
     );
 
     if (spec.series?.length) {
-        lines.push("  chart.series.load('items');", '  await context.sync();');
-        lines.push(`  if (chart.series.items.length < ${spec.series.length}) throw new Error('Excel inferred too few series.');`);
+        lines.push(
+            "  chart.series.load('items');",
+            '  await context.sync();',
+            '  for (let index = chart.series.items.length - 1; index >= 0; index -= 1) {',
+            '    chart.series.getItemAt(index).delete();',
+            '  }',
+            '  await context.sync();',
+        );
         spec.series.forEach((binding, index) => {
             lines.push(
-                `  chart.series.items[${index}].name = ${JSON.stringify(binding.name)};`,
-                `  chart.series.items[${index}].setXAxisValues(sheet.getRangeByIndexes(1, ${binding.xColumn}, ${binding.rowCount}, 1));`,
-                `  chart.series.items[${index}].setValues(sheet.getRangeByIndexes(1, ${binding.yColumn}, ${binding.rowCount}, 1));`,
+                `  const boundSeries${index} = chart.series.add(${JSON.stringify(binding.name)}, ${index});`,
+                `  boundSeries${index}.setXAxisValues(sheet.getRangeByIndexes(1, ${binding.xColumn}, ${binding.rowCount}, 1));`,
+                `  boundSeries${index}.setValues(sheet.getRangeByIndexes(1, ${binding.yColumn}, ${binding.rowCount}, 1));`,
             );
             if (binding.bubbleSizeColumn !== undefined) {
-                lines.push(`  chart.series.items[${index}].setBubbleSizes(sheet.getRangeByIndexes(1, ${binding.bubbleSizeColumn}, ${binding.rowCount}, 1));`);
+                lines.push(`  boundSeries${index}.setBubbleSizes(sheet.getRangeByIndexes(1, ${binding.bubbleSizeColumn}, ${binding.rowCount}, 1));`);
             }
         });
-        lines.push(
-            `  for (let index = chart.series.items.length - 1; index >= ${spec.series.length}; index -= 1) {`,
-            '    chart.series.getItemAt(index).delete();',
-            '    await context.sync();',
-            '  }',
-        );
     }
 
     lines.push(`  chart.width = ${width};`, `  chart.height = ${height};`);
     if (spec.title) {
-        lines.push(`  chart.title.text = ${JSON.stringify(spec.title)};`, '  chart.title.visible = true;');
+        lines.push(
+            `  chart.title.text = ${JSON.stringify(spec.title)};`,
+            '  chart.title.visible = true;',
+            `  chart.title.format.font.size = ${EXCEL_CHART_TITLE_FONT_SIZE};`,
+        );
     }
     if (spec.legend) {
         lines.push(`  chart.legend.visible = ${spec.legend.visible};`);
         if (spec.legend.visible && spec.legend.position) {
             lines.push(`  chart.legend.position = ${JSON.stringify(spec.legend.position)};`);
         }
+        if (spec.legend.visible) lines.push(`  chart.legend.format.font.size = ${EXCEL_LEGEND_FONT_SIZE};`);
     }
     if (spec.dataLabels) {
         lines.push(`  chart.dataLabels.visible = ${spec.dataLabels.visible};`);
         if (spec.dataLabels.position) lines.push(`  chart.dataLabels.position = ${JSON.stringify(spec.dataLabels.position)};`);
         if (spec.dataLabels.numberFormat) lines.push(`  chart.dataLabels.numberFormat = ${JSON.stringify(spec.dataLabels.numberFormat)};`);
         if (spec.dataLabels.fontColor) lines.push(`  chart.dataLabels.format.font.color = ${JSON.stringify(spec.dataLabels.fontColor)};`);
-        if (spec.dataLabels.fontSize !== undefined) lines.push(`  chart.dataLabels.format.font.size = ${spec.dataLabels.fontSize};`);
+        lines.push(`  chart.dataLabels.format.font.size = ${spec.dataLabels.fontSize ?? EXCEL_DATA_LABEL_FONT_SIZE};`);
     }
     if (prepared.hasAxes) {
         if (spec.categoryAxis) lines.push(...axisCode('categoryAxis', spec.categoryAxis));

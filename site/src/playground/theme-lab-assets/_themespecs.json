@@ -1,0 +1,95 @@
+{
+  "$comment": "Theme Lab bookkeeping. The ThemeSpecs themselves now ship in flint-js (core/theme/presets); this file keeps only the coverage record: per case, whether the spec vocabulary is sufficient for a compiler to reach the hand-authored result.",
+  "schema": "https://flint.dev/schema/themespec/v12",
+  "coverage": {
+    "$comment": "status: `full` = v6 is sufficient for a compiler; `partial` = reachable but one stated move is not derivable; `blocked` = a required move is outside the ThemeSpec by construction.",
+    "electricity-mix-area": {
+      "status": "blocked",
+      "notes": [
+        "Colour assigned by domain meaning: coal and gas take dark slate and rust so the ramp reads dirty-to-clean. No compiler-resolvable signal distinguishes coal from wind. This is editorial knowledge, not a theme policy."
+      ]
+    },
+    "gdp-bartable": {
+      "status": "blocked",
+      "notes": [
+        "A two-panel hconcat is collapsed into one plot. §7 forbids the ThemeSpec from altering composition, and this redesign depends on it."
+      ]
+    },
+    "us-pyramid": {
+      "status": "full",
+      "notes": [
+        "Reclassified in iteration 11. 'Male' and 'Female' are titles over the two halves of the plot, not names attached to marks, so this case supports no legend placement at all - it is `annotation`/title territory. It had been counted as direct labelling only because the draft implementation derived the two words by filtering the data to the '75+' band. Fixing that removed Datawrapper's only series-end evidence."
+      ]
+    },
+    "stock-candle": {
+      "status": "blocked",
+      "notes": [
+        "A temporal scale is converted to ordinal to delete non-trading gaps. That changes what the x position means, so it is semantic."
+      ]
+    },
+    "penguins-box": {
+      "status": "partial",
+      "notes": [
+        "Whisker extent changed from 1.5×IQR to min-max. A statistical definition, not a treatment — correctly outside the ThemeSpec, but the redesign needs it."
+      ]
+    },
+    "faithful-hist": {
+      "status": "partial",
+      "notes": [
+        "Bin width stated rather than inferred. Binning changes the claim, so it is semantic."
+      ]
+    },
+    "exam-ecdf": {
+      "status": "partial",
+      "notes": [
+        "Curve extended to both edges of the score range so the function starts at 0 and reaches 1. A domain decision."
+      ]
+    },
+    "driving": {
+      "status": "partial",
+      "notes": [
+        "Zero baseline dropped. Zero inclusion is semantic — and NYT drops it here while forcing it in us-unemployment, so there is no house policy to encode."
+      ]
+    },
+    "keeling": {
+      "status": "partial",
+      "notes": [
+        "Zero baseline dropped, same reasoning."
+      ]
+    },
+    "renewable-kpi": {
+      "status": "partial",
+      "notes": [
+        "Flint emits '67% of 45' as a string literal; the redesign computes it. A template-quality fix, not a theming act."
+      ]
+    },
+    "trust-likert": {
+      "status": "partial",
+      "notes": [
+        "stackMode 'center' is a no-op when every row totals 100, so the chart is not the diverging Likert it declares. A chart-type capability gap."
+      ]
+    },
+    "renewable-bullet": {
+      "status": "partial",
+      "notes": [
+        "Qualitative bands are not comparable across rows; the redesign replaces them. A semantic repair."
+      ]
+    },
+    "temp-heatmap": {
+      "status": "full",
+      "notes": [
+        "The continuous-colour cluster, added in iteration 9. All six languages redesign the same heatmap, so the ramp policy is separated from the chart that asked for it.",
+        "Confirms that ranked `legend.placement` degrades on its own: NYT, Economist and McKinsey all rank `seriesEnd` first, which a continuous ramp cannot realize, so grounding falls through to `top` and every one of them keeps a boxed legend - without the theme naming an exception.",
+        "Forced two fields - `ink.series.selection.signed: sequential` (McKinsey) and `legend.suppressWhenValuesPrinted` (McKinsey again). The repeated appearance of `suppressWhen*` flags is what eventually exposed `keying` as a legend block, in iteration 10.",
+        "Nature's ramp neutral is #FFFFFF, which is also its surface. Dropping the cell stroke follows from comparing `ramp.neutral` to the resolved surface, so it needs no new field - but it is the first case where the MIDPOINT, not the endpoints, collides with the paper."
+      ]
+    },
+    "state-unemployment": {
+      "status": "partial",
+      "notes": [
+        "`consumption: quantize` with `quantizeCount: 5` reaches the banded scale and the swatch key. What it does not reach is the break FORMAT: at one significant figure the five bands read 2%, 3%, 3%, 4%, 4%, and the renderer then drops the collisions. Choosing the precision that makes breaks distinct is a numeric decision the ThemeSpec cannot make without seeing the domain."
+      ]
+    }
+  },
+  "$evidence": "ink.series.sequential / .diverging are measured from every redesign in the lab that carries a continuous colour scale: state-unemployment.datawrapper (quantized sequential) and temp-heatmap in all six languages (diverging, except McKinsey). browser-pie.mckinsey samples a ramp categorically. temp-anomaly.nyt looks continuous but is nominal Below/Above average, so it is ink.series.status. McKinsey carries no diverging ramp because the house has no warm ink: on temp-heatmap it answers a signed measure with a single-hue sequential wash plus printed values, which is a measured house decision rather than a gap. Nature is the only language whose ramp does not hold its endpoints against the surface - its midpoint IS the surface, which is why its cells are left unstroked."
+}

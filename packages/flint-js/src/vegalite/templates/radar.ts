@@ -230,9 +230,14 @@ function buildRadarLayers(
         },
     };
     if (groups.length > 1 && groupField) {
+        // Stroke, fill and point colour all carry `__group`; Vega-Lite merges
+        // them into a single legend for the field. Leaving the legend off any
+        // one of them (a `legend: null`) removes the key from *all* of them,
+        // because the layers share the colour scale — so the series would be
+        // unidentifiable. Let all three share the one merged legend.
         lineLayer.encoding.stroke = { field: "__group", type: "nominal", title: groupField };
         if (filled) {
-            lineLayer.encoding.fill = { field: "__group", type: "nominal", title: groupField, legend: null };
+            lineLayer.encoding.fill = { field: "__group", type: "nominal", title: groupField };
         }
     } else if (filled) {
         lineLayer.mark.fill = "#4c78a8";
@@ -254,7 +259,7 @@ function buildRadarLayers(
         },
     };
     if (groups.length > 1 && groupField) {
-        pointLayer.encoding.color = { field: "__group", type: "nominal", title: groupField, legend: null };
+        pointLayer.encoding.color = { field: "__group", type: "nominal", title: groupField };
     }
     layers.push(pointLayer);
 

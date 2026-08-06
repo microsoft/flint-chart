@@ -11,6 +11,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-05
+
+### Added
+
+- Formal visual themes for Vega-Lite through the new top-level `theme_spec`
+  field. Callers can select one of ten built-in presets, provide a custom
+  `ThemeSpec`, or inherit a preset with `extends` and override selected fields.
+  Nested objects merge while arrays and scalar values replace inherited values.
+- The `pop` preset, a high-energy extension of Swiss with process colors,
+  strong structure, and chart-aware grid and heatmap treatment.
+- A semantic theme-grounding system that applies layout behavior, presentation
+  rules, mark geometry, typography, color, labels, legends, axes, annotations,
+  and chart furniture as one visual system across chart types and data shapes.
+- Public theme APIs: `ThemeSpec`, `ThemePreset`, `THEME_PRESETS`,
+  `listThemePresets()`, and `resolveThemeSpec()`.
+- Theme discovery in the MCP server through `list_themes`, plus preset selection
+  in the interactive MCP App.
+- Bundled ThemeSpec authoring guidance through the `flint://theme-skill`
+  resource and `author_flint_theme` prompt. Custom ThemeSpecs remain available
+  in the MCP App while callers compare presets, without becoming global themes.
+- A public visual-theme explorer with regular grid and screenshot-friendly
+  scattered-poster layouts, a compact two-row banner composition, large
+  chart/spec previews, a complete **Using themes** guide, and
+  preset/custom/inherited live examples on the Flint project site.
+- Theme Lab, an interactive editor for authoring a ThemeSpec and testing it
+  against a diverse wall of charts, with built-in Signal Studio, Microsoft
+  Fluent, and People's Daily examples.
+- Complete English and Chinese localization for the public theme explorer,
+  Theme Lab, navigation, and MCP theme-authoring guidance.
+
+### Changed
+
+- Vega-Lite assembly now grounds the selected theme before layout and realizes
+  its decisions throughout compilation instead of applying a post-render style
+  layer. Existing inputs without `theme_spec` retain Flint's default behavior.
+- Vega-Lite logarithmic axes choose readable powers-of-ten or 1/2/5 tick and
+  grid spacing from the transformed scale span and available pixels on either
+  axis. Two-position line axes suppress asymmetric endpoint guides, while
+  heatmaps use cell boundaries instead of redundant axis grids.
+
 ## [0.4.1] - 2026-07-27
 
 ### Changed
@@ -178,7 +218,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/microsoft/flint-chart/compare/88fbeb5ebf07f18a1cf661ebef71cc570b7425d6...0.3.0

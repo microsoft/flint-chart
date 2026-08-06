@@ -9,12 +9,19 @@ import { ChartWall } from './routes/ChartWall';
 import { ExcelGallery } from './routes/ExcelGallery';
 import { Editor } from './routes/Editor';
 import { McpServer } from './routes/McpServer';
+import { Themes } from './routes/Themes';
+import { ThemeLab as PublicThemeLab } from './routes/ThemeLab';
+import { AutoLayoutPlayground } from './routes/AutoLayoutPlayground';
 import { DocSectionPage } from './routes/DocSectionPage';
 import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
+import { ThemeLab } from './playground/ThemeLab';
+import { ThemeLabR2 } from './playground/ThemeLabR2';
+import { ThemeLabReal } from './playground/ThemeLabReal';
+import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
@@ -43,6 +50,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="wall/:backend" element={<WallRedirect />} />
         <Route path="editor" element={<Editor />} />
         <Route path="mcp" element={<McpServer />} />
+        <Route path="themes" element={<Themes />} />
+        <Route path="theme-lab" element={<PublicThemeLab />} />
+        <Route path="playgrounds/auto-layout" element={<AutoLayoutPlayground />} />
+        <Route path="themes/lab" element={<Navigate to={localePath('/theme-lab', locale)} replace />} />
         {/* Playground is public — poke around and play with the widgets. */}
         <Route path="dev-playground" element={<Navigate to={localePath('/playground/illustrations', locale)} replace />} />
         <Route path="dev/*" element={<Navigate to={localePath('/playground', locale)} replace />} />
@@ -52,6 +63,16 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
+          {/* The theme wall graduated to the public /themes page. */}
+          <Route path="theme-wall" element={<Navigate to={localePath('/themes', locale)} replace />} />
+          <Route path="theme-labs" element={<ThemeLab />} />
+          <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
+          <Route path="theme-lab-real" element={<ThemeLabReal />} />
+          <Route path="style-references/:house?" element={<StyleReferences />} />
+          {/* The Swiss and cartoon labs were the same page twice; keep the
+              links they were reached by working. */}
+          <Route path="swiss-lab" element={<Navigate to="../style-references/swiss" replace />} />
+          <Route path="cartoon-lab" element={<Navigate to="../style-references/cartoon" replace />} />
           <Route path="full-test-cases" element={<FullTestCases />} />
         </Route>
         {/* Tutorials merged into Documentation as the "Quick start" group. */}
@@ -61,6 +82,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
         />
         <Route path="tutorials/:slug" element={<TutorialRedirect />} />
         <Route path="documentation" element={<DocSectionPage section="documentation" />} />
+        <Route
+          path="documentation/chart-sizing"
+          element={<Navigate to={localePath('/playgrounds/auto-layout', locale)} replace />}
+        />
         <Route path="documentation/:slug" element={<DocSectionPage section="documentation" />} />
         <Route path="*" element={<Navigate to={localePath('/', locale)} replace />} />
       </Routes>

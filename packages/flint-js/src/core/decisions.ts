@@ -78,12 +78,28 @@ function validateTemporalParsing(
     fieldName: string,
     fromRegistry: boolean,
 ): boolean {
-    const sampleValues = data.map(r => r[fieldName]).slice(0, 15).filter((v: any) => v != null);
+    // Sample distinct values, not rows. Cartesian data is commonly ordered
+    // outer-axis first: in a 60 × 40 heatmap the first StartDate repeats for
+    // 40 rows while EndDate changes immediately. Sampling rows therefore
+    // declared one date field ordinal and the other temporal solely because of
+    // loop order. Walk until we have enough distinct evidence instead.
+    const sampleValues: any[] = [];
+    const seen = new Set<string>();
+    for (const row of data) {
+        const value = row[fieldName];
+        if (value == null) continue;
+        const key = value instanceof Date
+            ? `date:${value.getTime()}`
+            : `${typeof value}:${String(value)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        sampleValues.push(value);
+        if (sampleValues.length >= 15) break;
+    }
     if (sampleValues.length === 0) return false;
 
     // Single unique value → not useful as temporal axis (would show a single point)
-    const uniqueValues = new Set(sampleValues.map(String));
-    if (uniqueValues.size <= 1) return false;
+    if (sampleValues.length <= 1) return false;
 
     const looksTemporalValue = (val: any): boolean => {
         if (val instanceof Date) return true;

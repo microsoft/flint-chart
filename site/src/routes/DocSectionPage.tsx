@@ -48,6 +48,16 @@ export function DocSectionPage({ section }: { section: DocSection }) {
     }
   }, [slug, section, firstSlug, navigate, lp]);
 
+  // Reset scroll to top when the active doc changes, unless a heading anchor
+  // is pending (handled by the next effect).
+  useEffect(() => {
+    const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
+    const hash = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
+    if (!stored && !hash) {
+      mainRef.current?.scrollTo({ top: 0 });
+    }
+  }, [activeSlug, location.hash]);
+
   useEffect(() => {
     const stored = sessionStorage.getItem(DOC_SCROLL_TO_KEY);
     const hash = location.hash ? decodeURIComponent(location.hash.slice(1)) : '';
@@ -114,7 +124,7 @@ export function DocSectionPage({ section }: { section: DocSection }) {
                       icon={doc.icon}
                       dataAttr={{ 'data-doc-nav': doc.slug }}
                     >
-                      {t(`docs.entries.${doc.slug}.title`)}
+                      {t(`docs.entries.${doc.slug}.title`, { defaultValue: doc.title })}
                     </SidebarNavItem>
                   );
                 })}
@@ -186,7 +196,7 @@ function MobileDocPicker({
           <optgroup key={group.id} label={t(`docs.groups.${group.id}`)}>
             {group.docs.map((doc) => (
               <option key={doc.slug} value={doc.slug}>
-                {t(`docs.entries.${doc.slug}.title`)}
+                {t(`docs.entries.${doc.slug}.title`, { defaultValue: doc.title })}
               </option>
             ))}
           </optgroup>

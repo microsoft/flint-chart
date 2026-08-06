@@ -1,0 +1,118 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Flint's qualitative bands are not comparable across rows. It hardcodes five separate datasets in which each country's three grey bands are 25%, 50% and 75% of that country's own target — so on a shared 0–100 axis Norway's first band ends at 25 and America's ends at 12.5. Identical greys sit at different absolute positions and mean different things. Replaced by one track running 0–100, which is the actual range of a percentage and is the same on every row.",
+    "The legend deleted. Flint offers 'Below target' in red and 'Meets target' in green when not one of the five countries meets its target — a two-item key of which one item never appears, spending a colour on an empty set.",
+    "The shortfall stated as a number at the end of each row, in #E66C37. This is what the chart is for, and Flint asks the reader to measure the distance from the bar end to the tick by eye.",
+    "Bars in brand #118DFF, target ticks in #F3F2F1 at 2px. Flint's red bars pre-judge every row as a failure before the reader has looked at the gap; the theme reserves status colour for the threshold statement, and here it appears once, on the number.",
+    "Descending order pinned in the spec rather than depending on 'sort: null' and the order the rows happen to arrive in. The rendered sequence is the baseline's; only its robustness changes.",
+    "Inverted to the #1B1A19 report canvas with 9.5pt Segoe UI, dashed #3B3A39 gridlines at low contrast, and Flint's ',.12~g' axis format replaced by integers with a per-cent suffix."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 6, "right": 14, "bottom": 8 },
+  "title": {
+    "text": "Every country is short of its renewable target",
+    "subtitle": ["Renewable share of electricity, 2023, per cent, against national targets"]
+  },
+  "width": 260,
+  "height": 150,
+  "data": {
+    "values": [
+      { "Country": "Norway", "Share": 98.6, "Target": 100 },
+      { "Country": "Brazil", "Share": 89.2, "Target": 95 },
+      { "Country": "Germany", "Share": 51.6, "Target": 80 },
+      { "Country": "World", "Share": 30.3, "Target": 60 },
+      { "Country": "United States", "Share": 22.7, "Target": 50 }
+    ]
+  },
+  "transform": [
+    { "calculate": "'−' + format(datum.Target - datum.Share, '.1f')", "as": "__gapLabel" }
+  ],
+  "encoding": {
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "title": null,
+      "sort": { "field": "Share", "op": "max", "order": "descending" },
+      "scale": { "paddingInner": 0.45 },
+      "axis": { "grid": false, "domain": false, "ticks": false, "labelColor": "#f3f2f1", "labelPadding": 6 }
+    },
+    "x": {
+      "field": "Share",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 104] },
+      "axis": {
+        "values": [0, 25, 50, 75, 100],
+        "labelExpr": "datum.value + '%'",
+        "grid": true,
+        "gridColor": "#3b3a39",
+        "gridDash": [3, 3],
+        "domain": false,
+        "ticks": false
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "fill": "#2b2a29", "height": { "band": 1 } },
+      "encoding": {
+        "x": { "datum": 0 },
+        "x2": { "datum": 100 }
+      }
+    },
+    {
+      "mark": { "type": "bar", "fill": "#118dff", "height": { "band": 1 } }
+    },
+    {
+      "mark": { "type": "tick", "color": "#f3f2f1", "thickness": 2, "size": 20 },
+      "encoding": {
+        "x": { "field": "Target", "type": "quantitative" }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 8,
+        "fontSize": 10,
+        "fontWeight": 600,
+        "color": "#e66c37"
+      },
+      "encoding": {
+        "x": { "field": "Target", "type": "quantitative" },
+        "text": { "field": "__gapLabel", "type": "nominal" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "subtitleFontSize": 9.5,
+      "subtitleColor": "#8a8886",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#8a8886",
+      "titleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "titleFontSize": 9.5,
+      "titleColor": "#8a8886",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

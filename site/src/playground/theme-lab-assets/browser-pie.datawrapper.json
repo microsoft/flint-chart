@@ -1,0 +1,172 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Still a pie. The form is weak here — Safari and Edge are both on 12 per cent, and as two arcs of equal angle at different orientations no reader can confirm that by looking — but the question this table asks is what a design language does to a chart, not what it replaces it with. So the tie is made checkable by printing the numbers, not by abandoning the geometry.",
+    "Values printed outside every slice. Flint's pie states no quantities at all: the reader gets five arcs and a colour key and is asked to estimate. With 65, 12, 12, 6 and 5 on the page the two 12s are identical characters and the tie is settled.",
+    "Labels set outside the wedges in near-black, not inside them in white. None of the five house inks clears 4.5:1 against white type — the orange is nearer 2:1 — so an accessibility-first language cannot use the usual place for the number. Outside, on white, every label runs at about 12:1.",
+    "tableau10 replaced by the five house inks as an explicit domain/range pair, so a browser keeps its colour across every chart in a story rather than taking whatever hue its row index happens to draw.",
+    "Legend kept, but moved to the top as a horizontal strip of square swatches with no title. A pie is the one form that genuinely needs a key — the categories live in the marks and there is no axis to name them — so the key is restyled rather than removed.",
+    "Slice order left exactly as the baseline has it, running clockwise from twelve o'clock in source order. Sorting by share would read better — Chrome's 65 per cent would open the circle and the two twelves would end up adjacent — but which wedge follows which is a statement about the data, decided upstream of any house style.",
+    "A 1.5px white separator between slices — what keeps two adjacent hues legible as two shapes for a reader who cannot tell the hues apart.",
+    "11pt type floor, no frame, hairline footer."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 16, "bottom": 8 },
+  "title": {
+    "text": "Chrome holds two-thirds of the desktop market",
+    "subtitle": ["Desktop browser share, 2024, per cent"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "width": 260,
+      "height": 190,
+      "data": {
+        "values": [
+          { "Browser": "Chrome", "Share": 65 },
+          { "Browser": "Safari", "Share": 12 },
+          { "Browser": "Edge", "Share": 12 },
+          { "Browser": "Firefox", "Share": 6 },
+          { "Browser": "Other", "Share": 5 }
+        ]
+      },
+      "transform": [
+        {
+          "window": [{ "op": "row_number", "as": "__i" }],
+          "frame": [null, null]
+        },
+        {
+          "window": [{ "op": "sum", "field": "Share", "as": "__cum" }],
+          "sort": [{ "field": "__i", "order": "ascending" }],
+          "frame": [null, 0]
+        },
+        { "calculate": "(datum.__cum - datum.Share) / 100 * 2 * PI", "as": "__start" },
+        { "calculate": "datum.__cum / 100 * 2 * PI", "as": "__end" },
+        { "calculate": "(datum.__cum - datum.Share / 2) / 100 * 2 * PI", "as": "__mid" },
+        { "calculate": "datum.Share + '%'", "as": "__pct" }
+      ],
+      "encoding": {
+        "color": {
+          "field": "Browser",
+          "type": "nominal",
+          "title": null,
+          "scale": {
+            "domain": ["Chrome", "Safari", "Edge", "Firefox", "Other"],
+            "range": ["#18a1cd", "#e2a233", "#c04a4a", "#2d8659", "#7e5aa2"]
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "arc",
+            "outerRadius": 70,
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5
+          },
+          "encoding": {
+            "theta": {
+              "field": "__start",
+              "type": "quantitative",
+              "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+            },
+            "theta2": { "field": "__end" }
+          }
+        },
+        {
+          "transform": [{ "filter": "datum.__mid < PI" }],
+          "mark": {
+            "type": "text",
+            "radius": 80,
+            "align": "left",
+            "baseline": "middle",
+            "fontSize": 11
+          },
+          "encoding": {
+            "theta": {
+              "field": "__mid",
+              "type": "quantitative",
+              "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+            },
+            "text": { "field": "__pct", "type": "nominal" },
+            "color": { "value": "#333333" }
+          }
+        },
+        {
+          "transform": [{ "filter": "datum.__mid >= PI" }],
+          "mark": {
+            "type": "text",
+            "radius": 80,
+            "align": "right",
+            "baseline": "middle",
+            "fontSize": 11
+          },
+          "encoding": {
+            "theta": {
+              "field": "__mid",
+              "type": "quantitative",
+              "scale": { "domain": [0, 6.283185307179586], "range": [0, 6.283185307179586] }
+            },
+            "text": { "field": "__pct", "type": "nominal" },
+            "color": { "value": "#333333" }
+          }
+        }
+      ]
+    },
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#dcdcdc", "stroke": null },
+      "width": 270,
+      "height": 1,
+      "view": { "stroke": null }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "lineHeight": 18,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "subtitleLineHeight": 15
+    },
+    "view": { "stroke": null },
+    "legend": {
+      "orient": "top",
+      "direction": "horizontal",
+      "title": null,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "symbolType": "square",
+      "symbolSize": 100,
+      "symbolStrokeWidth": 0,
+      "labelOffset": 5,
+      "columnPadding": 14,
+      "offset": 2,
+      "padding": 0
+    },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "labelPadding": 5,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10.5,
+      "titleFontWeight": 400,
+      "titleColor": "#767676",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

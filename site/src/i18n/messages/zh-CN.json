@@ -2,9 +2,13 @@
   "nav": {
     "about": "关于",
     "mcp": "MCP 服务器",
+    "themes": "主题",
     "gallery": "图表示例",
     "documentation": "文档",
+    "playgrounds": "实验室",
     "editor": "在线编辑器",
+    "themeLab": "主题实验室",
+    "autoLayoutPlayground": "自动布局",
     "github": "GitHub",
     "githubAria": "GitHub 仓库",
     "githubAriaStars": "GitHub 仓库，{{count}} 星",
@@ -13,6 +17,35 @@
     "langEn": "EN",
     "langZh": "中文",
     "langSwitchAria": "切换语言"
+  },
+  "themeLab": {
+    "title": "主题实验室",
+    "lead": "试验并完善你的主题，将视觉设计转化为可复用的规范，与更多人分享。",
+    "steps": {
+      "generate": "复制提示词并连同网站、幻灯片或品牌指南等参考资料交给智能体，让它生成主题。",
+      "preview": "在下方编辑并预览主题效果。",
+      "shareReady": "准备好分享了吗？",
+      "shareLink": "分享你的设计",
+      "shareSuffix": "。"
+    },
+    "docsPointer": "请参阅<docsLink>文档：使用主题</docsLink>了解详情。",
+    "copyPrompt": "复制提示词",
+    "copied": "已复制",
+    "prompt": "帮我为 Flint Chart 创建一个自定义 ThemeSpec。\n\n开始之前，请阅读并遵循 Flint ThemeSpec 编写技能：\nhttps://raw.githubusercontent.com/microsoft/flint-chart/main/agent-skills/flint-theme-author/SKILL.md\n\n如果原始文件链接不可用，请改用 GitHub 页面：\nhttps://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-theme-author/SKILL.md\n\n请使用我提供的参考资料，只询问会实质影响设计的重要缺失信息，并遵循技能中规定的架构、语义边界、无障碍指南、输出约定和验证清单。请返回一个完整的 ThemeSpec JSON 对象，让我可以直接粘贴到 Flint 主题实验室中。",
+    "demoAria": "示例主题",
+    "inspiration": "需要灵感？",
+    "demos": {
+      "signal-studio": "信号工作室",
+      "microsoft-fluent": "Microsoft Fluent",
+      "peoples-daily": "人民日报"
+    },
+    "editorAria": "自定义主题编辑器",
+    "formatJson": "格式化 JSON",
+    "validSpec": "ThemeSpec 有效",
+    "objectError": "ThemeSpec 必须是 JSON 对象。",
+    "close": "关闭",
+    "rows": "{{count}} 行",
+    "flintSpec": "Flint 规范"
   },
   "footer": {
     "copyright": "© 2026 Microsoft",
@@ -26,6 +59,23 @@
     "mobileLabel": "文档",
     "mobileAria": "选择文档页面",
     "fallbackNote": "暂无中文译本，正在显示英文原文。",
+    "themeSpecPanel": {
+      "aria": "ThemeSpec 示例",
+      "modeAria": "ThemeSpec 形式",
+      "preset": "预设",
+      "base": "基础主题",
+      "modes": {
+        "preset": "预设",
+        "custom": "自定义",
+        "inherit": "继承"
+      },
+      "customDescription": "直接在 theme_spec 中编写完整的设计系统。所有区块都是可选的。",
+      "inheritDescription": "从 {{name}} 开始，只覆盖你的品牌需要改变的决策。",
+      "renderError": "无法渲染：",
+      "exampleTitle": "预期寿命，2000–2021",
+      "exampleSubtitle": "出生时预期寿命。多数国家有所提高，美国则出现下降。",
+      "exampleSource": "来源：{{source}}"
+    },
     "groups": {
       "quick-start": "快速开始",
       "introduction": "语言设计",
@@ -73,6 +123,10 @@
         "title": "自动布局算法",
         "description": "弹簧、气压、径向与面积等尺寸模型。"
       },
+      "theme-spec": {
+        "title": "使用主题",
+        "description": "使用预设、定义设计系统，或继承并覆盖内置主题。"
+      },
       "api-reference": {
         "title": "API 参考",
         "description": "ChartAssemblyInput、组装器、编码、选项与导出。"
@@ -89,9 +143,21 @@
         "title": "Chart.js 图表",
         "description": "全部 Chart.js 图表类型、通道与可配置参数。"
       },
+      "reference-plotly": {
+        "title": "Plotly 图表",
+        "description": "全部 Plotly 图表类型、通道与可配置参数。"
+      },
+      "reference-excel": {
+        "title": "Excel 图表",
+        "description": "全部原生 Excel 图表类型、通道与 Office.js 映射。"
+      },
       "development": {
         "title": "开发指南",
         "description": "Monorepo 搭建、日常命令与测试策略。"
+      },
+      "test-plan": {
+        "title": "图表引擎测试计划",
+        "description": "共享视觉案例、覆盖矩阵与后端接入流程。"
       },
       "adding-a-semantic-type": {
         "title": "扩展语义类型",
@@ -124,7 +190,127 @@
     "backends": {
       "vegalite": "将 Flint 规范编译为干净的 Vega-Lite 规范——适合用 Vega 渲染清晰、出版级的统计图形。",
       "echarts": "将 Flint 规范编译为 Apache ECharts option——适合交互式仪表盘与丰富视觉效果。",
-      "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。"
+      "chartjs": "将 Flint 规范编译为 Chart.js 配置——适合在日常 Web 应用中轻量嵌入图表。",
+      "plotly": "将 Flint 规范编译为 Plotly.js figure——适合带有原生悬停、缩放和图例交互的分析图表。"
+    }
+  },
+  "themes": {
+    "title": "探索主题",
+    "concept": "Flint 主题通过正式规范，为整个图表库定义统一的视觉识别。",
+    "principles": {
+      "layout": {
+        "title": "布局",
+        "body": "控制间距、疏密，以及坐标轴、图例、标签和注释的位置。"
+      },
+      "semantics": {
+        "title": "语义表现",
+        "body": "根据字段角色、顺序、分组与层级决定对比、强调和系列识别。"
+      },
+      "identity": {
+        "title": "视觉系统",
+        "body": "将字体、颜色、表面、线宽、圆角和图形形状定义为一套可识别的系统。"
+      }
+    },
+    "generalization": "编译器会将主题的布局行为、语义表现和视觉识别应用到不同的图表类型、数据形态和画布尺寸中。",
+    "docsPointer": "有关应用和自定义主题的方法，请参阅<docs>使用主题</docs>。",
+    "themeLabCta": "有灵感了？前往<lab>主题实验室</lab>创作主题",
+    "flintDefault": "Flint 默认",
+    "switchAria": "主题",
+    "layoutToggle": {
+      "aria": "图表排列方式",
+      "grid": "网格",
+      "gridTitle": "将图表排列为规整的对比网格",
+      "scatter": "散落",
+      "scatterTitle": "将图表像照片一样散落排列，便于制作编辑截图",
+      "banner": "横幅",
+      "bannerTitle": "将十二张图表紧密排列为两行博客横幅"
+    },
+    "descriptions": {
+      "default": "均衡、中性的默认样式，适用于各种图表类型。",
+      "nyt": "新闻图表风格：以结论为标题，在图形上标注数值，并在曲线末端标出系列名称。",
+      "economist": "紧凑的印刷图表风格：简洁标题、解释性副标题，并沿坐标轴重复显示单位。",
+      "nature": "学术期刊图表风格：紧凑面板、明确单位，并在拟合线旁标注统计信息。",
+      "mckinsey": "演示文稿风格：宽阔色带、醒目数值，以及突出核心结论的标题。",
+      "datawrapper": "简洁的网页图表风格：窄幅布局、朴素排版与克制的分隔线。",
+      "powerbi": "深色仪表板风格：紧凑布局、右侧图例，并突出最新数值。",
+      "powerbi-light": "浅色仪表板风格：白色画布、细网格线与右侧图例。",
+      "swiss": "国际主义平面设计风格：清晰网格、强烈的黑色结构与单一红色强调色。",
+      "pop": "波普艺术版 Swiss：高饱和印刷色、粗重黑色结构与醒目的展示字体。",
+      "cartoon": "活泼的漫画风格：暖色纸张、圆润字体、粗描边、明亮配色与柔和虚线网格。"
+    },
+    "cases": {
+      "keeling": {
+        "title": "基林曲线",
+        "blurb": "莫纳罗亚的大气二氧化碳，从 316 ppm 升至 421，仍在攀升。"
+      },
+      "driving": {
+        "title": "开车里程掉头向下",
+        "blurb": "人均行驶里程与油价的对照，1956–2010 年。"
+      },
+      "seattle-range": {
+        "title": "西雅图气温区间",
+        "blurb": "逐月的日均最低到最高气温。"
+      },
+      "temp-heatmap": {
+        "title": "各城市月度气温",
+        "blurb": "热带全年温暖，莫斯科冰封，悉尼季节相反。"
+      },
+      "browser-pie": {
+        "title": "桌面浏览器份额",
+        "blurb": "Chrome 占去三分之二，Safari 与 Edge 远远落后且旗鼓相当。"
+      },
+      "co2-lollipop": {
+        "title": "人均二氧化碳排放",
+        "blurb": "十六个国家，相差二十倍，单位为吨。"
+      },
+      "life-expectancy": {
+        "title": "预期寿命，2000 至 2021",
+        "blurb": "几乎每个国家都在上升，美国的线在疫情期间下探。"
+      },
+      "lifeexp-dumbbell": {
+        "title": "男女寿命差距",
+        "blurb": "每条线连接一个国家男性与女性的预期寿命。"
+      },
+      "electricity-mix-area": {
+        "title": "全球发电结构",
+        "blurb": "风能与太阳能登场的三十年里，煤炭份额岿然不动。"
+      },
+      "big-mac": {
+        "title": "巨无霸指数",
+        "blurb": "同一个汉堡的全球价格：衡量货币购买力的粗略标尺。"
+      },
+      "olympic-bump": {
+        "title": "奥运奖牌榜排名",
+        "blurb": "四届夏季奥运会，2012 至 2024，第一名居顶。"
+      },
+      "nutrition-radar": {
+        "title": "杏仁、燕麦与酸奶",
+        "blurb": "每 100 克的五项营养素，每种食物各自勾出一个多边形。"
+      },
+      "faithful-hist": {
+        "title": "老忠实泉喷发",
+        "blurb": "两个峰，约两分钟与四分半，平均值会把两者都藏起来。"
+      },
+      "trust-likert": {
+        "title": "美国民众对机构的信心",
+        "blurb": "以中立点对齐：信任在左，怀疑在右。"
+      },
+      "population-waterfall": {
+        "title": "世界人口，1950 至 2020",
+        "blurb": "从 25 亿到 79 亿的一座桥，每一级是一个联合国次区域。"
+      },
+      "us-pyramid": {
+        "title": "美国人口的年龄与性别",
+        "blurb": "年龄段向上堆叠，两性以零为轴左右对照。"
+      },
+      "gapminder-bubble": {
+        "title": "财富与健康",
+        "blurb": "罗斯林的气泡图：大小是人口，颜色是洲。"
+      },
+      "earnings-education": {
+        "title": "按学历与性别看收入",
+        "blurb": "同时呈现两种差距：阶梯本身，以及每一级内部的差距。"
+      }
     }
   },
   "modal": {
@@ -157,13 +343,21 @@
     "attribution": "Microsoft Research 项目",
     "installNpm": "通过 <npmLink>npm</npmLink> 安装 Flint（TypeScript / JavaScript）。",
     "installMcp": "智能体请使用 <mcpLink>MCP 服务器</mcpLink>；独立指南见 <skillLink>Agent Skill</skillLink>。",
-    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例。",
+    "installGallery": "前往<galleryLink>图表示例</galleryLink>，探索 {{chartTypes}} 种图表类型和 {{examples}} 个示例，或比较<themesLink>视觉主题</themesLink>。",
+    "themeLead": "Flint 的正式主题规范让设计师只需定义一次视觉识别，就能在整个图表库中统一应用。",
+    "installThemeLab": "在<themeLabLink>主题实验室</themeLabLink>中创建自定义视觉系统。",
+    "ctaThemes": "视觉主题",
     "ctaGallery": "浏览图表示例",
     "ctaMcp": "使用 MCP 服务器",
     "ctaGithub": "访问 GitHub",
     "ctaDocs": "阅读文档",
     "news": {
       "title": "更新",
+      "release050": {
+        "date": "2026 年 8 月 5 日",
+        "dateTime": "2026-08-05",
+        "text": "Flint 0.5.0 引入正式的视觉主题系统，包含十种预设、自定义 ThemeSpec 与预设继承。"
+      },
       "release040": {
         "date": "2026 年 7 月 24 日",
         "dateTime": "2026-07-24",
@@ -193,13 +387,14 @@
     "leadMiddle": "。你不必手动编写比例尺、坐标轴、间距、布局等繁琐的底层参数；Flint 编译器会结合数据、语义类型、图表类型和编码，自动推导出更合适的图表配置。",
     "leadHighlight2": "Flint 目前通过统一接口，在 {{backends}} 种渲染后端上支持 {{chartTypes}} 种图表类型",
     "backendRosterLabel": "渲染后端",
+    "themeRosterLabel": "主题",
+    "themeRosterMore": "另有 {{count}} 种",
     "flintSpec": "Flint 规范",
     "compiledChart": "编译结果",
     "backendAria": "渲染后端",
     "prevExample": "上一个示例",
     "nextExample": "下一个示例",
     "exampleAria": "示例",
-    "openInEditor": "在编辑器中打开此示例",
     "seeGallery": "在图表示例中查看更多",
     "closingTitle": "开始使用 Flint",
     "closingBody": "Flint 已开源，可直接使用。前往 GitHub 获取源码，或先浏览图表示例。",
@@ -225,44 +420,63 @@
         "title": "一份规范，多种渲染后端",
         "body": "Flint 支持通过 Vega-Lite、ECharts、Chart.js 和 Plotly 渲染 {{chartTypes}} 种图表，图表示例中收录了 {{examples}} 个后端专属示例，还可通过 Office.js 生成原生 Excel 图表。不同后端的 API 和编程模型各不相同，Flint 则以统一接口抹平差异。",
         "example": "按需切换后端以发挥其原生优势：ECharts 适合层级旭日图，Plotly 擅长统计和分析图表，Excel 则可生成工作簿中可继续编辑的原生图表。"
+      },
+      "themes": {
+        "title": "用不同主题呈现",
+        "body": "Flint 主题是一套正式规范，用于引导布局算法、根据语义角色应用表现规则，并将几何、字体和颜色组织成统一的视觉系统。",
+        "example": "将视觉主题从 Economist 切换为 Swiss 时，数据与编码保持不变，而间距、结构、标签、图形、字体和颜色会随之调整，以体现各自的视觉语言。"
       }
     },
     "examples": {
       "facetedLine": {
         "label": "分地区折线图",
-        "caption": "按地区拆分成多个小图，展示月活用户随时间的变化。"
+        "caption": "按地区拆分成多个小图，展示月活用户随时间的变化。",
+        "title": "各地区月活跃用户",
+        "subtitle": "2025 年逐月活跃玩家数，每个地区一幅小图，按平台着色"
       },
       "heatmap": {
         "label": "发散热力图",
-        "caption": "按地区与月份展示用户净增减，颜色以零为中心。"
+        "caption": "按地区与月份展示用户净增减，颜色以零为中心。",
+        "title": "哪些游戏在何时获得了玩家",
+        "subtitle": "2025 年各游戏逐月净增用户；正值表示增长，负值表示流失"
       },
       "waterfall": {
         "label": "瀑布图",
-        "caption": "逐月累加用户增减量，呈现全年用户总数的变化过程。"
+        "caption": "逐月累加用户增减量，呈现全年用户总数的变化过程。",
+        "title": "2025 年玩家规模的变化过程",
+        "subtitle": "逐月净增用户，累加为全年总量"
       },
       "sunburst": {
         "label": "旭日图",
-        "caption": "将用户活动拆成三级层级：地区、游戏类型与游戏。"
+        "caption": "将用户活动拆成三级层级：地区、游戏类型与游戏。",
+        "title": "玩家分布在哪里",
+        "subtitle": "月活跃用户按地区、平台、游戏逐层拆分"
       },
       "donut": {
         "label": "环图",
-        "caption": "以比例扇区展示影片分级，并从图表规范应用内半径。"
+        "caption": "以比例扇区展示影片分级，并从图表规范应用内半径。",
+        "title": "按 MPAA 分级划分的影片",
+        "subtitle": "各分级影片数量占比"
       },
       "regression": {
         "label": "回归散点图",
-        "caption": "评论与观众评分，并拟合趋势线以揭示关系。"
+        "caption": "评论与观众评分，并拟合趋势线以揭示关系。",
+        "title": "影评人与观众的评价大体一致",
+        "subtitle": "IMDB 评分对烂番茄评分，每部影片一个点，并拟合趋势线"
       },
       "sortedBar": {
         "label": "排序柱状图",
-        "caption": "按数量从多到少排列影片类型。"
+        "caption": "按数量从多到少排列影片类型。",
+        "title": "按类型划分的影片",
+        "subtitle": "影片数量，从多到少"
       }
     }
   },
   "mcp": {
-    "heroTitle": "让智能体通过 Flint MCP 创建图表",
+    "heroTitle": "让智能体通过 Flint MCP 创建图表与主题",
     "leadBefore": "将 <code>flint-chart-mcp</code> 配置为",
     "leadMcpLink": "Model Context Protocol",
-    "leadAfter": "服务器后，智能体便能创建图表，并以交互式 MCP App 呈现结果。Flint 默认打开可交互的图表视图；需要导出结果时，也可以返回静态图片，或生成可供 Vega-Lite、ECharts 和 Chart.js 直接使用的规范。",
+    "leadAfter": "服务器后，智能体既能创建交互式图表，也能编写可复用的视觉主题。Flint 默认打开可交互的图表视图；也可以导出静态结果，并引导智能体通过正式的 ThemeSpec 定义视觉设计。",
     "quickStart": "让 AI 智能体帮你配置：",
     "quickStartBody": "把下面这段请求发给智能体即可。若想手动配置，请参阅",
     "localSetupTitle": "本地服务器",
@@ -281,13 +495,13 @@
     "step3Title": "查看并调整结果。",
     "step3Body": "如果你的 MCP 客户端支持 MCP Apps，Flint 会直接打开实时 SVG 预览，并提供图表选项供你调整。需要导出时，也可以生成 PNG、SVG，或可供各渲染后端直接使用的规范。",
     "provides": "功能一览",
-    "providesBody": "服务器提供一组精简而明确的工具和资源：你可以交互式查看图表，也可以进行静态渲染、规范校验，或让智能体进一步了解 Flint 支持的图表类型和写法。",
+    "providesBody": "服务器将执行与编写分开：工具负责渲染、校验和查询 Flint 能力，随包提供的技能则指导智能体编写语义图表规范和可复用的 ThemeSpec。",
     "installTitle": "安装与配置",
     "installBody": "手动配置时，服务器通过 <strong>stdio</strong> 通信，并可直接通过 <code>npx</code> 运行，无需预先安装。将下面的服务器配置添加到 MCP 客户端：",
     "dataBody": "调用工具时，可以通过 <code>data.values</code> 直接传入数据行，也可以通过 <code>data.url</code> 读取本地 CSV、TSV 或 JSON 文件。Flint 不会获取远程 URL。如果服务器运行在不受信任的环境中，请传入 <code>--disable-file-reference</code> 禁用本地文件引用，此时只接受内联的 <code>data.values</code>：",
     "reference": "延伸阅读",
     "referenceBody": "配置文档完整介绍了 MCP 工作流；包 README 则提供工具参数、CLI 选项和客户端配置的快速参考。",
-    "skillNote": "想把 Flint 集成到自己的应用中？独立的 <skillLink>Flint Agent Skill</skillLink> 可以指导编程智能体编写 Flint 规范并完成集成。",
+    "skillNote": "想在 MCP 之外使用 Flint？独立的<skillLink>图表编写技能</skillLink>可指导智能体创建和集成图表规范，<themeSkillLink>主题编写技能</themeSkillLink>则可将视觉识别转换成 ThemeSpec。",
     "readSetupDocs": "查看配置文档",
     "tools": {
       "create_chart_view": "打开交互式 MCP App，提供实时 SVG 预览和图表选项。需要查看图表时优先使用。",
@@ -295,9 +509,12 @@
       "compile_chart": "生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范，并返回编译警告。",
       "validate_chart": "检查规范是否有效，报告警告或错误，并返回计算得到的图表尺寸。",
       "list_chart_types": "列出可用的图表类型和编码通道，也可按渲染后端筛选。",
-      "agentSkill": "随包提供的编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
+      "list_themes": "列出 Flint 内置的视觉主题；传入主题 id 后，还可获取使用或扩展该设计语言的指南。",
+      "agentSkill": "随包提供的图表编写指南，帮助智能体生成有效的 ChartAssemblyInput 规范。",
+      "themeSkill": "随包提供的 ThemeSpec 编写指南，帮助智能体将视觉识别转换成可复用的正式规范。",
       "chartTypes": "覆盖所有渲染后端的图表类型和编码通道目录，可直接浏览查询。",
-      "authorPrompt": "在支持提示词的客户端中，于调用图表工具前加载 Flint 编写指南。"
+      "authorPrompt": "在支持提示词的客户端中，于调用图表工具前加载图表编写技能。",
+      "themeAuthorPrompt": "当用户提出创建、转换、完善或审查 ThemeSpec 时，加载主题编写技能。"
     },
     "tags": {
       "toolPreferred": "工具 · 首选",

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Value axis deleted and every bar labelled directly with its own dollar figure. The comparison the chart is for — the gap inside each rung — is now a subtraction the reader can do in place.",
+    "Colour cut from tableau10 to the two house inks, navy #051C2C and brand blue #2251FF, at equal weight. The chart is a comparison of two series, so neither may be recessive; what changes is that the hues now come from one palette instead of two arbitrary points on a categorical wheel.",
+    "Legend kept, but reduced to one unlabelled row of two swatches at the top. With the value axis gone the colours are the only thing naming the series, so dropping the key would leave the chart unreadable; what the briefing format objects to is the boxed, titled legend block, not the key itself.",
+    "Sub-bar spacing moved onto the offset scale's paddingInner rather than a fixed band fraction on the mark, so every bar stays centred on its own sub-band — a mark-level band height silently pushes the bar off the row its label sits on. Set to 0: the two bars of a pair meet, so each education level reads as one unit and the only gap on the chart is the one between levels.",
+    "Education labels left as full phrases at 10.5pt instead of being truncated — the category is the argument, so it gets the width.",
+    "All gridlines, ticks, domains and axis titles removed; the currency format ($,.0f) moves onto the labels so the unit is stated once per mark."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 34, "bottom": 8 },
+  "width": 210,
+  "title": {
+    "text": "Median weekly earnings by education and sex, 2023",
+    "subtitle": ["US dollars, full-time wage and salary workers"]
+  },
+  "height": { "step": 22 },
+  "data": {
+    "values": [
+      { "Education": "Less than high school", "Sex": "Men", "Weekly earnings ($)": 780 },
+      { "Education": "Less than high school", "Sex": "Women", "Weekly earnings ($)": 620 },
+      { "Education": "High school", "Sex": "Men", "Weekly earnings ($)": 1000 },
+      { "Education": "High school", "Sex": "Women", "Weekly earnings ($)": 790 },
+      { "Education": "Some college", "Sex": "Men", "Weekly earnings ($)": 1120 },
+      { "Education": "Some college", "Sex": "Women", "Weekly earnings ($)": 890 },
+      { "Education": "Bachelor's degree", "Sex": "Men", "Weekly earnings ($)": 1700 },
+      { "Education": "Bachelor's degree", "Sex": "Women", "Weekly earnings ($)": 1290 },
+      { "Education": "Advanced degree", "Sex": "Men", "Weekly earnings ($)": 2160 },
+      { "Education": "Advanced degree", "Sex": "Women", "Weekly earnings ($)": 1600 }
+    ]
+  },
+  "encoding": {
+    "y": {
+      "field": "Education",
+      "type": "nominal",
+      "sort": ["Advanced degree", "Bachelor's degree", "Some college", "High school", "Less than high school"],
+      "title": null,
+      "scale": { "paddingInner": 0.25 },
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 8 }
+    },
+    "yOffset": {
+      "field": "Sex",
+      "type": "nominal",
+      "sort": ["Men", "Women"],
+      "scale": { "paddingInner": 0 }
+    },
+    "x": {
+      "field": "Weekly earnings ($)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "domain": [0, 2600] },
+      "axis": null
+    },
+    "color": {
+      "field": "Sex",
+      "type": "nominal",
+      "title": null,
+      "sort": ["Men", "Women"],
+      "scale": { "domain": ["Men", "Women"], "range": ["#051c2c", "#2251ff"] },
+      "legend": {
+        "orient": "top",
+        "direction": "horizontal",
+        "symbolType": "square",
+        "symbolSize": 90,
+        "columnPadding": 8,
+        "offset": 6,
+        "padding": 0
+      }
+    }
+  },
+  "layer": [
+    { "mark": { "type": "bar" } },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 9.5,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "text": { "field": "Weekly earnings ($)", "type": "quantitative", "format": "$,.0f" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#8fa0ab",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#051c2c",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

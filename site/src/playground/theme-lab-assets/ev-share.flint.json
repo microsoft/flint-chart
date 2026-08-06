@@ -1,0 +1,139 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "EV share (%)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 308,
+      "continuousHeight": 254
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 25
+    }
+  },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": [
+      "Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2018",
+        "Country": "Norway",
+        "EV share (%)": 49
+      },
+      {
+        "Year": "2020",
+        "Country": "Norway",
+        "EV share (%)": 75
+      },
+      {
+        "Year": "2022",
+        "Country": "Norway",
+        "EV share (%)": 88
+      },
+      {
+        "Year": "2023",
+        "Country": "Norway",
+        "EV share (%)": 93
+      },
+      {
+        "Year": "2018",
+        "Country": "China",
+        "EV share (%)": 4
+      },
+      {
+        "Year": "2020",
+        "Country": "China",
+        "EV share (%)": 6
+      },
+      {
+        "Year": "2022",
+        "Country": "China",
+        "EV share (%)": 29
+      },
+      {
+        "Year": "2023",
+        "Country": "China",
+        "EV share (%)": 38
+      },
+      {
+        "Year": "2018",
+        "Country": "Germany",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "Germany",
+        "EV share (%)": 13
+      },
+      {
+        "Year": "2022",
+        "Country": "Germany",
+        "EV share (%)": 31
+      },
+      {
+        "Year": "2023",
+        "Country": "Germany",
+        "EV share (%)": 25
+      },
+      {
+        "Year": "2018",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2020",
+        "Country": "United States",
+        "EV share (%)": 2
+      },
+      {
+        "Year": "2022",
+        "Country": "United States",
+        "EV share (%)": 8
+      },
+      {
+        "Year": "2023",
+        "Country": "United States",
+        "EV share (%)": 10
+      }
+    ]
+  }
+}

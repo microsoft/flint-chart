@@ -1,0 +1,979 @@
+{
+  "width": 230,
+  "height": 230,
+  "layer": [
+    {
+      "data": {
+        "values": [
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0,
+            "__y2": -1
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0.9510565162951535,
+            "__y2": -0.30901699437494745
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": 0.5877852522924732,
+            "__y2": 0.8090169943749473
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": -0.587785252292473,
+            "__y2": 0.8090169943749475
+          },
+          {
+            "__type": "spoke",
+            "__x": 0,
+            "__y": 0,
+            "__x2": -0.9510565162951536,
+            "__y2": -0.30901699437494723
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "stroke": "#ddd",
+        "strokeWidth": 0.8
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -1.18,
+              1.18
+            ]
+          },
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -1.18,
+              1.18
+            ]
+          },
+          "axis": null
+        },
+        "x2": {
+          "field": "__x2"
+        },
+        "y2": {
+          "field": "__y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0,
+            "__y": -0.25,
+            "__x2": 0.23776412907378838,
+            "__y2": -0.07725424859373686
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0.23776412907378838,
+            "__y": -0.07725424859373686,
+            "__x2": 0.1469463130731183,
+            "__y2": 0.20225424859373684
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": 0.1469463130731183,
+            "__y": 0.20225424859373684,
+            "__x2": -0.14694631307311826,
+            "__y2": 0.20225424859373686
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": -0.14694631307311826,
+            "__y": 0.20225424859373686,
+            "__x2": -0.2377641290737884,
+            "__y2": -0.07725424859373681
+          },
+          {
+            "__type": "ring",
+            "__level": 0.25,
+            "__x": -0.2377641290737884,
+            "__y": -0.07725424859373681,
+            "__x2": 0,
+            "__y2": -0.25
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0,
+            "__y": -0.5,
+            "__x2": 0.47552825814757677,
+            "__y2": -0.15450849718747373
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0.47552825814757677,
+            "__y": -0.15450849718747373,
+            "__x2": 0.2938926261462366,
+            "__y2": 0.40450849718747367
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": 0.2938926261462366,
+            "__y": 0.40450849718747367,
+            "__x2": -0.2938926261462365,
+            "__y2": 0.4045084971874737
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": -0.2938926261462365,
+            "__y": 0.4045084971874737,
+            "__x2": -0.4755282581475768,
+            "__y2": -0.15450849718747361
+          },
+          {
+            "__type": "ring",
+            "__level": 0.5,
+            "__x": -0.4755282581475768,
+            "__y": -0.15450849718747361,
+            "__x2": 0,
+            "__y2": -0.5
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0,
+            "__y": -0.75,
+            "__x2": 0.7132923872213651,
+            "__y2": -0.2317627457812106
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0.7132923872213651,
+            "__y": -0.2317627457812106,
+            "__x2": 0.4408389392193549,
+            "__y2": 0.6067627457812105
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": 0.4408389392193549,
+            "__y": 0.6067627457812105,
+            "__x2": -0.4408389392193548,
+            "__y2": 0.6067627457812106
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": -0.4408389392193548,
+            "__y": 0.6067627457812106,
+            "__x2": -0.7132923872213652,
+            "__y2": -0.23176274578121042
+          },
+          {
+            "__type": "ring",
+            "__level": 0.75,
+            "__x": -0.7132923872213652,
+            "__y": -0.23176274578121042,
+            "__x2": 0,
+            "__y2": -0.75
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0,
+            "__y": -1,
+            "__x2": 0.9510565162951535,
+            "__y2": -0.30901699437494745
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0.9510565162951535,
+            "__y": -0.30901699437494745,
+            "__x2": 0.5877852522924732,
+            "__y2": 0.8090169943749473
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": 0.5877852522924732,
+            "__y": 0.8090169943749473,
+            "__x2": -0.587785252292473,
+            "__y2": 0.8090169943749475
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": -0.587785252292473,
+            "__y": 0.8090169943749475,
+            "__x2": -0.9510565162951536,
+            "__y2": -0.30901699437494723
+          },
+          {
+            "__type": "ring",
+            "__level": 1,
+            "__x": -0.9510565162951536,
+            "__y": -0.30901699437494723,
+            "__x2": 0,
+            "__y2": -1
+          }
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "stroke": "#e0e0e0",
+        "strokeWidth": 0.6
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "x2": {
+          "field": "__x2"
+        },
+        "y2": {
+          "field": "__y2"
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Protein",
+              "(25)"
+            ],
+            "__x": 0,
+            "__y": -1.15,
+            "__align": "center",
+            "__baseline": "bottom",
+            "__dx": 0,
+            "__dy": -4
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "center",
+        "baseline": "bottom",
+        "dx": 0,
+        "dy": -4,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Protein",
+            "(25)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Fat",
+              "(50)"
+            ],
+            "__x": 1.0937149937394264,
+            "__y": -0.35536954353118955,
+            "__align": "left",
+            "__baseline": "bottom",
+            "__dx": 4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "left",
+        "baseline": "bottom",
+        "dx": 4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Fat",
+            "(50)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Carbs",
+              "(100)"
+            ],
+            "__x": 0.6759530401363442,
+            "__y": 0.9303695435311894,
+            "__align": "left",
+            "__baseline": "top",
+            "__dx": 4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "left",
+        "baseline": "top",
+        "dx": 4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Carbs",
+            "(100)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Fiber",
+              "(20)"
+            ],
+            "__x": -0.6759530401363439,
+            "__y": 0.9303695435311895,
+            "__align": "right",
+            "__baseline": "top",
+            "__dx": -4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "right",
+        "baseline": "top",
+        "dx": -4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Fiber",
+            "(20)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__label": [
+              "Sugar",
+              "(5)"
+            ],
+            "__x": -1.0937149937394266,
+            "__y": -0.35536954353118927,
+            "__align": "right",
+            "__baseline": "bottom",
+            "__dx": -4,
+            "__dy": 0
+          }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "fontSize": 10,
+        "fill": "#555",
+        "align": "right",
+        "baseline": "bottom",
+        "dx": -4,
+        "dy": 0,
+        "limit": 120,
+        "lineHeight": 13
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "text": {
+          "value": [
+            "Sugar",
+            "(5)"
+          ]
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__group": "Almonds",
+            "__axis": "Protein",
+            "__value": 0.84,
+            "__raw": 21,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.84
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Fat",
+            "__value": 1,
+            "__raw": 50,
+            "__angle": 72,
+            "__x": 0.9510565162951535,
+            "__y": -0.30901699437494745
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Carbs",
+            "__value": 0.22,
+            "__raw": 22,
+            "__angle": 144,
+            "__x": 0.12931275550434412,
+            "__y": 0.1779837387624884
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Fiber",
+            "__value": 0.6,
+            "__raw": 12,
+            "__angle": 216,
+            "__x": -0.3526711513754838,
+            "__y": 0.4854101966249684
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Sugar",
+            "__value": 0.8,
+            "__raw": 4,
+            "__angle": 288,
+            "__x": -0.760845213036123,
+            "__y": -0.2472135954999578
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Protein",
+            "__value": 0.68,
+            "__raw": 17,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.68
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Fat",
+            "__value": 0.14,
+            "__raw": 7,
+            "__angle": 72,
+            "__x": 0.1331479122813215,
+            "__y": -0.043262379212492645
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Carbs",
+            "__value": 0.66,
+            "__raw": 66,
+            "__angle": 144,
+            "__x": 0.38793826651303237,
+            "__y": 0.5339512162874652
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Fiber",
+            "__value": 0.55,
+            "__raw": 11,
+            "__angle": 216,
+            "__x": -0.32328188876086017,
+            "__y": 0.44495934690622113
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Sugar",
+            "__value": 0.2,
+            "__raw": 1,
+            "__angle": 288,
+            "__x": -0.19021130325903074,
+            "__y": -0.06180339887498945
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Protein",
+            "__value": 0.4,
+            "__raw": 10,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.4
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Fat",
+            "__value": 0.1,
+            "__raw": 5,
+            "__angle": 72,
+            "__x": 0.09510565162951536,
+            "__y": -0.030901699437494747
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Carbs",
+            "__value": 0.04,
+            "__raw": 4,
+            "__angle": 144,
+            "__x": 0.02351141009169893,
+            "__y": 0.032360679774997896
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Fiber",
+            "__value": 0,
+            "__raw": 0,
+            "__angle": 216,
+            "__x": 0,
+            "__y": 0
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Sugar",
+            "__value": 0.8,
+            "__raw": 4,
+            "__angle": 288,
+            "__x": -0.760845213036123,
+            "__y": -0.2472135954999578
+          }
+        ]
+      },
+      "mark": {
+        "type": "line",
+        "interpolate": "linear-closed",
+        "strokeWidth": 1.5,
+        "point": false,
+        "fillOpacity": 0.15
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "order": {
+          "field": "__angle",
+          "type": "quantitative"
+        },
+        "tooltip": [
+          {
+            "field": "__axis",
+            "type": "nominal",
+            "title": "Nutrient"
+          },
+          {
+            "field": "__raw",
+            "type": "quantitative",
+            "title": "Grams/100g"
+          }
+        ],
+        "stroke": {
+          "field": "__group",
+          "type": "nominal",
+          "title": "Food"
+        },
+        "fill": {
+          "field": "__group",
+          "type": "nominal",
+          "title": "Food",
+          "legend": null
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {
+            "__group": "Almonds",
+            "__axis": "Protein",
+            "__value": 0.84,
+            "__raw": 21,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.84
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Fat",
+            "__value": 1,
+            "__raw": 50,
+            "__angle": 72,
+            "__x": 0.9510565162951535,
+            "__y": -0.30901699437494745
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Carbs",
+            "__value": 0.22,
+            "__raw": 22,
+            "__angle": 144,
+            "__x": 0.12931275550434412,
+            "__y": 0.1779837387624884
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Fiber",
+            "__value": 0.6,
+            "__raw": 12,
+            "__angle": 216,
+            "__x": -0.3526711513754838,
+            "__y": 0.4854101966249684
+          },
+          {
+            "__group": "Almonds",
+            "__axis": "Sugar",
+            "__value": 0.8,
+            "__raw": 4,
+            "__angle": 288,
+            "__x": -0.760845213036123,
+            "__y": -0.2472135954999578
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Protein",
+            "__value": 0.68,
+            "__raw": 17,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.68
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Fat",
+            "__value": 0.14,
+            "__raw": 7,
+            "__angle": 72,
+            "__x": 0.1331479122813215,
+            "__y": -0.043262379212492645
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Carbs",
+            "__value": 0.66,
+            "__raw": 66,
+            "__angle": 144,
+            "__x": 0.38793826651303237,
+            "__y": 0.5339512162874652
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Fiber",
+            "__value": 0.55,
+            "__raw": 11,
+            "__angle": 216,
+            "__x": -0.32328188876086017,
+            "__y": 0.44495934690622113
+          },
+          {
+            "__group": "Oats",
+            "__axis": "Sugar",
+            "__value": 0.2,
+            "__raw": 1,
+            "__angle": 288,
+            "__x": -0.19021130325903074,
+            "__y": -0.06180339887498945
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Protein",
+            "__value": 0.4,
+            "__raw": 10,
+            "__angle": 0,
+            "__x": 0,
+            "__y": -0.4
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Fat",
+            "__value": 0.1,
+            "__raw": 5,
+            "__angle": 72,
+            "__x": 0.09510565162951536,
+            "__y": -0.030901699437494747
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Carbs",
+            "__value": 0.04,
+            "__raw": 4,
+            "__angle": 144,
+            "__x": 0.02351141009169893,
+            "__y": 0.032360679774997896
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Fiber",
+            "__value": 0,
+            "__raw": 0,
+            "__angle": 216,
+            "__x": 0,
+            "__y": 0
+          },
+          {
+            "__group": "Greek yogurt",
+            "__axis": "Sugar",
+            "__value": 0.8,
+            "__raw": 4,
+            "__angle": 288,
+            "__x": -0.760845213036123,
+            "__y": -0.2472135954999578
+          }
+        ]
+      },
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 25
+      },
+      "encoding": {
+        "x": {
+          "field": "__x",
+          "type": "quantitative",
+          "axis": null
+        },
+        "y": {
+          "field": "__y",
+          "type": "quantitative",
+          "axis": null
+        },
+        "tooltip": [
+          {
+            "field": "__group",
+            "type": "nominal",
+            "title": "Food"
+          },
+          {
+            "field": "__axis",
+            "type": "nominal",
+            "title": "Nutrient"
+          },
+          {
+            "field": "__raw",
+            "type": "quantitative",
+            "title": "Grams/100g"
+          }
+        ],
+        "color": {
+          "field": "__group",
+          "type": "nominal",
+          "title": "Food",
+          "legend": null
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 230,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Nutrition profile per 100 g — Almonds vs Oats vs Greek yogurt"
+  },
+  "data": {
+    "values": [
+      {
+        "Food": "Almonds",
+        "Nutrient": "Protein",
+        "Grams/100g": 21
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Fat",
+        "Grams/100g": 50
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Carbs",
+        "Grams/100g": 22
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Fiber",
+        "Grams/100g": 12
+      },
+      {
+        "Food": "Almonds",
+        "Nutrient": "Sugar",
+        "Grams/100g": 4
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Protein",
+        "Grams/100g": 17
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Fat",
+        "Grams/100g": 7
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Carbs",
+        "Grams/100g": 66
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Fiber",
+        "Grams/100g": 11
+      },
+      {
+        "Food": "Oats",
+        "Nutrient": "Sugar",
+        "Grams/100g": 1
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Protein",
+        "Grams/100g": 10
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Fat",
+        "Grams/100g": 5
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Carbs",
+        "Grams/100g": 4
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Fiber",
+        "Grams/100g": 0
+      },
+      {
+        "Food": "Greek yogurt",
+        "Nutrient": "Sugar",
+        "Grams/100g": 4
+      }
+    ]
+  }
+}

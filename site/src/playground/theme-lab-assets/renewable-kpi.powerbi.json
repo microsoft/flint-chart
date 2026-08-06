@@ -1,0 +1,191 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "The data is out of the geometry. Flint draws the progress bar as a rect ending at x = 217.14666666666668 — a pixel coordinate with the arithmetic 30.3 ÷ 45 × 272 already performed and baked in. Change the number in the dataset and the bar does not move. Here the bar is a rect on a real 0–50 scale driven by the field.",
+    "'67% of 45' is a string literal in Flint's spec, not a computed label. Same failure, worse consequence: it is the only place the target appears, and it will keep saying 67% after the data changes. It is recomputed here from Share and Target, alongside the gap in points.",
+    "The white card deleted. A #FFFFFF panel with #1A1A1A type is a hole punched in a #1B1A19 report page; the tile now sits on the canvas and takes its contrast from the type, not from an inverted surface.",
+    "The target is now on the chart, as a tick at 45 with its own label, instead of surviving only inside a sentence. A progress bar with no visible goal is a bar with no scale.",
+    "Status colour used where the theme reserves it — for a threshold. The fill is brand #118DFF because the measure itself is neutral; the shortfall is #E66C37 because the value is under target. Flint's #5B8DEF says nothing either way.",
+    "The metric name comes from the Metric field rather than being retyped as a mark literal, so the tile is a template rather than a drawing.",
+    "68pt display type cut to 40pt Segoe UI semibold. A KPI number has to be the largest thing on the tile, not the largest thing on the page."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 10, "top": 6, "right": 12, "bottom": 8 },
+  "title": {
+    "text": "Renewables supply 30% of the world's electricity",
+    "subtitle": ["Share of global electricity generation, 2023, against a 45% target"]
+  },
+  "data": {
+    "values": [{ "Metric": "Renewable share", "Share (%)": 30.3, "Target": 45 }]
+  },
+  "transform": [
+    { "calculate": "format(datum['Share (%)'], '.1f') + '%'", "as": "__big" },
+    {
+      "calculate": "format(datum['Share (%)'] / datum.Target, '.0%') + ' of target'",
+      "as": "__pctLabel"
+    },
+    {
+      "calculate": "format(datum.Target - datum['Share (%)'], '.1f') + ' points short'",
+      "as": "__gapLabel"
+    }
+  ],
+  "spacing": 6,
+  "vconcat": [
+    {
+      "width": 300,
+      "height": 74,
+      "layer": [
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "top",
+            "fontSize": 11,
+            "fontWeight": 600,
+            "color": "#b3b0ad"
+          },
+          "encoding": {
+            "x": { "value": 0 },
+            "y": { "value": 0 },
+            "text": { "field": "Metric", "type": "nominal" }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "fontSize": 40,
+            "fontWeight": 600,
+            "color": "#f3f2f1"
+          },
+          "encoding": {
+            "x": { "value": 0 },
+            "y": { "value": 42 },
+            "text": { "field": "__big", "type": "nominal" }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "bottom",
+            "fontSize": 11,
+            "color": "#e66c37"
+          },
+          "encoding": {
+            "x": { "value": 0 },
+            "y": { "value": 74 },
+            "text": { "field": "__gapLabel", "type": "nominal" }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "baseline": "bottom",
+            "fontSize": 11,
+            "color": "#b3b0ad"
+          },
+          "encoding": {
+            "x": { "value": 300 },
+            "y": { "value": 74 },
+            "text": { "field": "__pctLabel", "type": "nominal" }
+          }
+        }
+      ]
+    },
+    {
+      "width": 300,
+      "height": 22,
+      "encoding": {
+        "x": {
+          "field": "Share (%)",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true, "nice": false, "domain": [0, 50] },
+          "axis": {
+            "values": [0, 10, 20, 30, 40, 50],
+            "labelExpr": "datum.value + '%'",
+            "grid": false,
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 4
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": { "type": "rect", "fill": "#3b3a39", "cornerRadius": 3 },
+          "encoding": {
+            "x": { "datum": 0 },
+            "x2": { "datum": 50 },
+            "y": { "value": 4 },
+            "y2": { "value": 16 }
+          }
+        },
+        {
+          "mark": { "type": "rect", "fill": "#118dff", "cornerRadius": 3 },
+          "encoding": {
+            "x": { "datum": 0 },
+            "x2": { "field": "Share (%)" },
+            "y": { "value": 4 },
+            "y2": { "value": 16 }
+          }
+        },
+        {
+          "mark": { "type": "rule", "stroke": "#f3f2f1", "strokeWidth": 2 },
+          "encoding": {
+            "x": { "field": "Target", "type": "quantitative" },
+            "y": { "value": 0 },
+            "y2": { "value": 20 }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "dy": -2,
+            "fontSize": 9.5,
+            "color": "#f3f2f1"
+          },
+          "encoding": {
+            "x": { "field": "Target", "type": "quantitative" },
+            "y": { "value": 0 },
+            "text": { "value": "Target" }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "subtitleFontSize": 9.5,
+      "subtitleColor": "#8a8886",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#8a8886",
+      "titleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "titleFontSize": 9.5,
+      "titleColor": "#8a8886",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

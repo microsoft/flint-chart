@@ -87,6 +87,20 @@ Python 包计划在后续版本发布，不包含在首次公开发版中。目�
 
 这就是 Flint 的核心：DataSpec 说明数据*是什么*，ChartSpec 说明你想*怎么看*。将 JSON 粘贴到[在线编辑器](/editor)即可实时查看和修改。
 
+### 可选：选择主题
+
+在 `chart_spec` 旁加入 `theme_spec`，即可使用 Flint 的内置设计系统：
+
+```json
+{
+  "theme_spec": "economist"
+}
+```
+
+Flint 主题是一套正式规范，会在编译过程中影响布局、语义表现和视觉识别，而不只是设置颜色或字体。ThemeSpec 目前只影响 Vega-Lite 输出。
+
+阅读[使用主题](/documentation/theme-spec)，了解如何选择预设、创建主题，或继承主题并覆盖部分规则。[探索主题](/themes)会用同一组图表展示所有预设的效果。
+
 ## 编译
 
 在 JavaScript 或 TypeScript 中，将同一份输入传给编译函数：
@@ -147,6 +161,7 @@ Python 支持将使用相同的输入结构，计划在后续版本发布。
 ## 接下来读什么
 
 - [示例：数据故事](/documentation/data-story)：用同一份 DataSpec 和五种 ChartSpec 生成不同图表。
+- [使用主题](/documentation/theme-spec)：了解预设、自定义与继承 ThemeSpec。
 - [配置 Flint MCP](/documentation/setup-flint-mcp)：在聊天工具或 IDE 中连接 Flint MCP。
 - [智能体工作流](/documentation/agent-workflows)：将 Flint 集成到自己的智能体产品中。
 - [语义类型](/documentation/semantic-types)：了解 `YearMonth`、`Quantity`、`Category` 和 `Profit` 等语义标签。

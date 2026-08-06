@@ -642,6 +642,7 @@ const colorSchemes = {
     // Diverging - good for data with meaningful center point
     diverging: {
         redBlue: 'redblue',
+        blueOrange: 'blueorange',
         redGrey: 'redgrey',
         redYellowBlue: 'redyellowblue',
         redYellowGreen: 'redyellowgreen',
@@ -651,6 +652,32 @@ const colorSchemes = {
         brownBlueGreen: 'brownbluegreen',
     },
 };
+
+/**
+ * Which end of a diverging scale gets the warm arm.
+ *
+ * Every diverging scheme Vega names runs from its *first*-named colour at the
+ * domain minimum to its last at the maximum: `redblue` is red at the bottom
+ * and blue at the top, `blueorange` the other way round. So choosing a scheme
+ * is choosing a polarity, and the polarity belongs to the field, not to the
+ * palette. Only two orders are intrinsic, and they point opposite ways:
+ *
+ *   - **Intensity.** Warm means *more*. Nobody reads blue as hotter, denser or
+ *     faster. Temperature is the plain case, but so is any measure whose two
+ *     ends are simply less and more of one thing, pivoted at a reference we
+ *     picked. Warm belongs at the top.
+ *   - **Valence.** Red means *loss*. Money below zero, a shrinking share, a
+ *     poor score, a negative sentiment. Here the sign is the reading, and red
+ *     is the side the reader is meant to wince at. Warm belongs at the bottom.
+ *
+ * Nothing else is intrinsic. Two named sides — a political lean, agree against
+ * disagree — carry their colour in the categories, not in the scale. And a
+ * field with no valence at all still leaves the reader holding "warmer is
+ * more", which is why intensity, not valence, is what we assume when the type
+ * tells us nothing.
+ */
+const DIVERGING_WARM_HIGH = 'blueorange';
+const DIVERGING_WARM_LOW = 'redblue';
 
 /**
  * Get recommended color scheme based on semantic type and encoding context.
@@ -707,7 +734,7 @@ export function getRecommendedColorScheme(
     // Temperature
     if (semanticType === 'Temperature') {
         if (colorHint?.type === 'diverging') {
-            return { scheme: 'redblue', type: 'diverging', reason: 'temperature diverging around freezing point' };
+            return { scheme: DIVERGING_WARM_HIGH, type: 'diverging', reason: 'temperature diverging around freezing point, warm end high' };
         }
         return { scheme: 'reds', type: 'sequential', reason: 'temperature single-direction uses sequential' };
     }
@@ -715,7 +742,7 @@ export function getRecommendedColorScheme(
     // Percentage
     if (semanticType === 'Percentage') {
         if (colorHint?.type === 'diverging') {
-            return { scheme: 'redblue', type: 'diverging', reason: 'percentage spans positive and negative' };
+            return { scheme: DIVERGING_WARM_LOW, type: 'diverging', reason: 'percentage spans positive and negative, red is the losing side' };
         }
         return { scheme: 'oranges', type: 'sequential', reason: 'percentage all same sign uses sequential' };
     }
@@ -723,7 +750,7 @@ export function getRecommendedColorScheme(
     // Price/Amount
     if (['Price', 'Amount'].includes(semanticType)) {
         if (colorHint?.type === 'diverging') {
-            return { scheme: 'redblue', type: 'diverging', reason: 'financial data spans positive and negative' };
+            return { scheme: DIVERGING_WARM_LOW, type: 'diverging', reason: 'financial data spans positive and negative, red is the losing side' };
         }
         return { scheme: 'goldgreen', type: 'sequential', reason: 'financial data uses gold-green' };
     }
@@ -731,7 +758,7 @@ export function getRecommendedColorScheme(
     // Score - evaluation metrics; diverging when hint says so (e.g., domain midpoint)
     if (semanticType === 'Score') {
         if (colorHint?.type === 'diverging') {
-            return { scheme: 'redblue', type: 'diverging', reason: 'score/rating diverging around midpoint' };
+            return { scheme: DIVERGING_WARM_LOW, type: 'diverging', reason: 'score diverging around midpoint, red is the poor side' };
         }
         return { scheme: 'yelloworangebrown', type: 'sequential', reason: 'scores use warm sequential' };
     }
@@ -754,7 +781,12 @@ export function getRecommendedColorScheme(
     // Geographic locations - use geographic-friendly palettes
     if (getRegistryEntry(semanticType ?? '').t1 === 'GeoPlace') {
         if (uniqueValueCount <= 10) {
-            return { scheme: 'set2', type: 'categorical', reason: 'geographic regions use distinct pastels' };
+            // Not a pastel set. A pastel is chosen for filled area — a
+            // choropleth, a stacked band — where there is enough of it to read
+            // a faint hue. A place just as often arrives as a one-pixel line
+            // or as the colour of its own label, and set2's yellow on white is
+            // then a line the reader has to hunt for.
+            return { scheme: 'tableau10', type: 'categorical', reason: 'places are named categories, at a contrast that survives thin marks' };
         }
         return { scheme: 'tableau20', type: 'categorical', reason: 'many regions use large categorical' };
     }
@@ -775,10 +807,10 @@ export function getRecommendedColorScheme(
 
     // Names (persons, companies, products) - use saturated schemes for readability
     if (semanticType === 'Name') {
-        return { 
-            scheme: uniqueValueCount > 8 ? 'tableau20' : 'set2', 
-            type: 'categorical', 
-            reason: 'names use readable categorical' 
+        return {
+            scheme: uniqueValueCount > 8 ? 'tableau20' : 'tableau10',
+            type: 'categorical',
+            reason: 'names use readable categorical'
         };
     }
 
@@ -792,7 +824,15 @@ export function getRecommendedColorScheme(
     // PercentageChange) pass through here and should honor their diverging hint.
     if (measureTypes.has(semanticType)) {
         if (colorHint?.type === 'diverging') {
-            return { scheme: 'redblue', type: 'diverging', reason: 'measure with diverging nature' };
+            // A signed measure splits into gain and loss, so red goes to the
+            // bottom. Everything else that happens to straddle a pivot — a
+            // bare Quantity, a Count, a Distance — splits into less and more,
+            // and there red at the bottom would tell the reader that small is
+            // bad when all we meant was small.
+            const signed = getRegistryEntry(semanticType).t1 === 'SignedMeasure';
+            return signed
+                ? { scheme: DIVERGING_WARM_LOW, type: 'diverging', reason: 'signed measure, red is the negative side' }
+                : { scheme: DIVERGING_WARM_HIGH, type: 'diverging', reason: 'measure with no valence, warm end high' };
         }
         const sequentialSchemes = ['viridis', 'blues', 'greens', 'reds', 'yelloworangebrown', 'goldgreen'];
         return { 

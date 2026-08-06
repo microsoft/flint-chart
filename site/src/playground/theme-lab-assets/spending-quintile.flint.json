@@ -1,0 +1,196 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Quintile",
+      "type": "nominal",
+      "sort": null
+    },
+    "y": {
+      "field": "Spending ($)",
+      "type": "quantitative",
+      "stack": "normalize",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "color": {
+      "field": "Category",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10",
+        "domain": [
+          "Housing",
+          "Transportation",
+          "Food",
+          "Healthcare",
+          "Everything else"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "title": {
+    "text": "Where each income group's money goes",
+    "subtitle": [
+      "Share of annual household spending, by income quintile"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Quintile": "Lowest fifth",
+        "Category": "Housing",
+        "Spending ($)": 12800
+      },
+      {
+        "Quintile": "Lowest fifth",
+        "Category": "Transportation",
+        "Spending ($)": 4900
+      },
+      {
+        "Quintile": "Lowest fifth",
+        "Category": "Food",
+        "Spending ($)": 5100
+      },
+      {
+        "Quintile": "Lowest fifth",
+        "Category": "Healthcare",
+        "Spending ($)": 2900
+      },
+      {
+        "Quintile": "Lowest fifth",
+        "Category": "Everything else",
+        "Spending ($)": 6400
+      },
+      {
+        "Quintile": "Second fifth",
+        "Category": "Housing",
+        "Spending ($)": 16100
+      },
+      {
+        "Quintile": "Second fifth",
+        "Category": "Transportation",
+        "Spending ($)": 7600
+      },
+      {
+        "Quintile": "Second fifth",
+        "Category": "Food",
+        "Spending ($)": 6300
+      },
+      {
+        "Quintile": "Second fifth",
+        "Category": "Healthcare",
+        "Spending ($)": 4000
+      },
+      {
+        "Quintile": "Second fifth",
+        "Category": "Everything else",
+        "Spending ($)": 10700
+      },
+      {
+        "Quintile": "Middle fifth",
+        "Category": "Housing",
+        "Spending ($)": 19400
+      },
+      {
+        "Quintile": "Middle fifth",
+        "Category": "Transportation",
+        "Spending ($)": 10600
+      },
+      {
+        "Quintile": "Middle fifth",
+        "Category": "Food",
+        "Spending ($)": 7600
+      },
+      {
+        "Quintile": "Middle fifth",
+        "Category": "Healthcare",
+        "Spending ($)": 4700
+      },
+      {
+        "Quintile": "Middle fifth",
+        "Category": "Everything else",
+        "Spending ($)": 16400
+      },
+      {
+        "Quintile": "Fourth fifth",
+        "Category": "Housing",
+        "Spending ($)": 24300
+      },
+      {
+        "Quintile": "Fourth fifth",
+        "Category": "Transportation",
+        "Spending ($)": 13700
+      },
+      {
+        "Quintile": "Fourth fifth",
+        "Category": "Food",
+        "Spending ($)": 9100
+      },
+      {
+        "Quintile": "Fourth fifth",
+        "Category": "Healthcare",
+        "Spending ($)": 6100
+      },
+      {
+        "Quintile": "Fourth fifth",
+        "Category": "Everything else",
+        "Spending ($)": 22800
+      },
+      {
+        "Quintile": "Highest fifth",
+        "Category": "Housing",
+        "Spending ($)": 36600
+      },
+      {
+        "Quintile": "Highest fifth",
+        "Category": "Transportation",
+        "Spending ($)": 19500
+      },
+      {
+        "Quintile": "Highest fifth",
+        "Category": "Food",
+        "Spending ($)": 13400
+      },
+      {
+        "Quintile": "Highest fifth",
+        "Category": "Healthcare",
+        "Spending ($)": 8500
+      },
+      {
+        "Quintile": "Highest fifth",
+        "Category": "Everything else",
+        "Spending ($)": 43800
+      }
+    ]
+  }
+}

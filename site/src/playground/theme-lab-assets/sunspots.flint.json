@@ -1,0 +1,144 @@
+{
+  "mark": "line",
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal"
+    },
+    "y": {
+      "field": "Sunspot number",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 332,
+      "continuousHeight": 235
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 24
+    }
+  },
+  "title": {
+    "text": "Sunspot number, 2000–2023"
+  },
+  "data": {
+    "values": [
+      {
+        "Year": "2000",
+        "Sunspot number": 120
+      },
+      {
+        "Year": "2001",
+        "Sunspot number": 111
+      },
+      {
+        "Year": "2002",
+        "Sunspot number": 104
+      },
+      {
+        "Year": "2003",
+        "Sunspot number": 64
+      },
+      {
+        "Year": "2004",
+        "Sunspot number": 40
+      },
+      {
+        "Year": "2005",
+        "Sunspot number": 30
+      },
+      {
+        "Year": "2006",
+        "Sunspot number": 15
+      },
+      {
+        "Year": "2007",
+        "Sunspot number": 8
+      },
+      {
+        "Year": "2008",
+        "Sunspot number": 3
+      },
+      {
+        "Year": "2009",
+        "Sunspot number": 3
+      },
+      {
+        "Year": "2010",
+        "Sunspot number": 16
+      },
+      {
+        "Year": "2011",
+        "Sunspot number": 56
+      },
+      {
+        "Year": "2012",
+        "Sunspot number": 58
+      },
+      {
+        "Year": "2013",
+        "Sunspot number": 65
+      },
+      {
+        "Year": "2014",
+        "Sunspot number": 79
+      },
+      {
+        "Year": "2015",
+        "Sunspot number": 67
+      },
+      {
+        "Year": "2016",
+        "Sunspot number": 40
+      },
+      {
+        "Year": "2017",
+        "Sunspot number": 22
+      },
+      {
+        "Year": "2018",
+        "Sunspot number": 7
+      },
+      {
+        "Year": "2019",
+        "Sunspot number": 4
+      },
+      {
+        "Year": "2020",
+        "Sunspot number": 9
+      },
+      {
+        "Year": "2021",
+        "Sunspot number": 29
+      },
+      {
+        "Year": "2022",
+        "Sunspot number": 83
+      },
+      {
+        "Year": "2023",
+        "Sunspot number": 123
+      }
+    ]
+  }
+}

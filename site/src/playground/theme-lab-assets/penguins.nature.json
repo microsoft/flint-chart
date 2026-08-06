@@ -1,0 +1,145 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nature",
+  "__design__": [
+    "Grid deleted entirely and the frame replaced by black L-shaped spines with outward 3.5pt ticks. Flint's default kept a light box and no domain lines; a figure panel needs the opposite.",
+    "Palette switched from tableau10 to Okabe–Ito (#0072B2 / #E69F00 / #009E73), which stays separable in deuteranopia and in greyscale.",
+    "Redundant encoding added: species also maps to shape, and the two legends merge into one, so colour is never the only channel carrying the group.",
+    "Units made mandatory in both axis titles; type dropped to 8.5pt labels / 9pt titles for an 89 mm single-column figure.",
+    "Legend kept but moved inside the top-left of the plot — a journal figure pays for width, not for a legend gutter.",
+    "Point size cut to 26 with a thin white stroke so overlapping birds stay countable at print size, and mark type changed from circle to point so the shape channel is available at all.",
+    "Headline set as a small 12pt bold sans line with the sample description demoted to an 8pt italic deck — the journal convention of a terse label over a methods line, rather than one undifferentiated title string."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 4, "top": 4, "right": 6, "bottom": 4 },
+  "width": 250,
+  "height": 195,
+  "title": {
+    "text": "Flipper length versus body mass in three penguin species",
+    "subtitle": ["Palmer Archipelago, Antarctica; n = 33"]
+  },
+  "data": {
+    "values": [
+      { "Species": "Adelie", "Flipper length (mm)": 181, "Body mass (g)": 3750 },
+      { "Species": "Adelie", "Flipper length (mm)": 186, "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Flipper length (mm)": 195, "Body mass (g)": 3250 },
+      { "Species": "Adelie", "Flipper length (mm)": 193, "Body mass (g)": 3450 },
+      { "Species": "Adelie", "Flipper length (mm)": 190, "Body mass (g)": 3650 },
+      { "Species": "Adelie", "Flipper length (mm)": 181, "Body mass (g)": 3625 },
+      { "Species": "Adelie", "Flipper length (mm)": 195, "Body mass (g)": 4675 },
+      { "Species": "Adelie", "Flipper length (mm)": 182, "Body mass (g)": 3200 },
+      { "Species": "Adelie", "Flipper length (mm)": 191, "Body mass (g)": 3800 },
+      { "Species": "Adelie", "Flipper length (mm)": 198, "Body mass (g)": 4400 },
+      { "Species": "Adelie", "Flipper length (mm)": 185, "Body mass (g)": 3700 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 192, "Body mass (g)": 3500 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 196, "Body mass (g)": 3900 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 193, "Body mass (g)": 3650 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 188, "Body mass (g)": 3525 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 197, "Body mass (g)": 3950 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 198, "Body mass (g)": 3800 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 178, "Body mass (g)": 3300 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 207, "Body mass (g)": 4800 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 201, "Body mass (g)": 4050 },
+      { "Species": "Chinstrap", "Flipper length (mm)": 191, "Body mass (g)": 3550 },
+      { "Species": "Gentoo", "Flipper length (mm)": 211, "Body mass (g)": 4500 },
+      { "Species": "Gentoo", "Flipper length (mm)": 230, "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Flipper length (mm)": 210, "Body mass (g)": 4450 },
+      { "Species": "Gentoo", "Flipper length (mm)": 218, "Body mass (g)": 5700 },
+      { "Species": "Gentoo", "Flipper length (mm)": 215, "Body mass (g)": 5400 },
+      { "Species": "Gentoo", "Flipper length (mm)": 219, "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Flipper length (mm)": 209, "Body mass (g)": 4800 },
+      { "Species": "Gentoo", "Flipper length (mm)": 215, "Body mass (g)": 5000 },
+      { "Species": "Gentoo", "Flipper length (mm)": 214, "Body mass (g)": 4650 },
+      { "Species": "Gentoo", "Flipper length (mm)": 216, "Body mass (g)": 5550 },
+      { "Species": "Gentoo", "Flipper length (mm)": 221, "Body mass (g)": 5950 },
+      { "Species": "Gentoo", "Flipper length (mm)": 217, "Body mass (g)": 5250 }
+    ]
+  },
+  "mark": { "type": "point", "filled": true, "size": 26, "opacity": 0.95, "stroke": "#ffffff", "strokeWidth": 0.4 },
+  "encoding": {
+    "x": {
+      "field": "Flipper length (mm)",
+      "type": "quantitative",
+      "title": "Flipper length (mm)",
+      "scale": { "zero": false, "nice": true },
+      "axis": { "tickCount": 5 }
+    },
+    "y": {
+      "field": "Body mass (g)",
+      "type": "quantitative",
+      "title": "Body mass (g)",
+      "scale": { "zero": false, "nice": true },
+      "axis": { "tickCount": 5, "format": ",.0f" }
+    },
+    "color": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": null,
+      "title": "Species",
+      "scale": { "range": ["#0072b2", "#e69f00", "#009e73"] },
+      "legend": {
+        "orient": "top-left",
+        "direction": "vertical",
+        "fillColor": "#ffffff",
+        "strokeColor": null,
+        "offset": 4,
+        "padding": 2
+      }
+    },
+    "shape": {
+      "field": "Species",
+      "type": "nominal",
+      "sort": null,
+      "title": "Species",
+      "scale": { "range": ["circle", "triangle-up", "square"] }
+    }
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 12,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 6,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 8,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#3c3c3c",
+      "subtitlePadding": 5
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "labelPadding": 2,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "titlePadding": 4,
+      "grid": false,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 3.5
+    },
+    "legend": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 8.5,
+      "labelColor": "#000000",
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleFontSize": 9,
+      "titleFontWeight": 400,
+      "titleColor": "#000000",
+      "symbolSize": 30,
+      "rowPadding": 0
+    }
+  }
+}

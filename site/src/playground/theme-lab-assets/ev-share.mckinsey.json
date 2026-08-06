@@ -1,0 +1,138 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Legend deleted, series named at the line ends, and the 2023 value printed next to the name. This is the deck reading of the same problem the ranked-bar row posed: the number is the deliverable, so it goes on the page rather than being recovered from an axis. Norway 93, China 38, Germany 25, United States 10 — four figures a reader can repeat without looking twice.",
+    "Which makes the value axis redundant, so it is deleted along with every gridline. What remains is a single baseline rule at zero, kept because four lines rising from different starting points need a common floor to be judged against.",
+    "Year axis reduced to its four observed points with no domain or ticks. The series is unevenly sampled — 2018, 2020, 2022, 2023 — and a nice-numbered axis would smooth over that.",
+    "Palette is the house progression navy → blue → cyan → teal, pinned to the baseline's series order. All four carry similar weight: none is greyed back, because nothing in this data licenses singling a country out.",
+    "Series order left exactly as the baseline has it: Norway, China, Germany, United States."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 108, "bottom": 8 },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": ["Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"]
+  },
+  "width": 280,
+  "height": 205,
+  "data": {
+    "values": [
+      { "Year": "2018", "Country": "Norway", "EV share (%)": 49 },
+      { "Year": "2020", "Country": "Norway", "EV share (%)": 75 },
+      { "Year": "2022", "Country": "Norway", "EV share (%)": 88 },
+      { "Year": "2023", "Country": "Norway", "EV share (%)": 93 },
+      { "Year": "2018", "Country": "China", "EV share (%)": 4 },
+      { "Year": "2020", "Country": "China", "EV share (%)": 6 },
+      { "Year": "2022", "Country": "China", "EV share (%)": 29 },
+      { "Year": "2023", "Country": "China", "EV share (%)": 38 },
+      { "Year": "2018", "Country": "Germany", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "Germany", "EV share (%)": 13 },
+      { "Year": "2022", "Country": "Germany", "EV share (%)": 31 },
+      { "Year": "2023", "Country": "Germany", "EV share (%)": 25 },
+      { "Year": "2018", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2022", "Country": "United States", "EV share (%)": 8 },
+      { "Year": "2023", "Country": "United States", "EV share (%)": 10 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "values": ["2018", "2020", "2022", "2023"],
+        "format": "%Y",
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 10,
+        "labelColor": "#051c2c",
+        "labelPadding": 6
+      }
+    },
+    "y": {
+      "field": "EV share (%)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 100] },
+      "axis": null
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "domain": ["Norway", "China", "Germany", "United States"],
+        "range": ["#051c2c", "#2251ff", "#00a9f4", "#3ebcb6"]
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "rule", "color": "#051c2c", "strokeWidth": 1 },
+      "encoding": { "y": { "datum": 0 }, "color": null }
+    },
+    { "mark": { "type": "line", "strokeWidth": 2.2 } },
+    { "mark": { "type": "point", "filled": true, "size": 30 } },
+    {
+      "transform": [{ "filter": "utcyear(datum.Year) === 2023" }],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 8,
+        "fontSize": 10,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "text": {
+          "field": "Country",
+          "type": "nominal"
+        }
+      }
+    },
+    {
+      "transform": [{ "filter": "utcyear(datum.Year) === 2023" }],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 8,
+        "dy": 12,
+        "fontSize": 10,
+        "fontWeight": 400
+      },
+      "encoding": {
+        "text": { "field": "EV share (%)", "type": "quantitative", "format": "d" }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#5c6b75",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

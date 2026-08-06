@@ -1,0 +1,265 @@
+{
+  "mark": {
+    "type": "bar",
+    "stroke": "#ffffff",
+    "strokeWidth": 0.5,
+    "color": "#0072b2"
+  },
+  "encoding": {
+    "x": {
+      "bin": true,
+      "field": "Duration (min)",
+      "type": "quantitative"
+    },
+    "y": {
+      "aggregate": "count"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 440,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelAngle": 0,
+      "labelAlign": "center",
+      "labelBaseline": "top",
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "tickCount": 10
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 14,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 12,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "title": {
+    "text": "Old Faithful eruption durations",
+    "subtitle": [
+      "Two clusters, not one: short eruptions near 2 min and long ones near 4 min"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.8
+      },
+      {
+        "Duration (min)": 3.333
+      },
+      {
+        "Duration (min)": 2.283
+      },
+      {
+        "Duration (min)": 4.533
+      },
+      {
+        "Duration (min)": 2.883
+      },
+      {
+        "Duration (min)": 4.7
+      },
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.95
+      },
+      {
+        "Duration (min)": 4.35
+      },
+      {
+        "Duration (min)": 1.833
+      },
+      {
+        "Duration (min)": 3.917
+      },
+      {
+        "Duration (min)": 4.2
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 4.7
+      },
+      {
+        "Duration (min)": 2.167
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 4.8
+      },
+      {
+        "Duration (min)": 1.6
+      },
+      {
+        "Duration (min)": 4.25
+      },
+      {
+        "Duration (min)": 1.8
+      },
+      {
+        "Duration (min)": 1.75
+      },
+      {
+        "Duration (min)": 3.45
+      },
+      {
+        "Duration (min)": 3.067
+      },
+      {
+        "Duration (min)": 4.533
+      },
+      {
+        "Duration (min)": 3.6
+      },
+      {
+        "Duration (min)": 1.967
+      },
+      {
+        "Duration (min)": 4.083
+      },
+      {
+        "Duration (min)": 3.85
+      },
+      {
+        "Duration (min)": 4.433
+      },
+      {
+        "Duration (min)": 4.3
+      },
+      {
+        "Duration (min)": 4.467
+      },
+      {
+        "Duration (min)": 3.367
+      },
+      {
+        "Duration (min)": 4.033
+      },
+      {
+        "Duration (min)": 3.833
+      },
+      {
+        "Duration (min)": 2.017
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    }
+  ]
+}

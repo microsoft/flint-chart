@@ -1,18 +1,16 @@
-import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { LocaleLink } from '../i18n/LocaleLink';
-import { useLocale } from '../i18n/LocaleContext';
-import { LOCALE_URL_SEGMENT } from '../i18n/locales';
 import { TEST_GENERATORS, makeField, makeEncodingItem, buildMetadata, type TestCase } from 'flint-chart/test-data';
-import { SiteNavBar, MicrosoftDisclosures, GitHubIcon } from '../components/SiteShell';
+import { THEME_PRESETS } from 'flint-chart';
+import { SiteNavBar, MicrosoftDisclosures, GitHubIcon, LabIcon } from '../components/SiteShell';
 import { WallChart } from '../components/WallChart';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { GalleryOptionsBar } from '../components/GalleryOptionsBar';
+import { GalleryOptionsBar, ThemeControl } from '../components/GalleryOptionsBar';
 import { SpecPipelineFigure } from '../components/SpecPipelineFigure';
-import { testCaseToFlintSummary, testCaseToAssemblyInput } from '../shared/test-case-utils';
-import { buildGalleryEditorHref, openEditorWithPayload } from '../shared/editor-payload';
-import { buildPanelModel } from '../shared/chart-options';
+import { testCaseToFlintSummary, testCaseToAssemblyInput, withHouse } from '../shared/test-case-utils';
+import { buildPanelModel, withoutEchoedOverrides } from '../shared/chart-options';
 import { CHART_CATEGORIES } from '../shared/chart-categories';
 import { MOVIE_RATINGS } from './movie-ratings-data';
 import {
@@ -61,21 +59,46 @@ export function Landing() {
                     backends: BACKEND_ROSTER_LINKS.length,
                   })}
                 </LeadHighlight>
-                .
+                . {t('landing.themeLead')}
               </p>
 
-              <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
-                <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
-                  {t('landing.backendRosterLabel')}
-                </span>
-                {BACKEND_ROSTER_LINKS.map((backend, index) => (
-                  <span key={backend.label} style={backendRosterItemStyle}>
-                    {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
-                    <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
-                      {backend.label}
+              <div style={rostersStyle}>
+                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.backendRosterLabel')}>
+                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                    {t('landing.backendRosterLabel')}
+                  </span>
+                  {BACKEND_ROSTER_LINKS.map((backend, index) => (
+                    <span key={backend.label} style={backendRosterItemStyle}>
+                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                      <LocaleLink className="landing-backend-link" to={backend.to} style={backendRosterLinkStyle}>
+                        {backend.label}
+                      </LocaleLink>
+                    </span>
+                  ))}
+                </div>
+                <div className="landing-backend-roster" style={backendRosterStyle} aria-label={t('landing.themeRosterLabel')}>
+                  <span className="landing-backend-roster-label" style={backendRosterLabelStyle}>
+                    {t('landing.themeRosterLabel')}
+                  </span>
+                  {THEME_ROSTER_PREVIEW.map((theme, index) => (
+                    <span key={theme.id} style={backendRosterItemStyle}>
+                      {index > 0 && <span aria-hidden="true" style={backendRosterSeparatorStyle} />}
+                      <LocaleLink
+                        className="landing-backend-link"
+                        to={`/themes?theme=${theme.id}`}
+                        style={backendRosterLinkStyle}
+                      >
+                        {theme.label}
+                      </LocaleLink>
+                    </span>
+                  ))}
+                  <span style={backendRosterItemStyle}>
+                    <span aria-hidden="true" style={backendRosterSeparatorStyle} />
+                    <LocaleLink className="landing-backend-link" to="/themes" style={backendRosterMoreLinkStyle}>
+                      {t('landing.themeRosterMore', { count: THEME_ROSTER_REMAINDER })}
                     </LocaleLink>
                   </span>
-                ))}
+                </div>
               </div>
 
               <div style={installLinesStyle}>
@@ -123,6 +146,22 @@ export function Landing() {
                       galleryLink: (
                         <LocaleLink to="/gallery" className="landing-skill-link" style={installLineLinkStyle} />
                       ),
+                      themesLink: (
+                        <LocaleLink to="/themes" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
+                    }}
+                  />
+                </div>
+                <div style={installLineStyle}>
+                  <span style={{ ...promptMarkStyle, display: 'inline-flex', verticalAlign: '-2px' }} aria-hidden="true">
+                    <LabIcon size={14} />
+                  </span>{' '}
+                  <Trans
+                    i18nKey="landing.installThemeLab"
+                    components={{
+                      themeLabLink: (
+                        <LocaleLink to="/theme-lab" className="landing-skill-link" style={installLineLinkStyle} />
+                      ),
                     }}
                   />
                 </div>
@@ -130,6 +169,12 @@ export function Landing() {
             </div>
             <div className="landing-hero-actions" style={leadButtonsColStyle}>
               <div style={actionBoxStyle}>
+                <HeroCTA
+                  to="/themes"
+                  label={t('landing.ctaThemes')}
+                  attention
+                  variant="secondary"
+                />
                 <HeroCTA to="/gallery" label={t('landing.ctaGallery')} variant="secondary" />
                 <HeroCTA to="/mcp" label={t('landing.ctaMcp')} variant="secondary" />
                 <HeroCTA
@@ -172,9 +217,9 @@ export function Landing() {
           <h2 style={newsHeadingStyle}>{t('landing.news.title')}</h2>
           <div style={newsListStyle}>
             {([
+              { key: 'release050', href: `${GITHUB_REPO}/releases/tag/0.5.0`, linkLabel: 'v0.5.0' },
               { key: 'release040', href: `${GITHUB_REPO}/releases/tag/0.4.0`, linkLabel: 'v0.4.0' },
               { key: 'dynamicWidgets', href: `${GITHUB_REPO}/releases/tag/0.3.0`, linkLabel: 'v0.3.0' },
-              { key: 'release022', href: null, linkLabel: null },
             ] as const).map((update) => (
               <article className="landing-news-item" style={newsItemStyle} key={update.key}>
                 <time style={newsDateStyle} dateTime={t(`landing.news.${update.key}.dateTime`)}>
@@ -224,6 +269,7 @@ export function Landing() {
                 <div style={featureGridTextStyle}>
                   <h2 style={featureTitleStyle}>
                     <span style={featureNumberStyle}>{i + 1}.</span>
+                    {feature.isNew ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
                     {feature.title}
                   </h2>
                   <p style={featureBodyStyle}>{feature.body}</p>
@@ -399,25 +445,42 @@ function moviesSortedBar(): TestCase {
   };
 }
 
+/**
+ * The canvas every showcase example is drawn on.
+ *
+ * `ScaleToFit` only ever scales a chart *down*, so a chart authored smaller
+ * than the pane sits at its own size in the middle of it with the surrounding
+ * space wasted. Handing the compiler a canvas of roughly the pane's own
+ * proportions is what makes the chart fill it — and it is the compiler, not a
+ * CSS stretch, that decides what to do with the room, so the charts stay in
+ * proportion. Measured against the real 561 × 465 pane box, 560 × 440 fills it
+ * best across all seven: 68–100% of its width and 79–100% of its height,
+ * against 56–87% and as little as 17% before.
+ */
+const SHOWCASE_CANVAS = { width: 560, height: 440 };
+const WELCOME_THEME = 'pop';
+
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
+  {
+    id: 'waterfall',
+    exampleKey: 'waterfall',
+    generator: 'Omni: Waterfall',
+    index: 0,
+  },
   {
     id: 'line',
     exampleKey: 'facetedLine',
     generator: 'Omni: Line',
     index: 0,
-    canvasSize: { width: 800, height: 400 },
+    // Four regions, so two columns is a 2x2 block. Four columns would be a
+    // single row: it compiles to a 2.62 aspect against a pane of 1.21 and fills
+    // only 46% of the pane's height, where 2x2 fills 95%.
     defaultChartProperties: { facetColumns: 2 },
   },
   {
     id: 'heatmap',
     exampleKey: 'heatmap',
     generator: 'Omni: Heatmap',
-    index: 0,
-  },
-  {
-    id: 'waterfall',
-    exampleKey: 'waterfall',
-    generator: 'Omni: Waterfall',
     index: 0,
   },
   {
@@ -451,6 +514,7 @@ function HeroCTA({
   href,
   variant,
   className,
+  attention,
 }: {
   label: string;
   icon?: ReactNode;
@@ -458,6 +522,7 @@ function HeroCTA({
   href?: string;
   variant: 'primary' | 'secondary';
   className?: string;
+  attention?: boolean;
 }) {
   const [active, setActive] = useState(false);
   const handlers = {
@@ -472,6 +537,7 @@ function HeroCTA({
     return (
       <a className={ctaClassName} href={href} style={heroCtaStyle(variant, active)} target="_blank" rel="noreferrer" {...handlers}>
         {icon}
+        {attention ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
         {label}
       </a>
     );
@@ -480,6 +546,7 @@ function HeroCTA({
   return (
     <LocaleLink className={ctaClassName} to={to ?? '/'} style={heroCtaStyle(variant, active)} {...handlers}>
       {icon}
+      {attention ? <span aria-hidden="true" style={attentionStarStyle}>★</span> : null}
       {label}
     </LocaleLink>
   );
@@ -487,14 +554,29 @@ function HeroCTA({
 
 function HeroShowcase() {
   const { t } = useTranslation();
-  const { locale } = useLocale();
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
+  // The house every showcase chart is drawn in. It is deliberately *not* reset
+  // as the carousel moves: the point of a house is that it holds across a set
+  // of charts, so a reader who picks one sees the whole carousel answer to it.
+  // Only Vega-Lite reads `theme_spec`, so the switch is offered on that backend
+  // alone — an inert switch reads as a bug in the theme.
+  const [themeId, setThemeId] = useState<string | undefined>(WELCOME_THEME);
+  const [previewTheme, setPreviewTheme] = useState<{ id: string | undefined } | null>(null);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
-  const exampleLabel = t(`landing.examples.${example.exampleKey}.label`);
-  const exampleCaption = t(`landing.examples.${example.exampleKey}.caption`);
+  // What the chart says, in words. Every example carries one: a chart of bare
+  // numbers names nothing on its own, and several houses drop axis titles on
+  // the understanding that this line is carrying the subject.
+  const headline = useMemo(
+    () => ({
+      title: t(`landing.examples.${example.exampleKey}.title`),
+      subtitle: t(`landing.examples.${example.exampleKey}.subtitle`),
+    }),
+    [t, example.exampleKey],
+  );
+  const canvasSize = example.canvasSize ?? SHOWCASE_CANVAS;
   const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0);
   const testCase = example.testCase ?? galleryTestCase;
   const supported = useMemo(
@@ -509,19 +591,50 @@ function HeroShowcase() {
     [example.defaultChartProperties, tempOptions],
   );
 
-  useEffect(() => setTempOptions({}), [exampleIdx, backend]);
+  useEffect(() => {
+    setTempOptions({});
+    setPreviewTheme(null);
+  }, [exampleIdx, backend]);
+
+  const canTheme = backend === 'vegalite';
+  const activeTheme = canTheme ? (previewTheme ? previewTheme.id : themeId) : undefined;
+
+  // A house that paints its own canvas draws a coloured rectangle of the
+  // chart's *own* size, and `ScaleToFit` centres that rectangle in a pane it
+  // rarely fills exactly — so a dark house reads as a dark card floating on
+  // white paper, with the space around it belonging to the site rather than to
+  // the chart. Carrying the house's canvas colour out to the pane closes the
+  // gap: the chart's surface and the room around it become one surface, which
+  // is what the house is actually claiming. Only the viewport is painted — the
+  // options bar below it is site furniture, and site-coloured text on a dark
+  // house would be unreadable.
+  const houseCanvas = useMemo(
+    () => (activeTheme ? THEME_PRESETS[activeTheme]?.spec?.ink?.surface?.canvas : undefined),
+    [activeTheme],
+  );
 
   const displayInput = useMemo(() => {
     if (!testCase) return null;
-    const base = testCaseToAssemblyInput(testCase);
+    const base = withHouse(testCaseToAssemblyInput(testCase, canvasSize), activeTheme, canTheme);
     return {
       ...base,
       chart_spec: {
         ...base.chart_spec,
+        ...headline,
         chartProperties: { ...base.chart_spec.chartProperties, ...effectiveOptions },
       },
     };
-  }, [testCase, effectiveOptions]);
+  }, [testCase, effectiveOptions, activeTheme, canTheme, canvasSize, headline]);
+
+  // A house can change what a chart *is*, not only how it looks — the NYT puts
+  // points on a line. Those are defaults, so they yield to anything the bar has
+  // stated, and a value the reader never really chose would silently outrank
+  // the new house. Let go of the ones that were only echoing the old one.
+  const chooseTheme = (next: string | undefined) => {
+    if (displayInput) setTempOptions((options) => withoutEchoedOverrides(displayInput, options));
+    setThemeId(next);
+    setPreviewTheme(null);
+  };
 
   const panelModel = useMemo(
     () => (displayInput ? buildPanelModel(displayInput, backend) : null),
@@ -552,29 +665,31 @@ function HeroShowcase() {
           <div className="landing-spec-pane" style={{ ...showcasePaneStyle, ...specPaneStyle }}>
             <div style={paneHeaderRowStyle}>
               <span style={paneLabelStyle}>{t('landing.flintSpec')}</span>
-              <OpenEditorButton
-                href={
-                  example.generator
-                    ? buildGalleryEditorHref(example.generator, example.index ?? 0, locale)
-                    : undefined
-                }
-                onActivate={
-                  example.generator
-                    ? undefined
-                    : () => openEditorWithPayload(testCaseToAssemblyInput(testCase), locale)
-                }
-              />
             </div>
             <FlintSpecCode
               testCase={testCase}
-              canvasSize={example.canvasSize}
+              canvasSize={canvasSize}
               chartPropertyOverrides={effectiveOptions}
+              themeId={activeTheme}
+              useThemeCanvas={canTheme}
+              headline={headline}
             />
           </div>
 
           <div className="landing-chart-pane" style={{ ...showcasePaneStyle, ...chartPaneStyle, borderLeft: `1px solid ${HAIRLINE}` }}>
             <div className="landing-pane-header" style={paneHeaderRowStyle}>
-              <span style={paneLabelStyle}>{t('landing.compiledChart')}</span>
+              {canTheme ? (
+                <ThemeControl
+                  themeId={themeId}
+                  onTheme={chooseTheme}
+                  onPreview={(id) => setPreviewTheme({ id })}
+                  onPreviewEnd={() => setPreviewTheme(null)}
+                  placement="bottom"
+                  prominent
+                />
+              ) : (
+                <span style={paneLabelStyle}>{BACKEND_LABELS[backend]}</span>
+              )}
               <div className="landing-backend-toggle" style={backendToggleStyle} role="tablist" aria-label={t('landing.backendAria')}>
                 {ALL_BACKENDS.map((b) => {
                   const isSupported = supported.includes(b);
@@ -597,13 +712,23 @@ function HeroShowcase() {
               </div>
             </div>
             <div className="landing-chart-canvas" style={chartCanvasStyle}>
-              <div style={chartViewportStyle}>
-                <ScaleToFit fill height={410} padding={8}>
+              <div
+                style={{
+                  ...chartViewportStyle,
+                  ...(houseCanvas
+                    ? { background: houseCanvas, borderRadius: siteTheme.radius }
+                    : {}),
+                }}
+              >
+                <ScaleToFit fill height={465} padding={8}>
                   <WallChart
                     testCase={testCase}
                     backend={backend}
-                    canvasSize={example.canvasSize}
+                    canvasSize={canvasSize}
                     chartPropertyOverrides={effectiveOptions}
+                    themeId={activeTheme}
+                    useThemeCanvas={canTheme}
+                    headline={headline}
                   />
                 </ScaleToFit>
               </div>
@@ -612,8 +737,11 @@ function HeroShowcase() {
                   <GalleryOptionsBar
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
-                    canReset={Object.keys(tempOptions).length > 0}
-                    onReset={() => setTempOptions({})}
+                    canReset={Object.keys(tempOptions).length > 0 || themeId !== WELCOME_THEME}
+                    onReset={() => {
+                      setTempOptions({});
+                      setThemeId(WELCOME_THEME);
+                    }}
                     onChange={(key, value) =>
                       setTempOptions((current) => {
                         const next = { ...current };
@@ -640,11 +768,6 @@ function HeroShowcase() {
           <ChevronIcon dir="right" />
         </button>
       </div>
-      <p style={showcaseCaptionStyle}>
-        <strong style={{ color: siteTheme.text, fontWeight: 600 }}>{exampleLabel}.</strong>{' '}
-        {exampleCaption}
-      </p>
-
       {/* Example pager dots */}
       <div style={{ ...dotsRowStyle, marginTop: 16 }} role="tablist" aria-label={t('landing.exampleAria')}>
         {SHOWCASE_EXAMPLES.map((ex, i) => {
@@ -681,56 +804,27 @@ function ChevronIcon({ dir }: { dir: 'left' | 'right' }) {
   );
 }
 
-function OpenEditorButton({
-  href,
-  onActivate,
-}: {
-  href?: string;
-  onActivate?: () => string;
-}) {
-  const { t } = useTranslation();
-  const { locale } = useLocale();
-  const [active, setActive] = useState(false);
-  const defaultHref = useMemo(() => {
-    const segment = LOCALE_URL_SEGMENT[locale];
-    const base = segment ? `/${segment}/editor` : '/editor';
-    return `#${base}`;
-  }, [locale]);
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (onActivate) {
-      e.preventDefault();
-      window.location.hash = onActivate();
-    }
-  };
-  return (
-    <a
-      href={href ?? defaultHref}
-      style={openEditorBtnStyle(active)}
-      title={t('landing.openInEditor')}
-      onClick={handleClick}
-      onMouseEnter={() => setActive(true)}
-      onMouseLeave={() => setActive(false)}
-      onFocus={() => setActive(true)}
-      onBlur={() => setActive(false)}
-    >
-      {t('modal.openInEditor')}
-    </a>
-  );
-}
-
 function FlintSpecCode({
   testCase,
   canvasSize,
   chartPropertyOverrides,
+  themeId,
+  useThemeCanvas,
+  headline,
 }: {
   testCase: TestCase;
   canvasSize?: { width: number; height: number };
   chartPropertyOverrides?: Record<string, unknown>;
+  themeId?: string;
+  useThemeCanvas?: boolean;
+  headline?: { title?: string; subtitle?: string };
 }) {
   const text = useMemo(() => {
     const summary = testCaseToFlintSummary(testCase);
     const chartSpec = {
       ...summary.chart_spec,
+      ...(headline?.title ? { title: headline.title } : {}),
+      ...(headline?.subtitle ? { subtitle: headline.subtitle } : {}),
       ...(canvasSize ? { baseSize: canvasSize } : {}),
       ...(chartPropertyOverrides && Object.keys(chartPropertyOverrides).length > 0
         ? {
@@ -741,10 +835,10 @@ function FlintSpecCode({
           }
         : {}),
     };
-    const withCanvas = { ...summary, chart_spec: chartSpec };
+    const withCanvas = withHouse({ ...summary, chart_spec: chartSpec }, themeId, useThemeCanvas);
     const body = JSON.stringify(withCanvas, null, 2);
     return body.replace(/^{\n/, '{\n  "data": {...},\n');
-  }, [testCase, canvasSize, chartPropertyOverrides]);
+  }, [testCase, canvasSize, chartPropertyOverrides, themeId, useThemeCanvas, headline?.title, headline?.subtitle]);
   return <pre style={specPreStyle}>{text}</pre>;
 }
 
@@ -794,6 +888,11 @@ const BACKEND_ROSTER_LINKS = [
   { label: 'Plotly', to: '/documentation/reference-plotly' },
   { label: 'Excel', to: '/gallery/excel' },
 ] as const;
+const THEME_ROSTER_PREVIEW = [
+  ...Object.values(THEME_PRESETS).slice(0, 5),
+  THEME_PRESETS.pop,
+];
+const THEME_ROSTER_REMAINDER = Object.keys(THEME_PRESETS).length - THEME_ROSTER_PREVIEW.length;
 const CHART_GALLERY_ENTRY_COUNT = CHART_CATEGORIES.reduce(
   (count, category) => count + category.charts.length,
   0,
@@ -808,6 +907,7 @@ interface Feature {
   example?: string;
   // Before/after demo shown alongside the text, illustrating the feature.
   demo?: () => FeatureDemoConfig;
+  isNew?: boolean;
 }
 
 function getFeatures(t: TFunction): Feature[] {
@@ -843,6 +943,14 @@ function getFeatures(t: TFunction): Feature[] {
       example: t('landing.features.backends.example'),
       demo: demoBackends,
     },
+    {
+      id: 'themes',
+      title: t('landing.features.themes.title'),
+      body: t('landing.features.themes.body'),
+      example: t('landing.features.themes.example'),
+      demo: demoThemes,
+      isNew: true,
+    },
   ];
 }
 
@@ -869,7 +977,14 @@ function useTestCase(generator: string, index = 0): TestCase | null {
 
 type DemoStage =
   | { kind: 'spec'; label: string; testCase: TestCase }
-  | { kind: 'chart'; label: string; testCase: TestCase; backend: PreviewBackend };
+  | {
+      kind: 'chart';
+      label: string;
+      testCase: TestCase;
+      backend: PreviewBackend;
+      themeId?: string;
+      headline?: { title?: string; subtitle?: string };
+    };
 
 interface FeatureDemoConfig {
   before: DemoStage;
@@ -1010,6 +1125,62 @@ function demoBackends(): FeatureDemoConfig {
   };
 }
 
+// Card 5: the data and ChartSpec stay fixed; only the formal theme changes.
+// A grouped bar exposes the whole system at once: palette, bar geometry,
+// axes/grid, legend, labels, typography, and spacing.
+function demoThemes(): FeatureDemoConfig {
+  const grouped = themedRevenue();
+  const headline = {
+    title: 'Quarterly revenue by region',
+    subtitle: 'Three product lines across six markets',
+  };
+  return {
+    before: {
+      kind: 'chart',
+      label: 'Economist',
+      testCase: grouped,
+      backend: 'vegalite',
+      themeId: 'economist',
+      headline,
+    },
+    after: {
+      kind: 'chart',
+      label: 'Swiss',
+      testCase: grouped,
+      backend: 'vegalite',
+      themeId: 'swiss',
+      headline,
+    },
+  };
+}
+
+function themedRevenue(): TestCase {
+  const markets = ['North America', 'Europe', 'East Asia', 'South Asia', 'Latin America', 'Africa'];
+  const products = ['Cloud', 'Devices', 'Services'];
+  const data = markets.flatMap((market, marketIndex) =>
+    products.map((product, productIndex) => ({
+      Market: market,
+      Product: product,
+      Revenue: Math.round(28 + 54 * Math.abs(Math.sin(marketIndex * 0.83 + productIndex * 1.61 + 0.4))),
+    })),
+  );
+  return {
+    title: 'Quarterly revenue by region',
+    description: '',
+    tags: [],
+    chartType: 'Grouped Bar Chart',
+    data,
+    fields: [makeField('Market'), makeField('Product'), makeField('Revenue')],
+    metadata: buildMetadata(data),
+    encodingMap: {
+      x: makeEncodingItem('Market'),
+      y: makeEncodingItem('Revenue'),
+      color: makeEncodingItem('Product'),
+      group: makeEncodingItem('Product'),
+    },
+  };
+}
+
 /** Pick the requested backend, or the first one that supports the chart type. */
 function pickBackend(t: TestCase, want: PreviewBackend): PreviewBackend {
   const supported = getSupportedBackends(t.chartType);
@@ -1062,7 +1233,12 @@ function DemoStageContent({ stage }: { stage: DemoStage }) {
   }
   return (
     <ScaleToFit height={250} padding={6}>
-      <WallChart testCase={stage.testCase} backend={pickBackend(stage.testCase, stage.backend)} />
+      <WallChart
+        testCase={stage.testCase}
+        backend={pickBackend(stage.testCase, stage.backend)}
+        themeId={stage.themeId}
+        headline={stage.headline}
+      />
     </ScaleToFit>
   );
 }
@@ -1317,10 +1493,17 @@ const backendRosterStyle: CSSProperties = {
   alignItems: 'baseline',
   flexWrap: 'wrap',
   gap: '5px 0',
-  marginTop: 13,
   color: siteTheme.textMuted,
   minHeight: 18,
   lineHeight: '18px',
+};
+
+const rostersStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  flexWrap: 'wrap',
+  gap: '5px 26px',
+  marginTop: 13,
 };
 
 const backendRosterLabelStyle: CSSProperties = {
@@ -1349,6 +1532,12 @@ const backendRosterLinkStyle: CSSProperties = {
   textDecorationThickness: '1px',
   textUnderlineOffset: '3px',
   transition: 'color 120ms ease, text-decoration-color 120ms ease',
+};
+
+const backendRosterMoreLinkStyle: CSSProperties = {
+  ...backendRosterLinkStyle,
+  color: siteTheme.textMuted,
+  fontWeight: 500,
 };
 
 const backendRosterSeparatorStyle: CSSProperties = {
@@ -1415,8 +1604,8 @@ const landingInteractiveStyles = `
 
   @media (min-width: 901px) {
     .landing-showcase-card {
-      grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.7fr);
-      height: 460px;
+      grid-template-columns: minmax(300px, 1.05fr) minmax(0, 1.55fr);
+      height: 560px;
     }
 
     .landing-showcase-card > .landing-spec-pane,
@@ -1643,8 +1832,8 @@ const showcasePaneStyle: CSSProperties = {
 };
 
 const specPaneStyle: CSSProperties = {
-  flex: '0.72 1 300px',
-  minWidth: 280,
+  flex: '0.9 1 320px',
+  minWidth: 300,
 };
 
 /** The compiled-chart pane gets extra width so wide charts render larger. */
@@ -1695,22 +1884,6 @@ const paneLabelStyle: CSSProperties = {
   textTransform: 'uppercase',
   color: siteTheme.textMuted,
 };
-
-function openEditorBtnStyle(active: boolean): CSSProperties {
-  return {
-    margin: '6px 10px 0 0',
-    padding: '4px 10px',
-    fontSize: 12,
-    fontWeight: 600,
-    color: active ? siteTheme.text : siteTheme.textMuted,
-    background: active ? NEUTRAL_FILL : 'transparent',
-    border: `1px solid ${HAIRLINE}`,
-    borderRadius: siteTheme.radius,
-    textDecoration: 'none',
-    whiteSpace: 'nowrap',
-    transition: 'background 0.15s, color 0.15s',
-  };
-}
 
 const backendToggleStyle: CSSProperties = {
   display: 'inline-flex',
@@ -1818,21 +1991,19 @@ function dotStyle(active: boolean): CSSProperties {
   };
 }
 
-const showcaseCaptionStyle: CSSProperties = {
-  maxWidth: 760,
-  margin: '16px auto 0',
-  textAlign: 'center',
-  color: siteTheme.text,
-  fontSize: 14.5,
-  lineHeight: 1.55,
-};
-
 const specPreStyle: CSSProperties = {
   margin: 0,
   padding: '4px 16px 16px',
   fontFamily: siteTheme.fontMono,
-  fontSize: 12.5,
-  lineHeight: 1.55,
+  // Sized so the whole spec is *visible*, not scrolled. The pane hides its
+  // scrollbar, so a spec that overflows looks truncated rather than scrollable —
+  // and the point of the panel is that the reader can see the entire spec next
+  // to the chart it produced. The longest of the seven runs 27 raw lines and
+  // wraps to 28 in this pane; at 12/1.4 that is 470px against a 515px budget.
+  // Line *count* dominates, not wrapping, so widening the pane alone cannot buy
+  // the room — the leading has to give.
+  fontSize: 12,
+  lineHeight: 1.4,
   color: siteTheme.text,
   background: PAPER,
   whiteSpace: 'pre-wrap',
@@ -1978,6 +2149,13 @@ const featureBodyStyle: CSSProperties = {
   margin: 0,
 };
 
+const attentionStarStyle: CSSProperties = {
+  flex: '0 0 auto',
+  color: '#b26a00',
+  fontSize: 13,
+  lineHeight: 1,
+};
+
 function featureExampleRowStyle(): CSSProperties {
   return {
     display: 'flex',
@@ -2031,6 +2209,7 @@ const secondaryBtn: CSSProperties = {
 
 function heroCtaStyle(variant: 'primary' | 'secondary', active: boolean): CSSProperties {
   const base: CSSProperties = {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

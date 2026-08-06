@@ -6,19 +6,20 @@
 [![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
+**Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**Visual Themes**](https://microsoft.github.io/flint-chart/#/themes) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
 
-Flint is a visualization intermediate language that lets **AI agents create
-expressive, polished visualizations from simple, human-editable chart specs**.
-Instead of asking agents or developers to tune verbose chart configuration
-details such as scales, axes, spacing, labels, and layout, the Flint compiler
-derives optimized chart settings from the data, semantic types, chart type, and
-encodings. The result is a compact chart specification that agents can produce
-reliably, people can edit directly, and multiple backends can render as native
+Flint is a visualization intermediate language that lets **AI agents turn
+simple, human-editable chart specs into expressive, polished visualizations**.
+Rather than requiring agents or developers to tune verbose settings for scales,
+axes, spacing, labels, and layout, Flint derives those decisions from the data,
+semantic types, chart type, encodings, and an optional visual theme. Users can
+use a compact spec to create visually polished, brand-consistent charts rendered
+as native
 [Vega-Lite](https://vega.github.io/vega-lite/),
 [ECharts](https://echarts.apache.org/),
-[Chart.js](https://www.chartjs.org/), or
-[Plotly](https://plotly.com/javascript/) specs, and native Excel charts through Office.js.
+[Chart.js](https://www.chartjs.org/),
+[Plotly](https://plotly.com/javascript/) specs, or as native Excel charts
+through Office.js.
 
 This repo contains two main components:
 
@@ -38,6 +39,9 @@ This repo contains two main components:
   semantic types such as `Rank`, `Temperature`, `Price`, or `Country`.
 - **Automatic layout.** Flint adapts sizing, spacing, labels, marks, and legends
   to the data cardinality, chart design, and canvas constraints.
+- **Formal visual themes.** Define layout behavior, semantic presentation, and
+  visual identity once, then apply them across a chart library with a preset,
+  custom `ThemeSpec`, or inherited theme.
 - **Multiple backends.** Compile one input to backend-native output across
   [Vega-Lite](https://vega.github.io/vega-lite/),
   [ECharts](https://echarts.apache.org/),
@@ -49,6 +53,11 @@ This repo contains two main components:
 
 ## Updates
 
+- **August 5, 2026** — Flint 0.5.0 introduces a [formal theme specification](https://microsoft.github.io/flint-chart/#/themes)
+  that allows designers and users to define a visual system once and apply it
+  consistently across an entire chart library. It includes ten presets: New
+  York Times, Economist, Swiss, Nature, McKinsey, Datawrapper, Power BI, Power
+  BI Light, Pop, and Cartoon. ([v0.5.0](https://github.com/microsoft/flint-chart/releases/tag/0.5.0))
 - **July 24, 2026** — Flint 0.4.0 adds 38 Plotly chart types and 18 native,
   editable Excel chart templates. ([v0.4.0](https://github.com/microsoft/flint-chart/releases/tag/0.4.0))
 - **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart
@@ -110,6 +119,67 @@ const plotlyFigure = assemblePlotly(input);
 const excelArtifact = assembleExcel(input);
 ```
 
+## Apply Visual Themes
+
+`theme_spec` sits beside `chart_spec`: the chart spec defines what the chart
+means, while the theme defines how that meaning is presented. A theme can guide
+layout, labels, legends, axes, mark geometry, typography, and color as one
+coherent visual system.
+
+Use one of Flint's ten built-in presets:
+
+```ts
+const themedSpec = assembleVegaLite({
+  ...input,
+  theme_spec: 'economist',
+});
+```
+
+Or inherit a preset and override only the decisions that belong to your brand:
+
+```ts
+const brandedSpec = assembleVegaLite({
+  ...input,
+  theme_spec: {
+    extends: 'economist',
+    id: 'our-brand',
+    ink: {
+      series: { single: '#6b3fa0' },
+    },
+  },
+});
+```
+
+Nested objects merge; arrays and scalar values replace the inherited value.
+ThemeSpec currently affects Vega-Lite output. Compare all presets on the
+[theme explorer](https://microsoft.github.io/flint-chart/#/themes). See
+[Using themes](docs/theme-spec.md) for the complete custom and inherited-theme
+reference.
+
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=economist&amp;layout=banner">
+    <img src="docs/figs/flint-theme-economist.png" alt="Twelve charts rendered with Flint's Economist theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Economist</strong> — compact editorial graphics with a strong red accent.</sub>
+</p>
+
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=swiss&amp;layout=banner">
+    <img src="docs/figs/flint-theme-swiss.png" alt="Twelve charts rendered with Flint's Swiss theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Swiss</strong> — typographic structure, restrained color, and a clear visual grid.</sub>
+</p>
+
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=pop&amp;layout=banner">
+    <img src="docs/figs/flint-theme-pop.png" alt="Twelve charts rendered with Flint's Pop theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Pop</strong> — bold color, emphatic marks, and playful graphic contrast.</sub>
+</p>
+
 See the [API reference](docs/api-reference.md), backend references for
 [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
 [Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
@@ -128,7 +198,7 @@ For setup, start with the
 includes client configuration, usage examples, and links to deeper references.
 
 <p align="center">
-  <img src="docs/figs/flint-mcp-experience.png" alt="Agent chat showing Flint Chart as an MCP App with a grouped bar chart preview and chart options." width="100%">
+  <img src="docs/figs/flint-mcp-experience.png" alt="Agent chat showing Flint Chart as an MCP App with a grouped bar chart preview and chart options." width="720">
 </p>
 
 MCP calls let agents embed rows directly as `data.values`, or read local JSON,
@@ -140,19 +210,26 @@ use the standalone [agent skill](agent-skills/flint-chart-author/SKILL.md).
 ```
 flint-chart/
 ├── packages/
-│   ├── flint-js/          npm package `flint-chart` (TypeScript)
+│   ├── flint-js/            npm package `flint-chart` (TypeScript)
 │   │   └── src/
-│   │       ├── core/      semantics, layout, decisions, shared types
-│   │       ├── vegalite/  Vega-Lite backend
-│   │       ├── echarts/   ECharts backend
-│   │       ├── chartjs/   Chart.js backend
-│   │       └── test-data/ fixtures + generators (drive tests and the gallery)
-│   ├── flint-py/          Python port preview (package to be released)
-│   └── flint-mcp/         npm package `flint-chart-mcp` (MCP render server)
-├── site/                  Vite + React demo: landing, gallery, editor, docs
-├── agent-skills/          fallback copy of the MCP-served agent skill
-├── shared/test-data/      JSON fixtures shared across JS + Python
-└── docs/                  architecture and design documents
+│   │       ├── core/        semantics, themes, layout, decisions, shared types
+│   │       ├── chart-types/ shared chart definitions and template metadata
+│   │       ├── vegalite/    Vega-Lite backend
+│   │       ├── echarts/     ECharts backend
+│   │       ├── chartjs/     Chart.js backend
+│   │       ├── plotly/      Plotly backend
+│   │       ├── excel/       native Excel backend
+│   │       ├── gallery/     gallery assembly and generated references
+│   │       └── test-data/   fixtures and stress-test generators
+│   ├── flint-mcp/           MCP server, MCP App UI, assets, and tests
+│   └── flint-py/            Python port preview (package to be released)
+├── site/                    Vite + React project site, gallery, editor, and docs
+├── agent-skills/            chart- and theme-authoring skills for agents
+├── agents/                  agent and MCP server configuration
+├── shared/test-data/        JSON fixtures shared across JS and Python
+├── scripts/                 reference generation and theme audit tooling
+├── docs/                    user, API, backend, and architecture documentation
+└── design-docs/             design proposals and implementation research
 ```
 
 ### Documentation
@@ -160,6 +237,7 @@ flint-chart/
 The [project site](https://microsoft.github.io/flint-chart/) is the main entry
 point for examples, the live editor, and concept docs. For source-level
 references, start with the [API reference](docs/api-reference.md), the
+[theme guide](docs/theme-spec.md), the
 [Flint MCP project page](https://microsoft.github.io/flint-chart/#/mcp), or the
 [Development guide](docs/DEVELOPMENT.md). See the [changelog](CHANGELOG.md) for
 notable changes in each release.

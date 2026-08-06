@@ -1,0 +1,147 @@
+{
+  "layer": [
+    {
+      "mark": {
+        "type": "geoshape",
+        "fill": "lightgray",
+        "stroke": "white"
+      },
+      "data": {
+        "url": "https://vega.github.io/vega-lite/data/world-110m.json",
+        "format": {
+          "type": "topojson",
+          "feature": "countries"
+        }
+      },
+      "projection": {
+        "type": "equalEarth"
+      }
+    },
+    {
+      "mark": "circle",
+      "encoding": {
+        "longitude": {
+          "field": "Lon",
+          "type": "quantitative",
+          "scale": {
+            "nice": false
+          }
+        },
+        "latitude": {
+          "field": "Lat",
+          "type": "quantitative",
+          "scale": {
+            "nice": false
+          }
+        },
+        "size": {
+          "field": "Population (M)",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt",
+            "zero": true,
+            "range": [
+              9,
+              361
+            ]
+          }
+        }
+      },
+      "projection": {
+        "type": "equalEarth"
+      }
+    }
+  ],
+  "width": 600,
+  "height": 350,
+  "config": {
+    "view": {
+      "continuousWidth": 600,
+      "continuousHeight": 350,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "World's largest cities (metro population)"
+  },
+  "data": {
+    "values": [
+      {
+        "City": "Tokyo",
+        "Lon": 139.7,
+        "Lat": 35.7,
+        "Population (M)": 37.4
+      },
+      {
+        "City": "Delhi",
+        "Lon": 77.2,
+        "Lat": 28.6,
+        "Population (M)": 32.9
+      },
+      {
+        "City": "Shanghai",
+        "Lon": 121.5,
+        "Lat": 31.2,
+        "Population (M)": 29.2
+      },
+      {
+        "City": "São Paulo",
+        "Lon": -46.6,
+        "Lat": -23.5,
+        "Population (M)": 22.6
+      },
+      {
+        "City": "Mexico City",
+        "Lon": -99.1,
+        "Lat": 19.4,
+        "Population (M)": 22.1
+      },
+      {
+        "City": "Cairo",
+        "Lon": 31.2,
+        "Lat": 30,
+        "Population (M)": 21.3
+      },
+      {
+        "City": "New York",
+        "Lon": -74,
+        "Lat": 40.7,
+        "Population (M)": 18.9
+      },
+      {
+        "City": "Lagos",
+        "Lon": 3.4,
+        "Lat": 6.5,
+        "Population (M)": 15.4
+      },
+      {
+        "City": "London",
+        "Lon": -0.1,
+        "Lat": 51.5,
+        "Population (M)": 9.5
+      },
+      {
+        "City": "Los Angeles",
+        "Lon": -118.2,
+        "Lat": 34.1,
+        "Population (M)": 12.4
+      }
+    ]
+  }
+}

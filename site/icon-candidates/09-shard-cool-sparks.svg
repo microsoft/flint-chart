@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Flint shard with cool sparks</title>
+  <path d="m7 48 8-27 18-11 14 13-3 22-18 13L7 48Z" fill="#202a33"/>
+  <path d="m15 21 18-11-5 19-13 19H7l8-27Z" fill="#34424e"/>
+  <path d="m28 29 5-19 14 13-11 9-8-3Z" fill="#52606b"/>
+  <path d="m28 29 8 3 8 13-18 13 2-29Z" fill="#111820"/>
+  <path d="m47 10 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#29b6f6"/>
+  <path d="m57 7 .8 2.2L60 10l-2.2.8L57 13l-.8-2.2L54 10l2.2-.8L57 7ZM55 24l.7 1.8 1.8.7-1.8.7L55 29l-.7-1.8-1.8-.7 1.8-.7L55 24Z" fill="#0078d4"/>
+</svg>

@@ -1,0 +1,322 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Life expectancy",
+      "type": "quantitative",
+      "scale": {
+        "zero": false
+      },
+      "axis": {
+        "format": ",.12~g",
+        "title": null
+      }
+    },
+    "y": {
+      "field": "Country",
+      "type": "nominal",
+      "sort": null,
+      "axis": {
+        "title": null
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "color": "#d3dce1",
+        "strokeWidth": 3
+      },
+      "encoding": {
+        "detail": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true
+      },
+      "encoding": {
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#051c2c",
+              "#2251ff"
+            ]
+          },
+          "legend": null
+        }
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "transform": [
+        {
+          "window": [
+            {
+              "op": "row_number",
+              "as": "__seriesEndRank"
+            }
+          ],
+          "groupby": [
+            "Sex"
+          ]
+        },
+        {
+          "filter": "datum.__seriesEndRank === 1"
+        }
+      ],
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "bottom",
+        "dx": 0,
+        "dy": -5,
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10.5
+      },
+      "encoding": {
+        "y": {
+          "field": "Country",
+          "type": "nominal",
+          "sort": null
+        },
+        "x": {
+          "field": "Life expectancy",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "Sex",
+          "type": "nominal"
+        },
+        "color": {
+          "field": "Sex",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "range": [
+              "#051c2c",
+              "#2251ff"
+            ]
+          },
+          "legend": null
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelAngle": 0,
+      "tickCount": 8
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "labelAngle": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "height": {
+    "step": 49
+  },
+  "title": {
+    "text": "Women outlive men everywhere, but not by the same margin",
+    "subtitle": [
+      "Life expectancy at birth by sex, 2021, years"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 20,
+  "data": {
+    "values": [
+      {
+        "Country": "Japan",
+        "Sex": "Male",
+        "Life expectancy": 81.5
+      },
+      {
+        "Country": "Japan",
+        "Sex": "Female",
+        "Life expectancy": 87.6
+      },
+      {
+        "Country": "United States",
+        "Sex": "Male",
+        "Life expectancy": 73.5
+      },
+      {
+        "Country": "United States",
+        "Sex": "Female",
+        "Life expectancy": 79.3
+      },
+      {
+        "Country": "India",
+        "Sex": "Male",
+        "Life expectancy": 66
+      },
+      {
+        "Country": "India",
+        "Sex": "Female",
+        "Life expectancy": 69
+      },
+      {
+        "Country": "Brazil",
+        "Sex": "Male",
+        "Life expectancy": 69
+      },
+      {
+        "Country": "Brazil",
+        "Sex": "Female",
+        "Life expectancy": 76
+      },
+      {
+        "Country": "Nigeria",
+        "Sex": "Male",
+        "Life expectancy": 51
+      },
+      {
+        "Country": "Nigeria",
+        "Sex": "Female",
+        "Life expectancy": 54
+      },
+      {
+        "Country": "Germany",
+        "Sex": "Male",
+        "Life expectancy": 78.5
+      },
+      {
+        "Country": "Germany",
+        "Sex": "Female",
+        "Life expectancy": 83.4
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "no banded axis to key values to — one number per datum would be noise, not a label"
+    },
+    {
+      "stage": "ground",
+      "path": "marks.point.halo",
+      "message": "the dots carry a ring of the page around them — the lines cross, and at a crossing the ring is the only thing that says which line a dot sits on"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.connector",
+      "message": "the bridge is drawn at 3px in structural ink — the distance it spans is the reading, so it carries a mark's weight and none of a series' colour"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.placement",
+      "message": "`seriesEnd` realized as a synthesized text layer at each series' last point"
+    }
+  ]
+}

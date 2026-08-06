@@ -1,0 +1,117 @@
+{
+  "order": ["nyt", "economist", "nature", "mckinsey", "datawrapper", "powerbi", "powerbi-light"],
+  "themes": {
+    "nyt": {
+      "label": "NYT",
+      "alias": "narrative-editorial",
+      "surface": "#ffffff",
+      "ink": "#121212",
+      "accent": "#c2352b",
+      "swatches": ["#c2352b", "#2f6b9a", "#d9a441", "#4a8b6f", "#7f6a9e", "#9e9e9e"],
+      "intent": "One chart, one idea. Typography carries the hierarchy, the frame gets out of the way, and a single accent colour does the pointing that a caption would otherwise have to do.",
+      "signature": [
+        "Serif headline flush left, sans-serif everything else",
+        "No frame: horizontal gridlines only, black x baseline kept",
+        "Legend replaced by direct series labels where the data allows",
+        "One editorial accent; other series fall back to grey",
+        "Y-axis title rotated flat above the axis as a bare unit"
+      ]
+    },
+    "economist": {
+      "label": "Economist",
+      "alias": "compact-editorial",
+      "surface": "#ffffff",
+      "ink": "#121317",
+      "accent": "#e3120b",
+      "swatches": ["#006ba2", "#3ebcd2", "#379a8b", "#ebb434", "#b4ba39", "#9a607f"],
+      "intent": "A branded house style that has to survive being printed a hundred times a week. Fixed identity, dense information, zero per-chart art direction.",
+      "signature": [
+        "Red masthead rule top-left; bold headline, grey deck below",
+        "Value axis moved to the top; horizontal gridlines only",
+        "Hard baseline, thin bars, wide gutters",
+        "Fixed house palette used in a fixed order",
+        "9.5pt labels throughout — sized for a two-column print grid"
+      ]
+    },
+    "nature": {
+      "label": "Nature",
+      "alias": "scientific-publication",
+      "surface": "#ffffff",
+      "ink": "#000000",
+      "accent": "#0072b2",
+      "swatches": ["#0072b2", "#e69f00", "#009e73", "#cc79a7", "#56b4e9", "#d55e00"],
+      "intent": "A figure panel that must be readable at 89 mm column width, in greyscale, by a colour-blind reviewer, and defensible in a methods section.",
+      "signature": [
+        "Column-width geometry: 8.5pt type, hairlines, tight padding",
+        "Black L-shaped spines, outward ticks, no gridlines",
+        "Okabe–Ito palette; colour is never the only cue",
+        "Terse semantic title centred below the panel like a figure caption",
+        "Units mandatory in every axis title"
+      ]
+    },
+    "mckinsey": {
+      "label": "McKinsey",
+      "alias": "executive-briefing",
+      "surface": "#ffffff",
+      "ink": "#051c2c",
+      "accent": "#2251ff",
+      "swatches": ["#2251ff", "#b3c0c9", "#d3dce1", "#8fa0ab", "#00a9f4", "#051c2c"],
+      "intent": "The chart is evidence for a claim someone is about to make out loud. Everything that is not the claim is greyed out or deleted.",
+      "signature": [
+        "Value axis deleted — numbers printed on the marks",
+        "Exactly one series in brand blue; the rest grey",
+        "No gridlines, ticks or axis titles",
+        "Horizontal bars, sorted, labels reading left to right",
+        "Deep-navy ink and generous whitespace"
+      ]
+    },
+    "datawrapper": {
+      "label": "Datawrapper",
+      "alias": "accessible-civic",
+      "surface": "#ffffff",
+      "ink": "#333333",
+      "accent": "#18a1cd",
+      "swatches": ["#18a1cd", "#e2a233", "#c04a4a", "#2d8659", "#7e5aa2", "#6b6b6b"],
+      "intent": "A public-facing chart that will be read on a phone and republished by a local newsroom. Legibility is the whole brief.",
+      "signature": [
+        "11pt type floor so it survives mobile downscaling",
+        "High-contrast ink, light dashed gridlines, no frame",
+        "Explicit colour domain so a category keeps its hue across a story",
+        "Legend on top with large square symbols",
+        "Footer hairline closing the chart block"
+      ]
+    },
+    "powerbi": {
+      "label": "Power BI",
+      "alias": "product-dashboard",
+      "surface": "#1b1a19",
+      "ink": "#f3f2f1",
+      "accent": "#118dff",
+      "swatches": ["#118dff", "#e66c37", "#3bd1c7", "#e044a7", "#d9b300", "#8764b8"],
+      "intent": "A tile in a grid of tiles that refreshes every hour. Geometry has to stay stable as the data changes, and the whole thing has to work in dark mode.",
+      "signature": [
+        "Dark card surface; ink and grid tuned for #1B1A19",
+        "Compact 9.5pt Segoe UI — the tile is small on purpose",
+        "Dashed low-contrast gridlines; marks stay dominant",
+        "Legend in a fixed position as a reusable convention",
+        "Status colours reserved for thresholds"
+      ]
+    },
+    "powerbi-light": {
+      "label": "Power BI (light)",
+      "alias": "product-dashboard-light",
+      "surface": "#ffffff",
+      "ink": "#252423",
+      "accent": "#118dff",
+      "swatches": ["#118dff", "#12239e", "#e66c37", "#6b007b", "#e044a7", "#744ec2"],
+      "intent": "The default polished light-mode report tile: a white card in a grid of cards, the same product as the dark theme with the ink flipped. Geometry stays stable as the data refreshes; legibility comes from a hairline grid and a fixed palette, not contrast against a dark ground.",
+      "signature": [
+        "White card surface; #252423 ink, #ededed hairline grid",
+        "Compact 9.5pt Segoe UI — the tile is small on purpose",
+        "Solid low-contrast gridlines; marks stay dominant",
+        "Legend fixed on the right as a reusable convention",
+        "Status colours reserved for thresholds"
+      ]
+    }
+  }
+}

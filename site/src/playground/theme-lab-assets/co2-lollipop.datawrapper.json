@@ -1,0 +1,144 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Flint's lollipop contradicts itself. The stems are drawn down to y2 = 0 while the y scale carries 'zero: false', so the axis floor lands at 2 and every stem is cut off below it — India's 2.0 has no stem at all and Brazil's is a stub. Either the baseline is zero or it is not; here it is, and the scale says so.",
+    "Row order left exactly as the baseline has it. China and Germany are both on 8.0 tonnes, and re-sorting by value silently picks a different one to put first — which is the whole argument for keeping order out of a theme's hands: it decides something the data does not.",
+    "Value labels above each dot. The fact in the subtitle is a range from 37 to 2, an eighteen-fold spread that no reader estimates off a gridline, and the three-way cluster around 8 (Japan 8.5, China 8, Germany 8) is unresolvable without them.",
+    "Stems demoted to a 1px #C8C8C8 hairline and the ink moved to the dots. Flint draws both at full strength, so the stem — which encodes nothing the dot's height does not already state — carries as much weight as the value it hangs from.",
+    "Single house colour #18A1CD across all twelve. There is one measure and no category here, so colour stays out of it; a highlight would assert a comparison the subtitle does not make.",
+    "Flint's ',.12~g' y-axis format — twelve significant digits on a per-capita tonnage — replaced by plain integers, and the axis title dropped because the unit is already in the subtitle.",
+    "Orientation left vertical, deliberately, to hold the pair aligned. Twelve country names do not fit horizontally at a 24px step, so the labels rotate 45° rather than truncate: a name the reader cannot finish is worse than one they tilt their head for.",
+    "11pt type floor, dashed #DCDCDC horizontal gridlines, no frame, a near-black x baseline for contrast, and a hairline footer row to close the block."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 12, "bottom": 8 },
+  "title": {
+    "text": "Emissions per person run from 37 tonnes to 2",
+    "subtitle": ["Carbon dioxide emissions per capita, 2022, tonnes"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "width": 290,
+      "height": 175,
+      "data": {
+        "values": [
+          { "Country": "Qatar", "Tonnes/person": 37 },
+          { "Country": "UAE", "Tonnes/person": 22 },
+          { "Country": "United States", "Tonnes/person": 15 },
+          { "Country": "Canada", "Tonnes/person": 14 },
+          { "Country": "Russia", "Tonnes/person": 11 },
+          { "Country": "Japan", "Tonnes/person": 8.5 },
+          { "Country": "China", "Tonnes/person": 8 },
+          { "Country": "Germany", "Tonnes/person": 8 },
+          { "Country": "UK", "Tonnes/person": 5 },
+          { "Country": "France", "Tonnes/person": 4.6 },
+          { "Country": "Brazil", "Tonnes/person": 2.3 },
+          { "Country": "India", "Tonnes/person": 2 }
+        ]
+      },
+      "encoding": {
+        "x": {
+          "field": "Country",
+          "type": "nominal",
+          "title": null,
+          "sort": null,
+          "axis": {
+            "labelAngle": -45,
+            "labelAlign": "right",
+            "grid": false,
+            "domain": true,
+            "domainColor": "#333333",
+            "domainWidth": 1.2,
+            "ticks": false,
+            "labelPadding": 5
+          }
+        },
+        "y": {
+          "field": "Tonnes/person",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": true, "nice": false, "domain": [0, 42] },
+          "axis": {
+            "values": [0, 10, 20, 30, 40],
+            "format": "d",
+            "grid": true,
+            "gridColor": "#dcdcdc",
+            "gridDash": [2, 2],
+            "domain": false,
+            "ticks": false
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": { "type": "rule", "color": "#c8c8c8", "strokeWidth": 1 },
+          "encoding": { "y2": { "datum": 0 } }
+        },
+        {
+          "mark": {
+            "type": "circle",
+            "size": 80,
+            "color": "#18a1cd",
+            "opacity": 1,
+            "stroke": "#ffffff",
+            "strokeWidth": 1
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "center",
+            "baseline": "bottom",
+            "dy": -9,
+            "fontSize": 10,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": { "field": "Tonnes/person", "type": "quantitative", "format": ".3~g" }
+          }
+        }
+      ]
+    },
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#dcdcdc", "stroke": null },
+      "width": 310,
+      "height": 1,
+      "view": { "stroke": null }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "lineHeight": 18,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "subtitleLineHeight": 15
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "labelPadding": 5,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleFontSize": 10.5,
+      "titleFontWeight": 400,
+      "titleColor": "#767676",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

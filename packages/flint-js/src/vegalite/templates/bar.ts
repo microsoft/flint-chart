@@ -11,8 +11,16 @@ import {
 } from '../../core/axis-detection';
 import {
     defaultBuildEncodings, setMarkProp, adjustBarMarks, adjustRectTiling,
-    resolveAsDiscrete,
+    resolveAsDiscrete, alignStackOrderToColorOrder,
 } from './utils';
+
+/**
+ * Fraction of a lane's pitch a locally-dodged bar fills, leaving a small gap
+ * between the bars inside one band. A house that states its own
+ * `marks.bandFraction` re-cuts against this baseline (see theme.ts `bandWalk`),
+ * so the two must agree on the number.
+ */
+export const LOCAL_DODGE_LANE_FILL = 0.85;
 
 const HEATMAP_SCHEME_COLORS: Record<string, [string, string]> = {
     viridis: ['#440154', '#fde725'],
@@ -293,11 +301,12 @@ export const groupedBarChartDef: ChartTemplateDef = {
                     { joinaggregate: [{ op: 'distinct', field: groupField, as: '__localCount' }], groupby: [axisField] },
                     { calculate: `((datum.__laneIdx - 1) - (datum.__localCount - 1) / 2) / ${maxPB}`, as: '__off' },
                 ];
-                // Constant bar width ≈ 85% of a lane. VL's band reserves ~20%
-                // padding, so the usable per-lane pitch is (band·0.8 / maxPerBand).
+                // Constant bar width ≈ LOCAL_DODGE_LANE_FILL of a lane. VL's
+                // band reserves ~20% padding, so the usable per-lane pitch is
+                // (band·0.8 / maxPerBand).
                 const band = offsetCh === 'xOffset' ? ctx.layout?.xStep : ctx.layout?.yStep;
                 if (band) {
-                    spec.mark = setMarkProp(spec.mark, 'size', Math.max(2, Math.round((band * 0.8 / maxPB) * 0.85)));
+                    spec.mark = setMarkProp(spec.mark, 'size', Math.max(2, Math.round((band * 0.8 / maxPB) * LOCAL_DODGE_LANE_FILL)));
                 }
             }
         }
@@ -366,6 +375,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
                 }
             }
         }
+        alignStackOrderToColorOrder(spec, ctx);
         adjustBarMarks(spec, ctx);
     },
     properties: [
@@ -405,6 +415,12 @@ export const histogramDef: ChartTemplateDef = {
     },
     channels: ["x", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    // A binned x is an index axis, not a measure: the reader keys counts off
+    // its intervals, and its identity comes from banding even though the field
+    // is quantitative. Declaring it banded keeps the count off it and stops a
+    // house that seats its *measure* axis opposite (economist's right/top) from
+    // flipping the bins to the top of the plot.
+    declareLayoutMode: () => ({ axisFlags: { x: { banded: true } } }),
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         // `binCount` is the maxbins cap; 0 (auto) leaves the template's `bin: true`
@@ -437,9 +453,14 @@ export const heatmapDef: ChartTemplateDef = {
     template: { mark: "rect", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'color',
-    declareLayoutMode: (_cs, _table, chartProperties) => {
+    ownsValueLabels: true,
+    declareLayoutMode: (_channelSemantics, _table, chartProperties) => {
         const showTextLabels = !!chartProperties?.showTextLabels;
         return {
+            // Heatmap positions are cells, regardless of whether their labels
+            // are categories, numbers, or dates. Temporal axes keep a temporal
+            // scale for tick semantics while the dynamic layout budgets one
+            // discrete slot per observed value (continuous-as-discrete).
             axisFlags: { x: { banded: true }, y: { banded: true } },
             // Labels need slightly larger cells so the value text isn't crushed,
             // but we keep this close to the unlabeled defaults (minStep 6 /
@@ -458,9 +479,17 @@ export const heatmapDef: ChartTemplateDef = {
         const colorField = spec.encoding?.color?.field;
         const colorVals = colorField
             ? ctx.table
-                .map((r: any) => Number(r[colorField]))
+                .map((r: any) => r[colorField])
+                .filter((v: any) => v != null && v !== '')
+                .map((v: any) => Number(v))
                 .filter((v: number) => Number.isFinite(v))
             : [];
+        const hasMissingValues = colorField
+            ? ctx.table.some((r: any) => {
+                const value = r[colorField];
+                return value == null || value === '' || !Number.isFinite(Number(value));
+            })
+            : false;
         const observedMin = colorVals.length > 0 ? Math.min(...colorVals) : 0;
         const observedMax = colorVals.length > 0 ? Math.max(...colorVals) : 1;
         const existingScheme = spec.encoding?.color?.scale?.scheme;
@@ -478,8 +507,14 @@ export const heatmapDef: ChartTemplateDef = {
             && !semanticIsDiverging
             && !isDivergingHeatmapScheme(existingScheme)
             && colorEncodingType !== 'nominal';
+        // A diverging heatmap has a polarity, and the polarity is a reading of
+        // the field: warm at the top for an intensity, red at the bottom for a
+        // loss (see the diverging note in semantic-types). That call has
+        // already been made upstream, so take the scheme it named rather than
+        // pinning one here — a hard-coded default lands cold-red on every
+        // temperature grid we draw.
         const schemeName = userScheme
-            || (semanticIsDiverging ? (existingScheme || 'redblue') : undefined)
+            || (semanticIsDiverging ? (existingScheme || semanticScheme?.scheme || 'redblue') : undefined)
             || (shouldUseHeatmapDefault ? DEFAULT_HEATMAP_SCHEME : existingScheme);
         const isDiverging = isDivergingHeatmapScheme(schemeName);
         const intrinsicDomain = getSafeHeatmapIntrinsicDomain(ctx, colorField);
@@ -492,12 +527,20 @@ export const heatmapDef: ChartTemplateDef = {
             if (schemeName) {
                 spec.encoding.color.scale.scheme = schemeName;
             }
-            if (isDiverging && effectiveMin < 0 && effectiveMax > 0) {
-                const sym = Math.max(Math.abs(effectiveMin), Math.abs(effectiveMax));
-                effectiveMin = -sym;
-                effectiveMax = sym;
-                spec.encoding.color.scale.domain = [-sym, sym];
-                spec.encoding.color.scale.domainMid = 0;
+            // A diverging grid has to be symmetric about its pivot, or one arm
+            // of the ramp reaches further than the other and equal distances
+            // from the pivot read as unequal. The pivot is not always zero —
+            // an author can say what the reader is comparing against — so
+            // centre on whatever was resolved rather than on the origin.
+            const pivot = spec.encoding.color.scale.domainMid
+                ?? semanticScheme?.domainMid
+                ?? 0;
+            if (isDiverging && effectiveMin < pivot && effectiveMax > pivot) {
+                const sym = Math.max(pivot - effectiveMin, effectiveMax - pivot);
+                effectiveMin = pivot - sym;
+                effectiveMax = pivot + sym;
+                spec.encoding.color.scale.domain = [effectiveMin, effectiveMax];
+                spec.encoding.color.scale.domainMid = pivot;
             } else if (intrinsicDomain) {
                 // Sequential color with a known intrinsic domain (e.g. a
                 // Percentage field with [0, 100]). Don't force the full
@@ -516,10 +559,13 @@ export const heatmapDef: ChartTemplateDef = {
         adjustBarMarks(spec, ctx);
         adjustRectTiling(spec, ctx);
 
-        if (showTextLabels && spec.encoding?.color?.field) {
+        if ((showTextLabels || hasMissingValues) && spec.encoding?.color?.field) {
             const baseEncoding = spec.encoding || {};
             const xEncoding = baseEncoding.x;
             const yEncoding = baseEncoding.y;
+            const colorValue = `datum[${JSON.stringify(colorField)}]`;
+            const validValue = `isValid(${colorValue}) && ${colorValue} !== ''`;
+            const missingValue = `!(${validValue})`;
             const span = effectiveMax - effectiveMin;
 
             const cellMinDim = Math.min(ctx.layout.xStep || 50, ctx.layout.yStep || 50);
@@ -537,53 +583,89 @@ export const heatmapDef: ChartTemplateDef = {
                     : effectiveMin + span * 0.6)
                 : undefined;
 
-            spec.layer = [
-                {
+            if (hasMissingValues) {
+                // Keep no-data styling on the original rect encoding. A
+                // separate missing-value layer owns its own X/Y definitions;
+                // even with shared scales, that layer then participates in
+                // axis inference and can disturb a transposed temporal axis.
+                spec.encoding.color = {
+                    ...spec.encoding.color,
+                    condition: { test: missingValue, value: '#8c8c8c' },
+                };
+                spec.encoding.opacity = {
+                    condition: { test: missingValue, value: 0.32 },
+                    value: 1,
+                };
+            }
+
+            if (showTextLabels) {
+                const defaultTextColor = isDiverging
+                    ? 'black'
+                    : (highIsLight ? 'white' : 'black');
+                const textColorConditions: any[] = [
+                    ...(hasMissingValues
+                        ? [{ test: missingValue, value: '#8c8c8c' }]
+                        : []),
+                    ...(strongThreshold == null
+                        ? []
+                        : [{
+                            test: isDiverging
+                                ? `${colorValue} > ${strongThreshold} || ${colorValue} < ${-strongThreshold}`
+                                : `${colorValue} >= ${strongThreshold}`,
+                            value: isDiverging
+                                ? 'white'
+                                : (highIsLight ? 'black' : 'white'),
+                        }]),
+                ];
+                const layers: any[] = [{
                     mark: spec.mark,
                     encoding: {
                         ...(xEncoding ? { x: xEncoding } : {}),
                         ...(yEncoding ? { y: yEncoding } : {}),
-                        ...(baseEncoding.color ? { color: baseEncoding.color } : {}),
+                        ...(baseEncoding.color ? { color: spec.encoding.color } : {}),
+                        ...(spec.encoding.opacity ? { opacity: spec.encoding.opacity } : {}),
                     },
-                },
-                {
+                }, {
                     mark: {
                         type: 'text',
                         align: 'center',
                         baseline: 'middle',
                         fontSize: labelFontSize,
+                        clip: true,
                     },
                     encoding: {
                         ...(xEncoding ? { x: xEncoding } : {}),
                         ...(yEncoding ? { y: yEncoding } : {}),
                         text: {
+                            ...(hasMissingValues
+                                ? { condition: { test: missingValue, value: '—' } }
+                                : {}),
                             field: colorField,
                             type: 'quantitative',
                             format: labelFormat,
                         },
-                        color: strongThreshold == null
-                            ? { value: 'black' }
-                            : {
-                                condition: {
-                                    test: isDiverging
-                                        ? `datum.${colorField} > ${strongThreshold} || datum.${colorField} < ${-strongThreshold}`
-                                        : `datum.${colorField} >= ${strongThreshold}`,
-                                    value: isDiverging
-                                        ? 'white'
-                                        : (highIsLight ? 'black' : 'white'),
-                                },
-                                value: isDiverging
-                                    ? 'black'
-                                    : (highIsLight ? 'white' : 'black'),
-                            },
+                        color: textColorConditions.length > 0
+                            ? { condition: textColorConditions, value: defaultTextColor }
+                            : { value: defaultTextColor },
                     },
-                },
-            ];
-            delete spec.mark;
+                }];
+
+                spec.layer = layers;
+                delete spec.mark;
+
+                // Facets remain shared by the layered unit, but X/Y/color now
+                // live on the individual layers.
+                const sharedEncoding = {
+                    ...(baseEncoding.column ? { column: baseEncoding.column } : {}),
+                    ...(baseEncoding.row ? { row: baseEncoding.row } : {}),
+                };
+                if (Object.keys(sharedEncoding).length > 0) spec.encoding = sharedEncoding;
+                else delete spec.encoding;
+            }
         }
     },
     properties: [
-        { key: 'showTextLabels', label: 'Labels', type: 'binary', defaultValue: false },
+        { key: 'showValueLabels', label: 'Values', type: 'binary', defaultValue: false },
     ] as ChartPropertyDef[],
     // Color scheme is an encoding-level edit (writes encoding.scheme on the
     // color channel), so it is exposed as a Category-B encoding action rather

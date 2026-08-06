@@ -1,0 +1,377 @@
+{
+  "layer": [
+    {
+      "transform": [
+        {
+          "calculate": "(random() * 2 - 1) * 0.30000",
+          "as": "__off"
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 25,
+        "opacity": 0.7,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.5,
+        "color": "#0072b2"
+      },
+      "encoding": {
+        "x": {
+          "field": "Species",
+          "type": "nominal",
+          "sort": null
+        },
+        "y": {
+          "field": "Body mass (g)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        },
+        "xOffset": {
+          "field": "__off",
+          "type": "quantitative",
+          "scale": {
+            "domain": [
+              -0.5,
+              0.5
+            ]
+          },
+          "axis": null
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "boxplot",
+        "outliers": false,
+        "box": {
+          "filled": false,
+          "strokeWidth": 1.5
+        },
+        "median": {
+          "color": "#000000",
+          "strokeWidth": 2,
+          "opacity": 1
+        },
+        "size": 21,
+        "color": "#000000"
+      },
+      "encoding": {
+        "x": {
+          "field": "Species",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "paddingInner": 0.44999999999999996
+          }
+        },
+        "y": {
+          "field": "Body mass (g)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g"
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelAngle": 0
+    },
+    "axisY": {
+      "labelFontSize": 11,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#000000",
+      "domainWidth": 1,
+      "ticks": true,
+      "tickColor": "#000000",
+      "tickWidth": 1,
+      "tickSize": 5,
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "titleFont": "Arial, Helvetica, sans-serif",
+      "titleColor": "#000000",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Arial, Helvetica, sans-serif",
+    "title": {
+      "font": "Arial, Helvetica, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#000000",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "Arial, Helvetica, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleFontStyle": "italic",
+      "subtitleColor": "#000000",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.2,
+      "point": {
+        "filled": true,
+        "size": 45,
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      }
+    },
+    "trail": {
+      "size": 1.2
+    },
+    "point": {
+      "size": 45,
+      "filled": true
+    },
+    "circle": {
+      "size": 45,
+      "filled": true
+    },
+    "square": {
+      "size": 45,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "Arial, Helvetica, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#000000",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "width": {
+    "step": 52
+  },
+  "title": {
+    "text": "Body mass of three Pygoscelis species",
+    "subtitle": [
+      "Boxes show median and interquartile range; whiskers span the full sample; points are individual birds"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 8,
+  "data": {
+    "values": [
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3750
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3250
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3450
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3625
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4675
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3200
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 4400
+      },
+      {
+        "Species": "Adelie",
+        "Body mass (g)": 3700
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3500
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3900
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3650
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3525
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3950
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3300
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 4050
+      },
+      {
+        "Species": "Chinstrap",
+        "Body mass (g)": 3550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4500
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4450
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5700
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5400
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4800
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5000
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 4650
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5550
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5950
+      },
+      {
+        "Species": "Gentoo",
+        "Body mass (g)": 5250
+      }
+    ]
+  },
+  "__theme__": "nature",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "chartDefaults.Boxplot.showPoints",
+      "message": "house rule: `showPoints` set to true"
+    },
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 46px"
+    },
+    {
+      "stage": "ground",
+      "path": "axes.x.label.angle",
+      "message": "the widest name needs ~52px and the band is 52px — at the house's label size they read straight"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 45px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.summary.widthFraction",
+      "message": "the house fills 40% of the band with the box — 21px of a 52px band"
+    },
+    {
+      "stage": "realize",
+      "path": "ink.series",
+      "message": "the box is hollow because the observations are drawn through it — the outline is scaffolding and takes the text ink, not the series ink"
+    }
+  ]
+}

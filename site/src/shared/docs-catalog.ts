@@ -37,6 +37,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/tutorials/data-story.md',
       },
       {
+        slug: 'theme-spec',
+        title: 'Using themes',
+        description: 'Use a preset, define a design system, or inherit and override a shipped theme.',
+        file: '../../../docs/theme-spec.md',
+      },
+      {
         slug: 'setup-flint-mcp',
         title: 'Set up Flint MCP',
         description:
@@ -51,13 +57,6 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
           'Walk through a Data Formulator-style agent workflow that uses Flint as the semantic chart layer.',
         icon: agentIcon,
         file: '../../../docs/tutorials/agent-workflows.md',
-      },
-      {
-        slug: 'chart-sizing',
-        title: 'Example: Auto Layout',
-        description:
-          'See how Flint automatically resizes charts as data gets denser or layout slots get constrained.',
-        file: '../../../docs/tutorials/chart-sizing.md',
       },
     ],
   },
@@ -148,6 +147,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         title: 'Development guide',
         description: 'Monorepo setup, daily commands, and test strategy.',
         file: '../../../docs/DEVELOPMENT.md',
+      },
+      {
+        slug: 'test-plan',
+        title: 'Chart engine test plan',
+        description: 'Shared visual cases, coverage matrices, and backend bring-up workflow.',
+        file: '../../../docs/test_plan.md',
       },
       {
         slug: 'adding-a-semantic-type',

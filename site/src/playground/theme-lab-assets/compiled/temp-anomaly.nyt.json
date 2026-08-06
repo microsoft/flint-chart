@@ -1,0 +1,296 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Decade",
+      "type": "nominal",
+      "sort": null,
+      "axis": {
+        "title": null
+      },
+      "scale": {
+        "paddingInner": 0.28
+      }
+    },
+    "y": {
+      "field": "Anomaly (°C)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g",
+        "title": null,
+        "labelExpr": "datum.index === 1 ? datum.label + \"°C\" : datum.label"
+      }
+    },
+    "color": {
+      "field": "Direction",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "domain": [
+          "Below average",
+          "Above average"
+        ],
+        "range": [
+          "#c2352b",
+          "#2f6b9a"
+        ]
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#121212",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal"
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": true,
+      "gridColor": "#ececec",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "labelPadding": 2,
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#6b6b6b",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 4
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelColor": "#6b6b6b",
+      "titleFont": "Helvetica, Arial, sans-serif",
+      "titleColor": "#8a8a8a",
+      "gradientLength": 99,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, serif",
+      "fontSize": 16.5,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 15,
+      "subtitleFont": "Georgia, serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2.4,
+      "strokeCap": "round",
+      "strokeJoin": "round"
+    },
+    "trail": {
+      "size": 2.4
+    },
+    "rule": {
+      "strokeCap": "round"
+    },
+    "header": {
+      "labelFont": "Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#6b6b6b",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "width": {
+    "step": 23
+  },
+  "title": {
+    "text": "Global temperature anomaly by decade",
+    "subtitle": [
+      "°C against the 1951–1980 average"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 12,
+  "layer": [
+    {
+      "mark": "bar",
+      "encoding": {
+        "x": {
+          "field": "Decade",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.28
+          }
+        },
+        "y": {
+          "field": "Anomaly (°C)",
+          "type": "quantitative",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "labelExpr": "datum.index === 1 ? datum.label + \"°C\" : datum.label"
+          }
+        },
+        "color": {
+          "field": "Direction",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "domain": [
+              "Below average",
+              "Above average"
+            ],
+            "range": [
+              "#c2352b",
+              "#2f6b9a"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "values": [
+          {}
+        ]
+      },
+      "mark": {
+        "type": "rule",
+        "color": "#121212",
+        "strokeWidth": 1
+      },
+      "encoding": {
+        "y": {
+          "datum": 0
+        }
+      }
+    }
+  ],
+  "data": {
+    "values": [
+      {
+        "Decade": "1880s",
+        "Anomaly (°C)": -0.17,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1900s",
+        "Anomaly (°C)": -0.16,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1920s",
+        "Anomaly (°C)": -0.27,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1940s",
+        "Anomaly (°C)": 0.12,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "1960s",
+        "Anomaly (°C)": -0.03,
+        "Direction": "Below average"
+      },
+      {
+        "Decade": "1980s",
+        "Anomaly (°C)": 0.26,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2000s",
+        "Anomaly (°C)": 0.4,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2010s",
+        "Anomaly (°C)": 0.72,
+        "Direction": "Above average"
+      },
+      {
+        "Decade": "2020s",
+        "Anomaly (°C)": 1.02,
+        "Direction": "Above average"
+      }
+    ]
+  },
+  "__theme__": "nyt",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "the segments are stacked — a value at a segment edge would read as the running total"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.y.unit",
+      "message": "the unit `°C` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "structure.grid.zero",
+      "message": "the measure changes sign inside the plot — zero is drawn as its own rule, not as one gridline among the rest"
+    },
+    {
+      "stage": "realize",
+      "path": "ink.series.status",
+      "message": "the categories carry a sign — Below average is negative, Above average is positive"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 99px — under half the 221px block, so the key stays a caption to the chart"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "datawrapper",
+  "__design__": [
+    "Response scale re-coloured as a sequential ramp from confident blue to muted red (#18A1CD → #9FCBDD → #E0B48C → #C04A4A) instead of tableau10's four unrelated hues. On a Likert scale the categories are ordered, so the colour has to be ordered too.",
+    "Legend moved to the top as a single horizontal row of large squares, reading left to right in the same order as the stack — the key and the bar now share one grammar.",
+    "Value axis deleted. Every row totals 100, so one 0–100 axis is repeated five times and measures nothing the reader is asking about; the numbers move onto the segments instead.",
+    "Segment labels added from the existing Share field, blanked by a condition wherever the segment is too narrow (\u226412%) to hold two digits, with conditional ink for contrast. The condition has to blank the text rather than filter the rows: dropping rows would restack that layer and slide every label off its segment.",
+    "A numeric rank derived from the response order drives an explicit order channel shared by both layers. The bar layer would sort correctly from its colour domain alone, but the label layer overrides colour to get conditional ink, which leaves it stacking by ascending value; one shared rank keeps the two layers in register.",
+    "11pt type floor throughout and institution labels left-aligned in near-black #333 — the chart has to survive being embedded at 320px on a phone.",
+    "Row height raised to a 30px step and bar height cut to 0.66 of the band, which is what makes five long institution names readable without truncation."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 14, "bottom": 8 },
+  "width": 300,
+  "title": {
+    "text": "Confidence in US institutions",
+    "subtitle": ["% of adults expressing each level of confidence"]
+  },
+  "height": { "step": 30 },
+  "data": {
+    "values": [
+      { "Institution": "Scientists", "Response": "A great deal", "Share (%)": 39 },
+      { "Institution": "Scientists", "Response": "Some", "Share (%)": 45 },
+      { "Institution": "Scientists", "Response": "Not much", "Share (%)": 12 },
+      { "Institution": "Scientists", "Response": "None at all", "Share (%)": 4 },
+      { "Institution": "The military", "Response": "A great deal", "Share (%)": 32 },
+      { "Institution": "The military", "Response": "Some", "Share (%)": 43 },
+      { "Institution": "The military", "Response": "Not much", "Share (%)": 18 },
+      { "Institution": "The military", "Response": "None at all", "Share (%)": 7 },
+      { "Institution": "The police", "Response": "A great deal", "Share (%)": 26 },
+      { "Institution": "The police", "Response": "Some", "Share (%)": 44 },
+      { "Institution": "The police", "Response": "Not much", "Share (%)": 21 },
+      { "Institution": "The police", "Response": "None at all", "Share (%)": 9 },
+      { "Institution": "The press", "Response": "A great deal", "Share (%)": 11 },
+      { "Institution": "The press", "Response": "Some", "Share (%)": 32 },
+      { "Institution": "The press", "Response": "Not much", "Share (%)": 34 },
+      { "Institution": "The press", "Response": "None at all", "Share (%)": 23 },
+      { "Institution": "Congress", "Response": "A great deal", "Share (%)": 8 },
+      { "Institution": "Congress", "Response": "Some", "Share (%)": 30 },
+      { "Institution": "Congress", "Response": "Not much", "Share (%)": 38 },
+      { "Institution": "Congress", "Response": "None at all", "Share (%)": 24 }
+    ]
+  },
+  "transform": [
+    {
+      "calculate": "indexof(['A great deal', 'Some', 'Not much', 'None at all'], datum.Response)",
+      "as": "__rank"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Share (%)",
+      "type": "quantitative",
+      "stack": "center",
+      "title": null,
+      "axis": null
+    },
+    "y": {
+      "field": "Institution",
+      "type": "nominal",
+      "sort": ["Scientists", "The military", "The police", "The press", "Congress"],
+      "title": null,
+      "axis": { "domain": false, "ticks": false, "grid": false, "labelPadding": 6 }
+    },
+    "color": {
+      "field": "Response",
+      "type": "nominal",
+      "title": null,
+      "sort": ["A great deal", "Some", "Not much", "None at all"],
+      "scale": {
+        "domain": ["A great deal", "Some", "Not much", "None at all"],
+        "range": ["#18a1cd", "#9fcbdd", "#e0b48c", "#c04a4a"]
+      },
+      "legend": {
+        "orient": "top",
+        "direction": "horizontal",
+        "symbolType": "square",
+        "symbolSize": 110,
+        "columnPadding": 10,
+        "offset": 4,
+        "padding": 0
+      }
+    },
+    "order": { "field": "__rank", "type": "quantitative" }
+  },
+  "layer": [
+    { "mark": { "type": "bar", "height": { "band": 0.66 } } },
+    {
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "middle",
+        "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+        "fontSize": 10,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "x": {
+          "field": "Share (%)",
+          "type": "quantitative",
+          "stack": "center",
+          "bandPosition": 0.5
+        },
+        "text": {
+          "condition": {
+            "test": "datum['Share (%)'] > 12",
+            "field": "Share (%)",
+            "type": "quantitative",
+            "format": ".0f"
+          },
+          "value": ""
+        },
+        "color": {
+          "condition": { "test": "datum.Response === 'Some' || datum.Response === 'Not much'", "value": "#333333" },
+          "value": "#ffffff"
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#767676",
+      "subtitlePadding": 8
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333"
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 11,
+      "labelColor": "#333333",
+      "symbolStrokeWidth": 0
+    }
+  }
+}

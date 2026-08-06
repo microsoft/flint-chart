@@ -1,0 +1,160 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "economist",
+  "__design__": [
+    "The two edges of the band named directly at December. Flint draws a translucent ribbon with no legend at all — nothing on the page says which boundary is the daily high and which is the low, so the chart is literally unreadable without the field names.",
+    "Opacity raised from 0.5 to a solid house blue at 0.22 and both edges of the band outlined at 1.2px. A half-transparent fill was standing in for a border; and Vega-Lite's area `line` property outlines only the y boundary, so the baseline's ribbon has a drawn low edge and an undrawn high one — the two curves have to be layered explicitly to get a band with a defined top and bottom.",
+    "The house 'value axis on top' rule deliberately not applied. It exists so that a reader of a horizontal bar chart meets the unit before the bars; on a vertical chart the value axis is y, and moving it to the top turns the gridlines through ninety degrees and makes the scale unreadable. A house style is a set of reasons, not a set of coordinates.",
+    "Degree sign moved onto the tick labels (°F) and the axis title deleted; stating a unit twice is a habit, not a design.",
+    "Month axis reduced to a hard black baseline with no ticks or domain elsewhere, and the band given a monotone interpolation so a twelve-point seasonal curve does not read as eleven straight decisions.",
+    "Red masthead rule, 13.5pt bold headline over a grey deck, 9.5pt labels: the same fixed identity every chart in the section gets."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 6, "top": 4, "right": 22, "bottom": 6 },
+  "title": {
+    "text": "Seattle, month by month",
+    "subtitle": ["Average daily high and low temperature, °F, 1991–2020 normals"]
+  },
+  "spacing": 8,
+  "vconcat": [
+    {
+      "data": { "values": [{}] },
+      "mark": { "type": "rect", "fill": "#e3120b", "stroke": null },
+      "width": 26,
+      "height": 3,
+      "view": { "stroke": null }
+    },
+    {
+      "width": 250,
+      "height": 190,
+      "data": {
+        "values": [
+          { "Month": "Jan", "Low": 37, "High": 47 },
+          { "Month": "Feb", "Low": 37, "High": 50 },
+          { "Month": "Mar", "Low": 40, "High": 54 },
+          { "Month": "Apr", "Low": 43, "High": 59 },
+          { "Month": "May", "Low": 48, "High": 65 },
+          { "Month": "Jun", "Low": 53, "High": 70 },
+          { "Month": "Jul", "Low": 56, "High": 76 },
+          { "Month": "Aug", "Low": 57, "High": 77 },
+          { "Month": "Sep", "Low": 53, "High": 71 },
+          { "Month": "Oct", "Low": 46, "High": 60 },
+          { "Month": "Nov", "Low": 40, "High": 51 },
+          { "Month": "Dec", "Low": 36, "High": 46 }
+        ]
+      },
+      "encoding": {
+        "x": {
+          "field": "Month",
+          "type": "nominal",
+          "sort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+          "title": null,
+          "scale": { "padding": 0.04 },
+          "axis": {
+            "labelAngle": 0,
+            "labelPadding": 6,
+            "domain": true,
+            "domainColor": "#121317",
+            "domainWidth": 1,
+            "grid": false
+          }
+        },
+        "y": {
+          "field": "Low",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "zero": false, "nice": false, "domain": [30, 82] },
+          "axis": {
+            "tickCount": 5,
+            "format": ".0f",
+            "labelExpr": "datum.label + '°F'",
+            "grid": true,
+            "gridColor": "#c9d3da",
+            "domain": false,
+            "ticks": false,
+            "labelPadding": 4
+          }
+        },
+        "y2": { "field": "High" }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "area",
+            "interpolate": "monotone",
+            "color": "#006ba2",
+            "opacity": 0.22,
+            "line": false
+          }
+        },
+        {
+          "mark": { "type": "line", "interpolate": "monotone", "color": "#006ba2", "strokeWidth": 1.2 },
+          "encoding": { "y": { "field": "High", "type": "quantitative" }, "y2": null }
+        },
+        {
+          "mark": { "type": "line", "interpolate": "monotone", "color": "#006ba2", "strokeWidth": 1.2 },
+          "encoding": { "y": { "field": "Low", "type": "quantitative" }, "y2": null }
+        },
+        {
+          "transform": [{ "filter": "datum.Month === 'Dec'" }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 6,
+            "fontSize": 9.5,
+            "fontWeight": 600,
+            "color": "#006ba2"
+          },
+          "encoding": {
+            "y": { "field": "High", "type": "quantitative" },
+            "y2": null,
+            "text": { "value": "High" }
+          }
+        },
+        {
+          "transform": [{ "filter": "datum.Month === 'Dec'" }],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "middle",
+            "dx": 6,
+            "fontSize": 9.5,
+            "fontWeight": 600,
+            "color": "#006ba2"
+          },
+          "encoding": {
+            "y": { "field": "Low", "type": "quantitative" },
+            "y2": null,
+            "text": { "value": "Low" }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#54585a",
+      "grid": false,
+      "domain": false,
+      "ticks": false
+    }
+  }
+}

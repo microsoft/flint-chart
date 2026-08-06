@@ -1,0 +1,316 @@
+{
+  "background": "#ffffff",
+  "padding": 12,
+  "title": {
+    "text": "Confidence in US institutions",
+    "subtitle": [
+      "% of adults expressing each level of confidence"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "#ffffff",
+        "strokeWidth": 1.5
+      },
+      "encoding": {
+        "x": {
+          "field": "Share (%)",
+          "type": "quantitative",
+          "stack": "center",
+          "scale": {
+            "zero": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null,
+            "labelExpr": "datum.index === 1 ? datum.label + \"%\" : datum.label"
+          }
+        },
+        "y": {
+          "field": "Institution",
+          "type": "nominal",
+          "sort": null,
+          "axis": {
+            "title": null
+          },
+          "scale": {
+            "paddingInner": 0.33999999999999997
+          }
+        },
+        "color": {
+          "field": "Response",
+          "type": "nominal",
+          "sort": null,
+          "scale": {
+            "domain": [
+              "A great deal",
+              "Some",
+              "Not much",
+              "None at all"
+            ],
+            "range": [
+              "#18a1cd",
+              "#e2a233",
+              "#c04a4a",
+              "#2d8659"
+            ]
+          }
+        }
+      },
+      "height": {
+        "step": 23
+      }
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 300,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "resolve": {
+    "legend": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "tickCount": 6
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#999999",
+      "gradientLength": 135,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Institution": "Scientists",
+        "Response": "A great deal",
+        "Share (%)": 39
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "Some",
+        "Share (%)": 45
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "Not much",
+        "Share (%)": 12
+      },
+      {
+        "Institution": "Scientists",
+        "Response": "None at all",
+        "Share (%)": 4
+      },
+      {
+        "Institution": "The military",
+        "Response": "A great deal",
+        "Share (%)": 32
+      },
+      {
+        "Institution": "The military",
+        "Response": "Some",
+        "Share (%)": 43
+      },
+      {
+        "Institution": "The military",
+        "Response": "Not much",
+        "Share (%)": 18
+      },
+      {
+        "Institution": "The military",
+        "Response": "None at all",
+        "Share (%)": 7
+      },
+      {
+        "Institution": "The police",
+        "Response": "A great deal",
+        "Share (%)": 26
+      },
+      {
+        "Institution": "The police",
+        "Response": "Some",
+        "Share (%)": 44
+      },
+      {
+        "Institution": "The police",
+        "Response": "Not much",
+        "Share (%)": 21
+      },
+      {
+        "Institution": "The police",
+        "Response": "None at all",
+        "Share (%)": 9
+      },
+      {
+        "Institution": "The press",
+        "Response": "A great deal",
+        "Share (%)": 11
+      },
+      {
+        "Institution": "The press",
+        "Response": "Some",
+        "Share (%)": 32
+      },
+      {
+        "Institution": "The press",
+        "Response": "Not much",
+        "Share (%)": 34
+      },
+      {
+        "Institution": "The press",
+        "Response": "None at all",
+        "Share (%)": 23
+      },
+      {
+        "Institution": "Congress",
+        "Response": "A great deal",
+        "Share (%)": 8
+      },
+      {
+        "Institution": "Congress",
+        "Response": "Some",
+        "Share (%)": 30
+      },
+      {
+        "Institution": "Congress",
+        "Response": "Not much",
+        "Share (%)": 38
+      },
+      {
+        "Institution": "Congress",
+        "Response": "None at all",
+        "Share (%)": 24
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.unit",
+      "message": "the unit `%` rides on the last label, where the ruler ends"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 135px — under half the 300px block, so the key stays a caption to the chart"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 300px — not a fixed stub"
+    }
+  ]
+}

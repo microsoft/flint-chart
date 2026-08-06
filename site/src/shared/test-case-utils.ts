@@ -1,4 +1,6 @@
 import type { TestCase } from 'flint-chart/test-data';
+import type { ThemeSpec } from 'flint-chart';
+import { themeOwnsContinuousColor } from './theme-color';
 
 /** Keys that, when present, mean an encoding carries more than a bare field. */
 const ENCODING_OVERRIDE_KEYS = ['type', 'aggregate', 'sortOrder', 'sortBy', 'scheme'] as const;
@@ -157,4 +159,47 @@ export function thumbnailCanvasSize(t: TestCase): CanvasSize {
   const cardinality = categoryAxisCardinality(t);
   if (cardinality === 0 || cardinality > LOW_CARDINALITY_MAX) return DEFAULT_CANVAS;
   return THUMBNAIL_WIDE_CANVAS;
+}
+
+/**
+ * How far a themed chart may stretch when the house's own footprint drives it.
+ * Square and generous, so a house that wants to run wide (a long category
+ * ruler) or tall (a stack of small multiples) can, without the ceiling
+ * dictating the shape it starts from.
+ */
+const THEMED_CANVAS_CEILING: CanvasSize = { width: 720, height: 720 };
+
+/**
+ * Name a house on an assembly input, and stand the gallery's own sizing down.
+ * `useCanvasCeiling` applies the same treatment to Flint's default house.
+ *
+ * A named house states the footprint its style was measured against — the
+ * Economist's wide print column, Nature's narrow single-column figure — and
+ * Flint default falls back to the compiler's native base. The gallery's per-chart-type
+ * canvas is a tile-shaping convenience, not a decision anyone made about this
+ * chart, so when a house is chosen it steps aside and becomes a ceiling
+ * instead. That is exactly what the Theme Lab does, which is why the two agree.
+ */
+export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
+  input: T,
+  theme: string | ThemeSpec | undefined,
+  useCanvasCeiling = false,
+): T {
+  if (!theme && !useCanvasCeiling) return input;
+  const chartProperties = input.chart_spec.chartProperties as Record<string, unknown> | undefined;
+  const themedProperties = themeOwnsContinuousColor(theme) && chartProperties
+    ? Object.fromEntries(Object.entries(chartProperties).filter(([key]) => key !== 'colorScheme'))
+    : chartProperties;
+  return {
+    ...input,
+    chart_spec: {
+      ...input.chart_spec,
+      baseSize: undefined,
+      canvasSize: THEMED_CANVAS_CEILING,
+      ...(themedProperties && Object.keys(themedProperties).length > 0
+        ? { chartProperties: themedProperties }
+        : { chartProperties: undefined }),
+    },
+    ...(theme ? { theme_spec: theme } : {}),
+  } as T;
 }

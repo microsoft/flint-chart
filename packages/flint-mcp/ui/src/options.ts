@@ -30,6 +30,11 @@ import type {
   RawEncodingValue,
 } from 'flint-chart';
 
+/** Stable string key for an arbitrary option value (handles undefined/objects). */
+export function valueKey(value: unknown): string {
+  return JSON.stringify(value ?? null);
+}
+
 /** A resolved encoding action ready for rendering (control + current value). */
 export interface ResolvedAction {
   key: string;
@@ -235,6 +240,67 @@ export function setChannelField(
         ? { ...(prev as ChartEncoding), field }
         : { field };
   }
+  return next;
+}
+
+/**
+ * Drop the chart properties that only restate what the current configuration
+ * would have chosen anyway.
+ *
+ * A control the reader nudged and a control that happens to sit where it was
+ * put are stored the same way — as an explicit value — so once written, a
+ * value outranks every house forever. That is right when it is a decision and
+ * wrong when it is an echo, and after a theme change the difference is
+ * visible: the reader picks a house whose line carries points and gets a bare
+ * line, because a `showPoints: false` identical to the old house's default is
+ * still sitting there outranking it.
+ *
+ * A value that agrees with what the chart would have done unaided says
+ * nothing, so it is not carried across. Anything that disagrees is a real
+ * choice and stays.
+ */
+function withoutEchoedProperties(input: ChartAssemblyInput): ChartAssemblyInput {
+  const stated = input.chart_spec.chartProperties;
+  const keys = Object.keys(stated ?? {});
+  if (!keys.length) return input;
+  const kept: Record<string, unknown> = {};
+  for (const key of keys) {
+    const rest = { ...stated };
+    delete rest[key];
+    const unaided = { ...input, chart_spec: { ...input.chart_spec, chartProperties: rest } };
+    let fallback: unknown;
+    try {
+      fallback = getChartOptions(unaided).find((option) => option.key === key)?.value;
+    } catch {
+      // The chart does not compile without it — not ours to judge; keep it.
+      fallback = undefined;
+    }
+    if (fallback === undefined || valueKey(fallback) !== valueKey(stated![key])) {
+      kept[key] = stated![key];
+    }
+  }
+  return { ...input, chart_spec: { ...input.chart_spec, chartProperties: kept } };
+}
+
+/**
+ * Name the house the chart is drawn in, or clear it back to flint's own
+ * defaults. `theme_spec` sits at the top of the input rather than inside
+ * `chart_spec` because it is not a property of this chart — the same house
+ * applies whatever the chart turns out to be.
+ *
+ * A house does not only restyle a chart; it can change what the chart *is* —
+ * the NYT puts points on a line, Nature puts points in a box plot. Those are
+ * defaults, so they yield to anything stated, which means the panel has to let
+ * go of the values it is only holding by inheritance before the new house can
+ * speak. See {@link withoutEchoedProperties}.
+ */
+export function withTheme(
+  input: ChartAssemblyInput,
+  theme: ChartAssemblyInput['theme_spec'],
+): ChartAssemblyInput {
+  const next = cloneInput(withoutEchoedProperties(input));
+  if (theme === undefined) delete next.theme_spec;
+  else next.theme_spec = theme;
   return next;
 }
 

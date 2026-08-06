@@ -1,0 +1,128 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Whole tile inverted to the #1B1A19 dashboard canvas so it sits inside a dark report page instead of punching a white hole in it.",
+    "Step interpolation kept but pushed to 'step-after', which is the correct semantics for a policy rate: the rate holds until the meeting that changes it, so the vertical must land on the announcement year.",
+    "Area fill added under the step line as the same accent at 18% opacity. A rate path has a meaningful zero, so the region between the line and zero carries information the bare stroke was throwing away.",
+    "Accent switched to Power BI's #118DFF at 2.2px with a square line cap, matching the tile's other visuals.",
+    "Y axis reduced to a 4-tick grid of 1px #3B3A39 rules with no domain and no ticks; the values get a % suffix so the unit lives on the labels instead of an axis title.",
+    "Latest point emphasised with a filled marker so a glancing read lands on the current rate — this uses only the last row of the same series, no new data.",
+    "Segoe UI at 9.5pt in #C8C6C4, the dashboard's secondary ink, with the title in #F3F2F1 at 12.5pt."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 8, "top": 6, "right": 12, "bottom": 8 },
+  "width": 300,
+  "height": 190,
+  "title": {
+    "text": "Federal funds target rate",
+    "subtitle": ["Upper bound at year end, %"]
+  },
+  "data": {
+    "values": [
+      { "Year": "2015", "Target rate (%)": 0.5 },
+      { "Year": "2016", "Target rate (%)": 0.75 },
+      { "Year": "2017", "Target rate (%)": 1.5 },
+      { "Year": "2018", "Target rate (%)": 2.5 },
+      { "Year": "2019", "Target rate (%)": 1.75 },
+      { "Year": "2020", "Target rate (%)": 0.25 },
+      { "Year": "2021", "Target rate (%)": 0.25 },
+      { "Year": "2022", "Target rate (%)": 4.5 },
+      { "Year": "2023", "Target rate (%)": 5.5 },
+      { "Year": "2024", "Target rate (%)": 4.75 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "format": "%Y",
+        "tickCount": 5,
+        "grid": false,
+        "domain": true,
+        "domainColor": "#3b3a39",
+        "ticks": false,
+        "labelPadding": 6,
+        "labelColor": "#c8c6c4"
+      }
+    },
+    "y": {
+      "field": "Target rate (%)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "domain": [0, 6] },
+      "axis": {
+        "tickCount": 4,
+        "format": ".1f",
+        "labelExpr": "datum.label + '%'",
+        "grid": true,
+        "gridColor": "#3b3a39",
+        "gridWidth": 1,
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 6,
+        "labelColor": "#c8c6c4"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "area",
+        "interpolate": "step-after",
+        "line": false,
+        "color": "#118dff",
+        "opacity": 0.18
+      }
+    },
+    {
+      "mark": {
+        "type": "line",
+        "interpolate": "step-after",
+        "color": "#118dff",
+        "strokeWidth": 2.2,
+        "strokeCap": "square",
+        "strokeJoin": "miter"
+      }
+    },
+    {
+      "transform": [
+        { "window": [{ "op": "row_number", "as": "__rank" }], "sort": [{ "field": "Year", "order": "descending" }] },
+        { "filter": "datum.__rank === 1" }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 60,
+        "color": "#118dff",
+        "stroke": "#1b1a19",
+        "strokeWidth": 2
+      }
+    }
+  ],
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "subtitleFontSize": 9.5,
+      "subtitleColor": "#8a8886",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#c8c6c4"
+    }
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "background": "#ffffff",
+  "padding": {
+    "left": 12,
+    "right": 45,
+    "top": 12,
+    "bottom": 12
+  },
+  "title": {
+    "text": "What Americans die of",
+    "subtitle": [
+      "Leading causes of death, United States, 2022, thousands of deaths"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "height": {
+        "step": 23
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "stroke": "#ffffff",
+            "strokeWidth": 1.5,
+            "color": "#18a1cd"
+          },
+          "encoding": {
+            "y": {
+              "field": "Cause",
+              "type": "nominal",
+              "sort": null,
+              "axis": {
+                "title": null
+              },
+              "scale": {
+                "paddingInner": 0.33999999999999997
+              }
+            },
+            "x": {
+              "field": "Deaths (thousands)",
+              "type": "quantitative",
+              "scale": {
+                "zero": true
+              },
+              "axis": {
+                "format": ",.12~g",
+                "title": null
+              }
+            }
+          }
+        },
+        {
+          "__themeSynthetic": true,
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "left",
+            "baseline": "middle",
+            "dx": 4,
+            "color": "#333333"
+          },
+          "encoding": {
+            "text": {
+              "field": "Deaths (thousands)",
+              "type": "quantitative"
+            },
+            "x": {
+              "field": "Deaths (thousands)",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Cause",
+              "type": "nominal",
+              "sort": null
+            }
+          },
+          "transform": [
+            {
+              "filter": "abs(datum[\"Deaths (thousands)\"]) <= 621.5022142857142"
+            }
+          ]
+        },
+        {
+          "__themeSynthetic": true,
+          "transform": [
+            {
+              "filter": "abs(datum[\"Deaths (thousands)\"]) > 621.5022142857142"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            "fontSize": 11,
+            "align": "right",
+            "baseline": "middle",
+            "dx": -5,
+            "color": "#ffffff"
+          },
+          "encoding": {
+            "text": {
+              "field": "Deaths (thousands)",
+              "type": "quantitative"
+            },
+            "x": {
+              "field": "Deaths (thousands)",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Cause",
+              "type": "nominal",
+              "sort": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#dcdcdc"
+      },
+      "width": 300,
+      "height": 1,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 280,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": true,
+      "gridColor": "#e6e6e6",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "tickCount": 6
+    },
+    "axisY": {
+      "labelFontSize": 12,
+      "titleFontSize": 11,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": true,
+      "domainColor": "#333333",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#666666",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#666666",
+      "titleFontWeight": "normal",
+      "gridDash": [
+        3,
+        3
+      ],
+      "labelLimit": 0
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13.5,
+      "fontWeight": 700,
+      "color": "#333333",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#666666",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 12,
+      "labelColor": "#666666",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Cause": "Diseases of heart",
+        "Deaths (thousands)": 703
+      },
+      {
+        "Cause": "Malignant neoplasms",
+        "Deaths (thousands)": 608
+      },
+      {
+        "Cause": "Unintentional injuries",
+        "Deaths (thousands)": 227
+      },
+      {
+        "Cause": "Cerebrovascular diseases",
+        "Deaths (thousands)": 165
+      },
+      {
+        "Cause": "Chronic lower respiratory diseases",
+        "Deaths (thousands)": 148
+      },
+      {
+        "Cause": "Alzheimer disease",
+        "Deaths (thousands)": 120
+      },
+      {
+        "Cause": "Diabetes mellitus",
+        "Deaths (thousands)": 102
+      },
+      {
+        "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+        "Deaths (thousands)": 58
+      },
+      {
+        "Cause": "Chronic liver disease and cirrhosis",
+        "Deaths (thousands)": 55
+      },
+      {
+        "Cause": "Intentional self-harm (suicide)",
+        "Deaths (thousands)": 49
+      }
+    ]
+  },
+  "__theme__": "datawrapper",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "realize",
+      "path": "dataLabels.placement",
+      "message": "marks that reach the end of the scale print their label inside instead"
+    },
+    {
+      "stage": "realize",
+      "path": "furniture",
+      "message": "the footerRule runs the width of the block — 300px — not a fixed stub"
+    }
+  ]
+}

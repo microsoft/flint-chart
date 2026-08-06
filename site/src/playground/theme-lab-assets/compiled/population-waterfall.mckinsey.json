@@ -1,0 +1,341 @@
+{
+  "encoding": {
+    "x": {
+      "field": "Step",
+      "type": "ordinal",
+      "sort": null,
+      "axis": {
+        "labelAngle": -45,
+        "title": null
+      },
+      "scale": {
+        "paddingInner": 0.4
+      }
+    }
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "row_number",
+          "as": "__wf_row"
+        }
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "as": "__wf_total"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.__wf_row === datum.__wf_total ? 'end' : 'delta'",
+      "as": "__wf_type"
+    },
+    {
+      "window": [
+        {
+          "op": "sum",
+          "field": "Population (M)",
+          "as": "__wf_sum_raw"
+        }
+      ]
+    },
+    {
+      "calculate": "datum['__wf_type'] === 'end' ? datum.__wf_sum_raw - datum['Population (M)'] : datum.__wf_sum_raw",
+      "as": "__wf_sum"
+    },
+    {
+      "calculate": "datum['__wf_type'] === 'end' ? 0 : datum.__wf_sum - datum['Population (M)']",
+      "as": "__wf_prev_sum"
+    },
+    {
+      "calculate": "(datum['__wf_type'] === 'start' || datum['__wf_type'] === 'end') ? 'total' : datum['Population (M)'] >= 0 ? 'increase' : 'decrease'",
+      "as": "__wf_color"
+    },
+    {
+      "window": [
+        {
+          "op": "lead",
+          "field": "Step",
+          "as": "__wf_lead"
+        }
+      ]
+    },
+    {
+      "calculate": "datum.__wf_lead === null ? datum['Step'] : datum.__wf_lead",
+      "as": "__wf_lead"
+    },
+    {
+      "calculate": "datum.__wf_lead === datum['Step'] ? null : datum.__wf_sum",
+      "as": "__wf_connector_y"
+    }
+  ],
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "stroke": "#ffffff",
+        "strokeWidth": 0.6
+      },
+      "encoding": {
+        "y": {
+          "field": "__wf_prev_sum",
+          "type": "quantitative",
+          "title": "Population (M)",
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        },
+        "y2": {
+          "field": "__wf_sum"
+        },
+        "color": {
+          "field": "__wf_color",
+          "type": "nominal",
+          "scale": {
+            "domain": [
+              "total",
+              "increase",
+              "decrease"
+            ],
+            "range": [
+              "#051c2c",
+              "#2251ff",
+              "#00a9f4",
+              "#00cfb4",
+              "#8c9ba5"
+            ]
+          },
+          "legend": {
+            "title": "Type"
+          }
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "rule",
+        "color": "#d3dce1",
+        "opacity": 0.7,
+        "strokeWidth": 0.8
+      },
+      "encoding": {
+        "x": {
+          "field": "Step",
+          "type": "ordinal",
+          "sort": null,
+          "bandPosition": 0,
+          "axis": {
+            "title": null
+          }
+        },
+        "x2": {
+          "field": "__wf_lead",
+          "bandPosition": 1
+        },
+        "y": {
+          "field": "__wf_connector_y",
+          "type": "quantitative",
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        }
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelAngle": 0
+    },
+    "axisY": {
+      "labelFontSize": 12.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#5a6872",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "labelAngle": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "orient": "top",
+      "direction": "horizontal",
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#5a6872",
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#8a969d",
+      "gradientLength": 200,
+      "title": null
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11.5,
+      "subtitleColor": "#5a6872",
+      "subtitlePadding": 7,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 2
+    },
+    "trail": {
+      "size": 2
+    },
+    "point": {
+      "size": 64,
+      "filled": true
+    },
+    "circle": {
+      "size": 64,
+      "filled": true
+    },
+    "square": {
+      "size": 64,
+      "filled": true
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#5a6872",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "width": {
+    "step": 71
+  },
+  "title": {
+    "text": "Asia added more people than the world held in 1950",
+    "subtitle": [
+      "Contribution to world population growth by region, 1950–2020, millions"
+    ]
+  },
+  "background": "#ffffff",
+  "padding": 20,
+  "data": {
+    "values": [
+      {
+        "Step": "1950",
+        "Population (M)": 2536
+      },
+      {
+        "Step": "Asia",
+        "Population (M)": 3237
+      },
+      {
+        "Step": "Africa",
+        "Population (M)": 1134
+      },
+      {
+        "Step": "Americas",
+        "Population (M)": 684
+      },
+      {
+        "Step": "Europe",
+        "Population (M)": 199
+      },
+      {
+        "Step": "Oceania",
+        "Population (M)": 32
+      }
+    ]
+  },
+  "__theme__": "mckinsey",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "layout.bandStep",
+      "message": "the house gives each category 80px"
+    },
+    {
+      "stage": "ground",
+      "path": "ink.series",
+      "message": "`__wf_color` is created by a backend transform — the whole categorical set is offered rather than guessing a count"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`seriesEnd` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "legend.placement",
+      "message": "`inline` not available for this chart — falling through"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "the segments are stacked — a value at a segment edge would read as the running total"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.point.size",
+      "message": "a dot is drawn at 64px² wherever one is drawn — the house's size, not the renderer's, and the layout may still shrink it"
+    },
+    {
+      "stage": "realize",
+      "path": "marks.connector",
+      "message": "the lead line is drawn at 0.8px in structural ink — it runs across the categories at one level, and the two mark ends it touches already state that level"
+    },
+    {
+      "stage": "realize",
+      "path": "legend.gradientLength",
+      "message": "the ramp runs 200px — under half the 456px block, so the key stays a caption to the chart"
+    }
+  ]
+}

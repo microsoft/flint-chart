@@ -1,0 +1,152 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "powerbi",
+  "__design__": [
+    "Whole tile inverted to the #1B1A19 dashboard canvas so the three rows sit inside a report page rather than punching a white hole in it.",
+    "Rows given independent y scales. Flint shares one scale across all three metrics, which flattens revenue in the 120–180 range against churn at 3.8–5.2 into a single unreadable band; a sparkline row is a shape, not a magnitude comparison.",
+    "Colour freed from metric identity. The row label already names the metric, so the hue no longer has to; all three lines take Power BI green #22B14C because all three are currently moving in the desired direction — revenue and users up, churn down.",
+    "Row header moved from a rotated left-hand axis title to a flush-left label above each sparkline, which is how a KPI strip is laid out.",
+    "Current value printed at the right of each row, taken from the last point of the same series — the number a dashboard reader wants first, which the baseline made them read off a shared axis.",
+    "All axes, gridlines and ticks deleted. A sparkline has no axis by definition; the baseline's month labels and value ticks were consuming more pixels than the line.",
+    "Line weight 1.6px with a round join, plus a filled endpoint marker so the eye lands on the current period; row height cut to 34px so all three fit in one tile."
+  ],
+  "background": "#1b1a19",
+  "padding": { "left": 6, "top": 4, "right": 8, "bottom": 4 },
+  "title": {
+    "text": "Monthly KPIs",
+    "subtitle": ["Twelve-month trend and latest value"]
+  },
+  "data": {
+    "values": [
+      { "Month": "Jan", "Metric": "Revenue ($k)", "Value": 120 },
+      { "Month": "Feb", "Metric": "Revenue ($k)", "Value": 125 },
+      { "Month": "Mar", "Metric": "Revenue ($k)", "Value": 130 },
+      { "Month": "Apr", "Metric": "Revenue ($k)", "Value": 128 },
+      { "Month": "May", "Metric": "Revenue ($k)", "Value": 140 },
+      { "Month": "Jun", "Metric": "Revenue ($k)", "Value": 145 },
+      { "Month": "Jul", "Metric": "Revenue ($k)", "Value": 150 },
+      { "Month": "Aug", "Metric": "Revenue ($k)", "Value": 148 },
+      { "Month": "Sep", "Metric": "Revenue ($k)", "Value": 160 },
+      { "Month": "Oct", "Metric": "Revenue ($k)", "Value": 165 },
+      { "Month": "Nov", "Metric": "Revenue ($k)", "Value": 170 },
+      { "Month": "Dec", "Metric": "Revenue ($k)", "Value": 180 },
+      { "Month": "Jan", "Metric": "Active users (k)", "Value": 40 },
+      { "Month": "Feb", "Metric": "Active users (k)", "Value": 42 },
+      { "Month": "Mar", "Metric": "Active users (k)", "Value": 45 },
+      { "Month": "Apr", "Metric": "Active users (k)", "Value": 47 },
+      { "Month": "May", "Metric": "Active users (k)", "Value": 50 },
+      { "Month": "Jun", "Metric": "Active users (k)", "Value": 52 },
+      { "Month": "Jul", "Metric": "Active users (k)", "Value": 55 },
+      { "Month": "Aug", "Metric": "Active users (k)", "Value": 58 },
+      { "Month": "Sep", "Metric": "Active users (k)", "Value": 60 },
+      { "Month": "Oct", "Metric": "Active users (k)", "Value": 63 },
+      { "Month": "Nov", "Metric": "Active users (k)", "Value": 66 },
+      { "Month": "Dec", "Metric": "Active users (k)", "Value": 70 },
+      { "Month": "Jan", "Metric": "Churn (%)", "Value": 5.2 },
+      { "Month": "Feb", "Metric": "Churn (%)", "Value": 5.0 },
+      { "Month": "Mar", "Metric": "Churn (%)", "Value": 4.8 },
+      { "Month": "Apr", "Metric": "Churn (%)", "Value": 4.9 },
+      { "Month": "May", "Metric": "Churn (%)", "Value": 4.6 },
+      { "Month": "Jun", "Metric": "Churn (%)", "Value": 4.5 },
+      { "Month": "Jul", "Metric": "Churn (%)", "Value": 4.3 },
+      { "Month": "Aug", "Metric": "Churn (%)", "Value": 4.4 },
+      { "Month": "Sep", "Metric": "Churn (%)", "Value": 4.1 },
+      { "Month": "Oct", "Metric": "Churn (%)", "Value": 4.0 },
+      { "Month": "Nov", "Metric": "Churn (%)", "Value": 3.9 },
+      { "Month": "Dec", "Metric": "Churn (%)", "Value": 3.8 }
+    ]
+  },
+  "facet": {
+    "row": {
+      "field": "Metric",
+      "type": "nominal",
+      "sort": ["Revenue ($k)", "Active users (k)", "Churn (%)"],
+      "title": null,
+      "header": {
+        "labelAngle": 0,
+        "labelAlign": "left",
+        "labelAnchor": "start",
+        "labelOrient": "top",
+        "labelFontSize": 10,
+        "labelFontWeight": 600,
+        "labelColor": "#f3f2f1",
+        "labelPadding": 0
+      }
+    }
+  },
+  "spacing": 14,
+  "resolve": { "scale": { "y": "independent" } },
+  "spec": {
+    "width": 250,
+    "height": 34,
+    "encoding": {
+      "x": {
+        "field": "Month",
+        "type": "ordinal",
+        "sort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "title": null,
+        "axis": null
+      },
+      "y": {
+        "field": "Value",
+        "type": "quantitative",
+        "title": null,
+        "axis": null
+      }
+    },
+    "layer": [
+      {
+        "mark": {
+          "type": "line",
+          "color": "#22b14c",
+          "strokeWidth": 1.6,
+          "strokeJoin": "round",
+          "strokeCap": "round"
+        }
+      },
+      {
+        "transform": [{ "filter": "datum.Month === 'Dec'" }],
+        "mark": {
+          "type": "point",
+          "filled": true,
+          "size": 40,
+          "color": "#22b14c"
+        }
+      },
+      {
+        "transform": [{ "filter": "datum.Month === 'Dec'" }],
+        "mark": {
+          "type": "text",
+          "align": "left",
+          "baseline": "middle",
+          "dx": 8,
+          "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+          "fontSize": 12,
+          "fontWeight": 600,
+          "color": "#f3f2f1"
+        },
+        "encoding": {
+          "text": { "field": "Value", "type": "quantitative", "format": ".3~f" }
+        }
+      }
+    ]
+  },
+  "config": {
+    "background": "#1b1a19",
+    "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "title": {
+      "font": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": 12.5,
+      "fontWeight": 600,
+      "color": "#f3f2f1",
+      "anchor": "start",
+      "offset": 10,
+      "subtitleFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+      "subtitleFontSize": 9.5,
+      "subtitleColor": "#8a8886",
+      "subtitlePadding": 6
+    },
+    "view": { "stroke": null },
+    "header": { "labelFont": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif" }
+  }
+}

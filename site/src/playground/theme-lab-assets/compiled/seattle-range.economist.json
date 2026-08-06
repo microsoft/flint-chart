@@ -1,0 +1,252 @@
+{
+  "background": "#ffffff",
+  "padding": 8,
+  "title": {
+    "text": "Seattle, month by month",
+    "subtitle": [
+      "Average daily high and low temperature, °F, 1991–2020 normals"
+    ]
+  },
+  "spacing": 6,
+  "vconcat": [
+    {
+      "__themeSynthetic": true,
+      "mark": {
+        "type": "rect",
+        "color": "#e3120b"
+      },
+      "width": 26,
+      "height": 3,
+      "data": {
+        "values": [
+          {}
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "area",
+        "opacity": 0.5,
+        "line": {
+          "strokeWidth": 1
+        },
+        "color": "#006ba2"
+      },
+      "encoding": {
+        "x": {
+          "field": "Month",
+          "type": "nominal",
+          "sort": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ],
+          "axis": {
+            "title": null
+          }
+        },
+        "y": {
+          "field": "Low",
+          "type": "quantitative",
+          "scale": {
+            "zero": false,
+            "nice": true
+          },
+          "axis": {
+            "format": ",.12~g",
+            "title": null
+          }
+        },
+        "y2": {
+          "field": "High"
+        }
+      },
+      "width": {
+        "step": 23
+      }
+    }
+  ],
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230,
+      "stroke": null
+    },
+    "axisX": {
+      "labelLimit": 0,
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": false,
+      "gridColor": "transparent",
+      "gridWidth": 0,
+      "domain": false,
+      "domainColor": "#121317",
+      "domainWidth": 1,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelAngle": 0
+    },
+    "axisY": {
+      "labelFontSize": 10.5,
+      "titleFontSize": 10.5,
+      "grid": true,
+      "gridColor": "#d8dfe4",
+      "gridWidth": 1,
+      "domain": false,
+      "domainColor": "transparent",
+      "domainWidth": 0,
+      "ticks": false,
+      "tickColor": "transparent",
+      "tickWidth": 0,
+      "tickSize": 0,
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelColor": "#54585a",
+      "labelPadding": 7,
+      "titleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "titleColor": "#54585a",
+      "titleFontWeight": "normal",
+      "labelLimit": 0,
+      "tickCount": 5
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    },
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 14.5,
+      "fontWeight": 700,
+      "color": "#121317",
+      "anchor": "start",
+      "offset": 13,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 12.5,
+      "subtitleColor": "#54585a",
+      "subtitlePadding": 8,
+      "frame": "bounds"
+    },
+    "line": {
+      "strokeWidth": 1.6
+    },
+    "trail": {
+      "size": 1.6
+    },
+    "header": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10.5,
+      "labelColor": "#54585a",
+      "labelFontWeight": "normal",
+      "title": null
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Jan",
+        "Low": 37,
+        "High": 47
+      },
+      {
+        "Month": "Feb",
+        "Low": 37,
+        "High": 50
+      },
+      {
+        "Month": "Mar",
+        "Low": 40,
+        "High": 54
+      },
+      {
+        "Month": "Apr",
+        "Low": 43,
+        "High": 59
+      },
+      {
+        "Month": "May",
+        "Low": 48,
+        "High": 65
+      },
+      {
+        "Month": "Jun",
+        "Low": 53,
+        "High": 70
+      },
+      {
+        "Month": "Jul",
+        "Low": 56,
+        "High": 76
+      },
+      {
+        "Month": "Aug",
+        "Low": 57,
+        "High": 77
+      },
+      {
+        "Month": "Sep",
+        "Low": 53,
+        "High": 71
+      },
+      {
+        "Month": "Oct",
+        "Low": 46,
+        "High": 60
+      },
+      {
+        "Month": "Nov",
+        "Low": 40,
+        "High": 51
+      },
+      {
+        "Month": "Dec",
+        "Low": 36,
+        "High": 46
+      }
+    ]
+  },
+  "__theme__": "economist",
+  "__compiled__": true,
+  "__report__": [
+    {
+      "stage": "ground",
+      "path": "axes.x.label.angle",
+      "message": "the widest name needs ~18px and the band is 23px — at the house's label size they read straight"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.inkMode",
+      "message": "no ink mode declared but the label sits on the mark — it contrasts with what it is printed on"
+    },
+    {
+      "stage": "ground",
+      "path": "dataLabels.show",
+      "message": "`whenTheyFit` resolved to false — no banded axis to key values to"
+    },
+    {
+      "stage": "realize",
+      "path": "axes.x.domain",
+      "message": "the value scale floats — a rule under the categories would claim a base the chart does not have"
+    }
+  ]
+}

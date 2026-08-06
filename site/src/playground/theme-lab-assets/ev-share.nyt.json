@@ -1,0 +1,116 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "The legend is deleted and each line is named at its own right-hand end. Flint puts a four-swatch key beside the plot, which makes reading the chart a two-step lookup: find the colour, carry it back to the line. With four series that end far apart vertically — 93, 38, 25 and 10 — the label can sit where the line stops and the lookup disappears. This is the same move as the direct value labels on the ranked-bar row, applied to a different channel.",
+    "Which means colour stops being load-bearing. It still separates the lines where they cross in the middle years, but nothing depends on the reader remembering which hue is which, so the palette can be four muted inks rather than four maximally separated ones.",
+    "Horizontal grid at #E4E4E4 on the value axis only, at 25-point steps, with the year axis unruled. On a percentage series the question is always 'how high', never 'when' precisely, so the grid runs one way.",
+    "Points marked at each observation. The series is sampled at 2018, 2020, 2022, 2023 — unevenly — and a bare line implies a continuous reading it cannot support. The dots say where the data actually is.",
+    "Series order left exactly as the baseline has it, Norway through United States; the colour domain is pinned to that order so the assignment cannot drift.",
+    "Serif headline over sans labels — the house signature, and the only place the two typefaces meet."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 86, "bottom": 8 },
+  "title": {
+    "text": "Electric cars as a share of new sales",
+    "subtitle": ["Norway, China, Germany and the United States, 2018–2023, per cent of new car sales"]
+  },
+  "width": 300,
+  "height": 210,
+  "data": {
+    "values": [
+      { "Year": "2018", "Country": "Norway", "EV share (%)": 49 },
+      { "Year": "2020", "Country": "Norway", "EV share (%)": 75 },
+      { "Year": "2022", "Country": "Norway", "EV share (%)": 88 },
+      { "Year": "2023", "Country": "Norway", "EV share (%)": 93 },
+      { "Year": "2018", "Country": "China", "EV share (%)": 4 },
+      { "Year": "2020", "Country": "China", "EV share (%)": 6 },
+      { "Year": "2022", "Country": "China", "EV share (%)": 29 },
+      { "Year": "2023", "Country": "China", "EV share (%)": 38 },
+      { "Year": "2018", "Country": "Germany", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "Germany", "EV share (%)": 13 },
+      { "Year": "2022", "Country": "Germany", "EV share (%)": 31 },
+      { "Year": "2023", "Country": "Germany", "EV share (%)": 25 },
+      { "Year": "2018", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2020", "Country": "United States", "EV share (%)": 2 },
+      { "Year": "2022", "Country": "United States", "EV share (%)": 8 },
+      { "Year": "2023", "Country": "United States", "EV share (%)": 10 }
+    ]
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "title": null,
+      "scale": { "type": "utc" },
+      "axis": {
+        "values": ["2018", "2020", "2022", "2023"],
+        "format": "%Y",
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 10,
+        "labelColor": "#6b6b6b",
+        "labelPadding": 4
+      }
+    },
+    "y": {
+      "field": "EV share (%)",
+      "type": "quantitative",
+      "title": null,
+      "scale": { "zero": true, "nice": false, "domain": [0, 100] },
+      "axis": {
+        "values": [0, 25, 50, 75, 100],
+        "format": "d",
+        "grid": true,
+        "gridColor": "#e4e4e4",
+        "domain": false,
+        "ticks": false,
+        "labelFontSize": 10,
+        "labelColor": "#6b6b6b"
+      }
+    },
+    "color": {
+      "field": "Country",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "domain": ["Norway", "China", "Germany", "United States"],
+        "range": ["#2f6b9a", "#c2352b", "#5c8a3c", "#9a6c3f"]
+      }
+    }
+  },
+  "layer": [
+    { "mark": { "type": "line", "strokeWidth": 2 } },
+    { "mark": { "type": "point", "filled": true, "size": 26 } },
+    {
+      "transform": [{ "filter": "utcyear(datum.Year) === 2023" }],
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 7,
+        "fontSize": 10.5,
+        "fontWeight": 600
+      },
+      "encoding": { "text": { "field": "Country", "type": "nominal" } }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', Times, serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 11,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null }
+  }
+}

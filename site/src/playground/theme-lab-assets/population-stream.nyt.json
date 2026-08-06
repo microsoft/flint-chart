@@ -1,0 +1,141 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "nyt",
+  "__design__": [
+    "Legend deleted and each region named inside its own ribbon, with its 2020 figure attached. A streamgraph has no value axis to read against — Flint correctly sets axis null — so a right-hand key leaves the reader with shapes they cannot convert into numbers.",
+    "Stacking taken off the encoding and onto an explicit stack transform with offset 'center', so the label layer can compute each ribbon's midpoint from the same y0/y1 the area is drawn from. Positioning labels by eye on a centred stack is how they end up half a band out. The transform sorts descending because Vega-Lite draws the first colour-domain entry at the TOP of a vertical stack, and the two columns have to read in the same direction.",
+    "Oceania's label dropped just below its ribbon rather than sitting inside it: at 45m against a 7.8bn total the band is about one pixel tall, and a design that only labels the bands that happen to be thick enough is a design that hides its smallest category.",
+    "Gridlines turned vertical, not horizontal. On a centred stack a horizontal rule means nothing — there is no fixed baseline for it to measure from — whereas a vertical rule at each observed year marks where the thicknesses are actually comparable.",
+    "Five NYT swatches replacing tableau10, with labels reversed out in white; the ribbons carry saturated ink because on a stream the fill *is* the mark, not a container for one.",
+    "Serif headline flush left, frame and axis domain removed, x reduced to the five years where data exists — the baseline's temporal axis was interpolating tick positions between measurements."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 10, "bottom": 6 },
+  "width": 300,
+  "height": 200,
+  "title": {
+    "text": "Where the world's people are",
+    "subtitle": ["Population by region, 1950–2020, millions"]
+  },
+  "data": {
+    "values": [
+      { "Year": "1950", "Region": "Asia", "Population": 1404 },
+      { "Year": "1950", "Region": "Africa", "Population": 227 },
+      { "Year": "1950", "Region": "Europe", "Population": 549 },
+      { "Year": "1950", "Region": "Americas", "Population": 339 },
+      { "Year": "1950", "Region": "Oceania", "Population": 13 },
+      { "Year": "1970", "Region": "Asia", "Population": 2142 },
+      { "Year": "1970", "Region": "Africa", "Population": 365 },
+      { "Year": "1970", "Region": "Europe", "Population": 657 },
+      { "Year": "1970", "Region": "Americas", "Population": 512 },
+      { "Year": "1970", "Region": "Oceania", "Population": 20 },
+      { "Year": "1990", "Region": "Asia", "Population": 3226 },
+      { "Year": "1990", "Region": "Africa", "Population": 630 },
+      { "Year": "1990", "Region": "Europe", "Population": 721 },
+      { "Year": "1990", "Region": "Americas", "Population": 724 },
+      { "Year": "1990", "Region": "Oceania", "Population": 27 },
+      { "Year": "2010", "Region": "Asia", "Population": 4194 },
+      { "Year": "2010", "Region": "Africa", "Population": 1039 },
+      { "Year": "2010", "Region": "Europe", "Population": 736 },
+      { "Year": "2010", "Region": "Americas", "Population": 934 },
+      { "Year": "2010", "Region": "Oceania", "Population": 37 },
+      { "Year": "2020", "Region": "Asia", "Population": 4641 },
+      { "Year": "2020", "Region": "Africa", "Population": 1361 },
+      { "Year": "2020", "Region": "Europe", "Population": 748 },
+      { "Year": "2020", "Region": "Americas", "Population": 1023 },
+      { "Year": "2020", "Region": "Oceania", "Population": 45 }
+    ]
+  },
+  "transform": [
+    {
+      "calculate": "indexof(['Asia', 'Africa', 'Europe', 'Americas', 'Oceania'], datum.Region)",
+      "as": "__band"
+    },
+    {
+      "stack": "Population",
+      "groupby": ["Year"],
+      "sort": [{ "field": "__band", "order": "descending" }],
+      "offset": "center",
+      "as": ["__y0", "__y1"]
+    },
+    {
+      "calculate": "datum.Region === 'Oceania' ? datum.__y0 - 270 : (datum.__y0 + datum.__y1) / 2",
+      "as": "__labelY"
+    },
+    {
+      "calculate": "datum.Region + '  ' + format(datum.Population, ',')",
+      "as": "__label"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "ordinal",
+      "title": null,
+      "scale": { "padding": 0 },
+      "axis": { "labelAngle": 0, "labelPadding": 6, "grid": true, "gridColor": "#e4e4e4", "gridDash": [2, 2] }
+    },
+    "color": {
+      "field": "Region",
+      "type": "nominal",
+      "legend": null,
+      "scale": {
+        "domain": ["Asia", "Africa", "Europe", "Americas", "Oceania"],
+        "range": ["#c2352b", "#d9a441", "#4a8b6f", "#2f6b9a", "#7f6a9e"]
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "area", "interpolate": "monotone", "line": false },
+      "encoding": {
+        "y": { "field": "__y0", "type": "quantitative", "title": null, "axis": null },
+        "y2": { "field": "__y1" }
+      }
+    },
+    {
+      "transform": [{ "filter": "datum.Year === '2020'" }],
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "baseline": "middle",
+        "dx": -7,
+        "fontSize": 9.5,
+        "fontWeight": 600
+      },
+      "encoding": {
+        "y": { "field": "__labelY", "type": "quantitative", "axis": null },
+        "text": { "field": "__label", "type": "nominal" },
+        "color": {
+          "condition": { "test": "datum.Region === 'Oceania'", "value": "#121212" },
+          "value": "#ffffff"
+        }
+      }
+    }
+  ],
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "Georgia, 'Times New Roman', Times, serif",
+      "fontSize": 15,
+      "fontWeight": 700,
+      "color": "#121212",
+      "anchor": "start",
+      "offset": 14,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10.5,
+      "subtitleColor": "#6b6b6b",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#6b6b6b",
+      "domain": false,
+      "ticks": false,
+      "grid": false
+    }
+  }
+}

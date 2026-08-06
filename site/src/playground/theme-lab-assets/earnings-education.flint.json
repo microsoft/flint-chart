@@ -1,0 +1,119 @@
+{
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Weekly earnings ($)",
+      "type": "quantitative",
+      "scale": {
+        "zero": true
+      },
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "Education",
+      "type": "nominal",
+      "sort": null
+    },
+    "color": {
+      "field": "Sex",
+      "type": "nominal",
+      "sort": null,
+      "scale": {
+        "scheme": "tableau10"
+      }
+    },
+    "yOffset": {
+      "field": "Sex",
+      "type": "nominal",
+      "sort": null
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "height": {
+    "step": 46,
+    "for": "position"
+  },
+  "title": {
+    "text": "Median weekly earnings by education and sex, 2023",
+    "subtitle": [
+      "US dollars, full-time wage and salary workers"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Education": "Advanced degree",
+        "Sex": "Men",
+        "Weekly earnings ($)": 2160
+      },
+      {
+        "Education": "Advanced degree",
+        "Sex": "Women",
+        "Weekly earnings ($)": 1600
+      },
+      {
+        "Education": "Bachelor's degree",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1700
+      },
+      {
+        "Education": "Bachelor's degree",
+        "Sex": "Women",
+        "Weekly earnings ($)": 1290
+      },
+      {
+        "Education": "Some college",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1120
+      },
+      {
+        "Education": "Some college",
+        "Sex": "Women",
+        "Weekly earnings ($)": 890
+      },
+      {
+        "Education": "High school",
+        "Sex": "Men",
+        "Weekly earnings ($)": 1000
+      },
+      {
+        "Education": "High school",
+        "Sex": "Women",
+        "Weekly earnings ($)": 790
+      },
+      {
+        "Education": "Less than high school",
+        "Sex": "Men",
+        "Weekly earnings ($)": 780
+      },
+      {
+        "Education": "Less than high school",
+        "Sex": "Women",
+        "Weekly earnings ($)": 620
+      }
+    ]
+  }
+}

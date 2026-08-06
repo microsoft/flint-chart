@@ -1,0 +1,172 @@
+{
+  "encoding": {
+    "theta": {
+      "field": "Month",
+      "type": "nominal",
+      "sort": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "stack": true
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "arc",
+        "stroke": "white",
+        "padAngle": 0.02
+      },
+      "encoding": {
+        "radius": {
+          "field": "Rainfall (mm)",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        },
+        "color": {
+          "field": "Month",
+          "type": "nominal",
+          "sort": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ]
+        }
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "radiusOffset": 15,
+        "fontSize": 11
+      },
+      "encoding": {
+        "text": {
+          "field": "Month",
+          "type": "nominal"
+        },
+        "radius": {
+          "field": "Rainfall (mm)",
+          "type": "quantitative",
+          "scale": {
+            "type": "sqrt"
+          }
+        }
+      },
+      "transform": [
+        {
+          "aggregate": [
+            {
+              "op": "sum",
+              "field": "Rainfall (mm)",
+              "as": "Rainfall (mm)"
+            }
+          ],
+          "groupby": [
+            "Month"
+          ]
+        }
+      ]
+    }
+  ],
+  "width": 230,
+  "height": 230,
+  "config": {
+    "view": {
+      "continuousWidth": 230,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Seattle monthly rainfall (mm)"
+  },
+  "data": {
+    "values": [
+      {
+        "Month": "Jan",
+        "Rainfall (mm)": 140
+      },
+      {
+        "Month": "Feb",
+        "Rainfall (mm)": 90
+      },
+      {
+        "Month": "Mar",
+        "Rainfall (mm)": 95
+      },
+      {
+        "Month": "Apr",
+        "Rainfall (mm)": 70
+      },
+      {
+        "Month": "May",
+        "Rainfall (mm)": 50
+      },
+      {
+        "Month": "Jun",
+        "Rainfall (mm)": 40
+      },
+      {
+        "Month": "Jul",
+        "Rainfall (mm)": 18
+      },
+      {
+        "Month": "Aug",
+        "Rainfall (mm)": 25
+      },
+      {
+        "Month": "Sep",
+        "Rainfall (mm)": 40
+      },
+      {
+        "Month": "Oct",
+        "Rainfall (mm)": 100
+      },
+      {
+        "Month": "Nov",
+        "Rainfall (mm)": 165
+      },
+      {
+        "Month": "Dec",
+        "Rainfall (mm)": 155
+      }
+    ]
+  }
+}

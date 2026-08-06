@@ -5,16 +5,18 @@
 > PNG or SVG — across Vega-Lite, ECharts, and Chart.js. Rendering is local and
 > **in-process**: your data never leaves the host.
 
-Flint's [bundled agent skill](assets/flint-chart-author.SKILL.md) teaches an agent how to *author*
-a `ChartAssemblyInput`. This MCP server exposes that skill and acts as the
-execution counterpart: it compiles, validates, and renders that one spec.
+Flint's bundled [chart-author](assets/flint-chart-author.SKILL.md) and
+[theme-author](assets/flint-theme-author.SKILL.md) skills teach an agent how to
+author a `ChartAssemblyInput` or a reusable `ThemeSpec`. This MCP server exposes
+those skills and acts as the execution counterpart for charts: it compiles,
+validates, and renders one semantic spec.
 
 ## Why a small tool surface
 
 Most chart MCP servers expose one tool per chart type (26+ tools) because every
 chart has a different schema, and they upload your config to a remote render
 service. Flint has **one schema** (`ChartAssemblyInput`) spanning ~40 chart
-types × multiple backends, so this server exposes **five focused tools** and
+types × multiple backends, so this server exposes **six focused tools** and
 renders **locally**.
 
 ## Tools
@@ -25,7 +27,33 @@ renders **locally**.
 | `compile_chart` | spec + `backend` | backend-native spec JSON + warnings |
 | `validate_chart` | spec + `backend` | validity, warnings/errors, computed size |
 | `list_chart_types` | `backend?` | chart types + encoding channels per backend |
+| `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
 | `create_chart_view` | spec | interactive chart **UI** (MCP App): live SVG preview + customization panel |
+
+## Visual themes
+
+For Vega-Lite charts, agents should use a preset id from `list_themes`:
+
+```json
+{ "theme_spec": "economist" }
+```
+
+When the user requests a brand adjustment, extend a preset and keep the
+override small:
+
+```json
+{
+  "theme_spec": {
+    "extends": "economist",
+    "id": "our-brand",
+    "ink": { "series": { "single": "#6b3fa0" } }
+  }
+}
+```
+
+See the full
+[ThemeSpec guide](https://microsoft.github.io/flint-chart/#/documentation/theme-spec)
+for supported fields and merge behavior.
 
 ## MCP App: interactive chart view
 
@@ -33,22 +61,29 @@ In hosts that support MCP App UIs (e.g. Claude Desktop), `create_chart_view`
 opens an interactive view that renders the spec live (Vega-Lite → SVG) and shows
 a customization panel built from Flint's own option model — chart type, channel
 bindings, chart properties (corner radius, stack mode, donut hole, …), and
-encoding actions (sort). Rendering and edits run entirely in the host UI; no
-data leaves the host. The UI is a single self-contained HTML bundle served as
-the `ui://flint-chart/chart-view.html` resource and built with `npm run build:ui`.
+encoding actions (sort), plus Flint's visual theme presets. Rendering and edits
+run entirely in the host UI; no data leaves the host. The UI is a single
+self-contained HTML bundle served as the
+`ui://flint-chart/chart-view.html` resource and built with `npm run build:ui`.
 
-## Resources and prompt
+## Resources and prompts
 
 | Name | Kind | Purpose |
 |---|---|---|
 | `flint://agent-skill` | resource | Bundled Flint authoring instructions for generating valid `ChartAssemblyInput` specs. |
+| `flint://theme-skill` | resource | Bundled instructions for translating a visual identity into a valid reusable `ThemeSpec`. |
 | `flint://chart-types` | resource | Browsable chart-type catalog and encoding channels across backends. |
 | `ui://flint-chart/chart-view.html` | resource | Bundled UI for the `create_chart_view` MCP App (live chart + customization panel). |
 | `author_flint_chart` | prompt | Embeds the bundled skill so prompt-aware clients can load the chart-spec rules before tool calls. |
+| `author_flint_theme` | prompt | Embeds the theme-author skill for creating, translating, refining, or reviewing a `ThemeSpec`. |
 
 For best results, have your MCP client include `flint://agent-skill` or run the
 `author_flint_chart` prompt before asking the agent to call `create_chart_view`,
 `render_chart`, `compile_chart`, or `validate_chart`.
+
+When creating or substantially customizing a visual theme, load
+`flint://theme-skill` or run `author_flint_theme`. Use `list_themes` separately
+to discover built-in presets and retrieve preset-specific guidance.
 
 Data can be provided in two ways:
 

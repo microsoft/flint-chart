@@ -1,0 +1,144 @@
+{
+  "$schema": "https://vega-lite.github.io/schema/vega-lite/v5.json",
+  "__theme__": "mckinsey",
+  "__design__": [
+    "Five competing hues collapsed to one ordered blue value ramp. On a composition chart the reader tracks one band at a time, and five saturated categorical colours make all five shout at once; a ramp that darkens toward the baseline lets the eye follow the stack in the order it is built.",
+    "No band is singled out. The headline asks where each group's money goes, not whether housing costs too much, so promoting one category to brand blue would be the chart arguing something the data was not selected to argue.",
+    "Stack order pinned Housing → Transportation → Food → Healthcare → Everything else, so the largest band sits on the baseline where its height can be read against a straight edge rather than a ragged one.",
+    "Y axis reduced to five percent ticks with no gridlines; on a 100% stack the total is fixed, so the only rules that matter are the band boundaries.",
+    "Quintile labels shortened to rank names and kept horizontal — 'fifth' is already stated once in the subtitle, and a rotated category label on a five-bar chart is a layout failure, not a style choice.",
+    "Legend moved to the top as one horizontal row in stack order, so the key reads bottom-band-first exactly as the chart is built.",
+    "Bar width raised to 0.7 of the band and a 0.6px white segment stroke added, which is what separates the bands of a single-hue ramp without adding another colour."
+  ],
+  "background": "#ffffff",
+  "padding": { "left": 8, "top": 6, "right": 10, "bottom": 8 },
+  "height": 210,
+  "title": {
+    "text": "Where each income group's money goes",
+    "subtitle": ["Share of annual household spending, by income quintile"]
+  },
+  "width": { "step": 54 },
+  "data": {
+    "values": [
+      { "Quintile": "Lowest fifth", "Category": "Housing", "Spending ($)": 12800 },
+      { "Quintile": "Lowest fifth", "Category": "Transportation", "Spending ($)": 4900 },
+      { "Quintile": "Lowest fifth", "Category": "Food", "Spending ($)": 5100 },
+      { "Quintile": "Lowest fifth", "Category": "Healthcare", "Spending ($)": 2900 },
+      { "Quintile": "Lowest fifth", "Category": "Everything else", "Spending ($)": 6400 },
+      { "Quintile": "Second fifth", "Category": "Housing", "Spending ($)": 16100 },
+      { "Quintile": "Second fifth", "Category": "Transportation", "Spending ($)": 7600 },
+      { "Quintile": "Second fifth", "Category": "Food", "Spending ($)": 6300 },
+      { "Quintile": "Second fifth", "Category": "Healthcare", "Spending ($)": 4000 },
+      { "Quintile": "Second fifth", "Category": "Everything else", "Spending ($)": 10700 },
+      { "Quintile": "Middle fifth", "Category": "Housing", "Spending ($)": 19400 },
+      { "Quintile": "Middle fifth", "Category": "Transportation", "Spending ($)": 10600 },
+      { "Quintile": "Middle fifth", "Category": "Food", "Spending ($)": 7600 },
+      { "Quintile": "Middle fifth", "Category": "Healthcare", "Spending ($)": 4700 },
+      { "Quintile": "Middle fifth", "Category": "Everything else", "Spending ($)": 16400 },
+      { "Quintile": "Fourth fifth", "Category": "Housing", "Spending ($)": 24300 },
+      { "Quintile": "Fourth fifth", "Category": "Transportation", "Spending ($)": 13700 },
+      { "Quintile": "Fourth fifth", "Category": "Food", "Spending ($)": 9100 },
+      { "Quintile": "Fourth fifth", "Category": "Healthcare", "Spending ($)": 6100 },
+      { "Quintile": "Fourth fifth", "Category": "Everything else", "Spending ($)": 22800 },
+      { "Quintile": "Highest fifth", "Category": "Housing", "Spending ($)": 36600 },
+      { "Quintile": "Highest fifth", "Category": "Transportation", "Spending ($)": 19500 },
+      { "Quintile": "Highest fifth", "Category": "Food", "Spending ($)": 13400 },
+      { "Quintile": "Highest fifth", "Category": "Healthcare", "Spending ($)": 8500 },
+      { "Quintile": "Highest fifth", "Category": "Everything else", "Spending ($)": 43800 }
+    ]
+  },
+  "transform": [
+    {
+      "calculate": "indexof(['Housing', 'Transportation', 'Food', 'Healthcare', 'Everything else'], datum.Category)",
+      "as": "__stackRank"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Quintile",
+      "type": "nominal",
+      "sort": ["Lowest fifth", "Second fifth", "Middle fifth", "Fourth fifth", "Highest fifth"],
+      "title": null,
+      "axis": {
+        "labelAngle": 0,
+        "labelExpr": "replace(datum.label, ' fifth', '')",
+        "domain": false,
+        "ticks": false,
+        "grid": false,
+        "labelPadding": 6
+      }
+    },
+    "y": {
+      "field": "Spending ($)",
+      "type": "quantitative",
+      "stack": "normalize",
+      "title": null,
+      "axis": {
+        "format": ".0%",
+        "tickCount": 5,
+        "grid": false,
+        "domain": false,
+        "ticks": false,
+        "labelPadding": 5
+      }
+    },
+    "color": {
+      "field": "Category",
+      "type": "nominal",
+      "title": null,
+      "sort": ["Housing", "Transportation", "Food", "Healthcare", "Everything else"],
+      "scale": {
+        "domain": ["Housing", "Transportation", "Food", "Healthcare", "Everything else"],
+        "range": ["#051c2c", "#20618f", "#4a90c4", "#9dc3e0", "#d6e4f0"]
+      },
+      "legend": {
+        "orient": "top",
+        "direction": "horizontal",
+        "symbolType": "square",
+        "symbolSize": 100,
+        "columnPadding": 8,
+        "offset": 10,
+        "padding": 0
+      }
+    },
+    "order": {
+      "field": "__stackRank",
+      "type": "quantitative",
+      "sort": "ascending"
+    }
+  },
+  "mark": {
+    "type": "bar",
+    "width": { "band": 0.7 },
+    "stroke": "#ffffff",
+    "strokeWidth": 0.6
+  },
+  "config": {
+    "background": "#ffffff",
+    "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "title": {
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "fontSize": 13,
+      "fontWeight": 700,
+      "color": "#051c2c",
+      "anchor": "start",
+      "offset": 12,
+      "subtitleFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "subtitleFontSize": 10,
+      "subtitleColor": "#8fa0ab",
+      "subtitlePadding": 7
+    },
+    "view": { "stroke": null },
+    "axis": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 10,
+      "labelColor": "#051c2c"
+    },
+    "legend": {
+      "labelFont": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "labelFontSize": 9.5,
+      "labelColor": "#051c2c",
+      "symbolStrokeWidth": 0
+    }
+  }
+}

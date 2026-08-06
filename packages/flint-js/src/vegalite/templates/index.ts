@@ -211,6 +211,42 @@ const AXIS_DTYPE_PROPERTIES: ChartPropertyDef[] = [
 ];
 
 /**
+ * The reader's answer to "print the numbers on the marks?".
+ *
+ * A plain switch, seeded from what the house and the density already decided:
+ * the compiler supplies the recommended default at assembly time (same shape as
+ * `independentYAxis`), so an untouched control shows the theme's own habit and
+ * flipping it is an explicit decision about *this* chart.
+ *
+ * Switching it on is still not a licence to overprint — it inherits the same
+ * hard density ceiling the houses obey. And where that ceiling is already
+ * breached the control is reported inapplicable rather than offered inert: the
+ * compiler answers this from the grounded `dataLabels.possible`, so what the
+ * host shows can never drift from what the compiler would do.
+ */
+const VALUE_LABEL_PROPERTIES: ChartPropertyDef[] = [
+    {
+        key: 'showValueLabels', label: 'Values', type: 'binary',
+        defaultValue: false,
+        // Both applicability and the recommended default are measured, not
+        // guessed: they need the resolved layout (band width) and the house's
+        // policy, neither of which exists this early.
+        check: () => ({ applicable: false }),
+    },
+];
+
+/**
+ * Charts that can print one number per mark: a banded axis to key values to,
+ * or wedges of a whole. Stacked bars are absent on purpose — a number at a
+ * segment edge reads as the running total, and the compiler refuses to print
+ * them for the same reason.
+ */
+const VALUE_LABEL_CHARTS = new Set([
+    'Bar Chart', 'Grouped Bar Chart', 'Stacked Bar Chart', 'Lollipop Chart', 'Pyramid Chart',
+    'Pie Chart', 'Donut Chart', 'Rose Chart', 'Heatmap', 'Waterfall Chart',
+]);
+
+/**
  * Attach the cross-cutting properties (faceting, log scale, axis dtype) a
  * template qualifies for, based on its channels and mark-cognitive role. Keeps
  * these options co-located with the engine that evaluates them, so a downstream
@@ -227,6 +263,7 @@ function withInjectedProperties(def: ChartTemplateDef): ChartTemplateDef {
         ...(isPosition ? LOG_SCALE_PROPERTIES : []),
         ...(isPosition ? ZERO_BASELINE_PROPERTIES : []),
         ...(wantsAxisDtype ? AXIS_DTYPE_PROPERTIES : []),
+        ...(VALUE_LABEL_CHARTS.has(def.chart) ? VALUE_LABEL_PROPERTIES : []),
     ];
     if (extra.length === 0) return def;
     const ownKeys = new Set((def.properties ?? []).map(p => p.key));

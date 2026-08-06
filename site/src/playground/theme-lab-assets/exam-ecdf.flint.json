@@ -1,0 +1,190 @@
+{
+  "mark": {
+    "type": "line",
+    "interpolate": "step-after"
+  },
+  "transform": [
+    {
+      "window": [
+        {
+          "op": "count",
+          "field": "Score",
+          "as": "__ecdf_count"
+        }
+      ],
+      "sort": [
+        {
+          "field": "Score",
+          "order": "ascending"
+        }
+      ],
+      "frame": [
+        null,
+        0
+      ]
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "count",
+          "field": "Score",
+          "as": "__ecdf_total"
+        }
+      ]
+    },
+    {
+      "calculate": "datum['__ecdf_count'] / datum['__ecdf_total']",
+      "as": "__ecdf"
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "Score",
+      "type": "quantitative",
+      "scale": {
+        "nice": false,
+        "zero": false
+      },
+      "title": "Score",
+      "axis": {
+        "format": ",.12~g"
+      }
+    },
+    "y": {
+      "field": "__ecdf",
+      "type": "quantitative",
+      "scale": {
+        "domain": [
+          0,
+          1
+        ]
+      },
+      "title": "Cumulative proportion",
+      "axis": {
+        "format": ",.12~g"
+      }
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 340,
+      "continuousHeight": 230
+    },
+    "axisX": {
+      "labelLimit": 100,
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "axisY": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "legend": {
+      "labelFontSize": 10,
+      "titleFontSize": 11
+    },
+    "facet": {
+      "spacing": 23
+    }
+  },
+  "title": {
+    "text": "Empirical distribution of exam scores",
+    "subtitle": [
+      "n = 30; each step is one score"
+    ]
+  },
+  "data": {
+    "values": [
+      {
+        "Score": 55
+      },
+      {
+        "Score": 62
+      },
+      {
+        "Score": 68
+      },
+      {
+        "Score": 71
+      },
+      {
+        "Score": 73
+      },
+      {
+        "Score": 74
+      },
+      {
+        "Score": 76
+      },
+      {
+        "Score": 77
+      },
+      {
+        "Score": 78
+      },
+      {
+        "Score": 79
+      },
+      {
+        "Score": 80
+      },
+      {
+        "Score": 81
+      },
+      {
+        "Score": 82
+      },
+      {
+        "Score": 83
+      },
+      {
+        "Score": 84
+      },
+      {
+        "Score": 85
+      },
+      {
+        "Score": 85
+      },
+      {
+        "Score": 86
+      },
+      {
+        "Score": 87
+      },
+      {
+        "Score": 88
+      },
+      {
+        "Score": 88
+      },
+      {
+        "Score": 89
+      },
+      {
+        "Score": 90
+      },
+      {
+        "Score": 91
+      },
+      {
+        "Score": 92
+      },
+      {
+        "Score": 93
+      },
+      {
+        "Score": 94
+      },
+      {
+        "Score": 95
+      },
+      {
+        "Score": 97
+      },
+      {
+        "Score": 99
+      }
+    ]
+  }
+}

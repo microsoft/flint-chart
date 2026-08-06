@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { LocaleLink } from '../i18n/LocaleLink';
@@ -67,6 +67,9 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         <NavLink to="/mcp" active={logical.startsWith('/mcp')}>
           {t('nav.mcp')}
         </NavLink>
+        <NavLink to="/themes" active={logical.startsWith('/themes')}>
+          {t('nav.themes')}
+        </NavLink>
         <NavLink to="/gallery" active={logical.startsWith('/gallery') || logical.startsWith('/wall')}>
           {t('nav.gallery')}
         </NavLink>
@@ -76,9 +79,7 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         >
           {t('nav.documentation')}
         </NavLink>
-        <NavLink to="/editor" active={logical.startsWith('/editor')}>
-          {t('nav.editor')}
-        </NavLink>
+        <PlaygroundsMenu logicalPath={logical} />
       </nav>
 
       <div className="site-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -86,6 +87,151 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         <GitHubLink />
       </div>
     </header>
+  );
+}
+
+function PlaygroundsMenu({ logicalPath }: { logicalPath: string }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const active = logicalPath.startsWith('/editor')
+  || logicalPath.startsWith('/theme-lab') || logicalPath.startsWith('/playgrounds/');
+  const underline = active || hovered || open;
+
+  useEffect(() => setOpen(false), [logicalPath]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      containerRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    }
+    if (event.key === 'ArrowDown' && !open) {
+      event.preventDefault();
+      setOpen(true);
+      window.requestAnimationFrame(() => {
+        containerRef.current?.querySelector<HTMLAnchorElement>('[role="menuitem"]')?.focus();
+      });
+    }
+  };
+
+  const items = [
+    { to: '/editor', label: t('nav.editor') },
+    { to: '/theme-lab', label: t('nav.themeLab'), icon: 'lab' as const },
+    { to: '/playgrounds/auto-layout', label: t('nav.autoLayoutPlayground') },
+  ];
+
+  return (
+    <div
+      ref={containerRef}
+      className="site-nav-menu"
+      onKeyDown={onKeyDown}
+      style={{ position: 'relative', display: 'inline-flex', alignSelf: 'stretch', alignItems: 'center' }}
+    >
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          ...navLinkStyle,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          padding: 0,
+          border: 0,
+          background: 'transparent',
+          color: active || hovered || open ? siteTheme.text : siteTheme.navInactive,
+          textShadow: active ? '-0.2px 0 0 currentColor, 0.2px 0 0 currentColor' : undefined,
+          cursor: 'pointer',
+          transition: 'color 120ms ease',
+        }}
+      >
+        {/* Underline the label only, so the caret stays outside the tab rule. */}
+        <span
+          style={{
+            textDecorationLine: underline ? 'underline' : 'none',
+            textDecorationThickness: underline ? 2 : undefined,
+            textUnderlineOffset: underline ? 6 : undefined,
+            textDecorationColor: active ? siteTheme.text : 'rgba(0, 0, 0, 0.22)',
+            transition: 'text-decoration-color 120ms ease',
+          }}
+        >
+          {t('nav.playgrounds')}
+        </span>
+        <span
+          aria-hidden="true"
+          style={{
+            display: 'inline-block',
+            fontSize: 9,
+            lineHeight: 1,
+          }}
+        >
+          {open ? '▴' : '▾'}
+        </span>
+      </button>
+      {open ? (
+        <div
+          role="menu"
+          aria-label={t('nav.playgrounds')}
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            left: 0,
+            zIndex: 300,
+            display: 'flex',
+            flexDirection: 'column',
+            width: 180,
+            padding: 6,
+            gap: 2,
+            border: `1px solid ${siteTheme.border}`,
+            borderRadius: 7,
+            background: siteTheme.surface,
+            boxShadow: '0 8px 28px rgba(31, 35, 40, 0.14)',
+          }}
+        >
+          {items.map((item) => (
+            <LocaleLink
+              key={item.to}
+              to={item.to}
+              role="menuitem"
+              className="site-nav-menu-item"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '8px 10px',
+                borderRadius: 4,
+                color: siteTheme.text,
+                fontSize: 12.5,
+                lineHeight: 1.35,
+                textDecoration: 'none',
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {item.icon === 'lab' ? (
+                <span style={{ display: 'inline-flex', color: siteTheme.textMuted }}>
+                  <LabIcon size={14} />
+                </span>
+              ) : null}
+              {item.label}
+            </LocaleLink>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -318,6 +464,14 @@ export function GitHubIcon({ size = 15 }: { size?: number } = {}) {
   return (
     <svg viewBox="0 0 16 16" width={size} height={size} fill="currentColor" aria-hidden="true">
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  );
+}
+
+export function LabIcon({ size = 17 }: { size?: number } = {}) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 3h6M10 3v6.2l-5.4 8.3A2.3 2.3 0 0 0 6.5 21h11a2.3 2.3 0 0 0 1.9-3.5L14 9.2V3M7.8 15h8.4" />
     </svg>
   );
 }
