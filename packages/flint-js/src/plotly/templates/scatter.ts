@@ -14,6 +14,31 @@ import { groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
 
 /** Compute a reasonable marker diameter based on canvas area and point count. */
+/**
+ * Per-point diameters for a bound `size` channel.
+ *
+ * A reader compares bubbles by *area*, so the value is mapped onto an area and
+ * the diameter taken back out of it — mapping straight onto the diameter makes
+ * a twice-as-big number look four times as big. Plotly's own `sizeref` cannot
+ * do this: it divides a data value, so it needs the raw numbers, and it would
+ * fight the theme's size range, which rescales drawn pixels.
+ */
+function sizeScale(table: any[], field: string): (row: any) => number {
+    const values = table
+        .map((r: any) => Number(r[field]))
+        .filter((v: number) => Number.isFinite(v));
+    const min = values.length ? Math.min(...values) : 0;
+    const max = values.length ? Math.max(...values) : 1;
+    const MIN_AREA = 40;
+    const MAX_AREA = 900;
+    return (row: any) => {
+        const v = Number(row[field]);
+        if (!Number.isFinite(v)) return 2 * Math.sqrt(MIN_AREA / Math.PI);
+        const t = max > min ? (v - min) / (max - min) : 1;
+        return 2 * Math.sqrt((MIN_AREA + t * (MAX_AREA - MIN_AREA)) / Math.PI);
+    };
+}
+
 function computeMarkerSize(width: number, height: number, pointCount: number): number {
     const canvasArea = width * height;
     const areaPerPoint = canvasArea / Math.max(1, pointCount);
@@ -39,6 +64,8 @@ export const plScatterPlotDef: ChartTemplateDef = {
         if (!xField || !yField) return;
 
         const opacity = Number(chartProperties?.opacity ?? 1);
+        const sizeField = channelSemantics.size?.field;
+        const sizeOf = sizeField ? sizeScale(table, sizeField) : null;
         const traces: any[] = [];
 
         if (isContinuousColor && colorField) {
@@ -67,6 +94,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
                     showscale: true,
                     colorbar: { title: { text: colorField } },
                     opacity,
+                    ...(sizeOf ? { size: table.map((r: any) => sizeOf(r)) } : {}),
                     line: { color: '#ffffff', width: 0.5 },
                 },
             });
@@ -81,6 +109,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
                 marker: {
                     color: getSeriesColor(palette, colorIndex),
                     opacity,
+                    ...(sizeOf ? { size: rows.map(r => sizeOf(r)) } : {}),
                     line: { color: '#ffffff', width: 0.5 },
                 },
             });

@@ -93,6 +93,10 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
             values: sortedValues,
             hole,
             textinfo: textinfo[labelType] ?? 'label+percent',
+            // Plotly stands inside text on its end as soon as a slice gets
+            // narrow, which is unreadable and clips against the ring. Held
+            // horizontal, it shrinks or steps outside instead.
+            insidetextorientation: 'horizontal',
             // Let outside slice labels push the margins so a cluster of thin
             // slices (many tiny wedges crowded together) doesn't clip its
             // stacked callouts against the canvas edge.

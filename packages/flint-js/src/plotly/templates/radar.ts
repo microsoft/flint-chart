@@ -38,8 +38,31 @@ export const plRadarChartDef: ChartTemplateDef = {
         const metrics = extractCategories(table, axisField, channelSemantics.x?.ordinalSortOrder);
         if (metrics.length < 2) return;
 
+        // Each metric is measured in its own units — grams of fat against
+        // milligrams of sodium against a percentage. Sharing one radial scale
+        // buries every small metric at the centre, so each axis is normalised
+        // to its own nice ceiling and that ceiling is written into the spoke
+        // label. This is what the Vega-Lite radar does.
+        const axisMax: Record<string, number> = {};
+        for (const m of metrics) {
+            const vals = table
+                .filter((r: any) => String(r[axisField] ?? '') === m)
+                .map((r: any) => Number(r[valueField]))
+                .filter((v: number) => isFinite(v));
+            axisMax[m] = niceMax(vals.length > 0 ? Math.max(...vals) : 1);
+        }
+        const uniformScale = new Set(Object.values(axisMax)).size === 1;
+        const showMax = (m: string) => {
+            const mx = axisMax[m];
+            return mx % 1 === 0 ? String(mx) : mx.toFixed(1);
+        };
+        // When every metric already shares a ceiling there is nothing to
+        // reconcile: one radial scale reads for all of them, and repeating
+        // "(100)" on every spoke is noise.
+        const spokeLabel = (m: string) => (uniformScale ? m : `${m} (${showMax(m)})`);
+
         // Close the loop: repeat the first metric at the end so the polygon closes.
-        const closedMetrics = [...metrics, metrics[0]];
+        const closedMetrics = [...metrics, metrics[0]].map(spokeLabel);
 
         const meanPerMetric = (rows: any[]) => {
             const sums = new Map<string, { sum: number; count: number }>();
@@ -60,10 +83,9 @@ export const plRadarChartDef: ChartTemplateDef = {
         const fillOpacity = Number(chartProperties?.fillOpacity ?? 0.3);
         const palette = getPlotlyPalette(ctx, 'color');
 
-        // Global radial max across ALL data so facets share one comparable
-        // scale (a per-facet max would make regions visually incomparable).
-        const allVals = table.map((r: any) => Number(r[valueField])).filter((v: number) => isFinite(v));
-        const radialMax = niceMax(allVals.length > 0 ? Math.max(...allVals) : 1);
+        // With a shared ceiling the radius stays in data units; otherwise each
+        // axis is normalised to its own ceiling and the radius is a fraction.
+        const radialMax = uniformScale ? axisMax[metrics[0]] : 1;
 
         // Consistent color per group across every facet cell.
         const groupOrder = groupField
@@ -79,7 +101,11 @@ export const plRadarChartDef: ChartTemplateDef = {
             polarKey: string, showlegend: boolean,
         ) => {
             const values = meanPerMetric(rows);
-            const closedValues = [...values, values[0]];
+            const norm = uniformScale
+                ? values
+                : values.map((v, i) => (axisMax[metrics[i]] > 0 ? v / axisMax[metrics[i]] : 0));
+            const closedValues = [...norm, norm[0]];
+            const closedRaw = [...values, values[0]];
             const color = getSeriesColor(palette, idx);
             return {
                 type: 'scatterpolar',
@@ -88,6 +114,8 @@ export const plRadarChartDef: ChartTemplateDef = {
                 showlegend,
                 r: closedValues,
                 theta: closedMetrics,
+                customdata: closedRaw,
+                hovertemplate: `%{theta}: %{customdata}${name != null ? `<br>${name}` : ''}<extra></extra>`,
                 subplot: polarKey,
                 line: { color },
                 marker: { color },
@@ -136,11 +164,14 @@ export const plRadarChartDef: ChartTemplateDef = {
         const cellH = (1 - gapFrac * (gridRows - 1)) / gridRows;
         const titlePad = faceted ? 26 / height : 0;
         // The angular (metric) labels sit just outside the circle on all four
-        // sides. Inset the polar domain inside each cell so a side label
-        // ("Retention"/"Profit") stays within its OWN cell instead of colliding
-        // with the neighbouring radar's label across the gap.
-        const insetXFrac = faceted ? 40 / width : 0;
-        const insetYFrac = faceted ? 16 / height : 0;
+        // sides, and now carry the axis ceiling too ("Carbs (100)"). Inset the
+        // polar domain so a side label stays inside its own cell instead of
+        // running off the canvas or into the neighbouring radar.
+        const widestSpoke = Math.max(...metrics.map((m) => spokeLabel(m).length));
+        // Never eat more than a fifth of the cell, or the radar itself vanishes.
+        const sideLabelPx = Math.min(90, 8 + widestSpoke * 5.2, cellW * width * 0.2);
+        const insetXFrac = sideLabelPx / width;
+        const insetYFrac = (faceted ? 16 : 14) / height;
 
         const legendShown = new Set<string>();
         let cellIndex = 0;
@@ -175,7 +206,10 @@ export const plRadarChartDef: ChartTemplateDef = {
                     },
                     radialaxis: {
                         visible: true, range: [0, radialMax],
-                        showticklabels: !faceted, tickfont: { size: 9 },
+                        // Where each axis has its own ceiling the radius is a
+                        // fraction and a number on it would name nothing — the
+                        // spoke labels carry the scale instead.
+                        showticklabels: uniformScale && !faceted, tickfont: { size: 9 },
                     },
                     angularaxis: {
                         rotation: 90, direction: 'clockwise',

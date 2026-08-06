@@ -98,7 +98,12 @@ export function markFamilies(trace: any): string[] {
                 break;
             }
             const mode = String(trace?.mode ?? 'lines');
-            const filled = trace?.fill && trace.fill !== 'none';
+            // A trace in a `stackgroup` is filled by Plotly whether or not it
+            // says so — `fill` defaults to `tonexty` inside a stack. Reading
+            // only the explicit key types a stacked area as a bare line, and
+            // then nothing that paints an area ever reaches it.
+            const stackFilled = trace?.stackgroup != null && trace?.fill !== 'none';
+            const filled = (trace?.fill && trace.fill !== 'none') || stackFilled;
             if (filled) out.push('area');
             if (mode.includes('lines')) out.push('line');
             if (mode.includes('markers')) out.push('point');
@@ -606,12 +611,73 @@ function applyAxes(figure: any, d: DesignDecisions, table: any[], say: Say): voi
                 key,
                 Math.max(80, (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0)),
                 axisCategories(figure, layout[key], key, ch),
+                axisSpanDecades(figure, layout[key], key, ch),
             );
         }
     }
+    pinSparseTicks(figure, d, say);
     applyPolarAxes(figure, d);
     applyUnits(figure, d, say);
     applyTickLabels(figure, d, table, say);
+}
+
+/** A rank-like run: every integer between the ends is present. */
+function isContiguousIntegers(seen: Set<any>): boolean {
+    const nums = [...seen].map(Number);
+    if (nums.some((n) => !Number.isInteger(n))) return false;
+    return Math.max(...nums) - Math.min(...nums) + 1 === nums.length;
+}
+
+/**
+ * Name the values the chart actually holds, when there are few of them.
+ *
+ * Plotly picks its own round numbers for a continuous axis. On four Olympic
+ * years that gives "2015, 2020, 2025" — three labels, none of which is a games
+ * and none of which sits under a data point. Vega-Lite does not do this
+ * because it is told the domain. Where an axis carries only a handful of
+ * distinct values, those values *are* the sequence, so they are pinned.
+ */
+function pinSparseTicks(figure: any, d: DesignDecisions, say: Say): void {
+    const layout = figure.layout;
+    const MAX = 8;
+    for (const ch of ['x', 'y'] as const) {
+        const a = d.axes[ch];
+        if (!a) continue;
+        // A measure axis normally wants round numbers — naming the seven values
+        // a short series happens to hold ("1, 16, 29, 43, 51, 67") reads as
+        // noise. The exception is a rank-like axis, whose values are a
+        // contiguous run of integers and *are* the scale.
+        const measure = d.bound.measureChannels.includes(ch);
+        for (const key of axisKeys(layout, ch)) {
+            const ax = layout[key];
+            if (!ax || ax.type === 'category' || ax.type === 'log') continue;
+            if (ax.tickvals != null || !ax.showticklabels) continue;
+            const want = key.replace('axis', '');
+            const seen = new Set<any>();
+            for (const trace of figure.data ?? []) {
+                if (CHROME_TRACES.has(String(trace?.type))) continue;
+                if (String(trace?.[`${ch}axis`] ?? ch) !== want) continue;
+                for (const v of trace?.[ch] ?? []) if (v != null) seen.add(v);
+            }
+            if (seen.size < 2 || seen.size > MAX) continue;
+            if (measure && !isContiguousIntegers(seen)) continue;
+            const sorted = [...seen].sort((p, q) => (
+                ax.type === 'date'
+                    ? new Date(p).getTime() - new Date(q).getTime()
+                    : Number(p) - Number(q)
+            ));
+            const picked = fitTicksToBand(figure, ax, sorted, a.label.fontSize ?? 11);
+            if (!picked.length) continue;
+            if (ax.type === 'date' && !ax.tickformat) {
+                ax.tickformat = dateFormatFor(picked);
+                ax.tickangle = 0;
+            }
+            ax.tickmode = 'array';
+            ax.tickvals = picked;
+            delete ax.nticks;
+            say('axes.tickCount', `\`${key}\` names the ${picked.length} value(s) it holds, not Plotly's round numbers`);
+        }
+    }
 }
 
 /**
@@ -686,6 +752,27 @@ function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number,
     return longest * (a.label.fontSize ?? 11) * 0.58 + 5 <= band;
 }
 
+/**
+ * How many powers of ten the values bound to this axis cover. Only meaningful
+ * on a log axis, and only used to decide whether its minors need naming.
+ */
+function axisSpanDecades(figure: any, ax: any, key: string, ch: 'x' | 'y'): number {
+    if (Array.isArray(ax?.range) && ax.range.length === 2) {
+        return Math.abs(Number(ax.range[1]) - Number(ax.range[0]));
+    }
+    const want = key.replace('axis', '');
+    const values: number[] = [];
+    for (const trace of figure?.data ?? []) {
+        if (String(trace?.[`${ch}axis`] ?? ch) !== want) continue;
+        for (const v of trace?.[ch] ?? []) {
+            const n = Number(v);
+            if (Number.isFinite(n) && n > 0) values.push(n);
+        }
+    }
+    if (values.length < 2) return 0;
+    return Math.log10(Math.max(...values)) - Math.log10(Math.min(...values));
+}
+
 function applyAxis(
     ax: any,
     a: ResolvedAxis,
@@ -694,6 +781,7 @@ function applyAxis(
     key: string,
     width: number,
     cats: any[],
+    decades: number,
 ): void {
     // Grid
     ax.showgrid = a.grid.show;
@@ -785,6 +873,14 @@ function applyAxis(
         ax.nticks = Math.max(2, Math.round(a.tickCount * (Number.isFinite(dom) ? dom : 1)));
     }
 
+    // Plotly names the minors of a log axis on its own once the range is short
+    // enough — "2, 5, 10k, 2, 5, 100k" reads as a broken sequence, because the
+    // numbers repeat and nothing on the axis says they are decades apart.
+    // Naming the powers alone is what every reference chart does.
+    if (ax.type === 'log' && ax.dtick == null) {
+        if (decades >= 1.5) ax.dtick = 1;
+    }
+
     // A budget in *numbers* is not a budget in *room*. Sixteen panels across
     // one page leave 50px each, which holds one year, not four — and Plotly
     // will print all four on top of each other rather than drop any.
@@ -827,13 +923,47 @@ function fitTicksToBand(figure: any, ax: any, picked: any[], fontSize: number): 
         ? picked.slice(0, -1)
         : picked;
     picked = trimmed;
-    if (picked.length <= fits) return picked;
     if (fits < 2) return [picked[0]];
-    // Keep the ends and spread the rest, so the range still reads.
-    const step = (picked.length - 1) / (fits - 1);
-    const out: any[] = [];
-    for (let i = 0; i < fits; i++) out.push(picked[Math.round(i * step)]);
-    return [...new Set(out)];
+    if (picked.length > fits) {
+        // Keep the ends and spread the rest, so the range still reads.
+        const step = (picked.length - 1) / (fits - 1);
+        const out: any[] = [];
+        for (let i = 0; i < fits; i++) out.push(picked[Math.round(i * step)]);
+        picked = [...new Set(out)];
+    }
+    return spaceOutTicks(picked, each, band, ax);
+}
+
+/**
+ * Drop ticks that land on top of one another.
+ *
+ * Thinning by index assumes the values are evenly spaced, and observed values
+ * are not — a series sampled at 1995, 2000 … 2015, 2018, 2020, 2023 keeps
+ * every fourth entry and still prints "2018" against "2020". So the survivors
+ * are walked in *position* and any that falls within a label's width of the
+ * one before it is dropped. The last tick is kept in preference to its
+ * neighbour: it carries the end of the range.
+ */
+function spaceOutTicks(picked: any[], each: number, band: number, ax: any): any[] {
+    if (picked.length < 3) return picked;
+    const at = (v: any) => (ax.type === 'date' ? new Date(v).getTime() : Number(v));
+    const nums = picked.map(at);
+    if (nums.some((n) => !Number.isFinite(n))) return picked;
+    const lo = Math.min(...nums);
+    const hi = Math.max(...nums);
+    if (!(hi > lo)) return picked;
+    const px = (v: number) => ((v - lo) / (hi - lo)) * band;
+    const kept: any[] = [picked[0]];
+    let lastPx = px(nums[0]);
+    for (let i = 1; i < picked.length - 1; i++) {
+        if (px(nums[i]) - lastPx < each) continue;
+        kept.push(picked[i]);
+        lastPx = px(nums[i]);
+    }
+    const endPx = px(nums[nums.length - 1]);
+    while (kept.length > 1 && endPx - px(at(kept[kept.length - 1])) < each) kept.pop();
+    kept.push(picked[picked.length - 1]);
+    return kept;
 }
 
 /** How wide a tick label on this axis reads, in characters. */
@@ -858,6 +988,13 @@ function tickLabelChars(ax: any): number {
  */
 function applyUnits(figure: any, d: DesignDecisions, say: Say): void {
     const layout = figure.layout;
+    // An axis showing a normalized stack plots a share, not the measure, so the
+    // measure's unit would be a lie on it. The template has already written the
+    // right suffix there.
+    const normalized = new Set<string>();
+    for (const t of figure.data ?? []) {
+        if (t?.groupnorm === 'percent') normalized.add((t.yaxis ?? 'y').replace('y', 'yaxis'));
+    }
     for (const ch of ['x', 'y'] as const) {
         const unit = d.axes[ch]?.unit;
         if (!unit || unit.where === 'never' || !unit.text) continue;
@@ -868,11 +1005,18 @@ function applyUnits(figure: any, d: DesignDecisions, say: Say): void {
         for (const key of axisKeys(layout, ch)) {
             const ax = layout[key];
             if (ax.type === 'category') continue;
+            if (normalized.has(key)) {
+                say('axes.unit', `${key} shows a share of the whole — the measure's unit left off`);
+                continue;
+            }
             if (prefix) {
                 ax.tickprefix = unit.text;
                 ax.showtickprefix = where;
             } else {
-                ax.ticksuffix = unit.text;
+                // A word set flush against the number reads as one token —
+                // "400ppm". A symbol does not: "50%" is right and "50 %" is
+                // not. So the space goes in for words and stays out for signs.
+                ax.ticksuffix = /^[A-Za-z]/.test(unit.text) ? ` ${unit.text}` : unit.text;
                 ax.showticksuffix = where;
             }
         }
@@ -973,6 +1117,29 @@ function diameterOf(area: number): number {
     return Math.max(2, Math.round(2 * Math.sqrt(area / Math.PI)));
 }
 
+/**
+ * How wide a dot on a line may be, or 0 when it should not be drawn.
+ *
+ * A dot on a line is not a mark in its own right — it is a reading aid that
+ * says "a value was measured here". Two things bound it. It must not outweigh
+ * the line it sits on, so it is capped against the stroke; and it must not
+ * touch its neighbours, so it is capped against the gap between points. Where
+ * the points are packed tighter than a dot is wide, the aid has become a
+ * smear and is better left off.
+ */
+function dotDiameter(trace: any, figure: any, wanted: number, strokeWidth: number): number {
+    const n = Array.isArray(trace.x) ? trace.x.length : 0;
+    if (n < 2) return wanted;
+    const layout = figure.layout ?? {};
+    const plotW = Math.max(
+        40,
+        (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0),
+    );
+    const spacing = plotW / (n - 1);
+    if (spacing < 6) return 0;
+    return Math.max(2, Math.round(Math.min(wanted, strokeWidth * 3.5, spacing * 0.55)));
+}
+
 function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): void {
     const layout = figure.layout;
     const m = d.marks;
@@ -1061,13 +1228,15 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         // and dotting it reads as data points that are not there.
         const filled = (trace.fill != null && trace.fill !== 'none') || floors.has(index);
         if (m.point?.show && fams.includes('line') && !fams.includes('point') && !filled) {
-            trace.mode = String(trace.mode ?? 'lines').includes('markers')
-                ? trace.mode
-                : `${trace.mode ?? 'lines'}+markers`;
-            trace.marker = {
-                ...(trace.marker ?? {}),
-                size: diameterOf(m.point.size ?? 40),
-            };
+            const dot = dotDiameter(trace, figure, diameterOf(m.point.size ?? 40), m.strokeWidth ?? 2);
+            if (dot > 0) {
+                trace.mode = String(trace.mode ?? 'lines').includes('markers')
+                    ? trace.mode
+                    : `${trace.mode ?? 'lines'}+markers`;
+                trace.marker = { ...(trace.marker ?? {}), size: dot };
+            } else {
+                say('marks.point.show', 'dots left off — the points sit closer together than a dot is wide');
+            }
         }
     }
 
@@ -1086,10 +1255,14 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
             const min = Math.min(...finite);
             const max = Math.max(...finite);
             const floor = m.minSize != null ? Math.max(lo, m.minSize) : lo;
+            // A bubble the house has scaled down to two pixels is a speck: it
+            // is neither a readable value nor visibly a mark. Four pixels is
+            // the floor at which a dot still reads as one.
+            const MIN_DIAMETER = 4;
             trace.marker.size = areas.map((a: number) => {
-                if (!Number.isFinite(a)) return diameterOf(floor);
+                if (!Number.isFinite(a)) return Math.max(MIN_DIAMETER, diameterOf(floor));
                 const t = max > min ? (a - min) / (max - min) : 1;
-                return diameterOf(floor + t * (hi - floor));
+                return Math.max(MIN_DIAMETER, diameterOf(floor + t * (hi - floor)));
             });
         }
     }
@@ -1265,7 +1438,11 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
             trace.marker = { ...(trace.marker ?? {}), color: ink };
         }
         if (fams.includes('area')) {
-            trace.fillcolor = withAlpha(ink, d.marks.fillOpacity ?? 0.8);
+            // Bands in a stack sit side by side, not on top of one another, so
+            // there is nothing behind them to see; translucency there only
+            // muddies two colours into a third the house never chose.
+            const alpha = trace.stackgroup != null ? 1 : d.marks.fillOpacity ?? 0.8;
+            trace.fillcolor = withAlpha(ink, alpha);
         }
         seriesIndex++;
     }
@@ -1354,6 +1531,11 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
         ...(layout.legend ?? {}),
         ...anchor,
         ...(l.direction ? { orientation: l.direction === 'horizontal' ? 'h' : 'v' } : {}),
+        // Plotly turns a stacked chart's key upside down on its own, so a
+        // likert row running "a great deal → none at all" gets a key that
+        // reads "none at all → a great deal". The key names a scale, and a
+        // scale has one order: the one the traces are in.
+        traceorder: 'normal',
         font: fontOf(l.label, d.font),
         bgcolor: 'rgba(0,0,0,0)',
         borderwidth: 0,
@@ -1464,7 +1646,7 @@ function categoryPosition(ax: any, value: any): any {
  * same few pixels. The names are nudged in data units — the annotation still
  * points at the line's real last value, it is only shifted enough to be read.
  */
-function dodgeVertically(notes: any[], figure: any, fontSize: number, traces: any[]): void {
+function dodgeVertically(notes: any[], figure: any, fontSize: number, plotted: number[]): void {
     if (notes.length < 2) return;
     const layout = figure.layout;
     const values = notes.map((a) => Number(a.y)).filter((v) => Number.isFinite(v));
@@ -1474,8 +1656,7 @@ function dodgeVertically(notes: any[], figure: any, fontSize: number, traces: an
     // happen to fall in: measuring against the names alone under-counts the
     // gap several times over on a chart whose scale starts at zero.
     const ax = layout[(notes[0].yref ?? 'y').replace('y', 'yaxis')] ?? {};
-    const all: number[] = [];
-    for (const t of traces) for (const v of t.y ?? []) if (Number.isFinite(Number(v))) all.push(Number(v));
+    const all = plotted.filter((v) => Number.isFinite(v));
     let span: number;
     if (Array.isArray(ax.range) && ax.range.length === 2) span = Math.abs(Number(ax.range[1]) - Number(ax.range[0]));
     else if (all.length) span = Math.max(...all, ax.rangemode === 'tozero' ? 0 : -Infinity) - Math.min(...all, 0);
@@ -1496,6 +1677,52 @@ function dodgeVertically(notes: any[], figure: any, fontSize: number, traces: an
 }
 
 /**
+ * Where each trace is actually *drawn*, in the coordinates the axis shows.
+ *
+ * A stacked trace is not drawn at its own value: Plotly lifts it onto the ones
+ * before it in its `stackgroup`, and normalizes the whole group to 100 when the
+ * first trace in that group says `groupnorm: 'percent'`. Reading a stacked
+ * series' position off `t.y` therefore names a number the chart never plots —
+ * and since an annotation takes part in the autorange, it drags the scale out
+ * with it. Filled bands are named at their middle, bare lines at their top.
+ */
+function plottedPositions(traces: any[]): Map<any, number[]> {
+    const out = new Map<any, number[]>();
+    const groups = new Map<string, any[]>();
+    for (const t of traces) {
+        if (t.stackgroup == null) {
+            out.set(t, (t.y ?? []).map((v: any) => Number(v)));
+            continue;
+        }
+        const key = `${t.xaxis ?? 'x'}|${t.yaxis ?? 'y'}|${t.stackgroup}`;
+        const bucket = groups.get(key);
+        if (bucket) bucket.push(t);
+        else groups.set(key, [t]);
+    }
+    for (const group of groups.values()) {
+        const norm = group.some((t) => t.groupnorm === 'percent');
+        const n = Math.max(0, ...group.map((t) => (t.y ?? []).length));
+        const totals: number[] = [];
+        for (let i = 0; i < n; i++) {
+            totals[i] = group.reduce((sum, t) => sum + (Number(t.y?.[i]) || 0), 0);
+        }
+        const running = new Array<number>(n).fill(0);
+        for (const t of group) {
+            const banded = t.fill !== 'none' && markFamilies(t).includes('area');
+            const at: number[] = [];
+            for (let i = 0; i < n; i++) {
+                const v = Number(t.y?.[i]) || 0;
+                const point = banded ? running[i] + v / 2 : running[i] + v;
+                running[i] += v;
+                at[i] = norm ? (totals[i] ? (point / totals[i]) * 100 : 0) : point;
+            }
+            out.set(t, at);
+        }
+    }
+    return out;
+}
+
+/**
  * Name each series at the end of its own line.
  *
  * Returns false where nothing on the chart has an end to name — a bar chart
@@ -1510,18 +1737,20 @@ function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
 
     const layout = figure.layout;
     const annotations = (layout.annotations ??= []);
+    const drawnAt = plottedPositions(lines);
     const placed: any[] = [];
     for (const t of lines) {
         const n = t.x.length;
         if (!n) continue;
         const axisKey = (t.xaxis ?? 'x').replace('x', 'xaxis');
+        const drawn = drawnAt.get(t) ?? [];
         placed.push({
             // On a category axis Plotly reads an annotation's `x` as the
             // category's *serial number*, not its name — naming the category
             // there pushes the annotation thousands of bands to the right and
             // drags the scale with it.
             x: categoryPosition(layout[axisKey], t.x[n - 1]),
-            y: t.y[n - 1],
+            y: drawn[n - 1] ?? t.y[n - 1],
             xref: t.xaxis ?? 'x',
             yref: t.yaxis ?? 'y',
             text: styleText(String(t.name), d.legend.label),
@@ -1534,7 +1763,9 @@ function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
             },
         });
     }
-    dodgeVertically(placed, figure, d.legend.label.fontSize ?? 11, lines);
+    const spanValues: number[] = [];
+    for (const t of lines) for (const v of drawnAt.get(t) ?? []) if (Number.isFinite(v)) spanValues.push(v);
+    dodgeVertically(placed, figure, d.legend.label.fontSize ?? 11, spanValues);
     annotations.push(...placed);
 
     // The names sit outside the plotting rectangle; make room for them.
@@ -1578,6 +1809,12 @@ function applyFacetChrome(figure: any, d: DesignDecisions): void {
 // ---------------------------------------------------------------------------
 // Data labels
 // ---------------------------------------------------------------------------
+
+/** Is there a key on this figure that already names the slices of a pie? */
+function legendNamesSlices(figure: any, d: DesignDecisions): boolean {
+    if (d.legend.placement === 'seriesEnd') return false;
+    return figure?.layout?.showlegend !== false;
+}
 
 /**
  * Does this axis show unsigned labels for signed values?
@@ -1646,7 +1883,12 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
     }
 
     const fmt = dl.format ? `:${dl.format}` : '';
-    const unit = dl.unit ?? '';
+    const unitText = dl.unit ?? '';
+    // A currency sign leads the number; a word unit trails it after a space.
+    const unitPrefix = /^[$£€¥]$/.test(unitText) ? unitText : '';
+    const unit = unitPrefix ? ''
+        : /^[A-Za-z]/.test(unitText) ? ` ${unitText}`
+        : unitText;
     let printed = 0;
 
     for (const trace of traces) {
@@ -1661,12 +1903,24 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
             // type it is written in is the house's.
             trace.textfont = { ...(trace.textfont ?? {}), ...fontOf(dl.text, d.font) };
             if (dl.inkMode === 'contrastWithMark' && trace.textfont) delete trace.textfont.color;
+            // Except for one thing the template could not know: whether the
+            // slice's name is also in a key. Printing it twice is what makes a
+            // 5-per-cent wedge unreadable, and the second copy is in the
+            // smaller, more crowded place.
+            if (fams.includes('arc') && legendNamesSlices(figure, d)
+                && typeof trace.textinfo === 'string' && /\blabel\b/.test(trace.textinfo)) {
+                const rest = trace.textinfo.split('+').filter((part: string) => part !== 'label');
+                if (rest.length) {
+                    trace.textinfo = rest.join('+');
+                    say('label.text', 'slice names left to the key — printed on the wedge as well, they crowd it out');
+                }
+            }
             printed++;
             continue;
         }
         if (fams.includes('arc')) {
             trace.textinfo = 'value';
-            trace.texttemplate = `%{value${fmt}}${unit}`;
+            trace.texttemplate = `${unitPrefix}%{value${fmt}}${unit}`;
             trace.textposition = dl.placement === 'outsideMark' ? 'outside' : 'inside';
             trace.textfont = fontOf(dl.text, d.font);
             if (dl.inkMode === 'contrastWithMark') delete trace.textfont.color;
@@ -1676,7 +1930,7 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
 
         if (fams.includes('bar')) {
             const measure = trace.orientation === 'h' ? 'x' : (numericChannel(trace) ?? 'y');
-            trace.texttemplate = `%{${measure}${fmt}}${unit}`;
+            trace.texttemplate = `${unitPrefix}%{${measure}${fmt}}${unit}`;
             // Plotly places the label inside where it fits and outside where it
             // does not, which is exactly the geometry stage 2 computed with
             // `insideMinValue`/`outsideMaxValue`. `auto` hands that decision to
@@ -1702,7 +1956,7 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
                     && cd.every((v: any, i: number) => Number(v) === abs[i]);
                 if (cd == null || reusable) {
                     if (cd == null) trace.customdata = abs;
-                    trace.texttemplate = `%{customdata${fmt}}${unit}`;
+                    trace.texttemplate = `${unitPrefix}%{customdata${fmt}}${unit}`;
                     say('dataLabels.text', 'a mirrored measure prints its labels unsigned, as its axis does');
                 } else {
                     say('dataLabels.text', 'a mirrored measure kept its signed label — the trace needs its own customdata');
@@ -1747,7 +2001,7 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
             trace.mode = String(trace.mode ?? 'lines').includes('text')
                 ? trace.mode
                 : `${trace.mode ?? 'lines'}+text`;
-            trace.texttemplate = `%{${measure}${fmt}}${unit}`;
+            trace.texttemplate = `${unitPrefix}%{${measure}${fmt}}${unit}`;
             trace.textposition = 'top center';
             trace.textfont = fontOf(dl.text, d.font);
             trace.cliponaxis = false;

@@ -151,3 +151,121 @@ describe('the report says what was approximated', () => {
         }
     });
 });
+
+describe('the figure is sized at what Plotly actually draws', () => {
+    it('keeps the host sizing hint in step with the layout', () => {
+        const fig = bullet();
+        expect(fig._width).toBe(Math.ceil(fig.layout.width));
+        expect(fig._height).toBe(Math.ceil(fig.layout.height));
+        expect(Number.isInteger(fig._width)).toBe(true);
+    });
+});
+
+describe('a sparse axis names the values it holds', () => {
+    const olympics = (): any => assemblePlotly({
+        data: {
+            values: [2012, 2016, 2020, 2024].flatMap((Year, i) => [
+                { Year, Nation: 'US', Rank: 1 },
+                { Year, Nation: 'China', Rank: 2 + (i % 2) },
+                { Year, Nation: 'Japan', Rank: 3 },
+            ]),
+        },
+        semantic_types: { Year: 'Year', Nation: 'Category', Rank: 'Quantity' },
+        chart_spec: {
+            chartType: 'Bump Chart',
+            title: 'Medal-table rank',
+            encodings: { x: 'Year', y: 'Rank', color: 'Nation' },
+            baseSize: { width: 520, height: 320 },
+        },
+        theme_spec: theme(),
+    } as any) as any;
+
+    it('pins the four games rather than letting Plotly invent 2025', () => {
+        const fig = olympics();
+        expect(fig.layout.xaxis.tickmode).toBe('array');
+        expect(fig.layout.xaxis.tickvals).toHaveLength(4);
+        expect(fig.layout.xaxis.tickvals.map((v: any) => new Date(v).getUTCFullYear()))
+            .toEqual([2012, 2016, 2020, 2024]);
+    });
+
+    it('leaves a measure axis to its own round numbers', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { Year: 1995, Share: 1 }, { Year: 2000, Share: 7 },
+                    { Year: 2005, Share: 16 }, { Year: 2010, Share: 29 },
+                    { Year: 2015, Share: 43 }, { Year: 2018, Share: 51 },
+                    { Year: 2023, Share: 67 },
+                ],
+            },
+            semantic_types: { Year: 'Year', Share: 'Percentage' },
+            chart_spec: {
+                chartType: 'Area Chart',
+                title: 'Share of the world online',
+                encodings: { x: 'Year', y: 'Share' },
+                baseSize: { width: 520, height: 320 },
+            },
+            theme_spec: theme(),
+        } as any) as any;
+        expect(fig.layout.yaxis.tickvals).toBeUndefined();
+        // Uneven year steps must not print two labels on top of each other.
+        const xs: number[] = fig.layout.xaxis.tickvals ?? [];
+        expect(xs).not.toContain(2018);
+    });
+});
+
+describe('a printed value carries its unit on the right side', () => {
+    it('leads with a currency sign instead of trailing it', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { Group: 'Lowest', Item: 'Housing', Spend: 12800 },
+                    { Group: 'Lowest', Item: 'Food', Spend: 4600 },
+                    { Group: 'Highest', Item: 'Housing', Spend: 36600 },
+                    { Group: 'Highest', Item: 'Food', Spend: 13400 },
+                ],
+            },
+            semantic_types: { Group: 'Category', Item: 'Category', Spend: 'Currency' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                title: 'Where the money goes',
+                encodings: { x: 'Group', y: 'Spend', color: 'Item' },
+                baseSize: { width: 560, height: 360 },
+            },
+            theme_spec: theme({ annotation: { dataLabels: { show: 'all' } } } as any),
+        } as any) as any;
+        const templated = (fig.data as any[]).filter((t) => typeof t.texttemplate === 'string');
+        for (const t of templated) {
+            expect(t.texttemplate.endsWith('$')).toBe(false);
+        }
+    });
+});
+
+describe('a radar reads each spoke on its own scale', () => {
+    it('normalises every metric and writes its ceiling into the label', () => {
+        const rows = [
+            { Nutrient: 'Carbs', Food: 'Oats', Grams: 66 },
+            { Nutrient: 'Carbs', Food: 'Almonds', Grams: 22 },
+            { Nutrient: 'Sugar', Food: 'Oats', Grams: 1 },
+            { Nutrient: 'Sugar', Food: 'Almonds', Grams: 4 },
+            { Nutrient: 'Fat', Food: 'Oats', Grams: 7 },
+            { Nutrient: 'Fat', Food: 'Almonds', Grams: 50 },
+        ];
+        const fig = assemblePlotly({
+            data: { values: rows },
+            semantic_types: { Nutrient: 'Category', Food: 'Category', Grams: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                title: 'Nutrition profile',
+                encodings: { x: 'Nutrient', y: 'Grams', color: 'Food' },
+                baseSize: { width: 420, height: 420 },
+            },
+            theme_spec: theme(),
+        } as any) as any;
+        expect(fig.layout.polar.radialaxis.range).toEqual([0, 1]);
+        expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
+        const trace = (fig.data as any[])[0];
+        expect(trace.theta.some((t: string) => /\(\d/.test(t))).toBe(true);
+        for (const r of trace.r) expect(r).toBeLessThanOrEqual(1);
+    });
+});

@@ -507,6 +507,20 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     // RESULT
     // ═══════════════════════════════════════════════════════════════════════
 
+    // `_width`/`_height` are the size hint a host sizes its container with,
+    // and `layout.width`/`height` is what Plotly actually draws at. Title
+    // wrapping, a tall legend and the theme's chrome all grow the layout after
+    // the hint was written, so re-read the hint off the layout — otherwise a
+    // host clips the bottom or right off its own chart.
+    if (Number.isFinite(figure.layout?.width)) {
+        figure.layout.width = Math.ceil(figure.layout.width);
+        figure._width = figure.layout.width;
+    }
+    if (Number.isFinite(figure.layout?.height)) {
+        figure.layout.height = Math.ceil(figure.layout.height);
+        figure._height = figure.layout.height;
+    }
+
     if (warnings.length > 0) {
         figure._warnings = warnings;
     }
