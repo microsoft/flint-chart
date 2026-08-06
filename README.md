@@ -210,19 +210,26 @@ use the standalone [agent skill](agent-skills/flint-chart-author/SKILL.md).
 ```
 flint-chart/
 ├── packages/
-│   ├── flint-js/          npm package `flint-chart` (TypeScript)
+│   ├── flint-js/            npm package `flint-chart` (TypeScript)
 │   │   └── src/
-│   │       ├── core/      semantics, layout, decisions, shared types
-│   │       ├── vegalite/  Vega-Lite backend
-│   │       ├── echarts/   ECharts backend
-│   │       ├── chartjs/   Chart.js backend
-│   │       └── test-data/ fixtures + generators (drive tests and the gallery)
-│   ├── flint-py/          Python port preview (package to be released)
-│   └── flint-mcp/         npm package `flint-chart-mcp` (MCP render server)
-├── site/                  Vite + React demo: landing, gallery, editor, docs
-├── agent-skills/          fallback copy of the MCP-served agent skill
-├── shared/test-data/      JSON fixtures shared across JS + Python
-└── docs/                  architecture and design documents
+│   │       ├── core/        semantics, themes, layout, decisions, shared types
+│   │       ├── chart-types/ shared chart definitions and template metadata
+│   │       ├── vegalite/    Vega-Lite backend
+│   │       ├── echarts/     ECharts backend
+│   │       ├── chartjs/     Chart.js backend
+│   │       ├── plotly/      Plotly backend
+│   │       ├── excel/       native Excel backend
+│   │       ├── gallery/     gallery assembly and generated references
+│   │       └── test-data/   fixtures and stress-test generators
+│   ├── flint-mcp/           MCP server, MCP App UI, assets, and tests
+│   └── flint-py/            Python port preview (package to be released)
+├── site/                    Vite + React project site, gallery, editor, and docs
+├── agent-skills/            chart- and theme-authoring skills for agents
+├── agents/                  agent and MCP server configuration
+├── shared/test-data/        JSON fixtures shared across JS and Python
+├── scripts/                 reference generation and theme audit tooling
+├── docs/                    user, API, backend, and architecture documentation
+└── design-docs/             design proposals and implementation research
 ```
 
 ### Documentation
