@@ -1651,6 +1651,10 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
 
     for (const trace of traces) {
         const fams = markFamilies(trace);
+        // A trace with no numbers in it has nothing to print. A legend proxy
+        // — one empty bar standing in for a colour — is the usual case, and
+        // labelling it writes NaN on the axis.
+        if (!fams.includes('arc') && !numericChannel(trace)) continue;
         if (trace.text != null || trace.texttemplate != null || trace.textinfo != null) {
             // The template prints its own numbers. The theme may not change
             // *what* is written — that was the template's decision — but the
@@ -1671,7 +1675,7 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
         }
 
         if (fams.includes('bar')) {
-            const measure = trace.orientation === 'h' ? 'x' : 'y';
+            const measure = trace.orientation === 'h' ? 'x' : (numericChannel(trace) ?? 'y');
             trace.texttemplate = `%{${measure}${fmt}}${unit}`;
             // Plotly places the label inside where it fits and outside where it
             // does not, which is exactly the geometry stage 2 computed with
