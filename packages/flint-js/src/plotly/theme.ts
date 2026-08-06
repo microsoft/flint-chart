@@ -716,11 +716,23 @@ function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
                 ax.ticklen = 0;
                 ax.showline = false;
                 if (name === 'radialaxis') {
+                    const angularCount = new Set(
+                        subplotTraces.flatMap((trace: any) =>
+                            Array.isArray(trace?.theta) ? trace.theta.map(String) : []),
+                    ).size;
                     ax.showgrid = true;
                     ax.gridcolor = mixHex(plot, d.text.secondary, 0.28);
                     ax.gridwidth = 0.8;
-                    ax.layer = 'below traces';
-                    ax.showticklabels = false;
+                    // Plotly controls rings and their labels with one layer.
+                    // Keeping the layer below opaque bars also hides the
+                    // numbers, so draw both above and make the rings quiet.
+                    ax.layer = 'above traces';
+                    ax.showticklabels = true;
+                    // Plotly puts radial labels on a ray. Move that ray from
+                    // the centre of a wedge to the nearest band boundary, then
+                    // hide the ray itself: values remain available without a
+                    // cartesian-looking axis cutting through the marks.
+                    if (angularCount > 0) ax.angle = 180 / angularCount;
                     ax.nticks = 4;
                 } else {
                     ax.showgrid = false;
@@ -728,7 +740,7 @@ function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
                 if (!saidRose) {
                     say(
                         'structure.axis.polar',
-                        'the rose uses quiet concentric guides below its wedges — a radial axis ray, ticks and numbers would be printed through the data',
+                        'the rose uses quiet concentric guides, with values placed at a wedge boundary instead of an axis ray through the data',
                     );
                     saidRose = true;
                 }

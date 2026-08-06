@@ -272,7 +272,7 @@ describe('a radar reads each spoke on its own scale', () => {
     });
 
     describe('a rose uses polar guides rather than an axis through its wedges', () => {
-        it('keeps quiet rings and removes the radial ray, ticks and labels', () => {
+        it('keeps quiet labelled rings and removes the radial ray and ticks', () => {
             const fig = assemblePlotly({
                 data: {
                     values: months.map((Month, i) => ({ Month, Rainfall: 20 + i * 11 })),
@@ -291,8 +291,9 @@ describe('a radar reads each spoke on its own scale', () => {
             const angular = fig.layout.polar.angularaxis;
             expect(radial.showgrid).toBe(true);
             expect(radial.gridwidth).toBeLessThanOrEqual(1);
-            expect(radial.layer).toBe('below traces');
-            expect(radial.showticklabels).toBe(false);
+            expect(radial.layer).toBe('above traces');
+            expect(radial.showticklabels).toBe(true);
+            expect(radial.angle).toBe(15);
             expect(radial.showline).toBe(false);
             expect(radial.ticks).toBe('');
             expect(angular.showgrid).toBe(false);
@@ -322,8 +323,9 @@ describe('a radar reads each spoke on its own scale', () => {
                 theme_spec: theme(),
             } as any) as any;
 
-            expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
-            expect(fig.layout.polar.radialaxis.layer).toBe('below traces');
+            expect(fig.layout.polar.radialaxis.showticklabels).toBe(true);
+            expect(fig.layout.polar.radialaxis.angle).toBe(90);
+            expect(fig.layout.polar.radialaxis.layer).toBe('above traces');
             expect(fig.layout.polar.angularaxis.showgrid).toBe(false);
         });
     });
