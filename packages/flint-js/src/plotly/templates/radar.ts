@@ -117,8 +117,9 @@ export const plRadarChartDef: ChartTemplateDef = {
                 customdata: closedRaw,
                 hovertemplate: `%{theta}: %{customdata}${name != null ? `<br>${name}` : ''}<extra></extra>`,
                 subplot: polarKey,
+                _markerRole: 'secondary',
                 line: { color },
-                marker: { color },
+                marker: { color, size: 5 },
                 fill: filled ? ('toself' as const) : undefined,
                 fillcolor: filled ? fillColor(color, fillOpacity) : undefined,
             };
@@ -137,10 +138,27 @@ export const plRadarChartDef: ChartTemplateDef = {
 
         const traces: any[] = [];
         const annotations: any[] = [];
-        const layout: any = { showlegend: !!groupField };
+        // A polar plot carries no cartesian axis furniture, so the default
+        // margins — room for a y-axis title, tick labels and an x-axis strip —
+        // are 96px of width and 80px of height spent on nothing. Plotly honours
+        // `margin` for a polar domain, so every pixel of it comes straight off
+        // the radius.
+        const layout: any = {
+            showlegend: !!groupField,
+            margin: { t: 12, r: 24, b: 16, l: 24 },
+        };
 
-        // Canvas size first — needed to convert fixed-px label margins into
-        // domain fractions below.
+        // The spoke labels sit outside the circle, so their width is not part
+        // of the plot — it is chrome, and it has to be *reserved* rather than
+        // taken out of the radius. Measure the widest one first, then make sure
+        // the canvas is wide enough to hold two of them either side of a
+        // legible circle.
+        const MIN_RADIUS = 80;
+        const widestSpokePx = Math.min(
+            220,
+            8 + Math.max(...metrics.map((m) => spokeLabel(m).length)) * 6.2,
+        );
+
         let width: number;
         let height: number;
         if (faceted) {
@@ -150,12 +168,12 @@ export const plRadarChartDef: ChartTemplateDef = {
         } else {
             const p = computeCircumferencePressure(metrics.length, ctx.canvasSize, {
                 minArcPx: 60,
-                minRadius: 80,
+                minRadius: MIN_RADIUS,
                 maxStretch: ctx.assembleOptions?.maxStretch,
                 maxStretchX: ctx.assembleOptions?.maxStretchX,
                 maxStretchY: ctx.assembleOptions?.maxStretchY,
             });
-            width = p.canvasW;
+            width = Math.max(p.canvasW, 2 * widestSpokePx + 2 * MIN_RADIUS + 48);
             height = p.canvasH;
         }
 
@@ -163,13 +181,14 @@ export const plRadarChartDef: ChartTemplateDef = {
         const cellW = (1 - gapFrac * (cols - 1)) / cols;
         const cellH = (1 - gapFrac * (gridRows - 1)) / gridRows;
         const titlePad = faceted ? 26 / height : 0;
-        // The angular (metric) labels sit just outside the circle on all four
-        // sides, and now carry the axis ceiling too ("Carbs (100)"). Inset the
-        // polar domain so a side label stays inside its own cell instead of
-        // running off the canvas or into the neighbouring radar.
-        const widestSpoke = Math.max(...metrics.map((m) => spokeLabel(m).length));
-        // Never eat more than a fifth of the cell, or the radar itself vanishes.
-        const sideLabelPx = Math.min(90, 8 + widestSpoke * 5.2, cellW * width * 0.2);
+        // Inset the polar domain by that reserved strip, so a side label stays
+        // inside its own cell instead of running off the canvas or into the
+        // neighbouring radar. In a facet grid the canvas is not grown per cell,
+        // so there the strip is capped at a fifth of the cell or the radar
+        // itself vanishes.
+        const sideLabelPx = faceted
+            ? Math.min(widestSpokePx, cellW * width * 0.2)
+            : widestSpokePx;
         const insetXFrac = sideLabelPx / width;
         const insetYFrac = (faceted ? 16 : 14) / height;
 
@@ -206,6 +225,9 @@ export const plRadarChartDef: ChartTemplateDef = {
                     },
                     radialaxis: {
                         visible: true, range: [0, radialMax],
+                        tickmode: 'array',
+                        tickvals: [0.25, 0.5, 0.75, 1].map((level) => level * radialMax),
+                        ticktext: uniformScale ? ['', '', '', showMax(metrics[0])] : undefined,
                         // Where each axis has its own ceiling the radius is a
                         // fraction and a number on it would name nothing — the
                         // spoke labels carry the scale instead.

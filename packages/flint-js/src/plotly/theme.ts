@@ -416,7 +416,7 @@ function applyTypography(figure: any, d: DesignDecisions): number {
     );
     const lines = [styleText(headLines.join('<br>'), h)];
 
-    let height = 8 + headLines.length * headlineSize * 1.35 + 6;
+    let height = 8 + titleBlockHeight(headLines.length, headlineSize) + 6;
     if (deckText) {
         const size = deck.fontSize ?? 12;
         const color = deck.color ?? d.text.secondary;
@@ -427,7 +427,7 @@ function applyTypography(figure: any, d: DesignDecisions): number {
             ...(deck.font ? [`font-family:${deck.font}`] : []),
         ].join(';');
         lines.push(`<span style="${style}">${styleText(deckLines.join('<br>'), deck)}</span>`);
-        height += deckLines.length * size * 1.35 + d.title.deckPadding;
+        height += titleBlockHeight(deckLines.length, size) + d.title.deckPadding;
     }
 
     const anchor = d.title.anchor;
@@ -471,19 +471,30 @@ function restateNeutralAnnotations(layout: any, d: DesignDecisions): void {
 }
 
 /**
- * Where the title block has to be anchored to sit 8px clear of the top edge.
+ * Where to hang the title block so its first line starts 8px down.
  *
- * Plotly's `yanchor: 'top'` on a title is not a top anchor: measured, the block
- * comes out *centred* on `y`, with a constant offset of about 0.59 of a line
- * from the block's own baseline. So a two-line headline placed at the top of
- * the container has its first line off the page. Solving that measurement for
- * "block top = 8px" gives the expression below; it is calibrated against the
- * real renderer for one, two and three lines.
+ * `yanchor: 'top'` on a `yref: 'container'` title does not put the block's top
+ * at `y`. Measured against the real renderer across three font sizes and one
+ * to four lines, Plotly puts the block top `0.30em` below `y` for a single
+ * line and `1.00em` below it for two or more — a step, not a slope, and
+ * independent of the line count after that. The old expression grew with the
+ * line count instead, so a four-line headline landed 57px too low and ran into
+ * whatever was under it.
  */
 function titleY(layout: any, lines: number, fontSize: number): number {
     const height = Number(layout.height) || 300;
-    const line = fontSize * 1.35;
-    return 1 - (8 + line * (Math.max(1, lines) / 2 - 0.59)) / height;
+    const lead = fontSize * (Math.max(1, lines) > 1 ? 1 : 0.3);
+    return 1 - (8 + lead) / height;
+}
+
+/** What a title block of this many lines actually occupies. Measured: 1.29em. */
+function titleBlockHeight(lines: number, fontSize: number): number {
+    return Math.max(1, lines) * fontSize * 1.3;
+}
+
+function titleLineCount(title: any): number {
+    const text = typeof title === 'object' ? title?.text : title;
+    return Math.max(1, String(text ?? '').split('<br>').length);
 }
 
 /** Break a line of text to a pixel width, at word boundaries where it can. */
@@ -523,7 +534,13 @@ function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legend
     margin.t = Math.max(before, need);
     const grew = margin.t - before;
     if (grew > 0 && Number(layout.height)) layout.height = Math.round(layout.height + grew);
-    reserveAboveDomains(figure, need);
+    if (layout.title && typeof layout.title === 'object') {
+        layout.title.y = titleY(
+            layout,
+            titleLineCount(layout.title),
+            Number(layout.title.font?.size) || d.title.headline.fontSize || 17,
+        );
+    }
 
     // The key sits between the title and the plot, in the room just made. It
     // hangs from just under the title rather than standing on the plot: a key
@@ -535,34 +552,6 @@ function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legend
         layout.legend.y = 1 + Math.max(8, margin.t - titleH) / plotH;
     }
     void d;
-}
-
-/**
- * Push domain-positioned traces below the title block.
- *
- * A KPI card, gauge or pie placed by `domain` is laid out in fractions of the
- * *paper*, not of the plotting rectangle, so growing the top margin does not
- * move it: the headline lands on top of the number. The domain has to be
- * shortened by hand.
- */
-function reserveAboveDomains(figure: any, need: number): void {
-    const height = Number(figure?.layout?.height) || 0;
-    if (!height || need <= 0) return;
-    const top = Math.max(0.25, 1 - need / height);
-    const shorten = (owner: any): void => {
-        const y = owner?.domain?.y;
-        if (!Array.isArray(y) || y.length !== 2) return;
-        if (Number(y[1]) > top) owner.domain = { ...owner.domain, y: [Number(y[0]) * top, top] };
-    };
-    for (const trace of figure.data ?? []) shorten(trace);
-    // A polar, geographic or ternary plot is placed the same way, but from the
-    // layout rather than the trace.
-    for (const key of Object.keys(figure.layout ?? {})) {
-        if (!/^(polar|geo|ternary|scene|smith|map|mapbox)\d*$/.test(key)) continue;
-        const owner = figure.layout[key];
-        if (owner?.domain?.y) shorten(owner);
-        else if (owner && typeof owner === 'object') owner.domain = { y: [0, top] };
-    }
 }
 
 /**
@@ -692,25 +681,44 @@ function applyPolarAxes(figure: any, d: DesignDecisions): void {
         if (!/^polar\d*$/.test(key)) continue;
         const polar = layout[key];
         if (!polar || typeof polar !== 'object') continue;
-        polar.bgcolor = d.surface.plot ?? d.surface.canvas;
+        const plot = d.surface.plot ?? d.surface.canvas;
+        const subplot = key === 'polar' ? 'polar' : key;
+        const radar = (figure.data ?? []).some((trace: any) =>
+            trace?.type === 'scatterpolar'
+            && String(trace?.subplot ?? 'polar') === subplot
+            && trace?.fill === 'toself');
+        polar.bgcolor = plot;
         for (const [name, a] of [['radialaxis', d.axes.y], ['angularaxis', d.axes.x]] as const) {
             if (!a) continue;
             const ax = polar[name] ?? (polar[name] = {});
-            ax.showgrid = a.grid.show;
-            if (a.grid.show) {
-                ax.gridcolor = a.grid.color;
-                ax.gridwidth = a.grid.width;
-            }
-            ax.showline = a.domain.show;
-            if (a.domain.show) {
-                ax.linecolor = a.domain.color;
-                ax.linewidth = a.domain.width;
+            if (radar) {
+                // Rings and spokes are the radar's coordinate system, not
+                // optional cartesian reference lines. Keep them present but
+                // quiet so they locate a vertex without competing with it.
+                const strength = name === 'radialaxis' ? 0.18 : 0.24;
+                ax.showgrid = true;
+                ax.gridcolor = mixHex(plot, a.grid.color ?? d.text.secondary, strength);
+                ax.gridwidth = Math.min(1, a.grid.width ?? 1);
+                ax.showline = true;
+                ax.linecolor = mixHex(plot, a.domain.color ?? d.text.secondary, 0.42);
+                ax.linewidth = Math.min(1, a.domain.width ?? 1);
+            } else {
+                ax.showgrid = a.grid.show;
+                if (a.grid.show) {
+                    ax.gridcolor = a.grid.color;
+                    ax.gridwidth = a.grid.width;
+                }
+                ax.showline = a.domain.show;
+                if (a.domain.show) {
+                    ax.linecolor = a.domain.color;
+                    ax.linewidth = a.domain.width;
+                }
             }
             if (a.label.show !== false) {
                 ax.tickfont = { ...(ax.tickfont ?? {}), ...fontOf(a.label, d.font) };
                 if (name === 'radialaxis') {
                     ax.tickangle = 0;
-                    ax.nticks = Math.min(a.tickCount ?? 4, 4);
+                    if (ax.tickmode !== 'array') ax.nticks = Math.min(a.tickCount ?? 4, 4);
                 }
             }
         }
@@ -1204,8 +1212,9 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         }
 
         if (fams.includes('point')) {
-            const size = m.point?.size;
-            if (size != null && !Array.isArray(trace.marker?.size)) {
+            const secondary = trace?._markerRole === 'secondary';
+            const size = secondary ? m.point?.secondarySize : m.point?.size;
+            if (size != null && (secondary || trace.marker?.size == null)) {
                 trace.marker = { ...(trace.marker ?? {}), size: diameterOf(size) };
             }
             if (m.point?.haloColor && m.point.haloWidth) {
@@ -2055,11 +2064,11 @@ export function fitPlotlyTitle(figure: any): void {
         yanchor: 'top',
         yref: 'container',
     };
-    const need = 8 + all.length * size * 1.35 + 8;
+    const need = 8 + titleBlockHeight(all.length, size) + 14;
     const margin = (layout.margin ??= {});
     const before = margin.t ?? 0;
     margin.t = Math.max(before, need);
     const grew = margin.t - before;
     if (grew > 0 && Number(layout.height)) layout.height = Math.round(layout.height + grew);
-    reserveAboveDomains(figure, need);
+    layout.title.y = titleY(layout, all.length, size);
 }

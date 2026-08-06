@@ -268,17 +268,22 @@ export interface ThemeMarks {
          */
         presence?: Presence;
         /**
-         * How big a dot this house draws, as an area in px² — the way the
-         * renderer states a point's size and the way the size channel is read.
-         * One number, wherever a dot appears: at a line's vertex, on a scatter,
-         * at the ends of a dumbbell. A house that wanted its scatter dots and
-         * its vertex dots at different sizes would be saying that the same ink
-         * means two things, and the eye does not read them that way.
+         * How big a primary dot this house draws, as an area in px² — the way
+         * the renderer states a point's size and the way the size channel is
+         * read. This covers marks whose point is itself the reading: a scatter,
+         * a dot plot, or the ends of a dumbbell.
          *
          * Where the house says nothing the renderer's default stands. The
          * layout remains free to shrink it when the plot runs short of room.
          */
         size?: number;
+        /**
+         * How big a supporting vertex is, as an area in px². A radar vertex or
+         * a sampled point on a connected shape confirms the path's position;
+         * it is not the primary mark and must not obscure that path or its
+         * grid. Defaults to the smaller of `size` and 25px².
+         */
+        secondarySize?: number;
         fill?: 'solid' | 'hollow';
         halo?: { presence?: Presence; width?: number };
     };
@@ -714,7 +719,14 @@ export interface ResolvedMarks {
     cornerRadius?: number;
     /** A stroke around each filled bar/wedge/point: the sticker edge (thin bars skip it). */
     outline?: { color: string; width: number };
-    point?: { show: boolean; size?: number; filled?: boolean; haloColor?: string; haloWidth?: number };
+    point?: {
+        show: boolean;
+        size?: number;
+        secondarySize: number;
+        filled?: boolean;
+        haloColor?: string;
+        haloWidth?: number;
+    };
     /** The area a sized mark may take, smallest to largest, in px². */
     sizeRange?: [number, number];
     /** The area below which a sized mark stops being a mark. */

@@ -264,6 +264,8 @@ describe('a radar reads each spoke on its own scale', () => {
         } as any) as any;
         expect(fig.layout.polar.radialaxis.range).toEqual([0, 1]);
         expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
+        expect(fig.layout.polar.radialaxis.tickvals).toEqual([0.25, 0.5, 0.75, 1]);
+        expect(fig.layout.polar.domain.y[1]).toBeGreaterThan(0.9);
         const trace = (fig.data as any[])[0];
         expect(trace.theta.some((t: string) => /\(\d/.test(t))).toBe(true);
         for (const r of trace.r) expect(r).toBeLessThanOrEqual(1);
