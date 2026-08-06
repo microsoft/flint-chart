@@ -172,6 +172,14 @@ reference.
   <sub><strong>Swiss</strong> — typographic structure, restrained color, and a clear visual grid.</sub>
 </p>
 
+<p align="center">
+  <a href="https://microsoft.github.io/flint-chart/#/themes?theme=pop&amp;layout=banner">
+    <img src="docs/figs/flint-theme-pop.png" alt="Twelve charts rendered with Flint's Pop theme." width="100%">
+  </a>
+  <br>
+  <sub><strong>Pop</strong> — bold color, emphatic marks, and playful graphic contrast.</sub>
+</p>
+
 See the [API reference](docs/api-reference.md), backend references for
 [Vega-Lite](docs/reference-vegalite.md), [ECharts](docs/reference-echarts.md),
 [Chart.js](docs/reference-chartjs.md), [Plotly](docs/reference-plotly.md), and
