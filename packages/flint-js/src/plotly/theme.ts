@@ -239,10 +239,41 @@ function isContextTrace(trace: any): boolean {
     return trace?._role === 'context' || trace?.hoverinfo === 'skip' && !trace?.name;
 }
 
+/** A reference mark states a target or a threshold: furniture, not a series. */
+function isReferenceTrace(trace: any): boolean {
+    return trace?._role === 'reference';
+}
+
 function dataTraces(figure: any): any[] {
     return (figure?.data ?? []).filter(
-        (t: any) => t && !CHROME_TRACES.has(String(t.type)) && !isContextTrace(t),
+        (t: any) => t && !CHROME_TRACES.has(String(t.type)) && !isContextTrace(t) && !isReferenceTrace(t),
     );
+}
+
+/**
+ * Bands of context and reference ticks are drawn in fixed greys and blacks by
+ * the templates, which reads as a stack of light bars on a dark card. Each is
+ * restated against the house surface, keeping its relative weight.
+ */
+function applyFurnitureTraces(figure: any, d: DesignDecisions): void {
+    const surface = d.surface.plot ?? d.surface.canvas;
+    for (const trace of figure.data ?? []) {
+        if (isReferenceTrace(trace)) {
+            const line = trace.marker?.line;
+            if (line) trace.marker = { ...trace.marker, line: { ...line, color: d.text.primary } };
+            else if (trace.marker) trace.marker = { ...trace.marker, color: d.text.primary };
+            if (trace.line) trace.line = { ...trace.line, color: d.text.primary };
+            continue;
+        }
+        if (!isContextTrace(trace)) continue;
+        const colour = trace.marker?.color;
+        if (typeof colour !== 'string') continue;
+        const rgb = parseColor(colour);
+        if (!rgb) continue;
+        const l = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+        const weight = Math.min(0.25, Math.max(0.04, (1 - l) * 1.6));
+        trace.marker = { ...trace.marker, color: mixHex(surface, d.text.primary, weight) };
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -257,6 +288,7 @@ export function realizeThemePlotly(figure: any, d: DesignDecisions, table: any[]
 
     applySurface(figure, d);
     applyGeoSurface(figure, d);
+    applyFurnitureTraces(figure, d);
     const titleH = applyTypography(figure, d);
     applyAxes(figure, d, table, say);
     applyMarks(figure, d, table, say);
@@ -315,6 +347,25 @@ function applySurface(figure: any, d: DesignDecisions): void {
  * are done here: the headline is broken to the width it has, and the height
  * that costs is handed to {@link layoutTopChrome}.
  */
+/**
+ * A card's delta is a verdict, so it takes the house's status inks. Plotly's
+ * stock green and red are stated for a white card and go muddy on a dark one,
+ * so a house that names no status inks gets them lifted until they read.
+ */
+function applyDeltaInk(trace: any, d: DesignDecisions): void {
+    if (!trace.delta) return;
+    const bg = d.surface.plot ?? d.surface.canvas;
+    const lift = (ink: string) => (isDarkSurface(bg) ? mixHex(ink, '#ffffff', 0.35) : ink);
+    const up = d.series.status?.positive ?? lift('#2f8f4e');
+    const down = d.series.status?.negative ?? lift('#c0392b');
+    trace.delta = {
+        ...trace.delta,
+        increasing: { ...(trace.delta.increasing ?? {}), color: up },
+        decreasing: { ...(trace.delta.decreasing ?? {}), color: down },
+        font: { ...(trace.delta.font ?? {}), ...(d.font ? { family: d.font } : {}) },
+    };
+}
+
 function applyTypography(figure: any, d: DesignDecisions): number {
     const layout = figure.layout;
     layout.font = {
@@ -328,7 +379,10 @@ function applyTypography(figure: any, d: DesignDecisions): number {
         if (trace?.type !== 'indicator') continue;
         trace.title = { ...(trace.title ?? {}), font: { ...(trace.title?.font ?? {}), ...(d.font ? { family: d.font } : {}), color: d.text.secondary } };
         trace.number = { ...(trace.number ?? {}), font: { ...(trace.number?.font ?? {}), ...(d.font ? { family: d.font } : {}), color: d.text.primary } };
+        applyDeltaInk(trace, d);
     }
+
+    restateNeutralAnnotations(layout, d);
 
     const title = layout.title;
     const headlineText = typeof title === 'string' ? title : title?.text;
@@ -376,6 +430,32 @@ function applyTypography(figure: any, d: DesignDecisions): number {
         yref: 'container',
     };
     return height + d.title.offset;
+}
+
+/**
+ * Restate the template's own grey text in the house's inks.
+ *
+ * A bar table writes its category names, headers and totals as annotations in
+ * fixed greys, which are invisible on a dark house. A *grey* is furniture — it
+ * was chosen to be quiet, not to mean something — so it is re-read as a text
+ * role by its lightness and rewritten. A coloured annotation is data and is
+ * left alone.
+ */
+function restateNeutralAnnotations(layout: any, d: DesignDecisions): void {
+    for (const a of layout.annotations ?? []) {
+        const hex = a?.font?.color;
+        if (!hex) continue;
+        const c = parseColor(String(hex));
+        if (!c) continue;
+        const grey = Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b) < 40;
+        if (!grey) continue;
+        const light = (c.r + c.g + c.b) / 765;
+        a.font = {
+            ...a.font,
+            ...(d.font ? { family: d.font } : {}),
+            color: light < 0.3 ? d.text.primary : light < 0.62 ? d.text.secondary : d.text.muted,
+        };
+    }
 }
 
 /**
@@ -511,14 +591,103 @@ function applyAxes(figure: any, d: DesignDecisions, table: any[], say: Say): voi
         const decided = d.axes[ch];
         if (!decided) continue;
         for (const key of axisKeys(layout, ch)) {
-            applyAxis(layout[key] ?? (layout[key] = {}), decided, d, say, key);
+            applyAxis(
+                layout[key] ?? (layout[key] = {}),
+                decided,
+                d,
+                say,
+                key,
+                Math.max(80, (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0)),
+                axisCategories(figure, layout[key], key, ch),
+            );
         }
     }
+    applyPolarAxes(figure, d);
     applyUnits(figure, d, say);
     applyTickLabels(figure, d, table, say);
 }
 
-function applyAxis(ax: any, a: ResolvedAxis, d: DesignDecisions, say: Say, key: string): void {
+/**
+ * A polar plot keeps its scales inside `layout.polar`, out of reach of the
+ * cartesian pass. Its radial labels sit in the middle of the plot, where
+ * Plotly turns them on their side as soon as the circle gets small, so they
+ * are held straight and their count is kept low.
+ */
+function applyPolarAxes(figure: any, d: DesignDecisions): void {
+    const layout = figure.layout;
+    for (const key of Object.keys(layout ?? {})) {
+        if (!/^polar\d*$/.test(key)) continue;
+        const polar = layout[key];
+        if (!polar || typeof polar !== 'object') continue;
+        polar.bgcolor = d.surface.plot ?? d.surface.canvas;
+        for (const [name, a] of [['radialaxis', d.axes.y], ['angularaxis', d.axes.x]] as const) {
+            if (!a) continue;
+            const ax = polar[name] ?? (polar[name] = {});
+            ax.showgrid = a.grid.show;
+            if (a.grid.show) {
+                ax.gridcolor = a.grid.color;
+                ax.gridwidth = a.grid.width;
+            }
+            ax.showline = a.domain.show;
+            if (a.domain.show) {
+                ax.linecolor = a.domain.color;
+                ax.linewidth = a.domain.width;
+            }
+            if (a.label.show !== false) {
+                ax.tickfont = { ...(ax.tickfont ?? {}), ...fontOf(a.label, d.font) };
+                if (name === 'radialaxis') {
+                    ax.tickangle = 0;
+                    ax.nticks = Math.min(a.tickCount ?? 4, 4);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The names a banded axis carries: what the layout declares, or what the
+ * traces bound to that axis actually plot.
+ */
+function axisCategories(figure: any, ax: any, key: string, ch: 'x' | 'y'): any[] {
+    if (Array.isArray(ax?.categoryarray) && ax.categoryarray.length) return ax.categoryarray;
+    if (ax?.type !== 'category') return [];
+    const short = key.replace('axis', '');
+    const seen = new Set<string>();
+    for (const t of figure.data ?? []) {
+        if (String(t?.[`${ch}axis`] ?? ch) !== short) continue;
+        for (const v of t?.[ch] ?? []) seen.add(String(v));
+    }
+    return [...seen];
+}
+
+/**
+ * Would this axis's names read straight in the width it actually has?
+ *
+ * Only answerable for a banded axis, where the band width is the width divided
+ * by the number of names. Anything else is left to the house.
+ */
+function labelsFitStraight(ax: any, key: string, a: ResolvedAxis, width: number, cats: any[]): boolean {
+    if (!key.startsWith('x')) return true;
+    if ((a.label.angle ?? 0) !== 0) return true;
+    if (!Array.isArray(cats) || !cats.length) return true;
+    const span = Array.isArray(ax.domain) && ax.domain.length === 2
+        ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
+        : 1;
+    const band = (width * (Number.isFinite(span) ? span : 1)) / cats.length;
+    const longest = Math.max(...cats.map((c: any) => String(c).length));
+    // Names need air between them, or 'JanFebMar' reads as one word.
+    return longest * (a.label.fontSize ?? 11) * 0.58 + 5 <= band;
+}
+
+function applyAxis(
+    ax: any,
+    a: ResolvedAxis,
+    d: DesignDecisions,
+    say: Say,
+    key: string,
+    width: number,
+    cats: any[],
+): void {
     // Grid
     ax.showgrid = a.grid.show;
     if (a.grid.show) {
@@ -561,7 +730,19 @@ function applyAxis(ax: any, a: ResolvedAxis, d: DesignDecisions, say: Say, key: 
     ax.showticklabels = a.label.show !== false && ax.showticklabels !== false;
     if (ax.showticklabels) {
         ax.tickfont = { ...(ax.tickfont ?? {}), ...fontOf(a.label, d.font) };
-        if (a.label.angle != null) ax.tickangle = a.label.angle;
+        // A straight label angle was decided against the whole axis. A facet
+        // panel holds a fraction of it, and names that read straight across a
+        // full width run into each other across a quarter of one — so the
+        // angle the template chose stands where the house's will not fit.
+        if (a.label.angle != null) {
+            if (labelsFitStraight(ax, key, a, width, cats)) ax.tickangle = a.label.angle;
+            else {
+                say(
+                    'axes.label.angle',
+                    `\`${key}\` keeps its turned labels — straight they would not fit the panel`,
+                );
+            }
+        }
         if (a.label.padding != null) ax.ticklabelstandoff = a.label.padding;
     }
 
@@ -662,8 +843,12 @@ function dateFormatFor(values: any[]): string {
     const times = values.map((v) => new Date(v).getTime()).filter((n) => Number.isFinite(n));
     if (times.length < 2) return '%Y';
     const days = (Math.max(...times) - Math.min(...times)) / 86_400_000;
-    if (days > 900) return '%Y';
-    if (days > 60) return '%b %Y';
+    // What matters is not the span but the *step*: eight ticks across three
+    // years written as years print "2020 2020 2021 2021" — the same label
+    // twice, which reads as a mistake.
+    const step = days / (times.length - 1);
+    if (days > 900 && step > 300) return '%Y';
+    if (days > 60 && step > 20) return '%b %Y';
     return '%d %b';
 }
 
@@ -698,7 +883,9 @@ function thin(values: any[], mode: string, key: string): any[] | null {
     if (picked[picked.length - 1] !== last) {
         // Two ticks a fraction of a step apart print on top of each other.
         const lastIndex = values.indexOf(picked[picked.length - 1]);
-        if (values.length - 1 - lastIndex < step / 2) picked.pop();
+        // Two ticks less than a step apart print on top of each other; the
+        // last value is the one that has to be named, so the other goes.
+        if (values.length - 1 - lastIndex < step) picked.pop();
         picked.push(last);
     }
     return picked;
@@ -719,13 +906,19 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
 
     // Band occupancy is one number for the whole figure: Plotly sizes bars by
     // the gap left between them, not by a mark width.
-    const bars = (figure.data ?? []).filter((t: any) => markFamilies(t).includes('bar'));
+    // A trace another trace fills down to is the floor of a band, not a line
+    // of its own.
+    const traces: any[] = figure.data ?? [];
+    const floors = new Set<number>();
+    traces.forEach((t, i) => { if (t?.fill === 'tonexty' && i > 0) floors.add(i - 1); });
+
+    const bars = traces.filter((t: any) => markFamilies(t).includes('bar'));
     if (bars.length) {
         layout.bargap = Math.max(0, Math.min(0.9, 1 - m.bandFraction));
         if (layout.barmode === 'group' && bars.length > 1) layout.bargroupgap = 0.05;
     }
 
-    for (const trace of figure.data ?? []) {
+    for (const [index, trace] of traces.entries()) {
         if (CHROME_TRACES.has(String(trace?.type))) continue;
         const fams = markFamilies(trace);
 
@@ -789,7 +982,10 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         // A house that dots its lines says so through the chart's own options
         // where the template offers one; where it does not, the dots are added
         // here.
-        if (m.point?.show && fams.includes('line') && !fams.includes('point')) {
+        // A filled band has no line to dot — its edge is the top of an area,
+        // and dotting it reads as data points that are not there.
+        const filled = (trace.fill != null && trace.fill !== 'none') || floors.has(index);
+        if (m.point?.show && fams.includes('line') && !fams.includes('point') && !filled) {
             trace.mode = String(trace.mode ?? 'lines').includes('markers')
                 ? trace.mode
                 : `${trace.mode ?? 'lines'}+markers`;
@@ -1099,6 +1295,18 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
             if (grew > 0 && Number(layout.width)) layout.width = Math.round(layout.width + grew);
         }
     }
+
+    // A column of keys taller than the plot is simply cut off at the bottom,
+    // so the figure grows to hold it.
+    if (layout.legend.orientation !== 'h') {
+        const entries = legendEntries(figure);
+        const need = entries.length * ((l.label.fontSize ?? 11) + 14) + 20;
+        const have = (Number(layout.height) || 0) - (layout.margin?.t ?? 0) - (layout.margin?.b ?? 0);
+        if (entries.length && have > 0 && need > have) {
+            layout.height = Math.round(Number(layout.height) + (need - have));
+            say('legend.placement', `the figure grew ${Math.round(need - have)}px to hold a column of ${entries.length} keys`);
+        }
+    }
     return 0;
 }
 
@@ -1117,7 +1325,13 @@ function legendEntries(figure: any): string[] {
 function horizontalLegendHeight(figure: any, fontSize: number, bold = false): number {
     const entries = legendEntries(figure);
     if (!entries.length) return 0;
-    const width = Number(figure.layout?.width) || 400;
+    // A key above the plot is laid out across the *plot area*, not the paper,
+    // so it wraps sooner than the figure width suggests.
+    const layout = figure.layout ?? {};
+    const width = Math.max(
+        120,
+        (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0),
+    );
     const rowHeight = fontSize + 14;
     let rows = 1;
     let used = 0;
@@ -1236,10 +1450,23 @@ function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
 // Facet chrome
 // ---------------------------------------------------------------------------
 
+/**
+ * Is this annotation a panel's name?
+ *
+ * Templates that emit a facet grid mark the header for us; the rest are
+ * recognised by where they sit — pinned to the top of the paper, over a panel,
+ * with no arrow. Getting this wrong only means a caption is typed as a header.
+ */
+function isFacetHeader(a: any): boolean {
+    if (a?._role === 'facet-header') return true;
+    return a?.xref === 'paper' && a?.yref === 'paper' && a?.showarrow === false
+        && a?.xanchor === 'center' && a?.yanchor === 'top';
+}
+
 function applyFacetChrome(figure: any, d: DesignDecisions): void {
     const f = d.facets.header;
     for (const a of figure.layout?.annotations ?? []) {
-        if (a?._role !== 'facet-header') continue;
+        if (!isFacetHeader(a)) continue;
         if (!f.show) {
             a.text = '';
             continue;
@@ -1410,7 +1637,10 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
         }
 
         if (fams.includes('point') || fams.includes('line')) {
-            const measure = 'y';
+            // A point series is usually measured up the page, but not always:
+            // labelling a category with `%{y}` prints NaN.
+            const measure = numericChannel(trace);
+            if (!measure) continue;
             trace.mode = String(trace.mode ?? 'lines').includes('text')
                 ? trace.mode
                 : `${trace.mode ?? 'lines'}+text`;
@@ -1429,6 +1659,14 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
     void isDarkSurface;
     void contrastingInk;
     void sampleRamp;
+}
+
+/** Which of a trace's two channels carries the number worth printing. */
+function numericChannel(trace: any): 'x' | 'y' | null {
+    const numeric = (v: any) => Array.isArray(v) && v.some((n) => typeof n === 'number' && Number.isFinite(n));
+    if (numeric(trace?.y)) return 'y';
+    if (numeric(trace?.x)) return 'x';
+    return null;
 }
 
 /**
