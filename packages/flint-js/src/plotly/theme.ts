@@ -605,7 +605,7 @@ function applyAxes(figure: any, d: DesignDecisions, table: any[], say: Say): voi
         }
     }
     pinSparseTicks(figure, d, say);
-    applyPolarAxes(figure, d);
+    applyPolarAxes(figure, d, say);
     applyUnits(figure, d, say);
     applyTickLabels(figure, d, table, say);
 }
@@ -675,23 +675,64 @@ function pinSparseTicks(figure: any, d: DesignDecisions, say: Say): void {
  * Plotly turns them on their side as soon as the circle gets small, so they
  * are held straight and their count is kept low.
  */
-function applyPolarAxes(figure: any, d: DesignDecisions): void {
+function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
     const layout = figure.layout;
-    for (const key of Object.keys(layout ?? {})) {
+    let saidRose = false;
+    const polarKeys = new Set(
+        Object.keys(layout ?? {}).filter(key => /^polar\d*$/.test(key)),
+    );
+    // Plotly implicitly creates the default `polar` subplot when a trace does
+    // not declare one. Materialize it so themed furniture also reaches polar
+    // traces that passed through a generic figure combiner.
+    if ((figure.data ?? []).some((trace: any) =>
+        (trace?.type === 'barpolar' || trace?.type === 'scatterpolar')
+        && String(trace?.subplot ?? 'polar') === 'polar')) {
+        polarKeys.add('polar');
+        layout.polar ??= {};
+    }
+    for (const key of polarKeys) {
         if (!/^polar\d*$/.test(key)) continue;
         const polar = layout[key];
         if (!polar || typeof polar !== 'object') continue;
         const plot = d.surface.plot ?? d.surface.canvas;
         const subplot = key === 'polar' ? 'polar' : key;
-        const radar = (figure.data ?? []).some((trace: any) =>
+        const subplotTraces = (figure.data ?? []).filter((trace: any) =>
+            String(trace?.subplot ?? 'polar') === subplot);
+        const radar = subplotTraces.some((trace: any) =>
             trace?.type === 'scatterpolar'
-            && String(trace?.subplot ?? 'polar') === subplot
             && trace?.fill === 'toself');
+        const rose = subplotTraces.some((trace: any) => trace?.type === 'barpolar');
         polar.bgcolor = plot;
         for (const [name, a] of [['radialaxis', d.axes.y], ['angularaxis', d.axes.x]] as const) {
             if (!a) continue;
             const ax = polar[name] ?? (polar[name] = {});
-            if (radar) {
+            if (rose) {
+                // A rose has no empty axis gutter: the radial ray, its ticks,
+                // and its numbers would be drawn through the wedges. Replace
+                // that cartesian furniture with quiet rings below the marks.
+                // Month labels already locate the angular bands, so spokes and
+                // little rim ticks only repeat boundaries the wedges provide.
+                ax.ticks = '';
+                ax.ticklen = 0;
+                ax.showline = false;
+                if (name === 'radialaxis') {
+                    ax.showgrid = true;
+                    ax.gridcolor = mixHex(plot, d.text.secondary, 0.28);
+                    ax.gridwidth = 0.8;
+                    ax.layer = 'below traces';
+                    ax.showticklabels = false;
+                    ax.nticks = 4;
+                } else {
+                    ax.showgrid = false;
+                }
+                if (!saidRose) {
+                    say(
+                        'structure.axis.polar',
+                        'the rose uses quiet concentric guides below its wedges — a radial axis ray, ticks and numbers would be printed through the data',
+                    );
+                    saidRose = true;
+                }
+            } else if (radar) {
                 // Rings and spokes are the radar's coordinate system, not
                 // optional cartesian reference lines. Keep them present but
                 // quiet so they locate a vertex without competing with it.
@@ -718,7 +759,7 @@ function applyPolarAxes(figure: any, d: DesignDecisions): void {
                 ax.tickfont = { ...(ax.tickfont ?? {}), ...fontOf(a.label, d.font) };
                 if (name === 'radialaxis') {
                     ax.tickangle = 0;
-                    if (ax.tickmode !== 'array') ax.nticks = Math.min(a.tickCount ?? 4, 4);
+                    if (!rose && ax.tickmode !== 'array') ax.nticks = Math.min(a.tickCount ?? 4, 4);
                 }
             }
         }

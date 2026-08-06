@@ -270,4 +270,61 @@ describe('a radar reads each spoke on its own scale', () => {
         expect(trace.theta.some((t: string) => /\(\d/.test(t))).toBe(true);
         for (const r of trace.r) expect(r).toBeLessThanOrEqual(1);
     });
+
+    describe('a rose uses polar guides rather than an axis through its wedges', () => {
+        it('keeps quiet rings and removes the radial ray, ticks and labels', () => {
+            const fig = assemblePlotly({
+                data: {
+                    values: months.map((Month, i) => ({ Month, Rainfall: 20 + i * 11 })),
+                },
+                semantic_types: { Month: 'Category', Rainfall: 'Quantity' },
+                chart_spec: {
+                    chartType: 'Rose Chart',
+                    title: 'Rainfall by month',
+                    encodings: { x: 'Month', y: 'Rainfall' },
+                    baseSize: { width: 420, height: 360 },
+                },
+                theme_spec: theme(),
+            } as any) as any;
+
+            const radial = fig.layout.polar.radialaxis;
+            const angular = fig.layout.polar.angularaxis;
+            expect(radial.showgrid).toBe(true);
+            expect(radial.gridwidth).toBeLessThanOrEqual(1);
+            expect(radial.layer).toBe('below traces');
+            expect(radial.showticklabels).toBe(false);
+            expect(radial.showline).toBe(false);
+            expect(radial.ticks).toBe('');
+            expect(angular.showgrid).toBe(false);
+            expect(angular.showline).toBe(false);
+            expect(angular.ticks).toBe('');
+            expect(fig._theme.report.some((entry: any) =>
+                entry.path === 'structure.axis.polar')).toBe(true);
+        });
+
+        it('materializes and themes an implicit default polar subplot', () => {
+            const fig = assemblePlotly({
+                data: {
+                    values: [
+                        { Direction: 'N', Speed: 20, Site: '2023' },
+                        { Direction: 'E', Speed: 35, Site: '2023' },
+                        { Direction: 'N', Speed: 25, Site: '2024' },
+                        { Direction: 'E', Speed: 45, Site: '2024' },
+                    ],
+                },
+                semantic_types: { Direction: 'Category', Speed: 'Quantity', Site: 'Category' },
+                chart_spec: {
+                    chartType: 'Rose Chart',
+                    title: 'Wind by direction and site',
+                    encodings: { x: 'Direction', y: 'Speed', column: 'Site' },
+                    baseSize: { width: 420, height: 360 },
+                },
+                theme_spec: theme(),
+            } as any) as any;
+
+            expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
+            expect(fig.layout.polar.radialaxis.layer).toBe('below traces');
+            expect(fig.layout.polar.angularaxis.showgrid).toBe(false);
+        });
+    });
 });
