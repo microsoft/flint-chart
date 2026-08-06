@@ -25,6 +25,9 @@ export { assemblePlotly, getPlotlyPivot, getPlotlyTransform } from './assemble';
 // PL spec instantiation (Phase 2)
 export { plApplyLayoutToSpec, plApplyTooltips } from './instantiate-spec';
 
+// PL theme realization (stage 3)
+export { realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle } from './theme';
+
 // PL template registry
 export {
     plTemplateDefs,

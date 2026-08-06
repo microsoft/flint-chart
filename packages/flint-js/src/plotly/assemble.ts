@@ -48,6 +48,11 @@ import { plApplyCartesianAxisSpacing, plApplyLayoutToSpec, plApplyTooltips, plAp
 import { plCombineFacetPanels, niceBounds, type PlotlyFacetPanel } from './facet';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { resolveThemeSpec } from '../core/theme/presets';
+import {
+    realizeThemePlotly, realizeValueLabelsPlotly, plCollectMarkTypes, plCollectPositional, fitPlotlyTitle,
+} from './theme';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -90,10 +95,17 @@ function applyFieldDisplayNames(figure: any, names: Record<string, string> | und
 export function assemblePlotly(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
-    const sizeCeiling = input.chart_spec.canvasSize;
-    const baseSize = resolveBaseSize(input.chart_spec.baseSize, sizeCeiling);
+    // `theme_spec` may name a house Flint ships rather than spell one out.
+    const themeSpec = resolveThemeSpec(input.theme_spec);
+    // A house may prefer a size, a stretch budget, a facet gap. Those settle
+    // before anything is measured, and in a fixed order: the chart spec first,
+    // the theme's presets under it, flint's own defaults under that.
+    const themePresets = resolveCompileDefaults(themeSpec, input.options);
+    const housePresets = themeSpec?.compileDefaults;
+    const sizeCeiling = input.chart_spec.canvasSize ?? housePresets?.canvasSize;
+    const baseSize = resolveBaseSize(input.chart_spec.baseSize ?? housePresets?.baseSize, sizeCeiling);
     const canvasSize = baseSize;
-    const options = input.options ?? {};
+    const options = themePresets.options ?? {};
     let chartTemplate = plGetTemplateDef(chartType) as ChartTemplateDef;
     if (!chartTemplate) {
         throw new Error(`Unknown Plotly chart type: ${chartType}. Use plAllTemplateDefs to see available types.`);
@@ -104,8 +116,20 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     const normalizedProps = normalizeChartProperties(
         chartTemplate.properties, input.chart_spec.chartProperties,
     );
-    const chartProperties = normalizedProps.chartProperties;
+    let chartProperties = normalizedProps.chartProperties;
     warnings.push(...normalizedProps.warnings);
+
+    // A house's rules about the chart itself — points on a line, a bump chart
+    // left unsmoothed — change what is drawn, not how it is dressed, so they
+    // are folded in before the pipeline reads the properties. Anything the
+    // caller stated already is left alone. Mirrors the VL assembler.
+    if (themeSpec && !chartProperties) chartProperties = {};
+    const chartDefaultsReport = chartProperties
+        ? resolveChartDefaults(
+            themeSpec, chartType, chartTemplate.properties,
+            input.chart_spec.chartProperties, chartProperties,
+        )
+        : [];
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
@@ -419,6 +443,67 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // HEADLINE
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Written before theming, because whether the chart has a headline is a
+    // fact the theme reasons about: a house that omits axis titles is leaning
+    // on this line to name the measure. The deck rides along on `_deck` —
+    // Plotly 2.x has no `title.subtitle`, so realization writes it as a second
+    // styled line rather than as a block of its own.
+    const headline = input.chart_spec.title?.trim();
+    const deck = input.chart_spec.subtitle?.trim();
+    if (headline || deck) {
+        figure.layout.title = {
+            ...(typeof figure.layout.title === 'object' ? figure.layout.title : {}),
+            text: headline ?? '',
+            ...(deck ? { _deck: deck } : {}),
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // THEME (level 2 grounding → level 3 realization)
+    // ═══════════════════════════════════════════════════════════════════════
+    //
+    // Runs last: the theme is a style layer over a chart that already fits, so
+    // it must see the finished figure. Grounding runs whether or not a house
+    // was named — some design questions (can this chart carry its values, and
+    // at this density should it?) are Flint's own. Only realization is gated.
+    const markTypes = plCollectMarkTypes(figure);
+    const stackedMode = figure.layout?.barmode === 'relative' || figure.layout?.barmode === 'stack'
+        || (figure.data ?? []).some((t: any) => t?.stackgroup != null);
+    const design = groundTheme(themeSpec ?? {}, {
+        chartType,
+        markChannel: chartTemplate.markCognitiveChannel,
+        markTypes,
+        namesOnMarks: (chartProperties as any)?.showSeriesInLabel === true,
+        channelSemantics,
+        resolvedTypes: declaration.resolvedTypes as Record<string, string> | undefined,
+        axisFlags: declaration.axisFlags,
+        positional: plCollectPositional(figure, channelSemantics),
+        layout: layoutResult,
+        table: values,
+        canvasSize,
+        stacked: stackedMode,
+        partToWhole: markTypes.includes('arc'),
+        titled: Boolean(figure.layout?.title?.text),
+        hostSurface: (input.options as any)?.background,
+        valueLabels: resolvePlValueLabelChoice(chartProperties),
+    });
+
+    if (themeSpec) {
+        const realizeReport = realizeThemePlotly(figure, design, values);
+        figure._theme = {
+            id: design.themeId,
+            report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],
+            decisions: design,
+        };
+    } else {
+        realizeValueLabelsPlotly(figure, design, values);
+        fitPlotlyTitle(figure);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // RESULT
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -443,8 +528,7 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     return figure;
 }
 
-/** Inspect the Plotly legacy (composed) view transformation surface for an input. */
-export function getPlotlyPivot(input: ChartAssemblyInput): PivotSurface | undefined {
+/** Inspect the Plotly legacy (composed) view transformation surface for an input. */export function getPlotlyPivot(input: ChartAssemblyInput): PivotSurface | undefined {
     const spec = assemblePlotly(input);
     return spec && spec._pivot ? (spec._pivot as PivotSurface) : undefined;
 }
@@ -453,4 +537,19 @@ export function getPlotlyPivot(input: ChartAssemblyInput): PivotSurface | undefi
 export function getPlotlyTransform(input: ChartAssemblyInput): TransformSurface | undefined {
     const spec = assemblePlotly(input);
     return spec && spec._transform ? (spec._transform as TransformSurface) : undefined;
+}
+
+/**
+ * The reader's own answer to "print the numbers?".
+ *
+ * `showValueLabels` is the control; `showTextLabels` is the older boolean some
+ * templates still pass, where only `true` is meaningful (`false` means the
+ * caller never touched it). Mirrors the Vega-Lite assembler.
+ */
+function resolvePlValueLabelChoice(
+    chartProperties: Record<string, any> | undefined,
+): 'on' | 'off' | undefined {
+    const choice = chartProperties?.showValueLabels;
+    if (typeof choice === 'boolean') return choice ? 'on' : 'off';
+    return chartProperties?.showTextLabels === true ? 'on' : undefined;
 }
