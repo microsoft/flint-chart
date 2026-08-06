@@ -23,7 +23,7 @@
  * more here than a wall with no seams.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
@@ -32,6 +32,7 @@ import { BACKENDS } from '../shared/supported-backends';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteShell } from '../components/SiteShell';
+import { ThemeChartModal } from '../components/ThemeChartModal';
 import { siteTheme } from '../shared/theme';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 
@@ -180,147 +181,6 @@ function Tile({
         {blurb}
       </div>
     </article>
-  );
-}
-
-function ThemeChartModal({
-  c,
-  theme,
-  onClose,
-}: {
-  c: PreviewCase;
-  theme: string | undefined;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const title = t(`themes.cases.${c.id}.title`, c.title);
-  const blurb = t(`themes.cases.${c.id}.blurb`, c.blurb);
-  const input = useMemo(
-    () => buildInput(c, title, theme, { width: 720, height: 520 }),
-    [c, title, theme],
-  );
-  const compiled = useMemo(() => {
-    try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(input) };
-    } catch (err) {
-      return { ok: false as const, err };
-    }
-  }, [input]);
-  const specText = useMemo(
-    () => JSON.stringify({ ...input, data: '__FLINT_DATA__' }, null, 2).replace('"__FLINT_DATA__"', '{...}'),
-    [input],
-  );
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="theme-chart-modal-title"
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 24,
-        background: 'rgba(0, 0, 0, 0.42)',
-      }}
-    >
-      <div
-        className="theme-chart-modal"
-        onClick={(event) => event.stopPropagation()}
-        style={{
-          width: 'min(1320px, 96vw)',
-          height: 'min(820px, 92vh)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          border: `1px solid ${siteTheme.border}`,
-          borderRadius: 10,
-          background: siteTheme.surface,
-        }}
-      >
-        <header
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '12px 16px',
-            borderBottom: `1px solid ${siteTheme.border}`,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <h2 id="theme-chart-modal-title" style={{ margin: 0, fontSize: 17, lineHeight: 1.3, fontWeight: 600 }}>
-              {title}
-            </h2>
-            <div style={{ marginTop: 2, fontSize: 12.5, color: siteTheme.textMuted }}>{blurb}</div>
-          </div>
-          <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            title="Close"
-            style={{
-              width: 32,
-              height: 32,
-              flex: '0 0 auto',
-              border: 0,
-              borderRadius: 6,
-              background: 'transparent',
-              color: siteTheme.text,
-              fontSize: 22,
-              lineHeight: 1,
-              cursor: 'pointer',
-            }}
-          >
-            ×
-          </button>
-        </header>
-
-        <div className="theme-chart-modal-body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.45fr) minmax(320px, 0.8fr)', flex: 1, minHeight: 0 }}>
-          <div style={{ minWidth: 0, minHeight: 0, padding: 20, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-              <ScaleToFit fill height={650} padding={8}>
-                {compiled.ok ? (
-                  <VegaLiteView spec={compiled.value} />
-                ) : (
-                  <pre style={{ color: siteTheme.error, whiteSpace: 'pre-wrap' }}>
-                    {String((compiled.err as Error)?.message ?? compiled.err)}
-                  </pre>
-                )}
-              </ScaleToFit>
-            </div>
-            <div style={{ paddingTop: 10, fontSize: 11.5, lineHeight: 1.45, color: siteTheme.textMuted }}>
-              {c.source} · {c.license} · {c.data.length} rows
-            </div>
-          </div>
-          <section style={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${siteTheme.border}` }}>
-            <div style={{ padding: '10px 14px', borderBottom: `1px solid ${siteTheme.border}`, fontSize: 12, fontWeight: 600, color: siteTheme.textMuted }}>
-              Flint spec
-            </div>
-            <pre style={{ margin: 0, padding: 16, flex: 1, overflow: 'auto', fontFamily: siteTheme.fontMono, fontSize: 12, lineHeight: 1.5, color: siteTheme.text, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {specText}
-            </pre>
-          </section>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -611,7 +471,7 @@ export function Themes() {
           </div>
         </div>
       </div>
-      {openCase && <ThemeChartModal c={openCase} theme={themeId} onClose={() => setOpenCase(null)} />}
+      {openCase && <ThemeChartModal previewCase={openCase} theme={themeId} onClose={() => setOpenCase(null)} />}
     </SiteShell>
   );
 }
@@ -766,10 +626,5 @@ const wallStyles = `
   }
   @media (prefers-reduced-motion: reduce) {
     .themes-wall--scatter .themes-tile { transition: none; }
-  }
-  @media (max-width: 900px)  {
-    .theme-chart-modal { height: min(900px, 94vh) !important; }
-    .theme-chart-modal-body { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(300px, 1.15fr) minmax(240px, 0.85fr); overflow: auto; }
-    .theme-chart-modal-body > section { border-left: 0 !important; border-top: 1px solid ${siteTheme.border}; }
   }
 `;

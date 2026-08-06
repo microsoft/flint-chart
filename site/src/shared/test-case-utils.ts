@@ -1,5 +1,6 @@
 import type { TestCase } from 'flint-chart/test-data';
 import type { ThemeSpec } from 'flint-chart';
+import { themeOwnsContinuousColor } from './theme-color';
 
 /** Keys that, when present, mean an encoding carries more than a bare field. */
 const ENCODING_OVERRIDE_KEYS = ['type', 'aggregate', 'sortOrder', 'sortBy', 'scheme'] as const;
@@ -185,9 +186,20 @@ export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
   useCanvasCeiling = false,
 ): T {
   if (!theme && !useCanvasCeiling) return input;
+  const chartProperties = input.chart_spec.chartProperties as Record<string, unknown> | undefined;
+  const themedProperties = themeOwnsContinuousColor(theme) && chartProperties
+    ? Object.fromEntries(Object.entries(chartProperties).filter(([key]) => key !== 'colorScheme'))
+    : chartProperties;
   return {
     ...input,
-    chart_spec: { ...input.chart_spec, baseSize: undefined, canvasSize: THEMED_CANVAS_CEILING },
+    chart_spec: {
+      ...input.chart_spec,
+      baseSize: undefined,
+      canvasSize: THEMED_CANVAS_CEILING,
+      ...(themedProperties && Object.keys(themedProperties).length > 0
+        ? { chartProperties: themedProperties }
+        : { chartProperties: undefined }),
+    },
     ...(theme ? { theme_spec: theme } : {}),
   } as T;
 }

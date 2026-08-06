@@ -30,6 +30,7 @@ import type {
   RawEncodingValue,
 } from 'flint-chart';
 import { BACKENDS, type PreviewBackend } from './supported-backends';
+import { themeOwnsContinuousColor } from './theme-color';
 
 /** Control descriptor shared by chart properties and encoding actions. */
 export type ControlSpec =
@@ -227,6 +228,11 @@ export function buildPanelModel(
     chartProperties: input.chart_spec.chartProperties,
   };
   const actions: ResolvedAction[] = (actionSource?.encodingActions ?? [])
+    .filter((action) => !(
+      backend === 'vegalite'
+      && themeOwnsContinuousColor(input.theme_spec)
+      && action.key === 'colorScheme'
+    ))
     .filter((a) => (a.isApplicable ? a.isApplicable(ctx) : true))
     .map((a) => ({
       key: a.key,

@@ -438,7 +438,7 @@
         "label": "Diverging heatmap",
         "caption": "Net user gains and losses by region and month, shown with zero-centered color.",
         "title": "Which titles gained players, and when",
-        "subtitle": "Net new players per game per month in 2025; blue is a gain, red a loss"
+        "subtitle": "Net new players per game per month in 2025; positive values are gains, negative values are losses"
       },
       "waterfall": {
         "label": "Waterfall",

@@ -4,6 +4,7 @@ import { type ThemeSpec } from 'flint-chart';
 import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GitHubIcon, LabIcon, SiteShell } from '../components/SiteShell';
+import { ThemeChartModal } from '../components/ThemeChartModal';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
@@ -320,78 +321,6 @@ function PreviewTile({
   );
 }
 
-function ChartModal({
-  previewCase,
-  theme,
-  onClose,
-}: {
-  previewCase: PreviewCase;
-  theme: ThemeSpec;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const title = t(`themes.cases.${previewCase.id}.title`, previewCase.title);
-  const blurb = t(`themes.cases.${previewCase.id}.blurb`, previewCase.blurb);
-  const input = useMemo(
-    () => buildInput(previewCase, title, theme, { width: 720, height: 520 }),
-    [previewCase, theme, title],
-  );
-  const compiled = useMemo(() => {
-    try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(input) };
-    } catch (error) {
-      return { ok: false as const, error };
-    }
-  }, [input]);
-  const specText = useMemo(
-    () => JSON.stringify({ ...input, data: '__FLINT_DATA__' }, null, 2).replace('"__FLINT_DATA__"', '{...}'),
-    [input],
-  );
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [onClose]);
-
-  return (
-    <div className="theme-lab-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="theme-lab-modal-title" onClick={onClose}>
-      <div className="theme-lab-modal" onClick={(event) => event.stopPropagation()}>
-        <header>
-          <div>
-            <h2 id="theme-lab-modal-title">{title}</h2>
-            <p>{blurb}</p>
-          </div>
-          <button type="button" onClick={onClose} aria-label={t('themeLab.close')} title={t('themeLab.close')} autoFocus>×</button>
-        </header>
-        <div className="theme-lab-modal-body">
-          <section className="theme-lab-modal-chart">
-            <ScaleToFit fill height={650} padding={8}>
-              {compiled.ok ? (
-                <VegaLiteView spec={compiled.value} />
-              ) : (
-                <pre className="theme-lab-error">{String((compiled.error as Error)?.message ?? compiled.error)}</pre>
-              )}
-            </ScaleToFit>
-            <small>{previewCase.source} · {previewCase.license} · {t('themeLab.rows', { count: previewCase.data.length })}</small>
-          </section>
-          <section className="theme-lab-modal-spec">
-            <strong>{t('themeLab.flintSpec')}</strong>
-            <pre>{specText}</pre>
-          </section>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function parseThemeSpec(text: string, objectError: string): ThemeSpec {
   const value = JSON.parse(text) as unknown;
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -550,7 +479,7 @@ export function ThemeLab() {
 
         </div>
       </div>
-      {openCase && <ChartModal previewCase={openCase} theme={customTheme} onClose={() => setOpenCase(null)} />}
+      {openCase && <ThemeChartModal previewCase={openCase} theme={customTheme} onClose={() => setOpenCase(null)} />}
     </SiteShell>
   );
 }
@@ -605,25 +534,9 @@ const styles = `
   .theme-lab-tile:nth-child(6n) { --scatter-x: -6px; --scatter-y: 8px; --scatter-r: 1deg; }
   .theme-lab-tile-caption { margin-top: 2px; min-height: 28px; overflow: hidden; color: ${siteTheme.navInactive}; display: -webkit-box; font-size: 10.5px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .theme-lab-error { margin: 0; color: ${siteTheme.error}; font-size: 11px; white-space: pre-wrap; }
-  .theme-lab-modal-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 24px; background: rgba(0, 0, 0, 0.42); }
-  .theme-lab-modal { position: relative; isolation: isolate; width: min(1320px, calc(100vw - 48px)); height: min(820px, calc(100vh - 48px)); display: flex; flex-direction: column; overflow: hidden; border: 1px solid ${siteTheme.border}; border-radius: 10px; background: ${siteTheme.surface}; box-shadow: 0 20px 60px rgba(31, 35, 40, 0.24); }
-  .theme-lab-modal > header { position: relative; z-index: 10; display: flex; align-items: center; gap: 12px; flex: 0 0 auto; padding: 12px 16px; border-bottom: 1px solid ${siteTheme.border}; background: ${siteTheme.surface}; }
-  .theme-lab-modal > header > div { min-width: 0; }
-  .theme-lab-modal h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 600; }
-  .theme-lab-modal header p { margin: 2px 0 0; color: ${siteTheme.textMuted}; font-size: 12.5px; }
-  .theme-lab-modal header button { position: relative; z-index: 11; width: 32px; height: 32px; flex: 0 0 auto; margin-left: auto; border: 0; border-radius: 6px; background: transparent; color: ${siteTheme.text}; font-size: 22px; line-height: 1; cursor: pointer; }
-  .theme-lab-modal header button:hover, .theme-lab-modal header button:focus-visible { background: ${siteTheme.hover}; outline: none; }
-  .theme-lab-modal-body { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr); flex: 1; min-height: 0; overflow: hidden; }
-  .theme-lab-modal-chart { position: relative; isolation: isolate; min-width: 0; min-height: 0; overflow: hidden; padding: 20px; display: flex; flex-direction: column; }
-  .theme-lab-modal-chart > div { position: relative; flex: 1; min-height: 0; }
-  .theme-lab-modal-chart small { padding-top: 10px; color: ${siteTheme.textMuted}; font-size: 11.5px; }
-  .theme-lab-modal-spec { position: relative; z-index: 2; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; border-left: 1px solid ${siteTheme.border}; background: ${siteTheme.surface}; }
-  .theme-lab-modal-spec > strong { padding: 10px 14px; border-bottom: 1px solid ${siteTheme.border}; color: ${siteTheme.textMuted}; font-size: 12px; }
-  .theme-lab-modal-spec pre { flex: 1; margin: 0; padding: 16px; overflow: auto; color: ${siteTheme.text}; font-family: ${siteTheme.fontMono}; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
   @media (max-width: 1120px) { .theme-lab-workspace { grid-template-columns: minmax(0, 1fr); } .theme-lab-panel { position: relative; top: auto; height: 620px; } }
   @media (max-width: 840px) { .theme-lab-intro { grid-template-columns: minmax(0, 1fr); gap: 26px; } .theme-lab-title-row { align-items: flex-start; } }
   @media (max-width: 940px) { .theme-lab-wall { grid-template-columns: repeat(3, minmax(0, 220px)); } }
   @media (max-width: 700px) { .theme-lab-inner { padding: 28px 20px 72px; } .theme-lab-demo-bar { align-items: flex-start; flex-direction: column; gap: 4px; } .theme-lab-demo-options { width: 100%; } .theme-lab-wall { grid-template-columns: repeat(2, minmax(0, 220px)); padding: 22px 8px 30px; } .theme-lab-tile { margin: -1px -2px -16px; } }
   @media (max-width: 420px) { .theme-lab-wall { grid-template-columns: minmax(0, 220px); } }
-  @media (max-width: 900px) { .theme-lab-modal { height: min(900px, 94vh); } .theme-lab-modal-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(300px, 1.15fr) minmax(240px, 0.85fr); overflow: auto; } .theme-lab-modal-spec { border-left: 0; border-top: 1px solid ${siteTheme.border}; } }
 `;
