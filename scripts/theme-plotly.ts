@@ -41,6 +41,14 @@ const COLUMNS = ['flint', ...THEME_IDS];
 /** The starting set: one chart of each core family, on real data. */
 const LAB_IDS = ['browser-pie', 'causes-death', 'keeling', 'penguins', 'life-expectancy', 'temp-heatmap'];
 
+/** The second lab set: the families the first set never touched. */
+const LAB2_IDS = [
+    'electricity-stacked', 'medals-grouped', 'population-region', 'penguins-box',
+    'population-waterfall', 'education-funnel', 'stock-candle', 'olympic-bump',
+    'us-pyramid', 'cities-map', 'renewable-kpi', 'release-gantt',
+    'oecd-unemployment-facet', 'faithful-hist', 'nutrition-radar', 'renewables-gauge',
+];
+
 interface Case {
     id: string;
     heading: string;
@@ -77,6 +85,8 @@ function corpus(set: string, filters: string[]): Case[] {
     let cases: Case[];
     if (set === 'r2') {
         cases = R2_CASES.map(r2Wrapped);
+    } else if (set === 'lab2') {
+        cases = PREVIEW_CASES.filter((c) => LAB2_IDS.includes(c.id)).map(realCase);
     } else if (set === 'real') {
         cases = PREVIEW_CASES.map(realCase);
     } else {

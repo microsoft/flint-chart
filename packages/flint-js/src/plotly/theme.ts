@@ -30,7 +30,13 @@
  * =============================================================================
  */
 
-import type { DesignDecisions, ThemeReport, ResolvedAxis, ResolvedText } from '../core/theme/types';
+import type {
+    DesignDecisions,
+    ThemeReport,
+    ResolvedAxis,
+    ResolvedText,
+    ResolvedSeriesInk,
+} from '../core/theme/types';
 import { parseColor, toHex, mixHex, isDarkSurface, contrastingInk, sampleRamp } from '../core/theme/presence';
 
 type Say = (path: string, message: string) => void;
@@ -250,6 +256,7 @@ export function realizeThemePlotly(figure: any, d: DesignDecisions, table: any[]
     figure.layout ??= {};
 
     applySurface(figure, d);
+    applyGeoSurface(figure, d);
     const titleH = applyTypography(figure, d);
     applyAxes(figure, d, table, say);
     applyMarks(figure, d, table, say);
@@ -316,6 +323,13 @@ function applyTypography(figure: any, d: DesignDecisions): number {
         color: d.text.primary,
     };
 
+    // A card states its own caption and number inside the trace.
+    for (const trace of figure.data ?? []) {
+        if (trace?.type !== 'indicator') continue;
+        trace.title = { ...(trace.title ?? {}), font: { ...(trace.title?.font ?? {}), ...(d.font ? { family: d.font } : {}), color: d.text.secondary } };
+        trace.number = { ...(trace.number ?? {}), font: { ...(trace.number?.font ?? {}), ...(d.font ? { family: d.font } : {}), color: d.text.primary } };
+    }
+
     const title = layout.title;
     const headlineText = typeof title === 'string' ? title : title?.text;
     if (!headlineText) return 0;
@@ -336,7 +350,7 @@ function applyTypography(figure: any, d: DesignDecisions): number {
     );
     const lines = [styleText(headLines.join('<br>'), h)];
 
-    let height = headLines.length * headlineSize * 1.35 + 10;
+    let height = 8 + headLines.length * headlineSize * 1.35 + 6;
     if (deckText) {
         const size = deck.fontSize ?? 12;
         const color = deck.color ?? d.text.secondary;
@@ -365,15 +379,19 @@ function applyTypography(figure: any, d: DesignDecisions): number {
 }
 
 /**
- * Where the title block has to be anchored to sit clear of the top edge.
+ * Where the title block has to be anchored to sit 8px clear of the top edge.
  *
- * A multi-line Plotly title grows *upward* from its anchor, so a two-line
- * headline anchored at the container top has its first line off the page. The
- * anchor drops by the lines above it.
+ * Plotly's `yanchor: 'top'` on a title is not a top anchor: measured, the block
+ * comes out *centred* on `y`, with a constant offset of about 0.59 of a line
+ * from the block's own baseline. So a two-line headline placed at the top of
+ * the container has its first line off the page. Solving that measurement for
+ * "block top = 8px" gives the expression below; it is calibrated against the
+ * real renderer for one, two and three lines.
  */
 function titleY(layout: any, lines: number, fontSize: number): number {
     const height = Number(layout.height) || 300;
-    return 1 - (8 + Math.max(0, lines - 1) * fontSize * 1.35) / height;
+    const line = fontSize * 1.35;
+    return 1 - (8 + line * (Math.max(1, lines) / 2 - 0.59)) / height;
 }
 
 /** Break a line of text to a pixel width, at word boundaries where it can. */
@@ -413,6 +431,7 @@ function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legend
     margin.t = Math.max(before, need);
     const grew = margin.t - before;
     if (grew > 0 && Number(layout.height)) layout.height = Math.round(layout.height + grew);
+    reserveAboveDomains(figure, need);
 
     // The key sits between the title and the plot, in the room just made. It
     // hangs from just under the title rather than standing on the plot: a key
@@ -424,6 +443,62 @@ function layoutTopChrome(figure: any, d: DesignDecisions, titleH: number, legend
         layout.legend.y = 1 + Math.max(8, margin.t - titleH) / plotH;
     }
     void d;
+}
+
+/**
+ * Push domain-positioned traces below the title block.
+ *
+ * A KPI card, gauge or pie placed by `domain` is laid out in fractions of the
+ * *paper*, not of the plotting rectangle, so growing the top margin does not
+ * move it: the headline lands on top of the number. The domain has to be
+ * shortened by hand.
+ */
+function reserveAboveDomains(figure: any, need: number): void {
+    const height = Number(figure?.layout?.height) || 0;
+    if (!height || need <= 0) return;
+    const top = Math.max(0.25, 1 - need / height);
+    const shorten = (owner: any): void => {
+        const y = owner?.domain?.y;
+        if (!Array.isArray(y) || y.length !== 2) return;
+        if (Number(y[1]) > top) owner.domain = { ...owner.domain, y: [Number(y[0]) * top, top] };
+    };
+    for (const trace of figure.data ?? []) shorten(trace);
+    // A polar, geographic or ternary plot is placed the same way, but from the
+    // layout rather than the trace.
+    for (const key of Object.keys(figure.layout ?? {})) {
+        if (!/^(polar|geo|ternary|scene|smith|map|mapbox)\d*$/.test(key)) continue;
+        const owner = figure.layout[key];
+        if (owner?.domain?.y) shorten(owner);
+        else if (owner && typeof owner === 'object') owner.domain = { y: [0, top] };
+    }
+}
+
+/**
+ * A map has its own canvas, land and borders, none of which are axes.
+ *
+ * Left alone they stay Plotly's white-and-grey, which puts a white card in the
+ * middle of a dark house.
+ */
+function applyGeoSurface(figure: any, d: DesignDecisions): void {
+    const layout = figure?.layout ?? {};
+    const plot = d.surface.plot ?? d.surface.canvas;
+    for (const key of Object.keys(layout)) {
+        if (!/^geo\d*$/.test(key)) continue;
+        const geo = layout[key];
+        if (!geo || typeof geo !== 'object') continue;
+        const land = mixHex(plot, d.text.primary, 0.1);
+        const border = mixHex(plot, d.text.primary, 0.28);
+        Object.assign(geo, {
+            bgcolor: plot,
+            landcolor: land,
+            oceancolor: plot,
+            lakecolor: plot,
+            subunitcolor: border,
+            countrycolor: border,
+            coastlinecolor: border,
+            framecolor: border,
+        });
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -480,8 +555,10 @@ function applyAxis(ax: any, a: ResolvedAxis, d: DesignDecisions, say: Say, key: 
         ax.ticklen = 0;
     }
 
-    // Tick labels
-    ax.showticklabels = a.label.show !== false;
+    // Tick labels. A facet grid hides the labels on every panel but the
+    // outermost, which is a fact about the layout, not a house preference —
+    // turning them back on prints the same scale four times.
+    ax.showticklabels = a.label.show !== false && ax.showticklabels !== false;
     if (ax.showticklabels) {
         ax.tickfont = { ...(ax.tickfont ?? {}), ...fontOf(a.label, d.font) };
         if (a.label.angle != null) ax.tickangle = a.label.angle;
@@ -508,7 +585,15 @@ function applyAxis(ax: any, a: ResolvedAxis, d: DesignDecisions, say: Say, key: 
         }
     }
 
-    if (a.tickCount != null && ax.type !== 'category') ax.nticks = a.tickCount;
+    // A tick budget is stated for a whole axis. A facet panel holds a fraction
+    // of the width, so it gets that fraction of the budget — otherwise the
+    // last tick of one panel prints on top of the first tick of the next.
+    if (a.tickCount != null && ax.type !== 'category') {
+        const dom = Array.isArray(ax.domain) && ax.domain.length === 2
+            ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
+            : 1;
+        ax.nticks = Math.max(2, Math.round(a.tickCount * (Number.isFinite(dom) ? dom : 1)));
+    }
 }
 
 /**
@@ -715,16 +800,26 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         }
     }
 
-    // A sized mark's range: Plotly sizes by `sizeref` against the largest datum.
+    // A sized mark's range. `marker.size` has already been mapped to pixel
+    // diameters by the template, so the house's range is imposed by rescaling
+    // those diameters — going through `sizeref` instead would treat drawn
+    // pixels as data and flatten the differences under its square root.
     if (m.sizeRange) {
+        const [lo, hi] = m.sizeRange;
         for (const trace of figure.data ?? []) {
             const sizes = trace?.marker?.size;
             if (!Array.isArray(sizes)) continue;
-            const max = Math.max(...sizes.filter((s: any) => Number.isFinite(s)));
-            if (!(max > 0)) continue;
-            trace.marker.sizemode = 'area';
-            trace.marker.sizeref = (2 * max) / (m.sizeRange[1] || 400);
-            trace.marker.sizemin = m.minSize ? diameterOf(m.minSize) : 3;
+            const areas = sizes.map((dm: any) => Math.PI * (Number(dm) / 2) ** 2);
+            const finite = areas.filter((a: number) => Number.isFinite(a) && a > 0);
+            if (!finite.length) continue;
+            const min = Math.min(...finite);
+            const max = Math.max(...finite);
+            const floor = m.minSize != null ? Math.max(lo, m.minSize) : lo;
+            trace.marker.size = areas.map((a: number) => {
+                if (!Number.isFinite(a)) return diameterOf(floor);
+                const t = max > min ? (a - min) / (max - min) : 1;
+                return diameterOf(floor + t * (hi - floor));
+            });
         }
     }
 
@@ -763,6 +858,50 @@ function plotlyLineShape(interpolate: string): string | undefined {
  * carries per-point colours (a status waterfall, a colour-mapped scatter) is
  * re-stated value by value.
  */
+/**
+ * Paint the direction blocks of a waterfall, candlestick or OHLC trace.
+ *
+ * Where the house names no status inks the template's colours stand: an
+ * arbitrary indexed ink on "down" would say the wrong thing.
+ */
+function paintDirectional(trace: any, d: DesignDecisions, say: Say): void {
+    const status = d.series.status;
+    let positive = status?.positive;
+    let negative = status?.negative;
+    let neutral = status?.neutral;
+
+    if (!positive && !negative && !neutral) {
+        // A candlestick's red and green are a convention its readers rely on,
+        // so without status inks it is left alone. A waterfall's up and down
+        // are only contributions, and can take the indexed set.
+        if (trace.type !== 'waterfall') {
+            say('ink.series', 'rise/fall colours kept — the house names no status inks');
+            return;
+        }
+        const inks = d.series.categorical ?? [];
+        if (!inks.length) return;
+        positive = inks[0];
+        negative = inks[1] ?? inks[0];
+        neutral = mixHex(d.text.primary, d.surface.plot ?? d.surface.canvas, 0.45);
+        say('ink.series', 'no status inks — the waterfall takes the indexed set, totals a neutral');
+    }
+
+    const blocks: Array<[string, string | undefined]> = [
+        ['increasing', positive],
+        ['decreasing', negative ?? positive],
+        ['totals', neutral ?? positive],
+    ];
+    for (const [key, ink] of blocks) {
+        const block = trace[key];
+        if (!block || !ink) continue;
+        if (block.marker) block.marker = { ...block.marker, color: ink };
+        else if (block.line) block.line = { ...block.line, color: ink };
+        else trace[key] = { ...block, marker: { color: ink } };
+        if (block.fillcolor != null) block.fillcolor = ink;
+    }
+    say('ink.series', 'rise, fall and total take the house status inks');
+}
+
 function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say): void {
     const s = d.series;
     if (s.exhausted) {
@@ -807,6 +946,15 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
             continue;
         }
 
+        // A waterfall or a candlestick states its colours by *direction*, in
+        // `increasing`/`decreasing`/`totals` blocks. Direction is not a series,
+        // so the categorical set says nothing about it — the house's status
+        // inks do.
+        if (trace.increasing || trace.decreasing || trace.totals) {
+            paintDirectional(trace, d, say);
+            continue;
+        }
+
         const perPoint = Array.isArray(trace.marker?.color)
             ? (trace.marker.color as unknown[]).filter(isLiteralColor)
             : null;
@@ -821,6 +969,14 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
                 return seen.get(c);
             });
             continue;
+        }
+
+        // The wedge between funnel stages is furniture, not data: it takes a
+        // quiet mix of the surface and the text, like a grid line would.
+        if (trace.connector) {
+            const quiet = mixHex(d.surface.plot ?? d.surface.canvas, d.text.primary, 0.25);
+            if (trace.connector.fillcolor != null) trace.connector.fillcolor = quiet;
+            if (trace.connector.line) trace.connector.line = { ...trace.connector.line, color: quiet };
         }
 
         const ink = inks[seriesIndex % inks.length];
@@ -921,9 +1077,14 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
         });
     }
 
-    // A horizontal key above the plot is chrome the figure has to pay for.
-    if (layout.legend.orientation === 'h' && layout.legend.y > 1) {
-        return horizontalLegendHeight(figure, l.label.fontSize ?? 11, needsMarkup(l.label).bold);
+    // A key above the plot is chrome the figure has to pay for, however it is
+    // stacked.
+    if (layout.legend.y > 1) {
+        if (layout.legend.orientation === 'h') {
+            return horizontalLegendHeight(figure, l.label.fontSize ?? 11, needsMarkup(l.label).bold);
+        }
+        const rows = legendEntries(figure).length;
+        return rows ? rows * ((l.label.fontSize ?? 11) + 12) + 8 : 0;
     }
     // A key beside the plot is paid for in width, for the same reason.
     if (layout.legend.orientation === 'v' && layout.legend.x >= 1) {
@@ -1092,6 +1253,59 @@ function applyFacetChrome(figure: any, d: DesignDecisions): void {
 // Data labels
 // ---------------------------------------------------------------------------
 
+/**
+ * Does this axis show unsigned labels for signed values?
+ *
+ * That is how a mirrored chart — a pyramid, a diverging bar — is built: one
+ * side is negative and the axis relabels it. It is a fact about the compiled
+ * chart, readable without knowing which chart type made it.
+ */
+function isMirroredAxis(ax: any): boolean {
+    const vals = ax?.tickvals;
+    const text = ax?.ticktext;
+    if (!Array.isArray(vals) || !Array.isArray(text) || vals.length !== text.length) return false;
+    return vals.some((v: any, i: number) => Number(v) < 0 && !String(text[i]).includes('-')
+        && !String(text[i]).includes('\u2212'));
+}
+
+/**
+ * Blank the labels of segments too thin to hold one.
+ *
+ * `texttemplate` takes an array, one entry per point, so a per-segment
+ * decision is expressible. Returns how many were dropped.
+ */
+function blankSmallSegments(trace: any, figure: any, measure: 'x' | 'y', fontSize: number): number {
+    const values = trace[measure];
+    if (!Array.isArray(values)) return 0;
+    const layout = figure.layout ?? {};
+    const across = measure === 'y'
+        ? (Number(layout.height) || 300) - (layout.margin?.t ?? 0) - (layout.margin?.b ?? 0)
+        : (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0);
+
+    // The stack, not the trace, sets the scale: sum what every trace of the
+    // same orientation contributes to each band.
+    const totals: number[] = [];
+    for (const t of figure.data ?? []) {
+        const v = t?.[measure];
+        if (!Array.isArray(v) || String(t.type ?? '') !== 'bar') continue;
+        v.forEach((n: any, i: number) => {
+            totals[i] = (totals[i] ?? 0) + Math.abs(Number(n) || 0);
+        });
+    }
+    const span = Math.max(...totals.filter(Number.isFinite), 0);
+    if (!span || !Number.isFinite(across) || across <= 0) return 0;
+
+    const min = (span * fontSize * 1.8) / across;
+    const template = String(trace.texttemplate);
+    let dropped = 0;
+    trace.texttemplate = values.map((v: any) => {
+        if (Math.abs(Number(v) || 0) >= min) return template;
+        dropped++;
+        return '';
+    });
+    return dropped;
+}
+
 /** Trace families that can print a number on the mark. */
 const LABELABLE = new Set(['bar', 'arc', 'point', 'line']);
 
@@ -1138,7 +1352,51 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
             // `insideMinValue`/`outsideMaxValue`. `auto` hands that decision to
             // the renderer, which can measure the drawn bar; `outside` is
             // honoured literally because it is a house habit, not a fit.
-            trace.textposition = dl.placement === 'outsideMark' ? 'outside' : 'auto';
+            // A segment of a stack has no outside — "outside" is the middle of
+            // the neighbouring segment — so a label that will not fit inside is
+            // dropped instead of moved, and it is never turned on its side.
+            const stacked = /^(stack|relative)$/.test(String(figure.layout?.barmode ?? ''));
+            // A population pyramid states one side of the split as negative
+            // numbers and then hides the sign on the axis. The label has to
+            // tell the same story the axis does.
+            const axKey = measure === 'x'
+                ? String(trace.xaxis ?? 'x').replace('x', 'xaxis')
+                : String(trace.yaxis ?? 'y').replace('y', 'yaxis');
+            const mirrored = isMirroredAxis(figure.layout?.[axKey]);
+            if (mirrored) {
+                const abs = (trace[measure] as any[]).map((v) => Math.abs(Number(v) || 0));
+                const cd = trace.customdata;
+                // The template may already be carrying the unsigned value for
+                // its own tooltip; reuse it rather than trample it.
+                const reusable = Array.isArray(cd) && cd.length === abs.length
+                    && cd.every((v: any, i: number) => Number(v) === abs[i]);
+                if (cd == null || reusable) {
+                    if (cd == null) trace.customdata = abs;
+                    trace.texttemplate = `%{customdata${fmt}}${unit}`;
+                    say('dataLabels.text', 'a mirrored measure prints its labels unsigned, as its axis does');
+                } else {
+                    say('dataLabels.text', 'a mirrored measure kept its signed label — the trace needs its own customdata');
+                }
+            }
+            trace.textposition = stacked || mirrored
+                ? 'inside'
+                : dl.placement === 'outsideMark' ? 'outside' : 'auto';
+            trace.textangle = 0;
+            if (stacked) {
+                trace.insidetextanchor = 'middle';
+                trace.constraintext = 'both';
+                // Left to itself Plotly shrinks a label until it fits its
+                // segment, which puts three type sizes on one chart. A segment
+                // too thin for the house's size loses its label instead.
+                const dropped = blankSmallSegments(trace, figure, measure, dl.text.fontSize ?? 11);
+                if (dropped) {
+                    say(
+                        'dataLabels.show',
+                        `${dropped} stacked segment(s) too thin to hold a label at the house's size`,
+                    );
+                }
+                say('dataLabels.placement', 'stacked segments keep their labels inside, or drop them');
+            }
             trace.cliponaxis = false;
             trace.textfont = fontOf(dl.text, d.font);
             if (dl.inkMode === 'contrastWithMark') {
@@ -1202,10 +1460,11 @@ export function fitPlotlyTitle(figure: any): void {
         yanchor: 'top',
         yref: 'container',
     };
-    const need = all.length * size * 1.35 + 16;
+    const need = 8 + all.length * size * 1.35 + 8;
     const margin = (layout.margin ??= {});
     const before = margin.t ?? 0;
     margin.t = Math.max(before, need);
     const grew = margin.t - before;
     if (grew > 0 && Number(layout.height)) layout.height = Math.round(layout.height + grew);
+    reserveAboveDomains(figure, need);
 }
