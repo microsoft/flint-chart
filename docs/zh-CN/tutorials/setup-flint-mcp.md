@@ -15,15 +15,22 @@
 | `render_chart` | 渲染静态 PNG 或 SVG。客户端不支持 MCP Apps，或需要导出图片时使用。 |
 | `compile_chart` | 生成可供 Vega-Lite、ECharts 或 Chart.js 直接使用的 JSON 规范。 |
 | `list_chart_types` | 列出支持的图表类型和编码通道。 |
+| `list_themes` | 列出内置视觉主题，并获取所选预设的使用指南。 |
 
 | 资源或提示词 | 用途 |
 |--------------------|------|
 | `flint://agent-skill` | 加载随服务器提供的 Flint 图表编写指南。 |
+| `flint://theme-skill` | 加载随服务器提供的 ThemeSpec 编写指南。 |
 | `flint://chart-types` | 浏览支持的图表目录。 |
 | `ui://flint-chart/chart-view.html` | `create_chart_view` 使用的 MCP App 界面资源。 |
 | `author_flint_chart` | 加载 Flint 图表编写指南的提示词。 |
+| `author_flint_theme` | 加载 Flint 主题编写指南的提示词。 |
 
 调用图表工具前，请让客户端加载 `flint://agent-skill`，或运行 `author_flint_chart` 提示词。编写指南包含有效的 `chartType` 名称、字段与通道的对应关系、语义类型、数据绑定规则，以及各渲染工具的适用场景。
+
+创建自定义视觉识别时，请加载 `flint://theme-skill`，或运行
+`author_flint_theme`。主题编写技能用于生成可复用的 ThemeSpec；
+`list_themes` 则用于查询 Flint 内置预设及其使用指南。
 
 ## 要求
 

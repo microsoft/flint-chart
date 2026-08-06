@@ -42,13 +42,15 @@ Options:
   -h, --help              Print this help and exit.
 
 Tools:
-  render_chart, compile_chart, validate_chart, list_chart_types
+  create_chart_view, render_chart, compile_chart, validate_chart,
+  list_chart_types, list_themes
 
 Resources:
-  flint://agent-skill, flint://chart-types
+  flint://agent-skill, flint://theme-skill, flint://chart-types,
+  ui://flint-chart/chart-view.html
 
-Prompt:
-  author_flint_chart
+Prompts:
+  author_flint_chart, author_flint_theme
 
 Example MCP client config:
   { "command": "npx", "args": ["-y", "flint-chart-mcp"] }

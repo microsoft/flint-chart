@@ -28,10 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `listThemePresets()`, and `resolveThemeSpec()`.
 - Theme discovery in the MCP server through `list_themes`, plus preset selection
   in the interactive MCP App.
+- Bundled ThemeSpec authoring guidance through the `flint://theme-skill`
+  resource and `author_flint_theme` prompt. Custom ThemeSpecs remain available
+  in the MCP App while callers compare presets, without becoming global themes.
 - A public visual-theme explorer with regular grid and screenshot-friendly
   scattered-poster layouts, a compact two-row banner composition, large
   chart/spec previews, a complete **Using themes** guide, and
   preset/custom/inherited live examples on the Flint project site.
+- Theme Lab, an interactive editor for authoring a ThemeSpec and testing it
+  against a diverse wall of charts, with built-in Signal Studio, Microsoft
+  Fluent, and People's Daily examples.
+- Complete English and Chinese localization for the public theme explorer,
+  Theme Lab, navigation, and MCP theme-authoring guidance.
 
 ### Changed
 
@@ -210,7 +218,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/microsoft/flint-chart/compare/88fbeb5ebf07f18a1cf661ebef71cc570b7425d6...0.3.0
