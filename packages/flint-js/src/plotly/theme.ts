@@ -262,7 +262,14 @@ function applyFurnitureTraces(figure: any, d: DesignDecisions): void {
             const line = trace.marker?.line;
             if (line) trace.marker = { ...trace.marker, line: { ...line, color: d.text.primary } };
             else if (trace.marker) trace.marker = { ...trace.marker, color: d.text.primary };
-            if (trace.line) trace.line = { ...trace.line, color: d.text.primary };
+            // A rule is read against the marks, not with them: it takes the
+            // weight of a grid line rather than the weight of a series.
+            if (trace.line) {
+                trace.line = {
+                    ...trace.line,
+                    color: trace.line.dash ? mixHex(surface, d.text.primary, 0.45) : d.text.primary,
+                };
+            }
             continue;
         }
         if (!isContextTrace(trace)) continue;
@@ -769,12 +776,77 @@ function applyAxis(
     // A tick budget is stated for a whole axis. A facet panel holds a fraction
     // of the width, so it gets that fraction of the budget — otherwise the
     // last tick of one panel prints on top of the first tick of the next.
-    if (a.tickCount != null && ax.type !== 'category') {
+    // A log axis is ticked by decade. Asking it for a number of ticks makes
+    // Plotly name every minor as well — 2, 3, 4 … 9 between each power.
+    if (a.tickCount != null && ax.type !== 'category' && ax.type !== 'log') {
         const dom = Array.isArray(ax.domain) && ax.domain.length === 2
             ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
             : 1;
         ax.nticks = Math.max(2, Math.round(a.tickCount * (Number.isFinite(dom) ? dom : 1)));
     }
+
+    // A budget in *numbers* is not a budget in *room*. Sixteen panels across
+    // one page leave 50px each, which holds one year, not four — and Plotly
+    // will print all four on top of each other rather than drop any.
+    if (key.startsWith('x') && ax.type !== 'category' && ax.type !== 'log' && ax.showticklabels) {
+        const dom = Array.isArray(ax.domain) && ax.domain.length === 2
+            ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
+            : 1;
+        const span = Number.isFinite(dom) ? dom : 1;
+        const each = tickLabelChars(ax) * (a.label.fontSize ?? 11) * 0.58 + 8;
+        const band = width * span - (span < 0.99 ? each * 1.5 : 0);
+        const fits = Math.max(1, Math.floor(band / each));
+        if (fits < (ax.nticks ?? 6)) {
+            ax.nticks = Math.max(2, fits);
+            say('axes.tickCount', `\`${key}\` holds ${fits} label(s) in the room it has, not ${a.tickCount}`);
+        }
+    }
+}
+
+/**
+ * Keep only as many of these ticks as the panel has room to print. Plotly
+ * prints every value in `tickvals`, however narrow the panel, so a grid of
+ * sixteen facets writes four years on top of each other.
+ */
+function fitTicksToBand(figure: any, ax: any, picked: any[], fontSize: number): any[] {
+    const layout = figure.layout ?? {};
+    const width = Math.max(80, (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0));
+    const dom = Array.isArray(ax.domain) && ax.domain.length === 2
+        ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
+        : 1;
+    // A panel's end labels hang over its edges, so a facet has to leave a
+    // label's width of air or its last tick lands on its neighbour's first.
+    const span = Number.isFinite(dom) ? dom : 1;
+    const each = tickLabelChars(ax) * fontSize * 0.58 + 8;
+    const band = width * span - (span < 0.99 ? each * 1.5 : 0);
+    const fits = Math.max(1, Math.floor(band / each));
+    // Panels sit edge to edge, so a tick at the right edge of one prints on
+    // the tick at the left edge of the next. Every panel but the last gives
+    // up its final label.
+    const trimmed = span < 0.99 && Number(ax.domain?.[1]) < 0.99 && picked.length > 1
+        ? picked.slice(0, -1)
+        : picked;
+    picked = trimmed;
+    if (picked.length <= fits) return picked;
+    if (fits < 2) return [picked[0]];
+    // Keep the ends and spread the rest, so the range still reads.
+    const step = (picked.length - 1) / (fits - 1);
+    const out: any[] = [];
+    for (let i = 0; i < fits; i++) out.push(picked[Math.round(i * step)]);
+    return [...new Set(out)];
+}
+
+/** How wide a tick label on this axis reads, in characters. */
+function tickLabelChars(ax: any): number {
+    const fmt = typeof ax.tickformat === 'string' ? ax.tickformat : '';
+    if (fmt.includes('%')) {
+        if (/%d/.test(fmt) || /%b/.test(fmt)) return fmt.replace(/%./g, 'xxx').length;
+        return 4;
+    }
+    if (Array.isArray(ax.ticktext) && ax.ticktext.length) {
+        return Math.max(...ax.ticktext.map((t: any) => String(t).length));
+    }
+    return ax.type === 'date' ? 4 : 5;
 }
 
 /**
@@ -825,14 +897,15 @@ function applyTickLabels(figure: any, d: DesignDecisions, table: any[], say: Say
             if (ax.type === 'category') continue;
             const values = observedValues(ax, table, field);
             if (!values.length) continue;
-            const picked = thin(values, a.tickLabels, key);
+            let picked = thin(values, a.tickLabels, key);
             if (!picked?.length) continue;
-            ax.tickmode = 'array';
-            ax.tickvals = picked;
             if (ax.type === 'date' && !ax.tickformat) {
                 ax.tickformat = dateFormatFor(picked);
                 ax.tickangle = 0;
             }
+            if (ch === 'x') picked = fitTicksToBand(figure, ax, picked, a.label.fontSize ?? 11);
+            ax.tickmode = 'array';
+            ax.tickvals = picked;
             say('structure.axis.tickLabels', `${key} ticked at ${picked.length} observed values (${a.tickLabels})`);
         }
     }
@@ -920,6 +993,8 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
 
     for (const [index, trace] of traces.entries()) {
         if (CHROME_TRACES.has(String(trace?.type))) continue;
+        // Furniture keeps the weight `applyFurnitureTraces` gave it.
+        if (isContextTrace(trace) || isReferenceTrace(trace)) continue;
         const fams = markFamilies(trace);
 
         if (fams.includes('bar') || fams.includes('arc')) {
@@ -1128,6 +1203,7 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
     const inks = s.mode === 'single' ? [s.single] : s.categorical;
     if (!inks?.length) return;
 
+    const recoloured = new Map<string, string>();
     let seriesIndex = 0;
     for (const trace of traces) {
         if (trace.colorscale != null || trace.marker?.colorscale != null) continue;
@@ -1176,6 +1252,8 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
         }
 
         const ink = inks[seriesIndex % inks.length];
+        const was = trace.line?.color ?? trace.marker?.color;
+        if (typeof was === 'string' && isLiteralColor(was)) recoloured.set(was.toLowerCase(), ink);
         if (fams.includes('bar') || fams.includes('arc') || fams.includes('boxplot')) {
             trace.marker = { ...(trace.marker ?? {}), color: ink };
             if (trace.type === 'violin' || trace.type === 'box') trace.line = { ...(trace.line ?? {}), color: ink };
@@ -1192,8 +1270,29 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
         seriesIndex++;
     }
 
+    restateSeriesAnnotations(figure, recoloured, say);
+
     void table;
     void distinctCount;
+}
+
+/**
+ * An annotation printed in a series' colour — the number at the end of a
+ * sparkline row — is naming that series. When the series changes ink, so does
+ * the annotation, or the row says one thing in two colours.
+ */
+function restateSeriesAnnotations(figure: any, recoloured: Map<string, string>, say: Say): void {
+    if (!recoloured.size) return;
+    let moved = 0;
+    for (const note of figure.layout?.annotations ?? []) {
+        const colour = note?.font?.color;
+        if (typeof colour !== 'string') continue;
+        const ink = recoloured.get(colour.toLowerCase());
+        if (!ink || ink.toLowerCase() === colour.toLowerCase()) continue;
+        note.font = { ...note.font, color: ink };
+        moved++;
+    }
+    if (moved) say('ink.series', `${moved} annotation(s) named a series and followed its ink`);
 }
 
 function withAlpha(hex: string, alpha: number): string {
