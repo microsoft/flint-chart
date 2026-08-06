@@ -219,7 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
 [Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.0...HEAD
-[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.1...0.5.0
+[0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/microsoft/flint-chart/compare/88fbeb5ebf07f18a1cf661ebef71cc570b7425d6...0.3.0
