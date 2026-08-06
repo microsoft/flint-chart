@@ -1357,13 +1357,47 @@ function paintDirectional(trace: any, d: DesignDecisions, say: Say): void {
 
 function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say): void {
     const s = d.series;
+    const traces = dataTraces(figure);
+    if (!traces.length) return;
+
+    // A pie is one Plotly trace with one label/value pair per slice. When the
+    // house has an overflow ink, match Vega-Lite's part-to-whole policy: the
+    // largest K shares keep the indexed colours and the remaining shares sum
+    // into one explicit Others slice. Cycling the palette would make unrelated
+    // wedges look identical while still pretending they were distinguishable.
+    const foldedPies = new Set<any>();
+    if (s.overflowTail && s.overflow && s.categorical.length) {
+        for (const trace of traces) {
+            if (trace?.type !== 'pie' || !Array.isArray(trace.labels) || !Array.isArray(trace.values)) continue;
+            const count = Math.min(trace.labels.length, trace.values.length);
+            const keep = s.categorical.length;
+            if (count <= keep) continue;
+            const ranked = Array.from({ length: count }, (_, i) => ({
+                i,
+                label: trace.labels[i],
+                value: Number(trace.values[i]) || 0,
+            })).sort((a, b) => (Math.abs(b.value) - Math.abs(a.value)) || (a.i - b.i));
+            const head = ranked.slice(0, keep);
+            const tail = ranked.slice(keep);
+            const othersLabel = `Others (${tail.length})`;
+            trace.labels = [...head.map((d) => d.label), othersLabel];
+            trace.values = [...head.map((d) => d.value), tail.reduce((sum, d) => sum + d.value, 0)];
+            trace.marker = {
+                ...(trace.marker ?? {}),
+                colors: [...s.categorical.slice(0, keep), s.overflow],
+            };
+            foldedPies.add(trace);
+            say(
+                'ink.series.categorical',
+                `${count} series past ${keep} inks — the ${keep} largest keep a colour, the rest sum into one "${othersLabel}" slice`,
+            );
+        }
+    }
+
     if (s.exhausted) {
         say('ink.series', 'more series than the house names inks for — template palette kept');
         return;
     }
-
-    const traces = dataTraces(figure);
-    if (!traces.length) return;
 
     // A continuous colour channel: the ramp goes on the colorscale, not on a
     // per-trace colour.
@@ -1394,6 +1428,7 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
         // A pie states one colour per slice on `marker.colors` — the whole
         // series lives in one trace.
         if (Array.isArray(trace.marker?.colors)) {
+            if (foldedPies.has(trace)) continue;
             trace.marker.colors = (trace.marker.colors as any[]).map(
                 (c: any, i: number) => (isLiteralColor(c) ? inks[i % inks.length] : c),
             );
