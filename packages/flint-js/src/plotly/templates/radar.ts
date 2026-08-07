@@ -80,7 +80,7 @@ export const plRadarChartDef: ChartTemplateDef = {
         };
 
         const filled = chartProperties?.filled !== false;
-        const fillOpacity = Number(chartProperties?.fillOpacity ?? 0.3);
+        const fillOpacity = Number(chartProperties?.fillOpacity ?? 0.16);
         const palette = getPlotlyPalette(ctx, 'color');
 
         // With a shared ceiling the radius stays in data units; otherwise each
@@ -119,7 +119,7 @@ export const plRadarChartDef: ChartTemplateDef = {
                 subplot: polarKey,
                 _markerRole: 'secondary',
                 line: { color },
-                marker: { color, size: 5 },
+                marker: { color },
                 fill: filled ? ('toself' as const) : undefined,
                 fillcolor: filled ? fillColor(color, fillOpacity) : undefined,
             };
@@ -270,6 +270,6 @@ export const plRadarChartDef: ChartTemplateDef = {
                 { value: false, label: 'Outline only' },
             ],
         } as ChartPropertyDef,
-        { key: 'fillOpacity', label: 'Opacity', type: 'continuous', min: 0.05, max: 0.8, step: 0.05, defaultValue: 0.3 } as ChartPropertyDef,
+        { key: 'fillOpacity', label: 'Opacity', type: 'continuous', min: 0.05, max: 0.8, step: 0.05, defaultValue: 0.16 } as ChartPropertyDef,
     ],
 };

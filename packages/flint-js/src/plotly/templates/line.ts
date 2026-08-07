@@ -51,10 +51,13 @@ export const plLineChartDef: ChartTemplateDef = {
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table, chartProperties } = ctx;
+        const { channelSemantics, table, chartProperties, colorDecisions } = ctx;
         const xCS = channelSemantics.x;
         const yCS = channelSemantics.y;
         const colorField = channelSemantics.color?.field;
+        const colorType = channelSemantics.color?.type;
+        const continuousColor = !!colorField
+            && (colorType === 'quantitative' || colorType === 'temporal');
 
         if (!xCS?.field || !yCS?.field) return;
         const xField = xCS.field;
@@ -92,7 +95,50 @@ export const plLineChartDef: ChartTemplateDef = {
             };
         };
 
-        if (colorField) {
+        if (continuousColor && colorField) {
+            const rows = table;
+            const xVals = xIsDiscrete
+                ? categories!
+                : rows.map(r => mapX(r[xField]));
+            const yVals = xIsDiscrete
+                ? buildCategoryAlignedData(rows, xField, yField, categories!)
+                : rows.map(r => (r[yField] == null ? null : r[yField]));
+            const toColor = colorType === 'temporal'
+                ? (value: any) => value == null ? NaN : new Date(value).getTime()
+                : (value: any) => value == null ? NaN : Number(value);
+            const colorVals = rows.map(r => toColor(r[colorField]));
+            const finite = colorVals.filter(Number.isFinite);
+            const decision = colorDecisions?.color ?? colorDecisions?.group;
+            traces.push(
+                {
+                    type: 'scatter',
+                    mode: 'lines',
+                    x: xVals,
+                    y: yVals,
+                    line: { color: '#cccccc', shape },
+                    hoverinfo: 'skip',
+                    showlegend: false,
+                    _role: 'context',
+                },
+                {
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: colorField,
+                    x: xVals,
+                    y: yVals,
+                    marker: {
+                        color: colorVals,
+                        colorscale: decision?.schemeType === 'diverging' ? 'RdBu' : 'Viridis',
+                        cmin: finite.length ? Math.min(...finite) : 0,
+                        cmax: finite.length ? Math.max(...finite) : 1,
+                        showscale: true,
+                        colorbar: { title: { text: colorField } },
+                    },
+                    showlegend: false,
+                    _markerRole: 'secondary',
+                },
+            );
+        } else if (colorField) {
             let i = 0;
             for (const [name, rows] of groupBy(table, colorField)) {
                 traces.push(makeTrace(name, rows, i));
@@ -121,7 +167,7 @@ export const plLineChartDef: ChartTemplateDef = {
             layout: {
                 xaxis: xAxisSpec,
                 yaxis: yAxisSpec,
-                showlegend: !!colorField,
+                showlegend: !!colorField && !continuousColor,
             },
         };
 

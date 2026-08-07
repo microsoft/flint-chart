@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { assemblePlotly } from '../src';
 import type { ThemeSpec } from '../src/core/theme/types';
+import { THEME_PRESETS } from '../src/core/theme/presets';
 
 /**
  * The Plotly realizer writes the same backend-neutral `DesignDecisions` onto a
@@ -297,6 +298,117 @@ describe('a pie does not name every slice twice', () => {
             '%{label} %{percent}',
             '%{label}<br>%{percent}',
         ]);
+    });
+});
+
+describe('high-cardinality point color stays truthful', () => {
+    it('keeps every observation while collapsing only the overflow legend tail', () => {
+        const values = Array.from({ length: 10 }, (_, i) => ({
+            X: i,
+            Y: i * 2,
+            Group: `Group ${i + 1}`,
+        }));
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { X: 'Quantity', Y: 'Quantity', Group: 'Category' },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'X', y: 'Y', color: 'Group' },
+                baseSize: { width: 420, height: 360 },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        const dataTraces = fig.data.filter((trace: any) =>
+            trace._themeRole !== 'overflow-legend-proxy');
+        expect(dataTraces).toHaveLength(10);
+        expect(dataTraces.reduce((sum: number, trace: any) => sum + trace.x.length, 0)).toBe(10);
+        const proxy = fig.data.find((trace: any) =>
+            trace._themeRole === 'overflow-legend-proxy');
+        expect(proxy.name).toBe('Others (4)');
+        expect(dataTraces.filter((trace: any) => trace.showlegend !== false).length)
+            .toBe(6);
+    });
+});
+
+describe('role-based chart furniture stays legible', () => {
+    it('uses three semantic waterfall keys instead of Plotly trace 0', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { Step: 'Start', Amount: 100, Type: 'start' },
+                    { Step: 'Gain', Amount: 30, Type: 'increase' },
+                    { Step: 'Loss', Amount: -20, Type: 'decrease' },
+                    { Step: 'End', Amount: 110, Type: 'end' },
+                ],
+            },
+            semantic_types: { Step: 'Category', Amount: 'Quantity', Type: 'Category' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'Step', y: 'Amount', color: 'Type' },
+            },
+            theme_spec: THEME_PRESETS.nyt.spec,
+        } as any) as any;
+        const names = fig.data.filter((trace: any) => trace.showlegend).map((trace: any) => trace.name);
+        expect(names).toEqual(['Total', 'Increase', 'Decrease']);
+        expect(fig.data[0].showlegend).toBe(false);
+    });
+
+    it('caps Pop area edges and radar fills without changing their data', () => {
+        const area = assemblePlotly({
+            data: {
+                values: [
+                    { Stage: 'A', Value: 10, Group: 'One' },
+                    { Stage: 'B', Value: 12, Group: 'One' },
+                    { Stage: 'A', Value: 8, Group: 'Two' },
+                    { Stage: 'B', Value: 9, Group: 'Two' },
+                ],
+            },
+            semantic_types: { Stage: 'Category', Value: 'Quantity', Group: 'Category' },
+            chart_spec: {
+                chartType: 'Area Chart',
+                encodings: { x: 'Stage', y: 'Value', color: 'Group' },
+            },
+            theme_spec: THEME_PRESETS.pop.spec,
+        } as any) as any;
+        expect(area.data.every((trace: any) => trace.line.width <= 1)).toBe(true);
+        expect(area.data.every((trace: any) => trace.mode === 'lines')).toBe(true);
+
+        const radar = assemblePlotly({
+            data: {
+                values: ['A', 'B', 'C'].flatMap((Metric, i) => [
+                    { Metric, Team: 'One', Value: 5 + i },
+                    { Metric, Team: 'Two', Value: 7 - i },
+                ]),
+            },
+            semantic_types: { Metric: 'Category', Team: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                encodings: { x: 'Metric', y: 'Value', color: 'Team' },
+            },
+            theme_spec: THEME_PRESETS.pop.spec,
+        } as any) as any;
+        expect(radar.data.every((trace: any) => trace.line.width <= 2.5)).toBe(true);
+        expect(radar.data.every((trace: any) => /, 0\.16\)$/.test(trace.fillcolor))).toBe(true);
+    });
+
+    it('draws one positive scatter baseline instead of a domain plus zero rule', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { X: 10, Y: 20 },
+                    { X: 20, Y: 30 },
+                ],
+            },
+            semantic_types: { X: 'Quantity', Y: 'Quantity' },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'X', y: 'Y' },
+            },
+            theme_spec: THEME_PRESETS.nyt.spec,
+        } as any) as any;
+        expect(fig.layout.xaxis.showline).toBe(true);
+        expect(fig.layout.yaxis.zeroline).toBe(false);
     });
 });
 

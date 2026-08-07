@@ -38,6 +38,60 @@ export const plBarChartDef: ChartTemplateDef = {
     },
     instantiate: (spec, ctx) => {
         const { channelSemantics, table, chartProperties } = ctx;
+        const xDiscrete = channelSemantics.x?.type === 'nominal'
+            || channelSemantics.x?.type === 'ordinal';
+        const yDiscrete = channelSemantics.y?.type === 'nominal'
+            || channelSemantics.y?.type === 'ordinal';
+        if (xDiscrete && yDiscrete) {
+            const xField = channelSemantics.x?.field;
+            const yField = channelSemantics.y?.field;
+            if (!xField || !yField) return;
+            const xCategories = extractCategories(table, xField, channelSemantics.x?.ordinalSortOrder);
+            const yCategories = extractCategories(table, yField, channelSemantics.y?.ordinalSortOrder);
+            const occupied = new Map<string, any>();
+            for (const row of table) occupied.set(`${String(row[xField])}\0${String(row[yField])}`, row);
+            const cells = [...occupied.values()];
+            const cellSize = Math.max(
+                8,
+                Math.min(
+                    36,
+                    (ctx.canvasSize.width / Math.max(1, xCategories.length)) * 0.68,
+                    (ctx.canvasSize.height / Math.max(1, yCategories.length)) * 0.68,
+                ),
+            );
+            Object.assign(spec, {
+                data: [{
+                    type: 'scatter',
+                    mode: 'markers',
+                    x: cells.map(row => row[xField]),
+                    y: cells.map(row => row[yField]),
+                    marker: {
+                        symbol: 'square',
+                        size: cellSize,
+                        color: getSeriesColor(getPlotlyPalette(ctx), 0),
+                    },
+                    showlegend: false,
+                }],
+                layout: {
+                    xaxis: {
+                        type: 'category',
+                        categoryorder: 'array',
+                        categoryarray: xCategories,
+                        title: { text: xField },
+                    },
+                    yaxis: {
+                        type: 'category',
+                        categoryorder: 'array',
+                        categoryarray: yCategories,
+                        title: { text: yField },
+                    },
+                    showlegend: false,
+                },
+            });
+            delete spec.mark;
+            delete spec.encoding;
+            return;
+        }
         const { categoryAxis, valueAxis } = detectAxes(channelSemantics);
 
         const catField = channelSemantics[categoryAxis]?.field;

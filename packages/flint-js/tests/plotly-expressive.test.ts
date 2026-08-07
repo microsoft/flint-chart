@@ -163,6 +163,24 @@ describe('Plotly expressive templates — native trace shapes', () => {
 });
 
 describe('Plotly expressive templates — grouping & stacking', () => {
+  it('renders a discrete-by-discrete bar request as an occupied square grid', () => {
+    const rows = [
+      { product: 'Laptop', market: 'US' },
+      { product: 'Phone', market: 'US' },
+      { product: 'Phone', market: 'UK' },
+    ];
+    const fig = assemblePlotly(input(
+      'Bar Chart',
+      { x: { field: 'product' }, y: { field: 'market' } },
+      rows,
+      { product: 'Category', market: 'Category' },
+    ));
+    expect(fig.data[0].type).toBe('scatter');
+    expect(fig.data[0].marker.symbol).toBe('square');
+    expect(fig.data[0].x).toHaveLength(3);
+    expect(fig.layout.yaxis.type).toBe('category');
+  });
+
   it('grouped bar chart uses barmode "group" with one trace per group', () => {
     const fig = assemblePlotly(input('Grouped Bar Chart', { x: { field: 'region' }, y: { field: 'revenue' }, color: { field: 'year' } }, SALES, { region: 'Region', revenue: 'Amount', year: 'Year' }));
     expect(fig.layout.barmode).toBe('group');

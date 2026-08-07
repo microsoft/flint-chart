@@ -607,8 +607,40 @@ function applyAxes(figure: any, d: DesignDecisions, table: any[], say: Say): voi
     }
     pinSparseTicks(figure, d, say);
     applyPolarAxes(figure, d, say);
+    dedupeBoundaryZeroLines(figure, say);
     applyUnits(figure, d, say);
     applyTickLabels(figure, d, table, say);
+}
+
+/**
+ * A positive-only axis puts its zero rule on (or immediately beside) the
+ * perpendicular domain line. Plotly otherwise draws both strokes a few pixels
+ * apart because autorange pads zero, producing a doubled scatter baseline.
+ */
+function dedupeBoundaryZeroLines(figure: any, say: Say): void {
+    const layout = figure.layout ?? {};
+    for (const ch of ['x', 'y'] as const) {
+        for (const key of axisKeys(layout, ch)) {
+            const ax = layout[key];
+            if (!ax?.zeroline) continue;
+            const suffix = key.replace(`${ch}axis`, '');
+            const perpendicular = layout[`${ch === 'x' ? 'y' : 'x'}axis${suffix}`];
+            if (!perpendicular?.showline) continue;
+            const ref = `${ch}${suffix}`;
+            const values: number[] = [];
+            for (const trace of figure.data ?? []) {
+                if (String(trace?.[`${ch}axis`] ?? ch) !== ref) continue;
+                for (const value of trace?.[ch] ?? []) {
+                    const n = Number(value);
+                    if (Number.isFinite(n)) values.push(n);
+                }
+            }
+            if (values.length && Math.min(...values) >= 0) {
+                ax.zeroline = false;
+                say('axes.zeroRule', `${key} zero coincides with the perpendicular domain — duplicate stroke omitted`);
+            }
+        }
+    }
 }
 
 /** A rank-like run: every integer between the ends is present. */
@@ -1324,7 +1356,12 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         }
 
         if (fams.includes('line')) {
-            trace.line = { ...(trace.line ?? {}), width: m.strokeWidth };
+            const areaEdge = trace.type === 'scatter' && fams.includes('area');
+            const radarEdge = trace.type === 'scatterpolar' && fams.includes('area');
+            const width = areaEdge
+                ? Math.min(1, m.strokeWidth)
+                : radarEdge ? Math.min(2.5, m.strokeWidth) : m.strokeWidth;
+            trace.line = { ...(trace.line ?? {}), width };
             if (m.interpolate) {
                 const shape = plotlyLineShape(m.interpolate);
                 if (shape) trace.line.shape = shape;
@@ -1360,7 +1397,9 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         // here.
         // A filled band has no line to dot — its edge is the top of an area,
         // and dotting it reads as data points that are not there.
-        const filled = (trace.fill != null && trace.fill !== 'none') || floors.has(index);
+        const filled = fams.includes('area')
+            || (trace.fill != null && trace.fill !== 'none')
+            || floors.has(index);
         if (m.point?.show && fams.includes('line') && !fams.includes('point') && !filled) {
             const dot = dotDiameter(trace, figure, diameterOf(m.point.size ?? 40), m.strokeWidth ?? 2);
             if (dot > 0) {
@@ -1519,7 +1558,58 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
         }
     }
 
-    if (s.exhausted) {
+    // Unlike pie slices, scatter categories must not be merged: each point is
+    // still an observation. Keep the largest K categories distinct, paint the
+    // tail with the overflow ink, and collapse only its legend entries.
+    const pointOverflowInks = new Map<any, string>();
+    let pointOverflowHandled = false;
+    if (s.overflowTail && s.overflow && s.categorical.length) {
+        const points = traces.filter((trace) => {
+            const families = markFamilies(trace);
+            return trace?.name
+                && families.includes('point')
+                && !families.includes('line')
+                && !families.includes('area')
+                && !Array.isArray(trace.marker?.color);
+        });
+        if (points.length > s.categorical.length) {
+            const ranked = points
+                .map((trace, index) => ({
+                    trace,
+                    index,
+                    count: Math.max(trace.x?.length ?? 0, trace.y?.length ?? 0),
+                }))
+                .sort((a, b) => (b.count - a.count) || (a.index - b.index));
+            const keep = s.categorical.length;
+            ranked.slice(0, keep).forEach(({ trace }, index) => {
+                pointOverflowInks.set(trace, s.categorical[index]);
+                trace.showlegend = true;
+            });
+            const tail = ranked.slice(keep);
+            for (const { trace } of tail) {
+                pointOverflowInks.set(trace, s.overflow);
+                trace.showlegend = false;
+            }
+            figure.data.push({
+                type: 'scatter',
+                mode: 'markers',
+                name: `Others (${tail.length})`,
+                x: [null],
+                y: [null],
+                marker: { color: s.overflow },
+                hoverinfo: 'skip',
+                showlegend: true,
+                _themeRole: 'overflow-legend-proxy',
+            });
+            pointOverflowHandled = true;
+            say(
+                'ink.series.categorical',
+                `${points.length} point categories past ${keep} inks — observations stay separate while the legend tail shares one "Others (${tail.length})" ink`,
+            );
+        }
+    }
+
+    if (s.exhausted && !pointOverflowHandled) {
         say('ink.series', 'more series than the house names inks for — template palette kept');
         return;
     }
@@ -1548,6 +1638,11 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
     let seriesIndex = 0;
     for (const trace of traces) {
         if (trace.colorscale != null || trace.marker?.colorscale != null) continue;
+        const overflowInk = pointOverflowInks.get(trace);
+        if (overflowInk) {
+            trace.marker = { ...(trace.marker ?? {}), color: overflowInk };
+            continue;
+        }
         const fams = markFamilies(trace);
 
         // A pie states one colour per slice on `marker.colors` — the whole
@@ -1610,7 +1705,9 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
             // Bands in a stack sit side by side, not on top of one another, so
             // there is nothing behind them to see; translucency there only
             // muddies two colours into a third the house never chose.
-            const alpha = trace.stackgroup != null ? 1 : d.marks.fillOpacity ?? 0.8;
+            const alpha = trace.type === 'scatterpolar' && trace.fill === 'toself'
+                ? Math.min(0.16, d.marks.fillOpacity ?? 0.16)
+                : trace.stackgroup != null ? 1 : d.marks.fillOpacity ?? 0.8;
             trace.fillcolor = withAlpha(ink, alpha);
         }
         seriesIndex++;
@@ -1678,6 +1775,31 @@ const LEGEND_ANCHORS: Record<string, { x: number; y: number; xanchor: string; ya
     'bottom-right': { x: 0.98, y: 0.02, xanchor: 'right', yanchor: 'bottom', orientation: 'v' },
 };
 
+function addWaterfallLegendProxies(figure: any): void {
+    if ((figure.data ?? []).some((trace: any) => trace?._themeRole === 'waterfall-legend-proxy')) return;
+    const waterfall = (figure.data ?? []).find((trace: any) => trace?.type === 'waterfall');
+    if (!waterfall) return;
+    const roles = [
+        ['Total', waterfall.totals?.marker?.color],
+        ['Increase', waterfall.increasing?.marker?.color],
+        ['Decrease', waterfall.decreasing?.marker?.color],
+    ];
+    for (const [name, color] of roles) {
+        if (!color) continue;
+        figure.data.push({
+            type: 'scatter',
+            mode: 'markers',
+            name,
+            x: [null],
+            y: [null],
+            marker: { color, symbol: 'square', size: 9 },
+            hoverinfo: 'skip',
+            showlegend: true,
+            _themeRole: 'waterfall-legend-proxy',
+        });
+    }
+}
+
 function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
     const layout = figure.layout;
     const l = d.legend;
@@ -1691,6 +1813,8 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
         }
         return 0;
     }
+
+    addWaterfallLegendProxies(figure);
 
     const visiblePies = (figure.data ?? []).filter((trace: any) =>
         trace?.type === 'pie' && trace?.visible !== false);
