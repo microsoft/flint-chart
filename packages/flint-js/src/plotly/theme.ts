@@ -802,6 +802,7 @@ function addRoseValueLabels(
     const fontSize = d.axes.y?.label.fontSize ?? 11;
     const max = Math.max(...[...totals.values()].map(item => item.value));
     const count = totals.size;
+    const tipPad = (max * fontSize * 0.7) / radius;
     const theta: any[] = [];
     const r: number[] = [];
     const text: string[] = [];
@@ -815,10 +816,20 @@ function addRoseValueLabels(
         const labelPx = label.length * fontSize * 0.58;
         if (radialPx < fontSize * 1.6 || arcPx < labelPx) continue;
         theta.push(item.theta);
-        r.push(Math.max(0, item.value - (max * fontSize * 0.65) / radius));
+        r.push(item.value + tipPad);
         text.push(label);
     }
     if (!text.length) return;
+
+    const radialAxis = figure.layout?.[subplot]?.radialaxis
+        ?? (figure.layout[subplot].radialaxis = {});
+    const currentMin = Array.isArray(radialAxis.range) ? Number(radialAxis.range[0]) : 0;
+    const currentMax = Array.isArray(radialAxis.range) ? Number(radialAxis.range[1]) : 0;
+    radialAxis.range = [
+        Number.isFinite(currentMin) ? currentMin : 0,
+        Math.max(Number.isFinite(currentMax) ? currentMax : 0, max + tipPad * 2.5),
+    ];
+    delete radialAxis.rangemode;
 
     figure.data.push({
         type: 'scatterpolar',
@@ -830,7 +841,7 @@ function addRoseValueLabels(
         textposition: 'middle center',
         textfont: {
             ...fontOf(d.axes.y?.label ?? d.dataLabels.text, d.font),
-            color: d.surface.plot ?? d.surface.canvas,
+            color: d.text.primary,
         },
         hoverinfo: 'skip',
         showlegend: false,

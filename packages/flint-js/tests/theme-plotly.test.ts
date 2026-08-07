@@ -365,6 +365,8 @@ describe('a radar reads each spoke on its own scale', () => {
             expect(labels.text.length).toBeGreaterThan(0);
             expect(labels.text.length).toBeLessThan(months.length);
             expect(labels.text.at(-1)).toBe('141');
+            expect(labels.r.at(-1)).toBeGreaterThan(141);
+            expect(radial.range[1]).toBeGreaterThan(labels.r.at(-1));
         });
 
         it('materializes and themes an implicit default polar subplot', () => {
@@ -390,6 +392,36 @@ describe('a radar reads each spoke on its own scale', () => {
             expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
             expect(fig.layout.polar.radialaxis.layer).toBe('below traces');
             expect(fig.layout.polar.angularaxis.showgrid).toBe(false);
+        });
+
+        it('prints one summed total beyond each stacked rose tip', () => {
+            const fig = assemblePlotly({
+                data: {
+                    values: [
+                        { Direction: 'N', Season: 'Spring', Speed: 10 },
+                        { Direction: 'N', Season: 'Winter', Speed: 15 },
+                        { Direction: 'E', Season: 'Spring', Speed: 12 },
+                        { Direction: 'E', Season: 'Winter', Speed: 18 },
+                    ],
+                },
+                semantic_types: {
+                    Direction: 'Category',
+                    Season: 'Category',
+                    Speed: 'Quantity',
+                },
+                chart_spec: {
+                    chartType: 'Rose Chart',
+                    encodings: { x: 'Direction', y: 'Speed', color: 'Season' },
+                    baseSize: { width: 420, height: 360 },
+                },
+                theme_spec: theme(),
+            } as any) as any;
+
+            const labels = fig.data.find((trace: any) =>
+                trace._themeRole === 'rose-value-labels');
+            expect(labels.text).toEqual(['25', '30']);
+            expect(labels.r[0]).toBeGreaterThan(25);
+            expect(labels.r[1]).toBeGreaterThan(30);
         });
     });
 });
