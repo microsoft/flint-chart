@@ -34,14 +34,15 @@ export const plRoseChartDef: ChartTemplateDef = {
         const colorField = channelSemantics.color?.field;
         if (!catField || !valField) return;
 
-        let categories = extractCategories(table, catField, channelSemantics.x?.ordinalSortOrder);
+        const fullTable = ctx.fullTable ?? table;
+        let categories = extractCategories(fullTable, catField, channelSemantics.x?.ordinalSortOrder);
         if (categories.length === 0) return;
 
         const sortSlices = chartProperties?.sortSlices;
         if (sortSlices === 'descending' || sortSlices === 'ascending') {
             const totals = new Map<string, number>();
             for (const c of categories) totals.set(c, 0);
-            for (const row of table) {
+            for (const row of fullTable) {
                 const c = String(row[catField] ?? '');
                 if (totals.has(c)) totals.set(c, totals.get(c)! + (Number(row[valField]) || 0));
             }
@@ -61,16 +62,19 @@ export const plRoseChartDef: ChartTemplateDef = {
         const palette = getPlotlyPalette(ctx, 'color');
         const traces: any[] = [];
         if (colorField) {
-            let i = 0;
+            const colorCategories = extractCategories(
+                fullTable,
+                colorField,
+                channelSemantics.color?.ordinalSortOrder,
+            );
             for (const [name, rows] of groupBy(table, colorField)) {
                 traces.push({
                     type: 'barpolar',
                     name,
                     r: sumPerCategory(rows),
                     theta: categories,
-                    marker: { color: getSeriesColor(palette, i) },
+                    marker: { color: getSeriesColor(palette, Math.max(0, colorCategories.indexOf(name))) },
                 });
-                i++;
             }
         } else {
             traces.push({

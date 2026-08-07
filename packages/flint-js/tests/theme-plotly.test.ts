@@ -65,6 +65,177 @@ function monthlyLine(spec: ThemeSpec, width = 480): any {
 const traceNamed = (fig: any, name: string) =>
     (fig.data ?? []).find((t: any) => t.name === name);
 
+describe('semantic geometry survives house styling', () => {
+    it('keeps an ECDF stepped when the house prefers curved lines', () => {
+        const fig = assemblePlotly({
+            data: { values: [{ score: 1 }, { score: 2 }, { score: 3 }] },
+            semantic_types: { score: 'Quantity' },
+            chart_spec: {
+                chartType: 'ECDF Plot',
+                encodings: { x: 'score' },
+                baseSize: { width: 400, height: 300 },
+            },
+            theme_spec: THEME_PRESETS.pop,
+        } as any) as any;
+        expect(['hv', 'vh', 'hvh']).toContain(fig.data[0].line.shape);
+    });
+
+    it('prints normalized stacked values as shares for every number format', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { category: 'A', series: 'One', value: 20 },
+                    { category: 'A', series: 'Two', value: 80 },
+                ],
+            },
+            semantic_types: { category: 'Category', series: 'Category', value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                encodings: { x: 'category', y: 'value', color: 'series' },
+                chartProperties: { stackMode: 'normalize' },
+                baseSize: { width: 400, height: 300 },
+            },
+            theme_spec: theme({ dataLabels: { show: 'always', format: ',.0f' } } as any),
+        } as any) as any;
+        expect(fig.data[0].customdata).toEqual([20]);
+        expect(fig.data[1].customdata).toEqual([80]);
+        expect(JSON.stringify(fig.data[0].texttemplate)).toContain('customdata');
+        expect(JSON.stringify(fig.data[0].texttemplate)).toContain('%');
+    });
+
+    it('matches Plotly algebraic normalization for mixed-sign stacks', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { category: 'A', series: 'Positive', value: 20 },
+                    { category: 'A', series: 'Negative', value: -10 },
+                    { category: 'B', series: 'Positive', value: 10 },
+                    { category: 'B', series: 'Negative', value: -20 },
+                ],
+            },
+            semantic_types: { category: 'Category', series: 'Category', value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                encodings: { x: 'category', y: 'value', color: 'series' },
+                chartProperties: { stackMode: 'normalize' },
+                baseSize: { width: 400, height: 300 },
+            },
+            theme_spec: theme({ dataLabels: { show: 'always', format: '.0f' } } as any),
+        } as any) as any;
+        expect(fig.data[0].customdata).toEqual([200, 100]);
+        expect(fig.data[1].customdata).toEqual([-100, -200]);
+    });
+
+    it('normalizes printed stack values within each facet', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { category: 'A', series: 'One', value: 20, panel: 'Left' },
+                    { category: 'A', series: 'Two', value: 80, panel: 'Left' },
+                    { category: 'A', series: 'One', value: 30, panel: 'Right' },
+                    { category: 'A', series: 'Two', value: 70, panel: 'Right' },
+                ],
+            },
+            semantic_types: {
+                category: 'Category', series: 'Category', value: 'Quantity', panel: 'Category',
+            },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                encodings: { x: 'category', y: 'value', color: 'series', column: 'panel' },
+                chartProperties: { stackMode: 'normalize' },
+                baseSize: { width: 500, height: 300 },
+            },
+            theme_spec: theme({ dataLabels: { show: 'always', format: '.0f' } } as any),
+        } as any) as any;
+        expect(fig.data.map((trace: any) => trace.customdata)).toEqual([
+            [20], [80], [30], [70],
+        ]);
+    });
+
+    it('thins labels on a dense categorical axis without dropping bars', () => {
+        const values = Array.from({ length: 100 }, (_v, i) => ({
+            category: `Page ${i + 1}`,
+            value: i + 1,
+        }));
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { category: 'Category', value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'category', y: 'value' },
+                baseSize: { width: 480, height: 300 },
+            },
+            theme_spec: theme(),
+        } as any) as any;
+        expect(fig.data[0].x).toHaveLength(100);
+        expect(fig.layout.xaxis.tickvals.length).toBeLessThan(100);
+    });
+
+    it('factors color and dash into separate forecast legend dimensions', () => {
+        const values = ['A', 'B', 'C'].flatMap((product, productIndex) => [
+            { x: 1, y: 10 + productIndex, product, state: 'Actual' },
+            { x: 2, y: 12 + productIndex, product, state: 'Actual' },
+            { x: 2, y: 12 + productIndex, product, state: 'Forecast' },
+            { x: 3, y: 15 + productIndex, product, state: 'Forecast' },
+        ]);
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { x: 'Quantity', y: 'Quantity', product: 'Category', state: 'Category' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'x', y: 'y', color: 'product', strokeDash: 'state' },
+                baseSize: { width: 500, height: 300 },
+            },
+            theme_spec: theme({
+                legend: { show: 'always', placement: ['seriesEnd', 'right'] },
+            } as any),
+        } as any) as any;
+        const actual = fig.data.filter((trace: any) =>
+            trace._colorLegendValue && trace._dashLegendValue);
+        const proxies = fig.data.filter((trace: any) =>
+            trace._themeRole === 'factored-line-legend-proxy');
+        expect(actual).toHaveLength(6);
+        expect(actual.every((trace: any) => trace.showlegend === false)).toBe(true);
+        expect(proxies.map((trace: any) => trace.name)).toEqual([
+            'A', 'B', 'C', 'Actual', 'Forecast',
+        ]);
+        expect(actual[0].line.color).toBe(actual[1].line.color);
+        const annotations = JSON.stringify(fig.layout.annotations ?? []);
+        expect(annotations).not.toContain('Actual');
+        expect(annotations).not.toContain('Forecast');
+    });
+
+    it('places a factored series-end label at the furthest segment', () => {
+        const values = [
+            { x: 2, y: 12, product: 'A', state: 'Forecast' },
+            { x: 3, y: 15, product: 'A', state: 'Forecast' },
+            { x: 1, y: 10, product: 'A', state: 'Actual' },
+            { x: 2, y: 12, product: 'A', state: 'Actual' },
+            { x: 2, y: 20, product: 'B', state: 'Forecast' },
+            { x: 3, y: 22, product: 'B', state: 'Forecast' },
+            { x: 1, y: 18, product: 'B', state: 'Actual' },
+            { x: 2, y: 20, product: 'B', state: 'Actual' },
+            { x: 2, y: 30, product: 'C', state: 'Forecast' },
+            { x: 3, y: 32, product: 'C', state: 'Forecast' },
+            { x: 1, y: 28, product: 'C', state: 'Actual' },
+            { x: 2, y: 30, product: 'C', state: 'Actual' },
+        ];
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { x: 'Quantity', y: 'Quantity', product: 'Category', state: 'Category' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'x', y: 'y', color: 'product', strokeDash: 'state' },
+                baseSize: { width: 500, height: 300 },
+            },
+            theme_spec: theme({
+                legend: { show: 'always', placement: ['seriesEnd', 'right'] },
+            } as any),
+        } as any) as any;
+        expect(fig.layout.annotations.map((annotation: any) => annotation.x)).toEqual([3, 3, 3]);
+    });
+});
+
 describe('furniture is not a series', () => {
     it('restates a bullet chart\'s context bands against the house surface', () => {
         const dark = bullet(theme({

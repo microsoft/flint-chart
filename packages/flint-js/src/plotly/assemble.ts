@@ -414,7 +414,12 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
             hasColHeader: !!colField,
             hasRowHeader: !!rowField,
             colHeaderPerRow: wrapColumnOnly,
-            showLegend: !!channelSemantics.color?.field,
+            showLegend: !!(
+                channelSemantics.color?.field
+                || channelSemantics.group?.field
+                || channelSemantics.shape?.field
+                || channelSemantics.strokeDash?.field
+            ),
         });
 
         // Apply the shared x-label rotation / font decisions to every panel axis.

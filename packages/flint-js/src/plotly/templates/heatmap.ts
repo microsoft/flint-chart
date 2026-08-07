@@ -64,7 +64,13 @@ export const plHeatmapDef: ChartTemplateDef = {
             }],
             layout: {
                 xaxis: { type: 'category', categoryorder: 'array', categoryarray: xCategories, title: { text: xField } },
-                yaxis: { type: 'category', categoryorder: 'array', categoryarray: yCategories, title: { text: yField } },
+                yaxis: {
+                    type: 'category',
+                    categoryorder: 'array',
+                    categoryarray: yCategories,
+                    autorange: 'reversed',
+                    title: { text: yField },
+                },
                 showlegend: false,
             },
         });

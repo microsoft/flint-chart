@@ -37,6 +37,7 @@ export const plConnectedScatterDef: ChartTemplateDef = {
                 x: sorted.map((r: any) => r[xField]),
                 y: sorted.map((r: any) => r[yField]),
                 line: { color, shape: 'linear' as const },
+                _preserveLineShape: true,
                 marker: { color, size: 7 },
             };
         };

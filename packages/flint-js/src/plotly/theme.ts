@@ -250,9 +250,15 @@ function isReferenceTrace(trace: any): boolean {
     return trace?._role === 'reference';
 }
 
+function isLegendProxy(trace: any): boolean {
+    return typeof trace?._themeRole === 'string'
+        && trace._themeRole.endsWith('legend-proxy');
+}
+
 function dataTraces(figure: any): any[] {
     return (figure?.data ?? []).filter(
-        (t: any) => t && !CHROME_TRACES.has(String(t.type)) && !isContextTrace(t) && !isReferenceTrace(t),
+        (t: any) => t && !CHROME_TRACES.has(String(t.type))
+            && !isContextTrace(t) && !isReferenceTrace(t) && !isLegendProxy(t),
     );
 }
 
@@ -263,6 +269,12 @@ function dataTraces(figure: any): any[] {
  */
 function applyFurnitureTraces(figure: any, d: DesignDecisions): void {
     const surface = d.surface.plot ?? d.surface.canvas;
+    for (const shape of figure.layout?.shapes ?? []) {
+        if (shape?._role === 'series') shape.fillcolor = d.series.single;
+        if (shape?._role === 'context') {
+            shape.fillcolor = mixHex(surface, d.text.primary, 0.12);
+        }
+    }
     for (const trace of figure.data ?? []) {
         if (isReferenceTrace(trace)) {
             const line = trace.marker?.line;
@@ -606,10 +618,44 @@ function applyAxes(figure: any, d: DesignDecisions, table: any[], say: Say): voi
         }
     }
     pinSparseTicks(figure, d, say);
+    thinDenseCategoryTicks(figure, d, say);
     applyPolarAxes(figure, d, say);
     dedupeBoundaryZeroLines(figure, say);
     applyUnits(figure, d, say);
     applyTickLabels(figure, d, table, say);
+}
+
+/** Thin dense categorical x labels without removing any bars or categories. */
+function thinDenseCategoryTicks(figure: any, d: DesignDecisions, say: Say): void {
+    const layout = figure.layout ?? {};
+    const plotWidth = Math.max(
+        80,
+        (Number(layout.width) || Number(figure._width) || 400)
+            - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0),
+    );
+    const fontSize = d.axes.x?.label.fontSize ?? 11;
+    for (const key of axisKeys(layout, 'x')) {
+        const ax = layout[key];
+        const categories = Array.isArray(ax?.categoryarray) ? ax.categoryarray : [];
+        if (ax?.type !== 'category' || categories.length < 2 || ax.tickvals != null) continue;
+        const domain = Array.isArray(ax.domain) && ax.domain.length === 2
+            ? Math.abs(Number(ax.domain[1]) - Number(ax.domain[0]))
+            : 1;
+        const band = plotWidth * (Number.isFinite(domain) ? domain : 1);
+        const chars = Math.min(18, Math.max(3, ...categories.map((c: any) => String(c).length)));
+        const each = chars * fontSize * 0.58 + 8;
+        const fits = Math.max(2, Math.floor(band / each));
+        if (categories.length <= fits) continue;
+        const step = (categories.length - 1) / (fits - 1);
+        const picked = [...new Set(Array.from(
+            { length: fits },
+            (_v, i) => categories[Math.round(i * step)],
+        ))];
+        ax.tickmode = 'array';
+        ax.tickvals = picked;
+        ax.ticktext = picked.map(String);
+        say('axes.tickCount', `\`${key}\` labels ${picked.length} of ${categories.length} dense categories`);
+    }
 }
 
 /**
@@ -1327,6 +1373,7 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         if (CHROME_TRACES.has(String(trace?.type))) continue;
         // Furniture keeps the weight `applyFurnitureTraces` gave it.
         if (isContextTrace(trace) || isReferenceTrace(trace)) continue;
+        if (isLegendProxy(trace)) continue;
         const fams = markFamilies(trace);
 
         if (fams.includes('bar') || fams.includes('arc')) {
@@ -1362,7 +1409,8 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
                 ? Math.min(1, m.strokeWidth)
                 : radarEdge ? Math.min(2.5, m.strokeWidth) : m.strokeWidth;
             trace.line = { ...(trace.line ?? {}), width };
-            if (m.interpolate) {
+            if (m.interpolate && !trace._preserveLineShape
+                && (!trace.line.shape || trace.line.shape === 'linear')) {
                 const shape = plotlyLineShape(m.interpolate);
                 if (shape) trace.line.shape = shape;
                 else say('marks.line.interpolate', `\`${m.interpolate}\` has no Plotly line shape — left straight`);
@@ -1401,7 +1449,8 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
             || (trace.fill != null && trace.fill !== 'none')
             || floors.has(index);
         if (m.point?.show && fams.includes('line') && !fams.includes('point') && !filled) {
-            const dot = dotDiameter(trace, figure, diameterOf(m.point.size ?? 40), m.strokeWidth ?? 2);
+            const secondaryArea = m.point.secondarySize ?? Math.min(m.point.size ?? 40, 25);
+            const dot = dotDiameter(trace, figure, diameterOf(secondaryArea), m.strokeWidth ?? 2);
             if (dot > 0) {
                 trace.mode = String(trace.mode ?? 'lines').includes('markers')
                     ? trace.mode
@@ -1688,7 +1737,11 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
             if (trace.connector.line) trace.connector.line = { ...trace.connector.line, color: quiet };
         }
 
-        const ink = inks[seriesIndex % inks.length];
+        const declaredIndex = Number(trace?._seriesIndex);
+        const inkIndex = Number.isInteger(declaredIndex) && declaredIndex >= 0
+            ? declaredIndex
+            : seriesIndex;
+        const ink = inks[inkIndex % inks.length];
         const was = trace.line?.color ?? trace.marker?.color;
         if (typeof was === 'string' && isLiteralColor(was)) recoloured.set(was.toLowerCase(), ink);
         if (fams.includes('bar') || fams.includes('arc') || fams.includes('boxplot')) {
@@ -1800,6 +1853,53 @@ function addWaterfallLegendProxies(figure: any): void {
     }
 }
 
+function addFactoredLineLegendProxies(figure: any, d: DesignDecisions): void {
+    const traces = (figure.data ?? []).filter((trace: any) =>
+        trace?._colorLegendValue && trace?._dashLegendValue
+            && trace?._themeRole !== 'factored-line-legend-proxy');
+    const colors = new Map<string, string>();
+    const dashes = new Map<string, string>();
+    for (const trace of traces) {
+        if (!colors.has(trace._colorLegendValue)) {
+            colors.set(trace._colorLegendValue, trace.line?.color);
+        }
+        if (!dashes.has(trace._dashLegendValue)) {
+            dashes.set(trace._dashLegendValue, trace.line?.dash ?? 'solid');
+        }
+    }
+    for (const trace of traces) trace.showlegend = false;
+    const existing = (figure.data ?? []).filter((trace: any) =>
+        trace?._themeRole === 'factored-line-legend-proxy');
+    if (existing.length) {
+        for (const trace of existing) {
+            if (trace._colorLegendValue && colors.has(trace._colorLegendValue)) {
+                trace.line = { ...trace.line, color: colors.get(trace._colorLegendValue) };
+            } else if (trace._dashLegendValue) {
+                trace.line = { ...trace.line, color: d.text.secondary ?? d.text.primary };
+            }
+        }
+        return;
+    }
+    if (colors.size < 2 || dashes.size < 2) return;
+    const proxy = (name: string, color: string, dash: string) => ({
+        type: 'scatter',
+        mode: 'lines',
+        name,
+        x: [null],
+        y: [null],
+        line: { color, dash, width: 2.5 },
+        hoverinfo: 'skip',
+        showlegend: true,
+        _themeRole: 'factored-line-legend-proxy',
+    });
+    for (const [name, color] of colors) {
+        figure.data.push(proxy(name, color, 'solid'));
+    }
+    for (const [name, dash] of dashes) {
+        figure.data.push(proxy(name, d.text.secondary ?? d.text.primary, dash));
+    }
+}
+
 function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
     const layout = figure.layout;
     const l = d.legend;
@@ -1815,6 +1915,7 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
     }
 
     addWaterfallLegendProxies(figure);
+    addFactoredLineLegendProxies(figure, d);
 
     const visiblePies = (figure.data ?? []).filter((trace: any) =>
         trace?.type === 'pie' && trace?.visible !== false);
@@ -2061,10 +2162,37 @@ function plottedPositions(traces: any[]): Map<any, number[]> {
  * has no last point — so the caller can take the house's next placement.
  */
 function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
-    const lines = dataTraces(figure).filter((t) => {
+    let lines = dataTraces(figure).filter((t) => {
         const fams = markFamilies(t);
         return (fams.includes('line') || fams.includes('area')) && Array.isArray(t.x) && Array.isArray(t.y) && t.name;
     });
+    const factored = lines.filter(t => t._colorLegendValue && t._dashLegendValue);
+    if (factored.length) {
+        const lastByColor = new Map<string, any>();
+        const endpointRank = (trace: any): number => {
+            const values = trace.x ?? [];
+            let value: any;
+            for (let i = values.length - 1; i >= 0; i--) {
+                if (values[i] != null) { value = values[i]; break; }
+            }
+            const axisKey = String(trace.xaxis ?? 'x').replace('x', 'xaxis');
+            const axis = figure.layout?.[axisKey];
+            if (axis?.type === 'category') return categoryPosition(axis, value);
+            if (axis?.type === 'date') return new Date(value).getTime();
+            const numeric = Number(value);
+            return Number.isFinite(numeric) ? numeric : values.length;
+        };
+        for (const trace of factored) {
+            const prior = lastByColor.get(trace._colorLegendValue);
+            if (!prior || endpointRank(trace) >= endpointRank(prior)) {
+                lastByColor.set(trace._colorLegendValue, trace);
+            }
+        }
+        lines = [
+            ...lines.filter(t => !(t._colorLegendValue && t._dashLegendValue)),
+            ...lastByColor.values(),
+        ];
+    }
     if (lines.length < 1) return false;
 
     const layout = figure.layout;
@@ -2085,7 +2213,7 @@ function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
             y: drawn[n - 1] ?? t.y[n - 1],
             xref: t.xaxis ?? 'x',
             yref: t.yaxis ?? 'y',
-            text: styleText(String(t.name), d.legend.label),
+            text: styleText(String(t._colorLegendValue ?? t.name), d.legend.label),
             showarrow: false,
             xanchor: 'left',
             xshift: 6,
@@ -2101,7 +2229,7 @@ function labelSeriesEnds(figure: any, d: DesignDecisions, say: Say): boolean {
     annotations.push(...placed);
 
     // The names sit outside the plotting rectangle; make room for them.
-    const longest = Math.max(...lines.map((t) => String(t.name).length));
+    const longest = Math.max(...lines.map((t) => String(t._colorLegendValue ?? t.name).length));
     const pad = Math.ceil(longest * (d.legend.label.fontSize ?? 11) * 0.55) + 12;
     layout.margin = { ...(layout.margin ?? {}), r: Math.max(layout.margin?.r ?? 0, pad) };
     say('legend.placement', `series named at the end of each line (${lines.length})`);
@@ -2262,7 +2390,27 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
 
         if (fams.includes('bar')) {
             const measure = trace.orientation === 'h' ? 'x' : (numericChannel(trace) ?? 'y');
-            trace.texttemplate = `${unitPrefix}%{${measure}${fmt}}${unit}`;
+            const normalized = figure.layout?.barnorm === 'percent';
+            if (normalized) {
+                const barTraces = dataTraces(figure).filter((t) =>
+                    markFamilies(t).includes('bar')
+                    && Array.isArray(t[measure])
+                    && String(t[`${measure}axis`] ?? measure) === String(trace[`${measure}axis`] ?? measure)
+                    && String(t.offsetgroup ?? '') === String(trace.offsetgroup ?? ''));
+                const values = Array.isArray(trace[measure]) ? trace[measure] : [];
+                trace.customdata = values.map((value: any, index: number) => {
+                    const denominator = barTraces.reduce(
+                        (sum, t) => sum + (Number(t[measure]?.[index]) || 0),
+                        0,
+                    );
+                    return denominator ? (Number(value) || 0) / Math.abs(denominator) * 100 : null;
+                });
+                const percentMatch = dl.format?.match(/^\.(\d+)%$/);
+                const normalizedFmt = percentMatch ? `:.${percentMatch[1]}f` : fmt;
+                trace.texttemplate = `%{customdata${normalizedFmt}}%`;
+            } else {
+                trace.texttemplate = `${unitPrefix}%{${measure}${fmt}}${unit}`;
+            }
             // Plotly places the label inside where it fits and outside where it
             // does not, which is exactly the geometry stage 2 computed with
             // `insideMinValue`/`outsideMaxValue`. `auto` hands that decision to

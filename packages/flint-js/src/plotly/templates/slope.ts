@@ -67,8 +67,10 @@ export const plSlopeChartDef: ChartTemplateDef = {
             traces.push(makeTrace(undefined, table, 0));
         }
 
-        const yAxisSpec: any = { title: { text: yField } };
-        if (channelSemantics.y?.zero) yAxisSpec.rangemode = channelSemantics.y.zero.zero !== false ? 'tozero' : 'normal';
+        // A slopegraph compares change between its two columns; anchoring the
+        // value axis at zero compresses the slopes and contradicts the
+        // data-fitted framing used by the other backends.
+        const yAxisSpec: any = { title: { text: yField }, rangemode: 'normal' };
 
         Object.assign(spec, {
             data: traces,
