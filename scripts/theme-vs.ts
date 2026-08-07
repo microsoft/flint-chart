@@ -32,11 +32,21 @@ import * as vega from 'vega';
 
 import { assembleVegaLite, assemblePlotly, vlGetTemplateDef, plGetTemplateDef } from '../packages/flint-js/src/index';
 import { THEME_PRESETS } from '../packages/flint-js/src/core/theme/presets';
-import { PREVIEW_CASES, type PreviewCase } from '../site/src/shared/preview-cases';
+import { PREVIEW_CASES } from '../site/src/shared/preview-cases';
+import { R2_CASES, r2Input } from '../site/src/playground/theme-lab-r2-data';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT = resolve(__dirname, '../audit-out/vs');
 const PLOTLY_JS = resolve(__dirname, '../node_modules/plotly.js-dist-min/plotly.min.js');
+
+interface ComparableCase {
+    id: string;
+    chartType: string;
+    title?: string;
+    data: any[];
+    semantic_types: Record<string, string>;
+    encodings: Record<string, any>;
+    chartProperties?: Record<string, any>;
+}
 
 const CHROME_CANDIDATES = [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -64,7 +74,7 @@ function stripInternal(node: any): void {
     }
 }
 
-function inputFor(c: PreviewCase): any {
+function inputFor(c: ComparableCase): any {
     return {
         data: { values: c.data },
         semantic_types: c.semantic_types,
@@ -78,7 +88,7 @@ function inputFor(c: PreviewCase): any {
     };
 }
 
-async function vlPanel(c: PreviewCase, house: string | null) {
+async function vlPanel(c: ComparableCase, house: string | null) {
     if (!vlGetTemplateDef(c.chartType)) return { html: '<div class="none">no VL template</div>', bg: '#eee' };
     try {
         const base = inputFor(c);
@@ -95,7 +105,7 @@ async function vlPanel(c: PreviewCase, house: string | null) {
     }
 }
 
-function plFigure(c: PreviewCase, house: string | null) {
+function plFigure(c: ComparableCase, house: string | null) {
     if (!plGetTemplateDef(c.chartType)) return { figure: null, bg: '#eee', err: 'no Plotly template' };
     try {
         const base = inputFor(c);
@@ -111,16 +121,33 @@ function plFigure(c: PreviewCase, house: string | null) {
 }
 
 async function main(): Promise<void> {
-    const args = process.argv.slice(2);
+    const rawArgs = process.argv.slice(2);
+    const r2 = rawArgs[0] === '--set' && rawArgs[1] === 'r2';
+    const args = r2 ? rawArgs.slice(2) : rawArgs;
     const idFilter = args[0] ?? '';
     const houses = args.length > 1 ? args.slice(1) : ['flint', ...Object.keys(THEME_PRESETS)];
+    const source: ComparableCase[] = r2
+        ? R2_CASES.map((c) => {
+            const input = r2Input(c);
+            return {
+                id: c.id,
+                chartType: input.chart_spec.chartType,
+                title: input.chart_spec.title,
+                data: input.data.values,
+                semantic_types: input.semantic_types,
+                encodings: input.chart_spec.encodings,
+                chartProperties: input.chart_spec.chartProperties,
+            };
+        })
+        : PREVIEW_CASES as ComparableCase[];
 
-    const cases = PREVIEW_CASES.filter(
+    const cases = source.filter(
         (c) => !idFilter || c.id.toLowerCase().includes(idFilter.toLowerCase())
             || c.chartType.toLowerCase().includes(idFilter.toLowerCase()),
     );
     if (!cases.length) throw new Error(`no case matches "${idFilter}"`);
 
+    const OUT = resolve(__dirname, r2 ? '../audit-out/vs-r2' : '../audit-out/vs');
     mkdirSync(OUT, { recursive: true });
     const plotlySrc = readFileSync(PLOTLY_JS, 'utf8');
     const browser = await puppeteer.launch({
