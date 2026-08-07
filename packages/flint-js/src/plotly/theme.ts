@@ -1664,6 +1664,29 @@ function applyLegend(figure: any, d: DesignDecisions, say: Say): number {
         return 0;
     }
 
+    const visiblePies = (figure.data ?? []).filter((trace: any) =>
+        trace?.type === 'pie' && trace?.visible !== false);
+    const legendBearingTraces = (figure.data ?? []).filter((trace: any) =>
+        trace?.visible !== false
+        && trace?.showlegend !== false
+        && (Array.isArray(trace?.labels) || trace?.name));
+    const everyPieSliceNamed = visiblePies.length > 0
+        && legendBearingTraces.every((trace: any) => trace?.type === 'pie')
+        && visiblePies.every((trace: any) =>
+            Array.isArray(trace.labels)
+            && trace.labels.length > 0
+            && trace.labels.every((label: any) => String(label).trim().length > 0)
+            && typeof trace.textinfo === 'string'
+            && trace.textinfo.split('+').includes('label'));
+    if (everyPieSliceNamed) {
+        layout.showlegend = false;
+        say(
+            'legend.show',
+            'legend omitted — every pie slice is already named on the chart, so a second copy would compete with its callout',
+        );
+        return 0;
+    }
+
     // `seriesEnd` names each series at the end of its own line. Realized as
     // annotations where there is a line to end; otherwise the house's own
     // fallback is taken rather than a placement invented here.

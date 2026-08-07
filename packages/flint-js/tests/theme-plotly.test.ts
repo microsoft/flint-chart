@@ -241,6 +241,42 @@ describe('a printed value carries its unit on the right side', () => {
     });
 });
 
+describe('a pie does not name every slice twice', () => {
+    const pie = (labelType: string, themed: boolean): any => assemblePlotly({
+        data: {
+            values: [
+                { Vendor: 'Mouse', Share: 25 },
+                { Vendor: 'Keyboard', Share: 22 },
+                { Vendor: 'Camera', Share: 20 },
+                { Vendor: 'Tablet', Share: 18 },
+                { Vendor: 'Phone', Share: 15 },
+            ],
+        },
+        semantic_types: { Vendor: 'Category', Share: 'Quantity' },
+        chart_spec: {
+            chartType: 'Pie Chart',
+            title: 'Share by vendor',
+            encodings: { color: 'Vendor', size: 'Share' },
+            chartProperties: { labelType },
+            baseSize: { width: 420, height: 360 },
+        },
+        ...(themed ? { theme_spec: theme() } : {}),
+    } as any) as any;
+
+    it('omits the default legend when labels identify every slice', () => {
+        expect(pie('categoryPercent', false).layout.showlegend).toBe(false);
+        const themed = pie('categoryPercent', true);
+        expect(themed.layout.showlegend).toBe(false);
+        expect(themed._theme.report.some((entry: any) =>
+            entry.path === 'legend.show' && entry.message.includes('already named'))).toBe(true);
+    });
+
+    it('keeps the legend when annotations contain only percentages', () => {
+        expect(pie('percent', false).layout.showlegend).toBe(true);
+        expect(pie('percent', true).layout.showlegend).toBe(true);
+    });
+});
+
 describe('a radar reads each spoke on its own scale', () => {
     it('normalises every metric and writes its ceiling into the label', () => {
         const rows = [
