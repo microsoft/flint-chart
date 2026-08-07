@@ -291,9 +291,8 @@ describe('a radar reads each spoke on its own scale', () => {
             const angular = fig.layout.polar.angularaxis;
             expect(radial.showgrid).toBe(true);
             expect(radial.gridwidth).toBeLessThanOrEqual(1);
-            expect(radial.layer).toBe('above traces');
-            expect(radial.showticklabels).toBe(true);
-            expect(radial.angle).toBe(15);
+            expect(radial.layer).toBe('below traces');
+            expect(radial.showticklabels).toBe(false);
             expect(radial.showline).toBe(false);
             expect(radial.ticks).toBe('');
             expect(angular.showgrid).toBe(false);
@@ -301,6 +300,12 @@ describe('a radar reads each spoke on its own scale', () => {
             expect(angular.ticks).toBe('');
             expect(fig._theme.report.some((entry: any) =>
                 entry.path === 'structure.axis.polar')).toBe(true);
+            const labels = fig.data.find((trace: any) =>
+                trace._themeRole === 'rose-value-labels');
+            expect(labels).toBeTruthy();
+            expect(labels.text.length).toBeGreaterThan(0);
+            expect(labels.text.length).toBeLessThan(months.length);
+            expect(labels.text.at(-1)).toBe('141');
         });
 
         it('materializes and themes an implicit default polar subplot', () => {
@@ -323,9 +328,8 @@ describe('a radar reads each spoke on its own scale', () => {
                 theme_spec: theme(),
             } as any) as any;
 
-            expect(fig.layout.polar.radialaxis.showticklabels).toBe(true);
-            expect(fig.layout.polar.radialaxis.angle).toBe(90);
-            expect(fig.layout.polar.radialaxis.layer).toBe('above traces');
+            expect(fig.layout.polar.radialaxis.showticklabels).toBe(false);
+            expect(fig.layout.polar.radialaxis.layer).toBe('below traces');
             expect(fig.layout.polar.angularaxis.showgrid).toBe(false);
         });
     });

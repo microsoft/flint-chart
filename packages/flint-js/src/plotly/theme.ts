@@ -716,23 +716,11 @@ function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
                 ax.ticklen = 0;
                 ax.showline = false;
                 if (name === 'radialaxis') {
-                    const angularCount = new Set(
-                        subplotTraces.flatMap((trace: any) =>
-                            Array.isArray(trace?.theta) ? trace.theta.map(String) : []),
-                    ).size;
                     ax.showgrid = true;
                     ax.gridcolor = mixHex(plot, d.text.secondary, 0.28);
                     ax.gridwidth = 0.8;
-                    // Plotly controls rings and their labels with one layer.
-                    // Keeping the layer below opaque bars also hides the
-                    // numbers, so draw both above and make the rings quiet.
-                    ax.layer = 'above traces';
-                    ax.showticklabels = true;
-                    // Plotly puts radial labels on a ray. Move that ray from
-                    // the centre of a wedge to the nearest band boundary, then
-                    // hide the ray itself: values remain available without a
-                    // cartesian-looking axis cutting through the marks.
-                    if (angularCount > 0) ax.angle = 180 / angularCount;
+                    ax.layer = 'below traces';
+                    ax.showticklabels = false;
                     ax.nticks = 4;
                 } else {
                     ax.showgrid = false;
@@ -740,7 +728,7 @@ function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
                 if (!saidRose) {
                     say(
                         'structure.axis.polar',
-                        'the rose uses quiet concentric guides, with values placed at a wedge boundary instead of an axis ray through the data',
+                        'the rose uses quiet concentric guides and fitted values at wedge tips instead of an axis ray through the data',
                     );
                     saidRose = true;
                 }
@@ -775,7 +763,79 @@ function applyPolarAxes(figure: any, d: DesignDecisions, say: Say): void {
                 }
             }
         }
+        if (rose) addRoseValueLabels(figure, key, subplotTraces, d);
     }
+}
+
+/** Put a total near each rose tip, omitting labels whose wedge cannot hold it. */
+function addRoseValueLabels(
+    figure: any,
+    subplot: string,
+    traces: any[],
+    d: DesignDecisions,
+): void {
+    figure.data = (figure.data ?? []).filter((trace: any) =>
+        !(trace?._themeRole === 'rose-value-labels' && String(trace?.subplot ?? 'polar') === subplot));
+
+    const totals = new Map<string, { theta: any; value: number }>();
+    for (const trace of traces) {
+        if (trace?.type !== 'barpolar') continue;
+        for (let i = 0; i < Math.min(trace.theta?.length ?? 0, trace.r?.length ?? 0); i++) {
+            const value = Number(trace.r[i]);
+            if (!Number.isFinite(value) || value <= 0) continue;
+            const key = String(trace.theta[i]);
+            const current = totals.get(key);
+            if (current) current.value += value;
+            else totals.set(key, { theta: trace.theta[i], value });
+        }
+    }
+    if (!totals.size) return;
+
+    const layout = figure.layout ?? {};
+    const margin = layout.margin ?? {};
+    const plotW = (Number(layout.width) || Number(figure._width) || 400)
+        - (margin.l ?? 0) - (margin.r ?? 0);
+    const plotH = (Number(layout.height) || Number(figure._height) || 320)
+        - (margin.t ?? 0) - (margin.b ?? 0);
+    const radius = Math.max(40, Math.min(plotW, plotH) / 2);
+    const fontSize = d.axes.y?.label.fontSize ?? 11;
+    const max = Math.max(...[...totals.values()].map(item => item.value));
+    const count = totals.size;
+    const theta: any[] = [];
+    const r: number[] = [];
+    const text: string[] = [];
+
+    for (const item of totals.values()) {
+        const label = Number.isInteger(item.value)
+            ? String(item.value)
+            : String(Number(item.value.toPrecision(3)));
+        const radialPx = (item.value / max) * radius;
+        const arcPx = (2 * Math.PI * radialPx / count) * 0.65;
+        const labelPx = label.length * fontSize * 0.58;
+        if (radialPx < fontSize * 1.6 || arcPx < labelPx) continue;
+        theta.push(item.theta);
+        r.push(Math.max(0, item.value - (max * fontSize * 0.65) / radius));
+        text.push(label);
+    }
+    if (!text.length) return;
+
+    figure.data.push({
+        type: 'scatterpolar',
+        subplot,
+        mode: 'text',
+        theta,
+        r,
+        text,
+        textposition: 'middle center',
+        textfont: {
+            ...fontOf(d.axes.y?.label ?? d.dataLabels.text, d.font),
+            color: d.surface.plot ?? d.surface.canvas,
+        },
+        hoverinfo: 'skip',
+        showlegend: false,
+        _role: 'context',
+        _themeRole: 'rose-value-labels',
+    });
 }
 
 /**
