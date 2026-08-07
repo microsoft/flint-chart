@@ -275,6 +275,29 @@ describe('a pie does not name every slice twice', () => {
         expect(pie('percent', false).layout.showlegend).toBe(true);
         expect(pie('percent', true).layout.showlegend).toBe(true);
     });
+
+    it('wraps only category-percentage pairs that exceed the inline budget', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: [
+                    { Vendor: 'Mouse', Share: 60 },
+                    { Vendor: 'A substantially longer vendor', Share: 40 },
+                ],
+            },
+            semantic_types: { Vendor: 'Category', Share: 'Quantity' },
+            chart_spec: {
+                chartType: 'Pie Chart',
+                encodings: { color: 'Vendor', size: 'Share' },
+                baseSize: { width: 420, height: 360 },
+            },
+            theme_spec: theme(),
+        } as any) as any;
+
+        expect(fig.data[0].texttemplate).toEqual([
+            '%{label} %{percent}',
+            '%{label}<br>%{percent}',
+        ]);
+    });
 });
 
 describe('a radar reads each spoke on its own scale', () => {

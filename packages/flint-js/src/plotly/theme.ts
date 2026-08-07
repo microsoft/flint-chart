@@ -38,6 +38,7 @@ import type {
     ResolvedSeriesInk,
 } from '../core/theme/types';
 import { parseColor, toHex, mixHex, isDarkSurface, contrastingInk, sampleRamp } from '../core/theme/presence';
+import { pieCategoryPercentTemplates } from './pie-labels';
 
 type Say = (path: string, message: string) => void;
 
@@ -1602,6 +1603,22 @@ function applySeriesInk(figure: any, d: DesignDecisions, table: any[], say: Say)
             trace.fillcolor = withAlpha(ink, alpha);
         }
         seriesIndex++;
+    }
+
+    // Plotly's built-in label+percent formatter always stacks the two lines.
+    // Re-evaluate after overflow folding, because that pass can replace both
+    // labels and values (including a newly named Others slice).
+    for (const trace of traces) {
+        const parts = typeof trace?.textinfo === 'string' ? trace.textinfo.split('+') : [];
+        if (trace?.type !== 'pie'
+            || !Array.isArray(trace.labels)
+            || !parts.includes('label')
+            || !parts.includes('percent')) continue;
+        trace.texttemplate = pieCategoryPercentTemplates(
+            trace.labels,
+            Number(figure.layout?.width) || Number(figure._width) || 400,
+            d.dataLabels.text.fontSize ?? 11,
+        );
     }
 
     restateSeriesAnnotations(figure, recoloured, say);

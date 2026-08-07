@@ -13,6 +13,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, getPlotlyPalette } from './utils';
 import { computeCircumferencePressure, computeEffectiveBarCount } from '../../core/decisions';
+import { pieCategoryPercentTemplates } from '../pie-labels';
 
 function buildPieOption(spec: any, ctx: any, hole: number): void {
     const { channelSemantics, table, chartProperties } = ctx;
@@ -94,6 +95,9 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
             values: sortedValues,
             hole,
             textinfo: textinfo[labelType] ?? 'label+percent',
+            ...(labelType === 'categoryPercent'
+                ? { texttemplate: pieCategoryPercentTemplates(sortedLabels, canvasW) }
+                : {}),
             // Plotly stands inside text on its end as soon as a slice gets
             // narrow, which is unreadable and clips against the ring. Held
             // horizontal, it shrinks or steps outside instead.
