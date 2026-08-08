@@ -49,6 +49,7 @@ export const plBulletChartDef: ChartTemplateDef = {
         const zoneTraces = [0, 1, 2].map(i => ({
             type: 'bar',
             name: `__zone${i}`,
+            _role: 'context' as const,
             orientation: 'h' as const,
             showlegend: false,
             hoverinfo: 'skip' as const,
@@ -90,6 +91,7 @@ export const plBulletChartDef: ChartTemplateDef = {
                 type: 'scatter',
                 mode: 'markers',
                 name: 'Target',
+                _role: 'reference' as const,
                 x: categories.map(cat => goalOf(cat)),
                 y: categories,
                 showlegend: false,

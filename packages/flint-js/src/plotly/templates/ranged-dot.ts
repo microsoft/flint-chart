@@ -77,7 +77,13 @@ export const plRangedDotPlotDef: ChartTemplateDef = {
             });
         }
 
-        const catAxisSpec = { type: 'category' as const, categoryorder: 'array' as const, categoryarray: categories, title: { text: catField } };
+        const catAxisSpec = {
+            type: 'category' as const,
+            categoryorder: 'array' as const,
+            categoryarray: categories,
+            ...(catAxis === 'y' ? { autorange: 'reversed' as const } : {}),
+            title: { text: catField },
+        };
         const contAxisSpec = { title: { text: contField } };
 
         Object.assign(spec, {

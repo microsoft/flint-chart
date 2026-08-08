@@ -90,3 +90,7 @@ loops/
 # Generated eval-results data for the flint-py results viewer (8.5MB+, contains
 # run-specific paths/tracebacks). Regenerate locally via tools/build_results_page.py.
 packages/flint-py/tools/viewer/results.js
+
+# Theme audit renders and bundled audit scripts
+audit-out/
+scripts/.*.mjs

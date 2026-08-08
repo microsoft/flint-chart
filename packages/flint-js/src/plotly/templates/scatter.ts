@@ -10,10 +10,35 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
-import { groupBy, getPlotlyPalette, getSeriesColor } from './utils';
+import { extractCategories, groupBy, getPlotlyPalette, getSeriesColor } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
 
 /** Compute a reasonable marker diameter based on canvas area and point count. */
+/**
+ * Per-point diameters for a bound `size` channel.
+ *
+ * A reader compares bubbles by *area*, so the value is mapped onto an area and
+ * the diameter taken back out of it — mapping straight onto the diameter makes
+ * a twice-as-big number look four times as big. Plotly's own `sizeref` cannot
+ * do this: it divides a data value, so it needs the raw numbers, and it would
+ * fight the theme's size range, which rescales drawn pixels.
+ */
+function sizeScale(table: any[], field: string): (row: any) => number {
+    const values = table
+        .map((r: any) => Number(r[field]))
+        .filter((v: number) => Number.isFinite(v));
+    const min = values.length ? Math.min(...values) : 0;
+    const max = values.length ? Math.max(...values) : 1;
+    const MIN_AREA = 40;
+    const MAX_AREA = 900;
+    return (row: any) => {
+        const v = Number(row[field]);
+        if (!Number.isFinite(v)) return 2 * Math.sqrt(MIN_AREA / Math.PI);
+        const t = max > min ? (v - min) / (max - min) : 1;
+        return 2 * Math.sqrt((MIN_AREA + t * (MAX_AREA - MIN_AREA)) / Math.PI);
+    };
+}
+
 function computeMarkerSize(width: number, height: number, pointCount: number): number {
     const canvasArea = width * height;
     const areaPerPoint = canvasArea / Math.max(1, pointCount);
@@ -25,13 +50,14 @@ function computeMarkerSize(width: number, height: number, pointCount: number): n
 export const plScatterPlotDef: ChartTemplateDef = {
     chart: 'Scatter Plot',
     template: { mark: 'circle', encoding: {} },
-    channels: ['x', 'y', 'color', 'size', 'opacity', 'column', 'row'],
+    channels: ['x', 'y', 'color', 'size', 'shape', 'opacity', 'column', 'row'],
     markCognitiveChannel: 'position',
     instantiate: (spec, ctx) => {
         const { channelSemantics, table, chartProperties, colorDecisions } = ctx;
         const xField = channelSemantics.x?.field;
         const yField = channelSemantics.y?.field;
         const colorField = channelSemantics.color?.field;
+        const shapeField = channelSemantics.shape?.field;
         const colorType = channelSemantics.color?.type;
         const isTemporalColor = colorType === 'temporal';
         const isContinuousColor = !!colorField && (colorType === 'quantitative' || isTemporalColor);
@@ -39,7 +65,11 @@ export const plScatterPlotDef: ChartTemplateDef = {
         if (!xField || !yField) return;
 
         const opacity = Number(chartProperties?.opacity ?? 1);
+        const sizeField = channelSemantics.size?.field;
+        const sizeOf = sizeField ? sizeScale(table, sizeField) : null;
         const traces: any[] = [];
+        const symbols = ['circle', 'square', 'triangle-up', 'diamond', 'cross', 'x', 'star'];
+        const fullTable = ctx.fullTable ?? table;
 
         if (isContinuousColor && colorField) {
             // A quantitative/temporal color channel is a numeric scale, not a
@@ -49,30 +79,55 @@ export const plScatterPlotDef: ChartTemplateDef = {
             const toColorVal = isTemporalColor
                 ? (v: any) => (v != null ? new Date(v).getTime() : NaN)
                 : (v: any) => (v != null ? Number(v) : NaN);
-            const colorVals = table.map((r: any) => toColorVal(r[colorField])).filter((v: number) => !isNaN(v));
+            const colorVals = fullTable
+                .map((r: any) => toColorVal(r[colorField]))
+                .filter((v: number) => !isNaN(v));
             const cmin = colorVals.length ? Math.min(...colorVals) : 0;
             const cmax = colorVals.length ? Math.max(...colorVals) : 1;
             const decision = colorDecisions?.color ?? colorDecisions?.group;
             const diverging = decision?.schemeType === 'diverging';
-            traces.push({
-                type: 'scatter',
-                mode: 'markers',
-                name: colorField,
-                x: table.map((r: any) => r[xField]),
-                y: table.map((r: any) => r[yField]),
-                marker: {
-                    color: table.map((r: any) => toColorVal(r[colorField])),
-                    colorscale: diverging ? 'RdBu' : 'Viridis',
-                    cmin, cmax,
-                    showscale: true,
-                    colorbar: { title: { text: colorField } },
-                    opacity,
-                    line: { color: '#ffffff', width: 0.5 },
-                },
-            });
+            const shapeCategories = shapeField
+                ? extractCategories(fullTable, shapeField, channelSemantics.shape?.ordinalSortOrder)
+                : [];
+            const groups: Array<[string, any[]]> = shapeField
+                ? [...groupBy(table, shapeField)]
+                : [['', table]];
+            for (const [shapeName, rows] of groups) {
+                const shapeIndex = shapeField ? Math.max(0, shapeCategories.indexOf(shapeName)) : 0;
+                traces.push({
+                    type: 'scatter',
+                    mode: 'markers',
+                    name: shapeField ? shapeName : colorField,
+                    x: rows.map((r: any) => r[xField]),
+                    y: rows.map((r: any) => r[yField]),
+                    marker: {
+                        color: rows.map((r: any) => toColorVal(r[colorField])),
+                        colorscale: diverging ? 'RdBu' : 'Viridis',
+                        cmin, cmax,
+                        showscale: traces.length === 0,
+                        ...(traces.length === 0 ? { colorbar: { title: { text: colorField } } } : {}),
+                        ...(shapeField ? { symbol: symbols[shapeIndex % symbols.length] } : {}),
+                        opacity,
+                        ...(sizeOf ? { size: rows.map((r: any) => sizeOf(r)) } : {}),
+                        line: { color: '#ffffff', width: 0.5 },
+                    },
+                    showlegend: !!shapeField,
+                });
+            }
         } else {
             const palette = getPlotlyPalette(ctx, 'color');
-            const makeTrace = (name: string | undefined, rows: any[], colorIndex: number) => ({
+            const colorCategories = colorField
+                ? extractCategories(fullTable, colorField, channelSemantics.color?.ordinalSortOrder)
+                : [];
+            const shapeCategories = shapeField
+                ? extractCategories(fullTable, shapeField, channelSemantics.shape?.ordinalSortOrder)
+                : [];
+            const makeTrace = (
+                name: string | undefined,
+                rows: any[],
+                colorIndex: number,
+                shapeIndex: number,
+            ) => ({
                 type: 'scatter',
                 mode: 'markers',
                 ...(name != null ? { name } : {}),
@@ -80,19 +135,32 @@ export const plScatterPlotDef: ChartTemplateDef = {
                 y: rows.map(r => r[yField]),
                 marker: {
                     color: getSeriesColor(palette, colorIndex),
+                    ...(shapeField ? { symbol: symbols[shapeIndex % symbols.length] } : {}),
                     opacity,
+                    ...(sizeOf ? { size: rows.map(r => sizeOf(r)) } : {}),
                     line: { color: '#ffffff', width: 0.5 },
                 },
             });
 
-            if (colorField) {
-                let i = 0;
-                for (const [name, rows] of groupBy(table, colorField)) {
-                    traces.push(makeTrace(name, rows, i));
-                    i++;
+            if (colorField || shapeField) {
+                const fields = [colorField, shapeField].filter((f): f is string => !!f);
+                const groups = new Map<string, any[]>();
+                for (const row of table) {
+                    const key = JSON.stringify(fields.map(f => row[f]));
+                    const rows = groups.get(key);
+                    if (rows) rows.push(row);
+                    else groups.set(key, [row]);
+                }
+                for (const rows of groups.values()) {
+                    const colorValue = colorField ? String(rows[0][colorField]) : '';
+                    const shapeValue = shapeField ? String(rows[0][shapeField]) : '';
+                    const colorIndex = colorField ? Math.max(0, colorCategories.indexOf(colorValue)) : 0;
+                    const shapeIndex = shapeField ? Math.max(0, shapeCategories.indexOf(shapeValue)) : 0;
+                    const name = [colorValue, shapeValue].filter(Boolean).join(' · ');
+                    traces.push(makeTrace(name, rows, colorIndex, shapeIndex));
                 }
             } else {
-                traces.push(makeTrace(undefined, table, 0));
+                traces.push(makeTrace(undefined, table, 0, 0));
             }
         }
 
@@ -110,7 +178,7 @@ export const plScatterPlotDef: ChartTemplateDef = {
             layout: {
                 xaxis: xAxisSpec,
                 yaxis: yAxisSpec,
-                showlegend: !!colorField && !isContinuousColor,
+                showlegend: !!shapeField || (!!colorField && !isContinuousColor),
             },
         };
 

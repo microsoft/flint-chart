@@ -11,6 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { assemblePlotly, plAllTemplateDefs, plGetTemplateDef } from '../src';
+import { plCombineFacetPanels } from '../src/plotly/facet';
 
 function input(chartType: string, encodings: Record<string, unknown>, values: any[], semantic_types: Record<string, string>, chartProperties?: Record<string, unknown>) {
   return {
@@ -96,6 +97,325 @@ describe('Plotly expressive templates — registration', () => {
 });
 
 describe('Plotly expressive templates — native trace shapes', () => {
+  it('keeps the first resolved category at the top of horizontal bars', () => {
+    const fig = assemblePlotly(input(
+      'Bar Chart',
+      { y: { field: 'region', sortBy: 'x', sortOrder: 'descending' }, x: { field: 'revenue' } },
+      SALES,
+      { region: 'Region', revenue: 'Amount' },
+    )) as any;
+    expect(fig.layout.yaxis.autorange).toBe('reversed');
+  });
+
+  it('uses a continuous scale for quantitative bar color', () => {
+    const fig = assemblePlotly(input(
+      'Bar Chart',
+      { x: { field: 'category' }, y: { field: 'value' }, color: { field: 'score' } },
+      [
+        { category: 'A', value: 10, score: 0.2 },
+        { category: 'B', value: 20, score: 0.8 },
+      ],
+      { category: 'Category', value: 'Quantity', score: 'Quantity' },
+    )) as any;
+    expect(fig.data).toHaveLength(1);
+    expect(fig.data[0].marker.color).toEqual([0.2, 0.8]);
+    expect(fig.data[0].marker.showscale).toBe(true);
+    expect(fig.layout.showlegend).toBe(false);
+  });
+
+  it('fits slope values rather than forcing a zero baseline', () => {
+    const fig = assemblePlotly(input(
+      'Slope Chart',
+      { x: { field: 'year' }, y: { field: 'revenue' }, color: { field: 'region' } },
+      SALES,
+      { year: 'Year', revenue: 'Amount', region: 'Region' },
+    )) as any;
+    expect(fig.layout.yaxis.rangemode).toBe('normal');
+  });
+
+  it('groups line traces by stroke dash and retains the dash in the legend', () => {
+    const values = [
+      { year: 2023, value: 10, state: 'Observed' },
+      { year: 2024, value: 12, state: 'Observed' },
+      { year: 2024, value: 12, state: 'Projected' },
+      { year: 2025, value: 15, state: 'Projected' },
+    ];
+    const fig = assemblePlotly(input(
+      'Line Chart',
+      { x: { field: 'year' }, y: { field: 'value' }, strokeDash: { field: 'state' } },
+      values,
+      { year: 'Year', value: 'Amount', state: 'Category' },
+    )) as any;
+    expect(fig.data.map((t: any) => t.name)).toEqual(['Observed', 'Projected']);
+    expect(fig.data.map((t: any) => t.line.dash)).toEqual(['solid', 'dash']);
+    expect(fig.layout.showlegend).toBe(true);
+  });
+
+  it('shows goal progress on numeric KPI cards', () => {
+    const fig = assemblePlotly(input(
+      'KPI Card',
+      { metric: { field: 'metric' }, value: { field: 'value' }, goal: { field: 'goal' } },
+      [{ metric: 'Renewable share', value: 30, goal: 45 }],
+      { metric: 'Category', value: 'Quantity', goal: 'Quantity' },
+    )) as any;
+    expect(fig.data[0].mode).toBe('number+delta');
+    expect(fig.layout.shapes).toHaveLength(2);
+    expect(fig.layout.annotations[0].text).toBe('67% of 45');
+  });
+
+  it('does not divide by zero for a zero KPI goal', () => {
+    const fig = assemblePlotly(input(
+      'KPI Card',
+      { metric: { field: 'metric' }, value: { field: 'value' }, goal: { field: 'goal' } },
+      [{ metric: 'Defects', value: 0, goal: 0 }],
+      { metric: 'Category', value: 'Quantity', goal: 'Quantity' },
+    )) as any;
+    expect(fig.layout.shapes).toHaveLength(0);
+    expect(fig.layout.annotations[0].text).toBe('Goal: 0');
+    expect(JSON.stringify(fig)).not.toContain('NaN');
+  });
+
+  it('preserves categorical shape as marker symbols and legend entries', () => {
+    const values = [
+      { x: 1, y: 2, kind: 'A' },
+      { x: 2, y: 3, kind: 'B' },
+      { x: 3, y: 4, kind: 'A' },
+    ];
+    const fig = assemblePlotly(input(
+      'Scatter Plot',
+      { x: { field: 'x' }, y: { field: 'y' }, shape: { field: 'kind' } },
+      values,
+      { x: 'Quantity', y: 'Quantity', kind: 'Category' },
+    )) as any;
+    expect(fig.data.map((t: any) => t.name)).toEqual(['A', 'B']);
+    expect(fig.data.map((t: any) => t.marker.symbol)).toEqual(['circle', 'square']);
+    expect(fig.layout.showlegend).toBe(true);
+  });
+
+  it('retains shape groups alongside continuous scatter color', () => {
+    const values = [
+      { x: 1, y: 2, score: 0.1, kind: 'A' },
+      { x: 2, y: 3, score: 0.5, kind: 'B' },
+      { x: 3, y: 4, score: 0.9, kind: 'A' },
+    ];
+    const fig = assemblePlotly(input(
+      'Scatter Plot',
+      {
+        x: { field: 'x' },
+        y: { field: 'y' },
+        color: { field: 'score' },
+        shape: { field: 'kind' },
+      },
+      values,
+      { x: 'Quantity', y: 'Quantity', score: 'Quantity', kind: 'Category' },
+    )) as any;
+    expect(fig.data.map((t: any) => t.name)).toEqual(['A', 'B']);
+    expect(fig.data.map((t: any) => t.marker.symbol)).toEqual(['circle', 'square']);
+    expect(fig.data.filter((t: any) => t.marker.showscale)).toHaveLength(1);
+    expect(fig.layout.showlegend).toBe(true);
+  });
+
+  it('orients heatmap category rows like Vega-Lite', () => {
+    const fig = assemblePlotly(input(
+      'Heatmap',
+      { x: { field: 'x' }, y: { field: 'y' }, color: { field: 'value' } },
+      [{ x: 'A', y: 'First', value: 1 }, { x: 'A', y: 'Second', value: 2 }],
+      { x: 'Category', y: 'Category', value: 'Quantity' },
+    )) as any;
+    expect(fig.layout.yaxis.autorange).toBe('reversed');
+  });
+
+  it('uses a continuous colorbar instead of fifty grouped-bar legend keys', () => {
+    const values = Array.from({ length: 10 }, (_v, i) => ({
+      category: i < 5 ? 'A' : 'B',
+      value: i + 1,
+      temperature: 10.5 + i / 10,
+    }));
+    const fig = assemblePlotly(input(
+      'Grouped Bar Chart',
+      { x: { field: 'category' }, y: { field: 'value' }, color: { field: 'temperature' } },
+      values,
+      { category: 'Category', value: 'Quantity', temperature: 'Quantity' },
+    )) as any;
+    expect(fig.data).toHaveLength(5);
+    expect(fig.data[0].marker.color).toHaveLength(2);
+    expect(fig.data[0].marker.showscale).toBe(true);
+    expect(fig.layout.showlegend).toBe(false);
+  });
+
+  it('maps temporal grouped-bar color to timestamps and preserves missing values', () => {
+    const fig = assemblePlotly(input(
+      'Grouped Bar Chart',
+      { x: { field: 'category' }, y: { field: 'value' }, color: { field: 'when' } },
+      [
+        { category: 'A', value: 10, when: '2024-01-01' },
+        { category: 'B', value: 20, when: null },
+      ],
+      { category: 'Category', value: 'Quantity', when: 'Date' },
+    )) as any;
+    expect(fig.data[0].marker.color[0]).toBe(Date.parse('2024-01-01'));
+    expect(fig.data[0].marker.color[1]).toBeNull();
+  });
+
+  it('places polar facets on separate Plotly subplots', () => {
+    const values = [
+      { direction: 'N', value: 10, year: '2023' },
+      { direction: 'S', value: 8, year: '2023' },
+      { direction: 'N', value: 12, year: '2024' },
+      { direction: 'S', value: 9, year: '2024' },
+    ];
+    const fig = assemblePlotly(input(
+      'Rose Chart',
+      { x: { field: 'direction' }, y: { field: 'value' }, column: { field: 'year' } },
+      values,
+      { direction: 'Category', value: 'Quantity', year: 'Year' },
+    )) as any;
+    expect(fig.layout.polar.domain).toBeDefined();
+    expect(fig.layout.polar2.domain).toBeDefined();
+    expect(new Set(fig.data.map((t: any) => t.subplot))).toEqual(new Set(['polar', 'polar2']));
+  });
+
+  it('retains stacking when colored rose panels are faceted', () => {
+    const values = [
+      { direction: 'N', value: 10, year: '2023', series: 'A' },
+      { direction: 'N', value: 5, year: '2023', series: 'B' },
+      { direction: 'N', value: 12, year: '2024', series: 'A' },
+      { direction: 'N', value: 6, year: '2024', series: 'B' },
+    ];
+    const fig = assemblePlotly(input(
+      'Rose Chart',
+      {
+        x: { field: 'direction' },
+        y: { field: 'value' },
+        color: { field: 'series' },
+        column: { field: 'year' },
+      },
+      values,
+      { direction: 'Category', value: 'Quantity', series: 'Category', year: 'Year' },
+    )) as any;
+    expect(fig.layout.barmode).toBe('stack');
+  });
+
+  it('retains normalized stacking in cartesian facets', () => {
+    const values = [
+      { category: 'A', value: 20, series: 'One', panel: 'Left' },
+      { category: 'A', value: 80, series: 'Two', panel: 'Left' },
+      { category: 'A', value: 30, series: 'One', panel: 'Right' },
+      { category: 'A', value: 70, series: 'Two', panel: 'Right' },
+    ];
+    const fig = assemblePlotly(input(
+      'Stacked Bar Chart',
+      {
+        x: { field: 'category' },
+        y: { field: 'value' },
+        color: { field: 'series' },
+        column: { field: 'panel' },
+      },
+      values,
+      { category: 'Category', value: 'Quantity', series: 'Category', panel: 'Category' },
+      { stackMode: 'normalize' },
+    )) as any;
+    expect(fig.layout.barmode).toBe('stack');
+    expect(fig.layout.barnorm).toBe('percent');
+  });
+
+  it('keeps one colorbar and no categorical key across continuous-color facets', () => {
+    const values = [
+      { category: 'A', value: 10, score: 1, panel: 'Left' },
+      { category: 'B', value: 20, score: 2, panel: 'Left' },
+      { category: 'A', value: 30, score: 3, panel: 'Right' },
+      { category: 'B', value: 40, score: 4, panel: 'Right' },
+    ];
+    const fig = assemblePlotly(input(
+      'Bar Chart',
+      {
+        x: { field: 'category' },
+        y: { field: 'value' },
+        color: { field: 'score' },
+        column: { field: 'panel' },
+      },
+      values,
+      { category: 'Category', value: 'Quantity', score: 'Quantity', panel: 'Category' },
+    )) as any;
+    expect(fig.data.filter((trace: any) => trace.marker?.showscale)).toHaveLength(1);
+    expect(fig.data.every((trace: any) => trace.showlegend === false)).toBe(true);
+    expect(new Set(fig.data.map((trace: any) => trace.marker.cmin))).toEqual(new Set([1]));
+    expect(new Set(fig.data.map((trace: any) => trace.marker.cmax))).toEqual(new Set([4]));
+  });
+
+  it('globalizes and deduplicates continuous strip-plot facet scales', () => {
+    const values = [
+      { category: 'A', value: 1, score: 0, panel: 'Left' },
+      { category: 'A', value: 2, score: 1, panel: 'Left' },
+      { category: 'A', value: 3, score: 100, panel: 'Right' },
+      { category: 'A', value: 4, score: 200, panel: 'Right' },
+    ];
+    const fig = assemblePlotly(input(
+      'Strip Plot',
+      {
+        x: { field: 'category' },
+        y: { field: 'value' },
+        color: { field: 'score' },
+        column: { field: 'panel' },
+      },
+      values,
+      { category: 'Category', value: 'Quantity', score: 'Quantity', panel: 'Category' },
+    )) as any;
+    expect(fig.data.filter((trace: any) => trace.marker?.showscale)).toHaveLength(1);
+    expect(new Set(fig.data.map((trace: any) => trace.marker?.cmin))).toEqual(new Set([0]));
+    expect(new Set(fig.data.map((trace: any) => trace.marker?.cmax))).toEqual(new Set([200]));
+  });
+
+  it('globalizes sparse heatmap facet scales and keeps one colorbar', () => {
+    const values = [
+      { x: 'A', y: 'First', value: 100, panel: 'Left' },
+      { x: 'B', y: 'First', value: 200, panel: 'Left' },
+      { x: 'A', y: 'Second', value: 300, panel: 'Left' },
+      { x: 'A', y: 'First', value: 400, panel: 'Right' },
+      { x: 'B', y: 'Second', value: 350, panel: 'Right' },
+    ];
+    const fig = assemblePlotly(input(
+      'Heatmap',
+      {
+        x: { field: 'x' },
+        y: { field: 'y' },
+        color: { field: 'value' },
+        column: { field: 'panel' },
+      },
+      values,
+      { x: 'Category', y: 'Category', value: 'Quantity', panel: 'Category' },
+    )) as any;
+    expect(fig.data.filter((trace: any) => trace.showscale !== false)).toHaveLength(1);
+    expect(new Set(fig.data.map((trace: any) => trace.zmin))).toEqual(new Set([100]));
+    expect(new Set(fig.data.map((trace: any) => trace.zmax))).toEqual(new Set([400]));
+  });
+
+  it('globalizes large facet scales without spreading values as arguments', () => {
+    const color = Array.from({ length: 200_000 }, (_value, index) => index);
+    const fig = plCombineFacetPanels(
+      [{
+        rowIndex: 0,
+        colIndex: 0,
+        figure: {
+          data: [{ type: 'scatter', x: [0], y: [0], marker: { color, showscale: true } }],
+          layout: {},
+        },
+      }],
+      {
+        rows: 1,
+        cols: 1,
+        panelWidth: 400,
+        panelHeight: 300,
+        hasColHeader: false,
+        hasRowHeader: false,
+        colHeaderPerRow: false,
+        showLegend: false,
+      },
+    ) as any;
+    expect(fig.data[0].marker.cmin).toBe(0);
+    expect(fig.data[0].marker.cmax).toBe(199_999);
+  });
+
   it('boxplot uses a native box trace (no manual quartile computation)', () => {
     const fig = assemblePlotly(input('Boxplot', { x: { field: 'region' }, y: { field: 'revenue' } }, SALES, { region: 'Region', revenue: 'Amount' }));
     expect(fig.data[0].type).toBe('box');
@@ -163,6 +483,24 @@ describe('Plotly expressive templates — native trace shapes', () => {
 });
 
 describe('Plotly expressive templates — grouping & stacking', () => {
+  it('renders a discrete-by-discrete bar request as an occupied square grid', () => {
+    const rows = [
+      { product: 'Laptop', market: 'US' },
+      { product: 'Phone', market: 'US' },
+      { product: 'Phone', market: 'UK' },
+    ];
+    const fig = assemblePlotly(input(
+      'Bar Chart',
+      { x: { field: 'product' }, y: { field: 'market' } },
+      rows,
+      { product: 'Category', market: 'Category' },
+    ));
+    expect(fig.data[0].type).toBe('scatter');
+    expect(fig.data[0].marker.symbol).toBe('square');
+    expect(fig.data[0].x).toHaveLength(3);
+    expect(fig.layout.yaxis.type).toBe('category');
+  });
+
   it('grouped bar chart uses barmode "group" with one trace per group', () => {
     const fig = assemblePlotly(input('Grouped Bar Chart', { x: { field: 'region' }, y: { field: 'revenue' }, color: { field: 'year' } }, SALES, { region: 'Region', revenue: 'Amount', year: 'Year' }));
     expect(fig.layout.barmode).toBe('group');

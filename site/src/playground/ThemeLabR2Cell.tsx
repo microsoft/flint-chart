@@ -9,11 +9,15 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { THEME_PRESETS, assembleVegaLite } from 'flint-chart';
+import { THEME_PRESETS, assembleVegaLite, assemblePlotly } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
+import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import { r2Input, type R2Case } from './theme-lab-r2-data';
+
+/** Which assembler a column is drawn with. Both read the same ThemeSpec. */
+export type LabBackend = 'vegalite' | 'plotly';
 
 export const R2_COLUMNS = ['flint', ...Object.keys(THEME_PRESETS)] as const;
 export type R2Column = (typeof R2_COLUMNS)[number];
@@ -33,18 +37,32 @@ function stripInternal(node: any): void {
 
 interface Compiled {
     spec?: any;
+    figure?: any;
     background: string;
     error?: string;
     reportCount: number;
 }
 
-function compileCell(c: R2Case, column: R2Column): Compiled {
+function compileCell(c: R2Case, column: R2Column, backend: LabBackend): Compiled {
     try {
-        const input = r2Input(c);
+        const base = r2Input(c);
         const themeId = column === 'flint' ? null : column;
-        const spec = assembleVegaLite(
-            themeId ? { ...input, theme_spec: (THEME_PRESETS as any)[themeId].spec } : input,
-        ) as any;
+        const input = themeId
+            ? { ...base, theme_spec: (THEME_PRESETS as any)[themeId].spec }
+            : base;
+
+        if (backend === 'plotly') {
+            // A figure keeps its own paper colour, and its `_theme` block is
+            // read before the internals are stripped for rendering.
+            const figure = assemblePlotly(input as any) as any;
+            const reportCount = figure._theme?.report?.length ?? 0;
+            const background = typeof figure.layout?.paper_bgcolor === 'string'
+                ? figure.layout.paper_bgcolor
+                : '#ffffff';
+            return { figure, background, reportCount };
+        }
+
+        const spec = assembleVegaLite(input as any) as any;
         const reportCount = spec._theme?.report?.length ?? 0;
         const background = typeof spec.background === 'string' ? spec.background : '#ffffff';
         stripInternal(spec);
@@ -55,7 +73,15 @@ function compileCell(c: R2Case, column: R2Column): Compiled {
     }
 }
 
-export function R2Cell({ c, column }: { c: R2Case; column: R2Column }) {
+export function R2Cell({
+    c,
+    column,
+    backend = 'vegalite',
+}: {
+    c: R2Case;
+    column: R2Column;
+    backend?: LabBackend;
+}) {
     const ref = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(false);
 
@@ -75,7 +101,10 @@ export function R2Cell({ c, column }: { c: R2Case; column: R2Column }) {
         return () => observer.disconnect();
     }, []);
 
-    const built = useMemo(() => (visible ? compileCell(c, column) : null), [visible, c, column]);
+    const built = useMemo(
+        () => (visible ? compileCell(c, column, backend) : null),
+        [visible, c, column, backend],
+    );
 
     return (
         <div
@@ -145,7 +174,9 @@ export function R2Cell({ c, column }: { c: R2Case; column: R2Column }) {
                     </div>
                 ) : (
                     <ScaleToFit fill padding={6} height={R2_TILE_HEIGHT}>
-                        <VegaLiteView spec={built.spec} renderer="svg" />
+                        {built.figure
+                            ? <PlotlyView figure={built.figure} constrain={false} />
+                            : <VegaLiteView spec={built.spec} renderer="svg" />}
                     </ScaleToFit>
                 )}
             </div>

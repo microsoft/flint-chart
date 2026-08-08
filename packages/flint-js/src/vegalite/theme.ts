@@ -15,7 +15,7 @@
  */
 
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
-import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
+import { contrastingInk, parseColor, luminance, mixHex, toHex } from '../core/theme/presence.js';
 import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
@@ -1157,11 +1157,32 @@ function drawsPointCloud(spec: any): boolean {
     return found;
 }
 
-function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {    const config = spec.config;
+/** Restate the radar's required coordinate furniture and secondary vertices. */
+function applyRadarMarks(spec: any, d: DesignDecisions): void {
+    const plot = d.surface.plot ?? d.surface.canvas;
+    walk(spec, (node) => {
+        if (node.name === 'radar-grid-spokes' || node.name === 'radar-grid-rings') {
+            const mark = normalizeMark(node.mark);
+            const ring = node.name === 'radar-grid-rings';
+            mark.stroke = mixHex(plot, d.text.secondary, ring ? 0.18 : 0.24);
+            mark.strokeWidth = Math.min(1, Number(mark.strokeWidth) || 1);
+            node.mark = mark;
+        }
+        if (node.name === 'radar-secondary-vertices') {
+            const mark = normalizeMark(node.mark);
+            mark.size = d.marks.point?.secondarySize ?? 25;
+            node.mark = mark;
+        }
+    });
+}
+
+function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
+    const config = spec.config;
     const m = d.marks;
     const plotWidth = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
     const plotHeight = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
 
+    applyRadarMarks(spec, d);
     config.line = { ...(config.line ?? {}), strokeWidth: m.strokeWidth };
     config.trail = { ...(config.trail ?? {}), size: m.strokeWidth };
     if (m.strokeCap) { config.line.strokeCap = m.strokeCap; config.rule = { ...(config.rule ?? {}), strokeCap: m.strokeCap }; }

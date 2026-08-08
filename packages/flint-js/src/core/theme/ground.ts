@@ -1327,6 +1327,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             ? {
                 show: (marksSpec.point?.presence ?? 'omit') !== 'omit',
                 size: marksSpec.point?.size,
+                secondarySize: marksSpec.point?.secondarySize
+                    ?? Math.min(marksSpec.point?.size ?? 25, 25),
                 // Only a house that spoke about its dots' fill decides how
                 // they are filled; inventing an answer here would re-fill
                 // every scatter it has for the sake of a line chart's

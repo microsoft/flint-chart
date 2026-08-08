@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
-import { assembleVegaLite } from '../src';
+import { assemblePlotly, assembleVegaLite } from '../src';
 import { THEME_PRESETS } from '../src/core/theme/presets';
 
 /**
@@ -42,6 +42,26 @@ const drawnSize = (spec: { mark?: unknown; config?: Record<string, { size?: numb
 
 const declaredSize = (house: string) =>
     (THEME_PRESETS[house].spec as { marks?: { point?: { size?: number } } }).marks?.point?.size;
+
+const radarInput = (house: string) => ({
+    data: {
+        values: [
+            { Metric: 'Reach', Group: 'A', Value: 80 },
+            { Metric: 'Trust', Group: 'A', Value: 55 },
+            { Metric: 'Value', Group: 'A', Value: 70 },
+            { Metric: 'Reach', Group: 'B', Value: 60 },
+            { Metric: 'Trust', Group: 'B', Value: 85 },
+            { Metric: 'Value', Group: 'B', Value: 45 },
+        ],
+    },
+    semantic_types: { Metric: 'Category', Group: 'Category', Value: 'Quantity' },
+    chart_spec: {
+        chartType: 'Radar Chart',
+        encodings: { x: 'Metric', y: 'Value', color: 'Group' },
+        baseSize: { width: 420, height: 360 },
+    },
+    theme_spec: THEME_PRESETS[house].spec,
+} as never);
 
 describe('point size', () => {
     it('every house says how big its dots are', () => {
@@ -108,5 +128,31 @@ describe('point size', () => {
         } as never) as never as { config?: Record<string, { size?: number }> };
         expect(line.config?.circle?.size).toBe(declaredSize('mckinsey'));
         expect(drawnSize(scatter(rows, 'mckinsey'))).toBeLessThan(declaredSize('mckinsey')!);
+    });
+
+    it('a supporting radar vertex stays secondary-sized in both backends', () => {
+        // Pop's 180px² point is deliberately loud when the dot itself is the
+        // reading. On a radar it merely confirms a polygon vertex; carrying
+        // 180px² across would cover the grid and adjacent paths.
+        expect(declaredSize('pop')).toBe(180);
+
+        const vl = assembleVegaLite(radarInput('pop')) as any;
+        const vertices = vl.layer.find((layer: any) => layer.name === 'radar-secondary-vertices');
+        const spokes = vl.layer.find((layer: any) => layer.name === 'radar-grid-spokes');
+        const rings = vl.layer.find((layer: any) => layer.name === 'radar-grid-rings');
+        expect(vertices.mark.size).toBe(25);
+        expect(spokes.mark.strokeWidth).toBeLessThanOrEqual(1);
+        expect(rings.mark.strokeWidth).toBeLessThanOrEqual(1);
+
+        const plotly = assemblePlotly(radarInput('pop')) as any;
+        for (const trace of plotly.data) {
+            // Plotly states marker size as a whole-pixel diameter; 25px²
+            // converts to 5.64px and is rounded to 6.
+            expect(trace.marker.size).toBe(6);
+        }
+        expect(plotly.layout.polar.radialaxis.showgrid).toBe(true);
+        expect(plotly.layout.polar.angularaxis.showgrid).toBe(true);
+        expect(plotly.layout.polar.radialaxis.gridwidth).toBeLessThanOrEqual(1);
+        expect(plotly.layout.polar.angularaxis.gridwidth).toBeLessThanOrEqual(1);
     });
 });

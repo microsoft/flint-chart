@@ -76,9 +76,12 @@ export const plAreaChartDef: ChartTemplateDef = {
             ? extractCategories(table, xField, xCS.ordinalSortOrder)
             : undefined;
 
-        const opacity = Number(chartProperties?.opacity ?? 0.4);
         const stackMode = chartProperties?.stackMode;
         const stacked = stackMode !== 'layered';
+        // Layered areas overlap, so they have to be see-through. A stack does
+        // not overlap — a translucent band there only muddies the one beneath
+        // it and makes neither colour readable.
+        const opacity = Number(chartProperties?.opacity ?? (colorField && stacked ? 1 : 0.4));
         const shape = lineShape(chartProperties?.interpolate);
 
         const palette = getPlotlyPalette(ctx, 'color');
@@ -134,6 +137,12 @@ export const plAreaChartDef: ChartTemplateDef = {
         const yAxisSpec: any = { title: { text: yField } };
         if (yCS.zero) {
             yAxisSpec.rangemode = yCS.zero.zero !== false ? 'tozero' : 'normal';
+        }
+        // A normalized stack no longer plots the measure, so it must not carry
+        // the measure's unit either — it reads as a share of the whole.
+        if (traces[0]?.groupnorm === 'percent') {
+            yAxisSpec.ticksuffix = '%';
+            yAxisSpec.range = [0, 100];
         }
 
         const figure: any = {
