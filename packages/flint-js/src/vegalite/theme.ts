@@ -3621,36 +3621,59 @@ function applyDataLabels(spec: any, d: DesignDecisions, table: any[], say: (p: s
 /**
  * The ink for a number printed on a ramp.
  *
- * Vega-Lite cannot ask a mark what colour it ended up, so the places where the
- * ramp goes dark are worked out here and restated as a test on the value. A
- * sequential ramp darkens at one end and a diverging one at both, and the same
- * scan covers either.
+ * Vega-Lite cannot ask a mark what colour it ended up. A parallel quantized
+ * scale over the same (possibly aggregated) measure maps each ramp interval to
+ * readable light or dark text. Keeping the aggregate on the encoding lets
+ * Vega-Lite derive the same per-cell domain for both fill and label ink.
  */
-function inkOnRamp(field: string, stops: string[], values: number[], light: string, dark: string): any {
-    const lo = Math.min(...values);
-    const hi = Math.max(...values);
-    if (!(hi > lo) || stops.length < 2) return { value: dark };
+function inkScaleOnRamp(enc: any, stops: string[], light: string, dark: string): any {
+    if (stops.length < 2) return { value: dark };
+    const discreteScale = ['quantile', 'quantize', 'threshold', 'bin-ordinal'].includes(enc.scale?.type);
+    if (discreteScale && Array.isArray(enc.scale?.range) && enc.scale.range.length > 0) {
+        return {
+            field: enc.field,
+            type: 'quantitative',
+            ...(enc.aggregate ? { aggregate: enc.aggregate } : {}),
+            legend: null,
+            scale: {
+                ...enc.scale,
+                range: enc.scale.range.map((fill: string) => readableOn(fill, light, dark)),
+            },
+        };
+    }
     const STEPS = 32;
-    const runs: Array<[number, number]> = [];
-    for (let i = 0; i <= STEPS; i++) {
-        const t = (i / STEPS) * (stops.length - 1);
+    const range: string[] = [];
+    const lightColor = parseColor(light);
+    const darkColor = parseColor(dark);
+    const contrast = (a: ReturnType<typeof parseColor>, b: ReturnType<typeof parseColor>): number => {
+        if (!a || !b) return 0;
+        const lo = Math.min(luminance(a), luminance(b));
+        const hi = Math.max(luminance(a), luminance(b));
+        return (hi + 0.05) / (lo + 0.05);
+    };
+    for (let i = 0; i < STEPS; i++) {
+        const t = ((i + 0.5) / STEPS) * (stops.length - 1);
         const a = parseColor(stops[Math.floor(t)]);
         const b = parseColor(stops[Math.min(stops.length - 1, Math.floor(t) + 1)]);
-        if (!a || !b) continue;
+        if (!a || !b) {
+            range.push(dark);
+            continue;
+        }
         const k = t - Math.floor(t);
         const c = { r: a.r + (b.r - a.r) * k, g: a.g + (b.g - a.g) * k, b: a.b + (b.b - a.b) * k, a: 1 };
-        if (luminance(c) >= 0.5) continue;
-        const v = lo + (i / STEPS) * (hi - lo);
-        const last = runs[runs.length - 1];
-        if (last && i > 0 && last[1] >= lo + ((i - 1) / STEPS) * (hi - lo)) last[1] = v;
-        else runs.push([v, v]);
+        range.push(contrast(lightColor, c) >= contrast(darkColor, c) ? light : dark);
     }
-    if (runs.length === 0) return { value: dark };
-    const f = `datum[${JSON.stringify(field)}]`;
-    const test = runs
-        .map(([a, b]) => (a === b ? `${f} === ${a}` : `(${f} >= ${a} && ${f} <= ${b})`))
-        .join(' || ');
-    return { condition: { test, value: light }, value: dark };
+    return {
+        field: enc.field,
+        type: 'quantitative',
+        ...(enc.aggregate ? { aggregate: enc.aggregate } : {}),
+        legend: null,
+        scale: {
+            ...(enc.scale?.domain ? { domain: enc.scale.domain } : {}),
+            type: 'quantize',
+            range,
+        },
+    };
 }
 
 function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): any {
@@ -3868,7 +3891,12 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     }
 
     const labelEncoding: any = {
-        text: { field: measure.field, type: 'quantitative', ...(d.dataLabels.format ? { format: d.dataLabels.format } : {}) },
+        text: {
+            field: measure.field,
+            type: 'quantitative',
+            ...(measure.aggregate ? { aggregate: measure.aggregate } : {}),
+            ...(d.dataLabels.format ? { format: d.dataLabels.format } : {}),
+        },
     };
     if (d.dataLabels.unit) {
         printWithUnit(body, { encoding: labelEncoding }, measure.field, d.dataLabels.format, d.dataLabels.unit);
@@ -4010,9 +4038,8 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
 
     if (cells) {
         // The cell under the number is the ramp, so the ink follows the ramp.
-        const values = table.map((r) => r?.[measure.field]).filter((v) => typeof v === 'number');
         const stops = d.series.ramp?.stops ?? d.series.range ?? [];
-        labelEncoding.color = inkOnRamp(measure.field, stops, values, d.text.inverse, d.text.primary);
+        labelEncoding.color = inkScaleOnRamp(measure, stops, d.text.inverse, d.text.primary);
     } else if (d.dataLabels.inkMode === 'matchSeries' && enc.color?.field) {
         labelEncoding.color = { ...enc.color, legend: null };
     } else if (perCategoryInk) {
@@ -4050,7 +4077,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         ...(stackedTransform ?? []),
     ];
     if (labelTransforms.length > 0) layer.transform = labelTransforms;
-    if (perCategoryInk) {
+    if (perCategoryInk || (cells && labelEncoding.color?.field)) {
         // Vega-Lite merges scales of the same channel across a layer, so the
         // label's ink range and the mark's fill range are two answers to one
         // question and the fill wins — leaving the number painted its own

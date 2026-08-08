@@ -5,12 +5,12 @@
  * Vega-Lite Calendar Heatmap template.
  *
  * The ECharts backend has a first-class calendar coordinate system; Vega-Lite
- * has none, but it does not need computed week/day fields either — `timeUnit`
- * expresses the GitHub-style grid directly from a single date field:
- *   x  →  timeUnit 'yearweek' (one ordinal column per calendar week)
- *   y  →  timeUnit 'day'      (Sun–Sat, one ordinal row per weekday)
- * so the same date field drives both axes and the sum-per-cell aggregation
- * collapses to one value per calendar day.
+ * has none, so two UTC calendar fields are derived from the supplied date:
+ *   x  →  Monday at the start of the observation's week
+ *   y  →  Monday-first weekday name
+ * Using one UTC definition for both fields prevents ISO dates from drifting a
+ * weekday in negative-offset hosts and keeps every column a contiguous
+ * Monday–Sunday week.
  *
  * Encoding:
  *   x     (temporal) → the date of each cell
@@ -29,6 +29,52 @@ const WEEKDAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
  */
 const GITHUB_RANGE = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
 const VL_SCHEMES = new Set(['viridis', 'blues', 'greens', 'reds', 'oranges', 'purples']);
+const COUNT_FIELD = '__flintCalendarCount';
+const DATE_FIELD = '__flintCalendarDate';
+const WEEK_FIELD = '__flintCalendarWeek';
+const WEEKDAY_FIELD = '__flintCalendarWeekday';
+
+function calendarDate(raw: unknown): Date | undefined {
+    if (raw instanceof Date) {
+        return Number.isFinite(raw.getTime()) ? new Date(raw.getTime()) : undefined;
+    }
+    const text = typeof raw === 'string' ? raw.trim() : undefined;
+    if (text && /^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        const [year, month, date] = text.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, date));
+    }
+    if (text
+        && /^\d{4}-\d{2}-\d{2}[T ]/.test(text)
+        && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(text)) {
+        const date = new Date(`${text.replace(' ', 'T')}Z`);
+        return Number.isFinite(date.getTime()) ? date : undefined;
+    }
+    if (typeof raw !== 'string' && typeof raw !== 'number') return undefined;
+    const date = new Date(text ?? raw);
+    return Number.isFinite(date.getTime()) ? date : undefined;
+}
+
+function calendarWeekDomain(table: any[], field: string): number[] | undefined {
+    const dates = table.flatMap(row => {
+        const date = calendarDate(row?.[field]);
+        return date ? [date] : [];
+    });
+    if (!dates.length) return undefined;
+    dates.sort((a, b) => a.getTime() - b.getTime());
+
+    const first = dates[0];
+    const last = dates[dates.length - 1];
+    const start = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), 1));
+    start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+    const end = new Date(Date.UTC(last.getUTCFullYear(), last.getUTCMonth() + 1, 0));
+    end.setUTCDate(end.getUTCDate() - ((end.getUTCDay() + 6) % 7));
+
+    const domain: number[] = [];
+    for (const week = new Date(start); week <= end; week.setUTCDate(week.getUTCDate() + 7)) {
+        domain.push(week.getTime());
+    }
+    return domain;
+}
 
 export const vlCalendarHeatmapDef: ChartTemplateDef = {
     chart: 'Calendar Heatmap',
@@ -44,6 +90,25 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         const dateField = ctx.channelSemantics.x?.field;
         const valueField = ctx.channelSemantics.color?.field;
         if (!dateField) return;
+        const weekDomain = calendarWeekDomain(ctx.table, dateField);
+        spec.data = {
+            values: ctx.table.map(row => ({
+                ...row,
+                [DATE_FIELD]: calendarDate(row?.[dateField])?.getTime() ?? null,
+            })),
+        };
+
+        const date = `toDate(datum[${JSON.stringify(DATE_FIELD)}])`;
+        const utcWeek = `utc(utcyear(${date}),utcmonth(${date}),utcdate(${date})-((utcday(${date})+6)%7))`;
+        spec.transform = [
+            ...(spec.transform ?? []),
+            { calculate: utcWeek, as: WEEK_FIELD },
+            {
+                calculate: `['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][utcday(${date})]`,
+                as: WEEKDAY_FIELD,
+            },
+            ...(!valueField ? [{ calculate: '1', as: COUNT_FIELD }] : []),
+        ];
 
         const encScheme = ctx.encodings?.color?.scheme;
         const scheme = encScheme && encScheme !== 'default' ? encScheme : 'viridis';
@@ -57,14 +122,17 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         spec.encoding = {
             // One ordinal column per calendar week; month initials label the axis.
             x: {
-                field: dateField,
-                timeUnit: 'yearweek',
+                field: WEEK_FIELD,
                 type: 'ordinal',
                 title: null,
+                ...(weekDomain ? { scale: { domain: weekDomain } } : {}),
                 axis: {
-                    format: '%b',
+                    // `yearweek` has one tick per week. Print the month only
+                    // on its first weekly boundary instead of repeating "Jan"
+                    // under every January column.
+                    labelExpr: "utcdate(datum.value) <= 7 ? utcFormat(datum.value, '%b') : ''",
                     labelAngle: 0,
-                    labelOverlap: true,
+                    labelOverlap: false,
                     tickBand: 'extent',
                     domain: false,
                     ticks: false,
@@ -72,8 +140,7 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
             },
             // Sun–Sat rows, Monday-first to match the ECharts calendar.
             y: {
-                field: dateField,
-                timeUnit: 'day',
+                field: WEEKDAY_FIELD,
                 type: 'ordinal',
                 title: null,
                 sort: WEEKDAY_ORDER,
@@ -83,7 +150,7 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
             color: {
                 ...(valueField
                     ? { field: valueField, aggregate: 'sum' }
-                    : { aggregate: 'count' }),
+                    : { field: COUNT_FIELD, aggregate: 'sum' }),
                 type: 'quantitative',
                 legend: { title: null },
                 scale: colorScale,

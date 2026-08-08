@@ -548,7 +548,24 @@ describe('a cell in a grid is a position', () => {
         expect(label).toBeTruthy();
         expect(label.encoding.text.field).toBe('Temp');
         expect(label.mark.baseline).toBe('middle');
-        expect(label.encoding.color.condition?.test).toContain('Temp');
+        expect(label.encoding.color.field).toBe('Temp');
+        expect(label.encoding.color.scale.type).toBe('quantize');
+        expect(new Set(label.encoding.color.scale.range).size).toBeGreaterThan(1);
+    });
+
+    it('chooses the higher-contrast theme ink for each ramp interval', () => {
+        const spec = heatmap(theme({
+            dataLabels: { show: 'always', placement: 'atMark', inkMode: 'contrastWithMark' },
+            ink: {
+                surface: { canvas: '#ffffff' },
+                text: { primary: '#111111', inverse: '#ffffff' },
+                series: { single: '#333333', sequential: { stops: ['#f4a19a', '#f4a19a'] } },
+            },
+        } as Partial<ThemeSpec>));
+        const label = (spec.layer ?? []).find(
+            (layer: any) => layer.__themeSynthetic && markTypeOf(layer.mark) === 'text',
+        );
+        expect(new Set(label.encoding.color.scale.range)).toEqual(new Set(['#111111']));
     });
 });
 
