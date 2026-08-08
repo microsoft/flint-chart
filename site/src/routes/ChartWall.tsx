@@ -746,7 +746,11 @@ function VariantCard({ tile, onOpen }: { tile: Tile; onOpen: () => void }) {
         }}
       >
         {visible ? (
-          <ChartThumb height={TILE_CHART_HEIGHT} hovered={hovered} contain={faceted}>
+          <ChartThumb
+            height={TILE_CHART_HEIGHT}
+            hovered={hovered}
+            contain={faceted || tile.testCase.chartType === 'Calendar Heatmap'}
+          >
             <WallChart testCase={tile.testCase} backend={tile.chart.backend} />
           </ChartThumb>
         ) : (
