@@ -497,7 +497,17 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     });
 
     if (themeSpec) {
+        // These are semantic inputs to realization, not persistent Plotly
+        // properties. Sparklines never carry dots; theme-default line points
+        // may be suppressed when their spacing becomes unreadably dense.
+        figure._suppressLinePoints = chartTemplate.chart === 'Sparkline'
+            || input.chart_spec.chartProperties?.showPoints === false;
+        figure._themeDefaultLinePoints = chartTemplate.chart === 'Line Chart'
+            && input.chart_spec.chartProperties?.showPoints == null
+            && chartProperties?.showPoints === true;
         const realizeReport = realizeThemePlotly(figure, design, values);
+        delete figure._suppressLinePoints;
+        delete figure._themeDefaultLinePoints;
         figure._theme = {
             id: design.themeId,
             report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],

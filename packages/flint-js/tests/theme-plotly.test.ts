@@ -62,10 +62,104 @@ function monthlyLine(spec: ThemeSpec, width = 480): any {
     } as any) as any;
 }
 
+function denseLine(spec: ThemeSpec, showPoints?: boolean): any {
+    return assemblePlotly({
+        data: {
+            values: Array.from({ length: 100 }, (_, i) => ({ x: i, y: Math.sin(i / 8) })),
+        },
+        semantic_types: { x: 'Quantity', y: 'Quantity' },
+        chart_spec: {
+            chartType: 'Line Chart',
+            encodings: { x: 'x', y: 'y' },
+            baseSize: { width: 400, height: 300 },
+            ...(showPoints == null ? {} : { chartProperties: { showPoints } }),
+        },
+        theme_spec: spec,
+    } as any) as any;
+}
+
 const traceNamed = (fig: any, name: string) =>
     (fig.data ?? []).find((t: any) => t.name === name);
 
 describe('semantic geometry survives house styling', () => {
+    it('keeps sparklines free of theme-preferred dots', () => {
+        const fig = assemblePlotly({
+            data: {
+                values: months.map((month, i) => ({ month, value: 100 + i })),
+            },
+            semantic_types: { month: 'Category', value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Sparkline',
+                encodings: { x: 'month', y: 'value' },
+                baseSize: { width: 400, height: 120 },
+            },
+            theme_spec: THEME_PRESETS.pop.spec,
+        } as any) as any;
+        expect(fig.data
+            .filter((trace: any) => trace.type === 'scatter')
+            .every((trace: any) => !String(trace.mode).includes('markers')))
+            .toBe(true);
+    });
+
+    it('suppresses dense theme-default line dots but preserves an explicit request', () => {
+        const themedDefault = denseLine(THEME_PRESETS.nyt.spec);
+        expect(String(themedDefault.data[0].mode)).not.toContain('markers');
+        expect(themedDefault._theme.report.some((entry: any) => /too dense/.test(entry.message))).toBe(true);
+
+        const explicit = denseLine(THEME_PRESETS.nyt.spec, true);
+        expect(String(explicit.data[0].mode)).toContain('markers');
+    });
+
+    it('preserves an explicit request to hide points from a dot-preferring house', () => {
+        const fig = denseLine(THEME_PRESETS.pop.spec, false);
+        expect(String(fig.data[0].mode)).not.toContain('markers');
+    });
+
+    it('retains theme-default dots when line observations have enough room', () => {
+        const fig = monthlyLine(THEME_PRESETS.nyt.spec);
+        expect(String(fig.data[0].mode)).toContain('markers');
+    });
+
+    it('measures sparse categorical dots from observed positions rather than null placeholders', () => {
+        const values = Array.from({ length: 100 }, (_, i) => ({
+            category: `C${i}`,
+            value: i,
+            series: i % 10 === 0 ? 'Sparse' : 'Dense',
+        }));
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { category: 'Category', value: 'Quantity', series: 'Category' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'category', y: 'value', color: 'series' },
+                baseSize: { width: 600, height: 300 },
+            },
+            theme_spec: THEME_PRESETS.nyt.spec,
+        } as any) as any;
+        expect(String(traceNamed(fig, 'Sparse').mode)).toContain('markers');
+        expect(String(traceNamed(fig, 'Dense').mode)).not.toContain('markers');
+    });
+
+    it('does not count non-renderable x values toward line-dot density', () => {
+        const values = [
+            { x: 0, y: 1 },
+            { x: 1, y: 2 },
+            { x: 2, y: 3 },
+            ...Array.from({ length: 13 }, (_, i) => ({ x: null, y: i + 4 })),
+        ];
+        const fig = assemblePlotly({
+            data: { values },
+            semantic_types: { x: 'Quantity', y: 'Quantity' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'x', y: 'y' },
+                baseSize: { width: 400, height: 300 },
+            },
+            theme_spec: THEME_PRESETS.pop.spec,
+        } as any) as any;
+        expect(String(fig.data[0].mode)).toContain('markers');
+    });
+
     it('keeps an ECDF stepped when the house prefers curved lines', () => {
         const fig = assemblePlotly({
             data: { values: [{ score: 1 }, { score: 2 }, { score: 3 }] },

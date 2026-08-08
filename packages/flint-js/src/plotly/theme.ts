@@ -1328,6 +1328,9 @@ function diameterOf(area: number): number {
     return Math.max(2, Math.round(2 * Math.sqrt(area / Math.PI)));
 }
 
+/** Keep Plotly's default in step with the Vega-Lite countability heuristic. */
+const MAX_DOTTED_READINGS = 12;
+
 /**
  * How wide a dot on a line may be, or 0 when it should not be drawn.
  *
@@ -1339,14 +1342,50 @@ function diameterOf(area: number): number {
  * smear and is better left off.
  */
 function dotDiameter(trace: any, figure: any, wanted: number, strokeWidth: number): number {
-    const n = Array.isArray(trace.x) ? trace.x.length : 0;
-    if (n < 2) return wanted;
+    const xValues: any[] = Array.isArray(trace.x) ? trace.x : [];
     const layout = figure.layout ?? {};
-    const plotW = Math.max(
+    const xRef = String(trace.xaxis ?? 'x');
+    const axis = layout[xRef === 'x' ? 'xaxis' : `xaxis${xRef.slice(1)}`] ?? layout.xaxis ?? {};
+    const renderableX = (value: any): boolean => {
+        if (value == null) return false;
+        if (axis.type === 'category') return true;
+        return Number.isFinite(axis.type === 'date' ? Date.parse(String(value)) : Number(value));
+    };
+    const observedIndices = xValues
+        .map((_value, index) => index)
+        .filter(index =>
+            renderableX(xValues[index])
+            && (!Array.isArray(trace.y) || trace.y[index] != null));
+    if (observedIndices.length < 2) return wanted;
+    if (observedIndices.length > MAX_DOTTED_READINGS) return 0;
+    const figurePlotW = Math.max(
         40,
         (Number(layout.width) || 400) - (layout.margin?.l ?? 0) - (layout.margin?.r ?? 0),
     );
-    const spacing = plotW / (n - 1);
+    const domain = Array.isArray(axis.domain) ? axis.domain : [0, 1];
+    const rawDomainSpan = Math.abs(Number(domain[1]) - Number(domain[0]));
+    const plotW = figurePlotW * (Number.isFinite(rawDomainSpan) && rawDomainSpan > 0 ? rawDomainSpan : 1);
+
+    let relativeGap: number;
+    if (axis.type === 'category') {
+        const gaps = observedIndices.slice(1).map((index, i) => index - observedIndices[i]);
+        relativeGap = Math.min(...gaps) / Math.max(1, xValues.length - 1);
+    } else {
+        const positions = observedIndices.map(index => {
+            const value = xValues[index];
+            return axis.type === 'date' ? Date.parse(String(value)) : Number(value);
+        });
+        if (positions.every(Number.isFinite)) {
+            positions.sort((a, b) => a - b);
+            const span = positions[positions.length - 1] - positions[0];
+            const gaps = positions.slice(1).map((value, i) => value - positions[i]);
+            relativeGap = span > 0 ? Math.min(...gaps) / span : 0;
+        } else {
+            relativeGap = 1 / (observedIndices.length - 1);
+        }
+    }
+
+    const spacing = plotW * relativeGap;
     if (spacing < 6) return 0;
     return Math.max(2, Math.round(Math.min(wanted, strokeWidth * 3.5, spacing * 0.55)));
 }
@@ -1374,7 +1413,30 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         // Furniture keeps the weight `applyFurnitureTraces` gave it.
         if (isContextTrace(trace) || isReferenceTrace(trace)) continue;
         if (isLegendProxy(trace)) continue;
-        const fams = markFamilies(trace);
+        let fams = markFamilies(trace);
+        const filled = fams.includes('area')
+            || (trace.fill != null && trace.fill !== 'none')
+            || floors.has(index);
+        let preventThemePoints = figure._suppressLinePoints === true;
+
+        if (fams.includes('line') && fams.includes('point') && !filled
+            && (preventThemePoints || figure._themeDefaultLinePoints === true)) {
+            const secondaryArea = m.point?.secondarySize ?? Math.min(m.point?.size ?? 40, 25);
+            const dot = dotDiameter(trace, figure, diameterOf(secondaryArea), m.strokeWidth ?? 2);
+            if (preventThemePoints || dot === 0) {
+                trace.mode = String(trace.mode ?? 'lines')
+                    .split('+')
+                    .filter((part: string) => part !== 'markers')
+                    .join('+') || 'lines';
+                fams = markFamilies(trace);
+                preventThemePoints = true;
+                if (dot === 0) {
+                    say('marks.point.show', 'theme-default dots left off — the line is too dense');
+                }
+            } else {
+                trace.marker = { ...(trace.marker ?? {}), size: dot };
+            }
+        }
 
         if (fams.includes('bar') || fams.includes('arc')) {
             if (m.outline && !isContextTrace(trace)) {
@@ -1445,10 +1507,8 @@ function applyMarks(figure: any, d: DesignDecisions, table: any[], say: Say): vo
         // here.
         // A filled band has no line to dot — its edge is the top of an area,
         // and dotting it reads as data points that are not there.
-        const filled = fams.includes('area')
-            || (trace.fill != null && trace.fill !== 'none')
-            || floors.has(index);
-        if (m.point?.show && fams.includes('line') && !fams.includes('point') && !filled) {
+        if (m.point?.show && fams.includes('line') && !fams.includes('point')
+            && !filled && !preventThemePoints) {
             const secondaryArea = m.point.secondarySize ?? Math.min(m.point.size ?? 40, 25);
             const dot = dotDiameter(trace, figure, diameterOf(secondaryArea), m.strokeWidth ?? 2);
             if (dot > 0) {
