@@ -284,6 +284,7 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     applyPointEmphasis(spec, d, say);
     applyPrintedUnits(spec, d, say);
     applyStatistics(spec, d, table, say);
+    fitTitle(spec, d, table, say);
     const wrapped = applyFurniture(spec, d, table, say);
 
     return wrapped ? report : report;
@@ -346,6 +347,120 @@ function applyTypography(config: any, d: DesignDecisions): void {
     // the left edge of the plotting rectangle — otherwise the width of the
     // category labels decides where the title starts.
     if (d.title.anchor !== 'middle') config.title.frame = 'bounds';
+}
+
+// ---------------------------------------------------------------------------
+// Title fitting
+// ---------------------------------------------------------------------------
+
+/** Roughly how wide a glyph runs, as a fraction of the font size. */
+const HEADLINE_CHAR_RATIO = 0.55;
+
+/** How far past the block a headline may run before anything is done about it. */
+const STRETCH_TOLERANCE = 1.18;
+
+/** How far the headline may be set down before it is broken instead. */
+const MIN_HEADLINE_SCALE = 0.82;
+
+const CJK_RE = /[\u3000-\u303F\u3400-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/;
+
+/** Width of a string in pixels, counting a CJK glyph as a full em. */
+function textPx(s: string, fontSize: number): number {
+    let em = 0;
+    for (const ch of s) em += CJK_RE.test(ch) ? 1 : HEADLINE_CHAR_RATIO;
+    return em * fontSize;
+}
+
+/**
+ * Break the headline into `count` lines of even length.
+ *
+ * Filling each line to the brim and letting the remainder fall through is what
+ * leaves a headline ending in a single orphaned word. Aiming at the average
+ * line instead spreads the text over the lines it needs.
+ */
+function balancedLines(text: string, count: number, fontSize: number): string[] {
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length <= 1) return [text];
+    const target = textPx(text, fontSize) / count;
+    const lines: string[] = [];
+    let line = '';
+    for (const word of words) {
+        const candidate = line ? `${line} ${word}` : word;
+        // Break once the line is closer to the target with this word left off.
+        if (line && lines.length < count - 1
+            && textPx(candidate, fontSize) - target > target - textPx(line, fontSize)) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = candidate;
+        }
+    }
+    if (line) lines.push(line);
+    return lines;
+}
+
+/**
+ * Fit a headline that runs wider than the block it sits over.
+ *
+ * Vega-Lite measures the title as one unbroken run and grows the *canvas* to
+ * fit it, so a long headline quietly widens the graphic past the size the
+ * caller asked for and leaves the plot stranded at one end.
+ *
+ * Three answers, cheapest first: a headline that only just overhangs is left
+ * alone, because a graphic a little wider than its plot is normal and a break
+ * there would be gratuitous; one that overhangs more is set down a size; only
+ * a headline that still does not fit at the smaller size is broken, and then
+ * over even lines rather than one full line and an orphan. Broken lines are
+ * taken out of the plot rather than added to the canvas.
+ */
+function fitTitle(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
+    const title = spec.title;
+    const text = typeof title === 'string' ? title : title?.text;
+    if (typeof text !== 'string' || !text.trim()) return;
+
+    const block = blockWidth(spec, table);
+    if (!block || !Number.isFinite(block)) return;
+
+    const budget = block * STRETCH_TOLERANCE;
+    const size = d.title.headline.fontSize ?? 14;
+    if (textPx(text, size) <= budget) return;
+
+    const setTitle = (patch: Record<string, unknown>) => {
+        spec.title = { ...(typeof title === 'string' ? { text } : title), ...patch };
+    };
+
+    const smaller = Math.max(Math.round(size * MIN_HEADLINE_SCALE), (d.title.deck.fontSize ?? 11) + 1);
+    if (smaller < size && textPx(text, smaller) <= budget) {
+        setTitle({ fontSize: smaller });
+        say('title', `the headline overhangs the ${Math.round(block)}px block, so it is set at ${smaller}px rather than broken`);
+        return;
+    }
+
+    const count = Math.max(2, Math.ceil(textPx(text, smaller) / budget));
+    const lines = balancedLines(text, count, smaller);
+    if (lines.length < 2) return;
+    setTitle({ text: lines, ...(smaller < size ? { fontSize: smaller } : {}) });
+    takeFromPlotHeight(spec, Math.round((lines.length - 1) * smaller * 1.3));
+    say(
+        'title',
+        `the headline does not fit the ${Math.round(block)}px block even at ${smaller}px,`
+        + ` so it breaks over ${lines.length} even lines — the height comes out of the plot,`
+        + ' not out of the canvas the caller asked for',
+    );
+}
+
+/** The shortest a plot may be squeezed to make room for a taller headline. */
+const MIN_PLOT_HEIGHT = 80;
+
+/** Take pixels out of the plotting rectangle, wherever its height is stated. */
+function takeFromPlotHeight(spec: any, px: number): void {
+    const view = spec.config?.view;
+    if (view && typeof view.continuousHeight === 'number') {
+        view.continuousHeight = Math.max(MIN_PLOT_HEIGHT, view.continuousHeight - px);
+    }
+    walk(spec, (node) => {
+        if (typeof node.height === 'number') node.height = Math.max(MIN_PLOT_HEIGHT, node.height - px);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -5389,8 +5504,35 @@ function widestWidth(spec: any, table: any[]): number | undefined {
     if (typeof spec.width === 'number') consider(spec.width);
     // A chart that states no width of its own is drawn at the one the layout
     // put in the view config — that is the width, not a default to guess at.
-    if (widest == null) consider(spec.config?.view?.continuousWidth);
+    // Except when the axis is banded: Vega-Lite sizes those one step per
+    // category and never reads `continuousWidth`, so taking it here would run
+    // the rule well past the plot and stretch the canvas out to meet it.
+    if (widest == null) consider(bandedWidth(spec, table) ?? spec.config?.view?.continuousWidth);
     return widest;
+}
+
+/**
+ * The width Vega-Lite gives a banded plot that states no step of its own:
+ * one step per category. Returns undefined when the x axis is not banded.
+ */
+function bandedWidth(spec: any, table: any[]): number | undefined {
+    let enc: any;
+    walk(spec, (node) => {
+        const x = node.encoding?.x;
+        if (!enc && x?.field && (x.type === 'nominal' || x.type === 'ordinal')) enc = x;
+    });
+    if (!enc) return undefined;
+    // A template may compute its categories in a transform, in which case the
+    // table has no column to count — the stated domain is the count.
+    const count = Array.isArray(enc.scale?.domain) && enc.scale.domain.length
+        ? enc.scale.domain.length
+        : distinctCount(table, enc.field);
+    if (!count) return undefined;
+    const discrete = spec.config?.view?.discreteWidth;
+    const step = typeof discrete === 'number'
+        ? undefined
+        : discrete?.step ?? spec.config?.view?.step ?? 20;
+    return typeof discrete === 'number' ? discrete : step * count;
 }
 
 function blockWidth(spec: any, table: any[]): number | undefined {

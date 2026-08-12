@@ -2239,8 +2239,9 @@ function heroCtaStyle(variant: 'primary' | 'secondary', active: boolean): CSSPro
   if (variant === 'primary') {
     return {
       ...base,
-      color: '#fff',
-      background: active ? '#006abc' : siteTheme.accent,
+      color: PAPER,
+      background: active ? '#000' : siteTheme.text,
+      borderColor: active ? '#000' : siteTheme.text,
     };
   }
   return {

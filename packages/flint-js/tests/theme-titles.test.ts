@@ -188,3 +188,108 @@ describe('masthead furniture', () => {
         expect(spec.title).toBeTruthy();
     });
 });
+
+describe('a headline wider than its block', () => {
+    const LONG = 'Driving Shifts Into Reverse — miles driven per person against the price of gas, 1956 to 2010';
+    const PENGUINS = 'Palmer Penguins — flipper length vs body mass';
+
+    function titled(headline: string): any {
+        return assembleVegaLite({
+            data: { values: MONTHLY },
+            semantic_types: { Month: 'Month', Rainfall: 'Amount' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: headline,
+                encodings: { x: 'Month', y: 'Rainfall' },
+            },
+            theme_spec: THEME_PRESETS.nyt.spec,
+        } as any) as any;
+    }
+
+    /** A wide plot, where a headline of ordinary length only just overhangs. */
+    function scattered(headline: string, themeId: string): any {
+        const rows = Array.from({ length: 40 }, (_, i) => ({
+            flipper: 178 + (i % 20) * 3,
+            mass: 3200 + ((i * 137) % 2800),
+            species: ['Adelie', 'Chinstrap', 'Gentoo'][i % 3],
+        }));
+        return assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { flipper: 'Amount', mass: 'Amount', species: 'Category' },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                title: headline,
+                encodings: { x: 'flipper', y: 'mass', color: 'species' },
+            },
+            theme_spec: (THEME_PRESETS as any)[themeId].spec,
+        } as any) as any;
+    }
+
+    it('leaves a headline that fits alone', () => {
+        expect(titled('Rain keeps falling').title.text).toBe('Rain keeps falling');
+    });
+
+    it('lets a headline that only overhangs stand, in every house', () => {
+        for (const id of Object.keys(THEME_PRESETS)) {
+            const text = scattered(PENGUINS, id).title.text;
+            expect(Array.isArray(text), `${id} broke a headline it could have carried`).toBe(false);
+        }
+    });
+
+    it('breaks a headline that will not fit even set down a size', () => {
+        const spec = titled(LONG);
+        expect(Array.isArray(spec.title.text)).toBe(true);
+        expect(spec.title.text.length).toBeGreaterThan(1);
+        // Nothing is lost or reordered in the break.
+        expect(spec.title.text.join(' ')).toBe(LONG);
+    });
+
+    it('breaks over even lines, not one full line and an orphan', () => {
+        const lines: string[] = scattered(LONG, 'economist').title.text;
+        expect(lines.length).toBeGreaterThan(1);
+        const lengths = lines.map((l) => l.length);
+        expect(Math.min(...lengths)).toBeGreaterThan(Math.max(...lengths) * 0.6);
+    });
+
+    it('takes the lines it gains out of the plot, not out of the canvas', () => {
+        const plot = (s: any) => s.config?.view?.continuousHeight;
+        expect(plot(titled(LONG))).toBeLessThan(plot(titled('Rain keeps falling')));
+    });
+});
+
+describe('a closing rule under a banded plot', () => {
+    /** The synthetic rect a footerRule is drawn as, if one was drawn. */
+    function closingRule(spec: any): any {
+        return (spec.vconcat ?? []).find((child: any) => child.__themeSynthetic && child.mark?.type === 'rect');
+    }
+
+    function ruled(): any {
+        const themeSpec = {
+            id: 'ruled',
+            label: 'Ruled',
+            ink: { surface: { canvas: '#ffffff' }, series: { single: '#333333' } },
+            furniture: [{ kind: 'footerRule', anchor: 'bottomLeft', color: '#dcdcdc', height: 1 }],
+        } as unknown as ThemeSpec;
+        return assembleVegaLite({
+            data: { values: MONTHLY },
+            semantic_types: { Month: 'Month', Rainfall: 'Amount' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Rain keeps falling',
+                encodings: { x: 'Month', y: 'Rainfall' },
+            },
+            theme_spec: themeSpec,
+        } as any) as any;
+    }
+
+    it('runs the width of the bands, not the width a continuous plot would have taken', () => {
+        const spec = ruled();
+        const rule = closingRule(spec);
+        expect(rule).toBeTruthy();
+        const continuous = spec.config?.view?.continuousWidth;
+        expect(typeof continuous).toBe('number');
+        // Four months at Vega-Lite's own step is nowhere near a continuous plot,
+        // and a rule drawn at that width would stretch the canvas to meet it.
+        expect(rule.width).toBeLessThan(continuous);
+    });
+});
