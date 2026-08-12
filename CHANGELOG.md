@@ -11,6 +11,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-12
+
+### Added
+
+- Theme support for the Plotly backend. `theme_spec` now realizes onto Plotly
+  figures — surface, typography, axes, marks, series ink, legend, facet chrome,
+  and data labels — reusing the same neutral grounding stage as Vega-Lite. Where
+  Plotly cannot honor a decision it approximates and records what it did in
+  `figure._theme.report`. `assemblePlotly` also renders `chart_spec.title` for
+  the first time.
+- A Vega-Lite **Calendar Heatmap** chart type: daily values on a Monday-first
+  week grid, with a `cornerRadius` chart property and a canonical GitHub look
+  through a quantile color scale.
+- Per-house sparse band fitting through the new `layout.bandStepFit` field, so
+  each preset states how far it will grow a bar toward its slot when a chart has
+  few categories. All ten presets are calibrated from first-party sources.
+
+### Changed
+
+- Vega-Lite reserves the margins a chart will actually draw — value labels, tick
+  gutters, the title block, and the legend — before fitting bands, so a wide
+  house no longer sizes bands against room its own furniture will take.
+- Long headlines are fitted rather than left to widen the graphic. A headline
+  that only overhangs its block is left alone, one that overhangs further is set
+  down a size, and only a headline that still does not fit is broken — over even
+  lines, with the height taken out of the plot rather than added to the canvas.
+- Plotly line, bar, scatter, pie, rose, radar, slope, heatmap, ranged-dot, and
+  KPI-card templates were reworked against a paired audit with themed Vega-Lite:
+  point density, label wrapping, wedge totals, polar guides, facet chrome, and
+  cropping all move toward parity.
+
+### Fixed
+
+- A closing rule drawn under a banded plot now runs the width of the bands
+  rather than the width a continuous plot would have taken, so a house that
+  draws one no longer stretches the canvas past the chart.
+- Waterfall now declares its step axis as the band it is drawn on, so a temporal
+  waterfall is sized per category instead of as a continuous run. Fixed in both
+  the JavaScript and Python implementations.
+- A house no longer prints a value label off a template's internal working
+  column, which leaked computed values onto Vega-Lite waterfalls.
+- Calendar heatmaps drop the plot frame, which had drawn a box around the days
+  a part week does not have.
+- Straight axis labels that cannot fit their band are no longer held flat by a
+  house that prefers them straight.
+
 ## [0.5.0] - 2026-08-05
 
 ### Added
@@ -218,7 +264,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1
 [0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0
