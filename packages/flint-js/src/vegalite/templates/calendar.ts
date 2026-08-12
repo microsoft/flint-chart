@@ -17,7 +17,7 @@
  *   color (quantitative) → the cell value (defaults to a count of 1)
  */
 
-import { ChartTemplateDef, EncodingActionDef } from '../../core/types';
+import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
 
 /** Weekday row order, Monday-first — mirrors the ECharts template's dayLabel.firstDay = 1. */
 const WEEKDAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -90,6 +90,10 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         const dateField = ctx.channelSemantics.x?.field;
         const valueField = ctx.channelSemantics.color?.field;
         if (!dateField) return;
+        // A calendar ends mid-week as often as not, and a frame around the plot
+        // draws a box around the days the last week does not have. The cells
+        // are the grid.
+        spec._hideViewStroke = true;
         const weekDomain = calendarWeekDomain(ctx.table, dateField);
         spec.data = {
             values: ctx.table.map(row => ({
@@ -112,6 +116,10 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
 
         const encScheme = ctx.encodings?.color?.scheme;
         const scheme = encScheme && encScheme !== 'default' ? encScheme : 'viridis';
+        const cornerRadius = ctx.chartProperties?.cornerRadius;
+        if (typeof cornerRadius === 'number') {
+            spec.mark = { ...(typeof spec.mark === 'object' ? spec.mark : { type: 'rect' }), cornerRadius };
+        }
         const colorScale =
             scheme === 'github'
                 // Quantile scale snaps counts into the 5 canonical GitHub buckets
@@ -180,4 +188,7 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
             set: (enc, value) => ({ ...enc, color: { ...enc.color, scheme: value } }),
         },
     ] as EncodingActionDef[],
+    properties: [
+        { key: 'cornerRadius', label: 'Corners', type: 'continuous', min: 0, max: 8, step: 1, defaultValue: 2 },
+    ] as ChartPropertyDef[],
 };

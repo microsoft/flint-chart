@@ -65,6 +65,20 @@ describe('Vega-Lite Calendar Heatmap', () => {
         expect(vlGetTemplateDef('Calendar Heatmap')).toBeDefined();
     });
 
+    it('draws no plot frame, which would box in the days a part week lacks', () => {
+        const spec = assembleVegaLite(calInput()) as any;
+        expect(spec.config.view.stroke).toBeNull();
+    });
+
+    it('lets the caller square off the cells', () => {
+        const rounded = assembleVegaLite(calInput()) as any;
+        expect(rounded.mark.cornerRadius).toBe(2);
+
+        const input: any = calInput();
+        input.chart_spec.chartProperties = { cornerRadius: 0 };
+        expect((assembleVegaLite(input) as any).mark.cornerRadius).toBe(0);
+    });
+
     it('derives UTC Monday-week and weekday fields from the date', () => {
         const spec = assembleVegaLite(calInput()) as any;
         expect(spec.mark?.type ?? spec.mark).toBe('rect');
