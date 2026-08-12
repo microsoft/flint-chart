@@ -28,6 +28,20 @@ This repo contains two main components:
 - **`flint-chart-mcp`**: an MCP server that lets agents create, validate, and
   render charts directly from a chat or coding environment.
 
+### Try it in your agent
+
+The quickest way in is the hosted MCP server. Point any client that supports
+remote HTTP MCP servers at:
+
+```text
+https://flint.data-formulator.ai/mcp
+```
+
+Nothing to install. For local files and offline work, run the server yourself
+with `npx -y flint-chart-mcp` — see the
+[MCP Server Guide](https://microsoft.github.io/flint-chart/#/mcp) for client
+configuration.
+
 <p align="center">
   <img src="docs/figs/chartwall.png" alt="A wall of charts produced by Flint across its supported visualization backends." width="100%">
 </p>
@@ -53,6 +67,8 @@ This repo contains two main components:
 
 ## Updates
 
+- **August 12, 2026** — Flint 0.5.1 extends visual themes to the Plotly backend
+  and adds a Calendar Heatmap chart type. ([changelog](CHANGELOG.md))
 - **August 5, 2026** — Flint 0.5.0 introduces a [formal theme specification](https://microsoft.github.io/flint-chart/#/themes)
   that allows designers and users to define a visual system once and apply it
   consistently across an entire chart library. It includes ten presets: New
@@ -192,6 +208,10 @@ Install `flint-chart-mcp` as a [Model Context Protocol](https://modelcontextprot
 server when you want an agent to create charts in the same conversation where
 the question starts. It can open an interactive chart view, return static
 PNG/SVG output, or produce backend-native chart specs.
+
+Clients that only speak remote HTTP MCP can use the hosted endpoint at
+`https://flint.data-formulator.ai/mcp` instead. Prefer the local stdio server
+when your client supports it, especially when charting local files.
 
 For setup, start with the
 [Flint MCP project page](https://microsoft.github.io/flint-chart/#/mcp). It

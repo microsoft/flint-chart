@@ -264,8 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.1...HEAD
-[0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5...HEAD
 [0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0

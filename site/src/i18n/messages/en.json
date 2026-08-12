@@ -353,6 +353,11 @@
     "ctaDocs": "Read the docs",
     "news": {
       "title": "Updates",
+      "release051": {
+        "date": "August 12, 2026",
+        "dateTime": "2026-08-12",
+        "text": "Flint 0.5.1 extends visual themes to the Plotly backend and adds a Calendar Heatmap chart type."
+      },
       "release050": {
         "date": "August 5, 2026",
         "dateTime": "2026-08-05",
