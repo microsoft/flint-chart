@@ -435,10 +435,10 @@
         "subtitle": "Players per month in 2025, one panel per region, by platform"
       },
       "heatmap": {
-        "label": "Diverging heatmap",
-        "caption": "Net user gains and losses by region and month, shown with zero-centered color.",
-        "title": "Which titles gained players, and when",
-        "subtitle": "Net new players per game per month in 2025; positive values are gains, negative values are losses"
+        "label": "Temperature heatmap",
+        "caption": "Monthly climate normals across four cities, shown as a compact table of values.",
+        "title": "How seasons differ across four cities",
+        "subtitle": "Average monthly temperature in °C; climate normals"
       },
       "waterfall": {
         "label": "Waterfall",

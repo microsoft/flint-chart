@@ -421,7 +421,17 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         if (axis.ticks.offset) themed.tickOffset = axis.ticks.offset;
         if (axis.label.show === false) themed.labels = false;
         if (axis.label.limit != null) themed.labelLimit = axis.label.limit;
-        if (axis.label.angle != null) themed.labelAngle = axis.label.angle;
+        // Whether a house wants its names straight is a style matter; whether
+        // they still read as separate names is not. A straight angle that would
+        // print `2025-012025-02` is refused and the turn kept.
+        if (axis.label.angle != null) {
+            if (labelsFitStraight(spec, channel, axis, d, table)) {
+                themed.labelAngle = axis.label.angle;
+            } else {
+                say(`axes.${channel}.label.angle`,
+                    `the names are wider than their bands — laid straight they would run into each other, so they stay turned`);
+            }
+        }
         if (axis.tickCount != null) themed.tickCount = axis.tickCount;
 
         // Vega drops a tick label only once its box *overlaps* its neighbour's,
@@ -456,6 +466,15 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         config[key] = { ...existing, ...themed };
         if (axis.label.angle == null && existing.labelAngle != null) {
             config[key].labelAngle = existing.labelAngle;
+        }
+        // A refused straight angle leaves the axis with no angle at all, and
+        // Vega-Lite's own default is not a fit decision. Turn it the way the
+        // layout turns labels that will not fit.
+        if (axis.label.angle != null && themed.labelAngle === undefined
+            && config[key].labelAngle == null) {
+            config[key].labelAngle = -45;
+            config[key].labelAlign = 'right';
+            config[key].labelBaseline = 'top';
         }
 
         // Encoding-level axis objects outrank config, so anything a template
@@ -640,6 +659,43 @@ function bandedAxis(spec: any, channel: 'x' | 'y'): boolean {
         if (enc.type === 'nominal' || enc.type === 'ordinal') banded = true;
     });
     return banded;
+}
+
+/**
+ * Would this axis's names read straight in the band each one actually gets?
+ *
+ * Only answerable for a banded axis, where the band is the step the layout
+ * settled. Anything else is left to the house.
+ */
+function labelsFitStraight(spec: any, channel: 'x' | 'y', axis: any, d: DesignDecisions, table: any[]): boolean {
+    if (channel !== 'x') return true;
+    if ((axis.label.angle ?? 0) !== 0) return true;
+    if (!bandedAxis(spec, channel)) return true;
+
+    let field: string | undefined;
+    walk(spec, (node) => {
+        const enc = node.encoding?.[channel];
+        if (!enc?.field || (enc.type !== 'nominal' && enc.type !== 'ordinal')) return;
+        field ??= enc.field;
+    });
+    if (!field) return true;
+
+    const names = [...new Set(table.map((row) => row?.[field!]).filter((v) => v != null))].map(String);
+    if (!names.length) return true;
+
+    // A step-sized spec states the band outright; otherwise the categories
+    // share whatever plot width the layout settled.
+    const step = typeof spec.width?.step === 'number' ? spec.width.step
+        : typeof spec.width === 'number' ? spec.width / names.length
+        : typeof d.layout.xStep === 'number' && d.layout.xStep > 0 ? d.layout.xStep
+        : typeof d.layout.plotWidth === 'number' ? d.layout.plotWidth / names.length
+        : undefined;
+    if (!step) return true;
+
+    const fontSize = typeof axis.label.fontSize === 'number' ? axis.label.fontSize : BASE_LABEL_FONT_SIZE;
+    const longest = Math.max(...names.map((n) => n.length));
+    // Names need air between them, or `2025-012025-02` reads as one number.
+    return longest * fontSize * 0.62 + 6 <= step;
 }
 
 /** A line joining exactly two discrete columns; partial grid thinning would make the pair asymmetric. */

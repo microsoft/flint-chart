@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { assembleVegaLite } from '../src';
 import { deriveStretchCaps, resolveStretchCaps, resolveBaseSize } from '../src/core/compute-layout';
+import { computeAxisStep } from '../src/core/decisions';
 
 /**
  * Regression coverage for the `baseSize` (target) + `canvasSize` (hard ceiling)
@@ -17,6 +18,99 @@ import { deriveStretchCaps, resolveStretchCaps, resolveBaseSize } from '../src/c
  */
 
 const BASE = { width: 400, height: 320 };
+
+describe('bandStepFit (base pitch ↔ available span)', () => {
+  const decision = (bandStepFit: number) => computeAxisStep(4, 0, 400, {
+    elasticity: 0.5,
+    maxStretch: 1.5,
+    defaultStepSize: 20,
+    minStep: 6,
+    bandStepFit,
+  });
+
+  it('selects toward available capacity, then applies the elastic budget', () => {
+    expect(decision(0).step).toBe(20);
+    expect(decision(0.5).step).toBe(60);
+    expect(decision(1).step).toBe(100);
+  });
+
+  it('leaves fit inert under pressure and applies normal base-pitch elasticity', () => {
+    const dense = (bandStepFit: number) => computeAxisStep(10, 0, 100, {
+      elasticity: 0.5,
+      maxStretch: 1.5,
+      defaultStepSize: 20,
+      minStep: 6,
+      bandStepFit,
+    });
+    expect(dense(0).step).toBe(14);
+    expect(dense(0.5).step).toBe(14);
+    expect(dense(1).step).toBe(14);
+    expect(dense(0).budget).toBeLessThanOrEqual(150);
+  });
+
+  it('survives assembly before the overall canvas budget clamps it', () => {
+    const values = Array.from({ length: 4 }, (_, index) => ({
+      Category: String.fromCharCode(65 + index),
+      Value: index + 1,
+    }));
+    const compile = (bandStepFit: number) => assembleVegaLite({
+      data: { values },
+      semantic_types: { Category: 'Category', Value: 'Quantity' },
+      chart_spec: {
+        chartType: 'Bar Chart',
+        encodings: { x: 'Category', y: 'Value' },
+        baseSize: { width: 400, height: 320 },
+        canvasSize: { width: 400, height: 320 },
+      },
+      options: { defaultBandSize: 20, bandStepFit },
+    } as never) as { width: { step: number } };
+
+    const fixed = compile(0).width.step;
+    const blended = compile(0.5).width.step;
+    const filled = compile(1).width.step;
+    expect(fixed).toBeGreaterThanOrEqual(20);
+    expect(blended).toBeGreaterThan(fixed);
+    expect(filled).toBeGreaterThan(blended);
+    expect(filled * values.length).toBeLessThanOrEqual(400);
+  });
+
+  it('does not interfere when both axes are banded cells', () => {
+    const values = ['A', 'B', 'C'].flatMap(x => ['U', 'V'].map((y, index) => ({
+      x, y, value: index + 1,
+    })));
+    const compile = (bandStepFit: number) => assembleVegaLite({
+      data: { values },
+      semantic_types: { x: 'Category', y: 'Category', value: 'Quantity' },
+      chart_spec: {
+        chartType: 'Heatmap',
+        encodings: { x: 'x', y: 'y', color: 'value' },
+        baseSize: { width: 400, height: 320 },
+      },
+      options: { bandStepFit },
+    } as never) as { width: { step: number }; height: { step: number } };
+
+    expect(compile(1).width.step).toBe(compile(0).width.step);
+    expect(compile(1).height.step).toBe(compile(0).height.step);
+  });
+
+  it('does not change fully continuous axes', () => {
+    const compile = (bandStepFit: number) => assembleVegaLite({
+      data: { values: [{ x: 1, y: 3 }, { x: 2, y: 5 }, { x: 4, y: 2 }] },
+      semantic_types: { x: 'Quantity', y: 'Quantity' },
+      chart_spec: {
+        chartType: 'Scatter Plot',
+        encodings: { x: 'x', y: 'y' },
+        baseSize: { width: 400, height: 320 },
+      },
+      options: { bandStepFit },
+    } as never) as { width: number; height: number; _width: number; _height: number };
+
+    const fixed = compile(0);
+    const filled = compile(1);
+    expect([filled.width, filled.height, filled._width, filled._height])
+      .toEqual([fixed.width, fixed.height, fixed._width, fixed._height]);
+  });
+});
 
 describe('deriveStretchCaps (canvasSize → per-dimension βx/βy)', () => {
   it('falls back to maxStretch (default 1.5) when no ceiling is given', () => {

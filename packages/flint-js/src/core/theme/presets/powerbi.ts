@@ -226,6 +226,7 @@ export const powerbi: ThemePreset = {
         },
         "layout": {
             "density": "compact",
+            "bandStepFit": 1,
             "titleBlock": {
                 "anchor": "start",
                 "gap": "tight",

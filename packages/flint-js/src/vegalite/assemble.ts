@@ -373,6 +373,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     // Merge paramOverrides into effective options
     const effectiveOptions: AssembleOptions = {
+        // Vega-Lite's native width:{step} preserves the authored category pitch.
+        bandStepFit: 0,
         // Vega-Lite native font defaults (labels 10, titles 11).
         baseLabelFontSize: 10,
         baseTitleFontSize: 11,
@@ -389,18 +391,33 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // But a band step is a statement about bar thickness, and where *both* axes
     // are banded there are no bars: the marks are cells, and a cell's size is
     // fixed by the two counts and the room they share. A house that asks for
-    // 80px categories would print a grid of stripes. That one the layout keeps.
+    // A bar-sized category step would print a grid of stripes. That one the
+    // layout keeps.
     const houseBandStep = themeSpec?.layout?.bandStep;
+    const houseBandStepFit = themeSpec?.layout?.bandStepFit;
     const cellGrid = declaration.axisFlags?.x?.banded === true
         && declaration.axisFlags?.y?.banded === true;
     // A template may state a floor its read cannot go below (a slopegraph needs
     // its two columns spread wide however compact the house). The house sets
     // the band step, but not below that floor.
     const minBandStep = (declaration.paramOverrides as AssembleOptions | undefined)?.minBandStep;
+    if (houseBandStepFit != null && options.bandStepFit == null && !cellGrid) {
+        effectiveOptions.bandStepFit = Math.max(0, Math.min(1, houseBandStepFit));
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStepFit',
+            message: `the house blends ${Math.round(effectiveOptions.bandStepFit * 100)}% toward the available span per category`,
+        });
+    }
+    const fitsToRoom = (effectiveOptions.bandStepFit ?? 0) > 0;
     if (houseBandStep && options.defaultBandSize == null && !cellGrid) {
         const step = minBandStep ? Math.max(houseBandStep, minBandStep) : houseBandStep;
         effectiveOptions.defaultBandSize = step;
-        effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
+        // A house that also fits its sparse bands to the room has to be able to
+        // pass its own base pitch; the layout's sparse ceiling holds it in.
+        if (!fitsToRoom) {
+            effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
+        }
         chartDefaultsReport.push({
             stage: 'ground',
             path: 'layout.bandStep',
@@ -442,6 +459,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const caps = deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions);
     effectiveOptions.maxStretchX = caps.maxStretchX;
     effectiveOptions.maxStretchY = caps.maxStretchY;
+    effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
+    effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
     const facetFixW = effectiveOptions.facetFixedPadding.width;
     const facetFixH = effectiveOptions.facetFixedPadding.height;

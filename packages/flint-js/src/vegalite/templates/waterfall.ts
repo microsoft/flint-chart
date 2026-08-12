@@ -131,6 +131,7 @@ export const waterfallChartDef: ChartTemplateDef = {
         // internal bindings: a null on a primary channel resolves the merged
         // axis title to nothing, blanking the axis for every layer.
         const xEnc = {
+            ...x,
             field: xField,
             type: "ordinal" as const,
             sort: null,
@@ -139,7 +140,6 @@ export const waterfallChartDef: ChartTemplateDef = {
             // the axis title ("Month, __wf_lead"). Pinning the resolved title
             // here keeps the internal column off the axis and still honours a
             // caller-supplied label, falling back to the field name.
-            axis: { labelAngle: -45 },
             title: xTitle,
         };
 

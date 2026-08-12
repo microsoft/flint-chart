@@ -1534,7 +1534,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             : undefined,
         marks,
         facets,
-        layout: { padding, density },
+        layout: { padding, density, plotWidth: ctx.layout.subplotWidth, xStep: ctx.layout.xStep },
         statistics: theme.annotation?.statistics?.show?.length
             ? {
                 show: theme.annotation.statistics.show,
@@ -1666,7 +1666,12 @@ function groundSeriesInk(
 
     // Continuous series: a ramp, not an indexed set.
     if (seriesType === 'quantitative') {
-        const diverging = signals.isSigned && Boolean(s.diverging);
+        // Signed values normally use a diverging ramp, but a house may
+        // deliberately read the field as ordered magnitude instead. McKinsey
+        // does this on heatmaps: one navy sequence plus printed values, rather
+        // than introducing a warm ink the house does not otherwise own.
+        const signedSequential = signals.isSigned && selection.signed === 'sequential';
+        const diverging = signals.isSigned && !signedSequential && Boolean(s.diverging);
         const ramp: Ramp | undefined = offSurface(diverging ? s.diverging : s.sequential, surfaceColour, say);
         if (ramp?.stops?.length) {
             const consumption = ramp.consumption ?? 'interpolate';

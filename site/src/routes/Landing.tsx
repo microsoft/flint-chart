@@ -355,6 +355,8 @@ interface ShowcaseExample {
   exampleKey: ShowcaseExampleKey;
   generator?: string;
   index?: number;
+  /** Prefer a named generator case so inserted gallery cases cannot shift it. */
+  testTitle?: string;
   /** Pre-built test case (for examples not backed by a gallery generator). */
   testCase?: TestCase;
   /** Optional canvas override; narrower widths force facet panels to wrap. */
@@ -458,7 +460,11 @@ function moviesSortedBar(): TestCase {
  * against 56–87% and as little as 17% before.
  */
 const SHOWCASE_CANVAS = { width: 560, height: 440 };
-const WELCOME_THEME = 'pop';
+
+function randomWelcomeTheme(): string {
+  const themeIds = Object.keys(THEME_PRESETS);
+  return themeIds[Math.floor(Math.random() * themeIds.length)] ?? 'pop';
+}
 
 const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
@@ -480,8 +486,8 @@ const SHOWCASE_EXAMPLES: ShowcaseExample[] = [
   {
     id: 'heatmap',
     exampleKey: 'heatmap',
-    generator: 'Omni: Heatmap',
-    index: 0,
+    generator: 'Heatmap',
+    testTitle: 'Average monthly temperature by city',
   },
   {
     id: 'sunburst',
@@ -557,12 +563,13 @@ function HeroShowcase() {
   const [exampleIdx, setExampleIdx] = useState(0);
   const [selectedBackend, setSelectedBackend] = useState<PreviewBackend>('vegalite');
   const [tempOptions, setTempOptions] = useState<Record<string, unknown>>({});
+  const [welcomeTheme] = useState(randomWelcomeTheme);
   // The house every showcase chart is drawn in. It is deliberately *not* reset
   // as the carousel moves: the point of a house is that it holds across a set
   // of charts, so a reader who picks one sees the whole carousel answer to it.
   // Only Vega-Lite reads `theme_spec`, so the switch is offered on that backend
   // alone — an inert switch reads as a bug in the theme.
-  const [themeId, setThemeId] = useState<string | undefined>(WELCOME_THEME);
+  const [themeId, setThemeId] = useState<string | undefined>(welcomeTheme);
   const [previewTheme, setPreviewTheme] = useState<{ id: string | undefined } | null>(null);
 
   const example = SHOWCASE_EXAMPLES[exampleIdx];
@@ -577,7 +584,7 @@ function HeroShowcase() {
     [t, example.exampleKey],
   );
   const canvasSize = example.canvasSize ?? SHOWCASE_CANVAS;
-  const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0);
+  const galleryTestCase = useTestCase(example.generator ?? '', example.index ?? 0, example.testTitle);
   const testCase = example.testCase ?? galleryTestCase;
   const supported = useMemo(
     () => (testCase ? getSupportedBackends(testCase.chartType) : []),
@@ -737,10 +744,10 @@ function HeroShowcase() {
                   <GalleryOptionsBar
                     model={panelModel}
                     chartType={displayInput.chart_spec.chartType}
-                    canReset={Object.keys(tempOptions).length > 0 || themeId !== WELCOME_THEME}
+                    canReset={Object.keys(tempOptions).length > 0 || themeId !== welcomeTheme}
                     onReset={() => {
                       setTempOptions({});
-                      setThemeId(WELCOME_THEME);
+                      setThemeId(welcomeTheme);
                     }}
                     onChange={(key, value) =>
                       setTempOptions((current) => {
@@ -958,17 +965,18 @@ function getFeatures(t: TFunction): Feature[] {
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-function useTestCase(generator: string, index = 0): TestCase | null {
+function useTestCase(generator: string, index = 0, title?: string): TestCase | null {
   return useMemo(() => {
     const gen = TEST_GENERATORS[generator];
     if (!gen) return null;
     try {
       const all = gen();
+      if (title) return all.find((testCase) => testCase.title === title) ?? null;
       return all[index] ?? all[0] ?? null;
     } catch {
       return null;
     }
-  }, [generator, index]);
+  }, [generator, index, title]);
 }
 
 /* ------------------------------------------------------------------ */

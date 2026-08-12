@@ -65,6 +65,23 @@ function timestampToMs(val: number): number {
     return val <= MAX_TIMESTAMP_SEC ? val * 1000 : val;
 }
 
+function inferImplicitSemanticType(fieldName: string, values: any[]): string {
+    const tokens = fieldName
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter(Boolean);
+    if (!tokens.includes('year')) return '';
+
+    const observed = values.filter(value => value != null && value !== '');
+    if (new Set(observed.map(String)).size <= 1) return '';
+    const allYears = observed.every(value => {
+        const numeric = typeof value === 'number' ? value : Number(value);
+        return Number.isInteger(numeric) && numeric >= 1500 && numeric <= 2200;
+    });
+    return allYears ? 'Year' : '';
+}
+
 function looksLikeDateString(s: string): boolean {
     const t = s.trim();
     return /^\d|^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(t);
@@ -246,9 +263,14 @@ export function convertTemporalData(
     if (data.length === 0) return data;
 
     const keys = Object.keys(data[0]);
+    const fieldValues = Object.fromEntries(keys.map(key => [key, data.map(row => row[key])]));
+    const effectiveSemanticTypes = Object.fromEntries(keys.map(key => [
+        key,
+        toTypeString(semanticTypes[key]) || inferImplicitSemanticType(key, fieldValues[key]),
+    ]));
     const temporalKeys = keys.filter((k: string) => {
-        const st = toTypeString(semanticTypes[k]);
-        const vc = inferVisCategory(data.map(r => r[k]));
+        const st = effectiveSemanticTypes[k];
+        const vc = inferVisCategory(fieldValues[k]);
         const stCategory = st ? getVisCategory(st) : null;
         return vc === 'temporal' || stCategory === 'temporal' || st === 'Decade';
     });
@@ -259,7 +281,7 @@ export function convertTemporalData(
     return values.map((r: any) => {
         for (const temporalKey of temporalKeys) {
             const val = r[temporalKey];
-            const st = toTypeString(semanticTypes[temporalKey]);
+            const st = effectiveSemanticTypes[temporalKey];
 
             if (typeof val === 'number') {
                 if (st === 'Year' || st === 'Decade') {
@@ -336,10 +358,12 @@ export function resolveChannelSemantics(
         if (!fieldName) continue;
 
         const rawAnnotation = semanticTypes[fieldName];
-        const semanticType = typeof rawAnnotation === 'string'
+        const suppliedSemanticType = typeof rawAnnotation === 'string'
             ? (rawAnnotation || '')
             : (rawAnnotation?.semanticType ?? '');
         const fieldValues = data.map(r => r[fieldName]);
+        const semanticType = suppliedSemanticType
+            || inferImplicitSemanticType(fieldName, fieldValues);
 
         // Resolve encoding type
         const typeDecision = resolveEncodingTypeDecision(
@@ -367,7 +391,7 @@ export function resolveChannelSemantics(
 
         // Build ChannelSemantics entry
         // Stage 1: resolve field-level semantics (data identity)
-        const fc = resolveFieldSemantics(rawAnnotation, fieldName, fieldValues);
+        const fc = resolveFieldSemantics(rawAnnotation || semanticType, fieldName, fieldValues);
         const annotation = fc.semanticAnnotation;
 
         // Stage 2: layer on channel-specific visualization decisions

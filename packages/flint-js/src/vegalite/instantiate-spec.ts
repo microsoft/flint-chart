@@ -212,6 +212,7 @@ export function vlApplyLayoutToSpec(
                     new Date(maxVal + pad).toISOString(),
                 ];
             } else {
+                enc.scale.zero = false;
                 enc.scale.domain = [minVal - pad, maxVal + pad];
             }
         }

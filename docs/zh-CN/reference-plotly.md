@@ -27,7 +27,7 @@ Plotly 后端编译为 Plotly.js `{ data, layout }` 图形，并优先使用原�
 
 ### ![](chart-icon-scatter.svg) Scatter Plot
 
-**编码通道：** `x`, `y`, `color`, `size`, `opacity`, `column`, `row`
+**编码通道：** `x`, `y`, `color`, `size`, `shape`, `opacity`, `column`, `row`
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
@@ -174,7 +174,7 @@ _无模板专用参数。_
 
 ### ![](chart-icon-line.svg) Line Chart
 
-**编码通道：** `x`, `y`, `color`, `opacity`, `column`, `row`
+**编码通道：** `x`, `y`, `color`, `strokeDash`, `opacity`, `column`, `row`
 
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
@@ -245,7 +245,7 @@ _无模板专用参数。_
 | 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |
 |---|---|---|---|---|---|
 | `filled` | choice | `true` (Filled (default)), `false` (Outline only) | — | always | 填充雷达图围成的区域。 |
-| `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.3` | always | 区域填充不透明度。 |
+| `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.16` | always | 区域填充不透明度。 |
 
 ### ![](chart-icon-rose.svg) Rose Chart
 

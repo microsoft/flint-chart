@@ -8,7 +8,7 @@
       "field": "X",
       "type": "quantitative",
       "scale": {
-        "zero": true,
+        "zero": false,
         "nice": false,
         "domain": [
           0.5,

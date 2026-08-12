@@ -31,7 +31,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-scatter.svg) Scatter Plot
 
-**Encoding channels:** `x`, `y`, `color`, `size`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -178,7 +178,7 @@ _No template-specific parameters._
 
 ### ![](chart-icon-line.svg) Line Chart
 
-**Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `strokeDash`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -249,7 +249,7 @@ _No template-specific parameters._
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `filled` | choice | `true` (Filled (default)), `false` (Outline only) | — | always | Fill the enclosed radar area. |
-| `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.3` | always | Fill opacity for the area or region. |
+| `fillOpacity` | number | 0.05 – 0.8 (step 0.05) | `0.16` | always | Fill opacity for the area or region. |
 
 ### ![](chart-icon-rose.svg) Rose Chart
 

@@ -163,6 +163,7 @@ def vl_apply_layout_to_spec(vg_obj: dict, context: dict, warnings: list) -> None
         if is_temporal:
             enc["scale"]["domain"] = [_iso_z(min_val - pad), _iso_z(max_val + pad)]
         else:
+            enc["scale"]["zero"] = False
             enc["scale"]["domain"] = [min_val - pad, max_val + pad]
 
     # --- Canvas sizing ---

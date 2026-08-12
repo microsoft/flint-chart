@@ -181,6 +181,7 @@ export const economist: ThemePreset = {
         ],
         "layout": {
             "density": "compact",
+            "bandStepFit": 0.55,
             "titleBlock": {
                 "anchor": "start",
                 "gap": "tight"

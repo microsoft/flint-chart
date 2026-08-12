@@ -208,6 +208,7 @@ export const nature: ThemePreset = {
         "layout": {
             "density": "compact",
             "targetWidth": 252,
+            "bandStepFit": 0.2,
             "titleBlock": {
                 "anchor": "middle",
                 "position": "bottom",

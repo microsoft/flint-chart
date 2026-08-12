@@ -416,6 +416,13 @@ export interface ThemeLayout {
         deckGap?: 'tight' | 'normal' | 'loose';
     };
     bandStep?: number;
+    /**
+     * How strongly category pitch follows the available discrete-axis span.
+        * On sparse one-banded axes, `0` preserves `bandStep`, `1` fills the span,
+        * and intermediate values linearly blend the two. Under pressure normal
+        * elasticity applies to `bandStep`; two-banded cell grids ignore this.
+     */
+    bandStepFit?: number;
 }
 
 /** A predicate over signals the compiler already resolves. Deliberately closed. */
@@ -801,7 +808,13 @@ export interface DesignDecisions {
         spacing?: number;
         preferredColumns?: number;
     };
-    layout: { padding: number; density: 'compact' | 'normal' | 'airy' };
+    /** `plotWidth`/`xStep` are what the layout settled, so an axis can ask whether its names still fit. */
+    layout: {
+        padding: number;
+        density: 'compact' | 'normal' | 'airy';
+        plotWidth?: number;
+        xStep?: number;
+    };
     /**
      * What the house prints alongside a fit: the quantities it expects to see
      * stated, and where. Only meaningful where the chart actually fits

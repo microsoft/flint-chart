@@ -216,13 +216,13 @@ describe('value label precision', () => {
   });
 
   describe('which side of the mark the number sits on', () => {
-    const signed = (values: number[], horizontal = false) => assembleVegaLite({
+    const signed = (values: number[], horizontal = false, width = 700) => assembleVegaLite({
       data: { values: values.map((v, i) => ({ cat: `C${i + 1}`, val: v })) },
       semantic_types: { cat: 'nominal', val: 'quantitative' },
       chart_spec: {
         chartType: 'Bar Chart',
         encodings: horizontal ? { y: 'cat', x: 'val' } : { x: 'cat', y: 'val' },
-        baseSize: { width: 700, height: 320 },
+        baseSize: { width, height: 320 },
         chartProperties: { showValueLabels: true },
       },
       theme_spec: 'economist',
@@ -233,12 +233,24 @@ describe('value label precision', () => {
 
     it('sends the label below a bar that runs down from zero', () => {
       // A bar drawn downwards ends at the bottom, so "outside" is below it.
-      // Placed above, the number lands on top of the bar it labels.
-      const mark = labelMark(signed([-1234.5, -88, 12, 940, -3]));
+      // Placed above, the number lands on top of the bar it labels. A narrow
+      // column keeps the bands too thin to print the number inside.
+      const spec = signed([-1234.5, -88, 12, 940, -3], false, 300);
+      expect(spec._theme.decisions.dataLabels.placement).toBe('outsideMark');
+      const mark = labelMark(spec);
       expect(mark.baseline).toEqual({ expr: expect.stringContaining('datum["val"] < 0') });
       expect(mark.dy).toEqual({ expr: expect.stringContaining('datum["val"] < 0') });
       // Below for a negative, above for a positive — and never the reverse.
       expect(mark.baseline.expr).toBe(`datum["val"] < 0 ? 'top' : 'bottom'`);
+    });
+
+    it('turns those sides around once the number sits inside the bar', () => {
+      // Wide bands leave room to print in the mark, and inside is the other
+      // way up: the number hangs under a rising bar's top and sits over the
+      // end of one that runs down.
+      const spec = signed([-1234.5, -88, 12, 940, -3]);
+      expect(spec._theme.decisions.dataLabels.placement).toBe('atMark');
+      expect(labelMark(spec).baseline.expr).toBe(`datum["val"] < 0 ? 'bottom' : 'top'`);
     });
 
     it('flips left and right instead when the bars run sideways', () => {

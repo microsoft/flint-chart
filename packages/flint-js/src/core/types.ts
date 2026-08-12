@@ -1246,6 +1246,25 @@ export interface AssembleOptions {
      */
     defaultBandSize?: number;
     /**
+     * Blend between the scaled base band and the available span per item.
+     *
+    *   baseSpanStep = baseSpan / N
+    *   capacityStep = availableCapacity / N
+    *   preferredStep = baseSpanStep > baseStep
+    *       ? baseStep × (1 − fit) + capacityStep × fit
+    *       : baseStep
+     *
+    * `0` gives fixed-step behavior (Vega-Lite); `1` aims toward the available
+    * canvas capacity on sparse axes (ECharts, Chart.js, Plotly). The selected
+    * pitch then passes through normal elastic stretch/compression. Two-banded
+    * cell grids bypass this policy. Default: 0.
+     */
+    bandStepFit?: number;
+    /** Explicit X-axis capacity for sparse band fitting. Internal assembler bridge. */
+    bandStepFitCapacityX?: number;
+    /** Explicit Y-axis capacity for sparse band fitting. Internal assembler bridge. */
+    bandStepFitCapacityY?: number;
+    /**
      * Chart-specific **floor** on the per-category band step (at a 300px
      * baseline canvas), which a house's `layout.bandStep` may grow but not
      * undercut. Ordinary charts have no such floor: a compact house is right

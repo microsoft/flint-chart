@@ -176,6 +176,7 @@ export const datawrapper: ThemePreset = {
         "layout": {
             "density": "normal",
             "targetWidth": 300,
+            "bandStepFit": 1,
             "titleBlock": {
                 "anchor": "start"
             }

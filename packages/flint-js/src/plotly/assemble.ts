@@ -205,6 +205,8 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         : {};
 
     const effectiveOptions: AssembleOptions = {
+        // Plotly categories natively fill the available plot area.
+        bandStepFit: 1,
         // Plotly fills its plot area natively (bars sized by `bargap`), so sparse
         // categories spread out. Allow bands to expand well past the base size,
         // matching Plotly's official low-cardinality bar style, but cap it so one
@@ -216,8 +218,18 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         ...options,
         ...(declaration.paramOverrides || {}),
     };
+    const houseBandStep = themeSpec?.layout?.bandStep;
+    const houseBandStepFit = themeSpec?.layout?.bandStepFit;
+    if (houseBandStep != null && options.defaultBandSize == null) {
+        effectiveOptions.defaultBandSize = houseBandStep;
+    }
+    if (houseBandStepFit != null && options.bandStepFit == null) {
+        effectiveOptions.bandStepFit = Math.max(0, Math.min(1, houseBandStepFit));
+    }
 
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
+    effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     const {

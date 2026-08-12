@@ -222,6 +222,8 @@ export function assembleECharts(input: ChartAssemblyInput): any {
         // but adds ~120-160px grid margins on top.  A 24px base band gives
         // bars close to ECharts's native auto-sizing at typical category counts.
         defaultBandSize: 24,
+        // ECharts bars natively distribute across the available grid.
+        bandStepFit: 1,
         // ECharts fills its grid natively (bars sized by barCategoryGap), so
         // sparse categories spread out. Allow bands to expand past the base to
         // match that, capped so a couple of bars don't span the whole canvas.
@@ -248,6 +250,8 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // (βx, βy) so the entire layout — single plot OR facet grid — stays within
     // the same budget. Falls back to maxStretch when no ceiling is set.
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
+    effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     // Default true so that _encodingTooltip is applied and all charts get encoding-style tooltips

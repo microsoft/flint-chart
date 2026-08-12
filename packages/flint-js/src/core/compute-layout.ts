@@ -72,6 +72,13 @@ const VL_SHORT_DISCRETE_LABEL_MAX_LEN = 8;
 /** Approximate width (px) of one label character at the given font size. */
 const APPROX_CHAR_WIDTH_RATIO = 0.62;
 
+/**
+ * How wide one category may grow when a sparse axis fits itself to the room it
+ * has. Past this a "band" stops reading as a mark and starts reading as a
+ * panel, however much canvas is going spare.
+ */
+const SPARSE_FIT_BAND_CEILING = 100;
+
 /** Distinct label strings for a discrete axis field, plus derived stats. */
 interface DiscreteLabelStats {
     count: number;
@@ -288,6 +295,7 @@ export function computeLayout(
         minStep: minStepVal = 6,
         minSubplotSize: minSubplotVal = 60,
         stepPadding: stepPaddingVal = 0.1,
+        bandStepFit: bandStepFitVal = 0,
         maintainContinuousAxisRatio = false,
         continuousMarkCrossSection,
         facetAspectRatioResistance = 0,
@@ -310,11 +318,6 @@ export function computeLayout(
     const sizeRatio = Math.max(defaultChartWidth, defaultChartHeight) / baseRefSize;
     const baseBandSize = options.defaultBandSize ?? 20;
     const defaultStepSize = Math.round(baseBandSize * Math.max(1, sizeRatio));
-    // Sparse-expansion ceiling: a band may grow past its base size to fill a
-    // wide plot, but never past maxStepSize. Defaults to the base band, so a
-    // backend that doesn't opt in keeps the old "cap at base" behavior.
-    const maxBandSize = Math.max(baseBandSize, options.maxBandSize ?? baseBandSize);
-    const maxStepSize = Math.round(maxBandSize * Math.max(1, sizeRatio));
 
     const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
@@ -328,6 +331,22 @@ export function computeLayout(
     const axisFlags = declaration.axisFlags || {};
     const xBanded = axisFlags.x?.banded ?? false;
     const yBanded = axisFlags.y?.banded ?? false;
+    // Two banded axes describe cells, not freely thickened bars. Their shared
+    // cell-size resolver owns both steps, so sparse-axis fit must stay out.
+    const effectiveBandStepFit = xBanded && yBanded ? 0 : bandStepFitVal;
+    // Sparse-expansion ceiling: a band may grow past its base size to fill a
+    // wide plot, but never past maxStepSize. Defaults to the base band, so a
+    // backend that doesn't opt in keeps the old "cap at base" behavior.
+    const maxBandSize = options.maxBandSize == null
+        ? (effectiveBandStepFit > 0 ? Math.max(baseBandSize, SPARSE_FIT_BAND_CEILING) : baseBandSize)
+        : Math.max(baseBandSize, options.maxBandSize);
+    // A sparse-fit ceiling is an absolute readability limit, not a share of the
+    // canvas: scaling it with the plot is what turns three categories into
+    // three slabs. A template that already asks for a wide band (a slopegraph's
+    // two columns) keeps its own step; a caller-stated ceiling still scales.
+    const maxStepSize = options.maxBandSize == null && effectiveBandStepFit > 0
+        ? Math.max(defaultStepSize, SPARSE_FIT_BAND_CEILING)
+        : Math.round(maxBandSize * Math.max(1, sizeRatio));
 
     const nominalCount: Record<string, number> = {
         x: 0, y: 0, column: 0, row: 0, group: 0,
@@ -805,12 +824,18 @@ export function computeLayout(
         elasticity: elasticityVal,
         maxStretch: maxStretchX,
         defaultStepSize,
+        bandStepFit: effectiveBandStepFit,
+        bandStepFitCapacity: Math.max(1,
+            (options.bandStepFitCapacityX ?? defaultChartWidth) / defaultChartWidth),
         minStep: minStepVal,
     };
     const elasticParamsY: ElasticStretchParams = {
         elasticity: elasticityVal,
         maxStretch: maxStretchY,
         defaultStepSize,
+        bandStepFit: effectiveBandStepFit,
+        bandStepFitCapacity: Math.max(1,
+            (options.bandStepFitCapacityY ?? defaultChartHeight) / defaultChartHeight),
         minStep: minStepVal,
     };
 
@@ -832,9 +857,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupElasticX = options.groupBandFillsLanes
-            ? { ...elasticParamsX, defaultStepSize: elasticParamsX.defaultStepSize * itemsPerGroup }
-            : elasticParamsX;
+        const groupElasticX = {
+            ...elasticParamsX,
+            defaultStepSize: elasticParamsX.defaultStepSize * itemsPerGroup,
+        };
         const groupAxis = computeAxisStep(nominalCount.x, 0, subplotWidth, groupElasticX);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         xStepSize = groupStep;
@@ -851,9 +877,10 @@ export function computeLayout(
         const itemsPerGroup = nominalCount.group;
         const defaultGroupStep = itemsPerGroup * maxStepSize;
         const minGroupStep = Math.max(Math.ceil(MIN_GROUP_GAP_PX / stepPaddingVal), 2 * itemsPerGroup);
-        const groupElasticY = options.groupBandFillsLanes
-            ? { ...elasticParamsY, defaultStepSize: elasticParamsY.defaultStepSize * itemsPerGroup }
-            : elasticParamsY;
+        const groupElasticY = {
+            ...elasticParamsY,
+            defaultStepSize: elasticParamsY.defaultStepSize * itemsPerGroup,
+        };
         const groupAxis = computeAxisStep(nominalCount.y, 0, subplotHeight, groupElasticY);
         const groupStep = Math.max(minGroupStep, Math.min(defaultGroupStep, groupAxis.step));
         yStepSize = groupStep;
@@ -976,7 +1003,12 @@ export function computeLayout(
         && !bothDiscreteConnected) {
         const capX = Math.floor(maxSubplotW / xTotalNominalCount);
         const capY = Math.floor(maxSubplotH / yTotalNominalCount);
-        const generous = Math.round(CELL_BAND_SIZE * Math.max(1, sizeRatio));
+        // A grid cell is a two-dimensional reading target, not a bar whose
+        // thickness should grow with the chart footprint. Scaling this 28px
+        // target by a house's base canvas turned McKinsey's 440px chart into
+        // 41px tiles, even though the measured design uses roughly 26px cells.
+        // Cardinality may still shrink cells through capX/capY below.
+        const generous = CELL_BAND_SIZE;
         // The square is the narrower of the two steps — that one already fits —
         // grown to the generous size if there is room for it on both axes.
         const wanted = Math.max(generous, Math.min(xStepSize, yStepSize));
