@@ -459,8 +459,26 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const caps = deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions);
     effectiveOptions.maxStretchX = caps.maxStretchX;
     effectiveOptions.maxStretchY = caps.maxStretchY;
-    effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
-    effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
+    // The fit aims at the room the *plot* gets, not the whole box: a chart that
+    // spends its margins on a value gutter and a key has that much less to hand
+    // its bands. The reserve is a soft margin, not a guarantee.
+    const keyPlacement: string[] = themeSpec?.legend?.placement ?? [];
+    // A key is reserved on the house's placement alone. Whether one appears is
+    // a fact about the compiled spec, and templates that build their own from a
+    // working column (a waterfall's step types) never show a bound channel here.
+    const keyed = Boolean(channelSemantics.color?.field || channelSemantics.group?.field)
+        || chartTemplate.channels?.includes('color') === true;
+    const titled = Boolean(input.chart_spec.title?.trim() || input.chart_spec.subtitle?.trim());
+    const reserveW = (channelSemantics.y?.field ? FURNITURE.valueGutter : 0)
+        + (keyed && keyPlacement.some((p) => SIDE_KEY.has(p)) ? FURNITURE.sideKey : 0);
+    const reserveH = (channelSemantics.x?.field ? FURNITURE.tickGutter : 0)
+        + (titled ? FURNITURE.titleBlock : 0)
+        + (keyed && keyPlacement.some((p) => STACKED_KEY.has(p)) ? FURNITURE.stackedKey : 0);
+    const ceilingW = sizeCeiling?.width ?? baseSize.width;
+    const ceilingH = sizeCeiling?.height ?? baseSize.height;
+    // Furniture may take a chart's margins, never most of its plot.
+    effectiveOptions.bandStepFitCapacityX = Math.max(ceilingW * 0.6, ceilingW - reserveW);
+    effectiveOptions.bandStepFitCapacityY = Math.max(ceilingH * 0.6, ceilingH - reserveH);
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
     const facetFixW = effectiveOptions.facetFixedPadding.width;
     const facetFixH = effectiveOptions.facetFixedPadding.height;
@@ -950,6 +968,31 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 function templateOwnsValueLabels(template: ChartTemplateDef): boolean {
     return template.ownsValueLabels === true;
 }
+
+/** A key charges the dimension it sits along, and only that one. */
+const SIDE_KEY = new Set(['right', 'left', 'seriesEnd']);
+const STACKED_KEY = new Set(['top', 'bottom']);
+
+/**
+ * A soft margin for what a chart draws *around* its plot.
+ *
+ * Read off presence rather than measured: is there a title block, where does
+ * the key sit, is the axis labelled at all. Wrong in the small — a long name
+ * costs more than a short one, a facet pays per panel — but it stops the fit
+ * aiming a banded axis at room the axes and key have already spent.
+ */
+const FURNITURE = {
+    /** Tick labels down the side of the plot. */
+    valueGutter: 70,
+    /** One line of tick labels under it. */
+    tickGutter: 35,
+    /** Headline plus deck. */
+    titleBlock: 30,
+    /** A key in the side margin. */
+    sideKey: 100,
+    /** A key above or below. */
+    stackedKey: 30,
+};
 
 function resolveValueLabelChoice(
     chartProperties: Record<string, any> | undefined,
