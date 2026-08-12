@@ -3779,6 +3779,14 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         say('dataLabels', `measure channel \`${measureChannel}\` has no field`);
         return;
     }
+    // A column the template computed to draw itself is not a quantity anyone
+    // asked to read: a waterfall binds its bars to where each step *starts*,
+    // so printing it labels the running total under the bar, not the step.
+    if (String(measure.field).startsWith('__')) {
+        say('dataLabels',
+            `the measure is the template's own \`${measure.field}\` — a working column, not a value to print`);
+        return;
+    }
     // A stacked segment *can* carry its value, but only in the middle of it.
     // At the segment edge the number reads as the running total, which is why
     // it used to be refused outright; centred, it reads as the segment — the

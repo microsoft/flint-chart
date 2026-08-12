@@ -558,6 +558,44 @@ describe('theme compileDefaults', () => {
         expect(filled.width.step).toBeGreaterThan(fixed.width.step);
     });
 
+    it('never prints a house label off a template\'s own working column', () => {
+        // A waterfall binds its bars to where each step starts, so a house
+        // label layer reaching for "the measure" finds `__wf_prev_sum` and
+        // prints the running total under the bar — 0 on the opening step.
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            period: `2025-${String(index + 1).padStart(2, '0')}`,
+            newUsers: index === 0 ? 400_000 : index % 3 === 0 ? -120_000 : 180_000,
+        }));
+        const compile = (chartProperties?: Record<string, unknown>) => assembleVegaLite({
+            data: { values },
+            semantic_types: { period: 'YearMonth', newUsers: 'Profit' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'period', y: 'newUsers' },
+                canvasSize: { width: 720, height: 720 },
+                ...(chartProperties ? { chartProperties } : {}),
+            },
+            theme_spec: 'powerbi-light',
+        } as any) as any;
+
+        const textFields = (spec: any): string[] => {
+            const found: string[] = [];
+            const walk = (node: any): void => {
+                if (!node || typeof node !== 'object') return;
+                if (markTypeOf(node.mark) === 'text' && node.encoding?.text?.field) {
+                    found.push(node.encoding.text.field);
+                }
+                Object.values(node).forEach(walk);
+            };
+            walk(spec);
+            return found;
+        };
+
+        expect(textFields(compile())).toEqual([]);
+        // Asked for, the template prints its own — the step and the total.
+        expect(textFields(compile({ showValueLabels: true })).length).toBeGreaterThan(0);
+    });
+
     it('refuses a house straight angle the category names cannot fit, and keeps it when they can', () => {
         const compile = (prefix: string) => assembleVegaLite({
             data: {
