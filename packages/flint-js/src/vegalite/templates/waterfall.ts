@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { resolveDiscreteType } from '../../core/axis-detection';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 /**
@@ -21,8 +22,14 @@ export const waterfallChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'length',
     ownsValueLabels: true,
-    declareLayoutMode: () => ({
+    // The steps are drawn on a band scale whatever the column holds — a month
+    // is a step here, not a date. Saying so keeps the layout's category sizing
+    // in step with the ordinal encoding the template writes below.
+    declareLayoutMode: (cs, table) => ({
         axisFlags: { x: { banded: true } },
+        resolvedTypes: {
+            x: resolveDiscreteType(cs.x?.type ?? 'nominal', cs.x?.field, table ?? []),
+        },
     }),
     instantiate: (spec, ctx) => {
         const { x, y, color, column, row } = ctx.resolvedEncodings;

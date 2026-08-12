@@ -532,6 +532,32 @@ describe('theme compileDefaults', () => {
         expect(waterfall.config.axisX).toEqual(bar.config.axisX);
     });
 
+    it('gives a waterfall a category step even where the steps are dates', () => {
+        // The template draws its steps on a band scale whatever the column
+        // holds. Sized as a temporal axis instead, the bands get no step at all
+        // and the house's sparse fit has nothing to widen.
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            period: `2025-${String(index + 1).padStart(2, '0')}`,
+            newUsers: index === 0 ? 400_000 : index % 3 === 0 ? -120_000 : 180_000,
+        }));
+        const compile = (bandStepFit: number) => assembleVegaLite({
+            data: { values },
+            semantic_types: { period: 'YearMonth', newUsers: 'Profit' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'period', y: 'newUsers' },
+                canvasSize: { width: 720, height: 720 },
+            },
+            theme_spec: 'powerbi',
+            options: { bandStepFit },
+        } as any) as any;
+
+        const fixed = compile(0);
+        const filled = compile(1);
+        expect(typeof fixed.width?.step).toBe('number');
+        expect(filled.width.step).toBeGreaterThan(fixed.width.step);
+    });
+
     it('refuses a house straight angle the category names cannot fit, and keeps it when they can', () => {
         const compile = (prefix: string) => assembleVegaLite({
             data: {

@@ -1,9 +1,19 @@
 """Waterfall Chart template."""
 from __future__ import annotations
 
+from .utils import resolve_discrete_type
+
 
 def _waterfall_declare(cs, table, chart_properties):
-    return {"axisFlags": {"x": {"banded": True}}}
+    # The steps are drawn on a band scale whatever the column holds — a month is
+    # a step here, not a date — so the layout has to size it as a category.
+    x_cs = (cs or {}).get("x") or {}
+    return {
+        "axisFlags": {"x": {"banded": True}},
+        "resolvedTypes": {
+            "x": resolve_discrete_type(x_cs.get("type") or "nominal", x_cs.get("field"), table or []),
+        },
+    }
 
 
 def _waterfall_instantiate(spec, ctx):
