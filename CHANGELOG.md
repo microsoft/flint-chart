@@ -30,12 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- An axis title that is still needed now lies flat at the head of its own
-  ruler, beside the values it names, on whichever side those values sit. The
-  `titleBlock` placement, which moved such a title into the subtitle, is gone:
-  it could only ever carry one measure, so a chart with two rulers lost the
-  binding that says which quantity is which. Where both axes need naming, both
-  are named.
+- An axis title that is still needed now lies flat at the head of its own ruler,
+  beside the values it names and on whichever side those values sit, rather than
+  being turned on its side. Where two rulers each carry a measure, both are
+  named: one name cannot say which quantity is horizontal and which is vertical.
 - A measure axis that draws a grid rounds its domain to the tick count the axis
   actually draws, so the plot's edge falls on a grid line instead of stopping
   short of one and leaving the outermost reading with nothing above it. Axes
