@@ -525,6 +525,7 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
             titleFontSize: axis.title.fontSize,
             titleColor: axis.title.color,
             titleFontWeight: axis.title.fontWeight ?? 'normal',
+            ...(axis.title.gap != null ? { titlePadding: axis.title.gap } : {}),
         };
         if (axis.grid.show && twoPositionLineAxis(spec, channel, table)) {
             themed.grid = false;
@@ -533,6 +534,22 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                 'the line has exactly two banded positions — endpoint guides would either merge with a plot boundary or leave one column looking singled out, so both stand down');
         }
         if (axis.grid.dash) themed.gridDash = axis.grid.dash;
+        // A grid stops at the plot edge, and where the marks reach that edge —
+        // a histogram's last bar — the line is flush with the bar and its
+        // number is stranded off to the side with nothing leading to it. The
+        // house runs its rules on past the marks to end under the label they
+        // belong to, so the grid is carried over the gutter as a tick in grid
+        // ink. A house that draws its own ticks already has a mark there.
+        if (themed.grid && axis.role === 'measure' && !axis.ticks.show
+            && axis.label.show !== false) {
+            const overshoot = Math.max(4, Math.round((axis.label.padding ?? 4) * 0.75));
+            themed.ticks = true;
+            themed.tickColor = axis.grid.color;
+            themed.tickWidth = axis.grid.width;
+            themed.tickSize = overshoot;
+            say(`axes.${channel}.grid`,
+                `the grid runs ${overshoot}px past the plot to end under its own number — flush with the last mark it leads nowhere`);
+        }
         if (axis.ticks.offset) themed.tickOffset = axis.ticks.offset;
         if (axis.label.show === false) themed.labels = false;
         if (axis.label.limit != null) themed.labelLimit = axis.label.limit;
@@ -598,11 +615,15 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         let saidTicks = false;
         let saidGutter = false;
         let saidUnit = false;
-        let flatTitle = false;
+        const defaultOrient = channel === 'x' ? 'bottom' : 'left';
+        // One flat title per side: a left and a right ruler caption their own
+        // values and never land on each other.
+        const flatTitleSides = new Set<string>();
         walk(spec, (node) => {
             const enc = node.encoding?.[channel];
             if (!enc || enc.axis === null) return;
             const ax = enc.axis;
+            let unitNamedInTitle = false;
             if (ax && typeof ax === 'object') {
                 // A few pixels of label padding is styling and this file owns
                 // it. A hundred is not padding, it is a *column*: the template
@@ -639,28 +660,62 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                         }
                     }
                 }
+                // The unit is written once. Where the title already carries it
+                // — "CO2 (ppm)" — a unit on every tick states it a second time
+                // down a ruler of "450 ppm", "400 ppm".
+                const titleNow = enc.axis?.title ?? titleOf(enc);
+                if (axis.unit && typeof titleNow === 'string'
+                    && titleNow.includes(axis.unit.text)) {
+                    unitNamedInTitle = true;
+                }
                 // A title lying flat above its own axis reads as a label, not
                 // as a caption turned on its side. Only the vertical axis has
                 // anything to turn.
                 const placement = axis.title.placement;
-                if (channel === 'y' && !flatTitle
+                // The title captions the column of values under it, so it
+                // hangs off the side its own ticks are on — a title at the
+                // plot's left edge over a right-seated ruler names the wrong
+                // column. The house's orient wins where it has one; otherwise
+                // the template's own seat (a second measure on the right)
+                // stands.
+                const side = axis.orient !== defaultOrient
+                    ? axis.orient
+                    : (enc.axis?.orient ?? defaultOrient);
+                if (channel === 'y' && !flatTitleSides.has(side)
                     && (placement === 'flatAboveAxis' || placement === 'inline')) {
+                    const rightSeated = side === 'right';
+                    // The title clears the topmost value instead of sitting on
+                    // it, so the lift carries a line of the label's own size.
+                    const labelSize = axis.label.fontSize ?? 11;
+                    const gap = axis.title.gap ?? (axis.title.fontSize ?? 11) + 6;
+                    const lift = gap + Math.round(labelSize * 0.75);
                     enc.axis = {
                         ...(enc.axis ?? {}),
                         titleAngle: 0,
-                        titleAlign: 'left',
+                        titleAlign: rightSeated ? 'right' : 'left',
                         titleAnchor: placement === 'inline' ? 'end' : 'start',
-                        titleX: 0,
-                        titleY: -(axis.title.fontSize ?? 11) - 6,
+                        // On a right-hand ruler the renderer has already
+                        // measured how wide the values ran, so leaving `titleX`
+                        // unset seats the title on that outer edge. A guessed
+                        // width cannot: it reads raw data rather than the ticks
+                        // actually drawn, which stood the numbers off the grid
+                        // on one chart and laid them back over the plot on
+                        // another whose field is computed.
+                        ...(rightSeated ? {} : { titleX: 0 }),
+                        titleY: -lift,
+                        titlePadding: 0,
                         titleBaseline: 'bottom',
                     };
-                    growPadding(spec, 'top', (axis.title.fontSize ?? 11) + 8);
-                    flatTitle = true;
+                    // Both sides' titles sit on one line, so the room above
+                    // the plot is bought once.
+                    if (flatTitleSides.size === 0) {
+                        growPadding(spec, 'top', (axis.title.fontSize ?? 11) + lift);
+                    }
+                    flatTitleSides.add(side);
                     say(`axes.${channel}.title.placement`,
-                        'the axis title lies flat above the axis, where it reads as a label rather than a caption on its side');
+                        'the axis title lies flat at the head of its own ruler, beside the values it names');
                 }
             }
-            const defaultOrient = channel === 'x' ? 'bottom' : 'left';
             if (axis.orient !== defaultOrient) {
                 enc.axis = { ...(enc.axis ?? {}), orient: axis.orient };
             }
@@ -739,11 +794,29 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                 }
             }
 
+            // The plot's edge should fall on a grid line. Vega rounds the
+            // domain to about ten ticks by default while the axis draws the
+            // house's count, so the two disagree and the last line stops short
+            // of the edge — leaving a reading above it with no line to be read
+            // against.
+            //
+            // Only where a grid is actually drawn: rounding outward costs plot
+            // width, and a house that rules nothing gets nothing back for it —
+            // on a grid-less scatter it merely pushed the readings into a
+            // corner, once dragging a `zero: false` axis back to zero. A
+            // non-linear ruler is left alone too; its ticks are decades, not a
+            // count.
+            if (themed.grid && axis.tickCount != null && enc.type === 'quantitative' && !enc.bin
+                && !NONLINEAR_SCALES.has(enc.scale?.type)
+                && enc.scale?.domain == null && enc.scale?.nice !== false) {
+                enc.scale = { ...(enc.scale ?? {}), nice: axis.tickCount };
+            }
+
             // The unit has to be written somewhere. A house that drops axis
             // titles has taken away the usual place, so it says where else —
             // on every tick, or once at the end of the ruler.
             const unit = axis.unit;
-            if (unit && unit.where !== 'never' && axis.label.show !== false
+            if (unit && unit.where !== 'never' && !unitNamedInTitle && axis.label.show !== false
                 && (enc.type === 'quantitative' || enc.axis?.values != null)) {
                 const tagged = tagWithUnit(enc.axis?.labelExpr, unit.text, unit.where);
                 enc.axis = { ...(enc.axis ?? {}), labelExpr: tagged };
@@ -754,6 +827,10 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                             : `the unit \`${unit.text}\` rides on the ${unit.where === 'firstTick' ? 'first' : unit.where === 'firstAndLast' ? 'first and last' : 'last'} label, where the ruler ends`);
                     saidUnit = true;
                 }
+            } else if (unit && unit.where !== 'never' && unitNamedInTitle && !saidUnit) {
+                say(`axes.${channel}.unit`,
+                    `the title already names \`${unit.text}\` — the ruler stays bare rather than repeating the unit down every tick`);
+                saidUnit = true;
             }
         });
     }
@@ -1357,8 +1434,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     config.line = { ...(config.line ?? {}), strokeWidth: m.strokeWidth };
     config.trail = { ...(config.trail ?? {}), size: m.strokeWidth };
     if (m.strokeCap) { config.line.strokeCap = m.strokeCap; config.rule = { ...(config.rule ?? {}), strokeCap: m.strokeCap }; }
-    if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;
-    if (m.interpolate) config.line.interpolate = m.interpolate;
+    if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;    if (m.interpolate) config.line.interpolate = m.interpolate;
     if (m.fillOpacity != null) config.area = { ...(config.area ?? {}), fillOpacity: m.fillOpacity };
     if (m.cornerRadius != null) {
         // Round only the value end of a bar so the baseline stays a clean edge
@@ -1375,6 +1451,15 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         // bars wide enough to hold it. Grid cells (heatmaps) are a field, not
         // shapes to cut out, and are held apart by a tile gap, not an outline.
         config.arc = { ...(config.arc ?? {}), stroke: m.outline.color, strokeWidth: m.outline.width };
+        // An outlined shape has corners of its own, and the join is a property
+        // of the stroke, not of lines. Left to the renderer's mitre, the two
+        // radial edges of a thin wedge run past each other into a spike at the
+        // centre — worst exactly where the house draws the fattest outline.
+        if (m.strokeJoin) {
+            for (const family of ['arc', 'bar', 'area', 'point'] as const) {
+                config[family] = { ...(config[family] ?? {}), strokeJoin: m.strokeJoin };
+            }
+        }
     }
     protectDashEncoding(spec, config, m.strokeWidth);
 
@@ -1386,7 +1471,9 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.point?.show) {
         config.line.point = {
             filled: m.point.filled !== false,
-            size: m.point.size ?? 24,
+            // A vertex confirms a path's position; the primary size is the size
+            // of a dot that *is* the reading. Houses that separate them say so.
+            size: m.point.vertexSize ?? m.point.size ?? 24,
             ...(m.outline
                 ? { stroke: m.outline.color, strokeWidth: m.outline.width }
                 : m.point.haloColor
@@ -1758,6 +1845,21 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         let bandCh: 'x' | 'y' | undefined;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
+            // A stacked band adjoins its neighbour along its whole length, so it
+            // is held apart the same way bars are — without the cut, three
+            // quantities read as one silhouette.
+            if (mark === 'area') {
+                const enc = node.encoding ?? {};
+                const banded = Boolean(enc.color?.field ?? enc.fill?.field ?? spec.encoding?.color?.field);
+                if (!banded || isLiteralMark(node)) return;
+                node.mark = {
+                    ...normalizeMark(node.mark),
+                    stroke: m.separator!.color,
+                    strokeWidth: m.separator!.width,
+                };
+                sawStroke = true;
+                return;
+            }
             if (mark !== 'bar' && mark !== 'rect') return;
             if (isLiteralMark(node)) return;
             // A cell in a grid is not a bar in a row: it adjoins on both axes
@@ -1849,6 +1951,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             }
         });
     }
+
 }
 
 /**
@@ -2456,11 +2559,14 @@ function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: 
             // A scale pinned to zero, or to a domain the caller chose, is
             // saying where its ends are. Padding would move them.
             if (enc.scale?.zero === true || enc.scale?.domain || enc.scale?.padding != null) continue;
-            // `nice` rounds the domain outward to the next whole tick, and it
-            // does that *after* the padding is folded in — so a 4px gap turns
-            // into a whole extra interval of empty plot and an axis labelled
-            // past where the data goes. The padding is the breathing room; the
-            // rounding on top of it is not wanted.
+            // The padding is the breathing room that keeps the outermost dot
+            // inside the axes; rounding on top of it is not wanted here. A dot
+            // plot has no bar to anchor the eye, so an extra interval of empty
+            // scale reads as the readings hiding in a corner — and rounding
+            // outward can drag a `zero: false` ruler back to zero. Where a grid
+            // is drawn, the axis pass has already rounded to the house's tick
+            // count so the last line lands on the plot edge; that decision is
+            // kept rather than overwritten.
             enc.scale = { ...(enc.scale ?? {}), padding: radius, nice: enc.scale?.nice ?? false };
             padded = true;
         }
@@ -3311,8 +3417,12 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
     // also what seaborn does when one legend carries both: each block keeps
     // the variable name as a heading, because the heading is the only thing
     // telling a row of sizes apart from a row of colours.
+    // A key that keeps its title stands a line taller than one that dropped it.
+    // Side by side that leaves the row ragged, so the layout below has to know.
+    let titlesUneven = false;
     if (!l.title) {
         let valueKeys = 0;
+        let baredKeys = 0;
         walk(spec, (node) => {
             for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity'] as const) {
                 const enc = node.encoding?.[channel];
@@ -3323,8 +3433,10 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                     && enc.type === 'quantitative';
                 if (isValueKey) { valueKeys++; continue; }
                 enc.legend = { ...(enc.legend ?? {}), title: null };
+                baredKeys++;
             }
         });
+        titlesUneven = valueKeys > 0 && baredKeys > 0;
         if (valueKeys === 0) config.legend.title = null;
         else {
             say('legend.title',
@@ -3344,24 +3456,13 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         say('legend.offset',
             `the top key clears the flat axis title by ${clearance}px so its last row does not land on the title`);
     }
-    // A top or bottom key is a caption to the whole graphic, so it begins where
-    // the graphic does — flush with the title down the left edge — not indented
-    // to the plot rectangle the way Vega-Lite lays it by default. `bounds:
-    // 'full'` measures the key against the same box the start-anchored title
-    // uses (axes included), so the two share one left margin; the whitespace an
-    // indented key leaves between itself and the title, worst when the key
-    // wraps to several rows, closes up.
-    if ((l.orient === 'top' || l.orient === 'bottom')
-        && (l.direction ?? 'horizontal') === 'horizontal') {
-        config.legend.layout = {
-            ...(config.legend.layout ?? {}),
-            [l.orient]: {
-                anchor: 'start',
-                bounds: 'full',
-                ...(config.legend.layout?.[l.orient] ?? {}),
-            },
-        };
-    }
+    // A top or bottom key reads as a caption to the whole graphic, so the house
+    // would rather it began where the title does than indented to the plot.
+    // Vega-Lite has no way to say so: `legend.layout` was dropped after v4 and
+    // is silently discarded, and the only remaining route — `orient: 'none'`
+    // with an explicit `legendX` — would have to guess the width of the axis
+    // labels it must clear. That guess is wrong often enough to be worse than
+    // the indent, so the key stays where the renderer measures it.
     if (l.orient === 'top-right' || l.orient === 'top-left') {
         config.legend.fillColor = d.surface.plot;
         config.legend.padding = 4;
@@ -3452,7 +3553,18 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         const widths = keyWidths(spec, table, l.label.fontSize ?? 10);
         const block = blockWidth(spec, table);
         const total = widths.reduce((a, b) => a + b, 0);
-        if (widths.length > 1 && block && total > block) {
+        // A row whose keys sit at different depths reads as broken, so an
+        // uneven pair has two ways out: lay the title beside its entries where
+        // the row can afford it, or give each key a row of its own. Doing
+        // neither — which is what happens if the inline title does not fit and
+        // the keys technically still fit side by side — is the one outcome
+        // that leaves the ragged row on the page.
+        const twoKeys = widths.length > 1 && Boolean(block);
+        const titleRoom = titlesUneven
+            ? longestKeyTitle(spec) * (l.label.fontSize ?? 10) * 0.55 + 12
+            : 0;
+        const levelInline = twoKeys && titlesUneven && total + titleRoom <= block!;
+        if (twoKeys && (total > block! || (titlesUneven && !levelInline))) {
             config.legend.layout = {
                 ...(config.legend.layout ?? {}),
                 [l.orient]: {
@@ -3462,20 +3574,26 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 },
             };
             say('legend.placement',
-                `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`);
+                total > block!
+                    ? `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`
+                    : `${widths.length} keys sit at different depths and the row cannot hold an inline title — they take a row each`);
 
             // Stacked, each key that still has a title spends a line on it, so
             // two keys cost four lines above a plot that is only a couple of
             // hundred pixels tall. The title moves onto the entries' own line
             // instead — `Population (M)  ○ 200 ○ 600 ○ 1,000` — which reads
             // the way a journalistic key does and hands the row back to the
-            // chart. It is only offered here because it is only free here:
-            // stacked keys have the width to spare, whereas keys sharing a row
-            // are already short of it, and a leading title on each would push
-            // them apart rather than pull them up.
+            // chart.
             config.legend.titleOrient = 'left';
             say('legend.titleOrient',
                 'stacked keys put their title on the same line as their entries — the row is already paid for');
+        } else if (levelInline) {
+            // They fit on one row, but only one of them kept a title, so that
+            // key is a line deeper than its neighbour and the row hangs
+            // ragged. Laying its title beside its entries levels the two.
+            config.legend.titleOrient = 'left';
+            say('legend.titleOrient',
+                'one key keeps a title and the other does not — its title moves onto the entries\' line so both keys sit at the same depth');
         }
     }
 
@@ -3576,6 +3694,22 @@ function wrapWideKeys(
                 `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
         }
     });
+}
+
+/** The longest title still standing on any key, in characters. */
+function longestKeyTitle(spec: any): number {
+    let longest = 0;
+    walk(spec, (node) => {
+        for (const channel of ['color', 'fill', 'stroke', 'size', 'shape', 'opacity'] as const) {
+            const enc = node.encoding?.[channel];
+            if (!enc?.field || enc.legend === null) continue;
+            const title = enc.legend?.title;
+            if (title === null) continue;
+            const text = typeof title === 'string' ? title : String(enc.field);
+            longest = Math.max(longest, text.length);
+        }
+    });
+    return longest;
 }
 
 /**
@@ -4696,13 +4830,13 @@ function applySeriesEndLabels(
     };
     appendLayer(body, labelLayer);
 
-    // The labels live outside the plot rectangle; the canvas has to make room
-    // or Vega-Lite will draw them over whatever is next to the chart. At the
-    // head of a list they sit inside it and no room is needed.
-    if (atEnd) {
-        const longest = estimateLongestLabel(table, seriesField) + (merged ? 6 : 0);
-        growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
-    }
+    // The names sit outside the plot rectangle, and no room is reserved for
+    // them here: they are ordinary text marks, and Vega's default `pad`
+    // autosize already grows the canvas to the scene's own bounds. Estimating
+    // the same width a second time only double-counted it — measured at ~124px
+    // of dead margin on a three-series line — and the estimate could never
+    // agree with the text the renderer actually laid out.
+
     // Naming the series at the line end frees the corner the colour key used to
     // hold — but a *second* encoding (a forecast dash, a shape) still keeps its
     // own key, and Vega-Lite parks it top-right by default, right where the end
@@ -4914,11 +5048,8 @@ function bandEndLabels(
     if (!outside.length) appendLayer(body, endLayer(true));
     if (outside.length) {
         appendLayer(body, endLayer(false));
-        // Name only out here, so the margin is measured off the longest name
-        // plus a little air — not off a name-and-number pair that is no longer
-        // drawn.
-        const longest = Math.max(...outside.map((s) => s.length)) + 2;
-        growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
+        // No margin is reserved for these names: `pad` autosize already sizes
+        // the canvas to the scene, so reserving it here counted it twice.
         say('legend.placement',
             homeless.length === order.length
                 ? 'the bands climb away from their own labels — the names sit outside the plot in series ink, as a list'
@@ -5041,16 +5172,6 @@ function orderedValues(table: any[], field: string): string[] {
         if (!set.has(s)) { set.add(s); seen.push(s); }
     }
     return seen;
-}
-
-function estimateLongestLabel(table: any[], field: string): number {
-    if (!Array.isArray(table)) return 10;
-    let max = 0;
-    for (const row of table) {
-        const v = row?.[field];
-        if (v != null) max = Math.max(max, String(v).length);
-    }
-    return max || 10;
 }
 
 // ---------------------------------------------------------------------------

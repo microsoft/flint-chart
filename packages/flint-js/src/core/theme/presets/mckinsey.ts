@@ -124,8 +124,14 @@ export const mckinsey: ThemePreset = {
                 "size": "text.300",
                 "weight": "bold"
             },
-            "axisLabel": {
+            "deck": {
                 "size": "text.200"
+            },
+            "axisLabel": {
+                "size": "text.100"
+            },
+            "axisTitle": {
+                "size": "text.100"
             },
             "valueLabel": {
                 "size": "text.200",
@@ -170,6 +176,11 @@ export const mckinsey: ThemePreset = {
             },
             "slice": {
                 "gap": 1
+            }
+        },
+        "geometry": {
+            "cell": {
+                "gap": 0.8
             }
         },
         "labels": {

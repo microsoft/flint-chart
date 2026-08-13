@@ -100,7 +100,12 @@ export const economist: ThemePreset = {
                 "color": "#54585a"
             },
             "axisLabel": {
-                "size": "text.100"
+                "size": 11
+            },
+            "axisTitle": {
+                "size": 11,
+                "weight": "regular",
+                "color": "#54585a"
             }
         },
         "structure": {
@@ -143,6 +148,11 @@ export const economist: ThemePreset = {
                 450
             ]
         },
+        "geometry": {
+            "cell": {
+                "gap": 0.6
+            }
+        },
         "labels": {
             "truncation": "never",
             "angle": "auto"
@@ -163,6 +173,8 @@ export const economist: ThemePreset = {
         },
         "annotation": {
             "axisTitles": "omit",
+            "axisTitlePlacement": "flatAboveAxis",
+            "axisTitleGap": 8,
             "unit": "everyTick"
         },
         "furniture": [

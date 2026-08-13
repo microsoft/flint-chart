@@ -73,7 +73,7 @@ For a local MCP server (recommended for large datasets), check the
 ## Updates
 
 - **August 12, 2026** — Flint 0.5.1 extends visual themes to the Plotly backend
-  and adds a Calendar Heatmap chart type. ([changelog](CHANGELOG.md))
+  and adds Vega-Lite Calendar Heatmap. ([changelog](CHANGELOG.md))
 - **August 5, 2026** — Flint 0.5.0 introduces a [formal theme specification](https://microsoft.github.io/flint-chart/#/themes)
   that allows designers and users to define a visual system once and apply it
   consistently across an entire chart library. ([v0.5.0](https://github.com/microsoft/flint-chart/releases/tag/0.5.0))

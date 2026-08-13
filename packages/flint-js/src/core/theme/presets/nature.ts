@@ -176,6 +176,11 @@ export const nature: ThemePreset = {
                 "shape"
             ]
         },
+        "geometry": {
+            "point": {
+                "vertexSize": 26
+            }
+        },
         "labels": {
             "truncation": "never"
         },

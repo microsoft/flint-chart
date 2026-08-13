@@ -183,6 +183,12 @@ export interface ThemeStructure {
         measure?: Presence;
         category?: Presence;
         style?: 'solid' | 'dashed' | 'dotted';
+        /**
+         * The dash rhythm in px, `[dash, gap]`. `style` only names a family and
+         * picks a default; the length of the dash is its own decision, and a
+         * long dash reads as a guide where a short one reads as a dotted rule.
+         */
+        dash?: number[];
         /** Stroke width of visible gridlines in px. */
         weight?: number;
         /**
@@ -368,7 +374,17 @@ export interface ThemeAnnotation {
      * one is written. Ranks and binned ranges count as numbers.
      */
     axisTitles?: 'omit' | 'whenAmbiguous' | 'always';
+    /**
+     * Where a still-needed axis title sits. `flatAboveAxis` lays it straight
+     * at the head of its own ruler, beside the values it names.
+     */
     axisTitlePlacement?: 'rotated' | 'flatAboveAxis' | 'inline';
+    /**
+     * Distance in px from an axis title to the plot-side edge it labels.
+     * Realization maps this to native title padding or, for a flat y title,
+     * to its offset above the plot.
+     */
+    axisTitleGap?: number;
     unitsInAxisTitle?: boolean;
     numberFormat?: {
         precision?: 'auto' | 'integer' | 'one' | 'two';
@@ -452,6 +468,101 @@ export interface ThemeVariant {
 }
 
 /**
+ * The geometries a chart can be built out of, named by what the reader does
+ * with the shape rather than by the renderer's mark.
+ *
+ * `band` and `cell` are the reason this list exists and is not just a list of
+ * mark types: Vega-Lite draws both with `rect`, but a bar in a row and a tile
+ * in a grid take opposite answers to the same question. A gap between bars is
+ * rhythm; a gap between cells cuts a continuous field into a table.
+ */
+export type GeometryKind = 'line' | 'point' | 'area' | 'band' | 'arc' | 'cell';
+
+export interface LineGeometry {
+    width?: number;
+    opacity?: number;
+    cap?: 'butt' | 'round' | 'square';
+    join?: 'miter' | 'round' | 'bevel';
+    interpolation?: 'linear' | 'monotone' | 'step';
+}
+
+export interface PointGeometry {
+    /** Whether a line carries a dot at each reading. A scatter's dots are the chart, not this. */
+    presence?: Presence;
+    /** Area in px², the way both the renderer and the size channel state a dot. */
+    size?: number;
+    /**
+     * The area a dot takes when it is a *vertex* on a path rather than the
+     * reading itself. McKinsey draws a 30px² dot on its line and a 90px² one on
+     * a dumbbell, where the dot is the measurement; one number cannot say both.
+     * Falls back to {@link size}.
+     */
+    vertexSize?: number;
+    fill?: 'solid' | 'hollow';
+    outlineWidth?: number;
+}
+
+export interface AreaGeometry {
+    opacity?: number;
+    /** The line along the top of the fill: an area that keeps its edge reads as a line with a wash. */
+    edge?: Presence;
+    edgeWidth?: number;
+    interpolation?: 'linear' | 'monotone' | 'step';
+}
+
+export interface BandGeometry {
+    /** How much of its step the bar fills, 0–1. The rest is the gap. */
+    fraction?: number;
+    /** Rounding at the *value* end only, so a stack still reads as one column. */
+    cornerRadius?: number;
+    opacity?: number;
+    outline?: Presence;
+    outlineWidth?: number;
+}
+
+export interface ArcGeometry {
+    cornerRadius?: number;
+    /** How far neighbouring wedges stand apart, in px. */
+    gap?: number;
+    /** `rule` paints the shared edge; `pad` swings the wedges apart. */
+    gapStyle?: 'rule' | 'pad';
+}
+
+export interface CellGeometry {
+    /** Cut between tiles, in px. Zero keeps the grid a continuous field. */
+    gap?: number;
+    cornerRadius?: number;
+    opacity?: number;
+}
+
+/**
+ * Geometry the house states once and every chart built from that shape reads.
+ *
+ * Measured against the theme lab: `line.width`, `point.presence` and
+ * `point.size` all split inside a replicated cluster — one chart, many
+ * languages, different answers — so they are house decisions and belong here.
+ * `point.fill` did not split, which is why nothing here asks a house to state it.
+ *
+ * There is deliberately no per-chart-type sibling to this block. The lab was
+ * asked for one and refused: of the twelve (house, chart type) groups holding
+ * more than one chart, eight disagree with themselves, so a rule keyed by chart
+ * type could not have carried them anyway. What the disagreements track is
+ * series count and faceting — NYT, the Economist and Power BI all thin their
+ * line to exactly 2px for the four-series chart and run 2.2–2.5px for a lone
+ * one, and Power BI drops its dots only on the sixteen-panel facet. Those are
+ * `variants`, over signals the compiler already resolves, and a variant may
+ * carry a `geometry` block.
+ */
+export interface ThemeGeometry {
+    line?: LineGeometry;
+    point?: PointGeometry;
+    area?: AreaGeometry;
+    band?: BandGeometry;
+    arc?: ArcGeometry;
+    cell?: CellGeometry;
+}
+
+/**
  * The one block that is allowed to name a chart type.
  *
  * Everything else at level 1 is a policy the compiler binds to whatever chart
@@ -514,6 +625,7 @@ export interface ThemeSpec {
     furniture?: ThemeFurniture[];
     facets?: ThemeFacets;
     layout?: ThemeLayout;
+    geometry?: ThemeGeometry;
     chartDefaults?: ThemeChartDefaults;
     compileDefaults?: ThemeCompileDefaults;
     interaction?: { tooltipFormat?: string };
@@ -598,7 +710,7 @@ export interface ResolvedAxis {
     ticks: ResolvedRule & { size: number; offset: number };
     grid: ResolvedRule;
     label: ResolvedText & { show?: boolean; limit?: number; padding: number; flush?: boolean; angle?: number };
-    title: { show: boolean; placement?: 'rotated' | 'flatAboveAxis' | 'inline'; unit?: string } & ResolvedText;
+    title: { show: boolean; placement?: 'rotated' | 'flatAboveAxis' | 'inline'; gap?: number; unit?: string } & ResolvedText;
     /** Preferred tick count; undefined = let the renderer choose. */
     tickCount?: number;
     /**
@@ -730,6 +842,8 @@ export interface ResolvedMarks {
         show: boolean;
         size?: number;
         secondarySize: number;
+        /** Set only where the house sized path vertices apart from its primary dots. */
+        vertexSize?: number;
         filled?: boolean;
         haloColor?: string;
         haloWidth?: number;

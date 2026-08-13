@@ -14,6 +14,7 @@
 
 import type {
     DesignDecisions,
+    GeometryKind,
     LegendPlacement,
     NumericGuard,
     Presence,
@@ -23,7 +24,9 @@ import type {
     ResolvedSeriesInk,
     ResolvedText,
     SizeToken,
+    ThemeGeometry,
     ThemeGuard,
+    ThemeMarks,
     ThemeReport,
     ThemeSpec,
     TypeRole,
@@ -107,6 +110,12 @@ export interface GroundingContext {
      * written there, the delegation has nowhere to go.
      */
     titled?: boolean;
+    /**
+     * The headline and deck as written. A house that omits axis titles is
+     * delegating the naming to these words, so grounding has to be able to read
+     * them and check the delegation was actually honoured.
+     */
+    headline?: string;
     /** The surface the host page provides, if the theme defers to it. */
     hostSurface?: string;
     /**
@@ -121,6 +130,12 @@ export interface GroundingContext {
      * exactly as a house's own `always` does.
      */
     valueLabels?: 'on' | 'off';
+
+    /**
+     * The geometries the chart template builds. Geometry the template cannot
+     * build is dropped rather than carried to a renderer that would ignore it.
+     */
+    geometryKinds?: GeometryKind[];
 }
 
 // ---------------------------------------------------------------------------
@@ -236,6 +251,194 @@ export function resolveChartDefaults(
         });
     }
     return report;
+}
+
+// ---------------------------------------------------------------------------
+// Geometry
+// ---------------------------------------------------------------------------
+
+/**
+ * The geometry a house states through `marks`, read as the base profile.
+ *
+ * `marks` is the older, flatter way of saying most of this, and it is still the
+ * only thing nine shipped presets say. Deriving the profile from it is what
+ * makes the two vocabularies one: a theme that never writes `geometry` gets
+ * exactly the marks it always had, and a theme that does is overriding a
+ * profile rather than opening a second channel to the same renderer.
+ */
+function geometryFromMarks(marks: ThemeMarks | undefined): ThemeGeometry {
+    if (!marks) return {};
+    const interpolation = marks.interpolation;
+    return {
+        line: {
+            width: marks.strokeWeight,
+            cap: marks.strokeCap,
+            join: marks.strokeJoin,
+            interpolation,
+        },
+        point: {
+            presence: marks.point?.presence,
+            size: marks.point?.size,
+            fill: marks.point?.fill,
+            outlineWidth: marks.outline?.weight,
+        },
+        area: {
+            opacity: marks.fillOpacity,
+            interpolation,
+        },
+        band: {
+            fraction: marks.bandFraction,
+            cornerRadius: marks.cornerRadius,
+            opacity: marks.fillOpacity,
+            outline: marks.outline?.presence,
+            outlineWidth: marks.outline?.weight,
+        },
+        arc: {
+            cornerRadius: marks.cornerRadius,
+            gap: marks.slice?.gap,
+            gapStyle: marks.slice?.gapStyle,
+        },
+        cell: {
+            gap: marks.tile?.gap,
+        },
+    };
+}
+
+/** Overlay `patch` onto `base`, one geometry kind at a time; `undefined` never overwrites. */
+function mergeGeometry(base: ThemeGeometry, patch: ThemeGeometry | undefined): ThemeGeometry {
+    if (!patch) return base;
+    const out: Record<string, any> = { ...base };
+    for (const [kind, values] of Object.entries(patch)) {
+        if (!values) continue;
+        const merged: Record<string, any> = { ...(out[kind] ?? {}) };
+        for (const [key, value] of Object.entries(values)) {
+            if (value !== undefined) merged[key] = value;
+        }
+        out[kind] = merged;
+    }
+    return out as ThemeGeometry;
+}
+
+function stripUndefined(geometry: ThemeGeometry): ThemeGeometry {
+    const out: Record<string, any> = {};
+    for (const [kind, values] of Object.entries(geometry)) {
+        if (!values) continue;
+        const kept: Record<string, any> = {};
+        for (const [key, value] of Object.entries(values)) {
+            if (value !== undefined) kept[key] = value;
+        }
+        if (Object.keys(kept).length) out[kind] = kept;
+    }
+    return out as ThemeGeometry;
+}
+
+/**
+ * Settle the geometry this chart is built from: the house's `marks`, then its
+ * `geometry` profile.
+ *
+ * `declared` is the template's own list of shapes it builds. A house that hands
+ * arc geometry to a line chart is saying something the chart cannot hear, so it
+ * is dropped and reported rather than silently carried into a renderer that
+ * would ignore it anyway.
+ *
+ * Conditional geometry — a thinner line for a four-series chart, no dots in a
+ * sixteen-panel facet — arrives here already folded in, because variants are
+ * merged into `theme` before this runs.
+ */
+export function resolveGeometry(
+    theme: ThemeSpec | undefined,
+    chartType: string,
+    declared: GeometryKind[] | undefined,
+): { geometry: ThemeGeometry; report: ThemeReport[] } {
+    const report: ThemeReport[] = [];
+    if (!theme) return { geometry: {}, report };
+
+    let geometry = geometryFromMarks(theme.marks);
+    geometry = mergeGeometry(geometry, theme.geometry);
+    geometry = stripUndefined(geometry);
+
+    // Only filter when the template says what it builds; a template that has
+    // not declared its shapes yet keeps the whole profile rather than losing it.
+    if (declared) {
+        const kinds = new Set<string>(declared);
+        for (const kind of Object.keys(geometry)) {
+            if (kinds.has(kind)) continue;
+            delete (geometry as Record<string, unknown>)[kind];
+            if (theme.geometry?.[kind as GeometryKind]) {
+                report.push({
+                    stage: 'ground',
+                    path: `geometry.${kind}`,
+                    message: `\`${chartType}\` builds no ${kind} — the house's ${kind} geometry does not apply here`,
+                });
+            }
+        }
+    }
+
+    return { geometry, report };
+}
+
+/**
+ * Fold resolved geometry back into the marks vocabulary grounding already
+ * speaks, so the per-chart profile reaches the renderer through the one path
+ * that was already there instead of a parallel one.
+ */
+export function geometryToMarks(
+    geometry: ThemeGeometry | undefined,
+    base: ThemeMarks | undefined,
+): ThemeMarks | undefined {
+    if (!geometry || Object.keys(geometry).length === 0) return base;
+    const marks: ThemeMarks = { ...(base ?? {}) };
+    const { line, point, area, band, arc, cell } = geometry;
+
+    if (line?.width !== undefined) marks.strokeWeight = line.width;
+    if (line?.cap !== undefined) marks.strokeCap = line.cap;
+    if (line?.join !== undefined) marks.strokeJoin = line.join;
+    if (line?.interpolation !== undefined) marks.interpolation = line.interpolation;
+    else if (area?.interpolation !== undefined) marks.interpolation = area.interpolation;
+
+    // One opacity reaches every filled mark, so a band that states its own wins
+    // over an area's: a chart that draws both is a bar chart with a wash, and
+    // the bars are what the reader measures.
+    if (area?.opacity !== undefined) marks.fillOpacity = area.opacity;
+    if (band?.opacity !== undefined) marks.fillOpacity = band.opacity;
+    if (cell?.opacity !== undefined) marks.fillOpacity = cell.opacity;
+
+    if (band?.fraction !== undefined) marks.bandFraction = band.fraction;
+    if (band?.cornerRadius !== undefined) marks.cornerRadius = band.cornerRadius;
+    if (arc?.cornerRadius !== undefined) marks.cornerRadius = arc.cornerRadius;
+
+    if (point) {
+        const resolved = { ...(marks.point ?? {}) };
+        if (point.presence !== undefined) resolved.presence = point.presence;
+        if (point.size !== undefined) resolved.size = point.size;
+        if (point.vertexSize !== undefined) resolved.secondarySize = point.vertexSize;
+        if (point.fill !== undefined) resolved.fill = point.fill;
+        if (Object.keys(resolved).length) marks.point = resolved;
+    }
+
+    const outlinePresence = band?.outline ?? area?.edge;
+    const outlineWidth = band?.outlineWidth ?? area?.edgeWidth ?? point?.outlineWidth;
+    if (outlinePresence !== undefined || outlineWidth !== undefined) {
+        marks.outline = {
+            ...(marks.outline ?? {}),
+            ...(outlinePresence !== undefined ? { presence: outlinePresence } : {}),
+            ...(outlineWidth !== undefined ? { weight: outlineWidth } : {}),
+        };
+    }
+
+    if (arc?.gap !== undefined || arc?.gapStyle !== undefined) {
+        marks.slice = {
+            ...(marks.slice ?? {}),
+            ...(arc.gap !== undefined ? { gap: arc.gap } : {}),
+            ...(arc.gapStyle !== undefined ? { gapStyle: arc.gapStyle } : {}),
+        };
+    }
+
+    if (cell?.gap !== undefined) {
+        marks.tile = { ...(marks.tile ?? {}), gap: cell.gap };
+    }
+
+    return marks;
 }
 
 const TEXT_TOKENS: Record<string, number> = {
@@ -600,7 +803,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     };
 
     const gridStyle = structure.grid?.style ?? 'solid';
-    const gridDash = gridStyle === 'dashed' ? [3, 3] : gridStyle === 'dotted' ? [1, 3] : undefined;
+    const gridDash = structure.grid?.dash
+        ?? (gridStyle === 'dashed' ? [3, 3] : gridStyle === 'dotted' ? [1, 3] : undefined);
     const gridWeight = structure.grid?.weight ?? 1;
 
     const measureGrid: ResolvedRule = {
@@ -681,37 +885,26 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // binned range is in the second group even though it sits on a
         // categorical axis — its labels are numbers wearing an order.
         //
-        // A house that drops its axis titles altogether is leaning on the
-        // headline to name the measure, and a headline names one. Where both
-        // rulers carry a measure — one quantity plotted against another — the
-        // headline cannot say which is which, and two rows of bare numbers
-        // name nothing. The titles stay.
-        //
-        // And a chart with no headline at all has nothing to lean on. `omit`
-        // is a delegation, not a deletion: where the words it delegates to were
-        // never written, the labels that name nothing get their title back.
-        const twoMeasures = bindings.measureChannels.includes('x')
-            && bindings.measureChannels.includes('y');
+        // A headline is narrative, not an axis binding. Even when it repeats a
+        // field word, it does not reliably state the quantity, unit, direction
+        // or which ruler carries it. `The female–male life gap` does not tell a
+        // reader that 55–85 means life expectancy in years; `Olympic rank` does
+        // not state the rank direction. Numeric, rank and bin axes therefore
+        // keep their title under every policy. `omit` may still remove titles
+        // over labels that name their own kind, such as months or countries.
         const selfNaming = labelsNameThemselves(ctx, channel);
-        const undelegated = !selfNaming && ctx.titled !== true;
         const showTitle = axisTitlesPolicy === 'always'
             ? true
-            : axisTitlesPolicy === 'omit'
-                ? ((twoMeasures && role === 'measure') || undelegated)
-                : !selfNaming;
+            : !selfNaming;
         if (axisTitlesPolicy === 'whenAmbiguous' && selfNaming !== (role !== 'measure')) {
             say(`structure.axis.${role}.title`,
                 selfNaming
                     ? `the labels on ${channel} name their own kind — a title over them would repeat what is already read`
                     : `the labels on ${channel} are values, not names — without a title nothing on the axis says what they count`);
         }
-        if (axisTitlesPolicy === 'omit' && undelegated) {
+        if (axisTitlesPolicy === 'omit' && !selfNaming) {
             say('annotation.axisTitles',
-                `the house omits axis titles because the headline names the measure — this chart has no headline, so the title on ${channel} stays`);
-        }
-        if (axisTitlesPolicy === 'omit' && twoMeasures && role === 'measure' && channel === 'x') {
-            say('annotation.axisTitles',
-                'both rulers carry a measure — a headline can name one of them, so the axis titles are kept');
+                `the labels on ${channel} are values, not names — a headline cannot bind them to a quantity, so the axis title stays`);
         }
 
         // A measure axis is a ruler, and how finely it is graduated is a house
@@ -771,6 +964,9 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 show: showTitle,
                 ...axisTitleText,
                 ...(showTitle ? { placement: theme.annotation?.axisTitlePlacement } : {}),
+                ...(showTitle && theme.annotation?.axisTitleGap != null
+                    ? { gap: Math.max(0, theme.annotation.axisTitleGap) }
+                    : {}),
                 ...(titleUnit ? { unit: titleUnit } : {}),
             },
             tickCount,
@@ -892,7 +1088,13 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // placement) would stack that axis's tick labels under the names —
     // "Uni1ted", "Ch2na", "Ja3an" on a bump chart's rank axis. The end labels
     // own the right side; the measure axis falls back to the left.
-    if (placement === 'seriesEnd' || placement === 'inline') {
+    //
+    // Only when those names are actually drawn. A placement is chosen off the
+    // ranked list whether or not there is a key to place, so a single-series
+    // line chart — no series to name, nothing in the right margin — was
+    // evicting its own ruler to the left and losing the house's right-hand
+    // axis on the plainest chart it draws.
+    if (legendShow && (placement === 'seriesEnd' || placement === 'inline')) {
         for (const ch of bindings.measureChannels) {
             const ax = axes[ch];
             if (ax && ax.orient === 'right') {
@@ -1199,19 +1401,43 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     }
 
     // The same argument, one axis over: once every mark states its own value,
-    // the measure axis is a second copy of the same information.
+    // the *ruler* is a second copy of the same information. Its title is not.
+    // A printed `42` says how much and never says of what — the title is the
+    // only thing naming the quantity, and taking it away with the gradations
+    // leaves a grid of anonymous numbers. What the title says is still the
+    // title policy's call; this only stops the ruler dragging it out.
     if (dlShow && structure.axis?.measure?.suppressWhenValuesPrinted) {
+        let keptTitle = false;
         for (const ch of bindings.measureChannels) {
             const ax = axes[ch];
             if (!ax) continue;
             ax.label.show = false;
             ax.grid = { show: false, color: 'transparent', width: 0 };
-            ax.title = { ...ax.title, show: false };
             ax.ticks = { ...ax.ticks, show: false, size: 0 };
             ax.domain = { ...ax.domain, show: false };
+            if (ax.title.show) keptTitle = true;
         }
         say('structure.axis.measure.suppressWhenValuesPrinted',
-            'measure axis removed — every mark prints its own value');
+            keptTitle
+                ? 'measure ruler removed — every mark prints its own value; the axis title stays, because a printed number says how much and not of what'
+                : 'measure axis removed — every mark prints its own value');
+    }
+
+    // The mirror of the rule above, and the floor under it. A house strips its
+    // grid, its rule and its ticks because the number is printed on the mark —
+    // that is the consulting-deck bar, and there the scaffolding really is
+    // redundant. A scatter prints nothing, so the same house hands back
+    // readings floating on blank paper with no way to judge one against
+    // another. The house may choose how a value is read; it may not leave no
+    // way to read one, so the quiet grid returns.
+    if (!dlShow) {
+        for (const ch of bindings.measureChannels) {
+            const ax = axes[ch];
+            if (!ax || ax.grid.show || ax.domain.show || ax.ticks.show) continue;
+            ax.grid = { ...rule('quiet', structureInk.grid, 'quiet', gridWeight), dash: gridDash };
+            say(`axes.${ch}.grid`,
+                'no mark prints its value and the ruler draws nothing — the quiet grid returns, so a reading can be judged against something');
+        }
     }
 
     const measureChannel = bindings.measureChannels[0];
@@ -1254,7 +1480,13 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     }
 
     // --- marks --------------------------------------------------------------
-    const marksSpec = theme.marks ?? {};
+    // Geometry is resolved here, after variants, so a house's conditional
+    // geometry — a thinner line where four series share the plot — is already
+    // part of `theme` by the time the profile is read.
+    const marksSpec = geometryToMarks(
+        resolveGeometry(theme, ctx.chartType, ctx.geometryKinds).geometry,
+        theme.marks,
+    ) ?? {};
     const separatorInk = marksSpec.separator?.source === 'surface'
         ? plot
         : structureInk.rule ?? structureInk.grid;
@@ -1329,6 +1561,9 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
                 size: marksSpec.point?.size,
                 secondarySize: marksSpec.point?.secondarySize
                     ?? Math.min(marksSpec.point?.size ?? 25, 25),
+                // Only where the house sized vertices itself; otherwise a line's
+                // dots keep taking the primary size, as they always have.
+                vertexSize: marksSpec.point?.secondarySize,
                 // Only a house that spoke about its dots' fill decides how
                 // they are filled; inventing an answer here would re-fill
                 // every scatter it has for the sake of a line chart's

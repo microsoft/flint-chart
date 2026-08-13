@@ -35,7 +35,7 @@
     "demoAria": "示例主题",
     "inspiration": "需要灵感？",
     "demos": {
-      "signal-studio": "信号工作室",
+        "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "人民日报"
     },

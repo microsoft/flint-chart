@@ -504,6 +504,9 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
         stacked: stackedMode,
         partToWhole: markTypes.includes('arc'),
         titled: Boolean(figure.layout?.title?.text),
+        headline: [figure.layout?.title?.text, (input.chart_spec as any)?.subtitle]
+            .filter((t: unknown) => typeof t === 'string')
+            .join(' '),
         hostSurface: (input.options as any)?.background,
         valueLabels: resolvePlValueLabelChoice(chartProperties),
     });

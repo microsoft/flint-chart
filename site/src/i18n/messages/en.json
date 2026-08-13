@@ -35,7 +35,7 @@
     "demoAria": "Demo themes",
     "inspiration": "Need inspiration?",
     "demos": {
-      "signal-studio": "Signal Studio",
+        "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "People's Daily"
     },
@@ -356,7 +356,7 @@
       "release051": {
         "date": "August 12, 2026",
         "dateTime": "2026-08-12",
-        "text": "Flint 0.5.1 extends visual themes to the Plotly backend and adds a Calendar Heatmap chart type."
+        "text": "Flint 0.5.1 extends visual themes to the Plotly backend and adds Vega-Lite Calendar Heatmap."
       },
       "release050": {
         "date": "August 5, 2026",

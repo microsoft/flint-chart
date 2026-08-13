@@ -61,16 +61,230 @@ describe('axis titles', () => {
         expect(axisTitle(spec, 'y')).not.toBeNull();
     });
 
-    it('lets a house delegate the naming to its headline', () => {
-        const spec = bars(house({ axisTitles: 'omit' }), 'Wetter than it looks');
-        expect(axisTitle(spec, 'y')).toBeNull();
+    it('keeps a measure title even when the headline repeats its field name', () => {
+        const spec = bars(house({ axisTitles: 'whenAmbiguous' }), 'Monthly rainfall');
+        expect(axisTitle(spec, 'y')).not.toBeNull();
     });
 
-    it('puts the title back when there is no headline to delegate to', () => {
+    it('does not let an omit preference delegate a numeric ruler to the headline', () => {
+        const spec = bars(house({ axisTitles: 'omit' }), 'Rainfall, month by month');
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+    });
+
+    it('keeps the title when the headline names the subject but not the measure', () => {
+        // `omit` is a delegation, and this headline never took it up: "wetter"
+        // is the story, not the quantity, so the axis is the only thing left
+        // that can say the bars are rainfall.
+        const spec = bars(house({ axisTitles: 'omit' }), 'Wetter than it looks');
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+    });
+
+    it('accepts the measure named by its unit alone', () => {
+        const spec = assembleVegaLite({
+            data: { values: [{ City: 'Oslo', 'Price (USD)': 6.2 }, { City: 'Cairo', 'Price (USD)': 2.1 }] },
+            semantic_types: { City: 'City', 'Price (USD)': 'Amount' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'The Big Mac index (price in USD)',
+                encodings: { x: 'City', y: 'Price (USD)' },
+            },
+            theme_spec: house({ axisTitles: 'omit' }),
+        } as any) as any;
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+    });
+
+    it('keeps the title when there is no headline', () => {
         const spec = bars(house({ axisTitles: 'omit' }));
         expect(axisTitle(spec, 'y')).not.toBeNull();
         const report = spec._theme.report.map((r: any) => r.path);
         expect(report).toContain('annotation.axisTitles');
+    });
+
+    it('keeps the axis title when the ruler is dropped for printed values', () => {
+        // The ruler is redundant once every bar carries its number; the title
+        // is not, because `42` says how much and never says of what.
+        const spec = bars(
+            {
+                ...house({ axisTitles: 'omit' }),
+                structure: { axis: { measure: { suppressWhenValuesPrinted: true } } },
+                dataLabels: { show: 'always' },
+            } as ThemeSpec,
+            'Wetter than it looks',
+        );
+        const enc = (spec.spec?.encoding ?? spec.encoding ?? spec.layer?.[0]?.encoding ?? {}).y;
+        expect(spec.config.axisY.labels).toBe(false);
+        expect(enc?.axis?.title).not.toBeNull();
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(JSON.stringify(spec._theme.report)).toContain('the axis title stays');
+    });
+
+    it('keeps a needed measure title on its own axis, headline or not', () => {
+        const withHeadline = bars(house({ axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis' }), 'Wetter than it looks');
+        expect(axisTitle(withHeadline, 'y')).not.toBeNull();
+        expect(withHeadline.title.subtitle).toBeUndefined();
+        expect(withHeadline._theme.decisions.axes.y.title.placement).toBe('flatAboveAxis');
+
+        const bare = bars(house({ axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis' }));
+        expect(axisTitle(bare, 'y')).not.toBeNull();
+        expect(bare.title).toBeUndefined();
+    });
+
+    it('leaves an authored subtitle untouched and keeps the measure named', () => {
+        const spec = assembleVegaLite({
+            data: { values: MONTHLY },
+            semantic_types: { Month: 'Month', Rainfall: 'Amount' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Wetter than it looks',
+                subtitle: 'Four unusually wet months in 2025',
+                encodings: { x: 'Month', y: 'Rainfall' },
+            },
+            theme_spec: house({ axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis' }),
+        } as any) as any;
+
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(spec.title.subtitle).toEqual(['Four unusually wet months in 2025']);
+    });
+
+    it('keeps rank bound to its axis even when the headline names rank', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Games: 2012, Country: 'United States', Rank: 1 },
+                { Games: 2016, Country: 'United States', Rank: 1 },
+                { Games: 2012, Country: 'China', Rank: 2 },
+                { Games: 2016, Country: 'China', Rank: 3 },
+            ] },
+            semantic_types: { Games: 'Year', Country: 'Country', Rank: 'Rank' },
+            chart_spec: {
+                chartType: 'Bump Chart',
+                title: 'Olympic medal-table rank',
+                encodings: { x: 'Games', y: 'Rank', color: 'Country' },
+            },
+            theme_spec: house({ axisTitles: 'whenAmbiguous' }),
+        } as any) as any;
+
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+    });
+
+    it('moves an authored normalized-share label into the title block', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Institution: 'Congress', Response: 'Some', 'Share (%)': 38 },
+                { Institution: 'Congress', Response: 'Not much', 'Share (%)': 62 },
+            ] },
+            semantic_types: { Institution: 'Category', Response: 'Category', 'Share (%)': 'Quantity' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                title: 'Confidence in US institutions',
+                encodings: { x: 'Share (%)', y: 'Institution', color: 'Response' },
+                chartProperties: { stackMode: 'normalize' },
+            },
+            theme_spec: house({ axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis' }),
+        } as any) as any;
+
+        expect(axisTitle(spec, 'x')).not.toBeNull();
+        expect(spec.title.subtitle).toBeUndefined();
+    });
+
+    it('keeps a single share measure named on its own axis', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Institution: 'Congress', Response: 'Some', 'Share (%)': 38 },
+                { Institution: 'Congress', Response: 'Not much', 'Share (%)': 62 },
+            ] },
+            semantic_types: { Institution: 'Category', Response: 'Category', 'Share (%)': 'Quantity' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                title: 'Confidence in US institutions',
+                encodings: { x: 'Share (%)', y: 'Institution', color: 'Response' },
+                chartProperties: { stackMode: 'normalize' },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        expect(axisTitle(spec, 'x')).not.toBeNull();
+        expect(spec.title.subtitle).toBeUndefined();
+    });
+
+    it.each([
+        { width: 300, titleSize: 11 },
+        { width: 400, titleSize: 12 },
+    ])('keeps two Economist measure titles legible and bound at $width px', ({ width, titleSize }) => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Year: 1956, 'Miles/person': 3675, 'Gas price': 2.38 },
+                { Year: 1957, 'Miles/person': 3706, 'Gas price': 2.40 },
+                { Year: 1958, 'Miles/person': 3766, 'Gas price': 2.26 },
+            ] },
+            semantic_types: { Year: 'Year', 'Miles/person': 'Quantity', 'Gas price': 'Quantity' },
+            chart_spec: {
+                chartType: 'Connected Scatter Plot',
+                title: 'Driving shifts into reverse',
+                encodings: { x: 'Miles/person', y: 'Gas price', order: 'Year' },
+                baseSize: { width, height: 300 },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        expect(axisTitle(spec, 'x')).not.toBeNull();
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(spec.title.subtitle).toBeUndefined();
+        const enc = (spec.spec?.encoding ?? spec.encoding ?? spec.layer?.[0]?.encoding ?? {});
+        // The house seats its ruler on the right, so the title hangs off that
+        // side and the renderer's own measurement seats it on the outer edge.
+        expect(enc.y.axis.orient).toBe('right');
+        expect(enc.y.axis).toMatchObject({
+            titleAngle: 0,
+            titleAlign: 'right',
+            titlePadding: 0,
+        });
+        expect(enc.y.axis.titleX).toBeUndefined();
+        expect(enc.y.axis.labelPadding).toBeUndefined();
+        // The title clears the topmost value rather than sitting on it.
+        expect(enc.y.axis.titleY).toBeLessThanOrEqual(-16);
+        expect(spec.config.axisX).toMatchObject({ titleFontSize: titleSize, titlePadding: 8 });
+        expect(spec.config.axisY).toMatchObject({ titleFontSize: titleSize, titlePadding: 8 });
+        expect(JSON.stringify(spec._theme.report)).toContain('a headline cannot bind them to a quantity');
+    });
+
+    it('keeps life expectancy named when the headline only describes the story', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Country: 'Japan', Sex: 'Male', 'Life expectancy (years)': 81.4 },
+                { Country: 'Japan', Sex: 'Female', 'Life expectancy (years)': 87.5 },
+            ] },
+            semantic_types: { Country: 'Country', Sex: 'Category', 'Life expectancy (years)': 'Quantity' },
+            chart_spec: {
+                chartType: 'Ranged Dot Plot',
+                title: 'The female–male life gap',
+                encodings: { x: 'Life expectancy (years)', y: 'Country', color: 'Sex' },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        expect(axisTitle(spec, 'x')).not.toBeNull();
+        expect(spec.title.subtitle).toBeUndefined();
+    });
+
+    it('keeps rank named on its own axis', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Games: 2012, Country: 'United States', Rank: 1 },
+                { Games: 2016, Country: 'United States', Rank: 1 },
+                { Games: 2012, Country: 'China', Rank: 2 },
+                { Games: 2016, Country: 'China', Rank: 3 },
+            ] },
+            semantic_types: { Games: 'Year', Country: 'Country', Rank: 'Rank' },
+            chart_spec: {
+                chartType: 'Bump Chart',
+                title: 'Olympic medal-table rank',
+                encodings: { x: 'Games', y: 'Rank', color: 'Country' },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(spec.title.subtitle).toBeUndefined();
     });
 });
 

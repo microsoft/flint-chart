@@ -155,7 +155,7 @@ function Tile({
     >
       <ScaleToFit height={CHART_H} minHeight={110} adaptiveHeight padding={2}>
         {compiled.ok ? (
-          <VegaLiteView spec={compiled.value} />
+          <VegaLiteView spec={compiled.value} renderer="svg" />
         ) : (
           <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
             {String((compiled.err as Error)?.message ?? compiled.err)}

@@ -5,7 +5,7 @@ import type { ZeroDecision, ColorSchemeRecommendation } from './semantic-types';
 import type { LabelSizingDecision } from './decisions';
 import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint } from './field-semantics';
 import type { ColorDecisionResult } from './color-decisions';
-import type { ThemeSpec } from './theme/types';
+import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
 
 /**
  * Core types for the chart engine library.
@@ -500,6 +500,17 @@ export interface InstantiateContext {
     /** User-configured chart properties */
     chartProperties?: Record<string, any>;
 
+    /**
+     * The house's geometry for this chart type, already merged from its common
+     * profile and any per-chart specialisation, and filtered to the shapes this
+     * template declares.
+     *
+     * Templates read it when the geometry changes what is *built* rather than
+     * how it is painted — whether a line carries dots, how wide a bar's band is
+     * — because those cannot be restyled onto a finished spec.
+     */
+    geometry?: ThemeGeometry;
+
     /** Static series metadata (present when input used array-valued encoding) */
     staticSeries?: StaticSeriesMetadata;
 
@@ -942,6 +953,17 @@ export interface ChartTemplateDef {
 
     /** Optional configurable properties for the chart type */
     properties?: ChartPropertyDef[];
+
+    /**
+     * The geometries this template actually builds.
+     *
+     * A theme states geometry once and every chart made of that shape reads it,
+     * so the template has to say which shapes it makes: a line chart hears
+     * `line` and `point` and is deaf to `arc`. Geometry a template does not
+     * declare is dropped and reported rather than carried into a renderer that
+     * would ignore it. A template that declares nothing keeps the whole profile.
+     */
+    geometryKinds?: GeometryKind[];
 
     /**
      * This template draws its own value text instead of using the generic

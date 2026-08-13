@@ -66,7 +66,7 @@ import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deri
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
-import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveGeometry } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { realizeThemeVegaLite, realizeValueLabelsVegaLite, collectMarkTypes, collectPositional } from './theme';
 
@@ -109,6 +109,19 @@ const escapeVlFieldName = (name: string): string =>
  * });
  * ```
  */
+/** The headline and deck as one string, whichever shape the title took. */
+function headlineText(title: any): string | undefined {
+    if (!title) return undefined;
+    const parts: string[] = [];
+    const push = (v: any) => {
+        if (typeof v === 'string') parts.push(v);
+        else if (Array.isArray(v)) v.forEach(push);
+    };
+    if (typeof title === 'string') push(title);
+    else { push(title.text); push(title.subtitle); }
+    return parts.length ? parts.join(' ') : undefined;
+}
+
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -166,6 +179,13 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const choice = resolveValueLabelChoice(chartProperties);
         if (choice) chartProperties.showTextLabels = choice === 'on';
     }
+
+    // Geometry settles before anything is measured: whether a line carries dots
+    // and how much of its step a bar fills change what the layout has to fit,
+    // not just how the result is painted.
+    const { geometry: chartGeometry, report: geometryReport } = resolveGeometry(
+        themeSpec, chartType, chartTemplate.geometryKinds,
+    );
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
@@ -623,6 +643,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         semanticTypes,
         chartType,
         assembleOptions: effectiveOptions,
+        geometry: chartGeometry,
     };
 
     chartTemplate.instantiate(vgObj, instantiateContext);
@@ -819,8 +840,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
         partToWhole: markTypes.includes('arc'),
         titled: Boolean(vgObj.title),
+        headline: headlineText(vgObj.title),
         hostSurface: (input.options as any)?.background,
         valueLabels: resolveValueLabelChoice(chartProperties),
+        geometryKinds: chartTemplate.geometryKinds,
     });
 
     let themeDecisions: any;
@@ -828,7 +851,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const realizeReport = realizeThemeVegaLite(vgObj, design, values);
         themeDecisions = {
             ...design,
-            report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],
+            report: [...themePresets.report, ...chartDefaultsReport, ...geometryReport, ...design.report, ...realizeReport],
         };
     } else {
         realizeValueLabelsVegaLite(vgObj, design, values);
