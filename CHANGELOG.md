@@ -30,6 +30,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- An axis title that is still needed now lies flat at the head of its own
+  ruler, beside the values it names, on whichever side those values sit. The
+  `titleBlock` placement, which moved such a title into the subtitle, is gone:
+  it could only ever carry one measure, so a chart with two rulers lost the
+  binding that says which quantity is which. Where both axes need naming, both
+  are named.
+- A measure axis that draws a grid rounds its domain to the tick count the axis
+  actually draws, so the plot's edge falls on a grid line instead of stopping
+  short of one and leaving the outermost reading with nothing above it. Axes
+  that draw no grid, and non-linear rulers whose ticks are decades rather than a
+  count, are left alone.
+- A measure axis that draws a grid but no ticks carries that grid a few pixels
+  past the plot, in grid ink, so each line ends under its own number. Flush with
+  the last mark — a histogram's final bar — the line led nowhere.
+- A unit is stated once. Where the axis title already carries it, the ruler no
+  longer repeats it down every tick.
+- Economist axis labels and titles are calibrated against the 300x300 and
+  400x300 canvases the library actually draws, and the house now lays its axis
+  titles flat rather than turning them on their side.
+- McKinsey declares the `deck` and `axisTitle` type roles it had left implicit
+  and quiets `axisLabel`. Raising one role while leaving others to the global
+  defaults had inverted the ranking: the tick labels were the second-largest
+  text on the chart, above the subtitle and the axis title.
 - Vega-Lite reserves the margins a chart will actually draw — value labels, tick
   gutters, the title block, and the legend — before fitting bands, so a wide
   house no longer sizes bands against room its own furniture will take.
@@ -44,6 +67,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A house that omits its grid, its rule and its ticks does so because the value
+  is printed on the mark — a consulting-deck bar. A scatter prints nothing, and
+  the same house left its readings floating with no way to judge one against
+  another. Where no mark prints its value and the ruler draws nothing, the quiet
+  grid returns. A house may choose how a value is read; it may not leave no way
+  to read one.
+- A measure axis no longer surrenders the right margin to series-end labels that
+  are never drawn. The placement was chosen off the house's ranked list whether
+  or not there was a key to place, so a single-series line chart evicted its own
+  ruler to the left and lost the house's opposite-seated axis on the plainest
+  chart it draws.
+- Series-end and band-end labels no longer reserve canvas margin the renderer
+  has already reserved. They are ordinary text marks, and the default `pad`
+  autosize already grows the canvas to the scene's bounds, so the estimate was
+  counted twice — around 90px of dead margin per chart.
+- A flat axis title no longer lands on the side its values are not. On a
+  right-seated ruler it was laid at the plot's left edge, captioning the wrong
+  column, and only the first of two rulers was ever laid flat.
+- A flat axis title clears the topmost value rather than sitting on it.
 - A closing rule drawn under a banded plot now runs the width of the bands
   rather than the width a continuous plot would have taken, so a house that
   draws one no longer stretches the canvas past the chart.
