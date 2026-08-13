@@ -9,6 +9,7 @@ export default defineConfig({
     'chartjs/index': 'src/chartjs/index.ts',
     'plotly/index': 'src/plotly/index.ts',
     'excel/index': 'src/excel/index.ts',
+    'image-charts/index': 'src/image-charts/index.ts',
     'test-data/index': 'src/test-data/index.ts',
     'gallery/index': 'src/gallery/index.ts',
   },

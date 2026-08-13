@@ -65,6 +65,11 @@
       "import": "./dist/excel/index.js",
       "require": "./dist/excel/index.cjs"
     },
+    "./image-charts": {
+      "types": "./dist/image-charts/index.d.ts",
+      "import": "./dist/image-charts/index.js",
+      "require": "./dist/image-charts/index.cjs"
+    },
     "./test-data": {
       "types": "./dist/test-data/index.d.ts",
       "import": "./dist/test-data/index.js",

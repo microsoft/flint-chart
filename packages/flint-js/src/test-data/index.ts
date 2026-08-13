@@ -41,6 +41,7 @@ export { genLineAreaStretchTests } from './line-area-stretch-tests';
 export { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 export { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
 export { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
+export { genImageChartsTests } from './image-charts-tests';
 export { genDiscreteAxisTests } from './discrete-axis-tests';
 export { genDateTests, genDateYearTests, genDateMonthTests, genDateYearMonthTests, genDateDecadeTests, genDateDateTimeTests, genDateHoursTests } from './date-tests';
 export { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
@@ -116,6 +117,7 @@ import { genSemanticContextTests, genSnapToBoundTests } from './semantic-tests';
 import { genEChartsScatterTests, genEChartsLineTests, genEChartsBarTests, genEChartsStackedBarTests, genEChartsGroupedBarTests, genEChartsStressTests, genEChartsAreaTests, genEChartsPieTests, genEChartsHeatmapTests, genEChartsHistogramTests, genEChartsBoxplotTests, genEChartsRadarTests, genEChartsCandlestickTests, genEChartsStreamgraphTests, genEChartsFacetSmallTests, genEChartsFacetWrapTests, genEChartsFacetClipTests, genEChartsRoseTests, genEChartsGaugeTests, genEChartsFunnelTests, genEChartsTreemapTests, genEChartsSunburstTests, genEChartsSankeyTests, genEChartsUniqueStressTests, genEChartsCalendarTests, genEChartsParallelTests, genEChartsGraphTests, genEChartsTreeTests } from './echarts-tests';
 import { genChartJsScatterTests, genChartJsLineTests, genChartJsBarTests, genChartJsStackedBarTests, genChartJsGroupedBarTests, genChartJsAreaTests, genChartJsPieTests, genChartJsHistogramTests, genChartJsRadarTests, genChartJsStressTests, genChartJsRoseTests, genChartJsBubbleTests, genChartJsDoughnutTests, genChartJsComboTests } from './chartjs-tests';
 import { genPlotlyCoreTests, genPlotlyFacetTests } from './plotly-tests';
+import { genImageChartsTests } from './image-charts-tests';
 import {
     genGalleryRegionalSurveyScatterTests,
     genGalleryRegionalSurveyLineTests,
@@ -256,6 +258,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Chart.js: Stress Tests': genChartJsStressTests,
     'Plotly: Core Templates': genPlotlyCoreTests,
     'Plotly: Facets': genPlotlyFacetTests,
+    'Image-Charts: Core Templates': genImageChartsTests,
     'Gallery: Scatter': genGalleryRegionalSurveyScatterTests,
     'Gallery: Line': genGalleryRegionalSurveyLineTests,
     'Gallery: Bar': genGalleryRegionalSurveyBarTests,
