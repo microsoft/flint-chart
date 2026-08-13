@@ -97,6 +97,4 @@ scripts/.*.mjs
 
 # Third-party theme research artifacts. Keep provenance and findings tracked;
 # source PDFs/images remain local and are reproducible from the manifest.
-assets/theme-evidence/**/*.pdf
-assets/theme-evidence/**/*.png
-assets/theme-evidence/**/*.svgz
+theme-evidence/*
