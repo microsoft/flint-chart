@@ -179,6 +179,8 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
         // Chart.js fills its canvas natively — a wider default band size
         // matches its generous category spacing behavior.
         defaultBandSize: 30,
+        // Chart.js categories natively fill the available chart area.
+        bandStepFit: 1,
         // Chart.js has no default maxBarThickness, so sparse bars fill the
         // canvas. Allow bands to expand past the base to match, capped so a
         // couple of bars don't span the whole canvas.
@@ -193,6 +195,8 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     // Resolve the optional canvasSize ceiling into per-dimension stretch caps
     // (βx, βy). Falls back to maxStretch when no ceiling is set.
     Object.assign(effectiveOptions, deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions));
+    effectiveOptions.bandStepFitCapacityX = sizeCeiling?.width ?? baseSize.width;
+    effectiveOptions.bandStepFitCapacityY = sizeCeiling?.height ?? baseSize.height;
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
 
     const {

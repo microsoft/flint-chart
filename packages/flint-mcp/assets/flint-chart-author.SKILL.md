@@ -268,6 +268,7 @@ properties"). Required channels are noted.
 | `"Boxplot"` | x, y, color, opacity, column, row | category + measure; props `whiskerMethod`, `showOutliers`, `dodge` |
 | `"ECDF Plot"` | x, color, detail, column, row | x = measure; cumulative distribution (step line); prop `showPoints` |
 | `"Heatmap"` | x, y, color, column, row | color = the measure |
+| `"Calendar Heatmap"` | x, color | x = date; color = daily value (summed per day); GitHub-style week × weekday grid |
 | `"Line Chart"` | x, y, color, strokeDash, detail, opacity, column, row | props `interpolate`, `showPoints` |
 | `"Sparkline"` | x, y, color, detail, row, column | x + y required; small-multiple mini trend lines, one per series (series from `color` or `detail`); props `interpolate`, `baseline`, `trendWidth` |
 | `"Bump Chart"` | x, y, color, detail, column, row | rank-over-time lines |
@@ -321,7 +322,7 @@ type column.
 **Backend coverage.** Vega-Lite supports all of the above. Other backends
 support a subset (verify if targeting a non-VL backend):
 
-- **ECharts** adds: `"Calendar Heatmap"`, `"Gauge"`,
+- **ECharts** adds: `"Gauge"`,
   `"Funnel"`, `"Treemap"`, `"Sunburst"`, `"Sankey"`,
   `"Parallel Coordinates"`, `"Graph"`, `"Tree"`.
 - **Chart.js** supports: Scatter, Bubble, Bar, Grouped Bar, Stacked Bar,

@@ -399,6 +399,230 @@ describe('theme compileDefaults', () => {
         const houseSaysNothing = stated(theme({}));
         expect(housePrefersWide._width).toBe(houseSaysNothing._width);
     });
+
+    it('declares an explicit sparse band-fit preference for every house', () => {
+        const expected = {
+            cartoon: 0.75,
+            datawrapper: 1,
+            economist: 0.55,
+            mckinsey: 0.35,
+            nature: 0.2,
+            nyt: 0.7,
+            pop: 0.85,
+            powerbi: 1,
+            'powerbi-light': 1,
+            swiss: 0.5,
+        };
+
+        expect(Object.fromEntries(Object.keys(THEME_PRESETS).map((id) => [
+            id,
+            resolveThemeSpec(id)?.layout?.bandStepFit,
+        ]))).toEqual(expected);
+    });
+
+    it('realizes McKinsey bars with substantial marks and airy category rhythm', () => {
+        const values = Array.from({ length: 10 }, (_, index) => ({
+            Category: `Item ${index + 1}`,
+            Value: 100 - index,
+        }));
+        const spec = assembleVegaLite({
+            data: { values },
+            semantic_types: { Category: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { y: 'Category', x: 'Value' },
+                canvasSize: { width: 720, height: 720 },
+            },
+            theme_spec: 'mckinsey',
+        } as any) as any;
+        const bar = (spec.layer ?? []).find((layer: any) => markTypeOf(layer.mark) === 'bar');
+        const step = spec.height.step;
+        expect(step).toBeGreaterThanOrEqual(31);
+        expect(step).toBeLessThanOrEqual(33);
+        expect(bar.encoding.y.scale.paddingInner).toBeCloseTo(0.3);
+        const solidMark = step * (1 - bar.encoding.y.scale.paddingInner);
+        expect(solidMark).toBeCloseTo(step * 0.7);
+        expect(solidMark).toBeGreaterThan(24 * 0.7);
+    });
+
+    it('lets a caller tune theme band fit without losing theme occupancy', () => {
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            Category: `P${index + 1}`,
+            Value: index + 1,
+        }));
+        const compile = (bandStepFit: number) => assembleVegaLite({
+            data: { values },
+            semantic_types: { Category: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Category', y: 'Value' },
+                baseSize: { width: 440, height: 300 },
+                canvasSize: { width: 720, height: 300 },
+            },
+            theme_spec: 'mckinsey',
+            options: { bandStepFit },
+        } as any) as any;
+
+        const fixed = compile(0);
+        const filled = compile(1);
+        const bar = (filled.layer ?? []).find((layer: any) => markTypeOf(layer.mark) === 'bar');
+        expect(filled.width.step).toBeGreaterThan(fixed.width.step);
+        expect(bar.encoding.x.scale.paddingInner).toBeCloseTo(0.3);
+    });
+
+    it('applies McKinsey occupancy to a waterfall inherited category scale', () => {
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            Month: `2025-${String(index + 1).padStart(2, '0')}`,
+            Change: index === 0 ? 400 : index % 3 === 0 ? -120 : 180,
+        }));
+        const spec = assembleVegaLite({
+            data: { values },
+            semantic_types: { Month: 'Category', Change: 'Quantity' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'Month', y: 'Change' },
+                canvasSize: { width: 720, height: 720 },
+            },
+            theme_spec: 'mckinsey',
+        } as any) as any;
+        const barSpec = assembleVegaLite({
+            data: { values },
+            semantic_types: { Month: 'Category', Change: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Month', y: 'Change' },
+                canvasSize: { width: 720, height: 720 },
+            },
+            theme_spec: 'mckinsey',
+        } as any) as any;
+        expect(spec.encoding.x.scale.paddingInner).toBeCloseTo(0.3);
+        expect([spec._width, spec._height]).toEqual([barSpec._width, barSpec._height]);
+        expect(spec.encoding.x.axis?.labelAngle).toBeUndefined();
+    });
+
+    it('keeps bar-chart category labeling when waterfall rebuilds its x encoding', () => {
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            Month: `2025-${String(index + 1).padStart(2, '0')}`,
+            Change: index === 0 ? 400_000 : index % 3 === 0 ? -120_000 : 180_000,
+        }));
+        const compile = (chartType: 'Bar Chart' | 'Waterfall Chart') => assembleVegaLite({
+            data: { values },
+            semantic_types: { Month: 'Category', Change: 'Quantity' },
+            chart_spec: {
+                chartType,
+                encodings: { x: 'Month', y: 'Change' },
+                baseSize: { width: 440, height: 440 },
+                canvasSize: { width: 720, height: 440 },
+            },
+            theme_spec: 'powerbi',
+        } as any) as any;
+
+        const bar = compile('Bar Chart');
+        const waterfall = compile('Waterfall Chart');
+        const categoryX = (node: any): any => {
+            if (!node || typeof node !== 'object') return undefined;
+            if (node.encoding?.x?.field === 'Month') return node.encoding.x;
+            for (const value of Object.values(node)) {
+                const found = categoryX(value);
+                if (found) return found;
+            }
+            return undefined;
+        };
+        expect(categoryX(waterfall)?.axis).toEqual(categoryX(bar)?.axis);
+        expect(waterfall.config.axisX).toEqual(bar.config.axisX);
+    });
+
+    it('gives a waterfall a category step even where the steps are dates', () => {
+        // The template draws its steps on a band scale whatever the column
+        // holds. Sized as a temporal axis instead, the bands get no step at all
+        // and the house's sparse fit has nothing to widen.
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            period: `2025-${String(index + 1).padStart(2, '0')}`,
+            newUsers: index === 0 ? 400_000 : index % 3 === 0 ? -120_000 : 180_000,
+        }));
+        const compile = (bandStepFit: number) => assembleVegaLite({
+            data: { values },
+            semantic_types: { period: 'YearMonth', newUsers: 'Profit' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'period', y: 'newUsers' },
+                canvasSize: { width: 720, height: 720 },
+            },
+            theme_spec: 'powerbi',
+            options: { bandStepFit },
+        } as any) as any;
+
+        const fixed = compile(0);
+        const filled = compile(1);
+        expect(typeof fixed.width?.step).toBe('number');
+        expect(filled.width.step).toBeGreaterThan(fixed.width.step);
+    });
+
+    it('never prints a house label off a template\'s own working column', () => {
+        // A waterfall binds its bars to where each step starts, so a house
+        // label layer reaching for "the measure" finds `__wf_prev_sum` and
+        // prints the running total under the bar — 0 on the opening step.
+        const values = Array.from({ length: 12 }, (_, index) => ({
+            period: `2025-${String(index + 1).padStart(2, '0')}`,
+            newUsers: index === 0 ? 400_000 : index % 3 === 0 ? -120_000 : 180_000,
+        }));
+        const compile = (chartProperties?: Record<string, unknown>) => assembleVegaLite({
+            data: { values },
+            semantic_types: { period: 'YearMonth', newUsers: 'Profit' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'period', y: 'newUsers' },
+                canvasSize: { width: 720, height: 720 },
+                ...(chartProperties ? { chartProperties } : {}),
+            },
+            theme_spec: 'powerbi-light',
+        } as any) as any;
+
+        const textFields = (spec: any): string[] => {
+            const found: string[] = [];
+            const walk = (node: any): void => {
+                if (!node || typeof node !== 'object') return;
+                if (markTypeOf(node.mark) === 'text' && node.encoding?.text?.field) {
+                    found.push(node.encoding.text.field);
+                }
+                Object.values(node).forEach(walk);
+            };
+            walk(spec);
+            return found;
+        };
+
+        expect(textFields(compile())).toEqual([]);
+        // Asked for, the template prints its own — the step and the total.
+        expect(textFields(compile({ showValueLabels: true })).length).toBeGreaterThan(0);
+    });
+
+    it('refuses a house straight angle the category names cannot fit, and keeps it when they can', () => {
+        const compile = (prefix: string) => assembleVegaLite({
+            data: {
+                values: Array.from({ length: 12 }, (_, index) => ({
+                    Month: `${prefix}${String(index + 1).padStart(2, '0')}`,
+                    Change: index + 1,
+                })),
+            },
+            semantic_types: { Month: 'Category', Change: 'Quantity' },
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: 'Month', y: 'Change' },
+                baseSize: { width: 440, height: 440 },
+                canvasSize: { width: 720, height: 440 },
+            },
+            theme_spec: 'powerbi',
+        } as any) as any;
+
+        // The house asks for straight labels; `2025-01` is wider than its band,
+        // so the axis must not be left flat — whether it ends up at the layout's
+        // own -45 or Vega-Lite's turn is a rendering detail, not the guarantee.
+        const long = compile('2025-');
+        expect(long.config.axisX.labelAngle ?? -45).not.toBe(0);
+
+        // `P01` fits, so the house keeps the straight labels it asked for.
+        expect(compile('P').config.axisX.labelAngle).toBe(0);
+    });
 });
 
 describe('theme annotation.unitsInAxisTitle', () => {
@@ -548,7 +772,60 @@ describe('a cell in a grid is a position', () => {
         expect(label).toBeTruthy();
         expect(label.encoding.text.field).toBe('Temp');
         expect(label.mark.baseline).toBe('middle');
-        expect(label.encoding.color.condition?.test).toContain('Temp');
+        expect(label.encoding.color.field).toBe('Temp');
+        expect(label.encoding.color.scale.type).toBe('quantize');
+        expect(new Set(label.encoding.color.scale.range).size).toBeGreaterThan(1);
+    });
+
+    it('chooses the higher-contrast theme ink for each ramp interval', () => {
+        const spec = heatmap(theme({
+            dataLabels: { show: 'always', placement: 'atMark', inkMode: 'contrastWithMark' },
+            ink: {
+                surface: { canvas: '#ffffff' },
+                text: { primary: '#111111', inverse: '#ffffff' },
+                series: { single: '#333333', sequential: { stops: ['#f4a19a', '#f4a19a'] } },
+            },
+        } as Partial<ThemeSpec>));
+        const label = (spec.layer ?? []).find(
+            (layer: any) => layer.__themeSynthetic && markTypeOf(layer.mark) === 'text',
+        );
+        expect(new Set(label.encoding.color.scale.range)).toEqual(new Set(['#111111']));
+    });
+
+    it('honours a house that reads signed values with a sequential ramp', () => {
+        const sequential = ['#eef3f8', '#9db8d2', '#051c2c'];
+        const spec = heatmap(theme({
+            ink: {
+                surface: { canvas: '#ffffff' },
+                series: {
+                    single: '#051c2c',
+                    sequential: { stops: sequential },
+                    diverging: { stops: ['#2251ff', '#eef3f8', '#b4472e'] },
+                    selection: { signed: 'sequential' },
+                },
+            },
+        } as Partial<ThemeSpec>)) as any;
+        expect(spec.encoding.color.scale.range).toEqual(sequential);
+    });
+
+    it('keeps sparse grid cells near the fixed readability target on a wide canvas', () => {
+        const months = Array.from({ length: 12 }, (_, index) => `M${index + 1}`);
+        const cities = ['Cairo', 'Oslo', 'Seattle', 'Singapore'];
+        const spec = assembleVegaLite({
+            data: {
+                values: cities.flatMap((City, cityIndex) =>
+                    months.map((Month, monthIndex) => ({ City, Month, Temp: cityIndex + monthIndex }))),
+            },
+            semantic_types: { City: 'Category', Month: 'Category', Temp: 'Quantity' },
+            chart_spec: {
+                chartType: 'Heatmap',
+                encodings: { x: 'Month', y: 'City', color: 'Temp' },
+                baseSize: { width: 440, height: 300 },
+            },
+        } as any) as any;
+        expect(spec.width.step).toBeGreaterThanOrEqual(28);
+        expect(spec.width.step).toBeLessThanOrEqual(30);
+        expect(spec.height.step).toBe(spec.width.step);
     });
 });
 

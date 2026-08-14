@@ -47,7 +47,7 @@ export const plKpiCardDef: ChartTemplateDef = {
         // compact fixed footprint and let the grid grow with the tile COUNT
         // instead of filling the canvas.
         const TILE_W = 220;
-        const TILE_H = 150;
+        const TILE_H = 180;
         const figWidth = Math.round(cols * TILE_W + gapFrac * (cols - 1) * TILE_W);
         const figHeight = Math.round(gridRows * TILE_H + gapFrac * (gridRows - 1) * TILE_H);
         // Font sizes scale with each cell's actual pixel height so a dense
@@ -58,6 +58,7 @@ export const plKpiCardDef: ChartTemplateDef = {
 
         const traces: any[] = [];
         const annotations: any[] = [];
+        const shapes: any[] = [];
         rows.forEach((row: any, i: number) => {
             const col = i % cols;
             const gridRow = Math.floor(i / cols);
@@ -69,6 +70,7 @@ export const plKpiCardDef: ChartTemplateDef = {
             const isNumeric = rawValue != null && rawValue !== '' && Number.isFinite(value);
             const goal = goalField != null ? Number(row[goalField]) : undefined;
             const hasGoal = goal != null && Number.isFinite(goal);
+            const hasProgressGoal = hasGoal && goal > 0;
             const caption = metricField ? String(row[metricField] ?? '') : valueField;
 
             if (isNumeric) {
@@ -78,10 +80,63 @@ export const plKpiCardDef: ChartTemplateDef = {
                     value,
                     title: { text: caption, font: { size: captionFontPx } },
                     number: { font: { size: valueFontPx } },
-                    domain: { x: [x0, x0 + cellW], y: [y0, y1] },
+                    domain: {
+                        x: [x0, x0 + cellW],
+                        y: hasProgressGoal
+                            ? [y0 + cellH * 0.24, y1 - cellH * 0.16]
+                            : [y0, y1 - cellH * 0.12],
+                    },
                 };
                 if (hasGoal) {
                     indicator.delta = { reference: goal, relative: false, increasing: { color: '#2f855a' }, decreasing: { color: '#c44e52' } };
+                }
+                if (hasProgressGoal) {
+                    const barX0 = x0 + cellW * 0.12;
+                    const barX1 = x0 + cellW * 0.88;
+                    const progress = Math.max(0, Math.min(1, value / goal));
+                    shapes.push(
+                        {
+                            type: 'rect',
+                            xref: 'paper', yref: 'paper',
+                            x0: barX0, x1: barX1,
+                            y0: y0 + cellH * 0.06, y1: y0 + cellH * 0.10,
+                            line: { width: 0 },
+                            fillcolor: '#e5e7eb',
+                            _role: 'context',
+                        },
+                        {
+                            type: 'rect',
+                            xref: 'paper', yref: 'paper',
+                            x0: barX0, x1: barX0 + (barX1 - barX0) * progress,
+                            y0: y0 + cellH * 0.06, y1: y0 + cellH * 0.10,
+                            line: { width: 0 },
+                            fillcolor: '#4f7cff',
+                            _role: 'series',
+                        },
+                    );
+                    annotations.push({
+                        text: `${Math.round((value / goal) * 100)}% of ${goal}`,
+                        x: (x0 + x0 + cellW) / 2,
+                        y: y0 + cellH * 0.13,
+                        xref: 'paper',
+                        yref: 'paper',
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        showarrow: false,
+                        font: { size: goalFontPx, color: '#6b7280' },
+                    });
+                } else if (hasGoal) {
+                    annotations.push({
+                        text: `Goal: ${goal}`,
+                        x: (x0 + x0 + cellW) / 2,
+                        y: y0 + cellH * 0.12,
+                        xref: 'paper',
+                        yref: 'paper',
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        showarrow: false,
+                        font: { size: goalFontPx, color: '#6b7280' },
+                    });
                 }
                 traces.push(indicator);
             } else {
@@ -108,6 +163,7 @@ export const plKpiCardDef: ChartTemplateDef = {
             data: traces,
             layout: {
                 annotations,
+                shapes,
                 // Indicator traces suppress Plotly's default cartesian axes on
                 // their own; a card row with only text annotations (a
                 // pre-formatted string value) has no trace to do that, so the

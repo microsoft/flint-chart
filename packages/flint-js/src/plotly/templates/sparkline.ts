@@ -212,6 +212,7 @@ export const plSparklineDef: ChartTemplateDef = {
                 if (refY != null) {
                     traces.push({
                         type: 'scatter', mode: 'lines',
+                        _role: 'reference',
                         xaxis: xRef, yaxis: yRef,
                         x: [seriesRows[0].x, seriesRows[seriesRows.length - 1].x],
                         y: [refY, refY],

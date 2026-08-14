@@ -15,7 +15,7 @@
  */
 
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
-import { contrastingInk, parseColor, luminance, toHex } from '../core/theme/presence.js';
+import { contrastingInk, parseColor, luminance, mixHex, toHex } from '../core/theme/presence.js';
 import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
@@ -284,6 +284,7 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     applyPointEmphasis(spec, d, say);
     applyPrintedUnits(spec, d, say);
     applyStatistics(spec, d, table, say);
+    fitTitle(spec, d, table, say);
     const wrapped = applyFurniture(spec, d, table, say);
 
     return wrapped ? report : report;
@@ -302,6 +303,10 @@ export function realizeValueLabelsVegaLite(spec: any, d: DesignDecisions, table:
     const report: ThemeReport[] = [];
     const say = (path: string, message: string) => report.push({ stage: 'realize', path, message });
     applyDataLabels(spec, d, table, say);
+    // Staying inside the size the caller asked for is the same kind of concern:
+    // Vega-Lite grows the canvas to whatever one unbroken line of title needs,
+    // and a long deck took a 420px chart out to 1,249px with no house in sight.
+    fitTitle(spec, d, table, say);
     return report;
 }
 
@@ -346,6 +351,168 @@ function applyTypography(config: any, d: DesignDecisions): void {
     // the left edge of the plotting rectangle — otherwise the width of the
     // category labels decides where the title starts.
     if (d.title.anchor !== 'middle') config.title.frame = 'bounds';
+}
+
+// ---------------------------------------------------------------------------
+// Title fitting
+// ---------------------------------------------------------------------------
+
+/**
+ * Roughly how wide a glyph runs, as a fraction of the font size.
+ *
+ * Tuned for a browser, where Vega measures text with the canvas API. Node has
+ * no canvas backend here, so Vega falls back to an approximation that runs
+ * ~45% wider — measurements taken from a headless render read high and are not
+ * grounds for raising this.
+ */
+const HEADLINE_CHAR_RATIO = 0.55;
+
+/** How far past the block a headline may run before anything is done about it. */
+const STRETCH_TOLERANCE = 1.18;
+
+/** How far the headline may be set down before it is broken instead. */
+const MIN_HEADLINE_SCALE = 0.82;
+
+const CJK_RE = /[\u3000-\u303F\u3400-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/;
+
+/** Width of a string in pixels, counting a CJK glyph as a full em. */
+function textPx(s: string, fontSize: number): number {
+    let em = 0;
+    for (const ch of s) em += CJK_RE.test(ch) ? 1 : HEADLINE_CHAR_RATIO;
+    return em * fontSize;
+}
+
+/**
+ * Break the headline into `count` lines of even length.
+ *
+ * Filling each line to the brim and letting the remainder fall through is what
+ * leaves a headline ending in a single orphaned word. Aiming at the average
+ * line instead spreads the text over the lines it needs.
+ */
+function balancedLines(text: string, count: number, fontSize: number): string[] {
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length <= 1) return [text];
+    const target = textPx(text, fontSize) / count;
+    const lines: string[] = [];
+    let line = '';
+    for (const word of words) {
+        const candidate = line ? `${line} ${word}` : word;
+        // Break once the line is closer to the target with this word left off.
+        if (line && lines.length < count - 1
+            && textPx(candidate, fontSize) - target > target - textPx(line, fontSize)) {
+            lines.push(line);
+            line = word;
+        } else {
+            line = candidate;
+        }
+    }
+    if (line) lines.push(line);
+    return lines;
+}
+
+/**
+ * Fit a headline that runs wider than the block it sits over.
+ *
+ * Vega-Lite measures the title as one unbroken run and grows the *canvas* to
+ * fit it, so a long headline quietly widens the graphic past the size the
+ * caller asked for and leaves the plot stranded at one end.
+ *
+ * Three answers, cheapest first: a headline that only just overhangs is left
+ * alone, because a graphic a little wider than its plot is normal and a break
+ * there would be gratuitous; one that overhangs more is set down a size; only
+ * a headline that still does not fit at the smaller size is broken, and then
+ * over even lines rather than one full line and an orphan. Broken lines are
+ * taken out of the plot rather than added to the canvas.
+ */
+function fitTitle(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
+    // A title spans the whole graphic, not just the plot rectangle: the axis
+    // gutter under it is the title's to use. Measuring against the plot alone
+    // broke a headline that had 150px of room to spare beside the row labels.
+    const plot = blockWidth(spec, table);
+    const block = Math.max(plot ?? 0, d.layout.canvasWidth ?? 0);
+    if (!block || !Number.isFinite(block)) return;
+    fitHeadline(spec, d, block, say);
+    fitDeck(spec, d, block, say);
+}
+
+/**
+ * Break a deck that runs wider than the block it sits under.
+ *
+ * The headline above it is fitted; the deck was not, so a long one widened the
+ * graphic on its own even after the headline had been brought to heel. It is
+ * only ever broken, never set smaller: the deck is already the quietest line in
+ * the block, and taking it down again would cost legibility to buy width.
+ */
+function fitDeck(spec: any, d: DesignDecisions, block: number, say: (p: string, m: string) => void): void {
+    const title = spec.title;
+    if (!title || typeof title !== 'object') return;
+    const current = title.subtitle;
+    const text = Array.isArray(current) ? current.join(' ') : current;
+    if (typeof text !== 'string' || !text.trim()) return;
+
+    const size = d.title.deck.fontSize ?? 11;
+    const budget = block * STRETCH_TOLERANCE;
+    if (textPx(text, size) <= budget) return;
+
+    // Break to the block itself, not to the tolerance. The tolerance buys a
+    // headline the right to overhang a little, which reads as deliberate; a
+    // deck given the same licence just runs past the plot on every line.
+    const count = Math.max(2, Math.ceil(textPx(text, size) / block));
+    const lines = balancedLines(text, count, size);
+    if (lines.length < 2) return;
+
+    spec.title = { ...spec.title, subtitle: lines };
+    takeFromPlotHeight(spec, Math.round((lines.length - 1) * size * 1.3));
+    say('title.subtitle',
+        `the deck overhangs the ${Math.round(block)}px block, so it breaks over ${lines.length} even lines`
+        + ' — the height comes out of the plot, not out of the canvas the caller asked for');
+}
+
+function fitHeadline(spec: any, d: DesignDecisions, block: number, say: (p: string, m: string) => void): void {
+    const title = spec.title;
+    const text = typeof title === 'string' ? title : title?.text;
+    if (typeof text !== 'string' || !text.trim()) return;
+
+    const budget = block * STRETCH_TOLERANCE;
+    const size = d.title.headline.fontSize ?? 14;
+    if (textPx(text, size) <= budget) return;
+
+    const setTitle = (patch: Record<string, unknown>) => {
+        spec.title = { ...(typeof title === 'string' ? { text } : title), ...patch };
+    };
+
+    const smaller = Math.max(Math.round(size * MIN_HEADLINE_SCALE), (d.title.deck.fontSize ?? 11) + 1);
+    if (smaller < size && textPx(text, smaller) <= budget) {
+        setTitle({ fontSize: smaller });
+        say('title', `the headline overhangs the ${Math.round(block)}px block, so it is set at ${smaller}px rather than broken`);
+        return;
+    }
+
+    const count = Math.max(2, Math.ceil(textPx(text, smaller) / budget));
+    const lines = balancedLines(text, count, smaller);
+    if (lines.length < 2) return;
+    setTitle({ text: lines, ...(smaller < size ? { fontSize: smaller } : {}) });
+    takeFromPlotHeight(spec, Math.round((lines.length - 1) * smaller * 1.3));
+    say(
+        'title',
+        `the headline does not fit the ${Math.round(block)}px block even at ${smaller}px,`
+        + ` so it breaks over ${lines.length} even lines — the height comes out of the plot,`
+        + ' not out of the canvas the caller asked for',
+    );
+}
+
+/** The shortest a plot may be squeezed to make room for a taller headline. */
+const MIN_PLOT_HEIGHT = 80;
+
+/** Take pixels out of the plotting rectangle, wherever its height is stated. */
+function takeFromPlotHeight(spec: any, px: number): void {
+    const view = spec.config?.view;
+    if (view && typeof view.continuousHeight === 'number') {
+        view.continuousHeight = Math.max(MIN_PLOT_HEIGHT, view.continuousHeight - px);
+    }
+    walk(spec, (node) => {
+        if (typeof node.height === 'number') node.height = Math.max(MIN_PLOT_HEIGHT, node.height - px);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -410,6 +577,7 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
             titleFontSize: axis.title.fontSize,
             titleColor: axis.title.color,
             titleFontWeight: axis.title.fontWeight ?? 'normal',
+            ...(axis.title.gap != null ? { titlePadding: axis.title.gap } : {}),
         };
         if (axis.grid.show && twoPositionLineAxis(spec, channel, table)) {
             themed.grid = false;
@@ -418,10 +586,36 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                 'the line has exactly two banded positions — endpoint guides would either merge with a plot boundary or leave one column looking singled out, so both stand down');
         }
         if (axis.grid.dash) themed.gridDash = axis.grid.dash;
+        // A grid stops at the plot edge, and where the marks reach that edge —
+        // a histogram's last bar — the line is flush with the bar and its
+        // number is stranded off to the side with nothing leading to it. The
+        // house runs its rules on past the marks to end under the label they
+        // belong to, so the grid is carried over the gutter as a tick in grid
+        // ink. A house that draws its own ticks already has a mark there.
+        if (themed.grid && axis.role === 'measure' && !axis.ticks.show
+            && axis.label.show !== false) {
+            const overshoot = Math.max(4, Math.round((axis.label.padding ?? 4) * 0.75));
+            themed.ticks = true;
+            themed.tickColor = axis.grid.color;
+            themed.tickWidth = axis.grid.width;
+            themed.tickSize = overshoot;
+            say(`axes.${channel}.grid`,
+                `the grid runs ${overshoot}px past the plot to end under its own number — flush with the last mark it leads nowhere`);
+        }
         if (axis.ticks.offset) themed.tickOffset = axis.ticks.offset;
         if (axis.label.show === false) themed.labels = false;
         if (axis.label.limit != null) themed.labelLimit = axis.label.limit;
-        if (axis.label.angle != null) themed.labelAngle = axis.label.angle;
+        // Whether a house wants its names straight is a style matter; whether
+        // they still read as separate names is not. A straight angle that would
+        // print `2025-012025-02` is refused and the turn kept.
+        if (axis.label.angle != null) {
+            if (labelsFitStraight(spec, channel, axis, d, table)) {
+                themed.labelAngle = axis.label.angle;
+            } else {
+                say(`axes.${channel}.label.angle`,
+                    `the names are wider than their bands — laid straight they would run into each other, so they stay turned`);
+            }
+        }
         if (axis.tickCount != null) themed.tickCount = axis.tickCount;
 
         // Vega drops a tick label only once its box *overlaps* its neighbour's,
@@ -457,6 +651,15 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         if (axis.label.angle == null && existing.labelAngle != null) {
             config[key].labelAngle = existing.labelAngle;
         }
+        // A refused straight angle leaves the axis with no angle at all, and
+        // Vega-Lite's own default is not a fit decision. Turn it the way the
+        // layout turns labels that will not fit.
+        if (axis.label.angle != null && themed.labelAngle === undefined
+            && config[key].labelAngle == null) {
+            config[key].labelAngle = -45;
+            config[key].labelAlign = 'right';
+            config[key].labelBaseline = 'top';
+        }
 
         // Encoding-level axis objects outrank config, so anything a template
         // left behind in the keys this file owns has to go.
@@ -464,11 +667,15 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         let saidTicks = false;
         let saidGutter = false;
         let saidUnit = false;
-        let flatTitle = false;
+        const defaultOrient = channel === 'x' ? 'bottom' : 'left';
+        // One flat title per side: a left and a right ruler caption their own
+        // values and never land on each other.
+        const flatTitleSides = new Set<string>();
         walk(spec, (node) => {
             const enc = node.encoding?.[channel];
             if (!enc || enc.axis === null) return;
             const ax = enc.axis;
+            let unitNamedInTitle = false;
             if (ax && typeof ax === 'object') {
                 // A few pixels of label padding is styling and this file owns
                 // it. A hundred is not padding, it is a *column*: the template
@@ -505,28 +712,62 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                         }
                     }
                 }
+                // The unit is written once. Where the title already carries it
+                // — "CO2 (ppm)" — a unit on every tick states it a second time
+                // down a ruler of "450 ppm", "400 ppm".
+                const titleNow = enc.axis?.title ?? titleOf(enc);
+                if (axis.unit && typeof titleNow === 'string'
+                    && titleNow.includes(axis.unit.text)) {
+                    unitNamedInTitle = true;
+                }
                 // A title lying flat above its own axis reads as a label, not
                 // as a caption turned on its side. Only the vertical axis has
                 // anything to turn.
                 const placement = axis.title.placement;
-                if (channel === 'y' && !flatTitle
+                // The title captions the column of values under it, so it
+                // hangs off the side its own ticks are on — a title at the
+                // plot's left edge over a right-seated ruler names the wrong
+                // column. The house's orient wins where it has one; otherwise
+                // the template's own seat (a second measure on the right)
+                // stands.
+                const side = axis.orient !== defaultOrient
+                    ? axis.orient
+                    : (enc.axis?.orient ?? defaultOrient);
+                if (channel === 'y' && !flatTitleSides.has(side)
                     && (placement === 'flatAboveAxis' || placement === 'inline')) {
+                    const rightSeated = side === 'right';
+                    // The title clears the topmost value instead of sitting on
+                    // it, so the lift carries a line of the label's own size.
+                    const labelSize = axis.label.fontSize ?? 11;
+                    const gap = axis.title.gap ?? (axis.title.fontSize ?? 11) + 6;
+                    const lift = gap + Math.round(labelSize * 0.75);
                     enc.axis = {
                         ...(enc.axis ?? {}),
                         titleAngle: 0,
-                        titleAlign: 'left',
+                        titleAlign: rightSeated ? 'right' : 'left',
                         titleAnchor: placement === 'inline' ? 'end' : 'start',
-                        titleX: 0,
-                        titleY: -(axis.title.fontSize ?? 11) - 6,
+                        // On a right-hand ruler the renderer has already
+                        // measured how wide the values ran, so leaving `titleX`
+                        // unset seats the title on that outer edge. A guessed
+                        // width cannot: it reads raw data rather than the ticks
+                        // actually drawn, which stood the numbers off the grid
+                        // on one chart and laid them back over the plot on
+                        // another whose field is computed.
+                        ...(rightSeated ? {} : { titleX: 0 }),
+                        titleY: -lift,
+                        titlePadding: 0,
                         titleBaseline: 'bottom',
                     };
-                    growPadding(spec, 'top', (axis.title.fontSize ?? 11) + 8);
-                    flatTitle = true;
+                    // Both sides' titles sit on one line, so the room above
+                    // the plot is bought once.
+                    if (flatTitleSides.size === 0) {
+                        growPadding(spec, 'top', (axis.title.fontSize ?? 11) + lift);
+                    }
+                    flatTitleSides.add(side);
                     say(`axes.${channel}.title.placement`,
-                        'the axis title lies flat above the axis, where it reads as a label rather than a caption on its side');
+                        'the axis title lies flat at the head of its own ruler, beside the values it names');
                 }
             }
-            const defaultOrient = channel === 'x' ? 'bottom' : 'left';
             if (axis.orient !== defaultOrient) {
                 enc.axis = { ...(enc.axis ?? {}), orient: axis.orient };
             }
@@ -605,11 +846,29 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                 }
             }
 
+            // The plot's edge should fall on a grid line. Vega rounds the
+            // domain to about ten ticks by default while the axis draws the
+            // house's count, so the two disagree and the last line stops short
+            // of the edge — leaving a reading above it with no line to be read
+            // against.
+            //
+            // Only where a grid is actually drawn: rounding outward costs plot
+            // width, and a house that rules nothing gets nothing back for it —
+            // on a grid-less scatter it merely pushed the readings into a
+            // corner, once dragging a `zero: false` axis back to zero. A
+            // non-linear ruler is left alone too; its ticks are decades, not a
+            // count.
+            if (themed.grid && axis.tickCount != null && enc.type === 'quantitative' && !enc.bin
+                && !NONLINEAR_SCALES.has(enc.scale?.type)
+                && enc.scale?.domain == null && enc.scale?.nice !== false) {
+                enc.scale = { ...(enc.scale ?? {}), nice: axis.tickCount };
+            }
+
             // The unit has to be written somewhere. A house that drops axis
             // titles has taken away the usual place, so it says where else —
             // on every tick, or once at the end of the ruler.
             const unit = axis.unit;
-            if (unit && unit.where !== 'never' && axis.label.show !== false
+            if (unit && unit.where !== 'never' && !unitNamedInTitle && axis.label.show !== false
                 && (enc.type === 'quantitative' || enc.axis?.values != null)) {
                 const tagged = tagWithUnit(enc.axis?.labelExpr, unit.text, unit.where);
                 enc.axis = { ...(enc.axis ?? {}), labelExpr: tagged };
@@ -620,6 +879,10 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                             : `the unit \`${unit.text}\` rides on the ${unit.where === 'firstTick' ? 'first' : unit.where === 'firstAndLast' ? 'first and last' : 'last'} label, where the ruler ends`);
                     saidUnit = true;
                 }
+            } else if (unit && unit.where !== 'never' && unitNamedInTitle && !saidUnit) {
+                say(`axes.${channel}.unit`,
+                    `the title already names \`${unit.text}\` — the ruler stays bare rather than repeating the unit down every tick`);
+                saidUnit = true;
             }
         });
     }
@@ -640,6 +903,43 @@ function bandedAxis(spec: any, channel: 'x' | 'y'): boolean {
         if (enc.type === 'nominal' || enc.type === 'ordinal') banded = true;
     });
     return banded;
+}
+
+/**
+ * Would this axis's names read straight in the band each one actually gets?
+ *
+ * Only answerable for a banded axis, where the band is the step the layout
+ * settled. Anything else is left to the house.
+ */
+function labelsFitStraight(spec: any, channel: 'x' | 'y', axis: any, d: DesignDecisions, table: any[]): boolean {
+    if (channel !== 'x') return true;
+    if ((axis.label.angle ?? 0) !== 0) return true;
+    if (!bandedAxis(spec, channel)) return true;
+
+    let field: string | undefined;
+    walk(spec, (node) => {
+        const enc = node.encoding?.[channel];
+        if (!enc?.field || (enc.type !== 'nominal' && enc.type !== 'ordinal')) return;
+        field ??= enc.field;
+    });
+    if (!field) return true;
+
+    const names = [...new Set(table.map((row) => row?.[field!]).filter((v) => v != null))].map(String);
+    if (!names.length) return true;
+
+    // A step-sized spec states the band outright; otherwise the categories
+    // share whatever plot width the layout settled.
+    const step = typeof spec.width?.step === 'number' ? spec.width.step
+        : typeof spec.width === 'number' ? spec.width / names.length
+        : typeof d.layout.xStep === 'number' && d.layout.xStep > 0 ? d.layout.xStep
+        : typeof d.layout.plotWidth === 'number' ? d.layout.plotWidth / names.length
+        : undefined;
+    if (!step) return true;
+
+    const fontSize = typeof axis.label.fontSize === 'number' ? axis.label.fontSize : BASE_LABEL_FONT_SIZE;
+    const longest = Math.max(...names.map((n) => n.length));
+    // Names need air between them, or `2025-012025-02` reads as one number.
+    return longest * fontSize * 0.62 + 6 <= step;
 }
 
 /** A line joining exactly two discrete columns; partial grid thinning would make the pair asymmetric. */
@@ -1157,16 +1457,36 @@ function drawsPointCloud(spec: any): boolean {
     return found;
 }
 
-function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {    const config = spec.config;
+/** Restate the radar's required coordinate furniture and secondary vertices. */
+function applyRadarMarks(spec: any, d: DesignDecisions): void {
+    const plot = d.surface.plot ?? d.surface.canvas;
+    walk(spec, (node) => {
+        if (node.name === 'radar-grid-spokes' || node.name === 'radar-grid-rings') {
+            const mark = normalizeMark(node.mark);
+            const ring = node.name === 'radar-grid-rings';
+            mark.stroke = mixHex(plot, d.text.secondary, ring ? 0.18 : 0.24);
+            mark.strokeWidth = Math.min(1, Number(mark.strokeWidth) || 1);
+            node.mark = mark;
+        }
+        if (node.name === 'radar-secondary-vertices') {
+            const mark = normalizeMark(node.mark);
+            mark.size = d.marks.point?.secondarySize ?? 25;
+            node.mark = mark;
+        }
+    });
+}
+
+function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
+    const config = spec.config;
     const m = d.marks;
     const plotWidth = spec.config?.view?.continuousWidth ?? spec._width ?? 300;
     const plotHeight = spec.config?.view?.continuousHeight ?? spec._height ?? 300;
 
+    applyRadarMarks(spec, d);
     config.line = { ...(config.line ?? {}), strokeWidth: m.strokeWidth };
     config.trail = { ...(config.trail ?? {}), size: m.strokeWidth };
     if (m.strokeCap) { config.line.strokeCap = m.strokeCap; config.rule = { ...(config.rule ?? {}), strokeCap: m.strokeCap }; }
-    if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;
-    if (m.interpolate) config.line.interpolate = m.interpolate;
+    if (m.strokeJoin) config.line.strokeJoin = m.strokeJoin;    if (m.interpolate) config.line.interpolate = m.interpolate;
     if (m.fillOpacity != null) config.area = { ...(config.area ?? {}), fillOpacity: m.fillOpacity };
     if (m.cornerRadius != null) {
         // Round only the value end of a bar so the baseline stays a clean edge
@@ -1183,6 +1503,15 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         // bars wide enough to hold it. Grid cells (heatmaps) are a field, not
         // shapes to cut out, and are held apart by a tile gap, not an outline.
         config.arc = { ...(config.arc ?? {}), stroke: m.outline.color, strokeWidth: m.outline.width };
+        // An outlined shape has corners of its own, and the join is a property
+        // of the stroke, not of lines. Left to the renderer's mitre, the two
+        // radial edges of a thin wedge run past each other into a spike at the
+        // centre — worst exactly where the house draws the fattest outline.
+        if (m.strokeJoin) {
+            for (const family of ['arc', 'bar', 'area', 'point'] as const) {
+                config[family] = { ...(config[family] ?? {}), strokeJoin: m.strokeJoin };
+            }
+        }
     }
     protectDashEncoding(spec, config, m.strokeWidth);
 
@@ -1194,7 +1523,9 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
     if (m.point?.show) {
         config.line.point = {
             filled: m.point.filled !== false,
-            size: m.point.size ?? 24,
+            // A vertex confirms a path's position; the primary size is the size
+            // of a dot that *is* the reading. Houses that separate them say so.
+            size: m.point.vertexSize ?? m.point.size ?? 24,
             ...(m.outline
                 ? { stroke: m.outline.color, strokeWidth: m.outline.width }
                 : m.point.haloColor
@@ -1400,6 +1731,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         spec,
         config.point?.size ?? config.circle?.size ?? 30,
         config.point?.strokeWidth ?? m.outline?.width ?? 0,
+        table,
         say,
     );
 
@@ -1566,6 +1898,21 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         let bandCh: 'x' | 'y' | undefined;
         walk(spec, (node) => {
             const mark = markTypeOf(node.mark);
+            // A stacked band adjoins its neighbour along its whole length, so it
+            // is held apart the same way bars are — without the cut, three
+            // quantities read as one silhouette.
+            if (mark === 'area') {
+                const enc = node.encoding ?? {};
+                const banded = Boolean(enc.color?.field ?? enc.fill?.field ?? spec.encoding?.color?.field);
+                if (!banded || isLiteralMark(node)) return;
+                node.mark = {
+                    ...normalizeMark(node.mark),
+                    stroke: m.separator!.color,
+                    strokeWidth: m.separator!.width,
+                };
+                sawStroke = true;
+                return;
+            }
             if (mark !== 'bar' && mark !== 'rect') return;
             if (isLiteralMark(node)) return;
             // A cell in a grid is not a bar in a row: it adjoins on both axes
@@ -1657,6 +2004,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             }
         });
     }
+
 }
 
 /**
@@ -2209,6 +2557,78 @@ function dotOuterDiameter(size: number, strokeWidth: number): number {
 }
 
 /**
+ * Round a span outward to whole ticks, the way the renderer's own scale would.
+ *
+ * This is d3's `nice`, which Vega uses: the step is chosen from the 1/2/5/10
+ * family, and both ends are pushed out to a multiple of it until the step
+ * settles. It is reproduced rather than called because the rounding has to be
+ * applied to the *data*, before the pixel padding a dot scale carries — and
+ * `scale.nice` can only be applied after.
+ */
+const E10 = Math.sqrt(50);
+const E5 = Math.sqrt(10);
+const E2 = Math.SQRT2;
+
+function tickIncrement(start: number, stop: number, count: number): number {
+    const step = (stop - start) / Math.max(1, count);
+    const power = Math.floor(Math.log10(step));
+    const error = step / 10 ** power;
+    const factor = error >= E10 ? 10 : error >= E5 ? 5 : error >= E2 ? 2 : 1;
+    return power >= 0 ? factor * 10 ** power : -(10 ** -power) / factor;
+}
+
+function niceSpan(start: number, stop: number, count: number): [number, number] {
+    let lo = start;
+    let hi = stop;
+    let prestep: number | undefined;
+    // d3 loops until the step settles; a bound keeps a pathological span finite.
+    for (let i = 0; i < 32; i += 1) {
+        const step = tickIncrement(lo, hi, count);
+        if (step === prestep || step === 0 || !Number.isFinite(step)) break;
+        if (step > 0) {
+            lo = Math.floor(lo / step) * step;
+            hi = Math.ceil(hi / step) * step;
+        } else {
+            lo = Math.ceil(lo * step) / step;
+            hi = Math.floor(hi * step) / step;
+        }
+        prestep = step;
+    }
+    return [lo, hi];
+}
+
+/**
+ * The rounded span of a plain numeric field, or nothing when it cannot be read.
+ *
+ * A pinned domain narrower than the data would put marks off the chart, so
+ * anything the table cannot answer for — an aggregate, a bin, a time unit, a
+ * stack, a field the rows do not carry — returns nothing and the caller leaves
+ * the scale to the renderer.
+ */
+function roundedFieldDomain(enc: any, table: any[], count: number): [number, number] | undefined {
+    if (!Array.isArray(table) || !table.length) return undefined;
+    if (typeof enc?.field !== 'string') return undefined;
+    if (enc.aggregate || enc.bin || enc.timeUnit || enc.stack) return undefined;
+    if (enc.type && enc.type !== 'quantitative') return undefined;
+
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const row of table) {
+        const v = row?.[enc.field];
+        if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return undefined;
+
+    const [a, b] = niceSpan(lo, hi, count);
+    // Rounding only ever pushes outward; anything else means the arithmetic
+    // disagreed with the data, and a domain inside it would clip.
+    if (!(a <= lo && b >= hi)) return undefined;
+    return [a, b];
+}
+
+/**
  * A dot has a radius; a scale fitted to the data does not know that.
  *
  * Vega-Lite sizes a continuous scale to the extremes of the field, which puts
@@ -2226,7 +2646,7 @@ function dotOuterDiameter(size: number, strokeWidth: number): number {
  * bar, an area, a lollipop's stem — because there the edge is a base, and a
  * base that has been nudged off zero is worse than a clipped dot.
  */
-function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: string, m: string) => void): void {
+function padScaleForDots(spec: any, size: number, strokeWidth: number, table: any[], say: (p: string, m: string) => void): void {
     const radius = Math.ceil(dotOuterDiameter(size, strokeWidth) / 2);
     if (radius <= 0) return;
     // A dumbbell keeps its position channels on the parent and gives the dot
@@ -2256,6 +2676,7 @@ function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: 
     if (anchored || !dots.length) return;
 
     let padded = false;
+    const pinned: Partial<Record<'x' | 'y', [number, number]>> = {};
     for (const declared of dots) {
         for (const ch of ['x', 'y'] as const) {
             const enc = declared[ch];
@@ -2264,16 +2685,50 @@ function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: 
             // A scale pinned to zero, or to a domain the caller chose, is
             // saying where its ends are. Padding would move them.
             if (enc.scale?.zero === true || enc.scale?.domain || enc.scale?.padding != null) continue;
-            // `nice` rounds the domain outward to the next whole tick, and it
-            // does that *after* the padding is folded in — so a 4px gap turns
-            // into a whole extra interval of empty plot and an axis labelled
-            // past where the data goes. The padding is the breathing room; the
-            // rounding on top of it is not wanted.
-            enc.scale = { ...(enc.scale ?? {}), padding: radius, nice: enc.scale?.nice ?? false };
+            // The padding is the breathing room that keeps the outermost dot
+            // inside the axes; rounding on top of it is not wanted here. A dot
+            // plot has no bar to anchor the eye, so an extra interval of empty
+            // scale reads as the readings hiding in a corner — and rounding
+            // outward can drag a `zero: false` ruler back to zero.
+            //
+            // Where a grid is drawn, the axis pass asked for the domain to be
+            // rounded to the house's tick count so the last line lands on the
+            // plot edge. Vega pads *before* it rounds, so honouring that here
+            // would round the padded domain and turn a few pixels of clearance
+            // into a whole extra interval: a 0-100 score came out as -10 to
+            // 110. The data is rounded instead, and the padding stays the
+            // sliver it is. Where the data cannot be read off the table —
+            // an aggregate, a bin, a computed field — the rounding is dropped
+            // rather than guessed, since a pinned domain that is too narrow
+            // clips marks off the chart.
+            const count = typeof enc.scale?.nice === 'number' ? enc.scale.nice : undefined;
+            const rounded = count != null ? roundedFieldDomain(enc, table, count) : undefined;
+            if (rounded) pinned[ch] = rounded;
+            enc.scale = {
+                ...(enc.scale ?? {}),
+                padding: radius,
+                ...(rounded ? { domainMin: rounded[0], domainMax: rounded[1] } : {}),
+                nice: false,
+            };
             padded = true;
         }
     }
     if (padded) {
+        // Layers share a scale, and the axis pass wrote its rounding onto every
+        // encoding of the channel — including the ones that carry no dot. Left
+        // alone they disagree with the decision above, and the renderer warns
+        // and picks one. Settle them all the same way.
+        walk(spec, (node) => {
+            for (const ch of ['x', 'y'] as const) {
+                const enc = node.encoding?.[ch];
+                if (!enc?.field || typeof enc.scale?.nice !== 'number') continue;
+                enc.scale = {
+                    ...enc.scale,
+                    ...(pinned[ch] ? { domainMin: pinned[ch]![0], domainMax: pinned[ch]![1] } : {}),
+                    nice: false,
+                };
+            }
+        });
         say('marks.point.size',
             `the plot is opened by ${radius}px at each end — a dot's own radius — so the outermost reading sits inside the axes instead of half outside them`);
     }
@@ -3119,8 +3574,12 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
     // also what seaborn does when one legend carries both: each block keeps
     // the variable name as a heading, because the heading is the only thing
     // telling a row of sizes apart from a row of colours.
+    // A key that keeps its title stands a line taller than one that dropped it.
+    // Side by side that leaves the row ragged, so the layout below has to know.
+    let titlesUneven = false;
     if (!l.title) {
         let valueKeys = 0;
+        let baredKeys = 0;
         walk(spec, (node) => {
             for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity'] as const) {
                 const enc = node.encoding?.[channel];
@@ -3131,8 +3590,10 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                     && enc.type === 'quantitative';
                 if (isValueKey) { valueKeys++; continue; }
                 enc.legend = { ...(enc.legend ?? {}), title: null };
+                baredKeys++;
             }
         });
+        titlesUneven = valueKeys > 0 && baredKeys > 0;
         if (valueKeys === 0) config.legend.title = null;
         else {
             say('legend.title',
@@ -3152,24 +3613,13 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         say('legend.offset',
             `the top key clears the flat axis title by ${clearance}px so its last row does not land on the title`);
     }
-    // A top or bottom key is a caption to the whole graphic, so it begins where
-    // the graphic does — flush with the title down the left edge — not indented
-    // to the plot rectangle the way Vega-Lite lays it by default. `bounds:
-    // 'full'` measures the key against the same box the start-anchored title
-    // uses (axes included), so the two share one left margin; the whitespace an
-    // indented key leaves between itself and the title, worst when the key
-    // wraps to several rows, closes up.
-    if ((l.orient === 'top' || l.orient === 'bottom')
-        && (l.direction ?? 'horizontal') === 'horizontal') {
-        config.legend.layout = {
-            ...(config.legend.layout ?? {}),
-            [l.orient]: {
-                anchor: 'start',
-                bounds: 'full',
-                ...(config.legend.layout?.[l.orient] ?? {}),
-            },
-        };
-    }
+    // A top or bottom key reads as a caption to the whole graphic, so the house
+    // would rather it began where the title does than indented to the plot.
+    // Vega-Lite has no way to say so: `legend.layout` was dropped after v4 and
+    // is silently discarded, and the only remaining route — `orient: 'none'`
+    // with an explicit `legendX` — would have to guess the width of the axis
+    // labels it must clear. That guess is wrong often enough to be worse than
+    // the indent, so the key stays where the renderer measures it.
     if (l.orient === 'top-right' || l.orient === 'top-left') {
         config.legend.fillColor = d.surface.plot;
         config.legend.padding = 4;
@@ -3260,7 +3710,18 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         const widths = keyWidths(spec, table, l.label.fontSize ?? 10);
         const block = blockWidth(spec, table);
         const total = widths.reduce((a, b) => a + b, 0);
-        if (widths.length > 1 && block && total > block) {
+        // A row whose keys sit at different depths reads as broken, so an
+        // uneven pair has two ways out: lay the title beside its entries where
+        // the row can afford it, or give each key a row of its own. Doing
+        // neither — which is what happens if the inline title does not fit and
+        // the keys technically still fit side by side — is the one outcome
+        // that leaves the ragged row on the page.
+        const twoKeys = widths.length > 1 && Boolean(block);
+        const titleRoom = titlesUneven
+            ? longestKeyTitle(spec) * (l.label.fontSize ?? 10) * 0.55 + 12
+            : 0;
+        const levelInline = twoKeys && titlesUneven && total + titleRoom <= block!;
+        if (twoKeys && (total > block! || (titlesUneven && !levelInline))) {
             config.legend.layout = {
                 ...(config.legend.layout ?? {}),
                 [l.orient]: {
@@ -3270,20 +3731,26 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                 },
             };
             say('legend.placement',
-                `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`);
+                total > block!
+                    ? `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`
+                    : `${widths.length} keys sit at different depths and the row cannot hold an inline title — they take a row each`);
 
             // Stacked, each key that still has a title spends a line on it, so
             // two keys cost four lines above a plot that is only a couple of
             // hundred pixels tall. The title moves onto the entries' own line
             // instead — `Population (M)  ○ 200 ○ 600 ○ 1,000` — which reads
             // the way a journalistic key does and hands the row back to the
-            // chart. It is only offered here because it is only free here:
-            // stacked keys have the width to spare, whereas keys sharing a row
-            // are already short of it, and a leading title on each would push
-            // them apart rather than pull them up.
+            // chart.
             config.legend.titleOrient = 'left';
             say('legend.titleOrient',
                 'stacked keys put their title on the same line as their entries — the row is already paid for');
+        } else if (levelInline) {
+            // They fit on one row, but only one of them kept a title, so that
+            // key is a line deeper than its neighbour and the row hangs
+            // ragged. Laying its title beside its entries levels the two.
+            config.legend.titleOrient = 'left';
+            say('legend.titleOrient',
+                'one key keeps a title and the other does not — its title moves onto the entries\' line so both keys sit at the same depth');
         }
     }
 
@@ -3384,6 +3851,22 @@ function wrapWideKeys(
                 `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
         }
     });
+}
+
+/** The longest title still standing on any key, in characters. */
+function longestKeyTitle(spec: any): number {
+    let longest = 0;
+    walk(spec, (node) => {
+        for (const channel of ['color', 'fill', 'stroke', 'size', 'shape', 'opacity'] as const) {
+            const enc = node.encoding?.[channel];
+            if (!enc?.field || enc.legend === null) continue;
+            const title = enc.legend?.title;
+            if (title === null) continue;
+            const text = typeof title === 'string' ? title : String(enc.field);
+            longest = Math.max(longest, text.length);
+        }
+    });
+    return longest;
 }
 
 /**
@@ -3600,36 +4083,59 @@ function applyDataLabels(spec: any, d: DesignDecisions, table: any[], say: (p: s
 /**
  * The ink for a number printed on a ramp.
  *
- * Vega-Lite cannot ask a mark what colour it ended up, so the places where the
- * ramp goes dark are worked out here and restated as a test on the value. A
- * sequential ramp darkens at one end and a diverging one at both, and the same
- * scan covers either.
+ * Vega-Lite cannot ask a mark what colour it ended up. A parallel quantized
+ * scale over the same (possibly aggregated) measure maps each ramp interval to
+ * readable light or dark text. Keeping the aggregate on the encoding lets
+ * Vega-Lite derive the same per-cell domain for both fill and label ink.
  */
-function inkOnRamp(field: string, stops: string[], values: number[], light: string, dark: string): any {
-    const lo = Math.min(...values);
-    const hi = Math.max(...values);
-    if (!(hi > lo) || stops.length < 2) return { value: dark };
+function inkScaleOnRamp(enc: any, stops: string[], light: string, dark: string): any {
+    if (stops.length < 2) return { value: dark };
+    const discreteScale = ['quantile', 'quantize', 'threshold', 'bin-ordinal'].includes(enc.scale?.type);
+    if (discreteScale && Array.isArray(enc.scale?.range) && enc.scale.range.length > 0) {
+        return {
+            field: enc.field,
+            type: 'quantitative',
+            ...(enc.aggregate ? { aggregate: enc.aggregate } : {}),
+            legend: null,
+            scale: {
+                ...enc.scale,
+                range: enc.scale.range.map((fill: string) => readableOn(fill, light, dark)),
+            },
+        };
+    }
     const STEPS = 32;
-    const runs: Array<[number, number]> = [];
-    for (let i = 0; i <= STEPS; i++) {
-        const t = (i / STEPS) * (stops.length - 1);
+    const range: string[] = [];
+    const lightColor = parseColor(light);
+    const darkColor = parseColor(dark);
+    const contrast = (a: ReturnType<typeof parseColor>, b: ReturnType<typeof parseColor>): number => {
+        if (!a || !b) return 0;
+        const lo = Math.min(luminance(a), luminance(b));
+        const hi = Math.max(luminance(a), luminance(b));
+        return (hi + 0.05) / (lo + 0.05);
+    };
+    for (let i = 0; i < STEPS; i++) {
+        const t = ((i + 0.5) / STEPS) * (stops.length - 1);
         const a = parseColor(stops[Math.floor(t)]);
         const b = parseColor(stops[Math.min(stops.length - 1, Math.floor(t) + 1)]);
-        if (!a || !b) continue;
+        if (!a || !b) {
+            range.push(dark);
+            continue;
+        }
         const k = t - Math.floor(t);
         const c = { r: a.r + (b.r - a.r) * k, g: a.g + (b.g - a.g) * k, b: a.b + (b.b - a.b) * k, a: 1 };
-        if (luminance(c) >= 0.5) continue;
-        const v = lo + (i / STEPS) * (hi - lo);
-        const last = runs[runs.length - 1];
-        if (last && i > 0 && last[1] >= lo + ((i - 1) / STEPS) * (hi - lo)) last[1] = v;
-        else runs.push([v, v]);
+        range.push(contrast(lightColor, c) >= contrast(darkColor, c) ? light : dark);
     }
-    if (runs.length === 0) return { value: dark };
-    const f = `datum[${JSON.stringify(field)}]`;
-    const test = runs
-        .map(([a, b]) => (a === b ? `${f} === ${a}` : `(${f} >= ${a} && ${f} <= ${b})`))
-        .join(' || ');
-    return { condition: { test, value: light }, value: dark };
+    return {
+        field: enc.field,
+        type: 'quantitative',
+        ...(enc.aggregate ? { aggregate: enc.aggregate } : {}),
+        legend: null,
+        scale: {
+            ...(enc.scale?.domain ? { domain: enc.scale.domain } : {}),
+            type: 'quantize',
+            range,
+        },
+    };
 }
 
 function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): any {
@@ -3677,6 +4183,14 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     const measure = enc[measureChannel];
     if (!measure?.field) {
         say('dataLabels', `measure channel \`${measureChannel}\` has no field`);
+        return;
+    }
+    // A column the template computed to draw itself is not a quantity anyone
+    // asked to read: a waterfall binds its bars to where each step *starts*,
+    // so printing it labels the running total under the bar, not the step.
+    if (String(measure.field).startsWith('__')) {
+        say('dataLabels',
+            `the measure is the template's own \`${measure.field}\` — a working column, not a value to print`);
         return;
     }
     // A stacked segment *can* carry its value, but only in the middle of it.
@@ -3847,7 +4361,12 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     }
 
     const labelEncoding: any = {
-        text: { field: measure.field, type: 'quantitative', ...(d.dataLabels.format ? { format: d.dataLabels.format } : {}) },
+        text: {
+            field: measure.field,
+            type: 'quantitative',
+            ...(measure.aggregate ? { aggregate: measure.aggregate } : {}),
+            ...(d.dataLabels.format ? { format: d.dataLabels.format } : {}),
+        },
     };
     if (d.dataLabels.unit) {
         printWithUnit(body, { encoding: labelEncoding }, measure.field, d.dataLabels.format, d.dataLabels.unit);
@@ -3989,9 +4508,8 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
 
     if (cells) {
         // The cell under the number is the ramp, so the ink follows the ramp.
-        const values = table.map((r) => r?.[measure.field]).filter((v) => typeof v === 'number');
         const stops = d.series.ramp?.stops ?? d.series.range ?? [];
-        labelEncoding.color = inkOnRamp(measure.field, stops, values, d.text.inverse, d.text.primary);
+        labelEncoding.color = inkScaleOnRamp(measure, stops, d.text.inverse, d.text.primary);
     } else if (d.dataLabels.inkMode === 'matchSeries' && enc.color?.field) {
         labelEncoding.color = { ...enc.color, legend: null };
     } else if (perCategoryInk) {
@@ -4029,7 +4547,7 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         ...(stackedTransform ?? []),
     ];
     if (labelTransforms.length > 0) layer.transform = labelTransforms;
-    if (perCategoryInk) {
+    if (perCategoryInk || (cells && labelEncoding.color?.field)) {
         // Vega-Lite merges scales of the same channel across a layer, so the
         // label's ink range and the mark's fill range are two answers to one
         // question and the fill wins — leaving the number painted its own
@@ -4469,13 +4987,13 @@ function applySeriesEndLabels(
     };
     appendLayer(body, labelLayer);
 
-    // The labels live outside the plot rectangle; the canvas has to make room
-    // or Vega-Lite will draw them over whatever is next to the chart. At the
-    // head of a list they sit inside it and no room is needed.
-    if (atEnd) {
-        const longest = estimateLongestLabel(table, seriesField) + (merged ? 6 : 0);
-        growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
-    }
+    // The names sit outside the plot rectangle, and no room is reserved for
+    // them here: they are ordinary text marks, and Vega's default `pad`
+    // autosize already grows the canvas to the scene's own bounds. Estimating
+    // the same width a second time only double-counted it — measured at ~124px
+    // of dead margin on a three-series line — and the estimate could never
+    // agree with the text the renderer actually laid out.
+
     // Naming the series at the line end frees the corner the colour key used to
     // hold — but a *second* encoding (a forecast dash, a shape) still keeps its
     // own key, and Vega-Lite parks it top-right by default, right where the end
@@ -4687,11 +5205,8 @@ function bandEndLabels(
     if (!outside.length) appendLayer(body, endLayer(true));
     if (outside.length) {
         appendLayer(body, endLayer(false));
-        // Name only out here, so the margin is measured off the longest name
-        // plus a little air — not off a name-and-number pair that is no longer
-        // drawn.
-        const longest = Math.max(...outside.map((s) => s.length)) + 2;
-        growPadding(spec, domainChannel === 'x' ? 'right' : 'top', longest * (t.fontSize ?? 10) * 0.55 + 8);
+        // No margin is reserved for these names: `pad` autosize already sizes
+        // the canvas to the scene, so reserving it here counted it twice.
         say('legend.placement',
             homeless.length === order.length
                 ? 'the bands climb away from their own labels — the names sit outside the plot in series ink, as a list'
@@ -4814,16 +5329,6 @@ function orderedValues(table: any[], field: string): string[] {
         if (!set.has(s)) { set.add(s); seen.push(s); }
     }
     return seen;
-}
-
-function estimateLongestLabel(table: any[], field: string): number {
-    if (!Array.isArray(table)) return 10;
-    let max = 0;
-    for (const row of table) {
-        const v = row?.[field];
-        if (v != null) max = Math.max(max, String(v).length);
-    }
-    return max || 10;
 }
 
 // ---------------------------------------------------------------------------
@@ -5277,8 +5782,35 @@ function widestWidth(spec: any, table: any[]): number | undefined {
     if (typeof spec.width === 'number') consider(spec.width);
     // A chart that states no width of its own is drawn at the one the layout
     // put in the view config — that is the width, not a default to guess at.
-    if (widest == null) consider(spec.config?.view?.continuousWidth);
+    // Except when the axis is banded: Vega-Lite sizes those one step per
+    // category and never reads `continuousWidth`, so taking it here would run
+    // the rule well past the plot and stretch the canvas out to meet it.
+    if (widest == null) consider(bandedWidth(spec, table) ?? spec.config?.view?.continuousWidth);
     return widest;
+}
+
+/**
+ * The width Vega-Lite gives a banded plot that states no step of its own:
+ * one step per category. Returns undefined when the x axis is not banded.
+ */
+function bandedWidth(spec: any, table: any[]): number | undefined {
+    let enc: any;
+    walk(spec, (node) => {
+        const x = node.encoding?.x;
+        if (!enc && x?.field && (x.type === 'nominal' || x.type === 'ordinal')) enc = x;
+    });
+    if (!enc) return undefined;
+    // A template may compute its categories in a transform, in which case the
+    // table has no column to count — the stated domain is the count.
+    const count = Array.isArray(enc.scale?.domain) && enc.scale.domain.length
+        ? enc.scale.domain.length
+        : distinctCount(table, enc.field);
+    if (!count) return undefined;
+    const discrete = spec.config?.view?.discreteWidth;
+    const step = typeof discrete === 'number'
+        ? undefined
+        : discrete?.step ?? spec.config?.view?.step ?? 20;
+    return typeof discrete === 'number' ? discrete : step * count;
 }
 
 function blockWidth(spec: any, table: any[]): number | undefined {

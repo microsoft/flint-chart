@@ -176,6 +176,11 @@ export const nature: ThemePreset = {
                 "shape"
             ]
         },
+        "geometry": {
+            "point": {
+                "vertexSize": 26
+            }
+        },
         "labels": {
             "truncation": "never"
         },
@@ -208,6 +213,7 @@ export const nature: ThemePreset = {
         "layout": {
             "density": "compact",
             "targetWidth": 252,
+            "bandStepFit": 0.2,
             "titleBlock": {
                 "anchor": "middle",
                 "position": "bottom",

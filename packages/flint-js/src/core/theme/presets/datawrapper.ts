@@ -140,6 +140,14 @@ export const datawrapper: ThemePreset = {
                 "weight": 1
             }
         },
+        "geometry": {
+            "arc": {
+                "gap": 1.5
+            },
+            "cell": {
+                "gap": 1.5
+            }
+        },
         "labels": {
             "truncation": "never"
         },
@@ -176,6 +184,7 @@ export const datawrapper: ThemePreset = {
         "layout": {
             "density": "normal",
             "targetWidth": 300,
+            "bandStepFit": 1,
             "titleBlock": {
                 "anchor": "start"
             }

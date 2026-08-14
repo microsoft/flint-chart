@@ -127,6 +127,27 @@ export function plCombineFacetPanels(
     figure.layout.height = totalH;
 
     const seenLegend = new Set<string>();
+    let seenColorScale = false;
+    let scaleMin = Infinity;
+    let scaleMax = -Infinity;
+    for (const panel of panels) {
+        for (const trace of panel.figure?.data ?? []) {
+            const markerColors = Array.isArray(trace?.marker?.color) ? trace.marker.color : [];
+            const zValues = Array.isArray(trace?.z) ? trace.z.flat(Infinity) : [];
+            for (const values of [markerColors, zValues]) {
+                for (const value of values) {
+                    if (value == null) continue;
+                    const number = Number(value);
+                    if (!Number.isFinite(number)) continue;
+                    scaleMin = Math.min(scaleMin, number);
+                    scaleMax = Math.max(scaleMax, number);
+                }
+            }
+        }
+    }
+    const globalScale = Number.isFinite(scaleMin) && Number.isFinite(scaleMax)
+        ? { min: scaleMin, max: scaleMax }
+        : null;
 
     for (const panel of panels) {
         const { rowIndex: ri, colIndex: ci } = panel;
@@ -144,36 +165,74 @@ export function plCombineFacetPanels(
         const y0 = 1 - yFrac(yTopPx + panelHeight);
 
         const panelLayout = panel.figure?.layout ?? {};
-        const xAxis: any = { ...(panelLayout.xaxis ?? {}), domain: [x0, x1], anchor: yRef };
-        const yAxis: any = { ...(panelLayout.yaxis ?? {}), domain: [y0, y1], anchor: xRef };
+        for (const key of ['barmode', 'barnorm'] as const) {
+            if (panelLayout[key] != null && figure.layout[key] == null) {
+                figure.layout[key] = panelLayout[key];
+            }
+        }
+        const polarPanel = (panel.figure?.data ?? []).some((trace: any) =>
+            trace?.type === 'barpolar' || trace?.type === 'scatterpolar');
+        const polarName = n === 1 ? 'polar' : `polar${n}`;
+        if (polarPanel) {
+            figure.layout[polarName] = {
+                ...(panelLayout.polar ?? {}),
+                domain: { x: [x0, x1], y: [y0, y1] },
+            };
+        } else {
+            const xAxis: any = { ...(panelLayout.xaxis ?? {}), domain: [x0, x1], anchor: yRef };
+            const yAxis: any = { ...(panelLayout.yaxis ?? {}), domain: [y0, y1], anchor: xRef };
 
-        // Shared y-domain across panels (mirror CJS: fixed nice range, no
-        // per-panel autorange). Rangemode would fight an explicit range.
-        if (sharedYDomain) {
-            yAxis.range = [sharedYDomain.min, sharedYDomain.max];
-            delete yAxis.rangemode;
-        }
-        // Only the leftmost column shows y tick labels + title.
-        if (ci > 0) {
-            yAxis.showticklabels = false;
-            delete yAxis.title;
-        }
-        // X-axis titles only on the bottom row (a per-panel title would
-        // collide with the next row's column headers in a single figure).
-        if (ri < rows - 1) {
-            delete xAxis.title;
-        }
+            if (sharedYDomain) {
+                yAxis.range = [sharedYDomain.min, sharedYDomain.max];
+                delete yAxis.rangemode;
+            }
+            if (ci > 0) {
+                yAxis.showticklabels = false;
+                delete yAxis.title;
+            }
+            if (ri < rows - 1) delete xAxis.title;
 
-        figure.layout[xName] = xAxis;
-        figure.layout[yName] = yAxis;
+            figure.layout[xName] = xAxis;
+            figure.layout[yName] = yAxis;
+        }
 
         for (const trace of panel.figure?.data ?? []) {
-            const placed: any = { ...trace, xaxis: xRef, yaxis: yRef };
+            const placed: any = polarPanel
+                ? { ...trace, subplot: polarName }
+                : { ...trace, xaxis: xRef, yaxis: yRef };
+            if (globalScale && Array.isArray(placed.marker?.color)) {
+                placed.marker = {
+                    ...placed.marker,
+                    cmin: globalScale.min,
+                    cmax: globalScale.max,
+                };
+            }
+            if (globalScale && Array.isArray(placed.z)) {
+                placed.zmin = globalScale.min;
+                placed.zmax = globalScale.max;
+            }
+            const carriesScale = placed.marker?.showscale === true
+                || placed.showscale === true
+                || (placed.type === 'heatmap' && placed.showscale !== false);
+            if (carriesScale) {
+                if (seenColorScale) {
+                    if (placed.marker?.showscale === true) placed.marker = { ...placed.marker, showscale: false };
+                    if (placed.showscale === true || placed.type === 'heatmap') placed.showscale = false;
+                } else {
+                    seenColorScale = true;
+                }
+            }
             const legendKey = String(placed.name ?? '');
             if (legendKey) {
-                placed.legendgroup = legendKey;
-                placed.showlegend = !seenLegend.has(legendKey);
-                seenLegend.add(legendKey);
+                const dimension = placed._themeRole === 'factored-line-legend-proxy'
+                    ? placed._colorLegendValue ? 'color' : 'dash'
+                    : '';
+                const dedupeKey = dimension ? `${dimension}:${legendKey}` : legendKey;
+                placed.legendgroup = dedupeKey;
+                placed.showlegend = placed.showlegend === false
+                    ? false
+                    : !seenLegend.has(dedupeKey);
+                seenLegend.add(dedupeKey);
             } else {
                 placed.showlegend = false;
             }

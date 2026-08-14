@@ -111,7 +111,7 @@ export const mckinsey: ThemePreset = {
                 },
                 "selection": {
                     "partToWhole": "categorical",
-                    "signed": "diverging"
+                    "signed": "sequential"
                 },
                 "overflow": "#b6bfc7"
             },
@@ -124,8 +124,14 @@ export const mckinsey: ThemePreset = {
                 "size": "text.300",
                 "weight": "bold"
             },
-            "axisLabel": {
+            "deck": {
                 "size": "text.200"
+            },
+            "axisLabel": {
+                "size": "text.100"
+            },
+            "axisTitle": {
+                "size": "text.100"
             },
             "valueLabel": {
                 "size": "text.200",
@@ -153,7 +159,7 @@ export const mckinsey: ThemePreset = {
             "baseline": "full"
         },
         "marks": {
-            "bandFraction": 0.6,
+            "bandFraction": 0.7,
             "strokeWeight": 2,
             "connector": {
                 "presence": "full",
@@ -170,6 +176,11 @@ export const mckinsey: ThemePreset = {
             },
             "slice": {
                 "gap": 1
+            }
+        },
+        "geometry": {
+            "cell": {
+                "gap": 0.8
             }
         },
         "labels": {
@@ -206,7 +217,13 @@ export const mckinsey: ThemePreset = {
                 "gap": "loose",
                 "deckGap": "loose"
             },
-            "bandStep": 80
+            // McKinsey exhibits use substantial bars inside an airy page: the
+            // whitespace lives around the chart and its annotations, not in
+            // unusually narrow marks or compressed category rows.
+            "bandStep": 24,
+            // Sparse exhibits broaden their category rhythm, but retain more
+            // of the house's stable base step than the renderer's full-span fit.
+            "bandStepFit": 0.35
         },
         "compileDefaults": {
             "baseSize": { "width": 440, "height": 300 }

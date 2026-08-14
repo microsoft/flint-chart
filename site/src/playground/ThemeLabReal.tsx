@@ -11,22 +11,26 @@
  * of the `audit-out/real/` contact sheets (`scripts/theme-real.ts`).
  *
  * One row per case, eight columns: Flint's default plus every house. Only the
- * VL-supported cases are shown (Plotly-only cases have no ThemeSpec path). The
+ * cases the chosen backend has a template for are shown. The
  * corpus is chunked into fixed-size pages so the DOM never holds more than a
  * handful of rows, and each cell compiles only when it scrolls into view.
  */
 
 import { useState, type ReactNode } from 'react';
-import { vlGetTemplateDef } from 'flint-chart';
+import { vlGetTemplateDef, plGetTemplateDef } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 import { RealCell, REAL_COLUMNS } from './ThemeLabRealCell';
+import { BackendSwitch } from './ThemeLabR2';
+import type { LabBackend } from './ThemeLabR2Cell';
 
-/** VL-supported real cases (Plotly-only cases have no ThemeSpec path). */
-const REAL_CASES: PreviewCase[] = PREVIEW_CASES.filter((c) => vlGetTemplateDef(c.chartType));
+/** The cases the chosen backend has a template for. */
+function casesFor(backend: LabBackend): PreviewCase[] {
+    const has = backend === 'plotly' ? plGetTemplateDef : vlGetTemplateDef;
+    return PREVIEW_CASES.filter((c) => has(c.chartType));
+}
 
 const PAGE_SIZE = 6;
-const PAGE_COUNT = Math.ceil(REAL_CASES.length / PAGE_SIZE);
 
 function Pill({ children }: { children: ReactNode }) {
     return (
@@ -47,7 +51,7 @@ function Pill({ children }: { children: ReactNode }) {
     );
 }
 
-function Row({ c }: { c: PreviewCase }) {
+function Row({ c, backend }: { c: PreviewCase; backend: LabBackend }) {
     return (
         <section style={{ marginBottom: 28 }}>
             <header style={{ marginBottom: 8 }}>
@@ -64,7 +68,7 @@ function Row({ c }: { c: PreviewCase }) {
             </header>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingBottom: 10 }}>
                 {REAL_COLUMNS.map((col) => (
-                    <RealCell key={col} c={c} column={col} />
+                    <RealCell key={col} c={c} column={col} backend={backend} />
                 ))}
             </div>
         </section>
@@ -73,8 +77,12 @@ function Row({ c }: { c: PreviewCase }) {
 
 export function ThemeLabReal() {
     const [page, setPage] = useState(0);
-    const start = page * PAGE_SIZE;
-    const cases = REAL_CASES.slice(start, start + PAGE_SIZE);
+    const [backend, setBackend] = useState<LabBackend>('vegalite');
+    const realCases = casesFor(backend);
+    const pageCount = Math.ceil(realCases.length / PAGE_SIZE);
+    const safePage = Math.min(page, Math.max(0, pageCount - 1));
+    const start = safePage * PAGE_SIZE;
+    const cases = realCases.slice(start, start + PAGE_SIZE);
 
     return (
         <div style={{ padding: '8px 4px 64px' }}>
@@ -82,9 +90,10 @@ export function ThemeLabReal() {
                 <h2 style={{ margin: '0 0 4px', fontSize: 18, color: siteTheme.text }}>
                     Theme lab · real data{' '}
                     <span style={{ fontSize: 13, fontWeight: 400, color: siteTheme.textMuted }}>
-                        ({REAL_CASES.length} cases)
+                        ({realCases.length} cases)
                     </span>
                 </h2>
+                <BackendSwitch value={backend} onChange={setBackend} />
             </div>
 
             <nav
@@ -102,9 +111,9 @@ export function ThemeLabReal() {
                     borderBottom: `1px solid ${siteTheme.border}`,
                 }}
             >
-                {Array.from({ length: PAGE_COUNT }, (_, i) => {
-                    const active = i === page;
-                    const first = REAL_CASES[i * PAGE_SIZE];
+                {Array.from({ length: pageCount }, (_, i) => {
+                    const active = i === safePage;
+                    const first = realCases[i * PAGE_SIZE];
                     return (
                         <button
                             key={i}
@@ -120,14 +129,14 @@ export function ThemeLabReal() {
                                 color: active ? '#fff' : siteTheme.text,
                             }}
                         >
-                            {i * PAGE_SIZE + 1}–{Math.min((i + 1) * PAGE_SIZE, REAL_CASES.length)}
+                            {i * PAGE_SIZE + 1}–{Math.min((i + 1) * PAGE_SIZE, realCases.length)}
                         </button>
                     );
                 })}
             </nav>
 
             {cases.map((c) => (
-                <Row key={c.id} c={c} />
+                <Row key={`${backend}:${c.id}`} c={c} backend={backend} />
             ))}
         </div>
     );

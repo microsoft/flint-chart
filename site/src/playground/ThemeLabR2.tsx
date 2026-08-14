@@ -22,7 +22,7 @@ import {
     type R2Case,
     type R2Family,
 } from './theme-lab-r2-data';
-import { R2Cell, R2_COLUMNS } from './ThemeLabR2Cell';
+import { R2Cell, R2_COLUMNS, type LabBackend } from './ThemeLabR2Cell';
 
 function byFamily(family: R2Family): R2Case[] {
     return R2_CASES.filter((c) => c.family === family);
@@ -47,7 +47,46 @@ function Pill({ children }: { children: ReactNode }) {
     );
 }
 
-function Row({ c }: { c: R2Case }) {
+/**
+ * The same ThemeSpec is realized by two backends. Switching between them is
+ * the whole point of the lab: a house that only looks right in one of them is
+ * a gap in the shared decisions, not a rendering detail.
+ */
+export function BackendSwitch({
+    value,
+    onChange,
+}: {
+    value: LabBackend;
+    onChange: (b: LabBackend) => void;
+}) {
+    return (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6 }}>
+            <span style={{ fontSize: 11, color: siteTheme.textMuted }}>backend</span>
+            {(['vegalite', 'plotly'] as const).map((b) => {
+                const active = b === value;
+                return (
+                    <button
+                        key={b}
+                        onClick={() => onChange(b)}
+                        style={{
+                            fontSize: 11,
+                            padding: '2px 10px',
+                            borderRadius: 999,
+                            cursor: 'pointer',
+                            border: `1px solid ${active ? siteTheme.accent : siteTheme.border}`,
+                            background: active ? siteTheme.accent : 'transparent',
+                            color: active ? '#fff' : siteTheme.text,
+                        }}
+                    >
+                        {b}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+function Row({ c, backend }: { c: R2Case; backend: LabBackend }) {
     return (
         <section style={{ marginBottom: 28 }}>
             <header style={{ marginBottom: 8 }}>
@@ -71,7 +110,7 @@ function Row({ c }: { c: R2Case }) {
                 }}
             >
                 {R2_COLUMNS.map((col) => (
-                    <R2Cell key={col} c={c} column={col} />
+                    <R2Cell key={col} c={c} column={col} backend={backend} />
                 ))}
             </div>
         </section>
@@ -80,6 +119,7 @@ function Row({ c }: { c: R2Case }) {
 
 export function ThemeLabR2() {
     const [family, setFamily] = useState<R2Family>(R2_FAMILY_ORDER[0]);
+    const [backend, setBackend] = useState<LabBackend>('vegalite');
     const cases = byFamily(family);
 
     return (
@@ -88,6 +128,7 @@ export function ThemeLabR2() {
                 <h2 style={{ margin: '0 0 4px', fontSize: 18, color: siteTheme.text }}>
                     Theme lab · round 2 (coverage)
                 </h2>
+                <BackendSwitch value={backend} onChange={setBackend} />
             </div>
 
             <nav
@@ -127,7 +168,7 @@ export function ThemeLabR2() {
             </nav>
 
             {cases.map((c) => (
-                <Row key={c.id} c={c} />
+                <Row key={`${backend}:${c.id}`} c={c} backend={backend} />
             ))}
         </div>
     );

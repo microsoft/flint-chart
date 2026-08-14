@@ -13,11 +13,13 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { THEME_PRESETS, assembleVegaLite } from 'flint-chart';
+import { THEME_PRESETS, assembleVegaLite, assemblePlotly } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
+import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
 import type { PreviewCase } from '../shared/preview-cases';
+import type { LabBackend } from './ThemeLabR2Cell';
 
 export const REAL_COLUMNS = ['flint', ...Object.keys(THEME_PRESETS)] as const;
 export type RealColumn = (typeof REAL_COLUMNS)[number];
@@ -52,18 +54,32 @@ function stripInternal(node: any): void {
 
 interface Compiled {
     spec?: any;
+    figure?: any;
     background: string;
     error?: string;
     reportCount: number;
 }
 
-function compileCell(c: PreviewCase, column: RealColumn): Compiled {
+function compileCell(c: PreviewCase, column: RealColumn, backend: LabBackend): Compiled {
     try {
-        const input = realInput(c);
+        const base = realInput(c);
         const themeId = column === 'flint' ? null : column;
-        const spec = assembleVegaLite(
-            themeId ? { ...input, theme_spec: (THEME_PRESETS as any)[themeId].spec } : input,
-        ) as any;
+        const input = themeId
+            ? { ...base, theme_spec: (THEME_PRESETS as any)[themeId].spec }
+            : base;
+
+        if (backend === 'plotly') {
+            const figure = assemblePlotly(input as any) as any;
+            return {
+                figure,
+                reportCount: figure._theme?.report?.length ?? 0,
+                background: typeof figure.layout?.paper_bgcolor === 'string'
+                    ? figure.layout.paper_bgcolor
+                    : '#ffffff',
+            };
+        }
+
+        const spec = assembleVegaLite(input as any) as any;
         const reportCount = spec._theme?.report?.length ?? 0;
         const background = typeof spec.background === 'string' ? spec.background : '#ffffff';
         stripInternal(spec);
@@ -74,7 +90,15 @@ function compileCell(c: PreviewCase, column: RealColumn): Compiled {
     }
 }
 
-export function RealCell({ c, column }: { c: PreviewCase; column: RealColumn }) {
+export function RealCell({
+    c,
+    column,
+    backend = 'vegalite',
+}: {
+    c: PreviewCase;
+    column: RealColumn;
+    backend?: LabBackend;
+}) {
     const ref = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(false);
 
@@ -94,7 +118,10 @@ export function RealCell({ c, column }: { c: PreviewCase; column: RealColumn }) 
         return () => observer.disconnect();
     }, []);
 
-    const built = useMemo(() => (visible ? compileCell(c, column) : null), [visible, c, column]);
+    const built = useMemo(
+        () => (visible ? compileCell(c, column, backend) : null),
+        [visible, c, column, backend],
+    );
 
     return (
         <div
@@ -164,7 +191,9 @@ export function RealCell({ c, column }: { c: PreviewCase; column: RealColumn }) 
                     </div>
                 ) : (
                     <ScaleToFit fill padding={6} height={REAL_TILE_HEIGHT}>
-                        <VegaLiteView spec={built.spec} renderer="svg" />
+                        {built.figure
+                            ? <PlotlyView figure={built.figure} constrain={false} />
+                            : <VegaLiteView spec={built.spec} renderer="svg" />}
                     </ScaleToFit>
                 )}
             </div>

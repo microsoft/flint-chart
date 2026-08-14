@@ -173,6 +173,7 @@ function buildRadarLayers(
 
     // Spokes
     layers.push({
+        name: "radar-grid-spokes",
         data: { values: gridData.filter(d => d.__type === "spoke") },
         mark: { type: "rule", stroke: "#ddd", strokeWidth: 0.8 },
         encoding: {
@@ -184,6 +185,7 @@ function buildRadarLayers(
 
     // Rings
     layers.push({
+        name: "radar-grid-rings",
         data: { values: gridData.filter(d => d.__type === "ring") },
         mark: { type: "rule", stroke: "#e0e0e0", strokeWidth: 0.6 },
         encoding: {
@@ -246,6 +248,7 @@ function buildRadarLayers(
 
     // Data points
     const pointLayer: any = {
+        name: "radar-secondary-vertices",
         data: { values: finalData },
         mark: { type: "point", filled: true, size: 25 },
         encoding: {

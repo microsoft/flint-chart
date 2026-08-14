@@ -9,7 +9,7 @@
       "field": "X",
       "type": "quantitative",
       "scale": {
-        "zero": true,
+        "zero": false,
         "nice": false,
         "domain": [
           -5,
@@ -24,7 +24,7 @@
       "field": "Y",
       "type": "quantitative",
       "scale": {
-        "zero": true,
+        "zero": false,
         "nice": false,
         "domain": [
           -2.5,

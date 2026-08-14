@@ -35,7 +35,7 @@
     "demoAria": "示例主题",
     "inspiration": "需要灵感？",
     "demos": {
-      "signal-studio": "信号工作室",
+        "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "人民日报"
     },
@@ -353,6 +353,11 @@
     "ctaDocs": "阅读文档",
     "news": {
       "title": "更新",
+      "release051": {
+        "date": "2026 年 8 月 12 日",
+        "dateTime": "2026-08-12",
+        "text": "Flint 0.5.1 将视觉主题扩展到 Plotly 后端，并新增日历热力图图表类型。"
+      },
       "release050": {
         "date": "2026 年 8 月 5 日",
         "dateTime": "2026-08-05",
@@ -435,10 +440,10 @@
         "subtitle": "2025 年逐月活跃玩家数，每个地区一幅小图，按平台着色"
       },
       "heatmap": {
-        "label": "发散热力图",
-        "caption": "按地区与月份展示用户净增减，颜色以零为中心。",
-        "title": "哪些游戏在何时获得了玩家",
-        "subtitle": "2025 年各游戏逐月净增用户；正值表示增长，负值表示流失"
+        "label": "温度热力图",
+        "caption": "以紧凑数值表格展示四座城市的逐月气候常值。",
+        "title": "四座城市的季节差异",
+        "subtitle": "月平均气温（°C）；气候常值"
       },
       "waterfall": {
         "label": "瀑布图",

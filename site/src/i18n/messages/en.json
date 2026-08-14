@@ -35,7 +35,7 @@
     "demoAria": "Demo themes",
     "inspiration": "Need inspiration?",
     "demos": {
-      "signal-studio": "Signal Studio",
+        "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "People's Daily"
     },
@@ -353,6 +353,11 @@
     "ctaDocs": "Read the docs",
     "news": {
       "title": "Updates",
+      "release051": {
+        "date": "August 12, 2026",
+        "dateTime": "2026-08-12",
+        "text": "Flint 0.5.1 extends visual themes to the Plotly backend and adds Vega-Lite Calendar Heatmap."
+      },
       "release050": {
         "date": "August 5, 2026",
         "dateTime": "2026-08-05",
@@ -435,10 +440,10 @@
         "subtitle": "Players per month in 2025, one panel per region, by platform"
       },
       "heatmap": {
-        "label": "Diverging heatmap",
-        "caption": "Net user gains and losses by region and month, shown with zero-centered color.",
-        "title": "Which titles gained players, and when",
-        "subtitle": "Net new players per game per month in 2025; positive values are gains, negative values are losses"
+        "label": "Temperature heatmap",
+        "caption": "Monthly climate normals across four cities, shown as a compact table of values.",
+        "title": "How seasons differ across four cities",
+        "subtitle": "Average monthly temperature in °C; climate normals"
       },
       "waterfall": {
         "label": "Waterfall",

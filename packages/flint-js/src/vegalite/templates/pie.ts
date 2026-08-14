@@ -10,6 +10,7 @@ export const pieChartDef: ChartTemplateDef = {
     template: { mark: "arc", encoding: {} },
     channels: ["size", "color", "column", "row"],
     markCognitiveChannel: 'area',
+    geometryKinds: ['arc'],
     instantiate: (spec, ctx) => {
         // Remap abstract channels to VL channels:
         //   "size" → VL "theta" (angular extent of each slice)

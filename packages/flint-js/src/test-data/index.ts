@@ -34,6 +34,7 @@ export {
     genWaterfallTests, genBarTableTests, genCandlestickTests, genRadarTests, genPyramidTests,
     genRoseTests,
 } from './specialized-tests';
+export { genCalendarTests } from './calendar-tests';
 export { FACET_SIZES, DISCRETE_SIZES, genFacetColumnTests, genFacetRowTests, genFacetColRowTests, genFacetSmallTests, genFacetWrapTests, genFacetClipTests, genFacetOverflowedColTests, genFacetOverflowedColRowTests, genFacetOverflowedRowTests, genFacetDenseLineTests } from './facet-tests';
 export { genOverflowTests, genElasticityTests } from './stress-tests';
 export { genGasPressureTests } from './gas-pressure-tests';
@@ -106,6 +107,7 @@ import {
     genWaterfallTests, genBarTableTests, genCandlestickTests, genRadarTests, genPyramidTests,
     genRoseTests,
 } from './specialized-tests';
+import { genCalendarTests } from './calendar-tests';
 import { genFacetColumnTests, genFacetRowTests, genFacetColRowTests, genFacetSmallTests, genFacetWrapTests, genFacetClipTests, genFacetOverflowedColTests, genFacetOverflowedColRowTests, genFacetOverflowedRowTests, genFacetDenseLineTests } from './facet-tests';
 import { genOverflowTests, genElasticityTests } from './stress-tests';
 import { genGasPressureTests } from './gas-pressure-tests';
@@ -152,6 +154,7 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Grouped Bar Chart': genGroupedBarTests,
     'Histogram': genHistogramTests,
     'Heatmap': genHeatmapTests,
+    'Calendar Heatmap': genCalendarTests,
     'Line Chart': () => [...genLineTests(), galleryFacetLineExample()],
     'Sparkline': genSparklineTests,
     'Bump Chart': genBumpChartTests,
@@ -273,4 +276,3 @@ export const TEST_GENERATORS: Record<string, () => TestCase[]> = {
     'Omni: Heatmap': genOmniVizHeatmapTests,
     'Omni: Sunburst': genOmniVizSunburstTests,
 };
-

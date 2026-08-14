@@ -188,8 +188,10 @@ describe('Plotly backend', () => {
     const categorical = assemblePlotly(input('Scatter Plot', { x: { field: 'weight' }, y: { field: 'mpg' }, color: { field: 'origin' } }, CARS, { weight: 'Quantity', mpg: 'Quantity', origin: 'Country' }));
     // Categorical grouping draws from the plotly10 qualitative palette…
     expect(categorical.data[0].marker.color).toBe('#636efa');
-    // …while a diverging measure on color routes to the RdBu ramp.
-    expect(diverging.data[0].marker.color).toBe('#b2182b');
+    // …while a diverging measure on color preserves the values on an RdBu ramp.
+    expect(diverging.data[0].marker.color).toEqual([-6, 14, 24]);
+    expect(diverging.data[0].marker.colorscale).toBe('RdBu');
+    expect(diverging.data[0].marker.showscale).toBe(true);
   });
 
   it('every dedicated generator case assembles cleanly', () => {

@@ -91,6 +91,7 @@ export const plWaterfallChartDef: ChartTemplateDef = {
                 text: showLabels ? values.map(v => (v > 0 ? '+' : '') + v) : undefined,
                 textposition: showLabels ? 'outside' as const : undefined,
                 ...(showLabels ? { cliponaxis: false } : {}),
+                showlegend: false,
             }],
             layout: {
                 xaxis: { type: 'category', categoryorder: 'array', categoryarray: categories, title: { text: xField } },

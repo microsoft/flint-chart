@@ -66,7 +66,7 @@ import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deri
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
-import { groundTheme, resolveChartDefaults, resolveCompileDefaults } from '../core/theme/ground';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveGeometry } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { realizeThemeVegaLite, realizeValueLabelsVegaLite, collectMarkTypes, collectPositional } from './theme';
 
@@ -109,6 +109,19 @@ const escapeVlFieldName = (name: string): string =>
  * });
  * ```
  */
+/** The headline and deck as one string, whichever shape the title took. */
+function headlineText(title: any): string | undefined {
+    if (!title) return undefined;
+    const parts: string[] = [];
+    const push = (v: any) => {
+        if (typeof v === 'string') parts.push(v);
+        else if (Array.isArray(v)) v.forEach(push);
+    };
+    if (typeof title === 'string') push(title);
+    else { push(title.text); push(title.subtitle); }
+    return parts.length ? parts.join(' ') : undefined;
+}
+
 export function assembleVegaLite(input: ChartAssemblyInput): any {
     const chartType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
@@ -166,6 +179,13 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const choice = resolveValueLabelChoice(chartProperties);
         if (choice) chartProperties.showTextLabels = choice === 'on';
     }
+
+    // Geometry settles before anything is measured: whether a line carries dots
+    // and how much of its step a bar fills change what the layout has to fit,
+    // not just how the result is painted.
+    const { geometry: chartGeometry, report: geometryReport } = resolveGeometry(
+        themeSpec, chartType, chartTemplate.geometryKinds,
+    );
 
     // ═══════════════════════════════════════════════════════════════════════
     // PRE-PHASE: Static Series Normalization
@@ -373,6 +393,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     // Merge paramOverrides into effective options
     const effectiveOptions: AssembleOptions = {
+        // Vega-Lite's native width:{step} preserves the authored category pitch.
+        bandStepFit: 0,
         // Vega-Lite native font defaults (labels 10, titles 11).
         baseLabelFontSize: 10,
         baseTitleFontSize: 11,
@@ -389,18 +411,33 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // But a band step is a statement about bar thickness, and where *both* axes
     // are banded there are no bars: the marks are cells, and a cell's size is
     // fixed by the two counts and the room they share. A house that asks for
-    // 80px categories would print a grid of stripes. That one the layout keeps.
+    // A bar-sized category step would print a grid of stripes. That one the
+    // layout keeps.
     const houseBandStep = themeSpec?.layout?.bandStep;
+    const houseBandStepFit = themeSpec?.layout?.bandStepFit;
     const cellGrid = declaration.axisFlags?.x?.banded === true
         && declaration.axisFlags?.y?.banded === true;
     // A template may state a floor its read cannot go below (a slopegraph needs
     // its two columns spread wide however compact the house). The house sets
     // the band step, but not below that floor.
     const minBandStep = (declaration.paramOverrides as AssembleOptions | undefined)?.minBandStep;
+    if (houseBandStepFit != null && options.bandStepFit == null && !cellGrid) {
+        effectiveOptions.bandStepFit = Math.max(0, Math.min(1, houseBandStepFit));
+        chartDefaultsReport.push({
+            stage: 'ground',
+            path: 'layout.bandStepFit',
+            message: `the house blends ${Math.round(effectiveOptions.bandStepFit * 100)}% toward the available span per category`,
+        });
+    }
+    const fitsToRoom = (effectiveOptions.bandStepFit ?? 0) > 0;
     if (houseBandStep && options.defaultBandSize == null && !cellGrid) {
         const step = minBandStep ? Math.max(houseBandStep, minBandStep) : houseBandStep;
         effectiveOptions.defaultBandSize = step;
-        effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
+        // A house that also fits its sparse bands to the room has to be able to
+        // pass its own base pitch; the layout's sparse ceiling holds it in.
+        if (!fitsToRoom) {
+            effectiveOptions.maxBandSize = Math.max(step, effectiveOptions.maxBandSize ?? 0);
+        }
         chartDefaultsReport.push({
             stage: 'ground',
             path: 'layout.bandStep',
@@ -442,6 +479,26 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const caps = deriveStretchCaps(baseSize, sizeCeiling, effectiveOptions);
     effectiveOptions.maxStretchX = caps.maxStretchX;
     effectiveOptions.maxStretchY = caps.maxStretchY;
+    // The fit aims at the room the *plot* gets, not the whole box: a chart that
+    // spends its margins on a value gutter and a key has that much less to hand
+    // its bands. The reserve is a soft margin, not a guarantee.
+    const keyPlacement: string[] = themeSpec?.legend?.placement ?? [];
+    // A key is reserved on the house's placement alone. Whether one appears is
+    // a fact about the compiled spec, and templates that build their own from a
+    // working column (a waterfall's step types) never show a bound channel here.
+    const keyed = Boolean(channelSemantics.color?.field || channelSemantics.group?.field)
+        || chartTemplate.channels?.includes('color') === true;
+    const titled = Boolean(input.chart_spec.title?.trim() || input.chart_spec.subtitle?.trim());
+    const reserveW = (channelSemantics.y?.field ? FURNITURE.valueGutter : 0)
+        + (keyed && keyPlacement.some((p) => SIDE_KEY.has(p)) ? FURNITURE.sideKey : 0);
+    const reserveH = (channelSemantics.x?.field ? FURNITURE.tickGutter : 0)
+        + (titled ? FURNITURE.titleBlock : 0)
+        + (keyed && keyPlacement.some((p) => STACKED_KEY.has(p)) ? FURNITURE.stackedKey : 0);
+    const ceilingW = sizeCeiling?.width ?? baseSize.width;
+    const ceilingH = sizeCeiling?.height ?? baseSize.height;
+    // Furniture may take a chart's margins, never most of its plot.
+    effectiveOptions.bandStepFitCapacityX = Math.max(ceilingW * 0.6, ceilingW - reserveW);
+    effectiveOptions.bandStepFitCapacityY = Math.max(ceilingH * 0.6, ceilingH - reserveH);
     effectiveOptions.facetColumns = resolveFacetColumnsOption(input.chart_spec.chartProperties);
     const facetFixW = effectiveOptions.facetFixedPadding.width;
     const facetFixH = effectiveOptions.facetFixedPadding.height;
@@ -586,6 +643,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         semanticTypes,
         chartType,
         assembleOptions: effectiveOptions,
+        geometry: chartGeometry,
     };
 
     chartTemplate.instantiate(vgObj, instantiateContext);
@@ -782,8 +840,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         stacked: stacked === 'normalize' ? 'normalize' : Boolean(stacked),
         partToWhole: markTypes.includes('arc'),
         titled: Boolean(vgObj.title),
+        headline: headlineText(vgObj.title),
         hostSurface: (input.options as any)?.background,
         valueLabels: resolveValueLabelChoice(chartProperties),
+        geometryKinds: chartTemplate.geometryKinds,
     });
 
     let themeDecisions: any;
@@ -791,7 +851,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         const realizeReport = realizeThemeVegaLite(vgObj, design, values);
         themeDecisions = {
             ...design,
-            report: [...themePresets.report, ...chartDefaultsReport, ...design.report, ...realizeReport],
+            report: [...themePresets.report, ...chartDefaultsReport, ...geometryReport, ...design.report, ...realizeReport],
         };
     } else {
         realizeValueLabelsVegaLite(vgObj, design, values);
@@ -931,6 +991,31 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 function templateOwnsValueLabels(template: ChartTemplateDef): boolean {
     return template.ownsValueLabels === true;
 }
+
+/** A key charges the dimension it sits along, and only that one. */
+const SIDE_KEY = new Set(['right', 'left', 'seriesEnd']);
+const STACKED_KEY = new Set(['top', 'bottom']);
+
+/**
+ * A soft margin for what a chart draws *around* its plot.
+ *
+ * Read off presence rather than measured: is there a title block, where does
+ * the key sit, is the axis labelled at all. Wrong in the small — a long name
+ * costs more than a short one, a facet pays per panel — but it stops the fit
+ * aiming a banded axis at room the axes and key have already spent.
+ */
+const FURNITURE = {
+    /** Tick labels down the side of the plot. */
+    valueGutter: 70,
+    /** One line of tick labels under it. */
+    tickGutter: 35,
+    /** Headline plus deck. */
+    titleBlock: 30,
+    /** A key in the side margin. */
+    sideKey: 100,
+    /** A key above or below. */
+    stackedKey: 30,
+};
 
 function resolveValueLabelChoice(
     chartProperties: Record<string, any> | undefined,

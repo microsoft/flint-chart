@@ -213,6 +213,7 @@ export const cartoon: ThemePreset = {
         layout: {
             density: 'normal',
             targetWidth: 300,
+            bandStepFit: 0.75,
             titleBlock: {
                 anchor: 'start',
                 gap: 'normal',

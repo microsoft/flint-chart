@@ -24,6 +24,17 @@ const BAR_CORNER_RADIUS: ChartPropertyDef = {
     min: 0, max: 15, step: 1, defaultValue: 0,
 };
 
+function continuousColorValue(value: unknown, temporal: boolean): number | null {
+    if (value == null || value === '') return null;
+    const dateLike = temporal || (
+        typeof value === 'string'
+        && !Number.isFinite(Number(value))
+        && Number.isFinite(Date.parse(value))
+    );
+    const number = dateLike ? new Date(value as any).getTime() : Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
 export const plBarChartDef: ChartTemplateDef = {
     chart: 'Bar Chart',
     template: { mark: 'bar', encoding: {} },
@@ -37,7 +48,61 @@ export const plBarChartDef: ChartTemplateDef = {
         };
     },
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table, chartProperties } = ctx;
+        const { channelSemantics, table, chartProperties, colorDecisions } = ctx;
+        const xDiscrete = channelSemantics.x?.type === 'nominal'
+            || channelSemantics.x?.type === 'ordinal';
+        const yDiscrete = channelSemantics.y?.type === 'nominal'
+            || channelSemantics.y?.type === 'ordinal';
+        if (xDiscrete && yDiscrete) {
+            const xField = channelSemantics.x?.field;
+            const yField = channelSemantics.y?.field;
+            if (!xField || !yField) return;
+            const xCategories = extractCategories(table, xField, channelSemantics.x?.ordinalSortOrder);
+            const yCategories = extractCategories(table, yField, channelSemantics.y?.ordinalSortOrder);
+            const occupied = new Map<string, any>();
+            for (const row of table) occupied.set(`${String(row[xField])}\0${String(row[yField])}`, row);
+            const cells = [...occupied.values()];
+            const cellSize = Math.max(
+                8,
+                Math.min(
+                    36,
+                    (ctx.canvasSize.width / Math.max(1, xCategories.length)) * 0.68,
+                    (ctx.canvasSize.height / Math.max(1, yCategories.length)) * 0.68,
+                ),
+            );
+            Object.assign(spec, {
+                data: [{
+                    type: 'scatter',
+                    mode: 'markers',
+                    x: cells.map(row => row[xField]),
+                    y: cells.map(row => row[yField]),
+                    marker: {
+                        symbol: 'square',
+                        size: cellSize,
+                        color: getSeriesColor(getPlotlyPalette(ctx), 0),
+                    },
+                    showlegend: false,
+                }],
+                layout: {
+                    xaxis: {
+                        type: 'category',
+                        categoryorder: 'array',
+                        categoryarray: xCategories,
+                        title: { text: xField },
+                    },
+                    yaxis: {
+                        type: 'category',
+                        categoryorder: 'array',
+                        categoryarray: yCategories,
+                        title: { text: yField },
+                    },
+                    showlegend: false,
+                },
+            });
+            delete spec.mark;
+            delete spec.encoding;
+            return;
+        }
         const { categoryAxis, valueAxis } = detectAxes(channelSemantics);
 
         const catField = channelSemantics[categoryAxis]?.field;
@@ -57,6 +122,11 @@ export const plBarChartDef: ChartTemplateDef = {
         const values = buildCategoryAlignedData(table, catField, valField, categories);
 
         const isHorizontal = categoryAxis === 'y';
+        const colorField = channelSemantics.color?.field;
+        const colorDecision = colorDecisions?.color;
+        const continuousColor = !!colorField
+            && colorDecision != null
+            && colorDecision.schemeType !== 'categorical';
         const palette = getPlotlyPalette(ctx);
         const cornerRadius = Number(chartProperties?.cornerRadius ?? 0);
 
@@ -64,6 +134,7 @@ export const plBarChartDef: ChartTemplateDef = {
             type: 'category' as const,
             categoryorder: 'array' as const,
             categoryarray: categories,
+            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
             title: { text: catField },
         };
         const valCS = channelSemantics[valueAxis];
@@ -74,8 +145,50 @@ export const plBarChartDef: ChartTemplateDef = {
             rangemode: (includeZero ? 'tozero' : 'normal') as 'tozero' | 'normal',
         };
 
-        const figure: any = {
-            data: [{
+        const fullTable = ctx.fullTable ?? table;
+        const colorCategories = colorField && !continuousColor
+            ? extractCategories(fullTable, colorField, channelSemantics.color?.ordinalSortOrder)
+            : [];
+        const temporalColor = channelSemantics.color?.type === 'temporal';
+        const categoryRows = categories.map(category =>
+            table.find(row => String(row[catField]) === String(category)));
+        const allContinuousColors = continuousColor && colorField
+            ? fullTable
+                .map(row => continuousColorValue(row[colorField], temporalColor))
+                .filter((value): value is number => value != null)
+            : [];
+        const traces = continuousColor && colorField
+            ? [{
+                type: 'bar',
+                name: colorField,
+                ...(isHorizontal
+                    ? { x: values, y: categories, orientation: 'h' }
+                    : { x: categories, y: values }),
+                marker: {
+                    color: categoryRows.map(row =>
+                        row == null ? null : continuousColorValue(row[colorField], temporalColor)),
+                    colorscale: colorDecision.schemeType === 'diverging' ? 'RdBu' : 'Viridis',
+                    cmin: allContinuousColors.length ? Math.min(...allContinuousColors) : 0,
+                    cmax: allContinuousColors.length ? Math.max(...allContinuousColors) : 1,
+                    showscale: true,
+                    colorbar: { title: { text: colorField } },
+                    ...(cornerRadius > 0 ? { cornerradius: cornerRadius } : {}),
+                },
+                showlegend: false,
+            }]
+            : colorField
+            ? [...groupBy(table, colorField)].map(([name, rows]) => ({
+                type: 'bar',
+                name,
+                ...(isHorizontal
+                    ? { x: buildCategoryAlignedData(rows, catField, valField, categories), y: categories, orientation: 'h' }
+                    : { x: categories, y: buildCategoryAlignedData(rows, catField, valField, categories) }),
+                marker: {
+                    color: getSeriesColor(palette, Math.max(0, colorCategories.indexOf(name))),
+                    ...(cornerRadius > 0 ? { cornerradius: cornerRadius } : {}),
+                },
+            }))
+            : [{
                 type: 'bar',
                 name: valField,
                 ...(isHorizontal
@@ -85,13 +198,16 @@ export const plBarChartDef: ChartTemplateDef = {
                     color: getSeriesColor(palette, 0),
                     ...(cornerRadius > 0 ? { cornerradius: cornerRadius } : {}),
                 },
-            }],
+            }];
+        const figure: any = {
+            data: traces,
             layout: {
+                ...(colorField && !continuousColor ? { barmode: 'stack' } : {}),
                 bargap: 0.2,
                 ...(isHorizontal
                     ? { xaxis: valAxisSpec, yaxis: catAxisSpec }
                     : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
-                showlegend: false,
+                showlegend: !!colorField && !continuousColor,
             },
         };
 
@@ -151,16 +267,19 @@ export const plStackedBarChartDef: ChartTemplateDef = {
 
         const traces: any[] = [];
         if (colorField) {
-            let i = 0;
+            const colorCategories = extractCategories(
+                ctx.fullTable ?? table,
+                colorField,
+                channelSemantics.color?.ordinalSortOrder,
+            );
             for (const [name, rows] of groupBy(table, colorField)) {
                 const values = buildCategoryAlignedData(rows, catField, valField, categories);
                 traces.push({
                     type: 'bar',
                     name,
                     ...(isHorizontal ? { x: values, y: categories, orientation: 'h' } : { x: categories, y: values }),
-                    marker: { color: getSeriesColor(palette, i) },
+                    marker: { color: getSeriesColor(palette, Math.max(0, colorCategories.indexOf(name))) },
                 });
-                i++;
             }
         } else {
             const values = buildCategoryAlignedData(table, catField, valField, categories);
@@ -172,7 +291,13 @@ export const plStackedBarChartDef: ChartTemplateDef = {
             });
         }
 
-        const catAxisSpec = { type: 'category' as const, categoryorder: 'array' as const, categoryarray: categories, title: { text: catField } };
+        const catAxisSpec = {
+            type: 'category' as const,
+            categoryorder: 'array' as const,
+            categoryarray: categories,
+            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
+            title: { text: catField },
+        };
         const valCS = channelSemantics[valueAxis];
         const includeZero = valCS?.zero ? valCS.zero.zero !== false : true;
         const valAxisSpec = { title: { text: valField }, rangemode: (includeZero ? 'tozero' : 'normal') as 'tozero' | 'normal' };
@@ -228,7 +353,7 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         };
     },
     instantiate: (spec, ctx) => {
-        const { channelSemantics, table } = ctx;
+        const { channelSemantics, table, colorDecisions } = ctx;
         const { categoryAxis, valueAxis } = detectAxes(channelSemantics);
         const groupField = channelSemantics.group?.field || channelSemantics.color?.field;
 
@@ -244,6 +369,13 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         });
         const isHorizontal = categoryAxis === 'y';
         const palette = getPlotlyPalette(ctx, 'group');
+        const groupChannel = channelSemantics.group?.field ? 'group' : 'color';
+        const groupDecision = colorDecisions?.[groupChannel];
+        const groupType = channelSemantics[groupChannel]?.type;
+        const temporalGroup = groupType === 'temporal';
+        const continuousGroup = !!groupField
+            && groupDecision != null
+            && groupDecision.schemeType !== 'categorical';
 
         // When the group is redundant/nested with the category axis (group == x,
         // or a 1:1 pairing), no band holds more than one group value — there is
@@ -254,17 +386,51 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
         const degenerateGroup = !!groupField && planBandDodge(table, catField, groupField).maxPerBand <= 1;
 
         const traces: any[] = [];
-        if (groupField) {
-            let i = 0;
+        if (continuousGroup && groupField) {
+            const rowsByCategory = categories.map(category =>
+                table.filter(row => String(row[catField]) === String(category)));
+            const lanes = Math.max(0, ...rowsByCategory.map(rows => rows.length));
+            const colorValues = (ctx.fullTable ?? table)
+                .map(row => continuousColorValue(row[groupField], temporalGroup))
+                .filter((value): value is number => value != null);
+            const cmin = colorValues.length ? Math.min(...colorValues) : 0;
+            const cmax = colorValues.length ? Math.max(...colorValues) : 1;
+            for (let lane = 0; lane < lanes; lane++) {
+                const laneRows = rowsByCategory.map(rows => rows[lane]);
+                const values = laneRows.map(row => row == null ? null : Number(row[valField]));
+                const colors = laneRows.map(row =>
+                    row == null ? null : continuousColorValue(row[groupField], temporalGroup));
+                traces.push({
+                    type: 'bar',
+                    offsetgroup: `lane-${lane}`,
+                    showlegend: false,
+                    ...(isHorizontal
+                        ? { x: values, y: categories, orientation: 'h' }
+                        : { x: categories, y: values }),
+                    marker: {
+                        color: colors,
+                        colorscale: groupDecision.schemeType === 'diverging' ? 'RdBu' : 'Viridis',
+                        cmin,
+                        cmax,
+                        showscale: lane === 0,
+                        ...(lane === 0 ? { colorbar: { title: { text: groupField } } } : {}),
+                    },
+                });
+            }
+        } else if (groupField) {
+            const groupCategories = extractCategories(
+                ctx.fullTable ?? table,
+                groupField,
+                channelSemantics[groupChannel]?.ordinalSortOrder,
+            );
             for (const [name, rows] of groupBy(table, groupField)) {
                 const values = buildCategoryAlignedData(rows, catField, valField, categories);
                 traces.push({
                     type: 'bar',
                     name,
                     ...(isHorizontal ? { x: values, y: categories, orientation: 'h' } : { x: categories, y: values }),
-                    marker: { color: getSeriesColor(palette, i) },
+                    marker: { color: getSeriesColor(palette, Math.max(0, groupCategories.indexOf(name))) },
                 });
-                i++;
             }
         } else {
             const values = buildCategoryAlignedData(table, catField, valField, categories);
@@ -276,7 +442,13 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
             });
         }
 
-        const catAxisSpec = { type: 'category' as const, categoryorder: 'array' as const, categoryarray: categories, title: { text: catField } };
+        const catAxisSpec = {
+            type: 'category' as const,
+            categoryorder: 'array' as const,
+            categoryarray: categories,
+            ...(isHorizontal ? { autorange: 'reversed' as const } : {}),
+            title: { text: catField },
+        };
         const valCS = channelSemantics[valueAxis];
         const includeZero = valCS?.zero ? valCS.zero.zero !== false : true;
         const valAxisSpec = { title: { text: valField }, rangemode: (includeZero ? 'tozero' : 'normal') as 'tozero' | 'normal' };
@@ -287,7 +459,7 @@ export const plGroupedBarChartDef: ChartTemplateDef = {
                 barmode: degenerateGroup ? 'overlay' : 'group',
                 bargap: 0.2,
                 ...(isHorizontal ? { xaxis: valAxisSpec, yaxis: catAxisSpec } : { xaxis: catAxisSpec, yaxis: valAxisSpec }),
-                showlegend: !!groupField,
+                showlegend: !!groupField && !continuousGroup,
             },
         });
         delete spec.mark;

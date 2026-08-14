@@ -1,0 +1,17 @@
+.band-stretching-controls {
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+@media (max-width: 720px) {
+  .band-stretching-controls {
+    position: static !important;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .band-stretching-control-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    flex-basis: 100% !important;
+  }
+}

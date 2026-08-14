@@ -223,6 +223,7 @@ export const powerbiLight: ThemePreset = {
         },
         "layout": {
             "density": "compact",
+            "bandStepFit": 1,
             "titleBlock": {
                 "anchor": "start",
                 "gap": "tight",

@@ -552,6 +552,10 @@ export interface ElasticStretchParams {
     maxStretch: number;
     /** Default step size in px per discrete item */
     defaultStepSize: number;
+    /** Blend from base step (0) to available span per item (1). */
+    bandStepFit?: number;
+    /** Explicit available-span multiplier; does not include fallback stretch. */
+    bandStepFitCapacity?: number;
     /** Minimum pixels per discrete item (default: 6) */
     minStep: number;
 }
@@ -622,13 +626,33 @@ export function computeAxisStep(
     baseDimension: number,
     params: ElasticStretchParams,
 ): AxisStepDecision {
-    if (nominalCount > 0) {
-        const { budget } = computeElasticBudget(nominalCount, baseDimension, params);
-        return { step: Math.floor(budget / nominalCount), budget, itemCount: nominalCount };
-    }
-    if (continuousCount > 0) {
-        const { budget } = computeElasticBudget(continuousCount, baseDimension, params);
-        return { step: Math.floor(budget / continuousCount), budget, itemCount: continuousCount };
+    const itemCount = nominalCount > 0 ? nominalCount : continuousCount;
+    if (itemCount > 0) {
+        const fit = Math.max(0, Math.min(1, params.bandStepFit ?? 0));
+        const baseSpanStep = baseDimension / itemCount;
+        const capacityStep = baseDimension * (params.bandStepFitCapacity ?? 1) / itemCount;
+        // Fit only addresses unused room on a sparse categorical axis. When
+        // the base pitch is already under pressure, preserve it as the target
+        // and let the existing elastic budget stretch/compress the canvas.
+        const preferredStep = baseSpanStep > params.defaultStepSize
+            ? params.defaultStepSize * (1 - fit) + capacityStep * fit
+            : params.defaultStepSize;
+
+        // A preferred pitch that already fits should not be expanded to consume
+        // unused room. Under pressure, the existing elastic budget decides how
+        // much the canvas may grow before the pitch is compressed.
+        if (preferredStep <= baseSpanStep) {
+            return { step: Math.floor(preferredStep), budget: baseDimension, itemCount };
+        }
+        const { budget } = computeElasticBudget(itemCount, baseDimension, {
+            ...params,
+            defaultStepSize: preferredStep,
+        });
+        return {
+            step: Math.floor(Math.min(preferredStep, budget / itemCount)),
+            budget,
+            itemCount,
+        };
     }
     return { step: params.defaultStepSize, budget: baseDimension, itemCount: 0 };
 }

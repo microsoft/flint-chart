@@ -11,6 +11,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-13
+
+### Added
+
+- Theme support for the Plotly backend. `theme_spec` now realizes onto Plotly
+  figures — surface, typography, axes, marks, series ink, legend, facet chrome,
+  and data labels — reusing the same neutral grounding stage as Vega-Lite. Where
+  Plotly cannot honor a decision it approximates and records what it did in
+  `figure._theme.report`. `assemblePlotly` also renders `chart_spec.title` for
+  the first time.
+- A Vega-Lite **Calendar Heatmap** chart type: daily values on a Monday-first
+  week grid, with a `cornerRadius` chart property and a canonical GitHub look
+  through a quantile color scale.
+- Per-house sparse band fitting through the new `layout.bandStepFit` field, so
+  each preset states how far it will grow a bar toward its slot when a chart has
+  few categories. All ten presets are calibrated from first-party sources.
+
+### Changed
+
+- An axis title that is still needed now lies flat at the head of its own ruler,
+  beside the values it names and on whichever side those values sit, rather than
+  being turned on its side. Where two rulers each carry a measure, both are
+  named: one name cannot say which quantity is horizontal and which is vertical.
+- A measure axis that draws a grid rounds its domain to the tick count the axis
+  actually draws, so the plot's edge falls on a grid line instead of stopping
+  short of one and leaving the outermost reading with nothing above it. Axes
+  that draw no grid, and non-linear rulers whose ticks are decades rather than a
+  count, are left alone. On a dot scale the rounding is applied to the data
+  rather than to the domain the renderer has already opened by a dot's radius:
+  rounding the padded domain turned a few pixels of clearance into a whole extra
+  interval, and a score bounded 0 to 100 came out running -10 to 110.
+- A measure axis that draws a grid but no ticks carries that grid a few pixels
+  past the plot, in grid ink, so each line ends under its own number. Flush with
+  the last mark — a histogram's final bar — the line led nowhere.
+- A unit is stated once. Where the axis title already carries it, the ruler no
+  longer repeats it down every tick.
+- Economist axis labels and titles are calibrated against the 300x300 and
+  400x300 canvases the library actually draws, and the house now lays its axis
+  titles flat rather than turning them on their side.
+- McKinsey declares the `deck` and `axisTitle` type roles it had left implicit
+  and quiets `axisLabel`. Raising one role while leaving others to the global
+  defaults had inverted the ranking: the tick labels were the second-largest
+  text on the chart, above the subtitle and the axis title.
+- Vega-Lite reserves the margins a chart will actually draw — value labels, tick
+  gutters, the title block, and the legend — before fitting bands, so a wide
+  house no longer sizes bands against room its own furniture will take.
+- Long headlines are fitted rather than left to widen the graphic. A headline
+  that only overhangs its block is left alone, one that overhangs further is set
+  down a size, and only a headline that still does not fit is broken — over even
+  lines, with the height taken out of the plot rather than added to the canvas.
+- A long deck is fitted the same way, and was not before: Vega-Lite measures it
+  as one unbroken run and grows the canvas to fit, so a deck alone took a 420px
+  chart out past 1,200px even where the headline above it had been brought to
+  heel. It is only ever broken, never set smaller — the deck is already the
+  quietest line in the block.
+- Both are measured against the whole graphic rather than the plot rectangle.
+  The axis gutter beneath a title is the title's to use, and measuring without
+  it broke a headline that had room to spare beside its row labels.
+- Both now run when no house is named. Staying inside the size the caller asked
+  for is a Flint concern rather than a house preference, and an un-themed chart
+  was getting no fitting at all.
+- Plotly line, bar, scatter, pie, rose, radar, slope, heatmap, ranged-dot, and
+  KPI-card templates were reworked against a paired audit with themed Vega-Lite:
+  point density, label wrapping, wedge totals, polar guides, facet chrome, and
+  cropping all move toward parity.
+
+### Fixed
+
+- A house that omits its grid, its rule and its ticks does so because the value
+  is printed on the mark — a consulting-deck bar. A scatter prints nothing, and
+  the same house left its readings floating with no way to judge one against
+  another. Where no mark prints its value and the ruler draws nothing, the quiet
+  grid returns. A house may choose how a value is read; it may not leave no way
+  to read one.
+- A measure axis no longer surrenders the right margin to series-end labels that
+  are never drawn. The placement was chosen off the house's ranked list whether
+  or not there was a key to place, so a single-series line chart evicted its own
+  ruler to the left and lost the house's opposite-seated axis on the plainest
+  chart it draws.
+- Series-end and band-end labels no longer reserve canvas margin the renderer
+  has already reserved. They are ordinary text marks, and the default `pad`
+  autosize already grows the canvas to the scene's bounds, so the estimate was
+  counted twice — around 90px of dead margin per chart.
+- A flat axis title no longer lands on the side its values are not. On a
+  right-seated ruler it was laid at the plot's left edge, captioning the wrong
+  column, and only the first of two rulers was ever laid flat.
+- A flat axis title clears the topmost value rather than sitting on it.
+- A closing rule drawn under a banded plot now runs the width of the bands
+  rather than the width a continuous plot would have taken, so a house that
+  draws one no longer stretches the canvas past the chart.
+- Waterfall now declares its step axis as the band it is drawn on, so a temporal
+  waterfall is sized per category instead of as a continuous run. Fixed in both
+  the JavaScript and Python implementations.
+- A house no longer prints a value label off a template's internal working
+  column, which leaked computed values onto Vega-Lite waterfalls.
+- Calendar heatmaps drop the plot frame, which had drawn a box around the days
+  a part week does not have.
+- Straight axis labels that cannot fit their band are no longer held flat by a
+  house that prefers them straight.
+
 ## [0.5.0] - 2026-08-05
 
 ### Added
@@ -218,7 +318,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Treated only lowercase `start` and `end` Waterfall Type values as total
   anchors in Vega-Lite; other values now remain floating deltas colored by sign.
 
-[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/microsoft/flint-chart/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/microsoft/flint-chart/compare/0.5...0.5.1
 [0.5.0]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.5.0
 [0.4.1]: https://github.com/microsoft/flint-chart/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/microsoft/flint-chart/compare/0.3.0...0.4.0

@@ -155,7 +155,7 @@ function Tile({
     >
       <ScaleToFit height={CHART_H} minHeight={110} adaptiveHeight padding={2}>
         {compiled.ok ? (
-          <VegaLiteView spec={compiled.value} />
+          <VegaLiteView spec={compiled.value} renderer="svg" />
         ) : (
           <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
             {String((compiled.err as Error)?.message ?? compiled.err)}
@@ -212,8 +212,8 @@ function ThemeBar({
         flexWrap: 'wrap',
         gap: 4,
         padding: 4,
-        borderRadius: 10,
-        background: 'rgba(0, 0, 0, 0.04)',
+        borderRadius: 8,
+        background: 'rgba(0, 0, 0, 0.05)',
       }}
     >
       {choices.map((choice) => {
@@ -234,17 +234,20 @@ function ThemeBar({
               cursor: 'pointer',
               fontSize: 12.5,
               fontWeight: selected ? 600 : 400,
-              borderRadius: 7,
-              border: selected ? `1px solid ${siteTheme.accent}` : '1px solid transparent',
+              borderRadius: 6,
+              border: 0,
+              // The tray holds the containment, so the chip lifts with a fill
+              // and a shadow rather than a second border inside the first.
               background: selected ? siteTheme.surface : 'transparent',
-              color: selected ? siteTheme.text : siteTheme.navInactive,
+              boxShadow: selected ? '0 1px 2px rgba(31, 35, 40, 0.16)' : undefined,
+              color: selected ? siteTheme.text : siteTheme.textMuted,
               whiteSpace: 'nowrap',
             }}
           >
             <img
               src={iconUrl(choice.icon)}
               alt=""
-              style={{ width: 15, height: 15, display: 'block', opacity: selected ? 1 : 0.6 }}
+              style={{ width: 15, height: 15, display: 'block', opacity: selected ? 1 : 0.85 }}
             />
             {choice.label}
           </button>
@@ -271,10 +274,11 @@ function LayoutToggle({ layout, onLayout }: { layout: WallLayout; onLayout: (lay
             style={{
               height: 30,
               padding: '0 11px',
-              border: selected ? `1px solid ${siteTheme.accent}` : '1px solid transparent',
-              borderRadius: 7,
+              border: 0,
+              borderRadius: 6,
               background: selected ? siteTheme.surface : 'transparent',
-              color: selected ? siteTheme.text : siteTheme.navInactive,
+              boxShadow: selected ? '0 1px 2px rgba(31, 35, 40, 0.16)' : undefined,
+              color: selected ? siteTheme.text : siteTheme.textMuted,
               fontSize: 12.5,
               fontWeight: selected ? 600 : 400,
               cursor: 'pointer',
@@ -463,6 +467,8 @@ export function Themes() {
               display: 'grid',
               gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
               gap: 10,
+              maxWidth: 1180,
+              margin: '0 auto',
             }}
           >
             {cases.map((c) => (
@@ -498,39 +504,37 @@ const wallStyles = `
     gap: 7px;
     margin-top: 14px;
     padding: 8px 12px;
-    border: 1px solid rgba(0, 102, 204, 0.28);
-    border-radius: 7px;
-    background: rgba(0, 102, 204, 0.065);
+    border: 1px solid ${siteTheme.text};
+    border-radius: 6px;
+    background: ${siteTheme.surface};
     color: ${siteTheme.text};
     font-size: 15px;
     font-weight: 500;
     line-height: 1.4;
     text-decoration: none;
-    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+    transition: background 120ms ease, color 120ms ease;
   }
   .themes-lab-icon {
     width: 18px;
     height: 18px;
     flex: 0 0 18px;
     fill: none;
-    stroke: ${siteTheme.accent};
+    stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
   .themes-lab-cta strong {
-    color: ${siteTheme.accent};
     font-weight: 700;
     white-space: nowrap;
   }
   .themes-lab-cta:hover,
   .themes-lab-cta:focus-visible {
-    border-color: ${siteTheme.accent};
-    background: rgba(0, 102, 204, 0.105);
-    transform: translateY(-1px);
+    background: ${siteTheme.text};
+    color: ${siteTheme.surface};
   }
   .themes-lab-cta:focus-visible {
-    outline: 2px solid ${siteTheme.accent};
+    outline: 2px solid ${siteTheme.text};
     outline-offset: 2px;
   }
   .themes-controls-row {
@@ -549,16 +553,20 @@ const wallStyles = `
     flex: 0 0 auto;
     gap: 3px;
     padding: 4px;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
   }
   .themes-tile:hover { background: ${siteTheme.hover}; }
   .themes-wall [role="button"]:focus-visible {
     outline: 2px solid ${siteTheme.accent};
     outline-offset: 2px;
   }
+  .themes-wall { box-sizing: border-box; }
   .themes-wall--scatter {
     padding: 30px 34px 38px;
+    /* The jitter needs room to lean into, so the padding sits outside the
+       column the tiles share with the text rather than eating into it. */
+    max-width: calc(1180px + 68px) !important;
     column-gap: 2px !important;
     row-gap: 0 !important;
     overflow: visible;
@@ -575,7 +583,7 @@ const wallStyles = `
     border: 1px solid rgba(0, 0, 0, 0.14);
     border-radius: 2px !important;
     background: #fff;
-    box-shadow: 0 3px 9px rgba(31, 35, 40, 0.15), 0 12px 24px rgba(31, 35, 40, 0.07);
+    box-shadow: 0 1px 2px rgba(31, 35, 40, 0.09), 0 5px 12px rgba(31, 35, 40, 0.09);
     transform: translate3d(var(--scatter-x), var(--scatter-y), 0) rotate(var(--scatter-r));
     transform-origin: 50% 50%;
     transition: transform 180ms ease, box-shadow 180ms ease;
@@ -584,7 +592,7 @@ const wallStyles = `
   .themes-wall--scatter .themes-tile:focus-visible {
     z-index: 20;
     background: #fff;
-    box-shadow: 0 8px 18px rgba(31, 35, 40, 0.2), 0 18px 34px rgba(31, 35, 40, 0.1);
+    box-shadow: 0 4px 10px rgba(31, 35, 40, 0.14), 0 12px 24px rgba(31, 35, 40, 0.10);
     transform: translate3d(var(--scatter-x), calc(var(--scatter-y) - 7px), 0) rotate(0deg);
   }
   .themes-wall--scatter .themes-tile:nth-child(6n + 1) { --scatter-x: 7px;  --scatter-y: 5px;  --scatter-r: -2.1deg; }

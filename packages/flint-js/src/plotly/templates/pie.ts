@@ -13,6 +13,7 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { extractCategories, getPlotlyPalette } from './utils';
 import { computeCircumferencePressure, computeEffectiveBarCount } from '../../core/decisions';
+import { pieCategoryPercentTemplates } from '../pie-labels';
 
 function buildPieOption(spec: any, ctx: any, hole: number): void {
     const { channelSemantics, table, chartProperties } = ctx;
@@ -84,6 +85,7 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
     // is needed.
     const n = sortedLabels.length;
     const hasOutsideLabels = labelType !== 'none';
+    const labelsNameSlices = labelType === 'category' || labelType === 'categoryPercent';
     const labelMargin = hasOutsideLabels ? Math.min(48, 20 + n) : 12;
 
     Object.assign(spec, {
@@ -93,6 +95,13 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
             values: sortedValues,
             hole,
             textinfo: textinfo[labelType] ?? 'label+percent',
+            ...(labelType === 'categoryPercent'
+                ? { texttemplate: pieCategoryPercentTemplates(sortedLabels, canvasW) }
+                : {}),
+            // Plotly stands inside text on its end as soon as a slice gets
+            // narrow, which is unreadable and clips against the ring. Held
+            // horizontal, it shrinks or steps outside instead.
+            insidetextorientation: 'horizontal',
             // Let outside slice labels push the margins so a cluster of thin
             // slices (many tiny wedges crowded together) doesn't clip its
             // stacked callouts against the canvas edge.
@@ -100,7 +109,10 @@ function buildPieOption(spec: any, ctx: any, hole: number): void {
             marker: { colors: palette, line: { color: '#ffffff', width: 1 } },
         }],
         layout: {
-            showlegend: true,
+            // A second copy of every category competes with outside callouts
+            // for exactly the same edge of the pie. Keep the key only when
+            // the on-chart text does not already identify each slice.
+            showlegend: !labelsNameSlices,
             margin: { t: labelMargin, b: labelMargin, l: 12, r: 12 },
         },
         _width: canvasW,

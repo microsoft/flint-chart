@@ -16,6 +16,7 @@ const pages: NavEntry[] = [
       { to: 'theme-labs', label: 'Theme lab' },
       { to: 'theme-lab-r2', label: 'Theme lab R2' },
       { to: 'theme-lab-real', label: 'Theme lab real' },
+      { to: 'band-stretching', label: 'Band stretching' },
       { to: 'style-references', label: 'Style references' },
     ],
   },

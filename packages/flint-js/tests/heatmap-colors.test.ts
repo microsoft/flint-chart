@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, expect, it } from 'vitest';
+import { compile } from 'vega-lite';
 import { assembleECharts, assembleExcel, assembleVegaLite } from '../src';
 
 const HEATMAP_DATA = [
@@ -125,6 +126,71 @@ describe('heatmap color defaults', () => {
     expect(spec.layer[0].encoding.y.scale.domain).toHaveLength(2);
     expect(spec.layer[1].encoding.y.scale.domain)
       .toEqual(spec.layer[0].encoding.y.scale.domain);
+  });
+
+  it('infers a numeric year field as temporal when semantic types are missing', () => {
+    const values = Array.from({ length: 19 }, (_, index) => ({
+      year: 2006 + index,
+      item: 'Bananas, per lb.',
+      monthly_volatility: 11.27 - index / 10,
+    }));
+
+    const spec = assembleVegaLite({
+      data: { values },
+      semantic_types: {},
+      chart_spec: {
+        chartType: 'Heatmap',
+        encodings: {
+          x: { field: 'year' },
+          y: { field: 'item' },
+          color: { field: 'monthly_volatility', scheme: 'oranges' },
+        },
+        baseSize: { width: 400, height: 300 },
+        canvasSize: { width: 600, height: 450 },
+        chartProperties: {},
+      },
+      options: { addTooltips: true },
+    } as any) as any;
+
+    expect(spec.encoding.x.type).toBe('temporal');
+    expect(spec.encoding.x.axis?.format).toBeUndefined();
+    expect(spec.data.values.map((row: any) => row.year)).toEqual(
+      values.map(row => String(row.year)),
+    );
+
+    const compiled = compile(spec).spec as any;
+    const xScale = compiled.scales.find((scale: any) => scale.name === 'x');
+    expect(xScale.type).toBe('time');
+  });
+
+  it('does not zero-expand an explicit cell domain on an untyped quantitative axis', () => {
+    const values = Array.from({ length: 19 }, (_, index) => ({
+      position: 2006 + index,
+      item: 'Bananas, per lb.',
+      value: 11.27 - index / 10,
+    }));
+    const spec = assembleVegaLite({
+      data: { values },
+      semantic_types: {},
+      chart_spec: {
+        chartType: 'Heatmap',
+        encodings: { x: 'position', y: 'item', color: 'value' },
+      },
+    } as any) as any;
+
+    expect(spec.encoding.x).toMatchObject({
+      type: 'quantitative',
+      scale: { zero: false, nice: false, domain: [2005.5, 2024.5] },
+    });
+
+    const compiled = compile(spec).spec as any;
+    const xScale = compiled.scales.find((scale: any) => scale.name === 'x');
+    expect(xScale).toMatchObject({
+      type: 'linear',
+      domain: [2005.5, 2024.5],
+      nice: false,
+      zero: false,
+    });
   });
 
   it('retains two true temporal axes for a dense 2,400-cell time heatmap', () => {

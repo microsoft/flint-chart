@@ -5,7 +5,7 @@ import type { ZeroDecision, ColorSchemeRecommendation } from './semantic-types';
 import type { LabelSizingDecision } from './decisions';
 import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint } from './field-semantics';
 import type { ColorDecisionResult } from './color-decisions';
-import type { ThemeSpec } from './theme/types';
+import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
 
 /**
  * Core types for the chart engine library.
@@ -500,6 +500,17 @@ export interface InstantiateContext {
     /** User-configured chart properties */
     chartProperties?: Record<string, any>;
 
+    /**
+     * The house's geometry for this chart type, already merged from its common
+     * profile and any per-chart specialisation, and filtered to the shapes this
+     * template declares.
+     *
+     * Templates read it when the geometry changes what is *built* rather than
+     * how it is painted — whether a line carries dots, how wide a bar's band is
+     * — because those cannot be restyled onto a finished spec.
+     */
+    geometry?: ThemeGeometry;
+
     /** Static series metadata (present when input used array-valued encoding) */
     staticSeries?: StaticSeriesMetadata;
 
@@ -944,6 +955,17 @@ export interface ChartTemplateDef {
     properties?: ChartPropertyDef[];
 
     /**
+     * The geometries this template actually builds.
+     *
+     * A theme states geometry once and every chart made of that shape reads it,
+     * so the template has to say which shapes it makes: a line chart hears
+     * `line` and `point` and is deaf to `arc`. Geometry a template does not
+     * declare is dropped and reported rather than carried into a renderer that
+     * would ignore it. A template that declares nothing keeps the whole profile.
+     */
+    geometryKinds?: GeometryKind[];
+
+    /**
      * This template draws its own value text instead of using the generic
      * theme label layer. The public control is still `showValueLabels`;
      * templates may retain older internal/input spellings for compatibility.
@@ -1245,6 +1267,25 @@ export interface AssembleOptions {
      * Default: 20.
      */
     defaultBandSize?: number;
+    /**
+     * Blend between the scaled base band and the available span per item.
+     *
+    *   baseSpanStep = baseSpan / N
+    *   capacityStep = availableCapacity / N
+    *   preferredStep = baseSpanStep > baseStep
+    *       ? baseStep × (1 − fit) + capacityStep × fit
+    *       : baseStep
+     *
+    * `0` gives fixed-step behavior (Vega-Lite); `1` aims toward the available
+    * canvas capacity on sparse axes (ECharts, Chart.js, Plotly). The selected
+    * pitch then passes through normal elastic stretch/compression. Two-banded
+    * cell grids bypass this policy. Default: 0.
+     */
+    bandStepFit?: number;
+    /** Explicit X-axis capacity for sparse band fitting. Internal assembler bridge. */
+    bandStepFitCapacityX?: number;
+    /** Explicit Y-axis capacity for sparse band fitting. Internal assembler bridge. */
+    bandStepFitCapacityY?: number;
     /**
      * Chart-specific **floor** on the per-category band step (at a 300px
      * baseline canvas), which a house's `layout.bandStep` may grow but not

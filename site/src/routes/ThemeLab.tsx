@@ -20,78 +20,144 @@ const IDS = [
 const CASE_BY_ID = new Map(PREVIEW_CASES.map((previewCase) => [previewCase.id, previewCase]));
 const CHART_HEIGHT = 190;
 
-const STARTER_THEME: ThemeSpec = {
-  id: 'signal-studio',
-  label: 'Signal Studio',
+export const GOOGLE_MATERIAL_THEME: ThemeSpec = {
+  id: 'google-material',
+  label: 'Google Material',
   ink: {
     surface: {
       source: 'house',
-      canvas: '#f3f7f6',
+      canvas: '#ffffff',
       plot: '#ffffff',
-      panel: '#e8f0ee',
+      panel: '#fafafa',
     },
     text: {
-      primary: '#16302b',
-      secondary: '#536561',
-      muted: '#899a96',
+      primary: '#212121',
+      secondary: '#757575',
+      muted: '#9e9e9e',
+      inverse: '#ffffff',
     },
     structure: {
-      grid: '#d8e3e0',
-      axis: '#16302b',
-      rule: '#16302b',
-      connector: '#a4b6b1',
+      grid: '#e0e0e0',
+      axis: '#e0e0e0',
+      rule: '#e0e0e0',
+      zero: '#e0e0e0',
+      connector: '#9e9e9e',
     },
     series: {
-      single: '#00897b',
-      categorical: ['#00897b', '#e84a3c', '#f2b134', '#3867d6', '#9b51e0', '#d81b60'],
+      // The 2014 Material palette at the 400 step — the level Material's own
+      // chart examples use. Not the Google product blues: a chart is content,
+      // and the brand marque is not a categorical scale.
+      single: '#7e57c2',
+      categorical: ['#7e57c2', '#26a69a', '#ffa726', '#42a5f5', '#ec407a', '#66bb6a'],
+      categoricalExtended: [
+        '#7e57c2', '#26a69a', '#ffa726', '#42a5f5', '#ec407a', '#66bb6a',
+        '#5c6bc0', '#26c6da', '#ff7043', '#29b6f6', '#ab47bc', '#9ccc65',
+      ],
       sequential: {
-        stops: ['#e4f3f0', '#9bd5ca', '#45b4a5', '#00897b', '#00594f'],
+        stops: ['#ede7f6', '#b39ddb', '#7e57c2', '#5e35b1', '#4527a0'],
         space: 'lab',
         endpointsAgainstSurface: true,
+        consumption: 'interpolate',
       },
       diverging: {
-        stops: ['#3867d6', '#9eb9f2', '#f3f7f6', '#f2a39b', '#e84a3c'],
-        neutral: '#f3f7f6',
+        stops: ['#42a5f5', '#90caf9', '#eceff1', '#ef9a9a', '#ef5350'],
+        neutral: '#eceff1',
         space: 'lab',
         endpointsAgainstSurface: true,
+        consumption: 'interpolate',
       },
       status: {
-        positive: '#00897b',
-        negative: '#e84a3c',
-        neutral: '#899a96',
+        positive: '#66bb6a',
+        negative: '#ef5350',
+        neutral: '#9e9e9e',
       },
-      overflow: '#899a96',
+      overflow: '#bdbdbd',
     },
-    accent: '#e84a3c',
+    accent: '#7e57c2',
   },
   type: {
     minSize: 9,
-    headline: { weight: 'bold', color: '#16302b' },
-    deck: { color: '#536561' },
-    valueLabel: { weight: 'semibold' },
+    // Material's emphasis ladder on a light surface: 87% for what is read
+    // first, 60% for the scaffolding, 38% only for what may be skipped. 38%
+    // ink on white is ~2.8:1 and fails AA, so it never carries a label.
+    headline: {
+      family: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
+      size: 'text.400',
+      weight: 'regular',
+      color: '#212121',
+    },
+    deck: { family: "'Roboto', sans-serif", size: 'text.200', weight: 'regular', color: '#757575' },
+    axisLabel: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#757575' },
+    axisTitle: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#757575' },
+    valueLabel: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#424242' },
+    keyLabel: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#424242' },
+    annotation: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#616161' },
+    footnote: { family: "'Roboto', sans-serif", size: 'text.100', weight: 'regular', color: '#9e9e9e' },
+    display: { family: "'Roboto', sans-serif", size: 'text.hero900', weight: 'regular', color: '#212121' },
   },
   structure: {
+    axis: {
+      categorical: {
+        line: 'omit', ticks: 'omit', labelGap: 10, tickLabels: 'observed',
+      },
+      // Material seats the value scale on the far side and titles it above,
+      // so the reading runs left-to-right into the numbers rather than away.
+      measure: {
+        line: 'omit', ticks: 'omit', labelGap: 10, placement: 'opposite', tickDensity: 'sparse',
+      },
+    },
     grid: {
       measure: 'quiet',
       category: 'omit',
-      style: 'solid',
-      weight: 0.8,
+      style: 'dashed',
+      dash: [6, 4],
+      weight: 1,
+      zero: 'quiet',
     },
-    baseline: 'full',
+    baseline: 'omit',
     frame: 'omit',
   },
   marks: {
-    bandFraction: 0.74,
-    strokeWeight: 2.4,
-    strokeCap: 'round',
-    strokeJoin: 'round',
-    interpolation: 'monotone',
-    fillOpacity: 0.9,
-    cornerRadius: 4,
-    separator: { presence: 'quiet', width: 1, source: 'surface' },
-    slice: { gap: 1.5, gapStyle: 'rule' },
+    // A white cut between stacked bands is the Material tell — the bands read
+    // as separate quantities without a second ink entering the chart.
+    separator: { presence: 'full', width: 2, source: 'surface' },
   },
-  layout: { density: 'normal' },
+  geometry: {
+    line: { width: 2.5, cap: 'round', join: 'round', interpolation: 'linear' },
+    point: { presence: 'omit', size: 36, fill: 'solid' },
+    area: { opacity: 1, edge: 'omit' },
+    band: { fraction: 0.7, cornerRadius: 0, opacity: 1 },
+    arc: { cornerRadius: 0, gap: 2, gapStyle: 'pad' },
+    cell: { gap: 2, cornerRadius: 2 },
+  },
+  labels: { truncation: 'ellipsis', flush: true, angle: 'horizontal' },
+  legend: {
+    show: 'always', placement: ['bottom'], direction: 'horizontal',
+    title: 'omit', suppressWhenAxisNames: true,
+  },
+  dataLabels: { show: 'never', placement: 'outsideMark', inkMode: 'fixed' },
+  annotation: {
+    unit: 'never', axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis',
+    unitsInAxisTitle: true, pointEmphasis: 'never', pointLabels: 'never',
+    numberFormat: { precision: 'auto', thousands: 'suffix' },
+  },
+  facets: {
+    header: { presence: 'full', style: 'flushLabel', fieldTitle: 'omit' },
+    panelFrame: 'omit', axisRepetition: 'edgeOnly', spacing: 'normal',
+    preferredColumns: 3, sharedScale: 'whenComparable',
+  },
+  layout: {
+    density: 'airy', targetWidth: 640,
+    titleBlock: { anchor: 'start', position: 'top', gap: 'loose', deckGap: 'tight' },
+    bandStep: 28,
+  },
+  variants: [
+    {
+      when: { seriesCount: { gte: 4 } },
+      then: { geometry: { line: { width: 2 } } },
+      because: 'five boroughs on one plot — a lighter stroke keeps the lines apart',
+    },
+  ],
 };
 
 const MICROSOFT_FLUENT_THEME: ThemeSpec = {
@@ -248,7 +314,7 @@ const PEOPLES_DAILY_THEME: ThemeSpec = {
 };
 
 const DEMO_THEMES = [
-  { theme: STARTER_THEME, colors: ['#00897b', '#e84a3c', '#f2b134'] },
+  { theme: GOOGLE_MATERIAL_THEME, colors: ['#7e57c2', '#26a69a', '#ffa726', '#42a5f5'] },
   { theme: MICROSOFT_FLUENT_THEME, colors: ['#0078d4', '#c43e1c', '#4f7b00'] },
   { theme: PEOPLES_DAILY_THEME, colors: ['#9e1b16', '#1f4e79', '#6b5b2a'] },
 ] as const;
@@ -311,7 +377,7 @@ function PreviewTile({
     >
       <ScaleToFit height={CHART_HEIGHT} minHeight={110} adaptiveHeight padding={2}>
         {compiled.ok ? (
-          <VegaLiteView spec={compiled.value} />
+          <VegaLiteView spec={compiled.value} renderer="svg" />
         ) : (
           <pre className="theme-lab-error">{String((compiled.error as Error)?.message ?? compiled.error)}</pre>
         )}
@@ -332,9 +398,9 @@ function parseThemeSpec(text: string, objectError: string): ThemeSpec {
 export function ThemeLab() {
   const { t } = useTranslation();
   const [openCase, setOpenCase] = useState<PreviewCase | null>(null);
-  const [customTheme, setCustomTheme] = useState<ThemeSpec>(STARTER_THEME);
-  const [themeDraft, setThemeDraft] = useState(() => JSON.stringify(STARTER_THEME, null, 2));
-  const [activeDemoId, setActiveDemoId] = useState(STARTER_THEME.id);
+  const [customTheme, setCustomTheme] = useState<ThemeSpec>(GOOGLE_MATERIAL_THEME);
+  const [themeDraft, setThemeDraft] = useState(() => JSON.stringify(GOOGLE_MATERIAL_THEME, null, 2));
+  const [activeDemoId, setActiveDemoId] = useState(GOOGLE_MATERIAL_THEME.id);
   const [themeError, setThemeError] = useState<string | null>(null);
   const [promptCopied, setPromptCopied] = useState(false);
   const cases = useMemo(
@@ -487,7 +553,7 @@ export function ThemeLab() {
 const styles = `
   .theme-lab-page { flex: 1; min-height: 0; overflow-y: auto; background-color: ${siteTheme.surface}; background-image: linear-gradient(90deg, ${siteTheme.grid} 1px, transparent 1px), linear-gradient(0deg, ${siteTheme.grid} 1px, transparent 1px); background-size: 24px 24px; }
   .theme-lab-inner { max-width: 1500px; margin: 0 auto; padding: 36px 40px 96px; }
-  .theme-lab-intro { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.45fr); column-gap: 72px; row-gap: 16px; max-width: 1180px; margin: 0 auto 20px; align-items: start; }
+  .theme-lab-intro { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.45fr); column-gap: 72px; row-gap: 16px; max-width: 1180px; margin: 0 auto 28px; align-items: start; }
   .theme-lab-title-row { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
   .theme-lab-title-row h1 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
   .theme-lab-title-icon { display: inline-flex; color: ${siteTheme.textMuted}; }
@@ -498,31 +564,32 @@ const styles = `
   .theme-lab-steps a:hover { text-decoration: underline; }
   .theme-lab-share-link { display: inline-flex; align-items: center; gap: 5px; }
   .theme-lab-docs-pointer { margin: 8px 0 0; color: ${siteTheme.text}; font-size: 15px; line-height: 1.65; }
-  .theme-lab-prompt-block { position: relative; overflow: hidden; margin: 0 0 8px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 8px; background: rgba(0, 0, 0, 0.025); }
-  .theme-lab-prompt-block button { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid rgba(0, 102, 204, 0.24); border-radius: 7px; background: rgba(0, 102, 204, 0.08); color: ${siteTheme.accent}; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .theme-lab-prompt-block { position: relative; overflow: hidden; margin: 0 0 8px; border: 1px solid ${siteTheme.border}; border-radius: 8px; background: ${siteTheme.surface}; }
+  .theme-lab-prompt-block button { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 0; border-radius: 6px; background: rgba(0, 0, 0, 0.06); color: ${siteTheme.text}; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .theme-lab-prompt-block button:hover { background: ${siteTheme.text}; color: ${siteTheme.surface}; }
   .theme-lab-prompt-block button span { font-size: 13px; line-height: 1; }
   .theme-lab-prompt-block pre { max-height: 220px; margin: 0; padding: 14px 16px; padding-right: 128px; overflow: auto; color: ${siteTheme.text}; font-family: ${siteTheme.fontMono}; font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .theme-lab-demo-bar { display: flex; align-items: center; gap: 10px; min-height: 34px; margin: 0 0 8px 2px; }
-  .theme-lab-demo-bar > span { flex: 0 0 auto; color: ${siteTheme.textMuted}; font-size: 11.5px; }
-  .theme-lab-demo-options { display: flex; align-items: center; gap: 5px; min-width: 0; overflow-x: auto; }
-  .theme-lab-demo-options button { height: 26px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; padding: 0 8px; border: 1px solid ${siteTheme.border}; border-radius: 4px; background: rgba(0, 0, 0, 0.025); color: ${siteTheme.textMuted}; font: inherit; font-size: 11.5px; cursor: pointer; }
-  .theme-lab-demo-options button:hover { border-color: rgba(0, 0, 0, 0.2); background: rgba(0, 0, 0, 0.045); color: ${siteTheme.text}; }
-  .theme-lab-demo-options button[aria-pressed="true"] { border-color: rgba(0, 0, 0, 0.24); background: rgba(0, 0, 0, 0.06); color: ${siteTheme.text}; }
+  .theme-lab-demo-bar { display: flex; align-items: center; gap: 10px; min-height: 34px; max-width: 1180px; margin: 0 auto 20px; }
+  .theme-lab-demo-bar > span { flex: 0 0 auto; color: ${siteTheme.textMuted}; font-size: 12.5px; }
+  .theme-lab-demo-options { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; padding: 4px; border-radius: 8px; background: rgba(0, 0, 0, 0.05); }
+  .theme-lab-demo-options button { height: 28px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: ${siteTheme.textMuted}; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .theme-lab-demo-options button:hover { color: ${siteTheme.text}; }
+  .theme-lab-demo-options button[aria-pressed="true"] { background: ${siteTheme.surface}; box-shadow: 0 1px 2px rgba(31, 35, 40, 0.16); color: ${siteTheme.text}; font-weight: 600; }
   .theme-lab-demo-options button:focus-visible { outline: 2px solid ${siteTheme.accent}; outline-offset: 1px; }
-  .theme-lab-demo-swatches { display: inline-flex; overflow: hidden; width: 21px; height: 9px; border-radius: 1px; opacity: 0.8; }
+  .theme-lab-demo-swatches { display: inline-flex; overflow: hidden; width: 21px; height: 9px; border-radius: 1px; }
   .theme-lab-demo-swatches i { flex: 1; min-width: 0; }
-  .theme-lab-workspace { display: grid; grid-template-columns: minmax(390px, 0.68fr) minmax(0, 1.32fr); gap: 8px; align-items: start; }
+  .theme-lab-workspace { display: grid; grid-template-columns: minmax(390px, 0.42fr) minmax(0, 0.58fr); gap: 24px; max-width: 1180px; margin: 0 auto; align-items: start; }
   .theme-lab-panel { position: sticky; top: 0; height: min(740px, calc(100vh - 48px)); min-height: 600px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid ${siteTheme.border}; border-radius: 6px; background: ${siteTheme.surface}; box-shadow: 0 1px 2px rgba(31, 35, 40, 0.06); }
   .theme-lab-editor { flex: 1; min-height: 0; overflow: hidden; }
   .theme-lab-editor > div, .theme-lab-editor .cm-editor { height: 100%; min-height: 0; }
   .theme-lab-editor .cm-scroller { overflow: auto; }
-  .theme-lab-format-button { position: absolute; top: 8px; right: 12px; z-index: 5; padding: 5px 9px; border: 1px solid ${siteTheme.border}; border-radius: 6px; background: ${siteTheme.surface}; color: ${siteTheme.textMuted}; font: inherit; font-size: 11.5px; font-weight: 600; line-height: 1.25; box-shadow: 0 1px 3px rgba(31, 35, 40, 0.12); cursor: pointer; }
-  .theme-lab-format-button:hover, .theme-lab-format-button:focus-visible { border-color: ${siteTheme.accent}; color: ${siteTheme.accent}; outline: none; }
-  .theme-lab-format-button:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
-  .theme-lab-format-button:disabled:hover { border-color: ${siteTheme.border}; color: ${siteTheme.textMuted}; }
-  .theme-lab-status { min-height: 32px; display: flex; align-items: center; padding: 7px 12px; border-top: 1px solid ${siteTheme.border}; color: #107c10; font-size: 10.5px; line-height: 1.35; }
+  .theme-lab-format-button { position: absolute; top: 8px; right: 12px; z-index: 5; padding: 5px 9px; border: 0; border-radius: 6px; background: rgba(0, 0, 0, 0.06); color: ${siteTheme.text}; font: inherit; font-size: 12px; font-weight: 600; line-height: 1.25; cursor: pointer; }
+  .theme-lab-format-button:hover, .theme-lab-format-button:focus-visible { background: ${siteTheme.text}; color: ${siteTheme.surface}; outline: none; }
+  .theme-lab-format-button:disabled { opacity: 0.45; cursor: default; }
+  .theme-lab-format-button:disabled:hover { background: rgba(0, 0, 0, 0.06); color: ${siteTheme.text}; }
+  .theme-lab-status { min-height: 32px; display: flex; align-items: center; padding: 7px 12px; border-top: 1px solid ${siteTheme.border}; color: #0b6a0b; font-size: 11.5px; line-height: 1.35; }
   .theme-lab-status--error { color: ${siteTheme.error}; }
-  .theme-lab-wall { display: grid; grid-template-columns: repeat(4, minmax(0, 220px)); justify-content: start; gap: 5px; align-self: start; padding: 12px 8px 38px; overflow: visible; }
+  .theme-lab-wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); justify-content: start; gap: 5px; align-self: start; padding: 4px 8px 38px; overflow: visible; }
   .theme-lab-tile { --scatter-x: 0px; --scatter-y: 0px; --scatter-r: 0deg; position: relative; align-self: start; z-index: 1; min-width: 0; margin: -3px -4px -28px; padding: 10px 10px 15px; border: 1px solid rgba(0, 0, 0, 0.14); border-radius: 2px; background: #fff; box-shadow: 0 3px 9px rgba(31, 35, 40, 0.15), 0 12px 24px rgba(31, 35, 40, 0.07); transform: translate3d(var(--scatter-x), var(--scatter-y), 0) rotate(var(--scatter-r)); transform-origin: 50% 50%; cursor: zoom-in; }
   .theme-lab-tile:hover, .theme-lab-tile:focus-visible { z-index: 20; box-shadow: 0 8px 18px rgba(31, 35, 40, 0.2), 0 18px 34px rgba(31, 35, 40, 0.1); transform: translate3d(var(--scatter-x), calc(var(--scatter-y) - 7px), 0) rotate(0deg); }
   .theme-lab-tile:focus-visible { outline: 2px solid ${siteTheme.accent}; outline-offset: 2px; }
@@ -532,9 +599,9 @@ const styles = `
   .theme-lab-tile:nth-child(6n + 4) { --scatter-x: -8px; --scatter-y: 1px; --scatter-r: 2.3deg; }
   .theme-lab-tile:nth-child(6n + 5) { --scatter-x: 3px; --scatter-y: -5px; --scatter-r: -1.5deg; }
   .theme-lab-tile:nth-child(6n) { --scatter-x: -6px; --scatter-y: 8px; --scatter-r: 1deg; }
-  .theme-lab-tile-caption { margin-top: 2px; min-height: 28px; overflow: hidden; color: ${siteTheme.navInactive}; display: -webkit-box; font-size: 10.5px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .theme-lab-tile-caption { margin-top: 2px; min-height: 28px; overflow: hidden; color: ${siteTheme.textMuted}; display: -webkit-box; font-size: 11.5px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .theme-lab-error { margin: 0; color: ${siteTheme.error}; font-size: 11px; white-space: pre-wrap; }
-  @media (max-width: 1120px) { .theme-lab-workspace { grid-template-columns: minmax(0, 1fr); } .theme-lab-panel { position: relative; top: auto; height: 620px; } }
+  @media (max-width: 1120px) { .theme-lab-workspace { grid-template-columns: minmax(0, 1fr); } .theme-lab-panel { position: relative; top: auto; height: 620px; } .theme-lab-wall { grid-template-columns: repeat(4, minmax(0, 220px)); } }
   @media (max-width: 840px) { .theme-lab-intro { grid-template-columns: minmax(0, 1fr); gap: 26px; } .theme-lab-title-row { align-items: flex-start; } }
   @media (max-width: 940px) { .theme-lab-wall { grid-template-columns: repeat(3, minmax(0, 220px)); } }
   @media (max-width: 700px) { .theme-lab-inner { padding: 28px 20px 72px; } .theme-lab-demo-bar { align-items: flex-start; flex-direction: column; gap: 4px; } .theme-lab-demo-options { width: 100%; } .theme-lab-wall { grid-template-columns: repeat(2, minmax(0, 220px)); padding: 22px 8px 30px; } .theme-lab-tile { margin: -1px -2px -16px; } }

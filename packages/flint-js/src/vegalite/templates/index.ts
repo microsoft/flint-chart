@@ -37,6 +37,7 @@ import { radarChartDef } from './radar';
 import { roseChartDef } from './rose';
 import { mapDef, choroplethDef } from './map';
 import { kpiCardDef } from './kpi-card';
+import { vlCalendarHeatmapDef } from './calendar';
 
 /**
  * Cross-cutting properties injected into every template that supports
@@ -288,7 +289,7 @@ export const vlTemplateDefs: { [key: string]: ChartTemplateDef[] } = Object.from
         "Distributions":   [histogramDef, densityPlotDef, ecdfPlotDef, violinPlotDef, boxplotDef, pyramidChartDef, candlestickChartDef],
         "Lines & Areas":   [lineChartDef, sparklineDef, bumpChartDef, slopeChartDef, areaChartDef, streamgraphDef, rangeAreaChartDef],
         "Circular":        [pieChartDef, donutChartDef, roseChartDef, radarChartDef],
-        "Tables & Maps":   [heatmapDef, barTableDef, kpiCardDef, mapDef, choroplethDef],
+        "Tables & Maps":   [heatmapDef, vlCalendarHeatmapDef, barTableDef, kpiCardDef, mapDef, choroplethDef],
     }).map(([category, defs]) => [category, defs.map(withInjectedProperties)]),
 );
 

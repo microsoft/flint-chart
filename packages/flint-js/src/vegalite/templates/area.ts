@@ -117,6 +117,7 @@ export const areaChartDef: ChartTemplateDef = {
     template: { mark: "area", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'area',
+    geometryKinds: ['area', 'line', 'point'],
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

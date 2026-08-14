@@ -194,6 +194,7 @@ export const swiss: ThemePreset = {
         layout: {
             density: 'normal',
             targetWidth: 300,
+            bandStepFit: 0.5,
             titleBlock: {
                 anchor: 'start',
                 gap: 'normal',

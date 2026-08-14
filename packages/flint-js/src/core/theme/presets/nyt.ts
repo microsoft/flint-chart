@@ -196,6 +196,7 @@ export const nyt: ThemePreset = {
         },
         "layout": {
             "density": "normal",
+            "bandStepFit": 0.7,
             "titleBlock": {
                 "anchor": "start",
                 "deckGap": "tight"

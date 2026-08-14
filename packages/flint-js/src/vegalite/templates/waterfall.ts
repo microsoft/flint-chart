@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { resolveDiscreteType } from '../../core/axis-detection';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 /**
@@ -21,8 +22,14 @@ export const waterfallChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'length',
     ownsValueLabels: true,
-    declareLayoutMode: () => ({
+    // The steps are drawn on a band scale whatever the column holds — a month
+    // is a step here, not a date. Saying so keeps the layout's category sizing
+    // in step with the ordinal encoding the template writes below.
+    declareLayoutMode: (cs, table) => ({
         axisFlags: { x: { banded: true } },
+        resolvedTypes: {
+            x: resolveDiscreteType(cs.x?.type ?? 'nominal', cs.x?.field, table ?? []),
+        },
     }),
     instantiate: (spec, ctx) => {
         const { x, y, color, column, row } = ctx.resolvedEncodings;
@@ -131,6 +138,7 @@ export const waterfallChartDef: ChartTemplateDef = {
         // internal bindings: a null on a primary channel resolves the merged
         // axis title to nothing, blanking the axis for every layer.
         const xEnc = {
+            ...x,
             field: xField,
             type: "ordinal" as const,
             sort: null,
@@ -139,7 +147,6 @@ export const waterfallChartDef: ChartTemplateDef = {
             // the axis title ("Month, __wf_lead"). Pinning the resolved title
             // here keeps the internal column off the axis and still honours a
             // caller-supplied label, falling back to the field name.
-            axis: { labelAngle: -45 },
             title: xTitle,
         };
 

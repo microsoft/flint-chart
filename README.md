@@ -10,16 +10,14 @@
 
 Flint is a visualization intermediate language that lets **AI agents turn
 simple, human-editable chart specs into expressive, polished visualizations**.
-Rather than requiring agents or developers to tune verbose settings for scales,
-axes, spacing, labels, and layout, Flint derives those decisions from the data,
-semantic types, chart type, encodings, and an optional visual theme. Users can
-use a compact spec to create visually polished, brand-consistent charts rendered
-as native
+Rather than requiring agents to hardcode verbose parameters for scales, axes,
+spacing, labels, and layout, Flint derives those decisions from a high-level
+semantic specification, the data, and an optional visual theme (e.g., New York
+Times, Economist, Swiss, and McKinsey). A compact spec compiles to native
 [Vega-Lite](https://vega.github.io/vega-lite/),
 [ECharts](https://echarts.apache.org/),
 [Chart.js](https://www.chartjs.org/),
-[Plotly](https://plotly.com/javascript/) specs, or as native Excel charts
-through Office.js.
+[Plotly](https://plotly.com/javascript/) specs, or editable Excel charts.
 
 This repo contains two main components:
 
@@ -27,6 +25,27 @@ This repo contains two main components:
   Flint input into Vega-Lite, ECharts, Chart.js, Plotly, or Excel-native output.
 - **`flint-chart-mcp`**: an MCP server that lets agents create, validate, and
   render charts directly from a chat or coding environment.
+
+### Try it in your agent
+
+Try Flint with your agent using our hosted MCP server. Clients that support
+remote HTTP MCP servers include [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
+(`MCP: Add Server` → `HTTP`) and [Claude](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
+(`Customize` → `Connectors` → `Add custom connector`). Point either client at:
+
+```text
+https://flint.data-formulator.ai/mcp
+```
+
+Then ask your agent to find some public data and visualize it, for example:
+
+```text
+Go to Yahoo Finance, find today's percentage change for the Magnificent Seven
+tech stocks, and compare their performance with Flint in Economist style.
+```
+
+For a local MCP server (recommended for large datasets), check the
+[MCP Server Guide](https://microsoft.github.io/flint-chart/#/mcp) for details.
 
 <p align="center">
   <img src="docs/figs/chartwall.png" alt="A wall of charts produced by Flint across its supported visualization backends." width="100%">
@@ -53,11 +72,11 @@ This repo contains two main components:
 
 ## Updates
 
+- **August 12, 2026** — Flint 0.5.1 extends visual themes to the Plotly backend
+  and adds Vega-Lite Calendar Heatmap. ([changelog](CHANGELOG.md))
 - **August 5, 2026** — Flint 0.5.0 introduces a [formal theme specification](https://microsoft.github.io/flint-chart/#/themes)
   that allows designers and users to define a visual system once and apply it
-  consistently across an entire chart library. It includes ten presets: New
-  York Times, Economist, Swiss, Nature, McKinsey, Datawrapper, Power BI, Power
-  BI Light, Pop, and Cartoon. ([v0.5.0](https://github.com/microsoft/flint-chart/releases/tag/0.5.0))
+  consistently across an entire chart library. ([v0.5.0](https://github.com/microsoft/flint-chart/releases/tag/0.5.0))
 - **July 24, 2026** — Flint 0.4.0 adds 38 Plotly chart types and 18 native,
   editable Excel chart templates. ([v0.4.0](https://github.com/microsoft/flint-chart/releases/tag/0.4.0))
 - **July 19, 2026** — Flint 0.3.0 adds dynamic chart widgets that switch chart

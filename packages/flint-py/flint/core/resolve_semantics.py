@@ -45,6 +45,27 @@ def timestamp_to_ms(val: float) -> float:
     return val * 1000 if val <= MAX_TIMESTAMP_SEC else val
 
 
+def infer_implicit_semantic_type(field_name: str, values: list[Any]) -> str:
+    tokenized = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", field_name).lower()
+    tokens = [token for token in re.split(r"[^a-z0-9]+", tokenized) if token]
+    if "year" not in tokens:
+        return ""
+
+    observed = [value for value in values if value is not None and value != ""]
+    if len({str(value) for value in observed}) <= 1:
+        return ""
+    for value in observed:
+        if isinstance(value, bool):
+            return ""
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return ""
+        if not numeric.is_integer() or not 1500 <= numeric <= 2200:
+            return ""
+    return "Year"
+
+
 def looks_like_date_string(s: str) -> bool:
     t = s.strip()
     return bool(re.match(r"^\d|^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)", t, re.IGNORECASE))
@@ -225,10 +246,16 @@ def convert_temporal_data(
         return data
 
     keys = list(data[0].keys())
+    field_values = {key: [row.get(key) for row in data] for key in keys}
+    effective_semantic_types = {
+        key: to_type_string(semantic_types.get(key))
+        or infer_implicit_semantic_type(key, field_values[key])
+        for key in keys
+    }
     temporal_keys: list[str] = []
     for k in keys:
-        st = to_type_string(semantic_types.get(k))
-        vc = infer_vis_category([r.get(k) for r in data])
+        st = effective_semantic_types[k]
+        vc = infer_vis_category(field_values[k])
         st_category = get_vis_category(st) if st else None
         if vc == "temporal" or st_category == "temporal" or st == "Decade":
             temporal_keys.append(k)
@@ -240,7 +267,7 @@ def convert_temporal_data(
     for r in values:
         for temporal_key in temporal_keys:
             val = r.get(temporal_key)
-            st = to_type_string(semantic_types.get(temporal_key))
+            st = effective_semantic_types[temporal_key]
 
             if isinstance(val, bool):
                 # JS treats booleans as numbers via +true=1 etc, but they don't reach here in practice
@@ -310,12 +337,13 @@ def resolve_channel_semantics(
 
         raw_annotation = semantic_types.get(field_name)
         if isinstance(raw_annotation, str):
-            semantic_type = raw_annotation or ""
+            supplied_semantic_type = raw_annotation or ""
         elif isinstance(raw_annotation, dict):
-            semantic_type = raw_annotation.get("semanticType") or ""
+            supplied_semantic_type = raw_annotation.get("semanticType") or ""
         else:
-            semantic_type = ""
+            supplied_semantic_type = ""
         field_values = [r.get(field_name) for r in data]
+        semantic_type = supplied_semantic_type or infer_implicit_semantic_type(field_name, field_values)
 
         type_decision = resolve_encoding_type(
             semantic_type, field_values, channel, data, field_name,
@@ -336,7 +364,7 @@ def resolve_channel_semantics(
             if sample_values and all(iso_re.match(str(v).strip()) for v in sample_values):
                 resolved_type = "temporal"
 
-        fc = resolve_field_semantics(raw_annotation, field_name, field_values)
+        fc = resolve_field_semantics(raw_annotation or semantic_type, field_name, field_values)
         annotation = fc["semanticAnnotation"]
 
         tick_constraint = resolve_tick_constraint(annotation["semanticType"], annotation.get("intrinsicDomain"))

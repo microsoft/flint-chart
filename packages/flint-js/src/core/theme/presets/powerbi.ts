@@ -187,6 +187,33 @@ export const powerbi: ThemePreset = {
                 "weight": 2
             }
         },
+        "geometry": {
+            "band": {
+                "cornerRadius": 3
+            },
+            "cell": {
+                "gap": 1
+            },
+            "point": {
+                "presence": "full",
+                "vertexSize": 28
+            }
+        },
+        "variants": [
+            {
+                "when": {
+                    "isFaceted": true
+                },
+                "then": {
+                    "geometry": {
+                        "point": {
+                            "presence": "omit"
+                        }
+                    }
+                },
+                "because": "a panel in a grid has no room for a dot at every reading — its own 16-panel exhibit drops them"
+            }
+        ],
         "labels": {
             "truncation": "never"
         },
@@ -226,6 +253,7 @@ export const powerbi: ThemePreset = {
         },
         "layout": {
             "density": "compact",
+            "bandStepFit": 1,
             "titleBlock": {
                 "anchor": "start",
                 "gap": "tight",

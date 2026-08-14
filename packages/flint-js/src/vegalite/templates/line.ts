@@ -118,6 +118,7 @@ export const lineChartDef: ChartTemplateDef = {
     template: { mark: "line", encoding: {} },
     channels: ["x", "y", "color", "strokeDash", "detail", "opacity", "column", "row"],
     markCognitiveChannel: 'position',
+    geometryKinds: ['line', 'point'],
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

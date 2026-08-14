@@ -6,7 +6,7 @@ The Vega-Lite backend serves as Flint's reference implementation and offers the 
 
 ## What this page covers
 
-This reference lists the 35 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
+This reference lists the 36 chart types currently supported by the Vega-Lite backend, grouped into 6 categories. Each chart entry shows:
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
@@ -410,6 +410,12 @@ The **Availability** column shows whether a parameter is `always` available or `
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
 | `xAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the x-axis as a continuous time scale or discrete bands. |
 | `yAxisType` | choice | `temporal` (Temporal), `nominal` (Discrete) | — | conditional | Interpret the y-axis as a continuous time scale or discrete bands. |
+
+### ![](chart-icon-calendar.svg) Calendar Heatmap
+
+**Encoding channels:** `x`, `color`
+
+_No template-specific parameters._
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 

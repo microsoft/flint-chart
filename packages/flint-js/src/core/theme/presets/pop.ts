@@ -80,6 +80,6 @@ export const pop: ThemePreset = {
             separator: { presence: 'emphasised', width: 3, source: 'structure' },
         },
         dataLabels: { show: 'whenTheyFit', placement: 'atMark', inkMode: 'contrastWithMark' },
-        layout: { density: 'normal', titleBlock: { anchor: 'start', gap: 'tight' } },
+        layout: { density: 'normal', bandStepFit: 0.85, titleBlock: { anchor: 'start', gap: 'tight' } },
     },
 };

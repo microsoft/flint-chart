@@ -26,7 +26,11 @@ export function ThemeChartModal({
       chart_spec: {
         chartType: previewCase.chartType,
         encodings: previewCase.encodings,
-        baseSize: { width: 720, height: 520 },
+        // Laid out small and scaled up, so the type keeps its share of the
+        // chart. Composed at the modal's own size, the same 10px label is a
+        // sliver of a 720px frame. The ceiling still lets a dense chart grow.
+        baseSize: { width: 420, height: 320 },
+        canvasSize: { width: 760, height: 560 },
         title,
         ...(previewCase.chartProperties ? { chartProperties: previewCase.chartProperties } : {}),
       },
@@ -73,9 +77,9 @@ export function ThemeChartModal({
         <div className="theme-chart-modal-body">
           <section className="theme-chart-modal-preview">
             <div>
-              <ScaleToFit fill height={650} padding={24} maxScale={0.86}>
+              <ScaleToFit fill height={650} padding={24} maxScale={1.9}>
                 {compiled.ok ? (
-                  <VegaLiteView spec={compiled.value} />
+                  <VegaLiteView spec={compiled.value} renderer="svg" />
                 ) : (
                   <pre>{String((compiled.error as Error)?.message ?? compiled.error)}</pre>
                 )}
