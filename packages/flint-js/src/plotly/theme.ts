@@ -35,7 +35,6 @@ import type {
     ThemeReport,
     ResolvedAxis,
     ResolvedText,
-    ResolvedSeriesInk,
 } from '../core/theme/types';
 import { parseColor, toHex, mixHex, isDarkSurface, contrastingInk, sampleRamp } from '../core/theme/presence';
 import { pieCategoryPercentTemplates } from './pie-labels';
