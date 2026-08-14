@@ -58,6 +58,11 @@ export interface AxisRole {
     /** `opposite` = the far side of the plot (top for x, right for y). */
     placement?: 'default' | 'opposite';
     tickLabels?: 'all' | 'observed' | 'endpoints' | 'sparse';
+    /**
+     * How finely a *measure* ruler is graduated: one gradation per 60 / 45 / 30px
+     * of axis, floored at three. A hint — the renderer still rounds to its own
+     * 1/2/5/10 step, so a dense ask on a short axis can land on half units.
+     */
     tickDensity?: 'sparse' | 'normal' | 'dense';
     /**
      * Drop the axis entirely when every mark already prints its own value.
@@ -415,6 +420,7 @@ export interface ThemeFacets {
 }
 
 export interface ThemeLayout {
+    /** Air around the plot. Not the ruler's gradations — those are `tickDensity`. */
     density?: 'compact' | 'normal' | 'airy';
     targetWidth?: number;
     titleBlock?: {
@@ -928,6 +934,8 @@ export interface DesignDecisions {
         density: 'compact' | 'normal' | 'airy';
         plotWidth?: number;
         xStep?: number;
+        /** The graphic the caller asked for. Wider than `plotWidth` by the axis gutter. */
+        canvasWidth?: number;
     };
     /**
      * What the house prints alongside a fit: the quantities it expects to see

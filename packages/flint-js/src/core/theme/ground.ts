@@ -1769,7 +1769,13 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             : undefined,
         marks,
         facets,
-        layout: { padding, density, plotWidth: ctx.layout.subplotWidth, xStep: ctx.layout.xStep },
+        layout: {
+            padding,
+            density,
+            plotWidth: ctx.layout.subplotWidth,
+            xStep: ctx.layout.xStep,
+            canvasWidth: ctx.canvasSize?.width,
+        },
         statistics: theme.annotation?.statistics?.show?.length
             ? {
                 show: theme.annotation.statistics.show,

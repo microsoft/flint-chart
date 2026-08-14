@@ -38,7 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   actually draws, so the plot's edge falls on a grid line instead of stopping
   short of one and leaving the outermost reading with nothing above it. Axes
   that draw no grid, and non-linear rulers whose ticks are decades rather than a
-  count, are left alone.
+  count, are left alone. On a dot scale the rounding is applied to the data
+  rather than to the domain the renderer has already opened by a dot's radius:
+  rounding the padded domain turned a few pixels of clearance into a whole extra
+  interval, and a score bounded 0 to 100 came out running -10 to 110.
 - A measure axis that draws a grid but no ticks carries that grid a few pixels
   past the plot, in grid ink, so each line ends under its own number. Flush with
   the last mark — a histogram's final bar — the line led nowhere.
@@ -58,6 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that only overhangs its block is left alone, one that overhangs further is set
   down a size, and only a headline that still does not fit is broken — over even
   lines, with the height taken out of the plot rather than added to the canvas.
+- A long deck is fitted the same way, and was not before: Vega-Lite measures it
+  as one unbroken run and grows the canvas to fit, so a deck alone took a 420px
+  chart out past 1,200px even where the headline above it had been brought to
+  heel. It is only ever broken, never set smaller — the deck is already the
+  quietest line in the block.
+- Both are measured against the whole graphic rather than the plot rectangle.
+  The axis gutter beneath a title is the title's to use, and measuring without
+  it broke a headline that had room to spare beside its row labels.
+- Both now run when no house is named. Staying inside the size the caller asked
+  for is a Flint concern rather than a house preference, and an un-themed chart
+  was getting no fitting at all.
 - Plotly line, bar, scatter, pie, rose, radar, slope, heatmap, ranged-dot, and
   KPI-card templates were reworked against a paired audit with themed Vega-Lite:
   point density, label wrapping, wedge totals, polar guides, facet chrome, and

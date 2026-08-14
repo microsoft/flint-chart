@@ -303,6 +303,10 @@ export function realizeValueLabelsVegaLite(spec: any, d: DesignDecisions, table:
     const report: ThemeReport[] = [];
     const say = (path: string, message: string) => report.push({ stage: 'realize', path, message });
     applyDataLabels(spec, d, table, say);
+    // Staying inside the size the caller asked for is the same kind of concern:
+    // Vega-Lite grows the canvas to whatever one unbroken line of title needs,
+    // and a long deck took a 420px chart out to 1,249px with no house in sight.
+    fitTitle(spec, d, table, say);
     return report;
 }
 
@@ -353,7 +357,14 @@ function applyTypography(config: any, d: DesignDecisions): void {
 // Title fitting
 // ---------------------------------------------------------------------------
 
-/** Roughly how wide a glyph runs, as a fraction of the font size. */
+/**
+ * Roughly how wide a glyph runs, as a fraction of the font size.
+ *
+ * Tuned for a browser, where Vega measures text with the canvas API. Node has
+ * no canvas backend here, so Vega falls back to an approximation that runs
+ * ~45% wider — measurements taken from a headless render read high and are not
+ * grounds for raising this.
+ */
 const HEADLINE_CHAR_RATIO = 0.55;
 
 /** How far past the block a headline may run before anything is done about it. */
@@ -414,12 +425,53 @@ function balancedLines(text: string, count: number, fontSize: number): string[] 
  * taken out of the plot rather than added to the canvas.
  */
 function fitTitle(spec: any, d: DesignDecisions, table: any[], say: (p: string, m: string) => void): void {
+    // A title spans the whole graphic, not just the plot rectangle: the axis
+    // gutter under it is the title's to use. Measuring against the plot alone
+    // broke a headline that had 150px of room to spare beside the row labels.
+    const plot = blockWidth(spec, table);
+    const block = Math.max(plot ?? 0, d.layout.canvasWidth ?? 0);
+    if (!block || !Number.isFinite(block)) return;
+    fitHeadline(spec, d, block, say);
+    fitDeck(spec, d, block, say);
+}
+
+/**
+ * Break a deck that runs wider than the block it sits under.
+ *
+ * The headline above it is fitted; the deck was not, so a long one widened the
+ * graphic on its own even after the headline had been brought to heel. It is
+ * only ever broken, never set smaller: the deck is already the quietest line in
+ * the block, and taking it down again would cost legibility to buy width.
+ */
+function fitDeck(spec: any, d: DesignDecisions, block: number, say: (p: string, m: string) => void): void {
+    const title = spec.title;
+    if (!title || typeof title !== 'object') return;
+    const current = title.subtitle;
+    const text = Array.isArray(current) ? current.join(' ') : current;
+    if (typeof text !== 'string' || !text.trim()) return;
+
+    const size = d.title.deck.fontSize ?? 11;
+    const budget = block * STRETCH_TOLERANCE;
+    if (textPx(text, size) <= budget) return;
+
+    // Break to the block itself, not to the tolerance. The tolerance buys a
+    // headline the right to overhang a little, which reads as deliberate; a
+    // deck given the same licence just runs past the plot on every line.
+    const count = Math.max(2, Math.ceil(textPx(text, size) / block));
+    const lines = balancedLines(text, count, size);
+    if (lines.length < 2) return;
+
+    spec.title = { ...spec.title, subtitle: lines };
+    takeFromPlotHeight(spec, Math.round((lines.length - 1) * size * 1.3));
+    say('title.subtitle',
+        `the deck overhangs the ${Math.round(block)}px block, so it breaks over ${lines.length} even lines`
+        + ' — the height comes out of the plot, not out of the canvas the caller asked for');
+}
+
+function fitHeadline(spec: any, d: DesignDecisions, block: number, say: (p: string, m: string) => void): void {
     const title = spec.title;
     const text = typeof title === 'string' ? title : title?.text;
     if (typeof text !== 'string' || !text.trim()) return;
-
-    const block = blockWidth(spec, table);
-    if (!block || !Number.isFinite(block)) return;
 
     const budget = block * STRETCH_TOLERANCE;
     const size = d.title.headline.fontSize ?? 14;
@@ -1679,6 +1731,7 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
         spec,
         config.point?.size ?? config.circle?.size ?? 30,
         config.point?.strokeWidth ?? m.outline?.width ?? 0,
+        table,
         say,
     );
 
@@ -2504,6 +2557,78 @@ function dotOuterDiameter(size: number, strokeWidth: number): number {
 }
 
 /**
+ * Round a span outward to whole ticks, the way the renderer's own scale would.
+ *
+ * This is d3's `nice`, which Vega uses: the step is chosen from the 1/2/5/10
+ * family, and both ends are pushed out to a multiple of it until the step
+ * settles. It is reproduced rather than called because the rounding has to be
+ * applied to the *data*, before the pixel padding a dot scale carries — and
+ * `scale.nice` can only be applied after.
+ */
+const E10 = Math.sqrt(50);
+const E5 = Math.sqrt(10);
+const E2 = Math.SQRT2;
+
+function tickIncrement(start: number, stop: number, count: number): number {
+    const step = (stop - start) / Math.max(1, count);
+    const power = Math.floor(Math.log10(step));
+    const error = step / 10 ** power;
+    const factor = error >= E10 ? 10 : error >= E5 ? 5 : error >= E2 ? 2 : 1;
+    return power >= 0 ? factor * 10 ** power : -(10 ** -power) / factor;
+}
+
+function niceSpan(start: number, stop: number, count: number): [number, number] {
+    let lo = start;
+    let hi = stop;
+    let prestep: number | undefined;
+    // d3 loops until the step settles; a bound keeps a pathological span finite.
+    for (let i = 0; i < 32; i += 1) {
+        const step = tickIncrement(lo, hi, count);
+        if (step === prestep || step === 0 || !Number.isFinite(step)) break;
+        if (step > 0) {
+            lo = Math.floor(lo / step) * step;
+            hi = Math.ceil(hi / step) * step;
+        } else {
+            lo = Math.ceil(lo * step) / step;
+            hi = Math.floor(hi * step) / step;
+        }
+        prestep = step;
+    }
+    return [lo, hi];
+}
+
+/**
+ * The rounded span of a plain numeric field, or nothing when it cannot be read.
+ *
+ * A pinned domain narrower than the data would put marks off the chart, so
+ * anything the table cannot answer for — an aggregate, a bin, a time unit, a
+ * stack, a field the rows do not carry — returns nothing and the caller leaves
+ * the scale to the renderer.
+ */
+function roundedFieldDomain(enc: any, table: any[], count: number): [number, number] | undefined {
+    if (!Array.isArray(table) || !table.length) return undefined;
+    if (typeof enc?.field !== 'string') return undefined;
+    if (enc.aggregate || enc.bin || enc.timeUnit || enc.stack) return undefined;
+    if (enc.type && enc.type !== 'quantitative') return undefined;
+
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const row of table) {
+        const v = row?.[enc.field];
+        if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+        if (v < lo) lo = v;
+        if (v > hi) hi = v;
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return undefined;
+
+    const [a, b] = niceSpan(lo, hi, count);
+    // Rounding only ever pushes outward; anything else means the arithmetic
+    // disagreed with the data, and a domain inside it would clip.
+    if (!(a <= lo && b >= hi)) return undefined;
+    return [a, b];
+}
+
+/**
  * A dot has a radius; a scale fitted to the data does not know that.
  *
  * Vega-Lite sizes a continuous scale to the extremes of the field, which puts
@@ -2521,7 +2646,7 @@ function dotOuterDiameter(size: number, strokeWidth: number): number {
  * bar, an area, a lollipop's stem — because there the edge is a base, and a
  * base that has been nudged off zero is worse than a clipped dot.
  */
-function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: string, m: string) => void): void {
+function padScaleForDots(spec: any, size: number, strokeWidth: number, table: any[], say: (p: string, m: string) => void): void {
     const radius = Math.ceil(dotOuterDiameter(size, strokeWidth) / 2);
     if (radius <= 0) return;
     // A dumbbell keeps its position channels on the parent and gives the dot
@@ -2551,6 +2676,7 @@ function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: 
     if (anchored || !dots.length) return;
 
     let padded = false;
+    const pinned: Partial<Record<'x' | 'y', [number, number]>> = {};
     for (const declared of dots) {
         for (const ch of ['x', 'y'] as const) {
             const enc = declared[ch];
@@ -2563,15 +2689,46 @@ function padScaleForDots(spec: any, size: number, strokeWidth: number, say: (p: 
             // inside the axes; rounding on top of it is not wanted here. A dot
             // plot has no bar to anchor the eye, so an extra interval of empty
             // scale reads as the readings hiding in a corner — and rounding
-            // outward can drag a `zero: false` ruler back to zero. Where a grid
-            // is drawn, the axis pass has already rounded to the house's tick
-            // count so the last line lands on the plot edge; that decision is
-            // kept rather than overwritten.
-            enc.scale = { ...(enc.scale ?? {}), padding: radius, nice: enc.scale?.nice ?? false };
+            // outward can drag a `zero: false` ruler back to zero.
+            //
+            // Where a grid is drawn, the axis pass asked for the domain to be
+            // rounded to the house's tick count so the last line lands on the
+            // plot edge. Vega pads *before* it rounds, so honouring that here
+            // would round the padded domain and turn a few pixels of clearance
+            // into a whole extra interval: a 0-100 score came out as -10 to
+            // 110. The data is rounded instead, and the padding stays the
+            // sliver it is. Where the data cannot be read off the table —
+            // an aggregate, a bin, a computed field — the rounding is dropped
+            // rather than guessed, since a pinned domain that is too narrow
+            // clips marks off the chart.
+            const count = typeof enc.scale?.nice === 'number' ? enc.scale.nice : undefined;
+            const rounded = count != null ? roundedFieldDomain(enc, table, count) : undefined;
+            if (rounded) pinned[ch] = rounded;
+            enc.scale = {
+                ...(enc.scale ?? {}),
+                padding: radius,
+                ...(rounded ? { domainMin: rounded[0], domainMax: rounded[1] } : {}),
+                nice: false,
+            };
             padded = true;
         }
     }
     if (padded) {
+        // Layers share a scale, and the axis pass wrote its rounding onto every
+        // encoding of the channel — including the ones that carry no dot. Left
+        // alone they disagree with the decision above, and the renderer warns
+        // and picks one. Settle them all the same way.
+        walk(spec, (node) => {
+            for (const ch of ['x', 'y'] as const) {
+                const enc = node.encoding?.[ch];
+                if (!enc?.field || typeof enc.scale?.nice !== 'number') continue;
+                enc.scale = {
+                    ...enc.scale,
+                    ...(pinned[ch] ? { domainMin: pinned[ch]![0], domainMax: pinned[ch]![1] } : {}),
+                    nice: false,
+                };
+            }
+        });
         say('marks.point.size',
             `the plot is opened by ${radius}px at each end — a dot's own radius — so the outermost reading sits inside the axes instead of half outside them`);
     }

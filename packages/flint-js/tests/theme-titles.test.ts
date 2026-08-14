@@ -143,7 +143,10 @@ describe('axis titles', () => {
         } as any) as any;
 
         expect(axisTitle(spec, 'y')).not.toBeNull();
-        expect(spec.title.subtitle).toEqual(['Four unusually wet months in 2025']);
+        // The authored words stand; how they are broken to fit the block is a
+        // layout matter, so the content is what is asserted.
+        const subtitle = spec.title.subtitle;
+        expect([subtitle].flat().join(' ')).toBe('Four unusually wet months in 2025');
     });
 
     it('keeps rank bound to its axis even when the headline names rank', () => {
