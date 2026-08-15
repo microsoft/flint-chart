@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- ECharts categorical legends (and their title graphics) are pinned with
+  `legend.right` instead of a design-canvas `left` pixel. Hosts that size the
+  container independently of `_width` and call `chart.resize()` keep the
+  reserved gutter instead of overlapping the plot or clipping the legend
+  ([#98](https://github.com/microsoft/flint-chart/issues/98)).
 - Visible units now require an explicit `unit` in the field's semantic
   annotation. Conventional compact units may accompany values, while lexical
   units such as `years` are stated once as part of the field title. Bar Tables
