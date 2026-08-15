@@ -131,9 +131,10 @@ async function shot(name, width, which) {
   console.log('wrote', path);
 }
 
+await shot('issue-98-slope-534-before.png', designW, 'before');
 await shot('issue-98-slope-534.png', designW, 'after');
-await shot('issue-98-slope-800.png', 800, 'after');
 await shot('issue-98-slope-800-before.png', 800, 'before');
+await shot('issue-98-slope-800.png', 800, 'after');
 
 await browser.close();
 server.close();
