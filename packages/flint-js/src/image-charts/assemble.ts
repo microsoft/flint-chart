@@ -107,6 +107,20 @@ function formatValue(value: number | null): string {
     return String(Number(value.toFixed(4)));
 }
 
+function finiteNumber(value: unknown): number | null {
+    if (value == null || (typeof value === 'string' && value.trim() === '')) return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+function cellKey(value: unknown): string {
+    return `${typeof value}:${String(value)}`;
+}
+
+function pairKey(first: unknown, second: unknown): string {
+    return JSON.stringify([cellKey(first), cellKey(second)]);
+}
+
 /** Distinct values of a field in first-seen order (nulls skipped). */
 function distinct(rows: any[], field: string): Cell[] {
     const seen = new Set<unknown>();
@@ -139,14 +153,14 @@ function pivotValues(
         const cv = r[catField];
         if (cv == null) continue;
         const sv = seriesField ? r[seriesField] : SINGLE;
-        const num = Number(r[measField]);
-        if (!Number.isFinite(num)) continue;
-        const key = JSON.stringify([String(cv), String(sv)]);
+        const num = finiteNumber(r[measField]);
+        if (num == null) continue;
+        const key = pairKey(cv, sv);
         const e = acc.get(key) ?? { sum: 0, count: 0 };
         e.sum += num; e.count += 1; acc.set(key, e);
     }
     const valueAt = (cv: Cell, sv: Cell): number | null => {
-        const e = acc.get(JSON.stringify([String(cv), String(seriesField ? sv : SINGLE)]));
+        const e = acc.get(pairKey(cv, seriesField ? sv : SINGLE));
         if (!e) return null;
         return aggregate === 'average' ? e.sum / e.count : e.sum;
     };
@@ -280,8 +294,8 @@ function buildScatter(
     const colors: string[] = [];
     seriesKeys.forEach((key, index) => {
         const rows = seriesField ? table.filter((r) => r[seriesField] === key) : table;
-        const xs = rows.map((r) => Number(r[xField]));
-        const ys = rows.map((r) => Number(r[yField]));
+        const xs = rows.map((r) => finiteNumber(r[xField]));
+        const ys = rows.map((r) => finiteNumber(r[yField]));
         datasets.push(xs.map(formatValue).join(','));
         datasets.push(ys.map(formatValue).join(','));
         const color = SERIES_COLORS[index % SERIES_COLORS.length];
