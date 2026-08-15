@@ -973,6 +973,12 @@ export interface ChartTemplateDef {
     ownsValueLabels?: boolean;
 
     /**
+     * The template already presents values in a dedicated table column, so a
+     * generic label layer would repeat the same number on the data mark.
+     */
+    suppressValueLabels?: boolean;
+
+    /**
      * Opt out of a backend's *generic* column/row facet-splitting pass, even
      * though the template declares `x`/`y` (so the axis-less `hasAxes` gate
      * alone would not exempt it).

@@ -22,6 +22,7 @@ import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
 import { BandStretchingLab } from './playground/BandStretchingLab';
+import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
@@ -70,6 +71,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-real" element={<ThemeLabReal />} />
           <Route path="band-stretching" element={<BandStretchingLab />} />
+          <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
           {/* The Swiss and cartoon labs were the same page twice; keep the
               links they were reached by working. */}

@@ -3,7 +3,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef, ChannelSemantics } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
-import type { FormatSpec } from '../../core/field-semantics';
+import { resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -36,6 +36,7 @@ export const barTableDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    suppressValueLabels: true,
     declareLayoutMode: (cs, table, chartProperties) => {
         // Bar tables split the plot width into 3 horizontal panels
         // (bar | % | value), so they need a wider canvas than a basic
@@ -268,7 +269,6 @@ export const barTableDef: ChartTemplateDef = {
         // Derived directly from field names; no override knobs.
         const categoryHeader = yField;
         const percentHeader  = '%';
-        const valueHeader    = xField;
         // headerStyle.fontSize is set below once the responsive
         // `fontSize` constant is available.
 
@@ -284,7 +284,19 @@ export const barTableDef: ChartTemplateDef = {
         // The %-share column (panel 1) is a different story: it's a
         // *derived* 0..1 ratio computed by us, so it always needs `%`
         // formatting. That's `pctPattern` below.
-        const valueFmt: FormatSpec | undefined = xCS?.format;
+        const displayUnit = resolveDisplayUnit(xCS?.semanticAnnotation);
+        const valueFmt: FormatSpec | undefined = displayUnit?.placement === 'value'
+            ? {
+                ...(xCS?.format ?? {}),
+                ...(displayUnit.position === 'prefix' && !xCS?.format?.prefix
+                    ? { prefix: displayUnit.text }
+                    : {}),
+                ...(displayUnit.position === 'suffix' && !xCS?.format?.suffix
+                    ? { suffix: /^[A-Za-z]/.test(displayUnit.text) ? ` ${displayUnit.text}` : displayUnit.text }
+                    : {}),
+            }
+            : xCS?.format;
+        const valueHeader = titleWithDisplayUnit(xField, displayUnit);
         const pctPattern = '.1%';
 
         // ── Text-panel transforms ────────────────────────────────────
@@ -616,13 +628,14 @@ export const barTableDef: ChartTemplateDef = {
             outFieldHint: string,
         ): any => {
             if (!fmt || (!fmt.pattern && !fmt.prefix && !fmt.suffix)) {
-                return { field: sourceField, type: 'quantitative' };
-            }
-            if (!fmt.abbreviate && fmt.pattern && !fmt.prefix && !fmt.suffix) {
-                return { field: sourceField, type: 'quantitative', format: fmt.pattern };
+                transformsOut.push({ calculate: `datum[${JSON.stringify(sourceField)}] + ''`, as: outFieldHint });
+                return { field: outFieldHint, type: 'nominal' };
             }
             const formatExpr = formatSpecToVegaExpr(fmt, `datum[${JSON.stringify(sourceField)}]`);
-            if (!formatExpr) return { field: sourceField, type: 'quantitative' };
+            if (!formatExpr) {
+                transformsOut.push({ calculate: `datum[${JSON.stringify(sourceField)}] + ''`, as: outFieldHint });
+                return { field: outFieldHint, type: 'nominal' };
+            }
             transformsOut.push({
                 calculate: formatExpr,
                 as: outFieldHint,

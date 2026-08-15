@@ -231,6 +231,31 @@ describe('value label precision', () => {
     const labelMark = (spec: any) =>
       (spec.layer ?? []).find((l: any) => (l.mark?.type ?? l.mark) === 'text')?.mark;
 
+    it('keeps every label outside when the chart chooses outside placement', () => {
+      const spec: any = assembleVegaLite({
+        data: {
+          values: [703, 608, 227, 165, 148, 120, 102, 58, 55, 49]
+            .map((value, index) => ({ cause: `Cause ${index + 1}`, value })),
+        },
+        semantic_types: { cause: 'Category', value: 'Quantity' },
+        chart_spec: {
+          chartType: 'Bar Chart',
+          encodings: { y: 'cause', x: 'value' },
+          baseSize: { width: 420, height: 320 },
+          chartProperties: { showValueLabels: true },
+        },
+        theme_spec: 'datawrapper',
+      } as any);
+      const body = spec.layer ? spec : spec.vconcat?.[0];
+      const labels = (body?.layer ?? [])
+        .filter((layer: any) => (layer.mark?.type ?? layer.mark) === 'text');
+      expect(spec._theme.decisions.dataLabels.placement).toBe('outsideMark');
+      expect(labels).toHaveLength(1);
+      expect(labels[0].mark.align).toBe('left');
+      expect(labels[0].mark.dx).toBeGreaterThan(0);
+      expect(labels[0].transform).toBeUndefined();
+    });
+
     it('sends the label below a bar that runs down from zero', () => {
       // A bar drawn downwards ends at the bottom, so "outside" is below it.
       // Placed above, the number lands on top of the bar it labels. A narrow

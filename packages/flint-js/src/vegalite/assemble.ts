@@ -60,7 +60,7 @@ import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } 
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
-import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
+import { resolveDisplayUnit, titleWithDisplayUnit, toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
@@ -842,7 +842,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         titled: Boolean(vgObj.title),
         headline: headlineText(vgObj.title),
         hostSurface: (input.options as any)?.background,
-        valueLabels: resolveValueLabelChoice(chartProperties),
+        valueLabels: chartTemplate.suppressValueLabels
+            ? 'off'
+            : resolveValueLabelChoice(chartProperties),
         geometryKinds: chartTemplate.geometryKinds,
     });
 
@@ -916,8 +918,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // whose template already writes its own text. Templates that print labels
     // *on request* are the exception: they answer to the toggle themselves.
     const designCoupledApplicability: Record<string, boolean> = {
-        showValueLabels: ownsLabels
-            || (design?.dataLabels?.possible === true && !templateDrawsOwnText),
+        showValueLabels: !chartTemplate.suppressValueLabels && (ownsLabels
+            || (design?.dataLabels?.possible === true && !templateDrawsOwnText)),
         // The older spelling stays an accepted *input* for compatibility, but a
         // host should be shown one switch, not two that fight.
         showTextLabels: false,
@@ -1310,6 +1312,17 @@ function buildVLEncodings(
         // Apply localized display name as axis/legend title
         if (fieldDisplayNames && fieldName && fieldDisplayNames[fieldName] && !encodingObj.title) {
             encodingObj.title = fieldDisplayNames[fieldName];
+        }
+
+        // A lexical unit explicitly declared by the author belongs once with
+        // the field name, independent of whether a visual theme is applied.
+        const displayUnit = resolveDisplayUnit(cs?.semanticAnnotation);
+        if ((channel === 'x' || channel === 'y') && cs?.type === 'quantitative'
+            && displayUnit?.placement === 'field' && encodingObj.title !== null) {
+            const currentTitle = typeof encodingObj.title === 'string'
+                ? encodingObj.title
+                : fieldName;
+            if (currentTitle) encodingObj.title = titleWithDisplayUnit(currentTitle, displayUnit);
         }
 
         // --- Collect resolved encoding ---

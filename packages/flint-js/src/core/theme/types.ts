@@ -803,11 +803,6 @@ export interface ResolvedDataLabels {
      */
     insideMinValue?: number;
     /**
-     * Above this magnitude the mark reaches the end of the scale, so an
-     * outside label would fall off the plot. The mirror of `insideMinValue`.
-     */
-    outsideMaxValue?: number;
-    /**
      * The smallest share of the measure axis a stacked segment may occupy and
      * still be labelled — a line of text over the plot's extent along that
      * axis. Segments below it get no number: it would not fit between the
@@ -928,11 +923,12 @@ export interface DesignDecisions {
         spacing?: number;
         preferredColumns?: number;
     };
-    /** `plotWidth`/`xStep` are what the layout settled, so an axis can ask whether its names still fit. */
+    /** Plot dimensions and step are what layout settled, so realization can test whether annotations fit. */
     layout: {
         padding: number;
         density: 'compact' | 'normal' | 'airy';
         plotWidth?: number;
+        plotHeight?: number;
         xStep?: number;
         /** The graphic the caller asked for. Wider than `plotWidth` by the axis gutter. */
         canvasWidth?: number;

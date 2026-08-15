@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Visible units now require an explicit `unit` in the field's semantic
+  annotation. Conventional compact units may accompany values, while lexical
+  units such as `years` are stated once as part of the field title. Bar Tables
+  also no longer repeat their value column as annotations on the bars.
+- A raw sum-stacked chart whose total lands exactly on a clean axis tick now
+  keeps that edge flush instead of adding an empty interval above it, including
+  machine-scale residue from calculated shares. Totals meaningfully beyond the
+  clean endpoint still advance to the next tick; the rule is derived from the
+  plotted stack and does not special-case percentages or 100.
+- Series-end labels now use a bounded screen-space packing pass when endpoints
+  form one readable column. Small adjustments keep labels attached by proximity;
+  crowded or horizontally staggered sets fall back together to the next legend
+  placement instead of leaving a partial or overlapping direct-label system.
+
 ## [0.5.1] - 2026-08-13
 
 ### Added

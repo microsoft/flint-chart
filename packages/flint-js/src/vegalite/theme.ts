@@ -275,12 +275,12 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     harmonizeLinePoints(spec, d, table, say);
     applyConnectors(spec, d, say);
     applyRedundantChannels(spec, d, say);
-    demoteSeriesEnd(spec, d, say);
+    const seriesEndLayout = demoteSeriesEnd(spec, d, table, say);
     applyLegend(spec, config, d, table, say);
     applyFacetChrome(config, d);
     applyPanelTitles(spec, d, say);
     const valueLayer = applyDataLabels(spec, d, table, say);
-    applySeriesEndLabels(spec, d, valueLayer, table, say);
+    applySeriesEndLabels(spec, d, valueLayer, table, say, seriesEndLayout);
     applyPointEmphasis(spec, d, say);
     applyPrintedUnits(spec, d, say);
     applyStatistics(spec, d, table, say);
@@ -738,9 +738,15 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                     const rightSeated = side === 'right';
                     // The title clears the topmost value instead of sitting on
                     // it, so the lift carries a line of the label's own size.
+                    // A column facet owns the next line above the plot; clear
+                    // that header too instead of laying the shared y title on
+                    // the final panel's name.
                     const labelSize = axis.label.fontSize ?? 11;
                     const gap = axis.title.gap ?? (axis.title.fontSize ?? 11) + 6;
-                    const lift = gap + Math.round(labelSize * 0.75);
+                    const headerClearance = d.facets.header.show && hasTopFacetHeader(spec)
+                        ? Math.round((d.facets.header.fontSize ?? 11) * 1.7)
+                        : 0;
+                    const lift = gap + Math.round(labelSize * 0.75) + headerClearance;
                     enc.axis = {
                         ...(enc.axis ?? {}),
                         titleAngle: 0,
@@ -1439,6 +1445,15 @@ function panelCount(spec: any, table: any[]): number {
         panels *= Math.max(1, values.size);
     }
     return panels;
+}
+
+function hasTopFacetHeader(spec: any): boolean {
+    let found = false;
+    walk(spec, (node) => {
+        if (node.encoding?.facet?.field || node.encoding?.column?.field
+            || node.facet?.field || node.facet?.column?.field) found = true;
+    });
+    return found;
 }
 
 /**
@@ -4594,9 +4609,9 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         delete labelEncoding.theta;
     }
 
-    // A label goes where there is room. A mark shorter than its own label
-    // cannot hold it, and a mark that reaches the end of the scale has no room
-    // past its end — so each case sends those few labels the other way.
+    // Inside placement has one legibility exception: a mark shorter than its
+    // own label cannot hold it, so that label moves outside. Outside placement
+    // is chart-wide and never flips only the longest mark inward.
     // Vega-Lite has no conditional `align`, so this is two layers with
     // complementary filters.
     const flipInk = (within: boolean): string | undefined => {
@@ -4620,13 +4635,6 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         say('dataLabels.placement', message);
     };
 
-    // A vertical bar's outside label is cleared by giving the measure scale
-    // headroom (below); a horizontal one by reserving right margin. The
-    // scale-end flip — printing the tallest bars' labels inside instead —
-    // solves the same "no room past the end" problem, so it is only needed
-    // where headroom is not the remedy: on horizontal bars.
-    const headroomClears = !inside && onMarkBody && !horizontal && !radial && !cells;
-
     // A stacked segment is exempt: "outside" a segment is the top of the
     // stack, a different quantity. Segments too short for their number drop it
     // instead, which the keep test above already arranges.
@@ -4634,8 +4642,6 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         if (inside && d.dataLabels.insideMinValue != null) {
             split(d.dataLabels.insideMinValue, '<', 'marks shorter than their own label print it outside instead');
             growPadding(spec, horizontal ? 'right' : 'top', (t.fontSize ?? 10) * 2);
-        } else if (!inside && d.dataLabels.outsideMaxValue != null && !headroomClears) {
-            split(d.dataLabels.outsideMaxValue, '>', 'marks that reach the end of the scale print their label inside instead');
         }
     }
 
@@ -4778,9 +4784,19 @@ function addMeasureHeadroom(
  * *before* the legend is drawn — once the colour legends have been suppressed
  * in favour of end labels there is nothing to fall back to.
  */
-function demoteSeriesEnd(spec: any, d: DesignDecisions, say: (p: string, m: string) => void): void {
-    if (d.legend.placement !== 'seriesEnd' && d.legend.placement !== 'inline') return;
-    if (!d.legend.show) return;
+interface SeriesEndLayout {
+    adjustedValues: Map<unknown, number>;
+    maxDisplacement: number;
+}
+
+function demoteSeriesEnd(
+    spec: any,
+    d: DesignDecisions,
+    table: any[],
+    say: (p: string, m: string) => void,
+): SeriesEndLayout | undefined {
+    if (d.legend.placement !== 'seriesEnd' && d.legend.placement !== 'inline') return undefined;
+    if (!d.legend.show) return undefined;
     const body = plotBody(spec);
     // A band carries its own end label inside itself, so it counts as a run
     // with an end just as much as a line does.
@@ -4816,14 +4832,158 @@ function demoteSeriesEnd(spec: any, d: DesignDecisions, say: (p: string, m: stri
                     : marginTaken
                         ? `the ${runsAlongX ? 'right' : 'top'} margin holds the value axis, so a name too big for its band has nowhere to stand`
                         : null));
-    if (!reason) return;
+    const collision = !reason && !bands
+        ? planSeriesEndLayout(spec, d, table, enc, field)
+        : undefined;
+    const finalReason = reason ?? collision?.reason;
+    if (!finalReason) return collision?.layout;
     // The house ranked its placements; a demotion should land on the next one
     // it named, not on whatever this function happens to prefer.
     const next = d.legend.fallbacks?.find((p) => p !== 'seriesEnd' && p !== 'inline') ?? 'right';
-    say('legend.placement', `${reason} — the key is drawn \`${next}\` instead`);
+    say('legend.placement', `${finalReason} — the key is drawn \`${next}\` instead`);
     d.legend.placement = next;
     d.legend.orient = next === 'inside' ? 'top-right' : next as any;
     d.legend.direction = next === 'top' || next === 'bottom' ? 'horizontal' : 'vertical';
+    return undefined;
+}
+
+function planSeriesEndLayout(
+    spec: any,
+    d: DesignDecisions,
+    table: any[],
+    enc: any,
+    seriesField: string | undefined,
+): { layout?: SeriesEndLayout; reason?: string } {
+    if (!seriesField || runChannel(d) !== 'x') return {};
+    if (d.bound.isFaceted) return { reason: '`seriesEnd` collision checks do not guess across facet scales' };
+    if (d.bound.seriesCount > 8) return { reason: '`seriesEnd` is limited to eight series so the margin stays readable' };
+
+    const domain = enc.x;
+    const value = enc.y;
+    if (!domain?.field || !value?.field || value.type !== 'quantitative') return {};
+    if (value.scale?.type && value.scale.type !== 'linear') {
+        return { reason: '`seriesEnd` collision checks need a linear value scale' };
+    }
+
+    const orderedDomain = domain.type === 'quantitative' || domain.type === 'temporal' || domain.type === 'ordinal';
+    const explicitOrder: Map<unknown, number> | undefined = Array.isArray(domain.sort)
+        ? new Map(domain.sort.map((entry: unknown, index: number): [unknown, number] => [entry, index]))
+        : undefined;
+    const comparable = (raw: unknown): number | undefined => {
+        if (explicitOrder) return explicitOrder.get(raw);
+        if (domain.type === 'temporal') {
+            const time = raw instanceof Date ? raw.getTime() : Date.parse(String(raw));
+            return Number.isFinite(time) ? time : undefined;
+        }
+        const number = Number(raw);
+        return Number.isFinite(number) ? number : undefined;
+    };
+
+    const endpoints = new Map<unknown, { domain: number; value: number; order: number }>();
+    const allDomain: number[] = [];
+    const allValues: number[] = [];
+    table.forEach((row, order) => {
+        const series = row?.[seriesField];
+        const domainValue = comparable(row?.[domain.field]);
+        const valueNumber = Number(row?.[value.field]);
+        if (series == null || domainValue == null || !Number.isFinite(valueNumber)) return;
+        allDomain.push(domainValue);
+        allValues.push(valueNumber);
+        const previous = endpoints.get(series);
+        const takesEnd = !previous || (orderedDomain
+            ? (domain.sort === 'descending' ? domainValue < previous.domain : domainValue > previous.domain)
+            : order > previous.order);
+        if (takesEnd) endpoints.set(series, { domain: domainValue, value: valueNumber, order });
+    });
+    if (endpoints.size < 2 || allDomain.length < 2 || allValues.length < 2) return {};
+
+    const plotWidth = Number(d.layout.plotWidth ?? spec.width);
+    const plotHeight = Number(d.layout.plotHeight ?? plotBody(spec).height ?? spec.height);
+    if (!(plotWidth > 0) || !(plotHeight > 0)) return { reason: '`seriesEnd` could not measure the plot for collision checks' };
+
+    const domainMin = Math.min(...allDomain);
+    const domainMax = Math.max(...allDomain);
+    const domainSpan = domainMax - domainMin;
+    if (!(domainSpan > 0)) return {};
+    const endDomain = Array.from(endpoints.values(), (endpoint) => endpoint.domain);
+    const endSpreadPx = (Math.max(...endDomain) - Math.min(...endDomain)) / domainSpan * plotWidth;
+    const uniqueDomain = [...new Set(allDomain)].sort((a, b) => a - b);
+    const steps = uniqueDomain.slice(1).map((entry, index) => entry - uniqueDomain[index]).filter((step) => step > 0);
+    const medianStep = steps.length
+        ? steps.sort((a, b) => a - b)[Math.floor(steps.length / 2)] / domainSpan * plotWidth
+        : 0;
+    const alignmentTolerance = Math.max(8, medianStep * 0.25);
+
+    let valueMin = value.scale?.domainMin ?? Math.min(...allValues);
+    let valueMax = value.scale?.domainMax ?? Math.max(...allValues);
+    if (Array.isArray(value.scale?.domain) && value.scale.domain.length >= 2) {
+        valueMin = Number(value.scale.domain[0]);
+        valueMax = Number(value.scale.domain[1]);
+    }
+    if (value.scale?.zero !== false) {
+        valueMin = Math.min(0, valueMin);
+        valueMax = Math.max(0, valueMax);
+    }
+    const valueSpan = valueMax - valueMin;
+    if (!(valueSpan > 0)) return {};
+
+    const reversed = value.scale?.reverse === true;
+    const toPixel = (number: number) => reversed
+        ? (number - valueMin) / valueSpan * plotHeight
+        : (valueMax - number) / valueSpan * plotHeight;
+    const fromPixel = (pixel: number) => reversed
+        ? valueMin + pixel / plotHeight * valueSpan
+        : valueMax - pixel / plotHeight * valueSpan;
+    const fontSize = Math.max(9, (d.legend.label.fontSize ?? 11) - 1);
+    const separation = fontSize + 2;
+    const naturalRows = Array.from(endpoints.values(), (endpoint) => toPixel(endpoint.value))
+        .sort((a, b) => a - b);
+    const naturallyCollides = naturalRows.some((pixel, index) =>
+        index > 0 && pixel - naturalRows[index - 1] < separation);
+    if (!naturallyCollides) return {};
+    if (endSpreadPx > alignmentTolerance) {
+        return { reason: `series-end labels overlap and their endpoints span ${Math.round(endSpreadPx)}px horizontally, so they cannot be dodged as one column` };
+    }
+    if (endpoints.size * separation > plotHeight) {
+        return { reason: '`seriesEnd` labels cannot fit vertically without overlap' };
+    }
+
+    const packed = Array.from(endpoints, ([series, endpoint]) => ({
+        series,
+        value: endpoint.value,
+        desired: toPixel(endpoint.value),
+        placed: toPixel(endpoint.value),
+    })).sort((a, b) => a.desired - b.desired);
+    // A label centred on the top or bottom endpoint may straddle the plot
+    // boundary; Vega includes that text in the figure bounds. Pulling it half
+    // a line inward creates a needless dodge and disconnects it from the
+    // endpoint. Keep boundary labels pinned and pack only their neighbours.
+    const minCenter = 0;
+    const maxCenter = plotHeight;
+    packed[0].placed = Math.max(minCenter, packed[0].desired);
+    for (let index = 1; index < packed.length; index += 1) {
+        packed[index].placed = Math.max(packed[index].desired, packed[index - 1].placed + separation);
+    }
+    const overflow = packed[packed.length - 1].placed - maxCenter;
+    if (overflow > 0) packed.forEach((entry) => { entry.placed -= overflow; });
+    for (let index = packed.length - 2; index >= 0; index -= 1) {
+        packed[index].placed = Math.min(packed[index].placed, packed[index + 1].placed - separation);
+    }
+    if (packed[0].placed < minCenter) {
+        const shift = minCenter - packed[0].placed;
+        packed.forEach((entry) => { entry.placed += shift; });
+    }
+
+    const maxDisplacement = Math.max(...packed.map((entry) => Math.abs(entry.placed - entry.desired)));
+    if (maxDisplacement > fontSize) {
+        return { reason: `series-end labels need ${Math.round(maxDisplacement)}px of dodge, more than one line of text` };
+    }
+    return {
+        layout: {
+            adjustedValues: new Map(packed.map((entry) => [entry.series, fromPixel(entry.placed)])),
+            maxDisplacement,
+        },
+    };
 }
 
 /**
@@ -4846,6 +5006,7 @@ function applySeriesEndLabels(
     valueLayer: any,
     table: any[],
     say: (p: string, m: string) => void,
+    layout?: SeriesEndLayout,
 ): void {
     if (d.legend.placement !== 'seriesEnd' && d.legend.placement !== 'inline') return;
     if (!d.legend.show) return;
@@ -4964,6 +5125,18 @@ function applySeriesEndLabels(
             'series name and final value merged into one label — they compete for the same space');
     }
 
+    let labelValue = value;
+    if (layout?.maxDisplacement && layout.maxDisplacement > 0.5) {
+        const series = `datum[${JSON.stringify(seriesField)}]`;
+        let adjusted = `datum[${JSON.stringify(value.field)}]`;
+        for (const [name, number] of layout.adjustedValues) {
+            adjusted = `${series} === ${JSON.stringify(name)} ? ${number} : (${adjusted})`;
+        }
+        transform.push({ calculate: adjusted, as: '__seriesEndLabelValue' });
+        labelValue = { ...value, field: '__seriesEndLabelValue' };
+        say('legend.placement', `series-end labels dodged by at most ${Math.round(layout.maxDisplacement)}px to avoid overlap`);
+    }
+
     const labelLayer: any = {
         __themeSynthetic: true,
         transform,
@@ -4974,13 +5147,13 @@ function applySeriesEndLabels(
             dx: domainChannel === 'x' ? 5 : 0,
             dy: domainChannel === 'x' ? 0 : -5,
             font: t.font,
-            fontSize: t.fontSize,
+            fontSize: Math.max(9, (t.fontSize ?? 11) - 1),
             ...(t.fontWeight ? { fontWeight: t.fontWeight } : {}),
             ...(t.fontStyle ? { fontStyle: t.fontStyle } : {}),
         },
         encoding: {
             [domainChannel]: stripAxis(domain),
-            [valueChannel]: stripAxis(value),
+            [valueChannel]: layout ? { ...stripAxis(labelValue), title: null } : stripAxis(labelValue),
             text: { field: textField, type: 'nominal' },
             ...(colourEnc?.field ? { color: { ...colourEnc, legend: null } } : {}),
         },

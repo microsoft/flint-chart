@@ -1162,7 +1162,10 @@ For generic decimal types (Number, Score, Rating, Ratio, Latitude, Longitude), t
 
 **Unit and currency from annotation metadata:** When the LLM provides `unit` in the annotation (e.g., `"unit": "EUR"` for Price, `"unit": "kg"` for Weight), the format spec uses that directly. See §3 for the full annotation schema.
 
-**Fallback priority for units:** annotation.unit > column-name heuristics ("Weight (kg)") > data-value scanning ("$1,234") > type-specific defaults ("$" for Price).
+**Visible-unit policy:** only `annotation.unit` authorizes unit text. Semantic
+types, column names, and data scanning may inform parsing or other semantic
+decisions, but do not cause a unit to be printed. Conventional compact units
+may accompany values; lexical units are stated once with the field title.
 
 ### 5.1.1 Parsing
 
@@ -2070,9 +2073,9 @@ After this phase, all semantic-type-driven decisions flow through the flat `Chan
 
 1. **Unit/domain annotation reliability.** How reliably will the LLM provide `domain` and `unit`? Mitigation strategies:
    - (a) Require domain/unit for a small set of types (Rating, Score, Temperature, Price) — reject annotations without them
-   - (b) Treat domain/unit as best-effort hints — fall back gracefully to data-inferred or type-intrinsic defaults (current proposal)
+    - (b) Treat domain/unit as best-effort hints, but require an explicit unit annotation before displaying unit text (current policy)
    - (c) Prompt the user to confirm/correct LLM-provided annotations in certain cases
-   - Fallback priority: annotation.unit > column-name heuristics ("Weight (kg)") > data scan ("$1,234") > type defaults
+    - Visible unit text has no fallback: it requires `annotation.unit`
    - Note: `intrinsicDomain` replaces the old `domain` property for clarity
 
 2. **Scale type auto-detection.** Should we auto-switch to log scale when data spans >2 orders of magnitude? This is powerful but can surprise users. Options:
