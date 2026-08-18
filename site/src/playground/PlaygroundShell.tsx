@@ -9,6 +9,7 @@ const pages: NavEntry[] = [
   { to: 'illustrations', label: 'Illustrations' },
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },
+  { to: 'debug-gym', label: 'Debug gym' },
   { to: 'demo-wall', label: 'Demo wall' },
   {
     group: 'Theme labs',

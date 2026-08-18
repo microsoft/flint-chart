@@ -25,6 +25,7 @@ import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
+import { DebugGym } from './playground/DebugGym';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -73,6 +74,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
+          <Route path="debug-gym" element={<DebugGym />} />
+          <Route path="year-legend" element={<Navigate to="../debug-gym" replace />} />
           {/* The Swiss and cartoon labs were the same page twice; keep the
               links they were reached by working. */}
           <Route path="swiss-lab" element={<Navigate to="../style-references/swiss" replace />} />
