@@ -144,6 +144,21 @@ describe('ECharts Slope chart', () => {
     expect(option.yAxis.type).toBe('value');
   });
 
+  it('anchors the color legend from the right so chart.resize() keeps the gutter', () => {
+    // Design-canvas `left` (e.g. 422 of 534) overlaps the plot once the host
+    // is wider than `_width`. `right` is the inset to the legend box edge.
+    expect(option.legend.right).toBe(16);
+    expect(option.legend.left).toBeUndefined();
+    expect(option.legend.orient).toBe('vertical');
+    expect(option.grid.right).toBeGreaterThan(option.legend.right);
+    const title = (option.graphic ?? []).find(
+      (g: { type?: string; style?: { fontWeight?: string } }) =>
+        g.type === 'text' && g.style?.fontWeight === 'bold',
+    );
+    expect(title?.right).toBe(16);
+    expect(title?.left).toBeUndefined();
+  });
+
   it('orders temporal year periods as two ordered categories', () => {
     const temporal = byTitle(
       cases,
