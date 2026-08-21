@@ -115,6 +115,17 @@ export const barTableDef: ChartTemplateDef = {
         const yCS: ChannelSemantics | undefined = ctx.channelSemantics?.y;
         const xEntry = getRegistryEntry(xCS?.semanticAnnotation?.semanticType ?? 'Unknown');
 
+        // ── Ordinal measures (Rank) ──────────────────────────────────
+        // An ordinal is a standing, not a magnitude: "how much better is 1st
+        // than 2nd" has no answer. Length-encoding it (bar length + sequential
+        // colour ramp) would invert the ranking — rank 1 gets the shortest,
+        // palest bar. Honor the documented `Rank` behaviour instead (see
+        // flint://agent-skill: "Rank → reversed axis (1 on top), discrete
+        // color"): sort by rank ascending (1 first), use a discrete colour
+        // scale, and keep bars equal-length so the mark does not imply a
+        // magnitude that isn't there.
+        const xIsOrdinal = xCS?.type === 'ordinal';
+
         // Sign profile of x values — used by the diverging-palette check.
         let hasNegative = false;
         let hasPositive = false;
@@ -192,7 +203,9 @@ export const barTableDef: ChartTemplateDef = {
             && maxScopedCategoryCount > maxRows;
 
         const sortRowsByValue = (items: Array<{ cat: any; value: number }>) => items
-            .sort((a, b) => yCS?.reversed ? a.value - b.value : b.value - a.value);
+            .sort((a, b) => xIsOrdinal
+                ? a.value - b.value
+                : (yCS?.reversed ? a.value - b.value : b.value - a.value));
 
         let displayTable: any[] = [];
         let othersCatLabel: string | undefined;
@@ -418,7 +431,9 @@ export const barTableDef: ChartTemplateDef = {
             }
             return uniqueCats
                 .map(cat => ({ cat, value: aggValue(globalCategoryAgg.get(cat)!) }))
-                .sort((a, b) => yCS?.reversed ? a.value - b.value : b.value - a.value)
+                .sort((a, b) => xIsOrdinal
+                    ? a.value - b.value
+                    : (yCS?.reversed ? a.value - b.value : b.value - a.value))
                 .map(a => a.cat);
         })();
         const ySort: any = ySortOrder && ySortOrder.length > 0
@@ -483,12 +498,19 @@ export const barTableDef: ChartTemplateDef = {
                     legend: null,
                     scale: { scheme: 'redyellowgreen', domainMid: 0 },
                 }
-                : {
-                    field: xField,
-                    type: 'quantitative',
-                    legend: null,
-                    scale: { range: ['#cdebd3', '#41a25f'] },
-                };
+                : xIsOrdinal
+                    ? {
+                        field: xField,
+                        type: 'ordinal',
+                        legend: null,
+                        scale: { scheme: 'tableau10' },
+                    }
+                    : {
+                        field: xField,
+                        type: 'quantitative',
+                        legend: null,
+                        scale: { range: ['#cdebd3', '#41a25f'] },
+                    };
 
         // ── Dynamic panel widths from longest formatted label ────────
         //
@@ -708,12 +730,14 @@ export const barTableDef: ChartTemplateDef = {
             },
             encoding: {
                 y: yEncWithLabels,
-                x: {
-                    field: barXField,
-                    type: 'quantitative',
-                    axis: null,
-                    scale: barXScale,
-                },
+                x: xIsOrdinal
+                    ? { datum: 1, type: 'quantitative', axis: null, scale: { domain: [0, 1], nice: false } }
+                    : {
+                        field: barXField,
+                        type: 'quantitative',
+                        axis: null,
+                        scale: barXScale,
+                    },
                 color: barColorEnc,
             },
         });
