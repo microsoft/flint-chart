@@ -108,7 +108,7 @@ interface AggRow {
 /** Aggregate raw rows into ranked-and-topN'd category rows for one facet scope. */
 function buildScopeRows(
     rows: any[], yField: string, xField: string, colorField: string | undefined,
-    useMean: boolean, maxRows: number, reversed: boolean,
+    useMean: boolean, maxRows: number, reversed: boolean, xOrdinal: boolean,
 ): AggRow[] {
     const byCat = new Map<string, { sum: number; n: number; byColor: Map<string, number> }>();
     for (const r of rows) {
@@ -126,7 +126,7 @@ function buildScopeRows(
     const agg = (g: { sum: number; n: number }) => useMean ? g.sum / Math.max(1, g.n) : g.sum;
     const ranked = Array.from(byCat.entries())
         .map(([cat, g]) => ({ cat, value: agg(g), byColor: colorField ? g.byColor : undefined }))
-        .sort((a, b) => reversed ? a.value - b.value : b.value - a.value);
+        .sort((a, b) => (reversed || xOrdinal) ? a.value - b.value : b.value - a.value);
 
     if (maxRows <= 0 || ranked.length <= maxRows) {
         return ranked.map(r => ({ ...r, isOthers: false }));
@@ -177,6 +177,10 @@ export const plBarTableDef: ChartTemplateDef = {
         const showPercent = chartProperties?.showPercent === true;
         const useMean = channelSemantics.x?.aggregationDefault === 'average';
         const reversed = !!channelSemantics.y?.reversed;
+        // Ordinal measures (Rank) are standings, not magnitudes — length-encoding
+        // them inverts the ranking (see issue #85). Honor the documented `Rank`
+        // behaviour: rank ascending (1 first), discrete colour, equal-length bars.
+        const xIsOrdinal = channelSemantics.x?.type === 'ordinal';
 
         const xEntry = getRegistryEntry(channelSemantics.x?.semanticAnnotation?.semanticType ?? 'Unknown');
         let hasNegative = false, hasPositive = false;
@@ -233,7 +237,7 @@ export const plBarTableDef: ChartTemplateDef = {
 
         // ── Per-cell aggregation (Top-N rollup within each facet scope). ──
         const scoped = cells.map(row => row.map(cell =>
-            buildScopeRows(cell.rows, yField, xField, colorField, useMean, maxRows, reversed)));
+            buildScopeRows(cell.rows, yField, xField, colorField, useMean, maxRows, reversed, xIsOrdinal)));
 
         const allColorValues = colorField
             ? [...new Set(scoped.flat().flatMap(sr => sr.filter(r => !r.isOthers).flatMap(r => [...(r.byColor?.keys() ?? [])])))]
@@ -374,12 +378,16 @@ export const plBarTableDef: ChartTemplateDef = {
                         });
                     }
                 } else {
-                    const vals = sr.map(r => r.value);
+                    const vals = xIsOrdinal ? sr.map(() => 1) : sr.map(r => r.value);
                     const finite = vals.filter(Number.isFinite);
                     const vmin = finite.length ? Math.min(...finite, 0) : 0;
                     const vmax = finite.length ? Math.max(...finite) : 1;
-                    const colors = sr.map(r => {
+                    const colors = sr.map((r, idx) => {
                         if (r.isOthers) return OTHERS_GRAY;
+                        if (xIsOrdinal) {
+                            // Discrete colour per rank — no magnitude ramp.
+                            return palette[idx % palette.length];
+                        }
                         if (isDiverging) {
                             const span = Math.max(Math.abs(vmin), Math.abs(vmax)) || 1;
                             const t = r.value / span; // -1..1
