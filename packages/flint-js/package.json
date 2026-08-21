@@ -70,6 +70,31 @@
       "import": "./dist/image-charts/index.js",
       "require": "./dist/image-charts/index.cjs"
     },
+    "./interactive": {
+      "types": "./dist/interactive/index.d.ts",
+      "import": "./dist/interactive/index.js",
+      "require": "./dist/interactive/index.cjs"
+    },
+    "./vegalite/interactive": {
+      "types": "./dist/vegalite/interactive.d.ts",
+      "import": "./dist/vegalite/interactive.js",
+      "require": "./dist/vegalite/interactive.cjs"
+    },
+    "./echarts/interactive": {
+      "types": "./dist/echarts/interactive.d.ts",
+      "import": "./dist/echarts/interactive.js",
+      "require": "./dist/echarts/interactive.cjs"
+    },
+    "./chartjs/interactive": {
+      "types": "./dist/chartjs/interactive.d.ts",
+      "import": "./dist/chartjs/interactive.js",
+      "require": "./dist/chartjs/interactive.cjs"
+    },
+    "./plotly/interactive": {
+      "types": "./dist/plotly/interactive.d.ts",
+      "import": "./dist/plotly/interactive.js",
+      "require": "./dist/plotly/interactive.cjs"
+    },
     "./test-data": {
       "types": "./dist/test-data/index.d.ts",
       "import": "./dist/test-data/index.js",
@@ -103,15 +128,20 @@
   "peerDependencies": {
     "chart.js": "^4.0.0",
     "plotly.js": "^2.0.0 || ^3.0.0",
+    "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
     "echarts": "^5.0.0 || ^6.0.0",
     "vega": "^5.0.0 || ^6.0.0",
-    "vega-lite": "^5.0.0 || ^6.0.0"
+    "vega-lite": "^5.0.0 || ^6.0.0",
+    "vega-tooltip": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "vega": {
       "optional": true
     },
     "vega-lite": {
+      "optional": true
+    },
+    "vega-tooltip": {
       "optional": true
     },
     "echarts": {
@@ -121,6 +151,9 @@
       "optional": true
     },
     "plotly.js": {
+      "optional": true
+    },
+    "plotly.js-dist-min": {
       "optional": true
     }
   },

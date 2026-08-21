@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { describe, expect, it } from 'vitest';
-import { filterOverflow } from '../src/core/filter-overflow';
+import { applyCategoryViewports, filterOverflow, resolveCategoryViewport } from '../src/core/filter-overflow';
 import type { ChannelSemantics, ChartEncoding } from '../src/core/types';
 
 const budgets = { maxValues: { x: 3 } };
@@ -75,5 +75,44 @@ describe('overflow category selection', () => {
       { field: 'Category', type: 'nominal' },
       { field: 'Category', sortBy: 'y', sortOrder: 'descending' },
     )).toEqual(['Delta', 'Charlie', 'Bravo']);
+  });
+
+  it('retains the complete ordered domain for an interactive viewport', () => {
+    const data = [
+      { Category: 'Delta', Value: 100 },
+      { Category: 'Alpha', Value: 1 },
+      { Category: 'Charlie', Value: 80 },
+      { Category: 'Bravo', Value: 50 },
+    ];
+
+    const result = filterOverflow(
+      {
+        x: { field: 'Category', type: 'nominal', semanticAnnotation: annotation },
+        y: { field: 'Value', type: 'quantitative', semanticAnnotation: { semanticType: 'Quantity' } },
+      },
+      { axisFlags: { x: { banded: true } } },
+      {
+        x: { field: 'Category', sortBy: 'y', sortOrder: 'descending' },
+        y: { field: 'Value' },
+      },
+      data,
+      budgets,
+      marks,
+    );
+
+    expect(result.viewports).toEqual([{
+      channel: 'x',
+      field: 'Category',
+      orderedValues: ['Delta', 'Charlie', 'Bravo', 'Alpha'],
+      visibleCount: 3,
+      totalCount: 4,
+    }]);
+    expect(resolveCategoryViewport(result.viewports[0], 99)).toEqual({
+      start: 1,
+      end: 4,
+      values: ['Charlie', 'Bravo', 'Alpha'],
+    });
+    expect(applyCategoryViewports(data, result.viewports, { x: 1 }))
+      .toEqual([data[1], data[2], data[3]]);
   });
 });

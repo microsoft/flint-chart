@@ -874,6 +874,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (warnings.length > 0) {
         result._warnings = warnings;
     }
+    if (overflowResult.viewports.length > 0) {
+        result._viewports = overflowResult.viewports;
+    }
     result._width = layoutResult.subplotWidth;
     result._height = layoutResult.subplotHeight;
     // Annotated option catalog: every configurable property this template

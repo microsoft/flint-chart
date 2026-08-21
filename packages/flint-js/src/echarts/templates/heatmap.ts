@@ -59,7 +59,7 @@ export const ecHeatmapDef: ChartTemplateDef = {
     declareLayoutMode: () => ({
         axisFlags: { x: { banded: true }, y: { banded: true } },
         // No paramOverrides needed — uses the backend default band size
-        // (defaultBandSize=20, minStep=6), matching VL heatmap sizing.
+        // (defaultBandSize=20, minStep=8), matching VL heatmap sizing.
     }),
     instantiate: (spec, ctx) => {
         const { channelSemantics, table, colorDecisions, encodings } = ctx;

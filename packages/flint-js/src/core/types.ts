@@ -308,6 +308,20 @@ export interface ChannelBudgets {
     facetGrid?: FacetGridResult;
 }
 
+/** A scrollable window over an ordered positional category domain. */
+export interface CategoryViewport {
+    /** Positional channel controlled by this viewport. */
+    channel: 'x' | 'y';
+    /** Source field whose values define the category domain. */
+    field: string;
+    /** Complete display order, before the static fallback window is applied. */
+    orderedValues: any[];
+    /** Number of categories shown in an interactive window at the minimum valid step. */
+    visibleCount: number;
+    /** Total number of categories in the ordered domain. */
+    totalCount: number;
+}
+
 /** Result of overflow filtering. */
 export interface OverflowResult {
     /** Data after removing overflow rows */
@@ -318,6 +332,8 @@ export interface OverflowResult {
     truncations: TruncationWarning[];
     /** Warning messages for the UI */
     warnings: ChartWarning[];
+    /** Positional category windows that an interactive host can navigate. */
+    viewports: CategoryViewport[];
 }
 
 /**

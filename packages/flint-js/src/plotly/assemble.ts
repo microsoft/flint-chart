@@ -554,6 +554,9 @@ export function assemblePlotly(input: ChartAssemblyInput): any {
     if (warnings.length > 0) {
         figure._warnings = warnings;
     }
+    if (overflowResult.viewports.length > 0) {
+        figure._viewports = overflowResult.viewports;
+    }
 
     figure._dataLength = values.length;
 

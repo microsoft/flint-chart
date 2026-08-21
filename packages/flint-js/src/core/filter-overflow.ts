@@ -79,6 +79,7 @@ export function filterOverflow(
     };
     const truncations: TruncationWarning[] = [];
     const warnings: ChartWarning[] = [];
+    const viewports: OverflowResult['viewports'] = [];
     let filteredData = data;
 
     // Compute group nominal count
@@ -137,7 +138,22 @@ export function filterOverflow(
         nominalCounts[channel] = Math.min(uniqueValues.length, maxToKeep);
 
         if (uniqueValues.length > maxToKeep) {
-            const valuesToKeep = strategy(channel, fieldName, uniqueValues, maxToKeep, strategyContext);
+            const orderedValues = strategy === defaultOverflowStrategy
+                ? defaultOverflowOrder(channel, fieldName, uniqueValues, strategyContext)
+                : undefined;
+            const valuesToKeep = orderedValues
+                ? orderedValues.slice(0, maxToKeep)
+                : strategy(channel, fieldName, uniqueValues, maxToKeep, strategyContext);
+
+            if ((channel === 'x' || channel === 'y') && orderedValues) {
+                viewports.push({
+                    channel,
+                    field: fieldName,
+                    orderedValues,
+                    visibleCount: valuesToKeep.length,
+                    totalCount: orderedValues.length,
+                });
+            }
 
             const omittedCount = uniqueValues.length - valuesToKeep.length;
             const placeholder = `...${omittedCount} items omitted`;
@@ -168,7 +184,34 @@ export function filterOverflow(
         }
     }
 
-    return { filteredData, nominalCounts, truncations, warnings };
+    return { filteredData, nominalCounts, truncations, warnings, viewports };
+}
+
+/** Resolve a clamped category window for one viewport axis. */
+export function resolveCategoryViewport(
+    viewport: OverflowResult['viewports'][number],
+    requestedStart: number = 0,
+): { start: number; end: number; values: any[] } {
+    const maxStart = Math.max(0, viewport.totalCount - viewport.visibleCount);
+    const start = Math.min(maxStart, Math.max(0, Math.floor(requestedStart)));
+    const end = Math.min(viewport.totalCount, start + viewport.visibleCount);
+    return { start, end, values: viewport.orderedValues.slice(start, end) };
+}
+
+/**
+ * Apply one or more host-controlled category windows to the original rows.
+ * A heatmap may provide both x and y starts; ordinary bar charts provide one.
+ */
+export function applyCategoryViewports(
+    data: any[],
+    viewports: OverflowResult['viewports'],
+    starts: Partial<Record<'x' | 'y', number>> = {},
+): any[] {
+    const windows = viewports.map((viewport) => ({
+        field: viewport.field,
+        values: new Set(resolveCategoryViewport(viewport, starts[viewport.channel]).values),
+    }));
+    return data.filter((row) => windows.every((window) => window.values.has(row[window.field])));
 }
 
 // ---------------------------------------------------------------------------
@@ -185,7 +228,15 @@ export function filterOverflow(
  */
 const defaultOverflowStrategy: OverflowStrategy = (
     channel, fieldName, uniqueValues, maxToKeep, context,
-) => {
+) => defaultOverflowOrder(channel, fieldName, uniqueValues, context).slice(0, maxToKeep);
+
+/** Resolve the complete display order before a static or interactive window is applied. */
+function defaultOverflowOrder(
+    channel: string,
+    fieldName: string,
+    uniqueValues: any[],
+    context: OverflowStrategyContext,
+): any[] {
     const { data, channelSemantics, encodings, allMarkTypes } = context;
 
     // Determine sort intent from user encodings
@@ -211,7 +262,7 @@ const defaultOverflowStrategy: OverflowStrategy = (
                 const sortedList = JSON.parse(sortBy);
                 if (Array.isArray(sortedList)) {
                     const orderedValues = (sortOrder === 'descending') ? sortedList.reverse() : sortedList;
-                    return orderedValues.filter((v: any) => uniqueValues.includes(v)).slice(0, maxToKeep);
+                    return orderedValues.filter((v: any) => uniqueValues.includes(v));
                 }
             } catch {
                 // not a JSON list, fall through
@@ -243,7 +294,6 @@ const defaultOverflowStrategy: OverflowStrategy = (
         return Array.from(valueAggregates.entries())
             .map(([value, agg]) => ({ value, agg }))
             .sort((a, b) => isDescending ? b.agg - a.agg : a.agg - b.agg)
-            .slice(0, maxToKeep)
             .map(v => v.value);
     }
 
@@ -253,29 +303,29 @@ const defaultOverflowStrategy: OverflowStrategy = (
         const ordered = canonicalOrder.filter(value => present.has(value));
         const canonicalValues = new Set(ordered);
         ordered.push(...uniqueValues.filter(value => !canonicalValues.has(value)));
-        return ordered.slice(0, maxToKeep);
+        return ordered;
     }
 
     // Match the display default for quantitative values treated as discrete.
     const fieldOriginalType = inferVisCategory(data.map(r => r[fieldName]));
     if (fieldOriginalType === 'quantitative' || channel === 'color') {
         return [...uniqueValues].sort((a, b) => Number(a) - Number(b))
-            .slice(0, maxToKeep);
+            ;
     }
 
     // Facet channels: first N
     if (channel === 'column' || channel === 'row') {
-        return uniqueValues.slice(0, maxToKeep);
+        return uniqueValues;
     }
 
     // Explicit field-order sort follows the displayed label order.
     if (sortOrder === 'descending') {
-        return [...uniqueValues].sort((a, b) => String(b).localeCompare(String(a), undefined, { numeric: true })).slice(0, maxToKeep);
+        return [...uniqueValues].sort((a, b) => String(b).localeCompare(String(a), undefined, { numeric: true }));
     }
     if (sortOrder === 'ascending') {
-        return [...uniqueValues].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true })).slice(0, maxToKeep);
+        return [...uniqueValues].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
     }
 
     // Default: first N values
-    return uniqueValues.slice(0, maxToKeep);
-};
+    return uniqueValues;
+}

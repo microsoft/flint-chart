@@ -163,6 +163,29 @@ Each backend has its own assembly function. All accept the same
 | `assembleECharts(input)` | ECharts option object | `import { assembleECharts } from 'flint-chart'` |
 | `assembleChartjs(input)` | Chart.js config object | `import { assembleChartjs } from 'flint-chart'` |
 
+### Interactive surface
+
+Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
+
+```ts
+import { buildInteractiveChart } from 'flint-chart/interactive';
+
+const surface = buildInteractiveChart(
+  container,
+  input,
+  {
+    backend: 'vegalite',
+    renderer: 'canvas',
+    focusOnClick: true,
+  },
+);
+
+await surface.ready;
+// Later: surface.destroy();
+```
+
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite discrete marks also enable local click focus by default: click selects, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Set `focusOnClick: false` to disable it. Other backends currently ignore this option. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+
 ### Input types
 
 ```ts

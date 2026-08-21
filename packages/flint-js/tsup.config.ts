@@ -10,6 +10,11 @@ export default defineConfig({
     'plotly/index': 'src/plotly/index.ts',
     'excel/index': 'src/excel/index.ts',
     'image-charts/index': 'src/image-charts/index.ts',
+    'interactive/index': 'src/interactive/index.ts',
+    'vegalite/interactive': 'src/vegalite/interactive.ts',
+    'echarts/interactive': 'src/echarts/interactive.ts',
+    'chartjs/interactive': 'src/chartjs/interactive.ts',
+    'plotly/interactive': 'src/plotly/interactive.ts',
     'test-data/index': 'src/test-data/index.ts',
     'gallery/index': 'src/gallery/index.ts',
   },
@@ -20,5 +25,8 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   target: 'es2020',
-  external: ['vega', 'vega-lite', 'echarts', 'chart.js', 'plotly.js'],
+  external: [
+    'vega', 'vega-lite', 'vega-tooltip', 'echarts', 'chart.js', 'plotly.js', 'plotly.js-dist-min',
+    '../vegalite/interactive', '../echarts/interactive', '../chartjs/interactive', '../plotly/interactive',
+  ],
 });

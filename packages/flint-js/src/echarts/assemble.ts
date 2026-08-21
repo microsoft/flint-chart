@@ -538,6 +538,9 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     if (warnings.length > 0) {
         ecOption._warnings = warnings;
     }
+    if (overflowResult.viewports.length > 0) {
+        ecOption._viewports = overflowResult.viewports;
+    }
 
     // Store data reference (unlike VL which embeds data.values,
     // ECharts data is embedded directly in series[].data)

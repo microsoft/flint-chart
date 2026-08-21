@@ -39,6 +39,7 @@ export {
     type OverflowStrategy,
     type OverflowStrategyContext,
     type OverflowResult,
+    type CategoryViewport,
     type ChannelBudgets,
 } from './types';
 
@@ -132,7 +133,7 @@ export {
 
 // Phase modules (analysis pipeline — VL-free)
 export { resolveChannelSemantics, convertTemporalData } from './resolve-semantics';
-export { filterOverflow } from './filter-overflow';
+export { filterOverflow, resolveCategoryViewport, applyCategoryViewports } from './filter-overflow';
 export { computeLayout, computeChannelBudgets } from './compute-layout';
 export {
     normalizeStaticSeries,

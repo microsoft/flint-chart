@@ -446,6 +446,9 @@ export function assembleChartjs(input: ChartAssemblyInput): any {
     if (warnings.length > 0) {
         cjsConfig._warnings = warnings;
     }
+    if (overflowResult.viewports.length > 0) {
+        cjsConfig._viewports = overflowResult.viewports;
+    }
 
     cjsConfig._dataLength = values.length;
 
