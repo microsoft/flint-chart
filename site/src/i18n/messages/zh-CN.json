@@ -405,6 +405,9 @@
     "closingBody": "Flint 已开源，可直接使用。前往 GitHub 获取源码，或先浏览图表示例。",
     "viewGithub": "在 GitHub 上查看",
     "closingCollab": "Flint 由 <msr>Microsoft Research</msr> 与中国人民大学 <ideas>IDEAS Lab</ideas> 合作构建。",
+    "wechatTitle": "加入 Flint 用户微信群",
+    "wechatBody": "扫码加入 Flint 用户微信群，与其他用户交流。",
+    "wechatAlt": "Flint 用户微信群二维码",
     "features": {
       "semantic": {
         "title": "用语义类型表达数据含义",

@@ -297,6 +297,12 @@ Flint is built by [Microsoft Research](https://www.microsoft.com/en-us/research/
 in collaboration with the [IDEAS Lab](https://ideas-lab.net/), Renmin University
 of China. We welcome you to join us — see [Contributing](#contributing) to get involved.
 
+Scan to join the Flint WeChat user group（扫码加入 Flint 用户微信群）:
+
+<p align="center">
+  <img src="docs/figs/QR-code.png" alt="Flint WeChat user group QR code" width="240">
+</p>
+
 A research paper describing Flint is coming soon.
 
 ## Trademarks
@@ -311,3 +317,4 @@ or logos is subject to those third parties' policies.
 ## License
 
 [MIT](LICENSE) © Microsoft Corporation
+

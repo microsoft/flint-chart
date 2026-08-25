@@ -405,6 +405,9 @@
     "closingBody": "Open source and ready to use. Start from GitHub or browse examples in the gallery.",
     "viewGithub": "View on GitHub",
     "closingCollab": "Flint is built by <msr>Microsoft Research</msr> in collaboration with the <ideas>IDEAS Lab</ideas>, Renmin University of China.",
+    "wechatTitle": "Join the Flint WeChat group",
+    "wechatBody": "Scan the QR code to join the Flint user WeChat group and chat with other users.",
+    "wechatAlt": "QR code for the Flint WeChat user group",
     "features": {
       "semantic": {
         "title": "Specify with semantic types",
