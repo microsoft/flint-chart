@@ -138,6 +138,7 @@ export { computeLayout, computeChannelBudgets } from './compute-layout';
 export {
     normalizeStaticSeries,
     normalizeEncodingShorthand,
+    normalizeChartEncodingAliases,
     coerceEncodingValue,
     STATIC_SERIES_KEY_COLUMN,
     STATIC_SERIES_VALUE_COLUMN,

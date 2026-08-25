@@ -59,6 +59,19 @@ export function normalizeEncodingShorthand(
     return out;
 }
 
+/** Treat color and group as equivalent series bindings for grouped bars. */
+export function normalizeChartEncodingAliases<T>(
+    chartType: string,
+    encodings: Record<string, T>,
+): Record<string, T> {
+    if (chartType !== 'Grouped Bar Chart' || encodings.group || !encodings.color) {
+        return encodings;
+    }
+    const normalized: Record<string, T> = { ...encodings, group: encodings.color };
+    delete normalized.color;
+    return normalized;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -89,10 +102,14 @@ export function normalizeStaticSeries(
     rawEncodings: Record<string, RawEncodingValue>,
     data: any[],
     semanticTypes: Record<string, string | SemanticAnnotation>,
+    chartType = '',
 ): NormalizeStaticSeriesResult {
     // Expand bare-string channel shorthands (e.g. `{ x: "weight" }`) first so
     // the rest of the pipeline only ever sees full encoding objects.
-    const encodings = normalizeEncodingShorthand(rawEncodings);
+    const encodings = normalizeChartEncodingAliases(
+        chartType,
+        normalizeEncodingShorthand(rawEncodings),
+    );
 
     // Find array-valued channels
     const arrayChannels: { channel: string; entries: ChartEncoding[] }[] = [];

@@ -182,8 +182,23 @@ Flint provides common triggers for element activation, hover preview, rectangle 
 clickTrigger
 hoverTrigger
 rectangleTrigger('intersect' | 'contain')
+xBrushTrigger('intersect' | 'contain')
+yBrushTrigger('intersect' | 'contain')
 externalTrigger(source?)
 ```
+
+`xBrushTrigger()` and `yBrushTrigger()` emit region events constrained to one axis. An X brush spans the full plot height; a Y brush spans the full plot width. The trigger performs this projection in plot geometry and reports physical hits. It does not inspect chart orientation or invert scales.
+
+The corresponding `brushX()` and `brushY()` presets apply semantic emphasis to the elements resolved from those hits. This is element-based brushing; domain-range inversion for linked charts remains a separate ChartDef resolver capability.
+
+Brushes support two lifecycle modes:
+
+```ts
+brushX({ mode: 'ephemeral' }) // default: overlay exists only during the drag
+brushY({ mode: 'stateful' })  // committed overlay remains editable
+```
+
+Select and brush share the same region gesture engine. `select()` configures a free two-dimensional ephemeral rectangle. A stateful axis brush retains its committed interval, allows dragging the body to move it, allows dragging either edge to resize it, and clears on an outside click or Escape. Region events identify these transitions with `create`, `move`, `resize-leading`, `resize-trailing`, and `clear` operations. This state and its interaction chrome are owned per chart surface by the trigger runtime; presets remain stateless semantic policies.
 
 The folder is organized as:
 

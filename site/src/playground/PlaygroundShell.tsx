@@ -8,30 +8,26 @@ type NavEntry = NavLeaf | { group: string; children: NavLeaf[] };
 const pages: NavEntry[] = [
   { to: 'illustrations', label: 'Illustrations' },
   { to: 'mcp-ui', label: 'MCP UI test' },
-  { to: 'labs', label: 'Labs' },
-  { to: 'overflow-viewport', label: 'Overflow viewport' },
+  {
+    group: 'Labs',
+    children: [
+      { to: 'labs', label: 'Labs' },
+      { to: 'overflow-viewport', label: 'Overflow viewport' },
+    ],
+  },
   {
     group: 'Interactions',
     children: [
-      { to: 'click-focus', label: 'Current support' },
-      { to: 'external-to-chart', label: 'External to chart' },
-      { to: 'chart-to-external', label: 'Chart to external' },
-      { to: 'interaction-candidates', label: 'Candidates' },
+      { to: 'click-focus', label: 'Test cases' },
+      { to: 'interaction-candidates', label: 'References' },
+      { to: 'interaction-dashboard', label: 'Demo: dashboard' },
+      { to: 'external-to-chart', label: 'Demo: external to chart' },
+      { to: 'chart-to-external', label: 'Demo: chart to external' },
     ],
   },
   { to: 'debug-gym', label: 'Debug gym' },
   { to: 'demo-wall', label: 'Demo wall' },
-  {
-    group: 'Theme labs',
-    children: [
-      { to: 'theme-labs', label: 'Theme lab' },
-      { to: 'theme-lab-r2', label: 'Theme lab R2' },
-      { to: 'theme-lab-real', label: 'Theme lab real' },
-      { to: 'band-stretching', label: 'Band stretching' },
-      { to: 'label-experiment', label: 'Label experiment' },
-      { to: 'style-references', label: 'Style references' },
-    ],
-  },
+  { to: 'theme-labs', label: 'Theme' },
   { to: 'full-test-cases', label: 'Full test cases' },
 ];
 

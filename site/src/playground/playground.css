@@ -100,6 +100,15 @@
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
 
+.dev-nav-dropdown::before {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 5px;
+  content: "";
+}
+
 .dev-nav-group:hover .dev-nav-dropdown,
 .dev-nav-group:focus-within .dev-nav-dropdown {
   display: flex;

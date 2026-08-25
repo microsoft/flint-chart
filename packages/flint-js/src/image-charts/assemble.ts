@@ -31,6 +31,7 @@ import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-se
 import { detectBandedAxisFromSemantics } from '../core/axis-detection';
 import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { filterOverflow } from '../core/filter-overflow';
+import { normalizeChartEncodingAliases } from '../core/static-series';
 import type { LayoutDeclaration } from '../core/types';
 import { IMAGE_CHARTS_TYPE_MAP } from './chart-types';
 
@@ -183,7 +184,10 @@ export function assembleImageCharts(input: ChartAssemblyInput): ImageChartsArtif
 
     const semanticTypes = input.semantic_types ?? {};
     const rawData: any[] = input.data.values ?? [];
-    const encodings = normalizeEncodings(input.chart_spec.encodings);
+    const encodings = normalizeChartEncodingAliases(
+        flintType,
+        normalizeEncodings(input.chart_spec.encodings),
+    );
 
     if (encodings.column?.field || encodings.row?.field) {
         throw new Error(`Image-Charts backend does not support faceting in one chart: "${flintType}".`);

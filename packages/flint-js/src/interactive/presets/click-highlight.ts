@@ -8,6 +8,7 @@ import type {
 } from '../interactions';
 import { emphasisUpdate, normalizedOpacity } from '../emphasis-update';
 import { clickTrigger } from '../triggers';
+import { expandRangedDotTarget } from './ranged-dot-target';
 
 export class ClickHighlightInteraction implements InteractionDef {
     readonly id: string;
@@ -20,16 +21,7 @@ export class ClickHighlightInteraction implements InteractionDef {
     }
 
     actOn(target: SemanticTarget | null, context: InteractionContext): SemanticTarget | null {
-        if (!target) return null;
-        if (context.chartType !== 'Ranged Dot Plot'
-            || target.visual.role === 'legend-item'
-            || !context.categoryField
-            || target.elements.length !== 1) return target;
-        const category = target.elements[0].records?.[0]?.[context.categoryField];
-        if (category === undefined) return target;
-        const elements = context.available?.filter((element) =>
-            element.records?.some((record) => record[context.categoryField!] === category));
-        return elements?.length ? { ...target, elements } : target;
+        return expandRangedDotTarget(target, context);
     }
 
     update(event: InteractionInput, context: InteractionContext): ChartUpdate | null {

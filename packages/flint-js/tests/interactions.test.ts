@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { clickAnnotate, clickGroupHighlight, clickHighlight, normalizeInteractions, select } from '../src/interactive/interactions';
+import { brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, normalizeInteractions, select } from '../src/interactive/interactions';
 import {
+    BrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,
     SelectInteraction,
 } from '../src/interactive/presets';
 import { presentInteractionUpdate } from '../src/interactive/chart-update';
-import { clickTrigger, externalTrigger, hoverTrigger, rectangleTrigger } from '../src/interactive/triggers';
+import {
+    axisBrushTrigger,
+    clickTrigger,
+    externalTrigger,
+    hoverTrigger,
+    rectangleTrigger,
+    xBrushTrigger,
+    yBrushTrigger,
+} from '../src/interactive/triggers';
+import { geometryIntersectsRect, INTERACTION_KEY, normalizeVegaRegionEvent } from '../src/interactive/triggers/vega';
 import type {
     InteractionContext,
     InteractionDef,
@@ -41,12 +51,23 @@ describe('interaction definitions', () => {
         expect(clickGroupHighlight().eventSource).toBe(clickTrigger);
         expect(clickAnnotate().eventSource).toBe(clickTrigger);
         expect(select().eventSource).toEqual(rectangleTrigger('intersect'));
+        expect(brushX().eventSource).toEqual(xBrushTrigger('intersect', 'ephemeral'));
+        expect(brushY().eventSource).toEqual(yBrushTrigger('intersect', 'ephemeral'));
     });
 
     it('provides reusable trigger descriptors', () => {
         expect(clickTrigger).toEqual({ type: 'element', gesture: 'click' });
         expect(hoverTrigger).toEqual({ type: 'element', gesture: 'hover' });
         expect(rectangleTrigger('contain')).toEqual({ type: 'region', gesture: 'drag', match: 'contain' });
+        expect(axisBrushTrigger('x', 'contain')).toEqual({
+            type: 'region', gesture: 'drag', axis: 'x', match: 'contain', mode: 'ephemeral',
+        });
+        expect(xBrushTrigger()).toEqual({
+            type: 'region', gesture: 'drag', axis: 'x', match: 'intersect', mode: 'ephemeral',
+        });
+        expect(yBrushTrigger('intersect', 'stateful')).toEqual({
+            type: 'region', gesture: 'drag', axis: 'y', match: 'intersect', mode: 'stateful',
+        });
         expect(externalTrigger('story-scroll')).toEqual({ type: 'external', source: 'story-scroll' });
     });
 
@@ -81,6 +102,73 @@ describe('interaction definitions', () => {
             id: 'select',
             eventSource: rectangleTrigger('intersect'),
         });
+        expect(brushX()).toBeInstanceOf(BrushInteraction);
+        expect(brushX()).toMatchObject({ id: 'brush-x', axis: 'x', eventSource: xBrushTrigger() });
+        expect(brushY()).toMatchObject({ id: 'brush-y', axis: 'y', eventSource: yBrushTrigger() });
+        expect(brushX({ mode: 'stateful' }).eventSource).toEqual(xBrushTrigger('intersect', 'stateful'));
+    });
+
+    it('applies brush updates only for its configured axis', () => {
+        const target = {
+            visual: { kind: 'region' as const, role: 'region' },
+            elements: [{ key: { category: 'A' } }],
+        };
+        const context = { chartType: 'Scatter Plot', selected: [] };
+        const event = {
+            type: 'semantic' as const,
+            source: 'region' as const,
+            phase: 'preview' as const,
+            target,
+        };
+        expect(brushX().update({ ...event, axis: 'x' }, context)).toEqual({
+            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+        });
+        expect(brushX().update({ ...event, axis: 'y' }, context)).toBeNull();
+        expect(brushX({ mode: 'stateful' }).update({
+            ...event, axis: 'x', phase: 'commit', operation: 'clear', target: null,
+        }, context)).toEqual({ ops: [{ op: 'reset' }] });
+    });
+
+    it('normalizes axis brushes across the orthogonal plot extent', () => {
+        const mark = { marktype: 'symbol', name: 'points' };
+        const item = (key: string, x: number, y: number) => ({
+            mark,
+            datum: { [INTERACTION_KEY]: key },
+            bounds: { x1: x - 5, x2: x + 5, y1: y - 5, y2: y + 5 },
+        });
+        const view = {
+            width: () => 300,
+            height: () => 180,
+            scenegraph: () => ({ root: { items: [
+                item('same-x-top', 60, 20),
+                item('same-x-bottom', 60, 150),
+                item('same-y-right', 220, 60),
+            ] } }),
+        };
+        const modifiers = { shift: false, ctrl: false, meta: false };
+        const x = normalizeVegaRegionEvent(
+            view, { x: 40, y: 80 }, { x: 120, y: 90 }, 'commit', 'intersect', modifiers, 'x',
+        );
+        const y = normalizeVegaRegionEvent(
+            view, { x: 40, y: 30 }, { x: 50, y: 100 }, 'commit', 'intersect', modifiers, 'y',
+        );
+        expect(x).toMatchObject({ axis: 'x', operation: 'create', region: { x: 40, y: 0, width: 80, height: 180 } });
+        expect(y).toMatchObject({ axis: 'y', operation: 'create', region: { x: 0, y: 30, width: 300, height: 70 } });
+        expect(x.hits.map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['same-x-top', 'same-x-bottom']);
+        expect(y.hits.map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['same-y-right']);
+    });
+
+    it('does not intersect disjoint collinear area and brush edges', () => {
+        const slice = {
+            kind: 'slice' as const,
+            points: [
+                { x: 0, y: 240 }, { x: 30, y: 225 },
+                { x: 30, y: 260 }, { x: 0, y: 260 },
+            ],
+            offset: { x: 0, y: 0 },
+        };
+        expect(geometryIntersectsRect(slice, { x1: 0, x2: 300, y1: 80, y2: 160 }, false)).toBe(false);
+        expect(geometryIntersectsRect(slice, { x1: 0, x2: 300, y1: 220, y2: 250 }, false)).toBe(true);
     });
 
     it('clears selection for an empty rectangle commit', () => {
@@ -171,6 +259,38 @@ describe('interaction definitions', () => {
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
             elements: context.available.slice(0, 3),
         });
+    });
+
+    it('expands every brushed Ranged Dot Plot category to its complete interval', () => {
+        const target = {
+            visual: { kind: 'mark' as const, role: 'region' },
+            elements: [
+                { key: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] },
+                { key: { key: 'japan-connector' }, records: [{ Country: 'Japan' }] },
+            ],
+        };
+        const selected = [
+            target.elements[0],
+            { key: { key: 'us-female' }, records: [{ Country: 'United States', Sex: 'Female' }] },
+            { key: { key: 'us-connector' }, records: [{ Country: 'United States' }] },
+            { key: { key: 'japan-male' }, records: [{ Country: 'Japan', Sex: 'Male' }] },
+            { key: { key: 'japan-female' }, records: [{ Country: 'Japan', Sex: 'Female' }] },
+            target.elements[1],
+        ];
+        const context = {
+            chartType: 'Ranged Dot Plot',
+            selected: [],
+            categoryField: 'Country',
+            seriesField: 'Sex',
+            available: [
+                ...selected,
+                { key: { key: 'brazil-male' }, records: [{ Country: 'Brazil', Sex: 'Male' }] },
+            ],
+        };
+
+        expect(brushX().update({
+            type: 'semantic', source: 'region', phase: 'commit', axis: 'x', target,
+        }, context)?.ops[0]).toMatchObject({ elements: selected });
     });
 
     it('uses implicit rendered color for Waterfall grouping', () => {

@@ -143,7 +143,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
     const rawData = input.data.values ?? [];
     const normalized = normalizeStaticSeries(
-        input.chart_spec.encodings, rawData, semanticTypes,
+        input.chart_spec.encodings, rawData, semanticTypes, chartType,
     );
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;

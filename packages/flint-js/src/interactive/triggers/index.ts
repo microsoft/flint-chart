@@ -9,7 +9,9 @@ export type {
     PlotPoint,
     PlotPolygon,
     PlotRect,
+    RegionAxis,
     RegionInteractionEvent,
+    RegionOperation,
     SemanticInteractionEvent,
 } from './events';
 
@@ -22,6 +24,8 @@ export interface InteractionEventSource {
     readonly type: 'element' | 'region' | 'external' | (string & {});
     readonly gesture?: 'click' | 'hover' | 'drag';
     readonly match?: 'intersect' | 'contain';
+    readonly axis?: 'x' | 'y' | 'xy';
+    readonly mode?: 'ephemeral' | 'stateful';
     readonly source?: string;
     mount?(context: InteractionEventSourceContext): void | (() => void);
 }
@@ -40,6 +44,28 @@ export function rectangleTrigger(
     match: 'intersect' | 'contain' = 'intersect',
 ): InteractionEventSource {
     return { type: 'region', gesture: 'drag', match };
+}
+
+export function axisBrushTrigger(
+    axis: 'x' | 'y',
+    match: 'intersect' | 'contain' = 'intersect',
+    mode: 'ephemeral' | 'stateful' = 'ephemeral',
+): InteractionEventSource {
+    return { type: 'region', gesture: 'drag', axis, match, mode };
+}
+
+export function xBrushTrigger(
+    match: 'intersect' | 'contain' = 'intersect',
+    mode: 'ephemeral' | 'stateful' = 'ephemeral',
+): InteractionEventSource {
+    return axisBrushTrigger('x', match, mode);
+}
+
+export function yBrushTrigger(
+    match: 'intersect' | 'contain' = 'intersect',
+    mode: 'ephemeral' | 'stateful' = 'ephemeral',
+): InteractionEventSource {
+    return axisBrushTrigger('y', match, mode);
 }
 
 export function externalTrigger(source?: string): InteractionEventSource {

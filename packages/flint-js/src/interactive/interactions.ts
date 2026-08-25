@@ -8,6 +8,7 @@ import type {
     SemanticInteractionEvent,
 } from './triggers/events';
 import {
+    BrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,
@@ -36,6 +37,8 @@ export type {
     PlotPoint,
     PlotPolygon,
     PlotRect,
+    RegionAxis,
+    RegionOperation,
     RegionInteractionEvent,
     SemanticInteractionEvent,
 } from './triggers/events';
@@ -99,6 +102,10 @@ export interface SelectOptions {
     dimOpacity?: number;
 }
 
+export interface BrushOptions extends SelectOptions {
+    mode?: 'ephemeral' | 'stateful';
+}
+
 export function clickHighlight(options: ClickHighlightOptions = {}): InteractionDef {
     return new ClickHighlightInteraction(options);
 }
@@ -113,6 +120,14 @@ export function clickAnnotate(options: ClickAnnotateOptions = {}): InteractionDe
 
 export function select(options: SelectOptions = {}): InteractionDef {
     return new SelectInteraction(options);
+}
+
+export function brushX(options: BrushOptions = {}): InteractionDef {
+    return new BrushInteraction('x', options);
+}
+
+export function brushY(options: BrushOptions = {}): InteractionDef {
+    return new BrushInteraction('y', options);
 }
 
 export function normalizeInteractions(

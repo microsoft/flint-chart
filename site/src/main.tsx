@@ -25,6 +25,7 @@ import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ClickFocusLab } from './playground/ClickFocusLab';
+import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { InteractionCandidates } from './playground/InteractionCandidates';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
 import { ChartToExternalLab } from './playground/ChartToExternalLab';
@@ -80,6 +81,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
+          <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
           <Route path="interaction-candidates" element={<InteractionCandidates />} />

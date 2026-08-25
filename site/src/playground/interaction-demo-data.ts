@@ -48,7 +48,7 @@ export const salesFixture = fixture(
   'sales', 'Regional sales by segment', 'Sample Superstore-style snapshot',
   'Grouped Bar Chart', salesRows,
   { Region: 'Category', Segment: 'Category', 'Sales ($K)': 'Quantity', 'Profit ($K)': 'Quantity' },
-  { x: 'Region', y: 'Sales ($K)', color: 'Segment' },
+  { x: 'Region', y: 'Sales ($K)', group: 'Segment' },
 );
 
 const countryRows = [

@@ -4,7 +4,9 @@ import type {
     InteractionModifiers,
     InteractionPhase,
     PlotPoint,
+    RegionAxis,
     RegionInteractionEvent,
+    RegionOperation,
 } from './events';
 
 export const INTERACTION_KEY = '__flint_interaction_key';
@@ -180,7 +182,17 @@ function segmentsIntersect(a: PlotPoint, b: PlotPoint, c: PlotPoint, d: PlotPoin
     const abD = orientation(a, b, d);
     const cdA = orientation(c, d, a);
     const cdB = orientation(c, d, b);
-    return abC * abD <= 0 && cdA * cdB <= 0;
+    const epsilon = 1e-9;
+    const onSegment = (start: PlotPoint, end: PlotPoint, point: PlotPoint): boolean =>
+        point.x >= Math.min(start.x, end.x) - epsilon
+        && point.x <= Math.max(start.x, end.x) + epsilon
+        && point.y >= Math.min(start.y, end.y) - epsilon
+        && point.y <= Math.max(start.y, end.y) + epsilon;
+    if (Math.abs(abC) <= epsilon && onSegment(a, b, c)) return true;
+    if (Math.abs(abD) <= epsilon && onSegment(a, b, d)) return true;
+    if (Math.abs(cdA) <= epsilon && onSegment(c, d, a)) return true;
+    if (Math.abs(cdB) <= epsilon && onSegment(c, d, b)) return true;
+    return (abC > 0) !== (abD > 0) && (cdA > 0) !== (cdB > 0);
 }
 
 function pointInPolygon(point: PlotPoint, polygon: readonly PlotPoint[]): boolean {
@@ -359,17 +371,30 @@ export function normalizeVegaRegionEvent(
     phase: InteractionPhase,
     match: 'intersect' | 'contain',
     modifiers: InteractionModifiers,
+    axis: RegionAxis = 'xy',
+    plotSize: { width: number; height: number } = { width: view.width(), height: view.height() },
+    operation: RegionOperation = 'create',
 ): RegionInteractionEvent {
+    const constrainedStart = {
+        x: axis === 'y' ? 0 : start.x,
+        y: axis === 'x' ? 0 : start.y,
+    };
+    const constrainedEnd = {
+        x: axis === 'y' ? plotSize.width : end.x,
+        y: axis === 'x' ? plotSize.height : end.y,
+    };
     return {
         type: 'region',
         phase,
+        axis,
+        operation,
         region: {
-            x: Math.min(start.x, end.x),
-            y: Math.min(start.y, end.y),
-            width: Math.abs(end.x - start.x),
-            height: Math.abs(end.y - start.y),
+            x: Math.min(constrainedStart.x, constrainedEnd.x),
+            y: Math.min(constrainedStart.y, constrainedEnd.y),
+            width: Math.abs(constrainedEnd.x - constrainedStart.x),
+            height: Math.abs(constrainedEnd.y - constrainedStart.y),
         },
-        hits: regionHits(view, start, end, match === 'contain'),
+        hits: regionHits(view, constrainedStart, constrainedEnd, match === 'contain'),
         match,
         modifiers,
     };

@@ -23,6 +23,8 @@ export interface InteractionModifiers {
 }
 
 export type InteractionPhase = 'start' | 'preview' | 'commit' | 'cancel';
+export type RegionAxis = 'x' | 'y' | 'xy';
+export type RegionOperation = 'create' | 'move' | 'resize-leading' | 'resize-trailing' | 'clear';
 
 export interface ElementInteractionEvent {
     type: 'element';
@@ -35,6 +37,8 @@ export interface ElementInteractionEvent {
 export interface RegionInteractionEvent {
     type: 'region';
     phase: InteractionPhase;
+    axis: RegionAxis;
+    operation?: RegionOperation;
     region: PlotRect | PlotPolygon;
     hits: readonly RenderHit[];
     match: 'intersect' | 'contain';
@@ -61,5 +65,7 @@ export interface SemanticInteractionEvent {
     target: SemanticTarget | null;
     point?: PlotPoint;
     region?: PlotRect | PlotPolygon;
+    axis?: RegionAxis;
+    operation?: RegionOperation;
     modifiers?: InteractionModifiers;
 }

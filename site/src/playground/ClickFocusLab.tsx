@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Layers3, MousePointer2, Scan } from 'lucide-react';
+import { Layers3, MousePointer2, MoveHorizontal, MoveVertical, Scan } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
   genAreaTests,
@@ -26,6 +26,8 @@ import {
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
+  brushX,
+  brushY,
   clickGroupHighlight,
   clickHighlight,
   select as rectangleSelect,
@@ -35,13 +37,18 @@ import { ScaleToFit } from '../components/ScaleToFit';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import './click-focus-lab.css';
 
-type InteractionMode = 'element' | 'group' | 'select';
+type InteractionMode = 'element' | 'group' | 'select'
+  | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful';
 type Support = 'works' | 'partial' | 'none';
 
 const interactionModes = [
   { value: 'element', label: 'Element', icon: MousePointer2 },
   { value: 'group', label: 'Group', icon: Layers3 },
   { value: 'select', label: 'Select', icon: Scan },
+  { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
+  { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
+  { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
+  { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
 ] as const;
 
 interface InteractionCase {
@@ -182,14 +189,23 @@ function InteractiveChart({ input, mode }: { input: ChartAssemblyInput; mode: In
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    const interaction = mode === 'element'
+      ? clickHighlight()
+      : mode === 'group'
+        ? clickGroupHighlight()
+        : mode === 'select'
+          ? rectangleSelect()
+          : mode === 'brush-x'
+            ? brushX()
+            : mode === 'brush-y'
+              ? brushY()
+              : mode === 'brush-x-stateful'
+                ? brushX({ mode: 'stateful' })
+                : brushY({ mode: 'stateful' });
     const surface = buildInteractiveChart(container, input, {
       backend: 'vegalite',
       renderer: 'svg',
-      interactions: mode === 'element'
-        ? [clickHighlight()]
-        : mode === 'group'
-          ? [clickGroupHighlight()]
-          : [rectangleSelect()],
+      interactions: [interaction],
       expressionInterpreter,
       ariaLabel: input.chart_spec.title,
     });
@@ -251,11 +267,14 @@ export function ClickFocusLab() {
       </div>
       <header className="dev-page-heading cf-heading">
         <h1>Interaction gallery</h1>
-        <p>Flint currently supports three interactions:</p>
+        <p>Flint currently supports five interaction families:</p>
         <ul className="cf-interaction-list">
           <li><strong>Element:</strong> Click a mark to focus it and dim the other marks.</li>
           <li><strong>Group:</strong> Click a mark to focus related marks in the same category or series.</li>
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
+          <li><strong>X brush:</strong> Drag horizontally to focus marks across an X interval.</li>
+          <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
+          <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
         </ul>
         <div className="cf-summary" aria-label="Support summary">
           <span className="cf-summary-bound"><strong>{counts.works}</strong> bound</span>

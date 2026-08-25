@@ -110,7 +110,10 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
-**Encoding channels:** `x`, `y`, `group`, `column`, `row`
+**Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
+
+For grouped bars, `color` is an alias for `group`; either channel creates the
+colored side-by-side subdivision.
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

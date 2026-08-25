@@ -18,6 +18,7 @@ export type {
     AnnotationRenderPlan,
     ChartUpdate,
     ChartUpdateProcessor,
+    BrushOptions,
     ClickAnnotateOptions,
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
@@ -32,6 +33,8 @@ export type {
     PlotPoint,
     PlotPolygon,
     PlotRect,
+    RegionAxis,
+    RegionOperation,
     RenderHit,
     SelectOptions,
     SelectionMode,
@@ -41,10 +44,19 @@ export type {
     NormalizedInteractionEvent,
     UpdateOp,
 } from './interactions';
-export { clickAnnotate, clickGroupHighlight, clickHighlight, select } from './interactions';
+export { brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, select } from './interactions';
 export type { InteractionEventSource, InteractionEventSourceContext } from './triggers';
-export { clickTrigger, externalTrigger, hoverTrigger, rectangleTrigger } from './triggers';
 export {
+    axisBrushTrigger,
+    clickTrigger,
+    externalTrigger,
+    hoverTrigger,
+    rectangleTrigger,
+    xBrushTrigger,
+    yBrushTrigger,
+} from './triggers';
+export {
+    BrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,

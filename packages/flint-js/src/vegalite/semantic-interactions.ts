@@ -378,7 +378,7 @@ export function mountVegaInteractions(
     presentUpdate: ChartUpdateProcessor,
 ): VegaInteractionController {
     const clickInteraction = interactions.find((interaction) => interaction.eventSource.gesture === 'click');
-    const rectangleInteraction = interactions.find((interaction) => interaction.eventSource.gesture === 'drag');
+    const regionInteraction = interactions.find((interaction) => interaction.eventSource.gesture === 'drag');
     let selected = new Set<string>();
     let selectedLegend: { channel: string; value: unknown } | null = null;
     let hoveredPathKeys = new Set<string>();
@@ -386,6 +386,9 @@ export function mountVegaInteractions(
     let suppressClick = false;
     let dragStart: { x: number; y: number } | undefined;
     let pointerId: number | undefined;
+    let dragAction: 'create' | 'move' | 'resize-leading' | 'resize-trailing' = 'create';
+    let activeInterval: { leading: number; trailing: number } | undefined;
+    let initialInterval: { leading: number; trailing: number } | undefined;
     let syncRunning = false;
     let syncRequested = false;
 
@@ -809,7 +812,7 @@ export function mountVegaInteractions(
     };
     const clearHover = (): void => {
         void setHover([]);
-        if (!rectangleInteraction) container.style.cursor = previousCursor;
+        if (!regionInteraction) container.style.cursor = previousCursor;
     };
     const hoverHandler = (event: MouseEvent, item: any): void => {
         if (!clickInteraction || dragStart) return;
@@ -819,7 +822,7 @@ export function mountVegaInteractions(
         );
         const legend = normalized.legend;
         if (legend) {
-            if (!rectangleInteraction) container.style.cursor = 'pointer';
+            if (!regionInteraction) container.style.cursor = 'pointer';
             void setHover([],
                 legend.channel ? { channel: legend.channel, value: legend.value } : null);
             return;
@@ -829,7 +832,7 @@ export function mountVegaInteractions(
             clearHover();
             return;
         }
-        if (!rectangleInteraction) container.style.cursor = 'pointer';
+        if (!regionInteraction) container.style.cursor = 'pointer';
         const resolved = resolveTarget('hover', normalized.role, normalized.event.hits);
         const target = clickInteraction.actOn?.(resolved, context()) ?? resolved;
         emitSemanticEvent(clickInteraction, {
@@ -862,14 +865,14 @@ export function mountVegaInteractions(
 
     const overlay = document.createElement('div');
     Object.assign(overlay.style, {
-        position: 'absolute', display: 'none', pointerEvents: 'none',
+        position: 'absolute', display: 'none', zIndex: '5', pointerEvents: 'none',
         boxSizing: 'border-box',
         border: '1px solid rgba(37, 99, 235, 0.85)', background: 'rgba(37, 99, 235, 0.12)',
     });
     const previousPosition = container.style.position;
     const previousUserSelect = container.style.userSelect;
     const previousCursor = container.style.cursor;
-    if (rectangleInteraction) {
+    if (regionInteraction) {
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         container.style.userSelect = 'none';
         container.style.cursor = 'crosshair';
@@ -880,10 +883,64 @@ export function mountVegaInteractions(
     const localPoint = (event: PointerEvent): { x: number; y: number } => {
         return clientToPlotPoint({ x: event.clientX, y: event.clientY }, coordinateSpace());
     };
-    const showRegion = (a: { x: number; y: number }, b: { x: number; y: number }): void => {
+    const regionAxis = regionInteraction?.eventSource.axis ?? 'xy';
+    const statefulBrush = regionInteraction?.eventSource.mode === 'stateful' && regionAxis !== 'xy';
+    const brushPlotSize = (): { width: number; height: number } => {
         const space = coordinateSpace();
-        const leading = plotToClientPoint({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y) }, space);
-        const trailing = plotToClientPoint({ x: Math.max(a.x, b.x), y: Math.max(a.y, b.y) }, space);
+        return { width: space.plotWidth, height: space.plotHeight };
+    };
+    const constrainRegion = (
+        a: { x: number; y: number },
+        b: { x: number; y: number },
+        plotSize = brushPlotSize(),
+    ) => ({
+        start: { x: regionAxis === 'y' ? 0 : a.x, y: regionAxis === 'x' ? 0 : a.y },
+        end: { x: regionAxis === 'y' ? plotSize.width : b.x, y: regionAxis === 'x' ? plotSize.height : b.y },
+    });
+    const dragDistance = (a: { x: number; y: number }, b: { x: number; y: number }): number => {
+        if (regionAxis === 'x') return Math.abs(b.x - a.x);
+        if (regionAxis === 'y') return Math.abs(b.y - a.y);
+        return Math.hypot(b.x - a.x, b.y - a.y);
+    };
+    const axisValue = (point: { x: number; y: number }): number => regionAxis === 'y' ? point.y : point.x;
+    const axisLimit = (): number => regionAxis === 'y' ? brushPlotSize().height : brushPlotSize().width;
+    const pointsForInterval = (interval: { leading: number; trailing: number }): {
+        start: { x: number; y: number };
+        end: { x: number; y: number };
+    } => regionAxis === 'y'
+        ? { start: { x: 0, y: interval.leading }, end: { x: 0, y: interval.trailing } }
+        : { start: { x: interval.leading, y: 0 }, end: { x: interval.trailing, y: 0 } };
+    const intervalForDrag = (point: { x: number; y: number }): { leading: number; trailing: number } => {
+        const value = axisValue(point);
+        const limit = axisLimit();
+        if (!initialInterval || dragAction === 'create') {
+            const anchor = axisValue(dragStart!);
+            return { leading: Math.min(anchor, value), trailing: Math.max(anchor, value) };
+        }
+        if (dragAction === 'move') {
+            const width = initialInterval.trailing - initialInterval.leading;
+            const delta = value - axisValue(dragStart!);
+            const leading = Math.max(0, Math.min(limit - width, initialInterval.leading + delta));
+            return { leading, trailing: leading + width };
+        }
+        const leading = dragAction === 'resize-leading' ? value : initialInterval.leading;
+        const trailing = dragAction === 'resize-trailing' ? value : initialInterval.trailing;
+        return {
+            leading: Math.max(0, Math.min(limit, Math.min(leading, trailing))),
+            trailing: Math.max(0, Math.min(limit, Math.max(leading, trailing))),
+        };
+    };
+    const showRegion = (a: { x: number; y: number }, b: { x: number; y: number }): void => {
+        const constrained = constrainRegion(a, b);
+        const space = coordinateSpace();
+        const leading = plotToClientPoint({
+            x: Math.min(constrained.start.x, constrained.end.x),
+            y: Math.min(constrained.start.y, constrained.end.y),
+        }, space);
+        const trailing = plotToClientPoint({
+            x: Math.max(constrained.start.x, constrained.end.x),
+            y: Math.max(constrained.start.y, constrained.end.y),
+        }, space);
         const containerRect = container.getBoundingClientRect();
         const layoutSize = containerLayoutSize();
         const localLeading = clientToLayoutPoint(leading, containerRect, layoutSize);
@@ -896,88 +953,128 @@ export function mountVegaInteractions(
             height: `${localTrailing.y - localLeading.y}px`,
         });
     };
+    const showInterval = (interval: { leading: number; trailing: number }): void => {
+        const points = pointsForInterval(interval);
+        showRegion(points.start, points.end);
+    };
+    const dispatchRegion = (
+        phase: 'preview' | 'commit',
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+        event: PointerEvent,
+        operation: 'create' | 'move' | 'resize-leading' | 'resize-trailing' | 'clear',
+        target: SemanticTarget | null | undefined = undefined,
+    ): void => {
+        const normalized = normalizeVegaRegionEvent(
+            view, start, end, phase, regionInteraction!.eventSource.match ?? 'intersect',
+            interactionModifiers(event), regionAxis, brushPlotSize(), operation,
+        );
+        selected = new Set(committed);
+        void dispatch(regionInteraction!, {
+            type: 'semantic', source: 'region', phase,
+            target: target === undefined ? resolveTarget('rectangle', 'region', normalized.hits) : target,
+            region: normalized.region, axis: normalized.axis, operation: normalized.operation,
+            modifiers: normalized.modifiers,
+        });
+    };
     const pointerDown = (event: PointerEvent): void => {
-        if (!rectangleInteraction || event.button !== 0) return;
+        if (!regionInteraction || event.button !== 0) return;
         clearHover();
-        dragStart = localPoint(event);
+        const point = localPoint(event);
+        dragAction = 'create';
+        initialInterval = activeInterval ? { ...activeInterval } : undefined;
+        if (statefulBrush && activeInterval) {
+            const value = axisValue(point);
+            const edgeTolerance = 8;
+            if (Math.abs(value - activeInterval.leading) <= edgeTolerance) dragAction = 'resize-leading';
+            else if (Math.abs(value - activeInterval.trailing) <= edgeTolerance) dragAction = 'resize-trailing';
+            else if (value > activeInterval.leading && value < activeInterval.trailing) dragAction = 'move';
+        }
+        dragStart = point;
         pointerId = event.pointerId;
         committed = new Set(selected);
         container.setPointerCapture(event.pointerId);
     };
     const pointerMove = (event: PointerEvent): void => {
-        if (!rectangleInteraction || !dragStart || pointerId !== event.pointerId) return;
+        if (!regionInteraction) return;
+        if (!dragStart || pointerId !== event.pointerId) {
+            if (statefulBrush && activeInterval) {
+                const value = axisValue(localPoint(event));
+                const nearEdge = Math.abs(value - activeInterval.leading) <= 8
+                    || Math.abs(value - activeInterval.trailing) <= 8;
+                container.style.cursor = nearEdge
+                    ? regionAxis === 'x' ? 'ew-resize' : 'ns-resize'
+                    : value > activeInterval.leading && value < activeInterval.trailing ? 'grab' : 'crosshair';
+            }
+            return;
+        }
         const point = localPoint(event);
-        if (Math.hypot(point.x - dragStart.x, point.y - dragStart.y) < 4) return;
+        if (dragDistance(dragStart, point) < 4) return;
         suppressClick = true;
-        showRegion(dragStart, point);
-        const normalized = normalizeVegaRegionEvent(
-            view, dragStart, point, 'preview', rectangleInteraction.eventSource.match ?? 'intersect',
-            interactionModifiers(event),
-        );
-        selected = new Set(committed);
-        void dispatch(rectangleInteraction, {
-            type: 'semantic', source: 'region', phase: 'preview',
-            target: resolveTarget('rectangle', 'region', normalized.hits),
-            region: normalized.region, modifiers: normalized.modifiers,
-        });
+        const interval = regionAxis === 'xy' ? undefined : intervalForDrag(point);
+        const points = interval ? pointsForInterval(interval) : { start: dragStart, end: point };
+        interval ? showInterval(interval) : showRegion(dragStart, point);
+        dispatchRegion('preview', points.start, points.end, event, dragAction);
     };
     const finishDrag = (event: PointerEvent): void => {
-        if (!rectangleInteraction || !dragStart || pointerId !== event.pointerId) return;
+        if (!regionInteraction || !dragStart || pointerId !== event.pointerId) return;
         const point = localPoint(event);
-        const dragged = Math.hypot(point.x - dragStart.x, point.y - dragStart.y) >= 4;
+        const dragged = dragDistance(dragStart, point) >= 4;
         if (dragged) {
-            const normalized = normalizeVegaRegionEvent(
-                view, dragStart, point, 'commit', rectangleInteraction.eventSource.match ?? 'intersect',
-                interactionModifiers(event),
-            );
-            selected = new Set(committed);
-            void dispatch(rectangleInteraction, {
-                type: 'semantic', source: 'region', phase: 'commit',
-                target: resolveTarget('rectangle', 'region', normalized.hits),
-                region: normalized.region, modifiers: normalized.modifiers,
-            });
+            const interval = regionAxis === 'xy' ? undefined : intervalForDrag(point);
+            const points = interval ? pointsForInterval(interval) : { start: dragStart, end: point };
+            dispatchRegion('commit', points.start, points.end, event, dragAction);
+            if (statefulBrush && interval) {
+                activeInterval = interval;
+                showInterval(interval);
+            }
         } else {
-            const normalized = normalizeVegaRegionEvent(
-                view, dragStart, point, 'commit', rectangleInteraction.eventSource.match ?? 'intersect',
-                interactionModifiers(event),
-            );
-            selected = new Set(committed);
-            void dispatch(rectangleInteraction, {
-                type: 'semantic', source: 'region', phase: 'commit', target: null,
-                region: normalized.region, modifiers: normalized.modifiers,
-            });
+            const clickedOutside = !activeInterval || axisValue(point) < activeInterval.leading
+                || axisValue(point) > activeInterval.trailing;
+            if (!statefulBrush || clickedOutside) {
+                activeInterval = undefined;
+                committed.clear();
+                dispatchRegion('commit', dragStart, point, event, 'clear', null);
+            }
         }
         dragStart = undefined;
         pointerId = undefined;
-        overlay.style.display = 'none';
+        initialInterval = undefined;
+        if (!statefulBrush || !activeInterval) overlay.style.display = 'none';
         if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId);
         if (dragged) window.setTimeout(() => { suppressClick = false; }, 0);
     };
     const cancelDrag = (event: PointerEvent): void => {
-        if (!rectangleInteraction || !dragStart || pointerId !== event.pointerId) return;
+        if (!regionInteraction || !dragStart || pointerId !== event.pointerId) return;
         selected = new Set(committed);
         dragStart = undefined;
         pointerId = undefined;
-        overlay.style.display = 'none';
+        initialInterval = undefined;
+        if (statefulBrush && activeInterval) showInterval(activeInterval);
+        else overlay.style.display = 'none';
         if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId);
         void sync();
     };
     const keyDown = (event: KeyboardEvent): void => {
         if (event.key !== 'Escape') return;
-        if (dragStart) selected = new Set(committed);
-        else {
+        if (dragStart) {
+            selected = new Set(committed);
+            if (statefulBrush && initialInterval) activeInterval = initialInterval;
+        } else {
             selected.clear();
+            activeInterval = undefined;
             clearAnnotation();
         }
         dragStart = undefined;
         pointerId = undefined;
+        initialInterval = undefined;
         overlay.style.display = 'none';
         void sync();
     };
-    container.addEventListener('pointerdown', pointerDown);
-    container.addEventListener('pointermove', pointerMove);
-    container.addEventListener('pointerup', finishDrag);
-    container.addEventListener('pointercancel', cancelDrag);
+    container.addEventListener('pointerdown', pointerDown, true);
+    container.addEventListener('pointermove', pointerMove, true);
+    container.addEventListener('pointerup', finishDrag, true);
+    container.addEventListener('pointercancel', cancelDrag, true);
     container.addEventListener('keydown', keyDown);
 
     const customSourceCleanups = interactions.flatMap((interaction) => {
@@ -999,6 +1096,8 @@ export function mountVegaInteractions(
                     target,
                     point: event.type === 'element' ? event.point : undefined,
                     region: event.type === 'region' ? event.region : undefined,
+                    axis: event.type === 'region' ? event.axis : undefined,
+                    operation: event.type === 'region' ? event.operation : undefined,
                     modifiers: event.modifiers,
                 });
             },
@@ -1010,10 +1109,10 @@ export function mountVegaInteractions(
         view.removeEventListener('click', clickHandler);
         view.removeEventListener('mousemove', hoverHandler);
         view.removeEventListener('mouseout', clearHover);
-        container.removeEventListener('pointerdown', pointerDown);
-        container.removeEventListener('pointermove', pointerMove);
-        container.removeEventListener('pointerup', finishDrag);
-        container.removeEventListener('pointercancel', cancelDrag);
+        container.removeEventListener('pointerdown', pointerDown, true);
+        container.removeEventListener('pointermove', pointerMove, true);
+        container.removeEventListener('pointerup', finishDrag, true);
+        container.removeEventListener('pointercancel', cancelDrag, true);
         container.removeEventListener('keydown', keyDown);
         overlay.remove();
         focusLayer.remove();
