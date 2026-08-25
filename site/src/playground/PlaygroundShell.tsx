@@ -10,6 +10,15 @@ const pages: NavEntry[] = [
   { to: 'mcp-ui', label: 'MCP UI test' },
   { to: 'labs', label: 'Labs' },
   { to: 'overflow-viewport', label: 'Overflow viewport' },
+  {
+    group: 'Interactions',
+    children: [
+      { to: 'click-focus', label: 'Current support' },
+      { to: 'external-to-chart', label: 'External to chart' },
+      { to: 'chart-to-external', label: 'Chart to external' },
+      { to: 'interaction-candidates', label: 'Candidates' },
+    ],
+  },
   { to: 'debug-gym', label: 'Debug gym' },
   { to: 'demo-wall', label: 'Demo wall' },
   {
@@ -26,7 +35,7 @@ const pages: NavEntry[] = [
   { to: 'full-test-cases', label: 'Full test cases' },
 ];
 
-function ThemeLabsMenu({ group, children }: { group: string; children: NavLeaf[] }) {
+function NavGroupMenu({ group, children }: { group: string; children: NavLeaf[] }) {
   const { pathname } = useLocation();
   // A page may carry further segments (style-references/swiss), so match the
   // page rather than the end of the path.
@@ -66,7 +75,7 @@ export function PlaygroundShell() {
         <nav className="dev-nav" aria-label="Dev pages">
           {pages.map((page) => (
             'group' in page ? (
-              <ThemeLabsMenu key={page.group} group={page.group} children={page.children} />
+              <NavGroupMenu key={page.group} group={page.group} children={page.children} />
             ) : (
               <NavLink
                 key={page.to}

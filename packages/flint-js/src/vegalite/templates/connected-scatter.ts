@@ -29,6 +29,14 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import { defaultBuildEncodings } from './utils';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 /**
  * Pick a *sortable* Vega-Lite type for the order encoding. The order channel
@@ -64,6 +72,29 @@ export const connectedScatterDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "order", "color", "detail", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'order', 'color', 'detail']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                const kind = event.role === 'line' ? 'path' : 'mark';
+                return targetFromHits(hits, context.keyField, { kind, role: event.role });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+        };
+    },
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
 

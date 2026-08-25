@@ -3,6 +3,13 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
     coerceGanttEndpoint,
     ganttDurationLabelExpression,
     ganttLabelReservePx,
@@ -32,6 +39,27 @@ export const ganttChartDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "x2", "color", "detail", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color', 'detail']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar'],
+            renderHoverStyles: { rect: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'task' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+        };
+    },
     declareLayoutMode: () => ({
         axisFlags: { y: { banded: true } },
     }),

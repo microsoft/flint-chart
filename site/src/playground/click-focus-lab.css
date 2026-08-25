@@ -1,0 +1,185 @@
+.cf-page {
+  gap: 26px;
+  position: relative;
+}
+
+.cf-heading p {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: #66707a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cf-interaction-list {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  color: #66707a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.cf-interaction-list strong {
+  color: #1f2328;
+}
+
+.cf-summary {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 16px;
+  color: #737d86;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-top: 10px;
+}
+
+.cf-summary strong {
+  margin-right: 3px;
+  color: #1f2328;
+}
+
+.cf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 18px;
+  width: min(100%, 960px);
+}
+
+.cf-probe {
+  display: grid;
+  grid-template-rows: auto auto;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d8dde2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.cf-probe-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.cf-probe-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.cf-probe-header p {
+  margin: 6px 0 0;
+  color: #68737c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.cf-status {
+  flex: 0 0 auto;
+  padding-top: 2px;
+  color: #737d86;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cf-status-works {
+  color: #3f6b57;
+}
+
+.cf-status-partial {
+  color: #806327;
+}
+
+.cf-status-none {
+  color: #737d86;
+}
+
+.cf-action-rail {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 50%;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 6;
+  transform: translateY(-50%);
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #cfd5da;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cf-action-rail button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 92px;
+  height: 32px;
+  border: 0;
+  border-radius: 4px;
+  padding: 0 9px;
+  color: #66707a;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cf-action-rail button:hover {
+  color: #1f2328;
+  background: #eef1f3;
+}
+
+.cf-action-rail button.active {
+  color: #fff;
+  background: #4d5963;
+}
+
+.cf-stage {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cf-mount {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 280px;
+}
+
+.cf-mount [data-flint-chart] {
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 820px) {
+  .cf-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .cf-heading {
+    padding-right: 48px;
+  }
+
+  .cf-action-rail {
+    right: max(8px, env(safe-area-inset-right));
+  }
+
+  .cf-probe-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cf-status {
+    align-self: flex-start;
+  }
+}

@@ -1,0 +1,125 @@
+.ic-page {
+  gap: 24px;
+}
+
+.ic-heading p {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: #66707a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ic-eyebrow,
+.ic-kicker {
+  color: #446a59;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ic-eyebrow {
+  margin-bottom: 5px;
+}
+
+.ic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  align-items: start;
+  gap: 18px;
+  width: min(100%, 960px);
+}
+
+.ic-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d8dde2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ic-card-header {
+  min-height: 132px;
+  padding: 15px 16px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.ic-kicker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+
+.ic-card h2 {
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.ic-card strong {
+  color: #343b42;
+  font-size: 11px;
+}
+
+.ic-card p {
+  margin: 6px 0 0;
+  color: #68737c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ic-stage {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ic-tooltip {
+  position: absolute;
+  z-index: 4;
+  display: none;
+  max-width: min(240px, calc(100% - 24px));
+  padding: 7px 9px;
+  border: 1px solid #cfd5da;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 20px rgba(31, 35, 40, 0.13);
+  color: #1f2328;
+  font-size: 10px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.ic-tooltip[data-visible='true'] {
+  display: block;
+}
+
+.ic-card .ic-hovered,
+.ic-card .ic-selected {
+  opacity: 1 !important;
+  stroke: #7c2d12 !important;
+  stroke-width: 2px !important;
+}
+
+.ic-card .ic-dimmed {
+  opacity: 0.25 !important;
+}
+
+.ic-brush .selection {
+  fill: #b9d8ed;
+  fill-opacity: 0.35;
+  stroke: #315f7d;
+}
+
+.ic-brush .overlay {
+  cursor: crosshair;
+}
+
+@media (max-width: 520px) {
+  .ic-card-header {
+    min-height: 0;
+  }
+}

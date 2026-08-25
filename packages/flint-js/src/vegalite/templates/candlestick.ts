@@ -3,6 +3,8 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import { adjustBarMarks } from './utils';
+import { elementsFromHits } from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 export const candlestickChartDef: ChartTemplateDef = {
     chart: "Candlestick Chart",
@@ -15,6 +17,28 @@ export const candlestickChartDef: ChartTemplateDef = {
     },
     channels: ["x", "open", "high", "low", "close", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = resolvedEncodings.x?.field;
+        return {
+            fields: categoryField ? [categoryField] : [],
+            categoryField,
+            selectableMarks: ['rule', 'bar', 'tick'],
+            renderHoverStyles: {
+                rule: { strokeWidth: 2.5 },
+                rect: { opacity: 'contrast' },
+            },
+            resolve: (event, context) => {
+                const elements = elementsFromHits(event.hits, context.keyField);
+                return elements.length > 0
+                    ? { visual: { kind: 'mark', role: 'candlestick' }, elements }
+                    : null;
+            },
+            presentUpdate: presentInteractionUpdate(() => ({
+                anchor: 'top',
+                placement: 'above',
+            })),
+        };
+    },
     declareLayoutMode: () => ({
         axisFlags: { x: { banded: true } },
     }),

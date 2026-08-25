@@ -13,6 +13,9 @@ const DATA = [
   { weight: 2.1, mpg: 27, origin: 'US' },
   { weight: 1.9, mpg: 29, origin: 'EU' },
 ];
+function serializableSpec(spec: unknown): unknown {
+  return JSON.parse(JSON.stringify(spec));
+}
 
 const SEMANTIC = { weight: 'Quantity', mpg: 'Quantity', origin: 'Country' };
 
@@ -70,7 +73,7 @@ describe('channel field shorthand', () => {
       },
     });
 
-    expect(shorthand).toEqual(explicit);
+    expect(serializableSpec(shorthand)).toEqual(serializableSpec(explicit));
   });
 
   it('supports shorthand strings inside a static-series array', () => {
@@ -101,6 +104,6 @@ describe('channel field shorthand', () => {
       },
     });
 
-    expect(shorthand).toEqual(explicit);
+    expect(serializableSpec(shorthand)).toEqual(serializableSpec(explicit));
   });
 });

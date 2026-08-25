@@ -8,6 +8,15 @@ import {
     defaultBuildEncodings, applyPointSizeScaling, setMarkProp,
 } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_FILL,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
@@ -37,6 +46,34 @@ export const scatterPlotDef: ChartTemplateDef = {
     template: { mark: "circle", encoding: {} },
     channels: ["x", "y", "color", "size", "shape", "opacity", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const shapeOnlyHover = resolvedEncodings.shape?.field && !resolvedEncodings.color?.field
+            ? { fill: MUTED_HOVER_FILL }
+            : {};
+        const legendFields = Object.fromEntries(
+            ['color', 'size', 'shape']
+                .map((channel) => [channel, resolvedEncodings[channel]?.field])
+                .filter((entry): entry is [string, string] => !!entry[1]),
+        );
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size', 'shape']),
+            seriesField,
+            legendFields,
+            selectableMarks: ['circle', 'point'],
+            renderHoverStyles: {
+                symbol: { ...shapeOnlyHover, stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+        };
+    },
     instantiate: (spec, ctx) => {
         defaultBuildEncodings(spec, ctx.resolvedEncodings);
         // A `shape` encoding only renders distinct glyphs on the `point` mark;
@@ -168,6 +205,37 @@ export const rangedDotPlotDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "color"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                const markType = event.hits[0]?.markType;
+                const kind = markType === 'line' ? 'path' : 'mark';
+                const role = event.role === 'legend-item'
+                    ? 'legend-item'
+                    : markType === 'symbol'
+                    ? 'point'
+                    : markType ?? event.role;
+                return targetFromHits(hits, context.keyField, { kind, role });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+        };
+    },
     instantiate: (spec, ctx) => {
         const { color, ...rest } = ctx.resolvedEncodings;
         if (!spec.encoding) spec.encoding = {};
@@ -192,6 +260,34 @@ export const boxplotDef: ChartTemplateDef = {
     template: { mark: "boxplot", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: [...new Set([
+                ...fieldsFromEncodingChannels(resolvedEncodings, ['color']),
+                ...(categoryField ? [categoryField] : []),
+            ])],
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['boxplot'],
+            renderHoverStyles: {
+                rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                rule: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'distribution' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+        };
+    },
     declareLayoutMode: (cs, table, chartProperties) => {
         if (!cs.x?.field || !cs.y?.field) return {};
         const result = detectBandedAxisForceDiscrete(cs, table, { preferAxis: 'x' });

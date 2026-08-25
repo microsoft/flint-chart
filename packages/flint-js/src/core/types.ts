@@ -913,6 +913,26 @@ export interface ChartTemplateDef {
      */
     markCognitiveChannel: MarkCognitiveChannel;
 
+    /** Template-owned semantic resolution and chart-specific presentation. */
+    semanticInteractions?: (context: {
+        resolvedEncodings: Readonly<Record<string, any>>;
+    }) => {
+        fields: string[];
+        categoryField?: string;
+        seriesField?: string;
+        legendFields?: Record<string, string>;
+        selectableMarks: string[];
+        renderHoverStyles?: Record<string, {
+            fill?: string;
+            fillOpacity?: number;
+            opacity?: 'contrast';
+            stroke?: string;
+            strokeWidth?: number;
+        }>;
+        resolve: import('./interaction-semantics').ChartInteractionResolver;
+        presentUpdate: import('../interactive/interactions').ChartUpdateProcessor;
+    };
+
     /**
      * Phase 1a: Declare layout intent.
      * Runs BEFORE layout computation.

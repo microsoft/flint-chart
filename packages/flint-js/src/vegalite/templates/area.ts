@@ -4,6 +4,14 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { makeCartesianPivot } from '../../core/pivot';
 import { defaultBuildEncodings, setMarkProp, alignStackOrderToColorOrder } from './utils';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -118,6 +126,27 @@ export const areaChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "opacity", "column", "row"],
     markCognitiveChannel: 'area',
     geometryKinds: ['area', 'line', 'point'],
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { stroke: MUTED_HOVER_STROKE, strokeWidth: 1.5 } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'path', role: event.role });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

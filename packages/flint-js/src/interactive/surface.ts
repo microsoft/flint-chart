@@ -8,6 +8,13 @@ import type {
     ViewportState,
 } from './types';
 
+let generatedChartId = 0;
+
+function nextChartId(): string {
+    generatedChartId += 1;
+    return `flint-chart-${generatedChartId}`;
+}
+
 const RAIL_THICKNESS = 8;
 const RAIL_GAP = 9;
 const RAIL_TRACK_COLOR = 'rgba(31, 41, 55, 0.035)';
@@ -167,6 +174,7 @@ export function mountInteractiveChartSurface(
     adapter: InteractiveRendererAdapter,
     options: InteractiveChartSurfaceOptions = {},
 ): InteractiveChartSurface {
+    const chartId = options.chartId ?? nextChartId();
     const root = document.createElement('div');
     const chart = document.createElement('div');
     const state: ViewportState = {};
@@ -174,10 +182,12 @@ export function mountInteractiveChartSurface(
     let renderer: InteractiveRenderer | undefined;
     let updateTimer: number | undefined;
     let destroyed = false;
+    const pendingEvents: import('./interactions').ExternalInteractionEvent[] = [];
 
     root.className = options.className ?? 'flint-interactive-surface';
     root.setAttribute('role', 'figure');
     root.setAttribute('aria-label', options.ariaLabel ?? input.chart_spec.title ?? 'Interactive chart');
+    root.dataset.flintChartId = chartId;
     applyStyles(root, {
         display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'minmax(0, auto) auto',
         alignItems: 'stretch', rowGap: '6px', minWidth: '0', maxWidth: '100%', marginInline: 'auto',
@@ -208,6 +218,7 @@ export function mountInteractiveChartSurface(
             return;
         }
         renderer = mounted;
+        for (const event of pendingEvents.splice(0)) void mounted.dispatchInteraction?.(event);
         for (const viewport of mounted.viewports) {
             state[viewport.channel] = 0;
             const rail = createViewportRail(viewport, 0, (start) => setViewport(viewport.channel, start));
@@ -238,9 +249,15 @@ export function mountInteractiveChartSurface(
 
     return {
         element: root,
+        chartId,
         ready,
         getViewportState: () => ({ ...state }),
         setViewport,
+        dispatch: (event) => {
+            if (destroyed) return;
+            if (renderer) void renderer.dispatchInteraction?.(event);
+            else pendingEvents.push(event);
+        },
         destroy: () => {
             if (destroyed) return;
             destroyed = true;

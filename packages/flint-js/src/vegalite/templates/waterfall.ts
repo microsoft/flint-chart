@@ -3,6 +3,13 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 /**
@@ -21,6 +28,29 @@ export const waterfallChartDef: ChartTemplateDef = {
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar'],
+            renderHoverStyles: { rect: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'waterfall-step' });
+            },
+            presentUpdate: presentInteractionUpdate((element) => element.records?.[0]?.__wf_color === 'decrease'
+                ? { anchor: 'bottom', placement: 'below' }
+                : { anchor: 'top', placement: 'above' }),
+        };
+    },
     ownsValueLabels: true,
     // The steps are drawn on a band scale whatever the column holds — a month
     // is a step here, not a date. Saying so keeps the layout's category sizing
@@ -45,6 +75,7 @@ export const waterfallChartDef: ChartTemplateDef = {
         // rather than falling back to the raw field names.
         const xTitle = x?.title ?? xField;
         const yTitle = y?.title ?? yField;
+        const colorTitle = color?.title ?? colorField ?? "Type";
 
         if (!spec.encoding) spec.encoding = {};
         if (column) spec.encoding.column = column;
@@ -188,6 +219,13 @@ export const waterfallChartDef: ChartTemplateDef = {
         // extreme top/bottom bar tips isn't clipped by the plot edge.
         const labelPad = showLabels && labelFits ? ((labelFontSize + 8) / plotH) * ySpan : 0;
         const yDomain = labelPad > 0 ? [yMin - labelPad, yMax + labelPad] : null;
+        const tooltip = [
+            { field: xField, type: x?.type ?? "ordinal", title: xTitle },
+            { field: yField, type: y?.type ?? "quantitative", title: yTitle },
+            hasTypeCol
+                ? { field: colorField, type: color?.type ?? "nominal", title: colorTitle }
+                : { field: "__wf_color", type: "nominal", title: "Type" },
+        ];
 
         spec.encoding = {
             x: xEnc,
@@ -217,6 +255,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         },
                         legend: { title: "Type" },
                     },
+                    tooltip,
                 },
             },
             // Thin connector lines bridging each bar to the next at the running
@@ -236,6 +275,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                     x: { field: xField, type: "ordinal", sort: null, bandPosition: 0 },
                     x2: { field: "__wf_lead", bandPosition: 1 },
                     y: { field: "__wf_connector_y", type: "quantitative", title: yTitle },
+                    tooltip: null,
                 },
             },
         ];
@@ -265,6 +305,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                     encoding: {
                         y: { field: "__wf_sum", type: "quantitative", title: yTitle },
                         text: { field: "__wf_sum", type: "quantitative", format: labelFormat },
+                        tooltip: null,
                     },
                 },
                 // Delta inside the bar, muted in the bar's own hue. Skipped when the
@@ -284,6 +325,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                             condition: { test: "datum.__wf_color === 'total'", value: "#725a30" },
                             value: "white",
                         },
+                        tooltip: null,
                     },
                 },
             );

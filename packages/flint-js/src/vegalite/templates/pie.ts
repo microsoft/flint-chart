@@ -3,6 +3,13 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { computeCircumferencePressure, computeEffectiveBarCount } from '../../core/decisions';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 import { setMarkProp } from './utils';
 
 export const pieChartDef: ChartTemplateDef = {
@@ -10,6 +17,25 @@ export const pieChartDef: ChartTemplateDef = {
     template: { mark: "arc", encoding: {} },
     channels: ["size", "color", "column", "row"],
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['color']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['arc'],
+            renderHoverStyles: { arc: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'slice' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'arc-centroid', placement: 'auto' })),
+        };
+    },
     geometryKinds: ['arc'],
     instantiate: (spec, ctx) => {
         // Remap abstract channels to VL channels:

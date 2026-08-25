@@ -1,4 +1,5 @@
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { ExternalInteractionEvent, InteractionDef } from './interactions';
 
 export type ViewportChannel = 'x' | 'y';
 export type ViewportState = Partial<Record<ViewportChannel, number>>;
@@ -13,6 +14,7 @@ export interface InteractiveRenderer {
     setViewports(starts: ViewportState): void | Promise<void>;
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     resize?(size: { width: number; height: number }): void | Promise<void>;
+    dispatchInteraction?(event: ExternalInteractionEvent): void | Promise<void>;
     destroy(): void;
 }
 
@@ -23,6 +25,7 @@ export interface InteractiveRendererAdapter {
 export interface InteractiveChartSurfaceOptions {
     className?: string;
     ariaLabel?: string;
+    chartId?: string;
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
@@ -30,7 +33,9 @@ export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
 export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOptions {
     backend: InteractiveBackend;
     renderer?: 'canvas' | 'svg';
-    /** Enable local click focus where supported. Defaults to true for Vega-Lite. */
+    /** Semantic interactions to enable. Omit for viewport controls only. */
+    interactions?: readonly InteractionDef[];
+    /** @deprecated Use `interactions: [clickHighlight()]`. */
     focusOnClick?: boolean;
     expressionInterpreter?: unknown;
     background?: string;
@@ -38,8 +43,10 @@ export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOpt
 
 export interface InteractiveChartSurface {
     readonly element: HTMLElement;
+    readonly chartId: string;
     readonly ready: Promise<void>;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
+    dispatch(event: ExternalInteractionEvent): void;
     destroy(): void;
 }

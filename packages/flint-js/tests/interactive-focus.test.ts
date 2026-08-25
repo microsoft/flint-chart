@@ -28,7 +28,7 @@ describe('Vega-Lite interactive focus', () => {
         expect(spec.encoding.detail).toEqual({ field: '__flint_focus_key', type: 'nominal' });
         expect(spec.encoding.opacity).toEqual({
             condition: { param: '__flint_focus', value: 1 },
-            value: 0.3,
+            value: 0.25,
         });
     });
 

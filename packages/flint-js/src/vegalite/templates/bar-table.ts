@@ -4,6 +4,13 @@
 import { ChartTemplateDef, ChartPropertyDef, ChannelSemantics } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
 import { resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -36,6 +43,27 @@ export const barTableDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar'],
+            renderHoverStyles: { rect: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'bar-table-row' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+        };
+    },
     suppressValueLabels: true,
     declareLayoutMode: (cs, table, chartProperties) => {
         // Bar tables split the plot width into 3 horizontal panels

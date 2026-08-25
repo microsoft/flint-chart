@@ -24,6 +24,10 @@ import { ThemeLabReal } from './playground/ThemeLabReal';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
+import { ClickFocusLab } from './playground/ClickFocusLab';
+import { InteractionCandidates } from './playground/InteractionCandidates';
+import { ExternalToChartLab } from './playground/ExternalToChartLab';
+import { ChartToExternalLab } from './playground/ChartToExternalLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { DebugGym } from './playground/DebugGym';
@@ -75,6 +79,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
+          <Route path="click-focus" element={<ClickFocusLab />} />
+          <Route path="external-to-chart" element={<ExternalToChartLab />} />
+          <Route path="chart-to-external" element={<ChartToExternalLab />} />
+          <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
           <Route path="debug-gym" element={<DebugGym />} />
           <Route path="year-legend" element={<Navigate to="../debug-gym" replace />} />

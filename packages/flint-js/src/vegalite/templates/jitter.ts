@@ -4,6 +4,14 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { defaultBuildEncodings } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 export const stripPlotDef: ChartTemplateDef = {
     chart: "Strip Plot",
@@ -13,6 +21,31 @@ export const stripPlotDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "color", "size", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size']),
+            categoryField,
+            seriesField,
+            legendFields: {
+                ...(colorField ? { color: colorField } : {}),
+                ...(sizeField ? { size: sizeField } : {}),
+            },
+            selectableMarks: ['circle'],
+            renderHoverStyles: { symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { defaultBandSize: 50, minStep: 16 },
     }),

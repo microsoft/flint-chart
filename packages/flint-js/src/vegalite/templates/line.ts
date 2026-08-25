@@ -4,6 +4,14 @@
 import { ChartTemplateDef, ChartPropertyDef, type InstantiateContext } from '../../core/types';
 import { defaultBuildEncodings, setMarkProp } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    elementsFromHits,
+    MUTED_HOVER_STROKE,
+    type SemanticResolveContext,
+    type SemanticResolveEvent,
+    type SemanticTarget,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 
 export const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -67,6 +75,36 @@ function isContinuousColor(ctx: InstantiateContext): boolean {
     return type === 'quantitative' || type === 'temporal';
 }
 
+function discreteField(
+    resolvedEncodings: Readonly<Record<string, any>>,
+    channels: readonly string[],
+): string | undefined {
+    return channels
+        .map((channel) => resolvedEncodings[channel])
+        .find((encoding) => encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal'))
+        ?.field;
+}
+
+function resolveLineTarget(
+    event: SemanticResolveEvent,
+    context: SemanticResolveContext,
+    seriesField: string | undefined,
+): SemanticTarget | null {
+    const legendField = event.legendField ?? seriesField;
+    const hits = event.role === 'legend-item' && legendField && event.legendValue !== undefined
+        ? context.allHits.filter((hit) => hit.datum[legendField] === event.legendValue)
+        : event.hits;
+    const elements = elementsFromHits(hits, context.keyField);
+    if (elements.length === 0) return null;
+    return {
+        visual: {
+            kind: event.role === 'line' ? 'path' : 'mark',
+            role: event.role,
+        },
+        elements,
+    };
+}
+
 /**
  * Vega-Lite splits a line into one segment per datum when color is quantitative,
  * so nothing visible connects. Mirror ECharts: a neutral line + colored points.
@@ -119,6 +157,30 @@ export const lineChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "strokeDash", "detail", "opacity", "column", "row"],
     markCognitiveChannel: 'position',
     geometryKinds: ['line', 'point'],
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const fields = ['x', 'y', 'color', 'detail']
+            .map((channel) => resolvedEncodings[channel]?.field)
+            .filter((field): field is string => !!field);
+        const categoryField = discreteField(resolvedEncodings, ['x']);
+        const seriesField = discreteField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: [...new Set(fields)],
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => resolveLineTarget(event, context, seriesField),
+            presentUpdate: presentInteractionUpdate(() => ({
+                anchor: 'center',
+                placement: 'auto',
+            })),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

@@ -1,7 +1,8 @@
+import { DEFAULT_DIM_OPACITY } from '../interactive/emphasis-update';
+
 const FOCUS_PARAM = '__flint_focus';
 const FOCUS_KEY = '__flint_focus_key';
 const CLEAR_MARK = '__flint_focus_clear';
-const DIMMED_OPACITY = 0.3;
 const FOCUSABLE_MARKS = new Set(['bar', 'arc', 'point', 'circle', 'square', 'rect']);
 
 function markType(mark: unknown): string | undefined {
@@ -47,7 +48,7 @@ function focusTransform(field: string): Record<string, unknown> {
 function focusOpacity(restOpacity: number): Record<string, unknown> {
     return {
         condition: { param: FOCUS_PARAM, value: restOpacity },
-        value: Math.min(DIMMED_OPACITY, restOpacity),
+        value: Math.min(DEFAULT_DIM_OPACITY, restOpacity),
     };
 }
 

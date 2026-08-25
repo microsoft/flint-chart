@@ -1,15 +1,21 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { InteractionDef } from '../interactive/interactions';
 import type { InteractiveRendererAdapter, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
-import { addInteractiveFocus, injectFocusClearMark, withoutInteractiveFocusField } from './interactive-focus';
+import {
+    addVegaLiteInteractions,
+    injectVegaInteractionStore,
+    mountVegaInteractions,
+    withoutSemanticInteractionField,
+} from './semantic-interactions';
 import { compile } from 'vega-lite';
 import { Error as VegaError, parse, View } from 'vega';
 import { Handler } from 'vega-tooltip';
 
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
-    focusOnClick?: boolean;
+    interactions?: readonly InteractionDef[];
     expressionInterpreter?: unknown;
     background?: string;
 }
@@ -54,9 +60,10 @@ export function createVegaInteractiveRenderer(
             const firstInput = windowedInput(interactiveInput, viewports, {});
             const vlSpec = assembleVegaLite(firstInput) as any;
             applyViewportSorts(vlSpec, viewports);
-            const hasFocus = options.focusOnClick !== false && addInteractiveFocus(vlSpec);
+            const interactions = options.interactions ?? [];
+            const interactionPlan = addVegaLiteInteractions(vlSpec, interactions);
             const vegaSpec = compile(vlSpec).spec as any;
-            if (hasFocus) injectFocusClearMark(vegaSpec);
+            if (interactionPlan) injectVegaInteractionStore(vegaSpec, interactionPlan);
             const source = vegaSpec.data?.find((entry: any) => Array.isArray(entry.values))?.name as string | undefined;
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
@@ -72,9 +79,20 @@ export function createVegaInteractiveRenderer(
             view.logLevel(VegaError);
             const tooltip = new Handler();
             view.tooltip((handler, event, item, value) => {
-                tooltip.call(handler, event, item, withoutInteractiveFocusField(value));
+                tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
             await view.runAsync();
+            const interactionController = interactionPlan?.resolve && interactionPlan.presentUpdate
+                ? mountVegaInteractions(
+                    view,
+                    container,
+                    input.chart_spec.chartType,
+                    interactionPlan,
+                    interactions,
+                    interactionPlan.resolve,
+                    interactionPlan.presentUpdate,
+                )
+                : undefined;
 
             let destroyed = false;
             let running = false;
@@ -105,6 +123,9 @@ export function createVegaInteractiveRenderer(
 
             return {
                 viewports,
+                dispatchInteraction(event) {
+                    return interactionController?.dispatch(event);
+                },
                 getViewportGeometry(channel) {
                     const [left, top] = view.origin();
                     return channel === 'x'
@@ -124,6 +145,7 @@ export function createVegaInteractiveRenderer(
                     if (destroyed) return;
                     destroyed = true;
                     if (updateTimer !== undefined) window.clearTimeout(updateTimer);
+                    interactionController?.destroy();
                     view.finalize();
                     container.replaceChildren();
                 },

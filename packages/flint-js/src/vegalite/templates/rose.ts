@@ -17,6 +17,13 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentInteractionUpdate } from '../../interactive/chart-update';
 import { setMarkProp } from './utils';
 
 export const roseChartDef: ChartTemplateDef = {
@@ -31,6 +38,27 @@ export const roseChartDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorLegendField = resolvedEncodings.color?.field ?? resolvedEncodings.x?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorLegendField ? { color: colorLegendField } : undefined,
+            selectableMarks: ['arc'],
+            renderHoverStyles: { arc: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField ?? categoryField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'polar-bar' });
+            },
+            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'arc-centroid', placement: 'auto' })),
+        };
+    },
 
     // Polar charts have no positional axes — declare no banded axes
     // so the layout pipeline won't produce step-based sizing.
