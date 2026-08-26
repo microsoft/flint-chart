@@ -337,7 +337,7 @@ export function ClickFocusLab() {
       </div>
       <header className="dev-page-heading cf-heading">
         <h1>Interaction gallery</h1>
-        <p>Flint currently supports five interaction families:</p>
+        <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
         <ul className="cf-interaction-list">
           <li><strong>Element:</strong> Click a mark to focus it and dim the other marks.</li>
           <li><strong>Group:</strong> Click a mark to focus related marks in the same category or series.</li>
