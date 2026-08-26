@@ -77,6 +77,59 @@
   overflow: hidden;
 }
 
+.ic-stage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 12px 14px;
+}
+
+.ic-stage-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.ic-stage-meta strong {
+  color: #2d3439;
+  font-size: 12px;
+}
+
+.ic-stage-meta span {
+  color: #6c7780;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ic-stage-divider {
+  border-top: 1px solid #edf0f2;
+}
+
+.ic-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.ic-pill {
+  border: 1px solid #cfd5da;
+  border-radius: 999px;
+  background: #f7f8fa;
+  color: #2d3439;
+  font-size: 11px;
+  line-height: 1;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.ic-pill[data-active='true'] {
+  border-color: #50745f;
+  background: #edf5ef;
+  color: #284738;
+}
+
 .ic-tooltip {
   position: absolute;
   z-index: 4;
@@ -116,6 +169,24 @@
 
 .ic-brush .overlay {
   cursor: crosshair;
+}
+
+.ic-lasso .selection {
+  fill: rgba(49, 95, 125, 0.14);
+  stroke: #315f7d;
+  stroke-width: 1.8px;
+  stroke-linejoin: round;
+}
+
+.ic-lasso .overlay,
+.ic-overview-brush .overlay {
+  cursor: crosshair;
+}
+
+.ic-overview-brush .selection {
+  fill: rgba(80, 116, 95, 0.18);
+  stroke: #50745f;
+  stroke-width: 1.6px;
 }
 
 @media (max-width: 520px) {
