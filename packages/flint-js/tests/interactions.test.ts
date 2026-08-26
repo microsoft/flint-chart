@@ -1,23 +1,40 @@
 import { describe, expect, it } from 'vitest';
-import { brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, normalizeInteractions, select } from '../src/interactive/interactions';
+import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import {
+    AngularBrushInteraction,
     BrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,
+    NavigateInteraction,
     SelectInteraction,
 } from '../src/interactive/presets';
 import { presentInteractionUpdate } from '../src/interactive/chart-update';
 import {
     axisBrushTrigger,
+    angularBrushTrigger,
     clickTrigger,
     externalTrigger,
     hoverTrigger,
+    navigationTrigger,
     rectangleTrigger,
     xBrushTrigger,
     yBrushTrigger,
 } from '../src/interactive/triggers';
-import { geometryIntersectsRect, INTERACTION_KEY, normalizeVegaRegionEvent } from '../src/interactive/triggers/vega';
+import { AngularRegionSession } from '../src/interactive/gestures/angular-region';
+import {
+    cartesianDragDistance,
+    constrainCartesianRegion,
+    intervalPoints,
+    updateInterval,
+} from '../src/interactive/gestures/cartesian-region';
+import { PanSession, wheelZoomFactor } from '../src/interactive/gestures/navigation';
+import { guardNavigationDomain } from '../src/vegalite/interactions/navigation-scale';
+import {
+    geometryIntersectsRect,
+    INTERACTION_KEY,
+    normalizeVegaRegionEvent,
+} from '../src/vegalite/interactions/hit-adapter';
 import type {
     InteractionContext,
     InteractionDef,
@@ -45,6 +62,108 @@ function semanticUpdate(
     }, context);
 }
 
+describe('physical region gestures', () => {
+    it('projects Cartesian regions and measures only the configured axis', () => {
+        const start = { x: 20, y: 30 };
+        const end = { x: 80, y: 90 };
+        const plotSize = { width: 300, height: 180 };
+
+        expect(constrainCartesianRegion(start, end, 'x', plotSize)).toEqual({
+            start: { x: 20, y: 0 }, end: { x: 80, y: 180 },
+        });
+        expect(constrainCartesianRegion(start, end, 'y', plotSize)).toEqual({
+            start: { x: 0, y: 30 }, end: { x: 300, y: 90 },
+        });
+        expect(cartesianDragDistance(start, end, 'x')).toBe(60);
+        expect(cartesianDragDistance(start, end, 'y')).toBe(60);
+        expect(cartesianDragDistance(start, end, 'xy')).toBeCloseTo(Math.hypot(60, 60));
+    });
+
+    it('creates, moves, and resizes stateful Cartesian intervals', () => {
+        expect(updateInterval({ x: 30, y: 0 }, { x: 70, y: 0 }, 'x', 100, 'create')).toEqual({
+            leading: 30, trailing: 70,
+        });
+        expect(updateInterval(
+            { x: 95, y: 0 }, { x: 50, y: 0 }, 'x', 100, 'move', { leading: 30, trailing: 70 },
+        )).toEqual({ leading: 60, trailing: 100 });
+        expect(updateInterval(
+            { x: 90, y: 0 }, { x: 0, y: 0 }, 'x', 100, 'resize-leading', { leading: 30, trailing: 70 },
+        )).toEqual({ leading: 70, trailing: 90 });
+        expect(intervalPoints({ leading: 20, trailing: 60 }, 'y')).toEqual({
+            start: { x: 0, y: 20 }, end: { x: 0, y: 60 },
+        });
+    });
+
+    it('accumulates angular movement continuously across the zero-angle seam', () => {
+        const frame = { center: { x: 0, y: 0 }, innerRadius: 10, outerRadius: 100 };
+        const pointAt = (angle: number) => ({ x: 100 * Math.sin(angle), y: -100 * Math.cos(angle) });
+        const session = new AngularRegionSession(pointAt(Math.PI * 1.9), frame);
+
+        session.move(pointAt(Math.PI * 0.1));
+
+        expect(session.sector().endAngle - session.sector().startAngle).toBeCloseTo(Math.PI * 0.2);
+        expect(session.dragDistance()).toBeCloseTo(Math.PI * 20);
+    });
+});
+
+describe('viewport navigation', () => {
+    it('normalizes pan movement and wheel deltas without renderer state', () => {
+        const pan = new PanSession({ x: 20, y: 30 }, { width: 200, height: 100 });
+        expect(pan.move({ x: 40, y: 20 })).toEqual({ x: 0.1, y: -0.1 });
+        expect(pan.move({ x: 50, y: 40 })).toEqual({ x: 0.05, y: 0.2 });
+        expect(pan.dragDistance()).toBeCloseTo(Math.hypot(20, -10) + Math.hypot(10, 20));
+        expect(wheelZoomFactor(-100, 0, 400, 0.002)).toBeCloseTo(Math.exp(0.2));
+        expect(wheelZoomFactor(1, 1, 400, 0.002)).toBeCloseTo(Math.exp(-0.032));
+    });
+
+    it('declares navigation input separately from its viewport update policy', () => {
+        const interaction = navigate({ axes: 'xy' });
+        expect(interaction).toBeInstanceOf(NavigateInteraction);
+        expect(interaction.eventSource).toEqual(navigationTrigger({ axes: 'xy' }));
+        expect(interaction.update({
+            type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy',
+            factor: 1.5, anchor: { x: 0.25, y: 0.75 },
+        }, { chartType: 'Scatter Plot', selected: [] })).toEqual({
+            phase: 'commit',
+            ops: [{
+                op: 'navigate-viewport', phase: 'commit', operation: 'zoom', axes: 'xy',
+                factor: 1.5, anchor: { x: 0.25, y: 0.75 },
+                domainGuard: {
+                    minVisibleFraction: 0.02,
+                    maxVisibleFraction: 1,
+                    overscrollFraction: 0,
+                },
+            }],
+        });
+        expect(() => navigate({
+            domainGuard: { minVisibleFraction: 0.5, maxVisibleFraction: 0.25 },
+        })).toThrow(/maxVisibleFraction/);
+    });
+
+    it('guards linear, temporal, and logarithmic domains against the initial extent', () => {
+        const guard = { minVisibleFraction: 0.1, maxVisibleFraction: 1, overscrollFraction: 0 };
+        expect(guardNavigationDomain([45, 46], [0, 100], 'linear', guard)).toEqual([40.5, 50.5]);
+        expect(guardNavigationDomain([-20, 80], [0, 100], 'linear', guard)).toEqual([0, 100]);
+        const temporal = guardNavigationDomain(
+            [new Date('2020-05-01'), new Date('2020-05-02')],
+            [new Date('2020-01-01'), new Date('2021-01-01')],
+            'time',
+            guard,
+        );
+        expect(temporal[0]).toBeInstanceOf(Date);
+        expect((temporal[1] as Date).getTime() - (temporal[0] as Date).getTime())
+            .toBeCloseTo((Date.UTC(2021, 0, 1) - Date.UTC(2020, 0, 1)) * 0.1, -2);
+        const logarithmic = guardNavigationDomain([10, 11], [1, 1000], 'log', guard).map(Number);
+        expect(logarithmic[1] / logarithmic[0]).toBeCloseTo(Math.pow(1000, 0.1));
+        expect(guardNavigationDomain([-100, 200], [0, 100], 'linear', {
+            minVisibleFraction: 0.1, maxVisibleFraction: 1.5, overscrollFraction: 0,
+        })).toEqual([-25, 125]);
+        expect(guardNavigationDomain([-50, 50], [0, 100], 'linear', {
+            minVisibleFraction: 0.1, maxVisibleFraction: 1, overscrollFraction: 0.2,
+        })).toEqual([-20, 80]);
+    });
+});
+
 describe('interaction definitions', () => {
     it('declares normalized event sources for built-in presets', () => {
         expect(clickHighlight().eventSource).toBe(clickTrigger);
@@ -53,6 +172,8 @@ describe('interaction definitions', () => {
         expect(select().eventSource).toEqual(rectangleTrigger('intersect'));
         expect(brushX().eventSource).toEqual(xBrushTrigger('intersect', 'ephemeral'));
         expect(brushY().eventSource).toEqual(yBrushTrigger('intersect', 'ephemeral'));
+        expect(brushAngle().eventSource).toEqual(angularBrushTrigger('intersect'));
+        expect(navigate().eventSource).toEqual(navigationTrigger());
     });
 
     it('provides reusable trigger descriptors', () => {
@@ -67,6 +188,9 @@ describe('interaction definitions', () => {
         });
         expect(yBrushTrigger('intersect', 'stateful')).toEqual({
             type: 'region', gesture: 'drag', axis: 'y', match: 'intersect', mode: 'stateful',
+        });
+        expect(angularBrushTrigger('contain')).toEqual({
+            type: 'region', gesture: 'drag', regionGeometry: 'angular', match: 'contain', mode: 'ephemeral',
         });
         expect(externalTrigger('story-scroll')).toEqual({ type: 'external', source: 'story-scroll' });
     });
@@ -106,6 +230,8 @@ describe('interaction definitions', () => {
         expect(brushX()).toMatchObject({ id: 'brush-x', axis: 'x', eventSource: xBrushTrigger() });
         expect(brushY()).toMatchObject({ id: 'brush-y', axis: 'y', eventSource: yBrushTrigger() });
         expect(brushX({ mode: 'stateful' }).eventSource).toEqual(xBrushTrigger('intersect', 'stateful'));
+        expect(brushAngle()).toBeInstanceOf(AngularBrushInteraction);
+        expect(brushAngle()).toMatchObject({ id: 'brush-angle', eventSource: angularBrushTrigger() });
     });
 
     it('applies brush updates only for its configured axis', () => {
@@ -127,6 +253,10 @@ describe('interaction definitions', () => {
         expect(brushX({ mode: 'stateful' }).update({
             ...event, axis: 'x', phase: 'commit', operation: 'clear', target: null,
         }, context)).toEqual({ ops: [{ op: 'reset' }] });
+        expect(brushAngle().update({ ...event, axis: 'angle' }, context)).toEqual({
+            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+        });
+        expect(brushAngle().update({ ...event, axis: 'x' }, context)).toBeNull();
     });
 
     it('normalizes axis brushes across the orthogonal plot extent', () => {

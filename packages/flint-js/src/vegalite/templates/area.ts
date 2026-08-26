@@ -124,6 +124,7 @@ export const areaChartDef: ChartTemplateDef = {
     chart: "Area Chart",
     template: { mark: "area", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'area',
     geometryKinds: ['area', 'line', 'point'],
     semanticInteractions: ({ resolvedEncodings }) => {
@@ -209,6 +210,7 @@ export const streamgraphDef: ChartTemplateDef = {
     chart: "Streamgraph",
     template: { mark: "area", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'area',
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },

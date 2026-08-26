@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Layers3, MousePointer2, MoveHorizontal, MoveVertical, Scan } from 'lucide-react';
-import type { ChartAssemblyInput } from 'flint-chart';
+import { Layers3, MousePointer2, Move, MoveHorizontal, MoveVertical, RotateCcw, RotateCw, Scan } from 'lucide-react';
+import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
   genAreaTests,
   genBarTableTests,
@@ -26,20 +26,29 @@ import {
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
+  brushAngle,
   brushX,
   brushY,
   clickGroupHighlight,
   clickHighlight,
+  navigate,
   select as rectangleSelect,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
+import { ThemePicker } from './ThemePicker';
 import './click-focus-lab.css';
 
 type InteractionMode = 'element' | 'group' | 'select'
-  | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful';
+  | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate';
 type Support = 'works' | 'partial' | 'none';
+
+interface NavigationGuard {
+  minVisibleFraction: number;
+  maxVisibleFraction: number;
+  overscrollFraction: number;
+}
 
 const interactionModes = [
   { value: 'element', label: 'Element', icon: MousePointer2 },
@@ -47,8 +56,10 @@ const interactionModes = [
   { value: 'select', label: 'Select', icon: Scan },
   { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
   { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
+  { value: 'brush-angle', label: 'Angular brush', icon: RotateCw },
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
   { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
+  { value: 'navigate', label: 'Pan & zoom', icon: Move },
 ] as const;
 
 interface InteractionCase {
@@ -183,7 +194,25 @@ const interactionCases: InteractionCase[] = [
   interactionCase('connected-scatter', genConnectedScatterTests, 'works', 'Trajectory segments and observed points resolve independently.'),
 ];
 
-function InteractiveChart({ input, mode }: { input: ChartAssemblyInput; mode: InteractionMode }) {
+const navigationAxesByCase = new Map(interactionCases.flatMap((item) => {
+  const spec = assembleVegaLite(item.input) as any;
+  const axes = spec._interactionSemantics?.navigationAxes as readonly ('x' | 'y')[] | undefined;
+  return axes?.length ? [[item.id, axes] as const] : [];
+}));
+
+function InteractiveChart({
+  input,
+  mode,
+  themeId,
+  navigationGuard,
+  resetVersion,
+}: {
+  input: ChartAssemblyInput;
+  mode: InteractionMode;
+  themeId: string | undefined;
+  navigationGuard: NavigationGuard;
+  resetVersion: number;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -199,10 +228,15 @@ function InteractiveChart({ input, mode }: { input: ChartAssemblyInput; mode: In
             ? brushX()
             : mode === 'brush-y'
               ? brushY()
-              : mode === 'brush-x-stateful'
-                ? brushX({ mode: 'stateful' })
-                : brushY({ mode: 'stateful' });
-    const surface = buildInteractiveChart(container, input, {
+              : mode === 'brush-angle'
+                ? brushAngle()
+                : mode === 'brush-x-stateful'
+                  ? brushX({ mode: 'stateful' })
+                  : mode === 'brush-y-stateful'
+                    ? brushY({ mode: 'stateful' })
+                    : navigate({ axes: 'available', domainGuard: navigationGuard });
+    const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
+    const surface = buildInteractiveChart(container, themedInput, {
       backend: 'vegalite',
       renderer: 'svg',
       interactions: [interaction],
@@ -213,27 +247,51 @@ function InteractiveChart({ input, mode }: { input: ChartAssemblyInput; mode: In
       container.textContent = error instanceof Error ? error.message : String(error);
     });
     return () => surface.destroy();
-  }, [input, mode]);
+  }, [input, mode, navigationGuard, resetVersion, themeId]);
 
   return <div className="cf-mount" ref={containerRef} />;
 }
 
-function CaseCard({ item, mode }: { item: InteractionCase; mode: InteractionMode }) {
+function CaseCard({
+  item,
+  mode,
+  themeId,
+  navigationGuard,
+  resetVersion,
+}: {
+  item: InteractionCase;
+  mode: InteractionMode;
+  themeId: string | undefined;
+  navigationGuard: NavigationGuard;
+  resetVersion: number;
+}) {
   const title = item.input.chart_spec.title || item.input.chart_spec.chartType;
+  const navigationAxes = navigationAxesByCase.get(item.id);
+  const description = mode === 'navigate'
+    ? `Drag to pan and use the wheel or trackpad to zoom the ${navigationAxes?.join(' and ')} domain.`
+    : item.expectation;
   return (
     <article className="cf-probe">
       <header className="cf-probe-header">
         <div>
           <h2>{title}</h2>
-          <p>{item.expectation}</p>
+          <p>{description}</p>
         </div>
         <span className={`cf-status cf-status-${item.support}`}>
-          {item.support === 'works' ? 'Bound' : item.support === 'partial' ? 'Partial' : 'Not bound'}
+          {mode === 'navigate'
+            ? navigationAxes?.join(' + ')
+            : item.support === 'works' ? 'Bound' : item.support === 'partial' ? 'Partial' : 'Not bound'}
         </span>
       </header>
       <div className="cf-stage">
         <ScaleToFit height={420} minHeight={300} adaptiveHeight padding={8}>
-          <InteractiveChart input={item.input} mode={mode} />
+          <InteractiveChart
+            input={item.input}
+            mode={mode}
+            themeId={themeId}
+            navigationGuard={navigationGuard}
+            resetVersion={resetVersion}
+          />
         </ScaleToFit>
       </div>
     </article>
@@ -242,10 +300,22 @@ function CaseCard({ item, mode }: { item: InteractionCase; mode: InteractionMode
 
 export function ClickFocusLab() {
   const [mode, setMode] = useState<InteractionMode>('element');
+  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const [navigationGuard, setNavigationGuard] = useState<NavigationGuard>({
+    minVisibleFraction: 0.02,
+    maxVisibleFraction: 1,
+    overscrollFraction: 0,
+  });
+  const [resetVersion, setResetVersion] = useState(0);
   const counts = interactionCases.reduce((result, item) => {
     result[item.support] += 1;
     return result;
   }, { works: 0, partial: 0, none: 0 });
+  const visibleCases = mode === 'brush-angle'
+    ? interactionCases.filter((item) => item.id === 'pie' || item.id === 'rose')
+    : mode === 'navigate'
+      ? interactionCases.filter((item) => navigationAxesByCase.has(item.id))
+      : interactionCases;
 
   return (
     <div className="dev-page cf-page">
@@ -274,16 +344,61 @@ export function ClickFocusLab() {
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
           <li><strong>X brush:</strong> Drag horizontally to focus marks across an X interval.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
+          <li><strong>Angular brush:</strong> Drag around the center of a pie, donut, or rose chart.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
+          <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel or trackpad to zoom.</li>
         </ul>
         <div className="cf-summary" aria-label="Support summary">
           <span className="cf-summary-bound"><strong>{counts.works}</strong> bound</span>
           <span className="cf-summary-partial"><strong>{counts.partial}</strong> partial</span>
           <span className="cf-summary-none"><strong>{counts.none}</strong> not bound</span>
         </div>
+        <div className="cf-theme-picker">
+          <ThemePicker themeId={themeId} onTheme={setThemeId} />
+        </div>
+        {mode === 'navigate' && (
+          <div className="cf-navigation-controls" aria-label="Navigation guards">
+            <label>
+              <span>Minimum span <strong>{Math.round(navigationGuard.minVisibleFraction * 100)}%</strong></span>
+              <input type="range" min="1" max="25"
+                value={navigationGuard.minVisibleFraction * 100}
+                onChange={(event) => setNavigationGuard((guard) => ({
+                  ...guard, minVisibleFraction: Number(event.target.value) / 100,
+                }))} />
+            </label>
+            <label>
+              <span>Maximum span <strong>{Math.round(navigationGuard.maxVisibleFraction * 100)}%</strong></span>
+              <input type="range" min="25" max="160"
+                value={navigationGuard.maxVisibleFraction * 100}
+                onChange={(event) => setNavigationGuard((guard) => ({
+                  ...guard, maxVisibleFraction: Number(event.target.value) / 100,
+                }))} />
+            </label>
+            <label>
+              <span>Overscroll <strong>{Math.round(navigationGuard.overscrollFraction * 100)}%</strong></span>
+              <input type="range" min="0" max="30"
+                value={navigationGuard.overscrollFraction * 100}
+                onChange={(event) => setNavigationGuard((guard) => ({
+                  ...guard, overscrollFraction: Number(event.target.value) / 100,
+                }))} />
+            </label>
+            <button type="button" onClick={() => setResetVersion((value) => value + 1)}>
+              <RotateCcw size={14} aria-hidden="true" /> Reset views
+            </button>
+          </div>
+        )}
       </header>
       <div className="cf-grid">
-        {interactionCases.map((item) => <CaseCard key={item.id} item={item} mode={mode} />)}
+        {visibleCases.map((item) => (
+          <CaseCard
+            key={item.id}
+            item={item}
+            mode={mode}
+            themeId={themeId}
+            navigationGuard={navigationGuard}
+            resetVersion={resetVersion}
+          />
+        ))}
       </div>
     </div>
   );

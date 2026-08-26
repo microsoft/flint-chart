@@ -19,6 +19,7 @@ import { contrastingInk, parseColor, luminance, mixHex, toHex } from '../core/th
 import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
+import { withInteractionTextLabel } from './interaction-provenance.js';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -1635,9 +1636,10 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             if (fittedDots.has(node)) return;
             const mark = normalizeMark(node.mark);
             if (!mark.point) return;
+            const point = typeof mark.point === 'object' ? mark.point : {};
             mark.point = {
-                ...(typeof mark.point === 'object' ? mark.point : {}),
-                ...(dot.filled != null ? { filled: dot.filled } : {}),
+                ...point,
+                ...(point.filled == null ? { filled: dot.filled !== false } : {}),
                 ...(dot.size != null ? { size: dot.size } : {}),
                 stroke: m.outline?.color ?? dot.haloColor,
                 strokeWidth: m.outline?.width ?? dot.haloWidth ?? 1,
@@ -4548,7 +4550,11 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         markDef.color = t.color ?? d.text.primary;
     }
 
-    const layer: any = { __themeSynthetic: true, mark: markDef, encoding: labelEncoding };
+    const layer: any = withInteractionTextLabel({
+        __themeSynthetic: true,
+        mark: markDef,
+        encoding: labelEncoding,
+    }, { presentation: inside ? 'on-mark' : 'independent' });
     if (radialLabelKeepTest) {
         labelEncoding.opacity = { condition: { test: radialLabelKeepTest, value: 1 }, value: 0 };
     }
@@ -4624,12 +4630,12 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
         const v = `abs(datum[${JSON.stringify(measure.field)}])`;
         const flipped = !inside;
         layer.transform = [{ filter: `${v} ${comparison === '<' ? '>=' : '<='} ${threshold}` }];
-        const other: any = {
+        const other: any = withInteractionTextLabel({
             __themeSynthetic: true,
             transform: [{ filter: `${v} ${comparison} ${threshold}` }],
             mark: { ...markDef, ...geometry(flipped), color: flipInk(flipped) },
             encoding: labelEncoding,
-        };
+        }, { presentation: flipped ? 'on-mark' : 'independent' });
         if (other.mark.color === undefined) delete other.mark.color;
         appendLayer(body, other);
         say('dataLabels.placement', message);

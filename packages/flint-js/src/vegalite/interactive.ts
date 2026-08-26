@@ -6,9 +6,10 @@ import { assembleVegaLite } from './assemble';
 import {
     addVegaLiteInteractions,
     injectVegaInteractionStore,
-    mountVegaInteractions,
+    injectVegaNavigationSignals,
     withoutSemanticInteractionField,
-} from './semantic-interactions';
+} from './interactions/compile';
+import { mountVegaInteractions } from './interactions/runtime';
 import { compile } from 'vega-lite';
 import { Error as VegaError, parse, View } from 'vega';
 import { Handler } from 'vega-tooltip';
@@ -63,7 +64,15 @@ export function createVegaInteractiveRenderer(
             const interactions = options.interactions ?? [];
             const interactionPlan = addVegaLiteInteractions(vlSpec, interactions);
             const vegaSpec = compile(vlSpec).spec as any;
-            if (interactionPlan) injectVegaInteractionStore(vegaSpec, interactionPlan);
+            if (interactionPlan) {
+                if (interactions.some((interaction) => interaction.eventSource.type !== 'navigation')) {
+                    injectVegaInteractionStore(vegaSpec, interactionPlan);
+                }
+                interactionPlan.navigationAxes = injectVegaNavigationSignals(
+                    vegaSpec,
+                    interactionPlan.navigationChannels,
+                );
+            }
             const source = vegaSpec.data?.find((entry: any) => Array.isArray(entry.values))?.name as string | undefined;
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
@@ -82,7 +91,7 @@ export function createVegaInteractiveRenderer(
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
             await view.runAsync();
-            const interactionController = interactionPlan?.resolve && interactionPlan.presentUpdate
+            const interactionController = interactionPlan
                 ? mountVegaInteractions(
                     view,
                     container,
@@ -90,7 +99,7 @@ export function createVegaInteractiveRenderer(
                     interactionPlan,
                     interactions,
                     interactionPlan.resolve,
-                    interactionPlan.presentUpdate,
+                    interactionPlan.presentUpdate ?? ((update) => update),
                 )
                 : undefined;
 

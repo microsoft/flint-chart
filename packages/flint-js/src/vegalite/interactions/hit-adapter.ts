@@ -4,35 +4,32 @@ import type {
     InteractionModifiers,
     InteractionPhase,
     PlotPoint,
+    PlotAngularSector,
     RegionAxis,
     RegionInteractionEvent,
     RegionOperation,
-} from './events';
+} from '../../interactive/triggers/events';
+import { angularSegments, TAU } from '../../interactive/geometry/angular';
+export {
+    clientRectToLayoutRect,
+    clientToLayoutPoint,
+    clientToPlotPoint,
+    interactionModifiers,
+    plotToClientPoint,
+    type RendererCoordinateSpace,
+} from '../../interactive/geometry/coordinate-space';
 
 export const INTERACTION_KEY = '__flint_interaction_key';
+export const INTERACTION_ROLE = '__flint_interaction_role';
 export const PATH_KEY_SUFFIX = '|__flint_path';
 
-const SUPPORTED_RENDER_MARKS = new Set(['arc', 'area', 'bar', 'line', 'rect', 'rule', 'symbol']);
-
-export interface RendererCoordinateSpace {
-    rect: DOMRect;
-    logicalWidth: number;
-    logicalHeight: number;
-    originX: number;
-    originY: number;
-    plotWidth: number;
-    plotHeight: number;
-}
+const SUPPORTED_RENDER_MARKS = new Set(['arc', 'area', 'bar', 'line', 'rect', 'rule', 'symbol', 'text']);
 
 export interface SelectionRect {
     x1: number;
     y1: number;
     x2: number;
     y2: number;
-}
-
-export function interactionModifiers(event: MouseEvent | PointerEvent): InteractionModifiers {
-    return { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey };
 }
 
 interface PathGeometry {
@@ -43,48 +40,6 @@ interface PathGeometry {
 
 function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
-}
-
-export function clientToPlotPoint(client: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
-    const rendererX = (client.x - space.rect.left) * space.logicalWidth / space.rect.width;
-    const rendererY = (client.y - space.rect.top) * space.logicalHeight / space.rect.height;
-    return {
-        x: clamp(rendererX - space.originX, 0, space.plotWidth),
-        y: clamp(rendererY - space.originY, 0, space.plotHeight),
-    };
-}
-
-export function plotToClientPoint(point: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
-    return {
-        x: space.rect.left + (point.x + space.originX) * space.rect.width / space.logicalWidth,
-        y: space.rect.top + (point.y + space.originY) * space.rect.height / space.logicalHeight,
-    };
-}
-
-export function clientToLayoutPoint(
-    point: PlotPoint,
-    rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>,
-    layoutSize: { width: number; height: number },
-): PlotPoint {
-    return {
-        x: (point.x - rect.left) * layoutSize.width / rect.width,
-        y: (point.y - rect.top) * layoutSize.height / rect.height,
-    };
-}
-
-export function clientRectToLayoutRect(
-    rect: Pick<DOMRect, 'left' | 'top' | 'right' | 'bottom'>,
-    containerRect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>,
-    layoutSize: { width: number; height: number },
-): { left: number; top: number; width: number; height: number } {
-    const leading = clientToLayoutPoint({ x: rect.left, y: rect.top }, containerRect, layoutSize);
-    const trailing = clientToLayoutPoint({ x: rect.right, y: rect.bottom }, containerRect, layoutSize);
-    return {
-        left: leading.x,
-        top: leading.y,
-        width: trailing.x - leading.x,
-        height: trailing.y - leading.y,
-    };
 }
 
 function keyOfDatum(datum: unknown): string | undefined {
@@ -260,8 +215,67 @@ export function arcIntersectsRect(item: any, rect: SelectionRect, contain = fals
     return false;
 }
 
+export function arcIntersectsAngularSector(
+    item: any,
+    sector: PlotAngularSector,
+    contain = false,
+): boolean {
+    if (item?.mark?.marktype !== 'arc') return false;
+    const values = [item.x, item.y, item.innerRadius, item.outerRadius, item.startAngle, item.endAngle];
+    if (!values.every((value) => typeof value === 'number' && Number.isFinite(value))) return false;
+    if (Math.hypot(item.x - sector.center.x, item.y - sector.center.y) > 1) return false;
+    const radialMatch = contain
+        ? item.innerRadius >= sector.innerRadius && item.outerRadius <= sector.outerRadius
+        : item.outerRadius > sector.innerRadius && item.innerRadius < sector.outerRadius;
+    if (!radialMatch) return false;
+    const selection = angularSegments(sector.startAngle, sector.endAngle);
+    const arc = angularSegments(item.startAngle, item.endAngle);
+    if (contain) {
+        return arc.every(([arcStart, arcEnd]) => selection.some(
+            ([selectionStart, selectionEnd]) => arcStart >= selectionStart - 1e-9
+                && arcEnd <= selectionEnd + 1e-9,
+        ));
+    }
+    return arc.some(([arcStart, arcEnd]) => selection.some(
+        ([selectionStart, selectionEnd]) => Math.min(arcEnd, selectionEnd) - Math.max(arcStart, selectionStart) > 1e-9,
+    ));
+}
+
+export function angularRegionHits(
+    view: any,
+    sector: PlotAngularSector,
+    contain = false,
+): RenderHit[] {
+    return sceneItems(view)
+        .filter((item) => arcIntersectsAngularSector(item, sector, contain))
+        .map(renderHit)
+        .filter((hit): hit is RenderHit => hit !== null);
+}
+
+export function normalizeVegaAngularRegionEvent(
+    view: any,
+    sector: PlotAngularSector,
+    phase: InteractionPhase,
+    match: 'intersect' | 'contain',
+    modifiers: InteractionModifiers,
+    operation: RegionOperation = 'create',
+): RegionInteractionEvent {
+    return {
+        type: 'region',
+        phase,
+        axis: 'angle',
+        operation,
+        region: sector,
+        hits: angularRegionHits(view, sector, match === 'contain'),
+        match,
+        modifiers,
+    };
+}
+
 export function renderHit(item: any): RenderHit | null {
-    if (!SUPPORTED_RENDER_MARKS.has(item?.mark?.marktype) || !keyOfDatum(item?.datum)) return null;
+    const markType = item?.mark?.marktype;
+    const taggedText = markType !== 'text' || item?.datum?.[INTERACTION_ROLE] === 'text-label';
+    if (!SUPPORTED_RENDER_MARKS.has(markType) || !taggedText || !keyOfDatum(item?.datum)) return null;
     const datum = item.mark.marktype === 'line' || item.mark.marktype === 'area'
         ? { ...item.datum, [INTERACTION_KEY]: `${keyOfDatum(item.datum)}${PATH_KEY_SUFFIX}` }
         : item.datum;
@@ -270,7 +284,7 @@ export function renderHit(item: any): RenderHit | null {
         source: 'mark',
         markType: item.mark?.marktype,
         markName: item.mark?.name,
-        layerRole: item.mark?.role,
+        layerRole: item?.datum?.[INTERACTION_ROLE] ?? item.mark?.role,
     };
 }
 
@@ -313,7 +327,7 @@ export function legendTarget(
 
 export interface NormalizedVegaElement {
     event: ElementInteractionEvent;
-    role: 'mark' | 'legend-item';
+    role: 'mark' | 'legend-item' | 'text-label';
     legend: { channel?: string; value: unknown; field?: string } | null;
 }
 
@@ -336,7 +350,11 @@ export function normalizeVegaElementEvent(
             point,
             modifiers,
         },
-        role: legend ? 'legend-item' : 'mark',
+        role: legend
+            ? 'legend-item'
+            : hit?.layerRole === 'text-label'
+                ? 'text-label'
+                : 'mark',
         legend,
     };
 }

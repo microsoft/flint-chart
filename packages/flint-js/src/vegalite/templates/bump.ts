@@ -18,6 +18,7 @@ export const bumpChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "detail", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     properties: [interpolateConfigProperty],
     declareLayoutMode: () => ({

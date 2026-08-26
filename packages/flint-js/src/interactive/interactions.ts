@@ -4,20 +4,25 @@ import type {
     ExternalInteractionEvent,
     InteractionModifiers,
     InteractionPhase,
+    NavigationAxes,
+    NavigationInteractionEvent,
     PlotPoint,
     SemanticInteractionEvent,
 } from './triggers/events';
 import {
     BrushInteraction,
+    AngularBrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,
     SelectInteraction,
+    NavigateInteraction,
 } from './presets';
 export type { RenderHit, SemanticElement, SemanticTarget } from '../core/interaction-semantics';
 
 export type InteractionInput<TPayload = unknown> =
     | SemanticInteractionEvent
+    | NavigationInteractionEvent
     | ExternalInteractionEvent<TPayload>;
 
 export interface FlintInteractionEventDetail {
@@ -25,7 +30,7 @@ export interface FlintInteractionEventDetail {
     interactionId: string;
     timestamp: number;
     transactionId?: string;
-    event: SemanticInteractionEvent;
+    event: SemanticInteractionEvent | NavigationInteractionEvent;
 }
 
 export type {
@@ -33,8 +38,12 @@ export type {
     ExternalInteractionEvent,
     InteractionModifiers,
     InteractionPhase,
+    NavigationAxes,
+    NavigationInteractionEvent,
+    NavigationOperation,
     NormalizedInteractionEvent,
     PlotPoint,
+    PlotAngularSector,
     PlotPolygon,
     PlotRect,
     RegionAxis,
@@ -51,11 +60,27 @@ export interface AnnotationRenderPlan {
     anchor?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'mark-end' | 'arc-centroid';
 }
 
+export interface NavigationDomainGuard {
+    minVisibleFraction: number;
+    maxVisibleFraction: number;
+    overscrollFraction: number;
+}
+
 export type UpdateOp =
     | { op: 'emphasize'; elements: readonly SemanticElement[]; mode: SelectionMode; dimOpacity: number }
     | { op: 'annotate'; element: SemanticElement; text: string; point?: PlotPoint }
     | { op: 'render-annotation'; element: SemanticElement; point?: PlotPoint; annotation: AnnotationRenderPlan }
     | { op: 'clear-annotation' }
+    | {
+        op: 'navigate-viewport';
+        phase: InteractionPhase;
+        operation: import('./triggers/events').NavigationOperation;
+        axes: NavigationAxes;
+        delta?: PlotPoint;
+        factor?: number;
+        anchor?: PlotPoint;
+        domainGuard: NavigationDomainGuard;
+    }
     | { op: 'reset' };
 
 export interface ChartUpdate {
@@ -106,6 +131,17 @@ export interface BrushOptions extends SelectOptions {
     mode?: 'ephemeral' | 'stateful';
 }
 
+export type AngularBrushOptions = SelectOptions;
+
+export interface NavigateOptions {
+    id?: string;
+    axes?: NavigationAxes | 'available';
+    pan?: boolean;
+    zoom?: boolean;
+    wheelSensitivity?: number;
+    domainGuard?: Partial<NavigationDomainGuard>;
+}
+
 export function clickHighlight(options: ClickHighlightOptions = {}): InteractionDef {
     return new ClickHighlightInteraction(options);
 }
@@ -128,6 +164,14 @@ export function brushX(options: BrushOptions = {}): InteractionDef {
 
 export function brushY(options: BrushOptions = {}): InteractionDef {
     return new BrushInteraction('y', options);
+}
+
+export function brushAngle(options: AngularBrushOptions = {}): InteractionDef {
+    return new AngularBrushInteraction(options);
+}
+
+export function navigate(options: NavigateOptions = {}): InteractionDef {
+    return new NavigateInteraction(options);
 }
 
 export function normalizeInteractions(

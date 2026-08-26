@@ -67,6 +67,7 @@ export const slopeChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "detail", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     declareLayoutMode: (cs, table) => {
         // Force the period axis to a discrete band so the two periods sit at two

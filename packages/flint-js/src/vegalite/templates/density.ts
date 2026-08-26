@@ -63,6 +63,7 @@ export const densityPlotDef: ChartTemplateDef = {
         },
     },
     channels: ["x", "color", "column", "row"],
+    navigation: { axes: ['x'] },
     markCognitiveChannel: 'area',
     instantiate: (spec, ctx) => {
         const { x, color, column, row } = ctx.resolvedEncodings;

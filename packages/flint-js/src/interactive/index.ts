@@ -19,6 +19,7 @@ export type {
     ChartUpdate,
     ChartUpdateProcessor,
     BrushOptions,
+    AngularBrushOptions,
     ClickAnnotateOptions,
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
@@ -30,7 +31,13 @@ export type {
     InteractionContext,
     InteractionDef,
     InteractionModifiers,
+    NavigateOptions,
+    NavigationAxes,
+    NavigationDomainGuard,
+    NavigationInteractionEvent,
+    NavigationOperation,
     PlotPoint,
+    PlotAngularSector,
     PlotPolygon,
     PlotRect,
     RegionAxis,
@@ -44,22 +51,26 @@ export type {
     NormalizedInteractionEvent,
     UpdateOp,
 } from './interactions';
-export { brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, select } from './interactions';
+export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, navigate, select } from './interactions';
 export type { InteractionEventSource, InteractionEventSourceContext } from './triggers';
 export {
     axisBrushTrigger,
+    angularBrushTrigger,
     clickTrigger,
     externalTrigger,
     hoverTrigger,
+    navigationTrigger,
     rectangleTrigger,
     xBrushTrigger,
     yBrushTrigger,
 } from './triggers';
 export {
+    AngularBrushInteraction,
     BrushInteraction,
     ClickAnnotateInteraction,
     ClickGroupHighlightInteraction,
     ClickHighlightInteraction,
+    NavigateInteraction,
     SelectInteraction,
 } from './presets';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';

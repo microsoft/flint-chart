@@ -24,6 +24,7 @@ import {
     targetFromHits,
 } from '../../core/interaction-semantics';
 import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { withInteractionTextLabel } from '../interaction-provenance';
 import { setMarkProp } from './utils';
 
 export const roseChartDef: ChartTemplateDef = {
@@ -48,13 +49,21 @@ export const roseChartDef: ChartTemplateDef = {
             seriesField,
             legendFields: colorLegendField ? { color: colorLegendField } : undefined,
             selectableMarks: ['arc'],
+            supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
                 const legendField = event.legendField ?? seriesField ?? categoryField;
-                const hits = event.role === 'legend-item' && legendField
+                let hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
-                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'polar-bar' });
+                if (event.role === 'text-label' && categoryField) {
+                    const category = event.hits[0]?.datum[categoryField];
+                    hits = context.allHits.filter((hit) => hit.datum[categoryField] === category);
+                }
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'mark',
+                    role: event.role === 'text-label' ? 'text-label' : 'polar-bar',
+                });
             },
             presentUpdate: presentInteractionUpdate(() => ({ anchor: 'arc-centroid', placement: 'auto' })),
         };
@@ -180,10 +189,13 @@ export const roseChartDef: ChartTemplateDef = {
             const arcMark = spec.mark;
             spec.layer = [
                 { mark: arcMark, encoding: {} as any },
-                {
+                withInteractionTextLabel({
                     mark: { type: "text", radiusOffset: 15, fontSize: 11 },
                     encoding: {} as any,
-                },
+                }, {
+                    fields: x?.field ? [x.field] : undefined,
+                    presentation: 'independent',
+                }),
             ];
             delete spec.mark;
 

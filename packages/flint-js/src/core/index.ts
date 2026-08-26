@@ -200,6 +200,7 @@ export {
 // ThemeSpec: public visual-system vocabulary and chart-specific grounding
 export {
     type ThemeSpec,
+    type ThemeInteraction,
     type ThemePreset,
     type DesignDecisions,
     type ThemeReport,

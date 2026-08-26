@@ -16,6 +16,7 @@ export const candlestickChartDef: ChartTemplateDef = {
         ],
     },
     channels: ["x", "open", "high", "low", "close", "column", "row"],
+    navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = resolvedEncodings.x?.field;

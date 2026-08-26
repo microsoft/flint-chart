@@ -1,12 +1,16 @@
-import type { NormalizedInteractionEvent } from './events';
+import type { NavigationAxes, NormalizedInteractionEvent } from './events';
 
 export type {
     ElementInteractionEvent,
     ExternalInteractionEvent,
     InteractionModifiers,
     InteractionPhase,
+    NavigationAxes,
+    NavigationInteractionEvent,
+    NavigationOperation,
     NormalizedInteractionEvent,
     PlotPoint,
+    PlotAngularSector,
     PlotPolygon,
     PlotRect,
     RegionAxis,
@@ -22,10 +26,15 @@ export interface InteractionEventSourceContext {
 
 export interface InteractionEventSource {
     readonly type: 'element' | 'region' | 'external' | (string & {});
-    readonly gesture?: 'click' | 'hover' | 'drag';
+    readonly gesture?: 'click' | 'hover' | 'drag' | 'navigate';
     readonly match?: 'intersect' | 'contain';
     readonly axis?: 'x' | 'y' | 'xy';
     readonly mode?: 'ephemeral' | 'stateful';
+    readonly regionGeometry?: 'cartesian' | 'angular';
+    readonly axes?: NavigationAxes | 'available';
+    readonly pan?: boolean;
+    readonly zoom?: boolean;
+    readonly wheelSensitivity?: number;
     readonly source?: string;
     mount?(context: InteractionEventSourceContext): void | (() => void);
 }
@@ -66,6 +75,28 @@ export function yBrushTrigger(
     mode: 'ephemeral' | 'stateful' = 'ephemeral',
 ): InteractionEventSource {
     return axisBrushTrigger('y', match, mode);
+}
+
+export function angularBrushTrigger(
+    match: 'intersect' | 'contain' = 'intersect',
+): InteractionEventSource {
+    return { type: 'region', gesture: 'drag', regionGeometry: 'angular', match, mode: 'ephemeral' };
+}
+
+export function navigationTrigger(options: {
+    axes?: NavigationAxes | 'available';
+    pan?: boolean;
+    zoom?: boolean;
+    wheelSensitivity?: number;
+} = {}): InteractionEventSource {
+    return {
+        type: 'navigation',
+        gesture: 'navigate',
+        axes: options.axes ?? 'available',
+        pan: options.pan ?? true,
+        zoom: options.zoom ?? true,
+        wheelSensitivity: options.wheelSensitivity ?? 0.002,
+    };
 }
 
 export function externalTrigger(source?: string): InteractionEventSource {

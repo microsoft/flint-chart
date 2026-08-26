@@ -2,27 +2,42 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { clickHighlight, select } from '../src/interactive/interactions';
+import { brushAngle, clickHighlight, navigate, select } from '../src/interactive/interactions';
 import { MUTED_HOVER_FILL, MUTED_HOVER_STROKE } from '../src/core/interaction-semantics';
-import { barChartDef, pyramidChartDef } from '../src/vegalite/templates/bar';
+import { barChartDef, heatmapDef, pyramidChartDef } from '../src/vegalite/templates/bar';
 import { barTableDef } from '../src/vegalite/templates/bar-table';
+import { roseChartDef } from '../src/vegalite/templates/rose';
 import { rangedDotPlotDef, scatterPlotDef } from '../src/vegalite/templates/scatter';
 import {
     addVegaLiteInteractions,
+    injectVegaInteractionStore,
+    injectVegaNavigationSignals,
+} from '../src/vegalite/interactions/compile';
+import { angularSectorPath } from '../src/interactive/geometry/angular';
+import {
+    arcIntersectsAngularSector,
     arcIntersectsRect,
     boundsIntersectRect,
     clientRectToLayoutRect,
     clientToPlotPoint,
     clientToLayoutPoint,
-    HOVER_STORE,
-    injectVegaInteractionStore,
     INTERACTION_KEY,
+    INTERACTION_ROLE,
+    plotToClientPoint,
+    renderHit,
+    sceneItems,
+} from '../src/vegalite/interactions/hit-adapter';
+import {
+    HOVER_STORE,
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
-    plotToClientPoint,
-    sceneItems,
-} from '../src/vegalite/semantic-interactions';
+} from '../src/vegalite/interactions/stores';
+import { mergeContiguousSelectionBounds } from '../src/vegalite/interactions/presentation/focus-overlay';
+import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
+import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
+import { THEME_PRESETS } from '../src/core/theme/presets';
+import { lineChartDef } from '../src/vegalite/templates/line';
 
 function instrument(spec: Record<string, any>, interactions = [clickHighlight()]) {
     const plan = addVegaLiteInteractions(spec, interactions);
@@ -43,6 +58,194 @@ function allSceneItems(view: View): any[] {
 }
 
 describe('Vega-Lite semantic interactions', () => {
+    it('compiles navigation capabilities into resettable Vega domain signals', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: { field: 'x' }, y: { field: 'y' } },
+            },
+            semantic_types: { x: 'Number', y: 'Number' },
+            data: { values: [{ x: 1, y: 2 }, { x: 3, y: 4 }] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [navigate()]);
+        expect(plan?.navigationChannels).toEqual(['x', 'y']);
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaNavigationSignals(compiled, plan?.navigationChannels);
+        expect(axes).toMatchObject({
+            x: { scale: 'x', signal: '__flint_navigation_x_domain', type: 'linear' },
+            y: { scale: 'y', signal: '__flint_navigation_y_domain', type: 'linear' },
+        });
+        expect(compiled.scales.find((scale: any) => scale.name === 'x').domainRaw)
+            .toEqual({ signal: '__flint_navigation_x_domain' });
+        expect(compiled.signals).toEqual(expect.arrayContaining([
+            { name: '__flint_navigation_x_domain', value: null },
+            { name: '__flint_navigation_y_domain', value: null },
+        ]));
+        expect(compiled.marks.filter((mark: any) => mark.type === 'symbol'))
+            .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
+    });
+
+    it('clips every generated layer when navigation is combined with semantic interaction', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: { field: 'x' }, y: { field: 'y' } },
+                chartProperties: { showPoints: true },
+            },
+            semantic_types: { x: 'Date', y: 'Number' },
+            data: { values: [{ x: '2025-01-01', y: 2 }, { x: '2025-02-01', y: 4 }] },
+        }) as any;
+        addVegaLiteInteractions(spec, [navigate({ pan: false }), clickHighlight()]);
+
+        const marks = (compile(spec).spec as any).marks;
+        const dataMarks = marks.filter((mark: any) => ['line', 'symbol'].includes(mark.type));
+        expect(dataMarks)
+            .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
+        expect(dataMarks.map((mark: any) => mark.type)).toEqual(expect.arrayContaining(['line', 'symbol']));
+        expect(dataMarks).toSatisfy((compiledMarks: any[]) => (
+            compiledMarks.every((mark) => mark.clip === true)
+        ));
+    });
+
+    it('zooms and resets an actual Vega scale through its domain signal', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: { field: 'x' }, y: { field: 'y' } },
+            },
+            semantic_types: { x: 'Number', y: 'Number' },
+            data: { values: [{ x: 0, y: 0 }, { x: 100, y: 100 }] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [navigate()])!;
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaNavigationSignals(compiled, plan.navigationChannels);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const initial = view.scale('x').domain().map(Number);
+        const controller = createVegaNavigationController(view, axes);
+
+        await controller.apply({
+            op: 'navigate-viewport', phase: 'commit', operation: 'zoom', axes: 'x',
+            factor: 2, anchor: { x: 0.5, y: 0.5 },
+            domainGuard: { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 },
+        });
+        const zoomed = view.scale('x').domain().map(Number);
+        expect(zoomed[1] - zoomed[0]).toBeCloseTo((initial[1] - initial[0]) / 2);
+
+        await controller.apply({
+            op: 'navigate-viewport', phase: 'commit', operation: 'reset', axes: 'x',
+            domainGuard: { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 },
+        });
+        expect(view.scale('x').domain().map(Number)).toEqual(initial);
+        view.finalize();
+    });
+
+    it('declares proportional line focus and continuous-color region boundaries', () => {
+        expect(lineChartDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Year', type: 'ordinal' }, y: { field: 'Value', type: 'quantitative' } },
+        }).renderSelectionStyles).toEqual({ line: { strokeWidthMultiplier: 1.2 } });
+
+        expect(heatmapDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Year', type: 'ordinal' }, y: { field: 'Country', type: 'nominal' }, color: { field: 'Value', type: 'quantitative' } },
+        }).renderSelectionStyles).toEqual({ rect: { boundary: 'contiguous-region' } });
+        expect(heatmapDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'X', type: 'ordinal' }, y: { field: 'Y', type: 'nominal' }, color: { field: 'Group', type: 'nominal' } },
+        }).renderSelectionStyles).toBeUndefined();
+    });
+
+    it('resolves continuous-color selection boundaries from the active theme', () => {
+        const makeSpec = (theme_spec: any) => assembleVegaLite({
+            data: { values: [
+                { Year: '2020', Country: 'A', Value: 10 },
+                { Year: '2021', Country: 'A', Value: 14 },
+            ] },
+            semantic_types: { Year: 'Category', Country: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Heatmap',
+                encodings: { x: 'Year', y: 'Country', color: 'Value' },
+            },
+            theme_spec,
+        } as any) as any;
+
+        expect(makeSpec('economist')._interactionSemantics.selectionBoundary).toEqual({
+            color: '#e3120b',
+            width: 1.5,
+            opacity: 1,
+            haloColor: '#ffffff',
+            haloWidth: 3,
+            haloOpacity: 0.8,
+        });
+        expect(makeSpec({
+            extends: 'economist',
+            interaction: {
+                selectionBoundary: {
+                    color: '#b54a20',
+                    width: 2,
+                    opacity: 0.9,
+                    haloColor: '#fffaf2',
+                    haloWidth: 4,
+                    haloOpacity: 0.7,
+                },
+            },
+        })._interactionSemantics.selectionBoundary).toEqual({
+            color: '#b54a20',
+            width: 2,
+            opacity: 0.9,
+            haloColor: '#fffaf2',
+            haloWidth: 4,
+            haloOpacity: 0.7,
+        });
+    });
+
+    it('merges selected heatmap cells by contiguous region without bridging gaps', () => {
+        expect(mergeContiguousSelectionBounds([
+            { x1: 0, y1: 0, x2: 10, y2: 10 },
+            { x1: 11, y1: 0, x2: 21, y2: 10 },
+            { x1: 0, y1: 11, x2: 10, y2: 21 },
+            { x1: 0, y1: 30, x2: 10, y2: 40 },
+        ])).toEqual([
+            { x1: 0, y1: 0, x2: 21, y2: 21 },
+            { x1: 0, y1: 30, x2: 10, y2: 40 },
+        ]);
+    });
+
+    it('keeps themed line vertices filled when expanding them for interaction', () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [
+                    { Year: '2020', Country: 'A', Value: 10 },
+                    { Year: '2021', Country: 'A', Value: 14 },
+                    { Year: '2020', Country: 'B', Value: 13 },
+                    { Year: '2021', Country: 'B', Value: 11 },
+                ],
+            },
+            semantic_types: { Year: 'Category', Country: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: 'Year', y: 'Value', color: 'Country' },
+                chartProperties: { showPoints: true },
+            },
+            theme_spec: THEME_PRESETS.economist.spec,
+        } as any) as any;
+
+        addVegaLiteInteractions(spec, [clickHighlight()]);
+        const findPointMark = (node: any): any => {
+            if (node.mark?.type === 'point') return node.mark;
+            for (const property of ['layer', 'hconcat', 'vconcat', 'concat']) {
+                for (const child of node[property] ?? []) {
+                    const found = findPointMark(child);
+                    if (found) return found;
+                }
+            }
+            return undefined;
+        };
+        expect(findPointMark(spec)).toMatchObject({
+            type: 'point',
+            filled: true,
+            stroke: '#ffffff',
+        });
+    });
+
     it('keeps concatenated-chart hover paint geometry invariant', () => {
         const renderHoverStyles = (definition: typeof pyramidChartDef) =>
             definition.semanticInteractions?.({ resolvedEncodings: {} }).renderHoverStyles;
@@ -119,6 +322,42 @@ describe('Vega-Lite semantic interactions', () => {
             categoryField: 'Direction',
             legendFields: { color: 'Direction' },
         });
+    });
+
+    it('resolves a Rose category label to its label and all related arc segments', () => {
+        const resolve = roseChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Month', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Segment', type: 'nominal' },
+            },
+        }).resolve!;
+        const label = {
+            datum: { [INTERACTION_KEY]: 'Jan', Month: 'Jan', [INTERACTION_ROLE]: 'text-label' },
+            source: 'mark' as const,
+            markType: 'text',
+            layerRole: 'text-label',
+        };
+        const janA = { datum: { [INTERACTION_KEY]: 'Jan|A', Month: 'Jan', Segment: 'A' }, source: 'mark' as const };
+        const janB = { datum: { [INTERACTION_KEY]: 'Jan|B', Month: 'Jan', Segment: 'B' }, source: 'mark' as const };
+        const febA = { datum: { [INTERACTION_KEY]: 'Feb|A', Month: 'Feb', Segment: 'A' }, source: 'mark' as const };
+
+        const target = resolve(
+            { gesture: 'click', role: 'text-label', hits: [label] },
+            {
+                allHits: [janA, janB, febA, label],
+                keyField: INTERACTION_KEY,
+                categoryField: 'Month',
+                seriesField: 'Segment',
+            },
+        );
+
+        expect(target?.visual).toEqual({ kind: 'mark', role: 'text-label' });
+        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
+            'Jan|A',
+            'Jan|B',
+            'Jan',
+        ]);
     });
 
     it('uses one local hover rule across color semantics', () => {
@@ -387,6 +626,63 @@ describe('Vega-Lite semantic interactions', () => {
         expect(arcIntersectsRect(donutQuarter, { x1: 95, y1: 95, x2: 105, y2: 105 })).toBe(false);
         expect(arcIntersectsRect(quarter, { x1: 15, y1: 15, x2: 185, y2: 185 }, true)).toBe(true);
         expect(arcIntersectsRect(quarter, { x1: 90, y1: 90, x2: 180, y2: 180 }, true)).toBe(false);
+    });
+
+    it('tests angular selection across the zero-angle seam and within one polar center', () => {
+        const arc = {
+            mark: { marktype: 'arc' }, x: 100, y: 100,
+            innerRadius: 20, outerRadius: 80,
+            startAngle: 11 * Math.PI / 6, endAngle: 13 * Math.PI / 6,
+        };
+        const sector = {
+            center: { x: 100, y: 100 }, innerRadius: 0, outerRadius: 90,
+            startAngle: 7 * Math.PI / 4, endAngle: 9 * Math.PI / 4,
+        };
+
+        expect(arcIntersectsAngularSector(arc, sector)).toBe(true);
+        expect(arcIntersectsAngularSector(arc, sector, true)).toBe(true);
+        expect(arcIntersectsAngularSector(arc, { ...sector, endAngle: 2 * Math.PI }, true)).toBe(false);
+        expect(arcIntersectsAngularSector(arc, { ...sector, center: { x: 300, y: 100 } })).toBe(false);
+        expect(arcIntersectsAngularSector(arc, { ...sector, innerRadius: 85 })).toBe(false);
+    });
+
+    it('draws annular angular-brush geometry and admits it only on polar ChartDefs', () => {
+        expect(angularSectorPath({
+            center: { x: 100, y: 100 }, innerRadius: 30, outerRadius: 80,
+            startAngle: 0, endAngle: Math.PI / 2,
+        })).toContain('A 80 80 0 0 1');
+        const fullDisk = angularSectorPath({
+            center: { x: 100, y: 100 }, innerRadius: 0, outerRadius: 80,
+            startAngle: 0, endAngle: 2 * Math.PI,
+        });
+        const fullDonut = angularSectorPath({
+            center: { x: 100, y: 100 }, innerRadius: 30, outerRadius: 80,
+            startAngle: 0, endAngle: -2 * Math.PI,
+        });
+        expect(fullDisk.match(/ A /g)).toHaveLength(2);
+        expect(fullDonut.match(/ A /g)).toHaveLength(4);
+        expect(fullDisk).not.toContain('0.000001');
+
+        const cartesian = {
+            mark: 'bar',
+            data: { values: [{ category: 'A', value: 1 }] },
+            encoding: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
+            _interactionSemantics: barChartDef.semanticInteractions!({
+                resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
+            }),
+        };
+        expect(() => addVegaLiteInteractions(cartesian, [brushAngle()]))
+            .toThrow('requires a polar chart with angular-region support');
+
+        const polar = {
+            mark: 'arc',
+            data: { values: [{ category: 'A', value: 1 }] },
+            encoding: { theta: { field: 'value', type: 'quantitative' }, color: { field: 'category', type: 'nominal' } },
+            _interactionSemantics: roseChartDef.semanticInteractions!({
+                resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
+            }),
+        };
+        expect(addVegaLiteInteractions(polar, [brushAngle()])).not.toBeNull();
     });
 
     it('does not select adjacent cells that only touch the selection boundary', () => {
@@ -876,6 +1172,113 @@ describe('Vega-Lite semantic interactions', () => {
         expect(spec.layer[0].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
         expect(spec.layer[1].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
         expect(() => parse(compiled, undefined, { ast: true } as any)).not.toThrow();
+    });
+
+    it('dims independent text labels without instrumenting unrelated annotations', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['Category', 'Value'],
+                categoryField: 'Category',
+                selectableMarks: ['bar'],
+            },
+            data: {
+                values: [
+                    { Category: 'A', Value: 12 },
+                    { Category: 'B', Value: 8 },
+                ],
+            },
+            layer: [
+                {
+                    mark: 'bar',
+                    encoding: {
+                        x: { field: 'Category', type: 'nominal' },
+                        y: { field: 'Value', type: 'quantitative' },
+                    },
+                },
+                {
+                    [INTERACTION_PROVENANCE]: {
+                        role: 'text-label',
+                        identity: 'inherit',
+                        presentation: 'independent',
+                    },
+                    mark: { type: 'text', dy: -6 },
+                    encoding: {
+                        x: { field: 'Category', type: 'nominal' },
+                        y: { field: 'Value', type: 'quantitative' },
+                        text: { field: 'Value', type: 'quantitative' },
+                    },
+                },
+                {
+                    mark: { type: 'text', dy: 12 },
+                    encoding: {
+                        x: { datum: 'A', type: 'nominal' },
+                        y: { datum: 0, type: 'quantitative' },
+                        text: { value: 'Reference' },
+                    },
+                },
+            ],
+        };
+
+        const { plan, compiled } = instrument(spec, [clickHighlight()]);
+
+        expect(plan).not.toBeNull();
+        expect(spec.layer[0].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
+        expect(spec.layer[1].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
+        expect(spec.layer[0].mark.cursor).toBe('pointer');
+        expect(spec.layer[1].mark.cursor).toBeUndefined();
+        expect(spec.layer[2].encoding.opacity).toBeUndefined();
+        expect(() => parse(compiled, undefined, { ast: true } as any)).not.toThrow();
+    });
+
+    it('carries generated on-mark label provenance without double opacity', () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [
+                    { Category: 'A', Value: 12 },
+                    { Category: 'B', Value: 8 },
+                ],
+            },
+            semantic_types: { Category: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Category', y: 'Value' },
+                chartProperties: { showValueLabels: true },
+            },
+            theme_spec: 'economist',
+        } as never) as Record<string, any>;
+
+        const generatedLabel = spec.layer.find((layer: Record<string, any>) => layer.mark?.type === 'text');
+        expect(generatedLabel?.[INTERACTION_PROVENANCE]).toEqual({
+            role: 'text-label',
+            identity: 'inherit',
+            presentation: 'on-mark',
+        });
+
+        const { compiled } = instrument(spec, [clickHighlight()]);
+
+        expect(generatedLabel.encoding.opacity).toBeUndefined();
+        expect(generatedLabel.transform).toContainEqual({
+            calculate: "'text-label'",
+            as: INTERACTION_ROLE,
+        });
+        expect(JSON.stringify(spec)).not.toContain(INTERACTION_PROVENANCE);
+        expect(() => parse(compiled, undefined, { ast: true } as any)).not.toThrow();
+    });
+
+    it('resolves tagged label hits while leaving untagged text inert', () => {
+        const datum = { [INTERACTION_KEY]: 'A|12' };
+        const mark = { marktype: 'text', name: 'value-label' };
+
+        expect(renderHit({ mark, datum })).toBeNull();
+        expect(renderHit({
+            mark,
+            datum: { ...datum, [INTERACTION_ROLE]: 'text-label' },
+        })).toMatchObject({
+            datum: { [INTERACTION_KEY]: 'A|12', [INTERACTION_ROLE]: 'text-label' },
+            source: 'mark',
+            markType: 'text',
+            layerRole: 'text-label',
+        });
     });
 
     it('keeps a mark click local without a declared series', () => {

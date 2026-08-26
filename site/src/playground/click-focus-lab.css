@@ -38,6 +38,56 @@
   color: #1f2328;
 }
 
+.cf-theme-picker {
+  margin-top: 12px;
+}
+
+.cf-navigation-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  margin-top: 16px;
+}
+
+.cf-navigation-controls label {
+  display: grid;
+  gap: 5px;
+  width: 160px;
+  color: #66707a;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cf-navigation-controls label strong {
+  color: #1f2328;
+}
+
+.cf-navigation-controls input {
+  width: 100%;
+  accent-color: #4d5963;
+}
+
+.cf-navigation-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  border: 1px solid #cfd5da;
+  border-radius: 5px;
+  padding: 0 10px;
+  color: #4d5963;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cf-navigation-controls button:hover {
+  background: #eef1f3;
+}
+
 .cf-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
@@ -182,5 +232,9 @@
 
   .cf-status {
     align-self: flex-start;
+  }
+
+  .cf-navigation-controls label {
+    width: min(100%, 220px);
   }
 }

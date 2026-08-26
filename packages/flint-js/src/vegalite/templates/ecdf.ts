@@ -55,6 +55,7 @@ export const ecdfPlotDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ['x', 'color', 'detail', 'column', 'row'],
+    navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
     declareLayoutMode: () => ({
         paramOverrides: {

@@ -877,8 +877,21 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (overflowResult.viewports.length > 0) {
         result._viewports = overflowResult.viewports;
     }
-    if (chartTemplate.semanticInteractions) {
-        result._interactionSemantics = chartTemplate.semanticInteractions({ resolvedEncodings });
+    const navigationAxes = chartTemplate.navigation && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
+        ? (chartTemplate.navigation.axes ?? ['x', 'y']).filter((axis) => {
+            const encoding = resolvedEncodings[axis];
+            return !!encoding?.field && (encoding.type === 'quantitative' || encoding.type === 'temporal');
+        })
+        : [];
+    if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
+        result._interactionSemantics = {
+            ...(chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
+                fields: [],
+                selectableMarks: [],
+            }),
+            navigationAxes,
+            selectionBoundary: design.interaction.selectionBoundary,
+        };
     }
     result._width = layoutResult.subplotWidth;
     result._height = layoutResult.subplotHeight;

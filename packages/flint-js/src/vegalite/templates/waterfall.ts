@@ -10,6 +10,7 @@ import {
     targetFromHits,
 } from '../../core/interaction-semantics';
 import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { withInteractionTextLabel } from '../interaction-provenance';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
 
 /**
@@ -27,6 +28,7 @@ export const waterfallChartDef: ChartTemplateDef = {
     chart: "Waterfall Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
@@ -44,7 +46,10 @@ export const waterfallChartDef: ChartTemplateDef = {
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
-                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'waterfall-step' });
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'mark',
+                    role: event.role === 'text-label' ? 'text-label' : 'waterfall-step',
+                });
             },
             presentUpdate: presentInteractionUpdate((element) => element.records?.[0]?.__wf_color === 'decrease'
                 ? { anchor: 'bottom', placement: 'below' }
@@ -293,7 +298,7 @@ export const waterfallChartDef: ChartTemplateDef = {
 
             spec.layer.push(
                 // Running total outside the bar (above increases / below decreases).
-                {
+                withInteractionTextLabel({
                     mark: {
                         type: "text",
                         align: "center",
@@ -307,10 +312,10 @@ export const waterfallChartDef: ChartTemplateDef = {
                         text: { field: "__wf_sum", type: "quantitative", format: labelFormat },
                         tooltip: null,
                     },
-                },
+                }, { presentation: 'independent' }),
                 // Delta inside the bar, muted in the bar's own hue. Skipped when the
                 // bar is too short to hold the text.
-                {
+                withInteractionTextLabel({
                     transform: [{ filter: `abs(datum.__wf_sum - datum.__wf_prev_sum) >= ${minDataHeight}` }],
                     mark: {
                         type: "text",
@@ -327,7 +332,7 @@ export const waterfallChartDef: ChartTemplateDef = {
                         },
                         tooltip: null,
                     },
-                },
+                }, { presentation: 'on-mark' }),
             );
         }
 

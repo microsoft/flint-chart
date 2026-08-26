@@ -25,6 +25,7 @@ export const pieChartDef: ChartTemplateDef = {
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['arc'],
+            supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
                 const legendField = event.legendField ?? seriesField;

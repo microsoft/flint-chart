@@ -14,6 +14,7 @@ import {
     type SemanticTarget,
 } from '../../core/interaction-semantics';
 import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
 } from '../../core/axis-detection';
@@ -128,6 +129,7 @@ export const barChartDef: ChartTemplateDef = {
     chart: "Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -342,6 +344,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
     chart: "Grouped Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "group", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -462,6 +465,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
     chart: "Stacked Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -543,6 +547,7 @@ export const histogramDef: ChartTemplateDef = {
         },
     },
     channels: ["x", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const colorField = resolvedEncodings.color?.field;
@@ -609,6 +614,7 @@ export const heatmapDef: ChartTemplateDef = {
     chart: "Heatmap",
     template: { mark: "rect", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'color',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y']
@@ -620,6 +626,10 @@ export const heatmapDef: ChartTemplateDef = {
             categoryField,
             selectableMarks: ['rect'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
+            renderSelectionStyles: resolvedEncodings.color?.type === 'quantitative'
+                || resolvedEncodings.color?.type === 'temporal'
+                ? { rect: { boundary: 'contiguous-region' } }
+                : undefined,
             resolve: (event, context) => resolveBarTarget(event, context, undefined),
             presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
         };
@@ -796,7 +806,7 @@ export const heatmapDef: ChartTemplateDef = {
                         ...(baseEncoding.color ? { color: spec.encoding.color } : {}),
                         ...(spec.encoding.opacity ? { opacity: spec.encoding.opacity } : {}),
                     },
-                }, {
+                }, withInteractionTextLabel({
                     mark: {
                         type: 'text',
                         align: 'center',
@@ -819,7 +829,7 @@ export const heatmapDef: ChartTemplateDef = {
                             ? { condition: textColorConditions, value: defaultTextColor }
                             : { value: defaultTextColor },
                     },
-                }];
+                }, { presentation: 'on-mark' })];
 
                 spec.layer = layers;
                 delete spec.mark;

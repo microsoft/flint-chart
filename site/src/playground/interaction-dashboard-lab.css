@@ -1,7 +1,7 @@
 .idash-page {
   gap: 18px;
-  width: min(100%, 1280px);
-  max-width: 1280px;
+  width: min(100%, 1080px);
+  max-width: 1080px;
   margin: 0 auto;
   color: #20262c;
 }
@@ -87,13 +87,11 @@
   opacity: 0.42;
 }
 
-.idash-controls {
+.idash-summary {
   display: grid;
-  grid-template-columns: minmax(300px, 1.4fr) repeat(2, minmax(220px, 1fr));
-  align-items: end;
-  gap: 24px;
-  padding: 2px 0 16px;
-  border-bottom: 1px solid #cfd6da;
+  grid-template-columns: minmax(190px, 1.3fr) minmax(190px, 1.2fr) repeat(4, minmax(110px, 0.8fr));
+  align-items: stretch;
+  border-block: 1px solid #cfd6da;
 }
 
 .idash-year-control,
@@ -165,38 +163,35 @@
   box-shadow: 0 1px 3px rgb(32 38 44 / 12%);
 }
 
-.idash-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: 1px solid #dce1e4;
-}
-
-.idash-kpis > div {
+.idash-summary-item {
   display: grid;
   gap: 4px;
-  padding: 4px 18px 15px;
+  align-content: center;
+  min-width: 0;
+  padding: 12px 14px;
   border-right: 1px solid #e1e5e8;
 }
 
-.idash-kpis > div:first-child {
+.idash-summary-item:first-child {
   padding-left: 0;
 }
 
-.idash-kpis > div:last-child {
+.idash-summary-item:last-child {
   border-right: 0;
 }
 
-.idash-kpis span {
+.idash-summary-item > span {
   color: #748088;
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.idash-kpis strong {
+.idash-summary-item > strong {
   font-family: "Source Serif 4", "Iowan Old Style", Georgia, serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 620;
+  white-space: nowrap;
 }
 
 .idash-chart-grid {
@@ -204,7 +199,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   width: 100%;
-  gap: 14px;
+  gap: 12px;
 }
 
 .idash-panel {
@@ -219,15 +214,22 @@
   display: grid;
   align-items: start;
   justify-items: center;
-  min-height: 320px;
+  min-height: 0;
   overflow: hidden;
-  padding: 10px;
+  padding: 6px;
 }
 
 @media (max-width: 900px) {
-  .idash-controls {
-    grid-template-columns: minmax(280px, 1fr) repeat(2, minmax(180px, 0.7fr));
-    gap: 14px;
+  .idash-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .idash-summary-item:nth-child(3) {
+    border-right: 0;
+  }
+
+  .idash-summary-item:nth-child(-n + 3) {
+    border-bottom: 1px solid #e1e5e8;
   }
 
   .idash-chart-grid {
@@ -252,27 +254,22 @@
     width: 100%;
   }
 
-  .idash-controls {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
-
-  .idash-kpis {
+  .idash-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .idash-kpis > div {
+  .idash-summary-item {
     padding: 8px 12px 12px;
     border-bottom: 1px solid #e1e5e8;
   }
 
-  .idash-kpis > div:first-child {
+  .idash-summary-item:first-child {
     padding-left: 12px;
   }
 
   .idash-panel .it-chart-mount {
-    height: 394px;
-    min-height: 340px;
+    height: 350px;
+    min-height: 300px;
     padding: 8px;
   }
 

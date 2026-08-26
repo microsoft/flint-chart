@@ -23,7 +23,7 @@ function annotationText(element: SemanticTarget['elements'][number], context: In
     const entries = Object.entries(record).filter(([field]) => !field.startsWith('__'));
     const candidates = entries.filter(([field]) => field !== context.categoryField && field !== context.seriesField);
     const numeric = [...candidates].reverse().find(([, value]) => typeof value === 'number' && Number.isFinite(value));
-    const selected = numeric ?? candidates.at(-1) ?? entries.at(-1);
+    const selected = numeric ?? candidates[candidates.length - 1] ?? entries[entries.length - 1];
     return displayValue(selected?.[1]);
 }
 

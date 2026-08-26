@@ -45,6 +45,7 @@ export const scatterPlotDef: ChartTemplateDef = {
     chart: "Scatter Plot",
     template: { mark: "circle", encoding: {} },
     channels: ["x", "y", "color", "size", "shape", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
@@ -122,6 +123,7 @@ export const regressionDef: ChartTemplateDef = {
         ],
     },
     channels: ["x", "y", "size", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     instantiate: (spec, ctx) => {
         const { x, y, color, size, column, row } = ctx.resolvedEncodings;
@@ -204,6 +206,7 @@ export const rangedDotPlotDef: ChartTemplateDef = {
         ],
     },
     channels: ["x", "y", "color"],
+    navigation: {},
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
@@ -259,6 +262,7 @@ export const boxplotDef: ChartTemplateDef = {
     chart: "Boxplot",
     template: { mark: "boxplot", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);

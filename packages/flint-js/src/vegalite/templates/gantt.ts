@@ -9,6 +9,7 @@ import {
     targetFromHits,
 } from '../../core/interaction-semantics';
 import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     coerceGanttEndpoint,
     ganttDurationLabelExpression,
@@ -38,6 +39,7 @@ export const ganttChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["y", "x", "x2", "color", "detail", "column", "row"],
+    navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
@@ -55,7 +57,10 @@ export const ganttChartDef: ChartTemplateDef = {
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
-                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'task' });
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'mark',
+                    role: event.role === 'text-label' ? 'text-label' : 'task',
+                });
             },
             presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
         };
@@ -128,7 +133,7 @@ export const ganttChartDef: ChartTemplateDef = {
             spec.encoding = facetEncoding;
             spec.layer = [
                 { mark: spec.mark, encoding: barEncoding },
-                {
+                withInteractionTextLabel({
                     mark: { type: 'text', align: 'left', baseline: 'middle', dx: 4, fontSize: 10 },
                     encoding: {
                         y: { ...y },
@@ -139,7 +144,7 @@ export const ganttChartDef: ChartTemplateDef = {
                         },
                         text: { field: labelField, type: 'nominal' },
                     },
-                },
+                }, { presentation: 'independent' }),
             ];
             delete spec.mark;
         }

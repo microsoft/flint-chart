@@ -42,7 +42,6 @@ const focusCountries = new Set([
 ]);
 
 type DashboardMetric = 'Life expectancy' | 'GDP per capita';
-type TrendDensity = 'focus' | 'all';
 
 const semanticTypes = {
   Observation: 'Category',
@@ -55,6 +54,18 @@ const semanticTypes = {
   'Population (M)': 'Quantity',
   'Life expectancy': 'Quantity',
   'GDP per capita': 'Currency',
+};
+
+const dashboardTheme = {
+  extends: 'economist',
+  ink: {
+    series: {
+      categoricalExtended: [
+        '#006ba2', '#3ebcd2', '#ebb434', '#379a8b', '#9a3d5b', '#a17ba5',
+        '#003f5c', '#d46b27', '#5f8f3b', '#c75146', '#d66aa5', '#74624f',
+      ],
+    },
+  },
 };
 
 function idsFor(test: (row: GapminderRow) => boolean): string[] {
@@ -74,7 +85,7 @@ function dashboardFixture(
   encodings: Record<string, unknown>,
   values: Row[] = rows,
   chartProperties?: Record<string, unknown>,
-  baseSize = { width: 350, height: 245 },
+  baseSize = { width: 400, height: 230 },
 ): InteractionDemoFixture {
   return {
     id,
@@ -83,6 +94,7 @@ function dashboardFixture(
     input: {
       data: { values },
       semantic_types: semanticTypes,
+      theme_spec: dashboardTheme,
       options: chartType === 'Bar Chart'
         ? { defaultBandSize: 44, maxBandSize: 64 }
         : undefined,
@@ -116,7 +128,6 @@ const linkedFocus: InteractionDef<LinkPayload> = {
 function buildDashboardCharts(
   snapshotYear: number,
   metric: DashboardMetric,
-  trendDensity: TrendDensity,
 ): DashboardChart[] {
   const snapshotRows: Row[] = gapminderRows
     .filter((row) => row.Year === snapshotYear)
@@ -133,9 +144,7 @@ function buildDashboardCharts(
       'Observation IDs': idsFor((row) => row.Continent === Continent),
     };
   });
-  const trendRows = trendDensity === 'all'
-    ? rows
-    : rows.filter((row) => focusCountries.has(String(row.Country)));
+  const trendRows = rows.filter((row) => focusCountries.has(String(row.Country)));
   const metricTitle = metric === 'Life expectancy' ? 'Life expectancy' : 'Income per person';
 
   return [
@@ -148,7 +157,7 @@ function buildDashboardCharts(
         { x: 'GDP per capita', y: 'Life expectancy', size: 'Population (M)', color: 'Continent', detail: 'Country' },
         snapshotRows,
         { logScale_x: true },
-        { width: 430, height: 245 },
+        { width: 400, height: 230 },
       ),
       interaction: select({ id: 'dashboard-country-select' }),
     },
@@ -161,20 +170,20 @@ function buildDashboardCharts(
         { x: 'Population (M)', y: 'Continent' },
         continentRows,
         undefined,
-        { width: 430, height: 245 },
+        { width: 400, height: 230 },
       ),
       interaction: clickHighlight({ id: 'dashboard-continent-click' }),
     },
     {
       id: 'trends',
       fixture: dashboardFixture(
-        `dashboard-trends-${metric}-${trendDensity}`,
+        `dashboard-trends-${metric}`,
         `${metricTitle} trajectories, 1952–2007`,
         'Line Chart',
         { x: 'Year label', y: metric, color: 'Country' },
         trendRows,
-        { showPoints: trendDensity === 'focus', logScale_y: metric === 'GDP per capita' },
-        { width: 430, height: 300 },
+        { showPoints: true, logScale_y: metric === 'GDP per capita' },
+        { width: 400, height: 260 },
       ),
       interaction: clickHighlight({ id: 'dashboard-trend-click' }),
     },
@@ -186,6 +195,8 @@ function buildDashboardCharts(
         'Heatmap',
         { x: 'Year label', y: 'Country', color: metric },
         rows,
+        undefined,
+        { width: 400, height: 260 },
       ),
       interaction: brushY({ id: 'dashboard-brush-y' }),
     },
@@ -231,13 +242,11 @@ export function InteractionDashboardLab() {
   const [selection, setSelection] = useState<DashboardSelection | null>(null);
   const [snapshotYear, setSnapshotYear] = useState(2007);
   const [metric, setMetric] = useState<DashboardMetric>('Life expectancy');
-  const [trendDensity, setTrendDensity] = useState<TrendDensity>('focus');
   const deferredYear = useDeferredValue(snapshotYear);
   const deferredMetric = useDeferredValue(metric);
-  const deferredTrendDensity = useDeferredValue(trendDensity);
   const dashboardCharts = useMemo(
-    () => buildDashboardCharts(deferredYear, deferredMetric, deferredTrendDensity),
-    [deferredMetric, deferredTrendDensity, deferredYear],
+    () => buildDashboardCharts(deferredYear, deferredMetric),
+    [deferredMetric, deferredYear],
   );
 
   const registerSurface = useCallback((id: string, surface: InteractiveChartSurface | null) => {
@@ -258,7 +267,7 @@ export function InteractionDashboardLab() {
   }, []);
 
   const routeEvent = useCallback((detail: FlintInteractionEventDetail) => {
-    if (detail.event.phase !== 'commit') return;
+    if (detail.event.type !== 'semantic' || detail.event.phase !== 'commit') return;
     const ids = observationIds(detail.event.target?.elements ?? []);
     const source = dashboardCharts.find((chart) => `dashboard-${chart.id}` === detail.chartId);
     dispatchSelection(ids, source?.id);
@@ -278,11 +287,6 @@ export function InteractionDashboardLab() {
   const changeMetric = useCallback((nextMetric: DashboardMetric) => {
     clearSelection();
     setMetric(nextMetric);
-  }, [clearSelection]);
-
-  const changeTrendDensity = useCallback((density: TrendDensity) => {
-    clearSelection();
-    setTrendDensity(density);
   }, [clearSelection]);
 
   const activeIds = new Set(selection?.ids ?? rows.map((row) => String(row.Observation)));
@@ -310,8 +314,8 @@ export function InteractionDashboardLab() {
         </div>
       </header>
 
-      <section className="idash-controls" aria-label="Dashboard controls">
-        <label className="idash-year-control">
+      <section className="idash-summary" aria-label="Story controls and current selection summary">
+        <label className="idash-summary-item idash-year-control">
           <span>Snapshot year</span>
           <input
             type="range"
@@ -323,7 +327,7 @@ export function InteractionDashboardLab() {
           />
           <strong>{snapshotYear}</strong>
         </label>
-        <div className="idash-control-group">
+        <div className="idash-summary-item idash-control-group">
           <span>Story metric</span>
           <div className="idash-segments" role="group" aria-label="Story metric">
             {(['Life expectancy', 'GDP per capita'] as DashboardMetric[]).map((option) => (
@@ -338,31 +342,25 @@ export function InteractionDashboardLab() {
             ))}
           </div>
         </div>
-        <div className="idash-control-group">
-          <span>Trend lines</span>
-          <div className="idash-segments" role="group" aria-label="Trend density">
-            <button type="button" aria-pressed={trendDensity === 'focus'} onClick={() => changeTrendDensity('focus')}>
-              Focus 12
-            </button>
-            <button type="button" aria-pressed={trendDensity === 'all'} onClick={() => changeTrendDensity('all')}>
-              All 20
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="idash-kpis" aria-label="Current selection summary">
-        <div><span>Countries</span><strong>{activeCountries.size} of {countryCount}</strong></div>
-        <div><span>Years in focus</span><strong>{yearSpan}</strong></div>
-        <div>
+        <div className="idash-summary-item"><span>Countries</span><strong>{activeCountries.size} of {countryCount}</strong></div>
+        <div className="idash-summary-item"><span>Years in focus</span><strong>{yearSpan}</strong></div>
+        <div className="idash-summary-item">
           <span>Average {metric === 'Life expectancy' ? 'life expectancy' : 'income'}</span>
           <strong>{metric === 'Life expectancy' ? `${averageMetric.toFixed(1)} years` : `$${Math.round(averageMetric).toLocaleString()}`}</strong>
         </div>
-        <div><span>Observations</span><strong>{activeRows.length} of {rows.length}</strong></div>
+        <div className="idash-summary-item"><span>Observations</span><strong>{activeRows.length} of {rows.length}</strong></div>
       </section>
 
       <div className="idash-chart-grid">
-        {dashboardCharts.map((chart) => (
+        {dashboardCharts.slice(0, 2).map((chart) => (
+          <DashboardPanel
+            key={chart.id}
+            chart={chart}
+            registerSurface={registerSurface}
+            routeEvent={routeEvent}
+          />
+        ))}
+        {dashboardCharts.slice(2).map((chart) => (
           <DashboardPanel
             key={chart.id}
             chart={chart}

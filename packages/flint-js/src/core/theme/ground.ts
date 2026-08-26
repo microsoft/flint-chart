@@ -1698,6 +1698,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     const padding = isPaintedSurface(canvas)
         ? Math.max(densityPadding, Math.round((axisLabelText.fontSize ?? 10) * 1.5))
         : densityPadding;
+    const selectionBoundary = theme.interaction?.selectionBoundary;
+    const selectionBoundaryWidth = Math.max(0, selectionBoundary?.width ?? 1.5);
 
     return {
         themeId: theme.id ?? 'flint',
@@ -1750,6 +1752,16 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             }
             : undefined,
         marks,
+        interaction: {
+            selectionBoundary: {
+                color: selectionBoundary?.color ?? theme.ink?.accent ?? text.primary,
+                width: selectionBoundaryWidth,
+                opacity: clamp(selectionBoundary?.opacity ?? 1, 0, 1),
+                haloColor: selectionBoundary?.haloColor ?? plot ?? canvas,
+                haloWidth: Math.max(selectionBoundaryWidth, selectionBoundary?.haloWidth ?? 3),
+                haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.8, 0, 1),
+            },
+        },
         facets,
         layout: {
             padding,

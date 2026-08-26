@@ -601,6 +601,18 @@ export interface ThemeCompileDefaults extends Partial<AssembleOptions> {
     canvasSize?: { width: number; height: number };
 }
 
+export interface ThemeInteraction {
+    tooltipFormat?: string;
+    selectionBoundary?: {
+        color?: string;
+        width?: number;
+        opacity?: number;
+        haloColor?: string;
+        haloWidth?: number;
+        haloOpacity?: number;
+    };
+}
+
 /**
  * Level 1. One JSON document per design language.
  *
@@ -634,7 +646,7 @@ export interface ThemeSpec {
     geometry?: ThemeGeometry;
     chartDefaults?: ThemeChartDefaults;
     compileDefaults?: ThemeCompileDefaults;
-    interaction?: { tooltipFormat?: string };
+    interaction?: ThemeInteraction;
     variants?: ThemeVariant[];
 }
 
@@ -916,6 +928,16 @@ export interface DesignDecisions {
         size: number;
     };
     marks: ResolvedMarks;
+    interaction: {
+        selectionBoundary: {
+            color: string;
+            width: number;
+            opacity: number;
+            haloColor: string;
+            haloWidth: number;
+            haloOpacity: number;
+        };
+    };
     facets: {
         header: { show: boolean; fieldTitle: boolean } & ResolvedText;
         panelFrame: boolean;

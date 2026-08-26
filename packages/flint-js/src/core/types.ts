@@ -901,6 +901,11 @@ export interface ChartTemplateDef {
     /** Which encoding channels are available for this chart */
     channels: string[];
 
+    /** Cartesian positional channels whose continuous domains may be navigated at runtime. */
+    navigation?: {
+        axes?: readonly ('x' | 'y')[];
+    };
+
     /**
      * How the primary mark encodes its quantitative value.
      * Determines zero-baseline, scale tightness, and compression behavior.
@@ -922,12 +927,17 @@ export interface ChartTemplateDef {
         seriesField?: string;
         legendFields?: Record<string, string>;
         selectableMarks: string[];
+        supportedRegionGestures?: ('cartesian' | 'angular')[];
         renderHoverStyles?: Record<string, {
             fill?: string;
             fillOpacity?: number;
             opacity?: 'contrast';
             stroke?: string;
             strokeWidth?: number;
+        }>;
+        renderSelectionStyles?: Record<string, {
+            strokeWidthMultiplier?: number;
+            boundary?: 'contiguous-region';
         }>;
         resolve: import('./interaction-semantics').ChartInteractionResolver;
         presentUpdate: import('../interactive/interactions').ChartUpdateProcessor;

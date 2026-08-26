@@ -155,6 +155,7 @@ export const lineChartDef: ChartTemplateDef = {
     chart: "Line Chart",
     template: { mark: "line", encoding: {} },
     channels: ["x", "y", "color", "strokeDash", "detail", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     geometryKinds: ['line', 'point'],
     semanticInteractions: ({ resolvedEncodings }) => {
@@ -174,6 +175,7 @@ export const lineChartDef: ChartTemplateDef = {
                 line: { strokeWidth: 3 },
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
             resolve: (event, context) => resolveLineTarget(event, context, seriesField),
             presentUpdate: presentInteractionUpdate(() => ({
                 anchor: 'center',

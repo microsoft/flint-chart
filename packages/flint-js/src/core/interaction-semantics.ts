@@ -20,7 +20,7 @@ export interface SemanticTarget {
 }
 
 export interface SemanticResolveEvent {
-    gesture: 'click' | 'hover' | 'rectangle';
+    gesture: 'click' | 'hover' | 'rectangle' | 'angular';
     role: string;
     hits: readonly RenderHit[];
     legendValue?: unknown;

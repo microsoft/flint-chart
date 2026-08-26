@@ -203,7 +203,7 @@ function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
   );
   const interactions = useMemo(() => [interaction], [interaction]);
   const handleSemanticEvent = useCallback((event: FlintInteractionEventDetail) => setDetail(event), []);
-  const records = targetRecords(detail?.event.target ?? null);
+  const records = targetRecords(detail?.event.type === 'semantic' ? detail.event.target : null);
   const rendered = demo.render(records, demo.fixture);
 
   return (

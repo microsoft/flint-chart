@@ -13,6 +13,7 @@ const pages: NavEntry[] = [
     children: [
       { to: 'labs', label: 'Labs' },
       { to: 'overflow-viewport', label: 'Overflow viewport' },
+      { to: 'band-stretching', label: 'Band stretching' },
     ],
   },
   {
@@ -27,7 +28,16 @@ const pages: NavEntry[] = [
   },
   { to: 'debug-gym', label: 'Debug gym' },
   { to: 'demo-wall', label: 'Demo wall' },
-  { to: 'theme-labs', label: 'Theme' },
+  {
+    group: 'Theme',
+    children: [
+      { to: 'theme-labs', label: 'Theme' },
+      { to: 'theme-lab-r2', label: 'R2 evaluation' },
+      { to: 'theme-lab-real', label: 'Real-world evaluation' },
+      { to: 'label-experiment', label: 'Label experiment' },
+      { to: 'style-references', label: 'Style references' },
+    ],
+  },
   { to: 'full-test-cases', label: 'Full test cases' },
 ];
 
