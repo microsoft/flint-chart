@@ -133,6 +133,7 @@ export {
 // Phase modules (analysis pipeline — VL-free)
 export { resolveChannelSemantics, convertTemporalData } from './resolve-semantics';
 export { filterOverflow } from './filter-overflow';
+export { detectOrdinalAsMagnitude } from './ordinal-magnitude';
 export { computeLayout, computeChannelBudgets } from './compute-layout';
 export {
     normalizeStaticSeries,

@@ -62,6 +62,7 @@ import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
 import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
+import { detectOrdinalAsMagnitude } from '../core/ordinal-magnitude';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
@@ -683,6 +684,15 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         warnings.push(...vgObj._warnings);
         delete vgObj._warnings;
     }
+
+    // Read after instantiation: semantics resolve Rank to ordinal, so a magnitude
+    // encoding of it only exists once a template has overridden that. Reported
+    // rather than corrected — which value belongs on the bar is the author's call.
+    warnings.push(
+        ...detectOrdinalAsMagnitude(
+            chartType, chartTemplate.markCognitiveChannel, channelSemantics, vgObj,
+        ),
+    );
 
     // --- restructureFacets (VL-specific) ---
     // The facet grid (including wrapping) was already decided by
