@@ -1,5 +1,6 @@
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
 import type { ExternalInteractionEvent, InteractionDef } from './interactions';
+import type { ChartUpdateRequest, ChartUpdateResult } from './updates/request';
 
 export type ViewportChannel = 'x' | 'y';
 export type ViewportState = Partial<Record<ViewportChannel, number>>;
@@ -15,6 +16,8 @@ export interface InteractiveRenderer {
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     resize?(size: { width: number; height: number }): void | Promise<void>;
     dispatchInteraction?(event: ExternalInteractionEvent): void | Promise<void>;
+    applyUpdate?(update: ChartUpdateRequest): Promise<ChartUpdateResult>;
+    clearUpdate?(updateId: string): Promise<void>;
     destroy(): void;
 }
 
@@ -48,5 +51,7 @@ export interface InteractiveChartSurface {
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
     dispatch(event: ExternalInteractionEvent): void;
+    applyUpdate(update: ChartUpdateRequest): Promise<ChartUpdateResult>;
+    clearUpdate(updateId: string): Promise<void>;
     destroy(): void;
 }

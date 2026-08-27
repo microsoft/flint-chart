@@ -51,6 +51,10 @@ export interface FocusOverlayOptions {
     containerLayoutSize(): { width: number; height: number };
 }
 
+export function hoverContrastOpacity(authoredOpacity: number): number {
+    return authoredOpacity < 1 ? 1 : 0.9;
+}
+
 export function createFocusOverlay({
     view,
     container,
@@ -157,7 +161,13 @@ export function createFocusOverlay({
             } else {
                 shape.setAttribute('points', points.map((plotPoint: PlotPoint) => `${plotPoint.x},${plotPoint.y}`).join(' '));
                 shape.setAttribute('fill', hoverStyle?.fill ?? visual?.fill ?? item.fill ?? '#4c78a8');
-                shape.setAttribute('fill-opacity', String(hoverStyle?.fillOpacity ?? visual?.fillOpacity ?? 1));
+                const authoredFillOpacity = visual?.fillOpacity ?? 1;
+                const fillOpacity = hoverStyle?.opacity === 'spotlight'
+                    ? 1
+                    : hoverStyle?.opacity === 'contrast'
+                    ? hoverContrastOpacity(authoredFillOpacity)
+                    : hoverStyle?.fillOpacity ?? authoredFillOpacity;
+                shape.setAttribute('fill-opacity', String(fillOpacity));
                 if (hoverStyle?.stroke) shape.setAttribute('stroke', hoverStyle.stroke);
                 if (hoverStyle?.strokeWidth !== undefined) shape.setAttribute('stroke-width', String(hoverStyle.strokeWidth));
             }

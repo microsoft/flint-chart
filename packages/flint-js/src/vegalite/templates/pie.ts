@@ -9,7 +9,11 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/updates/annotation';
 import { setMarkProp } from './utils';
 
 export const pieChartDef: ChartTemplateDef = {
@@ -19,6 +23,7 @@ export const pieChartDef: ChartTemplateDef = {
     markCognitiveChannel: 'area',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const valueField = resolvedEncodings.size?.field;
         const colorField = resolvedEncodings.color?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['color']),
@@ -34,7 +39,11 @@ export const pieChartDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'slice' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'arc-centroid', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('radial-midpoint', 'outer-radial'),
+                categoryValueAnnotationText(seriesField, valueField),
+                'arc',
+            ),
         };
     },
     geometryKinds: ['arc'],
@@ -118,6 +127,7 @@ export const pieChartDef: ChartTemplateDef = {
                 margin: 50,   // room for labels around pie
             });
 
+        spec.mark = setMarkProp(spec.mark, 'outerRadius', radius);
         // Set explicit width/height — overrides config.view defaults
         spec.width = canvasW;
         spec.height = canvasH;

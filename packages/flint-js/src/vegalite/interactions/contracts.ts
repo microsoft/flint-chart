@@ -1,10 +1,10 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
-import type { ChartUpdateProcessor } from '../../interactive/interactions';
+import type { ChartUpdatePresenter } from '../../interactive/interactions';
 
 export interface HoverStyle {
     fill?: string;
     fillOpacity?: number;
-    opacity?: 'contrast';
+    opacity?: 'contrast' | 'spotlight';
     stroke?: string;
     strokeWidth?: number;
 }
@@ -29,6 +29,14 @@ export interface VegaNavigationAxis {
     type: 'linear' | 'log' | 'time' | 'utc';
 }
 
+export interface VegaReorderAxis {
+    axis: 'x' | 'y';
+    field: string;
+    includeConnectiveMarks?: boolean;
+    scale: string;
+    signal: string;
+}
+
 export interface VegaInteractionPlan {
     fields: readonly string[];
     categoryField?: string;
@@ -40,6 +48,8 @@ export interface VegaInteractionPlan {
     selectionBoundary?: Readonly<SelectionBoundaryStyle>;
     navigationChannels?: readonly ('x' | 'y')[];
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;
+    reorderAxis?: VegaReorderAxis;
+    reorderAxes?: readonly VegaReorderAxis[];
     resolve?: ChartInteractionResolver;
-    presentUpdate?: ChartUpdateProcessor;
+    presentUpdate?: ChartUpdatePresenter;
 }

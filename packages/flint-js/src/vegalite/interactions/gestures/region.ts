@@ -275,7 +275,8 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         setSuppressClick(true);
         const interval = regionAxis === 'xy' ? undefined : intervalForDrag(point);
         const points = interval ? intervalPoints(interval, intervalAxis()) : { start: dragStart, end: point };
-        interval ? showInterval(interval) : showRegion(dragStart, point);
+        if (interval) showInterval(interval);
+        else showRegion(dragStart, point);
         dispatchRegion('preview', points.start, points.end, event, dragAction);
     };
     const finishDrag = (event: PointerEvent): void => {

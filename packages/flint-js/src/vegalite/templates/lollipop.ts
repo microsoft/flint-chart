@@ -13,7 +13,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { lollipopAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
 
 export const lollipopChartDef: ChartTemplateDef = {
     chart: "Lollipop Chart",
@@ -46,7 +46,9 @@ export const lollipopChartDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'lollipop' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(() => lollipopAnnotationCandidates(
+                resolvedEncodings.x?.type === 'quantitative' ? 'x' : 'y',
+            )),
         };
     },
     declareLayoutMode: (cs, table) => {

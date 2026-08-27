@@ -1,7 +1,8 @@
-export { BrushInteraction } from './brush';
-export { AngularBrushInteraction } from './angular-brush';
-export { ClickAnnotateInteraction } from './click-annotate';
-export { ClickGroupHighlightInteraction } from './click-group-highlight';
-export { ClickHighlightInteraction } from './click-highlight';
-export { SelectInteraction } from './select';
-export { NavigateInteraction } from './navigate';
+export { createBrushInteraction } from './brush';
+export { createAngularBrushInteraction } from './angular-brush';
+export { createClickAnnotateInteraction } from './click-annotate';
+export { createClickGroupHighlightInteraction } from './click-group-highlight';
+export { createClickHighlightInteraction } from './click-highlight';
+export { createSelectInteraction } from './select';
+export { createNavigateInteraction } from './navigate';
+export { createDragReorderInteraction } from './drag-reorder';

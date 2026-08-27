@@ -1,4 +1,4 @@
-import type { RenderHit } from '../../core/interaction-semantics';
+import { semanticVisualFamily, type RenderHit } from '../../core/interaction-semantics';
 import type {
     ElementInteractionEvent,
     InteractionModifiers,
@@ -9,7 +9,7 @@ import type {
     RegionInteractionEvent,
     RegionOperation,
 } from '../../interactive/triggers/events';
-import { angularSegments, TAU } from '../../interactive/geometry/angular';
+import { angularSegments } from '../../interactive/geometry/angular';
 export {
     clientRectToLayoutRect,
     clientToLayoutPoint,
@@ -23,7 +23,7 @@ export const INTERACTION_KEY = '__flint_interaction_key';
 export const INTERACTION_ROLE = '__flint_interaction_role';
 export const PATH_KEY_SUFFIX = '|__flint_path';
 
-const SUPPORTED_RENDER_MARKS = new Set(['arc', 'area', 'bar', 'line', 'rect', 'rule', 'symbol', 'text']);
+const SUPPORTED_RENDER_MARKS = new Set(['arc', 'area', 'bar', 'line', 'rect', 'rule', 'shape', 'symbol', 'text']);
 
 export interface SelectionRect {
     x1: number;
@@ -35,7 +35,9 @@ export interface SelectionRect {
 interface PathGeometry {
     kind: 'segment' | 'slice';
     points: PlotPoint[];
+    annotationPoints?: PlotPoint[];
     offset: PlotPoint;
+    endDatum?: Record<string, unknown>;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -46,6 +48,20 @@ function keyOfDatum(datum: unknown): string | undefined {
     if (!datum || typeof datum !== 'object') return undefined;
     const key = (datum as Record<string, unknown>)[INTERACTION_KEY];
     return typeof key === 'string' ? key : undefined;
+}
+
+export function pathHoverPresentationKey(items: readonly any[], semanticKey: string): string {
+    if (!semanticKey.endsWith(PATH_KEY_SUFFIX)) return semanticKey;
+    const segmentKey = semanticKey.slice(0, -PATH_KEY_SUFFIX.length);
+    const segment = items.find((item) =>
+        (item.mark?.marktype === 'line' || item.mark?.marktype === 'area')
+        && keyOfDatum(item.datum) === segmentKey,
+    );
+    if (segment?.mark?.marktype === 'line') return semanticKey;
+    const pathKey = segment?.mark?.items
+        ?.map((item: any) => keyOfDatum(item.datum))
+        .find((key: string | undefined): key is string => typeof key === 'string');
+    return pathKey ? `${pathKey}${PATH_KEY_SUFFIX}` : semanticKey;
 }
 
 function pathGeometry(item: any, offsetX: number, offsetY: number): PathGeometry | null {
@@ -59,21 +75,26 @@ function pathGeometry(item: any, offsetX: number, offsetY: number): PathGeometry
         return {
             kind: 'segment',
             points: [point(item), point(items[index + 1])],
+            annotationPoints: [point(item), point(items[index + 1])],
             offset: { x: offsetX, y: offsetY },
+            endDatum: items[index + 1].datum,
         };
     }
     if (item.mark.marktype !== 'area' || typeof item.y2 !== 'number') return null;
-    const previous = items[index - 1];
     const next = items[index + 1];
+    if (!next || typeof next.y2 !== 'number') return null;
+    const annotationPoints = [point(item), point(next)];
     return {
         kind: 'slice',
         points: [
-            { x: (previous ? (previous.x + item.x) / 2 : item.x) + offsetX, y: (previous ? (previous.y + item.y) / 2 : item.y) + offsetY },
-            { x: (next ? (item.x + next.x) / 2 : item.x) + offsetX, y: (next ? (item.y + next.y) / 2 : item.y) + offsetY },
-            { x: (next ? (item.x + next.x) / 2 : item.x) + offsetX, y: (next ? (item.y2 + next.y2) / 2 : item.y2) + offsetY },
-            { x: (previous ? (previous.x + item.x) / 2 : item.x) + offsetX, y: (previous ? (previous.y2 + item.y2) / 2 : item.y2) + offsetY },
+            point(item),
+            point(next),
+            { x: next.x + offsetX, y: next.y2 + offsetY },
+            { x: item.x + offsetX, y: item.y2 + offsetY },
         ],
+        annotationPoints,
         offset: { x: offsetX, y: offsetY },
+        endDatum: next.datum,
     };
 }
 
@@ -281,6 +302,7 @@ export function renderHit(item: any): RenderHit | null {
         : item.datum;
     return {
         datum,
+        endDatum: item.interactionGeometry?.endDatum,
         source: 'mark',
         markType: item.mark?.marktype,
         markName: item.mark?.name,
@@ -315,7 +337,7 @@ export function legendTarget(
     item: any,
     legendFields?: Readonly<Record<string, string>>,
 ): { channel?: string; value: unknown; field?: string } | null {
-    const isLegend = typeof item?.mark?.role === 'string' && item.mark.role.startsWith('legend-');
+    const isLegend = semanticVisualFamily(item?.mark?.role) === 'legend';
     if (!isLegend) return null;
     const scales = item?.mark?.group?.mark?.group?.datum?.scales
         ?? item?.mark?.group?.mark?.group?.mark?.group?.datum?.scales;

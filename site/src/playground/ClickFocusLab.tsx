@@ -1,27 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Layers3, MousePointer2, Move, MoveHorizontal, MoveVertical, RotateCcw, RotateCw, Scan } from 'lucide-react';
+import { ChevronDown, GripVertical, Layers3, MessageSquareText, MousePointer2, Move, MoveHorizontal, MoveVertical, RotateCcw, RotateCw, Scan } from 'lucide-react';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
-  genAreaTests,
-  genBarTableTests,
   genBarTests,
-  genBoxplotTests,
-  genCandlestickTests,
-  genConnectedScatterTests,
-  genGanttTests,
-  genGroupedBarTests,
-  genHeatmapTests,
-  genHistogramTests,
-  genLineTests,
-  genLollipopTests,
-  genPieTests,
-  genPyramidTests,
-  genRangedDotPlotTests,
-  genRoseTests,
-  genScatterTests,
-  genStackedBarTests,
-  genStripPlotTests,
-  genWaterfallTests,
+  TEST_GENERATORS,
   type TestCase,
 } from 'flint-chart/test-data';
 import {
@@ -29,20 +11,25 @@ import {
   brushAngle,
   brushX,
   brushY,
+  clickAnnotate,
   clickGroupHighlight,
   clickHighlight,
+  dragReorder,
   navigate,
   select as rectangleSelect,
+  type FlintInteractionEventDetail,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { BACKENDS } from '../shared/supported-backends';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
+import { navigationDemoCases } from './navigation-demo-data';
 import './click-focus-lab.css';
 
-type InteractionMode = 'element' | 'group' | 'select'
-  | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate';
-type Support = 'works' | 'partial' | 'none';
+type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
+  | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder';
+type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 interface NavigationGuard {
   minVisibleFraction: number;
@@ -53,6 +40,7 @@ interface NavigationGuard {
 const interactionModes = [
   { value: 'element', label: 'Element', icon: MousePointer2 },
   { value: 'group', label: 'Group', icon: Layers3 },
+  { value: 'annotate', label: 'Annotate', icon: MessageSquareText },
   { value: 'select', label: 'Select', icon: Scan },
   { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
   { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
@@ -60,12 +48,14 @@ const interactionModes = [
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
   { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
+  { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
 ] as const;
 
 interface InteractionCase {
   id: string;
   input: ChartAssemblyInput;
-  support: Support;
+  navigationAxes?: 'x' | 'y' | 'xy';
+  chartType: string;
   expectation: string;
 }
 
@@ -78,19 +68,37 @@ function representative(generator: () => TestCase[]): TestCase {
     ?? cases[0];
 }
 
-function interactionCase(
-  id: string,
-  generator: () => TestCase[],
-  support: Support,
-  expectation: string,
-): InteractionCase {
-  const testCase = representative(generator);
+function interactionCase(testCase: TestCase, suffix = ''): InteractionCase {
   return {
-    id,
+    id: `${testCase.chartType}-${testCase.title}${suffix}`,
+    chartType: testCase.chartType,
     input: testCaseToAssemblyInput(testCase, SIZE) as ChartAssemblyInput,
-    support,
-    expectation,
+    expectation: testCase.description || 'Interact with the chart and inspect the resolved semantic target below.',
   };
+}
+
+function representativeCases(): InteractionCase[] {
+  const byChartType = new Map<string, TestCase>();
+  for (const generator of Object.values(TEST_GENERATORS)) {
+    let cases: TestCase[];
+    try {
+      cases = generator();
+    } catch {
+      continue;
+    }
+    for (const testCase of cases) {
+      if (!BACKENDS.vegalite.getTemplateDef(testCase.chartType)) continue;
+      const current = byChartType.get(testCase.chartType);
+      const preferred = testCase.tags?.includes('real')
+        && !testCase.encodingMap.column?.fieldID
+        && !testCase.encodingMap.row?.fieldID;
+      if (!current || preferred) byChartType.set(testCase.chartType, testCase);
+    }
+  }
+  const cases = [...byChartType.values()].map((testCase) => interactionCase(testCase));
+  const horizontalBar = genBarTests().find((testCase) => testCase.description.includes('Horizontal'));
+  if (horizontalBar) cases.push(interactionCase(horizontalBar, '-horizontal'));
+  return cases.sort((left, right) => left.chartType.localeCompare(right.chartType) || left.id.localeCompare(right.id));
 }
 
 function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
@@ -164,64 +172,134 @@ function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
         baseSize: SIZE,
       },
     } as ChartAssemblyInput,
-    support: 'works',
+    chartType: 'Scatter Plot',
     expectation: selected.expectation,
   };
 }
 
 const interactionCases: InteractionCase[] = [
-  interactionCase('bar', genBarTests, 'works', 'Element mode isolates one bar; group mode follows its color series.'),
-  interactionCase('grouped-bar', genGroupedBarTests, 'works', 'Element mode isolates one bar; group mode follows the same color across categories.'),
-  interactionCase('stacked-bar', genStackedBarTests, 'works', 'Element mode isolates one segment; group mode follows its color across stacks.'),
-  interactionCase('heatmap', genHeatmapTests, 'works', 'A cell is keyed by both discrete axes.'),
-  interactionCase('pie', genPieTests, 'works', 'Each arc is one semantic slice.'),
-  interactionCase('rose', genRoseTests, 'works', 'Each radial arc is one semantic category.'),
-  interactionCase('pyramid', genPyramidTests, 'works', 'Each age-and-side bar resolves independently.'),
-  interactionCase('gantt', genGanttTests, 'works', 'Task bars resolve by their discrete task axis.'),
-  interactionCase('waterfall', genWaterfallTests, 'partial', 'Group mode follows the implicit increase, decrease, or total color; connectors remain independent.'),
-  interactionCase('bar-table', genBarTableTests, 'partial', 'Bars respond; text and table furniture do not.'),
-  interactionCase('histogram', genHistogramTests, 'works', 'Each generated bin is one selectable interval.'),
-  interactionCase('lollipop', genLollipopTests, 'works', 'A dot and its stem resolve to one encoded observation.'),
-  interactionCase('candlestick', genCandlestickTests, 'works', 'Body, wick, and doji tick resolve to one trading interval.'),
-  interactionCase('scatter', genScatterTests, 'works', 'Each point resolves by its complete encoded identity.'),
+  ...representativeCases(),
   multiLegendCase('shape'),
   multiLegendCase('size'),
-  interactionCase('strip', genStripPlotTests, 'works', 'Element mode isolates one point; group mode follows every point in its jitter lane.'),
-  interactionCase('line', genLineTests, 'works', 'Click or drag a segment; visible points remain independently selectable.'),
-  interactionCase('area', genAreaTests, 'works', 'Each domain interval resolves to an area slice.'),
-  interactionCase('boxplot', genBoxplotTests, 'works', 'Box, median, and whiskers coalesce by category and series.'),
-  interactionCase('ranged-dot', genRangedDotPlotTests, 'works', 'Both endpoints and their connector resolve as one interval.'),
-  interactionCase('connected-scatter', genConnectedScatterTests, 'works', 'Trajectory segments and observed points resolve independently.'),
 ];
 
-const navigationAxesByCase = new Map(interactionCases.flatMap((item) => {
+const navigationCases: InteractionCase[] = navigationDemoCases.map((item) => ({
+  ...item,
+  chartType: item.input.chart_spec.chartType,
+}));
+
+const navigationAxesByCase = new Map([...interactionCases, ...navigationCases].flatMap((item) => {
   const spec = assembleVegaLite(item.input) as any;
   const axes = spec._interactionSemantics?.navigationAxes as readonly ('x' | 'y')[] | undefined;
   return axes?.length ? [[item.id, axes] as const] : [];
 }));
+
+const reorderAxesByCase = new Map(interactionCases.flatMap((item) => {
+  const spec = assembleVegaLite(item.input) as any;
+  const axes = spec._interactionSemantics?.reorderAxes as readonly { axis: 'x' | 'y'; field: string }[] | undefined;
+  return axes?.length ? [[item.id, axes] as const] : [];
+}));
+
+const ITEM_PREVIEW_LIMIT = 5;
+
+function summarizeElement(
+  element: NonNullable<FlintInteractionEventDetail['event']['target']>['elements'][number],
+): string {
+  const values = Object.entries(element.value ?? {})
+    .filter(([field, value]) => !field.startsWith('__')
+      && !['value', 'density', 'density_start', 'density_end'].includes(field)
+      && value != null
+      && typeof value !== 'object')
+    .slice(0, 3)
+    .map(([field, value]) => `${field}: ${String(value)}`);
+  return values.length ? values.join(' · ') : Object.values(element.key).map(String).join(' · ');
+}
+
+type InteractionEvent = FlintInteractionEventDetail['event'];
+type PlotGeometry = NonNullable<InteractionEvent['geometry']['plot']>;
+
+const compactNumber = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+const plotPoint = (point: { x: number; y: number }): string =>
+  `${compactNumber(point.x)}, ${compactNumber(point.y)}`;
+const percentPoint = (point: { x: number; y: number }): string =>
+  `${compactNumber(point.x * 100)}%, ${compactNumber(point.y * 100)}%`;
+
+function summarizePlotGeometry(geometry: PlotGeometry): string {
+  if (geometry.kind === 'point') return `at ${plotPoint(geometry.point)}`;
+  if (geometry.kind === 'drag') {
+    return `${plotPoint(geometry.start)} → ${plotPoint(geometry.current)} · Δ ${plotPoint(geometry.delta)}`;
+  }
+  if (geometry.kind === 'rect') {
+    const { x, y, width, height } = geometry.rect;
+    return `box ${plotPoint({ x, y })} · ${compactNumber(width)} × ${compactNumber(height)}`;
+  }
+  if (geometry.kind === 'polygon') {
+    const { points } = geometry.polygon;
+    if (!points.length) return 'polygon · 0 points';
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    return `polygon · ${points.length} points · ${compactNumber(Math.max(...xs) - Math.min(...xs))} × ${compactNumber(Math.max(...ys) - Math.min(...ys))}`;
+  }
+  if (geometry.kind === 'angular-sector') {
+    const { center, innerRadius, outerRadius, startAngle, endAngle } = geometry.sector;
+    const degrees = (radians: number) => compactNumber(radians * 180 / Math.PI);
+    return `center ${plotPoint(center)} · r ${compactNumber(innerRadius)}–${compactNumber(outerRadius)} · ${degrees(startAngle)}°–${degrees(endAngle)}°`;
+  }
+  const parts = [`${geometry.axes} viewport`];
+  if (geometry.anchor) parts.push(`center ${percentPoint(geometry.anchor)}`);
+  if (geometry.factor != null) parts.push(`scale ${compactNumber(geometry.factor)}×`);
+  if (geometry.delta) parts.push(`Δ ${percentPoint(geometry.delta)}`);
+  return parts.join(' · ');
+}
+
+function summarizeGeometry(event: InteractionEvent): string | undefined {
+  const plot = event.geometry.plot;
+  if (!plot) return undefined;
+  return summarizePlotGeometry(plot);
+}
 
 function InteractiveChart({
   input,
   mode,
   themeId,
   navigationGuard,
+  navigationAxes,
   resetVersion,
+  onStatus,
+  onSemanticEvent,
 }: {
   input: ChartAssemblyInput;
   mode: InteractionMode;
   themeId: string | undefined;
   navigationGuard: NavigationGuard;
+  navigationAxes?: 'x' | 'y' | 'xy';
   resetVersion: number;
+  onStatus: (status: ProbeStatus, message?: string) => void;
+  onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef(onStatus);
+  const semanticEventRef = useRef(onSemanticEvent);
+  statusRef.current = onStatus;
+  semanticEventRef.current = onSemanticEvent;
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    statusRef.current('loading');
+    const handleInteraction = (event: Event) => {
+      semanticEventRef.current((event as CustomEvent<FlintInteractionEventDetail>).detail);
+    };
+    container.addEventListener('flint-interaction', handleInteraction);
     const interaction = mode === 'element'
       ? clickHighlight()
       : mode === 'group'
         ? clickGroupHighlight()
+        : mode === 'annotate'
+          ? clickAnnotate()
         : mode === 'select'
           ? rectangleSelect()
           : mode === 'brush-x'
@@ -234,7 +312,9 @@ function InteractiveChart({
                   ? brushX({ mode: 'stateful' })
                   : mode === 'brush-y-stateful'
                     ? brushY({ mode: 'stateful' })
-                    : navigate({ axes: 'available', domainGuard: navigationGuard });
+                    : mode === 'drag-reorder'
+                      ? dragReorder()
+                      : navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard });
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
     const surface = buildInteractiveChart(container, themedInput, {
       backend: 'vegalite',
@@ -243,11 +323,15 @@ function InteractiveChart({
       expressionInterpreter,
       ariaLabel: input.chart_spec.title,
     });
-    void surface.ready.catch((error) => {
-      container.textContent = error instanceof Error ? error.message : String(error);
+    void surface.ready.then(() => statusRef.current('ready')).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      statusRef.current(message.includes('requires') || message.includes('support') ? 'unsupported' : 'error', message);
     });
-    return () => surface.destroy();
-  }, [input, mode, navigationGuard, resetVersion, themeId]);
+    return () => {
+      container.removeEventListener('flint-interaction', handleInteraction);
+      surface.destroy();
+    };
+  }, [input, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
 
   return <div className="cf-mount" ref={containerRef} />;
 }
@@ -265,11 +349,25 @@ function CaseCard({
   navigationGuard: NavigationGuard;
   resetVersion: number;
 }) {
+  const [status, setStatus] = useState<ProbeStatus>('loading');
+  const [statusMessage, setStatusMessage] = useState('Compiling');
+  const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
+  const [itemsExpanded, setItemsExpanded] = useState(false);
   const title = item.input.chart_spec.title || item.input.chart_spec.chartType;
-  const navigationAxes = navigationAxesByCase.get(item.id);
+  const availableNavigationAxes = navigationAxesByCase.get(item.id);
+  const navigationAxes = item.navigationAxes === 'xy'
+    ? ['x', 'y']
+    : item.navigationAxes ? [item.navigationAxes] : availableNavigationAxes;
   const description = mode === 'navigate'
-    ? `Drag to pan and use the wheel or trackpad to zoom the ${navigationAxes?.join(' and ')} domain.`
+    ? item.expectation
+    : mode === 'annotate'
+      ? 'Click a mark to inspect its compiler-inferred nearby position and connector.'
     : item.expectation;
+  const semanticTarget = lastInteraction?.event.target;
+  const semanticItems = semanticTarget?.elements ?? [];
+  const resolved = semanticItems.length > 0;
+  const geometry = lastInteraction ? summarizeGeometry(lastInteraction.event) : undefined;
+  const responded = resolved || lastInteraction?.event.action.endsWith('-viewport');
   return (
     <article className="cf-probe">
       <header className="cf-probe-header">
@@ -277,10 +375,10 @@ function CaseCard({
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <span className={`cf-status cf-status-${item.support}`}>
-          {mode === 'navigate'
-            ? navigationAxes?.join(' + ')
-            : item.support === 'works' ? 'Bound' : item.support === 'partial' ? 'Partial' : 'Not bound'}
+        <span className={`cf-status cf-status-${status}`} title={statusMessage}>
+          {status === 'ready' && mode === 'navigate'
+            ? navigationAxes?.join(' + ') || 'Ready'
+            : status === 'ready' ? 'Ready' : status}
         </span>
       </header>
       <div className="cf-stage">
@@ -290,10 +388,60 @@ function CaseCard({
             mode={mode}
             themeId={themeId}
             navigationGuard={navigationGuard}
+            navigationAxes={item.navigationAxes}
             resetVersion={resetVersion}
+            onStatus={(nextStatus, message) => {
+              setStatus(nextStatus);
+              setStatusMessage(message ?? (nextStatus === 'ready' ? 'Interactive surface ready' : 'Compiling'));
+            }}
+            onSemanticEvent={(detail) => {
+              setLastInteraction(detail);
+              setItemsExpanded(false);
+            }}
           />
         </ScaleToFit>
       </div>
+      <footer className={`cf-probe-event ${responded ? 'cf-probe-event-resolved' : 'cf-probe-event-warning'}`}>
+        {lastInteraction ? (
+          <>
+            <div className="cf-probe-event-summary">
+              <strong>{lastInteraction.event.action}</strong>
+              <span>{semanticTarget ? `${semanticTarget.visual.kind} · ${semanticTarget.visual.role}` : 'No semantic target'}</span>
+              {geometry && <span className="cf-probe-event-geometry">{geometry}</span>}
+              {!lastInteraction.event.action.endsWith('-viewport') && (
+                <span className="cf-probe-event-count">
+                  {semanticItems.length} item{semanticItems.length === 1 ? '' : 's'}
+                </span>
+              )}
+              {lastInteraction.event.dropTarget?.elements[0] && (
+                <span className="cf-probe-event-value">Drop: {summarizeElement(lastInteraction.event.dropTarget.elements[0])}</span>
+              )}
+            </div>
+            {semanticItems.length > 0 && (
+              <div className="cf-probe-event-data">
+                <ul className="cf-probe-event-items">
+                  {semanticItems.slice(0, itemsExpanded ? undefined : ITEM_PREVIEW_LIMIT).map((element, index) => (
+                    <li key={`${index}-${JSON.stringify(element.key)}`}>{summarizeElement(element)}</li>
+                  ))}
+                </ul>
+                  {semanticItems.length > ITEM_PREVIEW_LIMIT && (
+                  <button
+                    type="button"
+                    className="cf-items-toggle"
+                    aria-expanded={itemsExpanded}
+                    onClick={() => setItemsExpanded((expanded) => !expanded)}
+                  >
+                    {itemsExpanded ? 'Show less' : `Show ${semanticItems.length - ITEM_PREVIEW_LIMIT} more`}
+                    <ChevronDown size={12} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <span>{status === 'unsupported' || status === 'error' ? statusMessage : 'Interact to inspect semantic resolution'}</span>
+        )}
+      </footer>
     </article>
   );
 }
@@ -307,14 +455,12 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const counts = interactionCases.reduce((result, item) => {
-    result[item.support] += 1;
-    return result;
-  }, { works: 0, partial: 0, none: 0 });
   const visibleCases = mode === 'brush-angle'
-    ? interactionCases.filter((item) => item.id === 'pie' || item.id === 'rose')
+    ? interactionCases.filter((item) => ['Donut Chart', 'Pie Chart', 'Rose Chart'].includes(item.chartType))
     : mode === 'navigate'
-      ? interactionCases.filter((item) => navigationAxesByCase.has(item.id))
+      ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
+      : mode === 'drag-reorder'
+        ? interactionCases.filter((item) => reorderAxesByCase.has(item.id))
       : interactionCases;
 
   return (
@@ -341,6 +487,7 @@ export function ClickFocusLab() {
         <ul className="cf-interaction-list">
           <li><strong>Element:</strong> Click a mark to focus it and dim the other marks.</li>
           <li><strong>Group:</strong> Click a mark to focus related marks in the same category or series.</li>
+          <li><strong>Annotate:</strong> Click a mark to search nearby free space and connect its represented value.</li>
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
           <li><strong>X brush:</strong> Drag horizontally to focus marks across an X interval.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
@@ -348,11 +495,7 @@ export function ClickFocusLab() {
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel or trackpad to zoom.</li>
         </ul>
-        <div className="cf-summary" aria-label="Support summary">
-          <span className="cf-summary-bound"><strong>{counts.works}</strong> bound</span>
-          <span className="cf-summary-partial"><strong>{counts.partial}</strong> partial</span>
-          <span className="cf-summary-none"><strong>{counts.none}</strong> not bound</span>
-        </div>
+        <div className="cf-summary"><span><strong>{visibleCases.length}</strong> test cases</span></div>
         <div className="cf-theme-picker">
           <ThemePicker themeId={themeId} onTheme={setThemeId} />
         </div>

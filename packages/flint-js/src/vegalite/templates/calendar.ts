@@ -18,6 +18,8 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
+import { MUTED_HOVER_STROKE, targetFromHits } from '../../core/interaction-semantics';
+import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
 
 /** Weekday row order, Monday-first — mirrors the ECharts template's dayLabel.firstDay = 1. */
 const WEEKDAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -81,6 +83,17 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
     template: { mark: { type: 'rect', cornerRadius: 2 }, encoding: {} },
     channels: ['x', 'color'],
     markCognitiveChannel: 'color',
+    semanticInteractions: () => ({
+        fields: [WEEK_FIELD, WEEKDAY_FIELD],
+        categoryField: WEEK_FIELD,
+        selectableMarks: ['rect'],
+        renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+        resolve: (event, context) => targetFromHits(event.hits, context.keyField, {
+            kind: 'mark',
+            role: 'calendar-day',
+        }),
+        presentUpdate: suppressAnnotationUpdate,
+    }),
     declareLayoutMode: () => ({
         // Both axes are ordinal bands (week columns × weekday rows); square-ish
         // cells read as a calendar rather than a stretched grid.

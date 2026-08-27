@@ -23,12 +23,17 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/updates/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import { setMarkProp } from './utils';
 
 export const roseChartDef: ChartTemplateDef = {
     chart: "Rose Chart",
+    reorder: false,
     template: {
         mark: {
             type: "arc",
@@ -42,6 +47,7 @@ export const roseChartDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const valueField = resolvedEncodings.y?.field;
         const colorLegendField = resolvedEncodings.color?.field ?? resolvedEncodings.x?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
@@ -65,7 +71,11 @@ export const roseChartDef: ChartTemplateDef = {
                     role: event.role === 'text-label' ? 'text-label' : 'polar-bar',
                 });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'arc-centroid', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('outer-radial'),
+                valueAnnotationText(valueField),
+                'arc',
+            ),
         };
     },
 

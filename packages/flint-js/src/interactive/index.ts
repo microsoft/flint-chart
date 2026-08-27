@@ -15,9 +15,11 @@ export type {
     ViewportState,
 } from './types';
 export type {
+    AnnotationCandidate,
+    AnnotationConnection,
     AnnotationRenderPlan,
     ChartUpdate,
-    ChartUpdateProcessor,
+    ChartUpdatePresenter,
     BrushOptions,
     AngularBrushOptions,
     ClickAnnotateOptions,
@@ -26,7 +28,6 @@ export type {
     ElementInteractionEvent,
     ExternalInteractionEvent,
     FlintInteractionEventDetail,
-    InteractionInput,
     InteractionPhase,
     InteractionContext,
     InteractionDef,
@@ -51,7 +52,30 @@ export type {
     NormalizedInteractionEvent,
     UpdateOp,
 } from './interactions';
-export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, navigate, select } from './interactions';
+export type {
+    CanvasInteractionAction,
+    CanvasInteractionEvent,
+    DomainCoordinate,
+    DomainGeometry,
+    PlotGeometry,
+} from './canvas-interaction';
+export { toCanvasInteractionEvent } from './canvas-interaction';
+export type {
+    ChartUpdateRequest,
+    ChartUpdateRequestOp,
+    ChartUpdateResult,
+    SemanticTargetRef,
+    SemanticTargetSelector,
+    UpdateTarget,
+} from './updates/request';
+export {
+    annotate,
+    clearAnnotation,
+    emphasize,
+    navigateViewport,
+    resetUpdate,
+} from './updates/request';
+export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, navigate, select } from './interactions';
 export type { InteractionEventSource, InteractionEventSourceContext } from './triggers';
 export {
     axisBrushTrigger,
@@ -64,15 +88,6 @@ export {
     xBrushTrigger,
     yBrushTrigger,
 } from './triggers';
-export {
-    AngularBrushInteraction,
-    BrushInteraction,
-    ClickAnnotateInteraction,
-    ClickGroupHighlightInteraction,
-    ClickHighlightInteraction,
-    NavigateInteraction,
-    SelectInteraction,
-} from './presets';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
 
 export function buildInteractiveChart(

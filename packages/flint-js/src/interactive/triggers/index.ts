@@ -26,7 +26,7 @@ export interface InteractionEventSourceContext {
 
 export interface InteractionEventSource {
     readonly type: 'element' | 'region' | 'external' | (string & {});
-    readonly gesture?: 'click' | 'hover' | 'drag' | 'navigate';
+    readonly gesture?: 'click' | 'hover' | 'drag' | 'drag-element' | 'navigate';
     readonly match?: 'intersect' | 'contain';
     readonly axis?: 'x' | 'y' | 'xy';
     readonly mode?: 'ephemeral' | 'stateful';
@@ -37,6 +37,10 @@ export interface InteractionEventSource {
     readonly wheelSensitivity?: number;
     readonly source?: string;
     mount?(context: InteractionEventSourceContext): void | (() => void);
+}
+
+export function elementDragTrigger(): InteractionEventSource {
+    return { type: 'reorder', gesture: 'drag-element' };
 }
 
 export const clickTrigger = Object.freeze({

@@ -2,16 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { brushAngle, clickHighlight, navigate, select } from '../src/interactive/interactions';
+import { brushAngle, clickHighlight, dragReorder, navigate, select } from '../src/interactive/interactions';
 import { MUTED_HOVER_FILL, MUTED_HOVER_STROKE } from '../src/core/interaction-semantics';
-import { barChartDef, heatmapDef, pyramidChartDef } from '../src/vegalite/templates/bar';
+import { areaChartDef, streamgraphDef } from '../src/vegalite/templates/area';
+import {
+    barChartDef,
+    groupedBarChartDef,
+    heatmapDef,
+    pyramidChartDef,
+    stackedBarChartDef,
+} from '../src/vegalite/templates/bar';
 import { barTableDef } from '../src/vegalite/templates/bar-table';
+import { pieChartDef } from '../src/vegalite/templates/pie';
 import { roseChartDef } from '../src/vegalite/templates/rose';
 import { rangedDotPlotDef, scatterPlotDef } from '../src/vegalite/templates/scatter';
 import {
     addVegaLiteInteractions,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
+    injectVegaReorderSignal,
 } from '../src/vegalite/interactions/compile';
 import { angularSectorPath } from '../src/interactive/geometry/angular';
 import {
@@ -23,6 +32,7 @@ import {
     clientToLayoutPoint,
     INTERACTION_KEY,
     INTERACTION_ROLE,
+    PATH_KEY_SUFFIX,
     plotToClientPoint,
     renderHit,
     sceneItems,
@@ -34,10 +44,23 @@ import {
     LEGEND_SELECTION_STORE,
 } from '../src/vegalite/interactions/stores';
 import { mergeContiguousSelectionBounds } from '../src/vegalite/interactions/presentation/focus-overlay';
+import { annotationBounds } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
 import { THEME_PRESETS } from '../src/core/theme/presets';
 import { lineChartDef } from '../src/vegalite/templates/line';
+import { bumpChartDef } from '../src/vegalite/templates/bump';
+import { slopeChartDef } from '../src/vegalite/templates/slope';
+import { regressionDef } from '../src/vegalite/templates/scatter';
+import { mapDef, choroplethDef } from '../src/vegalite/templates/map';
+import { densityPlotDef } from '../src/vegalite/templates/density';
+import { ecdfPlotDef } from '../src/vegalite/templates/ecdf';
+import { vlCalendarHeatmapDef } from '../src/vegalite/templates/calendar';
+import { sparklineDef } from '../src/vegalite/templates/sparkline';
+import { violinPlotDef } from '../src/vegalite/templates/violin';
+import { bulletChartDef } from '../src/vegalite/templates/bullet';
+import { kpiCardDef } from '../src/vegalite/templates/kpi-card';
+import { radarChartDef } from '../src/vegalite/templates/radar';
 
 function instrument(spec: Record<string, any>, interactions = [clickHighlight()]) {
     const plan = addVegaLiteInteractions(spec, interactions);
@@ -58,6 +81,15 @@ function allSceneItems(view: View): any[] {
 }
 
 describe('Vega-Lite semantic interactions', () => {
+    it('uses a borderless spotlight for area hover', () => {
+        const hoverStyle = (resolvedEncodings: Record<string, any>) =>
+            areaChartDef.semanticInteractions!({ resolvedEncodings }).renderHoverStyles?.area;
+
+        expect(hoverStyle({})).toEqual({ opacity: 'spotlight' });
+        expect(hoverStyle({ opacity: { field: 'confidence', type: 'quantitative' } }))
+            .toEqual({ opacity: 'spotlight' });
+    });
+
     it('compiles navigation capabilities into resettable Vega domain signals', () => {
         const spec = assembleVegaLite({
             chart_spec: {
@@ -83,6 +115,156 @@ describe('Vega-Lite semantic interactions', () => {
         ]));
         expect(compiled.marks.filter((mark: any) => mark.type === 'symbol'))
             .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
+    });
+
+    it.each([
+        ['vertical', { x: { field: 'category' }, y: { field: 'value' } }, 'x'],
+        ['horizontal', { x: { field: 'value' }, y: { field: 'category' } }, 'y'],
+    ] as const)('compiles %s bar category reorder into a discrete domain signal', (_name, encodings, axis) => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Bar Chart', encodings },
+            semantic_types: { category: 'Category', value: 'Number' },
+            data: { values: [{ category: 'A', value: 1 }, { category: 'B', value: 2 }] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [dragReorder()])!;
+        expect(plan.reorderAxis).toMatchObject({ axis, field: 'category' });
+
+        const compiled = compile(spec).spec as any;
+        const reorderAxis = injectVegaReorderSignal(compiled, plan.reorderAxis);
+        expect(reorderAxis).toEqual({
+            axis, field: 'category', scale: axis, signal: `__flint_reorder_${axis}_domain`,
+        });
+        expect(compiled.scales.find((scale: any) => scale.name === axis).domainRaw)
+            .toEqual({ signal: `__flint_reorder_${axis}_domain` });
+    });
+
+    it('rejects drag reorder for charts without one template-declared category scale', () => {
+        expect(() => addVegaLiteInteractions({ mark: 'bar' }, [dragReorder()]))
+            .toThrow('requires a chart with a reorderable category axis');
+        const scatter = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: { field: 'x' }, y: { field: 'y' } },
+            },
+            semantic_types: { x: 'Number', y: 'Number' },
+            data: { values: [{ x: 1, y: 2 }] },
+        }) as any;
+        expect(() => addVegaLiteInteractions(scatter, [dragReorder()]))
+            .toThrow('requires a chart with a reorderable category axis');
+
+        const facetedSemantics = barChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'category', type: 'nominal' },
+                y: { field: 'value', type: 'quantitative' },
+                column: { field: 'region', type: 'nominal' },
+            },
+        });
+        expect(facetedSemantics.reorderAxis).toBeUndefined();
+    });
+
+    it.each(['quantitative', 'temporal'] as const)('rejects %s Bar category reorder semantics', (type) => {
+        const semantics = barChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'category', type },
+                y: { field: 'value', type: 'quantitative' },
+            },
+        });
+        expect(semantics.reorderAxis).toBeUndefined();
+        expect(semantics.reorderAxes).toBeUndefined();
+    });
+
+    it('declares and injects independent categorical Heatmap row and column reorder axes', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Heatmap',
+                encodings: { x: { field: 'column' }, y: { field: 'row' }, color: { field: 'value' } },
+            },
+            semantic_types: { column: 'Category', row: 'Category', value: 'Number' },
+            data: { values: [{ column: 'A', row: 'R1', value: 1 }] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [dragReorder()])!;
+        expect(plan.reorderAxes).toEqual([
+            { axis: 'x', field: 'column', scale: '', signal: '' },
+            { axis: 'y', field: 'row', scale: '', signal: '' },
+        ]);
+
+        const compiled = compile(spec).spec as any;
+        const axes = plan.reorderAxes!.map((axis) => injectVegaReorderSignal(compiled, axis));
+        expect(axes).toEqual([
+            { axis: 'x', field: 'column', scale: 'x', signal: '__flint_reorder_x_domain' },
+            { axis: 'y', field: 'row', scale: 'y', signal: '__flint_reorder_y_domain' },
+        ]);
+        expect(compiled.scales.find((scale: any) => scale.name === 'x').domainRaw)
+            .toEqual({ signal: '__flint_reorder_x_domain' });
+        expect(compiled.scales.find((scale: any) => scale.name === 'y').domainRaw)
+            .toEqual({ signal: '__flint_reorder_y_domain' });
+    });
+
+    it.each(['Boxplot', 'Line Chart'])('declares authored nominal axes as reorderable for %s', (chartType) => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType,
+                encodings: { x: { field: 'category' }, y: { field: 'value' } },
+            },
+            semantic_types: { category: 'Category', value: 'Number' },
+            data: { values: [
+                { category: 'A', value: 1 },
+                { category: 'B', value: 2 },
+            ] },
+        }) as any;
+        expect(spec._interactionSemantics.reorderAxes).toEqual([{ axis: 'x', field: 'category' }]);
+        const plan = addVegaLiteInteractions(spec, [dragReorder()])!;
+        expect(plan.reorderAxes).toEqual([{ axis: 'x', field: 'category', scale: '', signal: '' }]);
+    });
+
+    it('does not declare reorder for a path-only Range Area category axis', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Range Area Chart',
+                encodings: {
+                    x: { field: 'month' },
+                    y: { field: 'low' },
+                    y2: { field: 'high' },
+                },
+            },
+            semantic_types: { month: 'Category', low: 'Number', high: 'Number' },
+            data: { values: [{ month: 'Jan', low: 1, high: 3 }, { month: 'Feb', low: 2, high: 4 }] },
+        }) as any;
+        expect(spec._interactionSemantics.reorderAxes).toEqual([]);
+        expect(() => addVegaLiteInteractions(spec, [dragReorder()]))
+            .toThrow('requires a chart with a reorderable category axis');
+    });
+
+    it('distinguishes dumbbell connectors from stationary Slope stems during reorder preview', () => {
+        const input = (chartType: string) => assembleVegaLite({
+            chart_spec: {
+                chartType,
+                encodings: {
+                    x: { field: 'period' },
+                    y: { field: 'value' },
+                    color: { field: 'series' },
+                },
+            },
+            semantic_types: { period: 'Category', value: 'Number', series: 'Category' },
+            data: { values: [
+                { period: 'A', value: 1, series: 'one' },
+                { period: 'B', value: 2, series: 'one' },
+            ] },
+        }) as any;
+
+        expect(input('Ranged Dot Plot')._interactionSemantics.reorderAxes)
+            .toEqual([{ axis: 'x', field: 'period', includeConnectiveMarks: true }]);
+        expect(input('Slope Chart')._interactionSemantics.reorderAxes)
+            .toEqual([{ axis: 'x', field: 'period' }]);
+    });
+
+    it('rejects built-in interactions when a chart has no semantic contract', () => {
+        expect(() => addVegaLiteInteractions({ mark: 'line' }, [clickHighlight()]))
+            .toThrow('requires chart interaction semantics');
+        expect(() => addVegaLiteInteractions({
+            mark: 'line',
+            _interactionSemantics: { fields: [], selectableMarks: [], navigationAxes: ['x'] },
+        }, [clickHighlight()])).toThrow('requires chart element semantics');
     });
 
     it('clips every generated layer when navigation is combined with semantic interaction', () => {
@@ -360,6 +542,33 @@ describe('Vega-Lite semantic interactions', () => {
         ]);
     });
 
+    it('formats a Rose sector from its encoded category and value fields', () => {
+        const semantics = roseChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Month', type: 'nominal' },
+                y: { field: 'Rainfall (mm)', type: 'quantitative' },
+            },
+        });
+        const element = {
+            key: { [INTERACTION_KEY]: 'Jan' },
+            records: [{
+                Month: 'Jan',
+                'Rainfall (mm)': 140,
+                'Rainfall (mm)_start': 0,
+                'Rainfall (mm)_end': 140,
+            }],
+        };
+        const update = semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'polar-bar' } }] },
+            { chartType: 'Rose Chart', selected: [], categoryField: 'Month' },
+        );
+
+        expect(update.ops[0]).toMatchObject({ annotation: { text: '140' } });
+        expect((update.ops[0] as any).annotation.candidates).toEqual([
+            { connection: 'outer-radial', priority: 0 },
+        ]);
+    });
+
     it('uses one local hover rule across color semantics', () => {
         const makeSpec = (colorSemanticType: 'Category' | 'Quantity') => assembleVegaLite({
             data: { values: [
@@ -480,6 +689,80 @@ describe('Vega-Lite semantic interactions', () => {
         }
     });
 
+    it('slightly dims the owning area path behind the hovered slice', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Area Chart',
+                encodings: { x: { field: 'Year' }, y: { field: 'Value' } },
+            },
+            semantic_types: { Year: 'Date', Value: 'Number' },
+            data: { values: [
+                { Year: '2024-01-01', Value: 2 },
+                { Year: '2024-02-01', Value: 4 },
+            ] },
+        }) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const area = sceneItems(view).find((candidate) => candidate.mark?.marktype === 'area');
+        const key = area?.datum[INTERACTION_KEY];
+
+        view.change(HOVER_STORE, changeset().insert([{ key: `${key}${PATH_KEY_SUFFIX}` }]));
+        await view.runAsync();
+        const hovered = sceneItems(view).find((candidate) => candidate.mark?.marktype === 'area');
+
+        expect(hovered?.opacity).toBe(0.9);
+        expect(hovered?.stroke).toBeUndefined();
+    });
+
+    it('uses one area segment for its highlight, endpoint text, and annotation boundary', async () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Area Chart',
+                encodings: { x: { field: 'Year' }, y: { field: 'Users' } },
+            },
+            semantic_types: { Year: 'Date', Users: 'Number' },
+            data: { values: [
+                { Year: '2018-01-01', Users: 51 },
+                { Year: '2020-01-01', Users: 60 },
+                { Year: '2022-01-01', Users: 67 },
+            ] },
+        }) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const areaSegments = sceneItems(view).filter((candidate) => candidate.mark?.marktype === 'area');
+        const finalSegment = areaSegments.find((candidate) =>
+            candidate.interactionGeometry.endDatum?.Users === 67);
+        const hit = renderHit(finalSegment)!;
+        const semantics = areaChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Year', type: 'temporal' },
+                y: { field: 'Users', type: 'quantitative' },
+            },
+        });
+        const target = semantics.resolve(
+            { gesture: 'click', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY },
+        )!;
+
+        expect(areaSegments).toHaveLength(2);
+        expect(finalSegment.interactionGeometry.annotationPoints).toEqual(
+            finalSegment.interactionGeometry.points.slice(0, 2),
+        );
+        expect(annotationBounds(finalSegment).y2).toBeLessThan(finalSegment.bounds.y2);
+        expect(target.elements[0].records?.map((record) => record.Users)).toEqual([60, 67]);
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: target.elements[0] }] },
+            { chartType: 'Area Chart', selected: [] },
+        ).ops[0]).toMatchObject({
+            annotation: {
+                text: '60 → 67',
+                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+            },
+        });
+    });
+
     it('adds a light hover fill only to shape-only scatter points', () => {
         const hoverStyle = (resolvedEncodings: Record<string, any>) =>
             scatterPlotDef.semanticInteractions!({ resolvedEncodings }).renderHoverStyles?.symbol;
@@ -491,6 +774,18 @@ describe('Vega-Lite semantic interactions', () => {
             shape: { field: 'Shape', type: 'nominal' },
             color: { field: 'Color', type: 'nominal' },
         })).not.toHaveProperty('fill');
+    });
+
+    it('declares scatter detail encodings as semantic selector fields', () => {
+        const semantics = scatterPlotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'GDP', type: 'quantitative' },
+                y: { field: 'Life', type: 'quantitative' },
+                detail: { field: 'Country', type: 'nominal' },
+            },
+        });
+
+        expect(semantics.fields).toContain('Country');
     });
 
     it('applies one lollipop hover key to both stem and point layers', async () => {
@@ -601,6 +896,26 @@ describe('Vega-Lite semantic interactions', () => {
             expect(strokes.length).toBeGreaterThan(0);
             expect(strokes.every((item) => item.stroke !== 'transparent' && item.strokeWidth > 0)).toBe(true);
         }
+    });
+
+    it('leaves native line paint unchanged for segment-local hover', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Line Chart',
+                encodings: { x: { field: 'Year' }, y: { field: 'Value' } },
+            },
+            semantic_types: { Year: 'Date', Value: 'Number' },
+            data: { values: [
+                { Year: '2024-01-01', Value: 2 },
+                { Year: '2024-02-01', Value: 4 },
+            ] },
+        }) as any;
+        const { compiled } = instrument(spec);
+        const line = compiled.marks
+            .flatMap((mark: Record<string, any>) => mark.marks ?? [mark])
+            .find((mark: Record<string, any>) => mark.type === 'line');
+
+        expect(JSON.stringify(line.encode.update.strokeWidth ?? {})).not.toContain(HOVER_STORE);
     });
 
     it('tests rectangle selection against an arc sector rather than its broad bounds', () => {
@@ -856,6 +1171,38 @@ describe('Vega-Lite semantic interactions', () => {
         expect(() => parse(compiled, undefined, { ast: true } as any)).not.toThrow();
     });
 
+    it('formats bar-family annotations from the primary metric', () => {
+        const element = {
+            key: { [INTERACTION_KEY]: 'India' },
+            records: [{ Country: 'India', Population: 1428.6, Population_end: 1428.6 }],
+        };
+        const makeUpdate = (definition: typeof barChartDef, resolvedEncodings: Record<string, any>) => {
+            const semantics = definition.semanticInteractions!({ resolvedEncodings });
+            return semantics.presentUpdate!(
+                { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'bar' } }] },
+                { chartType: definition.chart, selected: [] },
+            );
+        };
+
+        const horizontalEncodings = {
+            x: { field: 'Population', type: 'quantitative' },
+            y: { field: 'Country', type: 'nominal' },
+        };
+        for (const definition of [barChartDef, groupedBarChartDef, stackedBarChartDef, pyramidChartDef]) {
+            const update = makeUpdate(definition, horizontalEncodings);
+            expect(update.ops[0]).toMatchObject({ annotation: { text: '1,428.6' } });
+            expect((update.ops[0] as any).annotation.candidates[0]).toMatchObject({ valueAxis: 'x' });
+        }
+
+        const flipped = makeUpdate(pyramidChartDef, {
+            x: { field: 'Country', type: 'nominal' },
+            y: { field: 'Population', type: 'quantitative' },
+        });
+
+        expect(flipped.ops[0]).toMatchObject({ annotation: { text: '1,428.6' } });
+        expect((flipped.ops[0] as any).annotation.candidates[0]).toMatchObject({ valueAxis: 'y' });
+    });
+
     it('hovers Pyramid bars without changing their geometry or center gap', async () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
@@ -986,9 +1333,91 @@ describe('Vega-Lite semantic interactions', () => {
         expect(renderedBars.find((item) => item.datum[INTERACTION_KEY] === peer.datum[INTERACTION_KEY])?.opacity).toBe(0.25);
     });
 
-    it.each(['click', 'hover'] as const)(
-        'resolves a ranged-dot endpoint %s to only the physical semantic unit',
-        (gesture) => {
+    it('resolves a ranged-dot click to its connector and both endpoints', () => {
+        const semantics = rangedDotPlotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Life expectancy', type: 'quantitative' },
+                y: { field: 'Country', type: 'nominal' },
+                color: { field: 'Sex', type: 'nominal' },
+            },
+        });
+        const male = {
+            datum: { [INTERACTION_KEY]: 'Japan|81.5|Male', Country: 'Japan', Sex: 'Male' },
+            source: 'mark' as const,
+            markType: 'symbol',
+        };
+        const female = {
+            datum: { [INTERACTION_KEY]: 'Japan|87.6|Female', Country: 'Japan', Sex: 'Female' },
+            source: 'mark' as const,
+            markType: 'symbol',
+        };
+        const connector = {
+            datum: {
+                [INTERACTION_KEY]: `Japan|connector${PATH_KEY_SUFFIX}`,
+                Country: 'Japan', Sex: 'Male', 'Life expectancy': 81.5,
+            },
+            endDatum: { Country: 'Japan', Sex: 'Female', 'Life expectancy': 87.6 },
+            source: 'mark' as const,
+            markType: 'line',
+        };
+        const other = {
+            datum: { [INTERACTION_KEY]: 'Brazil|76|Female', Country: 'Brazil', Sex: 'Female' },
+            source: 'mark' as const,
+        };
+
+        const target = semantics.resolve(
+            { gesture: 'click', role: 'mark', hits: [male] },
+            {
+                allHits: [male, female, connector, other],
+                keyField: INTERACTION_KEY,
+                categoryField: 'Country',
+                seriesField: 'Sex',
+            },
+        );
+
+        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
+            `Japan|connector${PATH_KEY_SUFFIX}`,
+            'Japan|81.5|Male',
+            'Japan|87.6|Female',
+        ]);
+        expect(target?.visual).toEqual({ kind: 'path', role: 'line' });
+        expect(target?.elements[0].records).toEqual([connector.datum, connector.endDatum]);
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: target!.elements[0], visual: target!.visual }] },
+            { chartType: 'Ranged Dot Plot', selected: [], categoryField: 'Country', seriesField: 'Sex' },
+        ).ops[0]).toMatchObject({
+            annotation: {
+                text: 'Male: 81.5, Female: 87.6',
+                candidates: [{ connection: 'segment-midpoint', priority: 0 }],
+            },
+        });
+    });
+
+    it('formats a pie slice from its encoded category and value fields', () => {
+        const semantics = pieChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                color: { field: 'Browser', type: 'nominal' },
+                size: { field: 'Share', type: 'quantitative' },
+            },
+        });
+        const element = {
+            key: { [INTERACTION_KEY]: 'Chrome' },
+            records: [{ Browser: 'Chrome', Share: 65, Share_start: 0, Share_end: 65 }],
+        };
+
+        const update = semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'slice' } }] },
+            { chartType: 'Pie Chart', selected: [], seriesField: 'Browser' },
+        );
+
+        expect(update.ops[0]).toMatchObject({ annotation: { text: 'Chrome: 65' } });
+        expect((update.ops[0] as any).annotation.candidates).toEqual([
+            { connection: 'radial-midpoint', priority: 0 },
+            { connection: 'outer-radial', priority: 1 },
+        ]);
+    });
+
+    it('keeps ranged-dot hover on the physical endpoint', () => {
         const resolve = rangedDotPlotDef.semanticInteractions!({
             resolvedEncodings: {
                 x: { field: 'Life expectancy', type: 'quantitative' },
@@ -1001,35 +1430,15 @@ describe('Vega-Lite semantic interactions', () => {
             source: 'mark' as const,
             markType: 'symbol',
         };
-        const female = {
-            datum: { [INTERACTION_KEY]: 'Japan|87.6|Female', Country: 'Japan', Sex: 'Female' },
-            source: 'mark' as const,
-        };
-        const connector = {
-            datum: { [INTERACTION_KEY]: 'Japan|connector', Country: 'Japan' },
-            source: 'mark' as const,
-        };
-        const other = {
-            datum: { [INTERACTION_KEY]: 'Brazil|76|Female', Country: 'Brazil', Sex: 'Female' },
-            source: 'mark' as const,
-        };
 
         const target = resolve(
-            { gesture, role: 'mark', hits: [male] },
-            {
-                allHits: [male, female, connector, other],
-                keyField: INTERACTION_KEY,
-                categoryField: 'Country',
-                seriesField: 'Sex',
-            },
+            { gesture: 'hover', role: 'mark', hits: [male] },
+            { allHits: [male], keyField: INTERACTION_KEY, categoryField: 'Country', seriesField: 'Sex' },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
-            'Japan|81.5|Male',
-        ]);
+        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['Japan|81.5|Male']);
         expect(target?.visual).toEqual({ kind: 'mark', role: 'point' });
-        },
-    );
+    });
 
     it('highlights only the hovered legend item until it is clicked', async () => {
         const spec = assembleVegaLite({
@@ -1281,6 +1690,34 @@ describe('Vega-Lite semantic interactions', () => {
         });
     });
 
+    it('preserves the second datum of a clicked line segment', () => {
+        const mark = { marktype: 'line', name: 'trend' };
+        const start = { [INTERACTION_KEY]: 'A', Month: 'Jan', Sales: 10 };
+        const end = { [INTERACTION_KEY]: 'B', Month: 'Feb', Sales: 14 };
+        const hit = renderHit({
+            mark,
+            datum: start,
+            interactionGeometry: { endDatum: end },
+        })!;
+        const resolve = lineChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Month', type: 'nominal' },
+                y: { field: 'Sales', type: 'quantitative' },
+            },
+        }).resolve;
+
+        const target = resolve(
+            { gesture: 'click', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY, categoryField: 'Month' },
+        );
+
+        expect(target?.visual).toEqual({ kind: 'path', role: 'line' });
+        expect(target?.elements[0].records).toEqual([
+            { ...start, [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
+            end,
+        ]);
+    });
+
     it('keeps a mark click local without a declared series', () => {
         const resolve = barChartDef.semanticInteractions!({
             resolvedEncodings: {
@@ -1452,5 +1889,134 @@ describe('Vega-Lite semantic interactions', () => {
         });
         expect(spec.encoding).not.toHaveProperty('detail');
         expect(spec.encoding.opacity.condition.test).toContain("!length(data('__flint_interaction_store'))");
+    });
+
+    it.each([
+        ['Bump Chart', bumpChartDef, ['line', 'point'], 'X'],
+        ['Slope Chart', slopeChartDef, ['line', 'point'], 'X'],
+        ['Regression', regressionDef, ['circle'], 'X'],
+        ['Streamgraph', streamgraphDef, ['area'], 'X'],
+        ['Map', mapDef, ['circle'], 'Longitude'],
+        ['Density Plot', densityPlotDef, ['area'], 'value'],
+        ['ECDF Plot', ecdfPlotDef, ['line', 'point'], 'X'],
+        ['Calendar Heatmap', vlCalendarHeatmapDef, ['rect'], '__flintCalendarWeek'],
+        ['Sparkline', sparklineDef, ['line'], 'X'],
+        ['Violin Plot', violinPlotDef, ['area'], 'X'],
+        ['Bullet Chart', bulletChartDef, ['bar', 'tick'], 'Value'],
+        ['KPI Card', kpiCardDef, ['rect'], 'Metric'],
+        ['Radar Chart', radarChartDef, ['line', 'point'], '__axis'],
+        ['Choropleth', choroplethDef, ['geoshape'], 'Region'],
+    ] as const)('declares semantic marks and identity for %s', (_name, definition, marks, identityField) => {
+        const semantics = definition.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'X', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Series', type: 'nominal' },
+                detail: { field: 'Detail', type: 'nominal' },
+                row: { field: 'Row', type: 'nominal' },
+                column: { field: 'Column', type: 'nominal' },
+                longitude: { field: 'Longitude', type: 'quantitative' },
+                latitude: { field: 'Latitude', type: 'quantitative' },
+                size: { field: 'Size', type: 'quantitative' },
+                goal: { field: 'Goal', type: 'quantitative' },
+                metric: { field: 'Metric', type: 'nominal' },
+                value: { field: 'Value', type: 'quantitative' },
+                id: { field: 'Region', type: 'nominal' },
+            },
+        });
+
+        expect(semantics.selectableMarks).toEqual(marks);
+        expect(semantics.fields).toContain(identityField);
+        expect(semantics.resolve).toBeTypeOf('function');
+    });
+
+    it('instruments marks inside a nested facet unit spec', () => {
+        const spec: Record<string, any> = {
+            data: { values: [{ Group: 'A', X: 1, Value: 2 }] },
+            facet: { row: { field: 'Group', type: 'nominal' } },
+            spec: {
+                mark: 'line',
+                encoding: {
+                    x: { field: 'X', type: 'quantitative' },
+                    y: { field: 'Value', type: 'quantitative' },
+                },
+            },
+            _interactionSemantics: {
+                fields: ['Group', 'X', 'Value'],
+                categoryField: 'Group',
+                selectableMarks: ['line'],
+            },
+        };
+
+        const { plan, compiled } = instrument(spec);
+        expect(plan?.fields).toEqual(['Group', 'X', 'Value']);
+        expect(spec.spec.encoding.opacity.condition.test).toContain(INTERACTION_STORE);
+        expect(() => parse(compiled)).not.toThrow();
+    });
+
+    it('does not instrument marks declared as decorative', () => {
+        const spec: Record<string, any> = {
+            layer: [
+                {
+                    mark: 'rect',
+                    data: { values: [{ Category: 'frame' }] },
+                    [INTERACTION_PROVENANCE]: {
+                        role: 'decorative',
+                        identity: 'inherit',
+                        presentation: 'independent',
+                    },
+                },
+                {
+                    mark: 'rect',
+                    data: { values: [{ Category: 'value' }] },
+                },
+            ],
+            _interactionSemantics: {
+                fields: ['Category'],
+                selectableMarks: ['rect'],
+            },
+        };
+
+        instrument(spec);
+        expect(spec.layer[0].encoding).toBeUndefined();
+        expect(spec.layer[1].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
+    });
+
+    it('compiles geoshapes into renderable semantic shape hits', async () => {
+        const spec: Record<string, any> = {
+            data: {
+                values: [{
+                    type: 'Feature',
+                    id: 'A',
+                    Region: 'Alpha',
+                    properties: {},
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+                    },
+                }],
+            },
+            mark: 'geoshape',
+            projection: { type: 'mercator' },
+            _interactionSemantics: {
+                fields: ['Region'],
+                categoryField: 'Region',
+                selectableMarks: ['geoshape'],
+            },
+        };
+
+        const { plan, compiled } = instrument(spec);
+        expect(plan?.fields).toEqual(['Region']);
+        expect(compiled.marks).toEqual(expect.arrayContaining([
+            expect.objectContaining({ type: 'shape' }),
+        ]));
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const shape = sceneItems(view).find((item) => item.mark.marktype === 'shape');
+        expect(renderHit(shape)).toMatchObject({
+            datum: { [INTERACTION_KEY]: expect.any(String) },
+            markType: 'shape',
+        });
+        view.finalize();
     });
 });

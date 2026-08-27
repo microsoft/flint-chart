@@ -25,6 +25,13 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/updates/annotation';
 import { defaultBuildEncodings, setMarkProp } from './utils';
 
 const interpolateConfigProperty: ChartPropertyDef = {
@@ -41,10 +48,36 @@ const interpolateConfigProperty: ChartPropertyDef = {
 
 export const rangeAreaChartDef: ChartTemplateDef = {
     chart: 'Range Area Chart',
+    reorder: false,
     template: { mark: { type: 'area', opacity: 0.5, line: { strokeWidth: 1 } }, encoding: {} },
     channels: ['x', 'y', 'y2', 'color', 'column', 'row'],
     navigation: {},
     markCognitiveChannel: 'area',
+    geometryKinds: ['area'],
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'y2', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => {
+                const legendField = event.legendField ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'path', role: event.role });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'center', 'top', 'bottom', 'right', 'left'),
+                rangeAnnotationText(resolvedEncodings.y?.field, resolvedEncodings.y2?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: {
             continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' },

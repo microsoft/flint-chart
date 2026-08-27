@@ -7,6 +7,7 @@ import type {
     ViewportChannel,
     ViewportState,
 } from './types';
+import type { ChartUpdateRequest, ChartUpdateResult } from './updates/request';
 
 let generatedChartId = 0;
 
@@ -211,6 +212,12 @@ export function mountInteractiveChartSurface(
         rails.get(channel)?.update(state[channel] ?? 0);
         scheduleRender();
     };
+    const unsupportedUpdate = (update: ChartUpdateRequest): ChartUpdateResult => ({
+        status: 'unsupported',
+        resolvedTargets: 0,
+        unresolvedTargets: [],
+        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+    });
 
     const ready = adapter.mount(chart, input).then((mounted) => {
         if (destroyed) {
@@ -257,6 +264,15 @@ export function mountInteractiveChartSurface(
             if (destroyed) return;
             if (renderer) void renderer.dispatchInteraction?.(event);
             else pendingEvents.push(event);
+        },
+        applyUpdate: async (update) => {
+            await ready;
+            if (destroyed || !renderer?.applyUpdate) return unsupportedUpdate(update);
+            return renderer.applyUpdate(update);
+        },
+        clearUpdate: async (updateId) => {
+            await ready;
+            if (!destroyed) await renderer?.clearUpdate?.(updateId);
         },
         destroy: () => {
             if (destroyed) return;

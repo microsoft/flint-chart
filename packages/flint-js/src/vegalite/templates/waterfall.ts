@@ -9,9 +9,18 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import type { AnnotationCandidate } from '../../interactive/interactions';
+import { presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/updates/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
+
+function waterfallAnnotationCandidates(): readonly AnnotationCandidate[] {
+    return [
+        { connection: 'value-end', valueAxis: 'y', priority: 0 },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2, priority: 1 },
+    ];
+}
 
 /**
  * Waterfall Chart template.
@@ -51,9 +60,11 @@ export const waterfallChartDef: ChartTemplateDef = {
                     role: event.role === 'text-label' ? 'text-label' : 'waterfall-step',
                 });
             },
-            presentUpdate: presentInteractionUpdate((element) => element.records?.[0]?.__wf_color === 'decrease'
-                ? { anchor: 'bottom', placement: 'below' }
-                : { anchor: 'top', placement: 'above' }),
+            presentUpdate: presentAnnotationUpdate(
+                waterfallAnnotationCandidates,
+                rangeAnnotationText('__wf_prev_sum', '__wf_sum'),
+                'rect',
+            ),
         };
     },
     ownsValueLabels: true,

@@ -10,7 +10,7 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { barAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -61,7 +61,7 @@ export const barTableDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'bar-table-row' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(() => barAnnotationCandidates('x')),
         };
     },
     suppressValueLabels: true,

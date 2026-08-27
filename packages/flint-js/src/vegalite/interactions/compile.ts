@@ -1,6 +1,7 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
-import type { ChartUpdateProcessor, InteractionDef } from '../../interactive/interactions';
-import { DEFAULT_DIM_OPACITY } from '../../interactive/emphasis-update';
+import type { ChartUpdatePresenter, InteractionDef } from '../../interactive/interactions';
+import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import { DEFAULT_DIM_OPACITY } from '../../interactive/updates/emphasis';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
 import type {
     HoverStyle,
@@ -8,7 +9,7 @@ import type {
     SelectionStyle,
     VegaInteractionPlan,
 } from './contracts';
-import { INTERACTION_KEY, INTERACTION_ROLE } from './hit-adapter';
+import { INTERACTION_KEY, INTERACTION_ROLE, PATH_KEY_SUFFIX } from './hit-adapter';
 import {
     HOVER_STORE,
     INTERACTION_STORE,
@@ -17,7 +18,7 @@ import {
 } from './stores';
 
 const CLEAR_MARK = '__flint_interaction_clear';
-const SUPPORTED_SPEC_MARKS = new Set(['arc', 'area', 'bar', 'boxplot', 'circle', 'line', 'point', 'rect', 'rule', 'tick']);
+const SUPPORTED_SPEC_MARKS = new Set(['arc', 'area', 'bar', 'boxplot', 'circle', 'geoshape', 'line', 'point', 'rect', 'rule', 'tick']);
 
 interface TemplateInteractionSemantics {
     fields: string[];
@@ -27,11 +28,13 @@ interface TemplateInteractionSemantics {
     selectableMarks: string[];
     supportedRegionGestures?: ('cartesian' | 'angular')[];
     navigationAxes?: ('x' | 'y')[];
+    reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean };
+    reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean }[];
     renderHoverStyles?: Record<string, HoverStyle>;
     renderSelectionStyles?: Record<string, SelectionStyle>;
     selectionBoundary?: SelectionBoundaryStyle;
     resolve?: ChartInteractionResolver;
-    presentUpdate?: ChartUpdateProcessor;
+    presentUpdate?: ChartUpdatePresenter;
 }
 
 export function withoutSemanticInteractionField(value: unknown): unknown {
@@ -84,6 +87,7 @@ function instrumentNode(
     const type = markType(node.mark);
     const selectable = !!type && SUPPORTED_SPEC_MARKS.has(type) && selectableMarks.has(type);
     const provenance = node[INTERACTION_PROVENANCE] as InteractionProvenance | undefined;
+    if (provenance?.role === 'decorative') return false;
     const textLabel = provenance?.role === 'text-label';
     if (!selectable && !textLabel) return false;
     if (textLabel) {
@@ -173,6 +177,16 @@ function instrumentMarks(
             ) || instrumented;
         }
     }
+    if (spec.spec && typeof spec.spec === 'object') {
+        instrumented = instrumentMarks(
+            spec.spec,
+            encoding,
+            semanticFields,
+            dimOpacity,
+            selectableMarks,
+            clickCursor,
+        ) || instrumented;
+    }
     return instrumented;
 }
 
@@ -182,6 +196,8 @@ function addLocalKeyTransforms(
     selectableMarks: ReadonlySet<string>,
 ): void {
     const type = markType(spec.mark);
+    const provenance = spec[INTERACTION_PROVENANCE] as InteractionProvenance | undefined;
+    if (provenance?.role === 'decorative') return;
     if (type && SUPPORTED_SPEC_MARKS.has(type) && selectableMarks.has(type) && spec.data) {
         spec.transform = [
             ...(Array.isArray(spec.transform) ? spec.transform : []),
@@ -192,6 +208,9 @@ function addLocalKeyTransforms(
         if (!Array.isArray(spec[property])) continue;
         for (const child of spec[property]) addLocalKeyTransforms(child, fields, selectableMarks);
     }
+    if (spec.spec && typeof spec.spec === 'object') {
+        addLocalKeyTransforms(spec.spec, fields, selectableMarks);
+    }
 }
 
 function stripInteractionProvenance(spec: Record<string, any>): void {
@@ -200,6 +219,7 @@ function stripInteractionProvenance(spec: Record<string, any>): void {
         if (!Array.isArray(spec[property])) continue;
         for (const child of spec[property]) stripInteractionProvenance(child);
     }
+    if (spec.spec && typeof spec.spec === 'object') stripInteractionProvenance(spec.spec);
 }
 
 function clipNavigableMarks(spec: Record<string, any>): void {
@@ -221,10 +241,39 @@ export function addVegaLiteInteractions(
     if (interactions.length === 0) return null;
     const templateSemantics = spec._interactionSemantics as TemplateInteractionSemantics | undefined;
     delete spec._interactionSemantics;
-    if (!templateSemantics) return null;
+    const reorderInteraction = interactions.find(
+        (interaction) => interaction.eventSource.gesture === 'drag-element',
+    );
+    if (!templateSemantics) {
+        if (reorderInteraction) {
+            throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
+        }
+        const builtInInteraction = interactions.find(
+            (interaction) => interaction.eventSource.type !== 'external',
+        );
+        if (builtInInteraction) {
+            throw new Error(`Interaction "${builtInInteraction.id}" requires chart interaction semantics.`);
+        }
+        return null;
+    }
     const navigationInteraction = interactions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
+    const declaredReorderAxes = templateSemantics.reorderAxes
+        ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
+    if (reorderInteraction && declaredReorderAxes.length === 0) {
+        throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
+    }
+    const semanticGestureInteraction = interactions.find(
+        (interaction) => interaction.eventSource.type === 'element'
+            || interaction.eventSource.type === 'region',
+    );
+    if (semanticGestureInteraction
+        && !templateSemantics.resolve
+        && templateSemantics.fields.length === 0
+        && templateSemantics.selectableMarks.length === 0) {
+        throw new Error(`Interaction "${semanticGestureInteraction.id}" requires chart element semantics.`);
+    }
     const semanticInteractions = interactions.filter(
         (interaction) => interaction.eventSource.type !== 'navigation',
     );
@@ -265,8 +314,8 @@ export function addVegaLiteInteractions(
     if (navigationInteraction) clipNavigableMarks(spec);
 
     const dimOpacity = semanticInteractions.reduce((value, interaction) => {
-        if (interaction.eventSource.type === 'external') return value;
-        const update = interaction.update({
+        if (interaction.eventSource.type === 'external' || !interaction.handle) return value;
+        const semanticEvent = {
             type: 'semantic',
             source: interaction.eventSource.type === 'region' ? 'region' : 'element',
             phase: 'commit',
@@ -274,7 +323,9 @@ export function addVegaLiteInteractions(
                 visual: { kind: 'mark', role: 'probe' },
                 elements: [{ key: {} }],
             },
-        }, { chartType: 'Unknown', selected: [] });
+        } as const;
+        const interactionContext = { chartType: 'Unknown', selected: [] };
+        const update = interaction.handle(toCanvasInteractionEvent(semanticEvent, interaction.eventSource), interactionContext);
         const emphasize = update?.ops.find((op) => op.op === 'emphasize');
         return emphasize?.op === 'emphasize' ? Math.min(value, emphasize.dimOpacity) : value;
     }, DEFAULT_DIM_OPACITY);
@@ -303,9 +354,28 @@ export function addVegaLiteInteractions(
         renderSelectionStyles: templateSemantics.renderSelectionStyles,
         selectionBoundary: templateSemantics.selectionBoundary,
         navigationChannels: [...requestedNavigationAxes],
+        reorderAxis: declaredReorderAxes[0]
+            ? { ...declaredReorderAxes[0], scale: '', signal: '' }
+            : undefined,
+        reorderAxes: declaredReorderAxes.map((axis) => ({ ...axis, scale: '', signal: '' })),
         resolve: templateSemantics.resolve,
         presentUpdate: templateSemantics.presentUpdate,
     };
+}
+
+export function injectVegaReorderSignal(
+    vegaSpec: Record<string, any>,
+    reorderAxis: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean } | undefined,
+): import('./contracts').VegaReorderAxis | undefined {
+    if (!reorderAxis) return undefined;
+    const scale = (vegaSpec.scales ?? []).find((candidate: any) => candidate.name === reorderAxis.axis);
+    if (!scale || !['band', 'point', 'ordinal'].includes(scale.type)) {
+        throw new Error(`Vega category reorder requires a top-level discrete "${reorderAxis.axis}" scale.`);
+    }
+    const signal = `__flint_reorder_${reorderAxis.axis}_domain`;
+    vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: null }];
+    scale.domainRaw = { signal };
+    return { ...reorderAxis, scale: reorderAxis.axis, signal };
 }
 
 export function injectVegaNavigationSignals(
@@ -330,24 +400,34 @@ function applyCompiledHoverStyles(
     marks: Record<string, any>[],
     renderHoverStyles: Readonly<Record<string, HoverStyle>>,
 ): void {
-    const hoverTest = `indata('${HOVER_STORE}', 'key', datum.${INTERACTION_KEY})`;
     for (const mark of marks) {
         if (Array.isArray(mark.marks)) applyCompiledHoverStyles(mark.marks, renderHoverStyles);
         const style = renderHoverStyles[mark.type];
         const update = mark.encode?.update;
         if (!style || !update || !JSON.stringify(mark.encode).includes(INTERACTION_KEY)) continue;
+        if (mark.type === 'line') continue;
+        const hoverKey = mark.type === 'line' || mark.type === 'area'
+            ? `datum.${INTERACTION_KEY} + '${PATH_KEY_SUFFIX}'`
+            : `datum.${INTERACTION_KEY}`;
+        const hoverTest = `indata('${HOVER_STORE}', 'key', ${hoverKey})`;
         for (const [channel, value] of Object.entries(style)) {
-            if (channel === 'opacity' && value === 'contrast') {
-                const numericValues = (Array.isArray(update.opacity) ? update.opacity : [update.opacity])
+            if (channel === 'opacity' && (value === 'contrast' || value === 'spotlight')) {
+                const currentOpacity = Array.isArray(update.opacity) ? update.opacity : [update.opacity];
+                if (value === 'spotlight' && currentOpacity.some((entry: any) =>
+                    entry?.field !== undefined || entry?.signal !== undefined || entry?.condition?.field !== undefined
+                )) continue;
+                const numericValues = currentOpacity
                     .map((entry: any) => entry?.value)
                     .filter((entry: unknown): entry is number => typeof entry === 'number');
                 const authoredOpacity = numericValues.length > 0 ? Math.max(...numericValues) : 1;
                 update.opacity = [
                     {
                         test: `!length(data('${INTERACTION_STORE}')) && ${hoverTest}`,
-                        value: authoredOpacity < 1 ? 1 : 0.9,
+                        value: value === 'spotlight'
+                            ? Math.min(authoredOpacity, 0.9)
+                            : authoredOpacity < 1 ? 1 : 0.9,
                     },
-                    ...(Array.isArray(update.opacity) ? update.opacity : [update.opacity]),
+                    ...currentOpacity,
                 ];
                 continue;
             }

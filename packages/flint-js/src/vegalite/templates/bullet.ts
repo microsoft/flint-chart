@@ -2,6 +2,13 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
 
 /**
  * Bullet chart — a compact KPI panel: one row per label, each showing a measure
@@ -41,6 +48,26 @@ export const bulletChartDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "goal", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = resolvedEncodings.y?.field;
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'goal', 'color', 'column', 'row']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar', 'tick'],
+            renderHoverStyles: {
+                bar: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                tick: { strokeWidth: 5 },
+            },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'right', 'left', 'top', 'bottom', 'center',
+            )),
+        };
+    },
     declareLayoutMode: () => ({
         axisFlags: { y: { banded: true } },
     }),

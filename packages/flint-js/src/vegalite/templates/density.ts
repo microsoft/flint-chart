@@ -3,6 +3,11 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    firstDiscreteEncodingField,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
 
 /**
  * Silverman/Scott rule-of-thumb bandwidth, matching vega-statistics' bandwidth.js
@@ -65,6 +70,22 @@ export const densityPlotDef: ChartTemplateDef = {
     channels: ["x", "color", "column", "row"],
     navigation: { axes: ['x'] },
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const groupFields = ['color', 'column', 'row']
+            .map((channel) => resolvedEncodings[channel]?.field)
+            .filter((field): field is string => !!field);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: [...new Set(['value', 'density', ...groupFields])],
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: suppressAnnotationUpdate,
+        };
+    },
     instantiate: (spec, ctx) => {
         const { x, color, column, row } = ctx.resolvedEncodings;
         if (x?.field) {

@@ -97,7 +97,7 @@
 
 .cf-probe {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #d8dde2;
@@ -138,16 +138,17 @@
   white-space: nowrap;
 }
 
-.cf-status-works {
+.cf-status-ready {
   color: #3f6b57;
 }
 
-.cf-status-partial {
+.cf-status-loading,
+.cf-status-unsupported {
   color: #806327;
 }
 
-.cf-status-none {
-  color: #737d86;
+.cf-status-error {
+  color: #a33b36;
 }
 
 .cf-action-rail {
@@ -208,6 +209,113 @@
 .cf-mount [data-flint-chart] {
   display: grid;
   place-items: center;
+}
+
+.cf-probe-event {
+  min-width: 0;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-top: 1px solid #edf0f2;
+  background: #fafbfc;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.cf-probe-event-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px 0;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.cf-probe-event-summary > * + *::before {
+  content: '·';
+  margin: 0 8px;
+  color: #b0b7bd;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.cf-probe-event strong {
+  flex: none;
+  font-weight: 600;
+}
+
+.cf-probe-event span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf-items-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #7a838b;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+
+.cf-probe-event-data {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #e7eaed;
+}
+
+.cf-items-toggle:hover {
+  color: #46515a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cf-items-toggle svg {
+  transition: transform 120ms ease;
+}
+
+.cf-items-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.cf-probe-event-resolved {
+  color: #46756a;
+}
+
+.cf-probe-event-warning {
+  color: #8a6a2f;
+}
+
+.cf-probe-event-value {
+  color: #68737c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+}
+
+.cf-probe-event-geometry {
+  color: #68737c;
+  font-variant-numeric: tabular-nums;
+}
+
+.cf-probe-event-items {
+  display: grid;
+  gap: 3px;
+  max-height: 128px;
+  margin: 0;
+  padding: 0 0 0 17px;
+  overflow: auto;
+  color: #68737c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
 }
 
 @media (max-width: 820px) {

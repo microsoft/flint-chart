@@ -906,6 +906,12 @@ export interface ChartTemplateDef {
         axes?: readonly ('x' | 'y')[];
     };
 
+    /** Whether authored categorical position axes support runtime domain reorder. */
+    reorder?: false | {
+        axes?: readonly ('x' | 'y')[];
+        includeConnectiveMarks?: boolean;
+    };
+
     /**
      * How the primary mark encodes its quantitative value.
      * Determines zero-baseline, scale tightness, and compression behavior.
@@ -925,13 +931,15 @@ export interface ChartTemplateDef {
         fields: string[];
         categoryField?: string;
         seriesField?: string;
+        reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean };
+        reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean }[];
         legendFields?: Record<string, string>;
         selectableMarks: string[];
         supportedRegionGestures?: ('cartesian' | 'angular')[];
         renderHoverStyles?: Record<string, {
             fill?: string;
             fillOpacity?: number;
-            opacity?: 'contrast';
+            opacity?: 'contrast' | 'spotlight';
             stroke?: string;
             strokeWidth?: number;
         }>;
@@ -940,7 +948,7 @@ export interface ChartTemplateDef {
             boundary?: 'contiguous-region';
         }>;
         resolve: import('./interaction-semantics').ChartInteractionResolver;
-        presentUpdate: import('../interactive/interactions').ChartUpdateProcessor;
+        presentUpdate: import('../interactive/interactions').ChartUpdatePresenter;
     };
 
     /**

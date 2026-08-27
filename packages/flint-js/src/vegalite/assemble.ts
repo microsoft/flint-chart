@@ -884,12 +884,42 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         })
         : [];
     if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
+        const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
+            fields: [],
+            selectableMarks: [],
+            reorderAxis: undefined,
+            reorderAxes: undefined,
+        };
+        const allowedReorderAxes: readonly ('x' | 'y')[] = chartTemplate.reorder === false
+            ? []
+            : chartTemplate.reorder?.axes ?? ['x', 'y'];
+        const defaultReorderAxes = allowedReorderAxes.length > 0
+            && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
+            ? (['x', 'y'] as const).flatMap((axis) => {
+                const encoding = resolvedEncodings[axis];
+                return allowedReorderAxes.includes(axis)
+                    && encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal')
+                    ? [{
+                        axis,
+                        field: encoding.field,
+                        ...(chartTemplate.reorder && chartTemplate.reorder.includeConnectiveMarks
+                            ? { includeConnectiveMarks: true }
+                            : {}),
+                    }]
+                    : [];
+            })
+            : [];
+        const explicitReorderAxes = templateSemantics.reorderAxes
+            ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
+        const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
+            .filter((candidate, index, candidates) => candidates.findIndex(
+                (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
+            ) === index);
         result._interactionSemantics = {
-            ...(chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
-                fields: [],
-                selectableMarks: [],
-            }),
+            ...templateSemantics,
             navigationAxes,
+            reorderAxis: reorderAxes[0],
+            reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,
         };
     }

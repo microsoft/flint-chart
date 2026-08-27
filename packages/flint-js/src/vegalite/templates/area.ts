@@ -8,10 +8,10 @@ import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
     legendMatchedHits,
-    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/updates/annotation';
 
 const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -137,7 +137,7 @@ export const areaChartDef: ChartTemplateDef = {
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['area'],
-            renderHoverStyles: { area: { stroke: MUTED_HOVER_STROKE, strokeWidth: 1.5 } },
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => {
                 const legendField = event.legendField ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
@@ -145,7 +145,10 @@ export const areaChartDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'path', role: event.role });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
         };
     },
     declareLayoutMode: () => ({
@@ -212,6 +215,23 @@ export const streamgraphDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     navigation: {},
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            categoryField: firstDiscreteEncodingField(resolvedEncodings, ['x']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

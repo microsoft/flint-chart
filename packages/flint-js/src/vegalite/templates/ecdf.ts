@@ -29,6 +29,13 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
 import { setMarkProp } from './utils';
 
 const showPointsProperty: ChartPropertyDef = {
@@ -57,6 +64,23 @@ export const ecdfPlotDef: ChartTemplateDef = {
     channels: ['x', 'color', 'detail', 'column', 'row'],
     navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color', 'detail', 'column', 'row']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: suppressAnnotationUpdate,
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: {
             continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' },

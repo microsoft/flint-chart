@@ -81,6 +81,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
+          <Route path="interaction-coverage" element={<Navigate to="../click-focus" replace />} />
           <Route path="pan-zoom" element={<Navigate to="../click-focus" replace />} />
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />

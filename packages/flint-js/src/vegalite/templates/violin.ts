@@ -32,6 +32,8 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { resolveSeriesTarget } from '../../core/interaction-semantics';
+import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 import { planBandDodge } from '../../core/band-dodge';
 
@@ -125,6 +127,7 @@ function maxGroupBandwidth(table: any[], measure: string, groupby: string[]): nu
 }
 
 export const violinPlotDef: ChartTemplateDef = {
+    reorder: false,
     chart: 'Violin Plot',
     template: {
         mark: { type: 'area', orient: 'horizontal' },
@@ -144,6 +147,23 @@ export const violinPlotDef: ChartTemplateDef = {
     // is exposed as an additional outer facet.
     channels: ['x', 'y', 'color', 'row'],
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = resolvedEncodings.x?.field;
+        const colorField = resolvedEncodings.color?.field;
+        const rowField = resolvedEncodings.row?.field;
+        const seriesField = colorField ?? categoryField;
+        return {
+            fields: [...new Set([categoryField, colorField, rowField]
+                .filter((field): field is string => !!field))],
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: suppressAnnotationUpdate,
+        };
+    },
     declareLayoutMode: (cs, table) => {
         // The category lives on `x`; force it discrete (boxplot-style) so a
         // numeric/temporal category still resolves to clean bands/panels.

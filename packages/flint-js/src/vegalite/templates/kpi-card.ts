@@ -2,6 +2,12 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import { withInteractionDecorative, withInteractionTextLabel } from '../interaction-provenance';
 
 /**
  * KPI Card — "big number" dashboard tile, one row per tile.
@@ -57,6 +63,18 @@ export const kpiCardDef: ChartTemplateDef = {
     template: { layer: [] },
     channels: ["metric", "value", "goal"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => ({
+        fields: fieldsFromEncodingChannels(resolvedEncodings, ['metric', 'value', 'goal']),
+        categoryField: resolvedEncodings.metric?.field,
+        selectableMarks: ['rect'],
+        resolve: (event, context) => targetFromHits(event.hits, context.keyField, {
+            kind: 'widget',
+            role: 'kpi-tile',
+        }),
+        presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+            'right', 'left', 'top', 'bottom', 'center',
+        )),
+    }),
     instantiate: (spec, ctx) => {
         const { metric, value, goal } = ctx.resolvedEncodings;
         const config = ctx.chartProperties || {};
@@ -78,6 +96,7 @@ export const kpiCardDef: ChartTemplateDef = {
             caption: string;
             valueText: string;
             goalText?: string;
+            record: Record<string, any>;
             // Progress is shown only when both value & goal are numeric.
             progress?: { fraction: number; valueNum: number; goalNum: number };
         };
@@ -111,12 +130,12 @@ export const kpiCardDef: ChartTemplateDef = {
                     };
                 }
 
-                tiles.push({ caption, valueText, goalText, progress });
+                tiles.push({ caption, valueText, goalText, record: row, progress });
             }
         }
 
         if (tiles.length === 0) {
-            tiles.push({ caption: 'Value', valueText: '—' });
+            tiles.push({ caption: 'Value', valueText: '—', record: {} });
         }
 
         // ── Layout ─────────────────────────────────────────────────────────
@@ -297,7 +316,7 @@ export const kpiCardDef: ChartTemplateDef = {
             // Card frame (bottom layer) — sized to content, centered with it.
             if (showCardFrame) {
                 layers.push({
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'rect',
                         fill: CARD_FILL,
@@ -316,8 +335,8 @@ export const kpiCardDef: ChartTemplateDef = {
             }
 
             // Caption
-            layers.push({
-                data: { values: [{}] },
+            layers.push(withInteractionTextLabel({
+                data: { values: [t.record] },
                 mark: {
                     type: 'text',
                     fontSize: captionFont,
@@ -332,11 +351,11 @@ export const kpiCardDef: ChartTemplateDef = {
                     x: { value: tileW / 2 },
                     y: { value: captionY },
                 },
-            });
+            }, { presentation: 'on-mark' }));
 
             // Big number
-            layers.push({
-                data: { values: [{}] },
+            layers.push(withInteractionTextLabel({
+                data: { values: [t.record] },
                 mark: {
                     type: 'text',
                     fontSize: valueFont,
@@ -351,7 +370,7 @@ export const kpiCardDef: ChartTemplateDef = {
                     x: { value: tileW / 2 },
                     y: { value: valueY },
                 },
-            });
+            }, { presentation: 'on-mark' }));
 
             // Optional goal / progress line
             if (t.progress) {
@@ -371,12 +390,12 @@ export const kpiCardDef: ChartTemplateDef = {
                         ? PROGRESS_BEHIND
                         : PROGRESS_ON_TRACK;
 
-                layers.push({
+                layers.push(withInteractionTextLabel({
                     // Only the exceeded state paints this line a status hue;
                     // otherwise it is ordinary caption grey and re-tones with
                     // the rest of the card's text.
                     ...(isExceeded ? { __themeRole: 'positive' } : {}),
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'text',
                         fontSize: subFont,
@@ -391,10 +410,10 @@ export const kpiCardDef: ChartTemplateDef = {
                         x: { value: tileW / 2 },
                         y: { value: subY },
                     },
-                });
+                }, { presentation: 'on-mark' }));
 
                 // Track
-                layers.push({
+                layers.push(withInteractionDecorative({
                     data: { values: [{}] },
                     mark: {
                         type: 'rect',
@@ -408,7 +427,7 @@ export const kpiCardDef: ChartTemplateDef = {
                         y:  { value: barY },
                         y2: { value: barY + barHeight },
                     },
-                });
+                }));
                 // Fill — clamped to track width; overshoot capped visually
                 // at 100% of the track, but the % label and color reveal
                 // that the goal was exceeded.
@@ -419,7 +438,7 @@ export const kpiCardDef: ChartTemplateDef = {
                     // where the reading is simply in progress, and the
                     // house's status inks where the reading has a verdict.
                     __themeRole: isExceeded ? 'positive' : isBehind ? 'negative' : 'accent',
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'rect',
                         fill: fillColor,
@@ -435,8 +454,8 @@ export const kpiCardDef: ChartTemplateDef = {
                 });
             } else if (t.goalText != null) {
                 // Non-numeric goal (or non-numeric value) → just show "Goal: …".
-                layers.push({
-                    data: { values: [{}] },
+                layers.push(withInteractionTextLabel({
+                    data: { values: [t.record] },
                     mark: {
                         type: 'text',
                         fontSize: subFont,
@@ -450,7 +469,7 @@ export const kpiCardDef: ChartTemplateDef = {
                         x: { value: tileW / 2 },
                         y: { value: subY },
                     },
-                });
+                }, { presentation: 'on-mark' }));
             }
 
             return {

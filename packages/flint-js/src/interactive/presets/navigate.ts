@@ -1,8 +1,5 @@
 import type {
-    ChartUpdate,
-    InteractionContext,
     InteractionDef,
-    InteractionInput,
     NavigateOptions,
     NavigationDomainGuard,
 } from '../interactions';
@@ -18,20 +15,9 @@ function normalizedFraction(value: number | undefined, fallback: number, min: nu
     return Number.isFinite(value) ? Math.max(min, value!) : fallback;
 }
 
-export class NavigateInteraction implements InteractionDef {
-    readonly id: string;
-    readonly eventSource;
-    private readonly domainGuard: NavigationDomainGuard;
-
-    constructor(options: NavigateOptions = {}) {
-        this.id = options.id ?? 'navigate';
-        this.eventSource = navigationTrigger({
-            axes: options.axes ?? 'available',
-            pan: options.pan ?? true,
-            zoom: options.zoom ?? true,
-            wheelSensitivity: options.wheelSensitivity ?? 0.002,
-        });
-        this.domainGuard = {
+export function createNavigateInteraction(options: NavigateOptions = {}): InteractionDef {
+    const id = options.id ?? 'navigate';
+    const domainGuard = {
             minVisibleFraction: normalizedFraction(
                 options.domainGuard?.minVisibleFraction,
                 DEFAULT_DOMAIN_GUARD.minVisibleFraction,
@@ -48,25 +34,34 @@ export class NavigateInteraction implements InteractionDef {
                 0,
             ),
         };
-        if (this.domainGuard.maxVisibleFraction < this.domainGuard.minVisibleFraction) {
-            throw new Error('navigate() requires maxVisibleFraction >= minVisibleFraction.');
-        }
+    if (domainGuard.maxVisibleFraction < domainGuard.minVisibleFraction) {
+        throw new Error('navigate() requires maxVisibleFraction >= minVisibleFraction.');
     }
-
-    update(event: InteractionInput, _context: InteractionContext): ChartUpdate | null {
-        if (event.type !== 'navigation') return null;
-        return {
-            phase: event.phase,
-            ops: [{
-                op: 'navigate-viewport',
+    return {
+        id,
+        eventSource: navigationTrigger({
+            axes: options.axes ?? 'available',
+            pan: options.pan ?? true,
+            zoom: options.zoom ?? true,
+            wheelSensitivity: options.wheelSensitivity ?? 0.002,
+        }),
+        handle(event) {
+            if (event.geometry.plot?.kind !== 'viewport' || !event.operation
+                || !['pan', 'zoom', 'reset'].includes(event.operation)) return null;
+            const operation = event.operation as 'pan' | 'zoom' | 'reset';
+            return {
+                updateId: id,
                 phase: event.phase,
-                operation: event.operation,
-                axes: event.axes,
-                delta: event.delta,
-                factor: event.factor,
-                anchor: event.anchor,
-                domainGuard: this.domainGuard,
-            }],
-        };
-    }
+                ops: [{
+                    op: 'navigate-viewport',
+                    operation,
+                    axes: event.geometry.plot.axes,
+                    delta: event.geometry.plot.delta,
+                    factor: event.geometry.plot.factor,
+                    anchor: event.geometry.plot.anchor,
+                    domainGuard,
+                }],
+            };
+        },
+    };
 }

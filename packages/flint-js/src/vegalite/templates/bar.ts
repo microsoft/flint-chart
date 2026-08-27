@@ -13,7 +13,13 @@ import {
     type SemanticResolveEvent,
     type SemanticTarget,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
+    annotationCandidates,
+    barAnnotationCandidates,
+    countAnnotationText,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/updates/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,
@@ -61,6 +67,13 @@ function discreteField(
         .map((channel) => resolvedEncodings[channel])
         .find((encoding) => encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal'))
         ?.field;
+}
+
+function primaryMetric(
+    resolvedEncodings: Readonly<Record<string, any>>,
+): { axis: 'x' | 'y'; field: string | undefined } {
+    const axis = resolvedEncodings.x?.type === 'quantitative' ? 'x' : 'y';
+    return { axis, field: resolvedEncodings[axis]?.field };
 }
 
 function tooltipForChannels(encoding: Record<string, any>, channels: readonly string[]): any[] {
@@ -138,18 +151,26 @@ export const barChartDef: ChartTemplateDef = {
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
         const seriesField = discreteField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const metric = primaryMetric(resolvedEncodings);
+        const categoryAxis = metric.axis === 'x' ? 'y' : 'x';
+        const reorderAxis: { axis: 'x' | 'y'; field: string } | undefined = categoryField
+            && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
+            ? { axis: categoryAxis, field: categoryField }
+            : undefined;
         return {
             fields: [...new Set(fields)],
             categoryField,
+            reorderAxis,
+            reorderAxes: reorderAxis ? [reorderAxis] : undefined,
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             resolve: (event, context) => resolveBarTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({
-                anchor: 'mark-end',
-                placement: 'auto',
-            })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates(metric.axis),
+                valueAnnotationText(metric.field),
+            ),
         };
     },
     geometryKinds: ['band'],
@@ -217,6 +238,7 @@ export const pyramidChartDef: ChartTemplateDef = {
         const categoryField = discreteField(resolvedEncodings, ['y']);
         const seriesField = discreteField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const metric = primaryMetric(resolvedEncodings);
         return {
             fields: [...new Set(fields)],
             categoryField,
@@ -225,7 +247,10 @@ export const pyramidChartDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             resolve: (event, context) => resolveBarTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates(metric.axis),
+                valueAnnotationText(metric.field),
+            ),
         };
     },
     declareLayoutMode: () => ({
@@ -353,6 +378,7 @@ export const groupedBarChartDef: ChartTemplateDef = {
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
         const seriesField = discreteField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const metric = primaryMetric(resolvedEncodings);
         return {
             fields: [...new Set(fields)],
             categoryField,
@@ -361,7 +387,10 @@ export const groupedBarChartDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             resolve: (event, context) => resolveBarTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates(metric.axis),
+                valueAnnotationText(metric.field),
+            ),
         };
     },
     declareLayoutMode: (cs, table, chartProperties) => {
@@ -474,6 +503,7 @@ export const stackedBarChartDef: ChartTemplateDef = {
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
         const seriesField = discreteField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const metric = primaryMetric(resolvedEncodings);
         return {
             fields: [...new Set(fields)],
             categoryField,
@@ -482,7 +512,10 @@ export const stackedBarChartDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             resolve: (event, context) => resolveBarTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates(metric.axis),
+                valueAnnotationText(metric.field),
+            ),
         };
     },
     declareLayoutMode: (cs, table) => {
@@ -559,7 +592,10 @@ export const histogramDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             resolve: (event, context) => resolveBarTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates('y'),
+                countAnnotationText,
+            ),
         };
     },
     // A binned x is an index axis, not a measure: the reader keys counts off
@@ -621,9 +657,17 @@ export const heatmapDef: ChartTemplateDef = {
             .map((channel) => resolvedEncodings[channel]?.field)
             .filter((field): field is string => !!field);
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
+        const reorderAxes = (['x', 'y'] as const).flatMap((axis) => {
+            const encoding = resolvedEncodings[axis];
+            return encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal')
+                ? [{ axis, field: encoding.field }]
+                : [];
+        });
         return {
             fields: [...new Set(fields)],
             categoryField,
+            reorderAxis: reorderAxes[0],
+            reorderAxes,
             selectableMarks: ['rect'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
             renderSelectionStyles: resolvedEncodings.color?.type === 'quantitative'
@@ -631,7 +675,9 @@ export const heatmapDef: ChartTemplateDef = {
                 ? { rect: { boundary: 'contiguous-region' } }
                 : undefined,
             resolve: (event, context) => resolveBarTarget(event, context, undefined),
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'bottom', 'right', 'left',
+            )),
         };
     },
     ownsValueLabels: true,

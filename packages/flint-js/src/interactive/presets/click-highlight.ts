@@ -1,31 +1,18 @@
-import type {
-    ChartUpdate,
-    ClickHighlightOptions,
-    InteractionContext,
-    InteractionDef,
-    InteractionInput,
-    SemanticTarget,
-} from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from '../emphasis-update';
+import type { ClickHighlightOptions, InteractionDef } from '../interactions';
+import { emphasisUpdate, normalizedOpacity } from '../updates/emphasis';
 import { clickTrigger } from '../triggers';
 import { expandRangedDotTarget } from './ranged-dot-target';
 
-export class ClickHighlightInteraction implements InteractionDef {
-    readonly id: string;
-    readonly eventSource = clickTrigger;
-    private readonly dimOpacity: number;
-
-    constructor(options: ClickHighlightOptions = {}) {
-        this.id = options.id ?? 'click-highlight';
-        this.dimOpacity = normalizedOpacity(options.dimOpacity);
-    }
-
-    actOn(target: SemanticTarget | null, context: InteractionContext): SemanticTarget | null {
-        return expandRangedDotTarget(target, context);
-    }
-
-    update(event: InteractionInput, context: InteractionContext): ChartUpdate | null {
-        if (event.type !== 'semantic' || event.source !== 'element' || event.phase !== 'commit') return null;
-        return emphasisUpdate(this.actOn(event.target, context), event.modifiers, this.dimOpacity);
-    }
+export function createClickHighlightInteraction(options: ClickHighlightOptions = {}): InteractionDef {
+    const id = options.id ?? 'click-highlight';
+    const dimOpacity = normalizedOpacity(options.dimOpacity);
+    return {
+        id,
+        eventSource: clickTrigger,
+        handle(event, context) {
+            if (!event.action.startsWith('click-') || event.phase === 'start' || event.phase === 'cancel') return null;
+            const target = expandRangedDotTarget(event.target, context);
+            return emphasisUpdate(id, event, target, dimOpacity);
+        },
+    };
 }

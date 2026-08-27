@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { reorderValues } from '../src/interactive/presets/drag-reorder';
+import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/updates/annotation';
+import { applySelectionMode } from '../src/interactive/updates/emphasis';
+import { ScopedSelectionState } from '../src/interactive/selection-state';
+import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
+import { semanticVisualFamily } from '../src/core/interaction-semantics';
 import {
-    AngularBrushInteraction,
-    BrushInteraction,
-    ClickAnnotateInteraction,
-    ClickGroupHighlightInteraction,
-    ClickHighlightInteraction,
-    NavigateInteraction,
-    SelectInteraction,
-} from '../src/interactive/presets';
-import { presentInteractionUpdate } from '../src/interactive/chart-update';
+    annotate,
+    clearAnnotation,
+    emphasize,
+    navigateViewport,
+    resetUpdate,
+    matchesSemanticTargetSelector,
+} from '../src/interactive/updates/request';
 import {
     axisBrushTrigger,
     angularBrushTrigger,
@@ -33,15 +37,48 @@ import { guardNavigationDomain } from '../src/vegalite/interactions/navigation-s
 import {
     geometryIntersectsRect,
     INTERACTION_KEY,
+    PATH_KEY_SUFFIX,
+    pathHoverPresentationKey,
     normalizeVegaRegionEvent,
 } from '../src/vegalite/interactions/hit-adapter';
+import { interactionsForHoverPresentation, nearestReorderHit } from '../src/vegalite/interactions/runtime';
+import { hoverContrastOpacity } from '../src/vegalite/interactions/presentation/focus-overlay';
+import {
+    annotationCandidateAngles,
+    annotationItem,
+    annotationObstacleOverlapCost,
+    annotationObstacleTier,
+    isAnnotationObstacle,
+    segmentMidpointConnectionPoint,
+    valueEndConnectionPoint,
+    valueSideConnectionPoint,
+} from '../src/vegalite/interactions/presentation/annotation-overlay';
+import { histogramDef } from '../src/vegalite/templates/bar';
+import { areaChartDef } from '../src/vegalite/templates/area';
+import { candlestickChartDef } from '../src/vegalite/templates/candlestick';
+import { connectedScatterDef } from '../src/vegalite/templates/connected-scatter';
+import { ganttChartDef } from '../src/vegalite/templates/gantt';
+import { lineChartDef } from '../src/vegalite/templates/line';
+import { lollipopChartDef } from '../src/vegalite/templates/lollipop';
+import { rangeAreaChartDef } from '../src/vegalite/templates/range-area';
+import { boxplotDef } from '../src/vegalite/templates/scatter';
+import { waterfallChartDef } from '../src/vegalite/templates/waterfall';
 import type {
     InteractionContext,
     InteractionDef,
     InteractionModifiers,
     InteractionPhase,
+    SemanticInteractionEvent,
     SemanticTarget,
 } from '../src/interactive/interactions';
+
+function handleSemanticEvent(
+    interaction: InteractionDef,
+    event: SemanticInteractionEvent,
+    context: InteractionContext,
+) {
+    return interaction.handle!(toCanvasInteractionEvent(event, interaction.eventSource), context);
+}
 
 function semanticUpdate(
     interaction: InteractionDef,
@@ -53,7 +90,7 @@ function semanticUpdate(
         modifiers?: InteractionModifiers;
     } = {},
 ) {
-    return interaction.update({
+    return handleSemanticEvent(interaction, {
         type: 'semantic',
         source: options.source ?? 'element',
         phase: options.phase ?? 'commit',
@@ -106,7 +143,239 @@ describe('physical region gestures', () => {
     });
 });
 
+describe('public canvas interaction events', () => {
+    it('classifies semantic visual roles consistently', () => {
+        expect(semanticVisualFamily('legend-symbol')).toBe('legend');
+        expect(semanticVisualFamily('axis-label')).toBe('axis');
+        expect(semanticVisualFamily('facet-header')).toBe('facet');
+        expect(semanticVisualFamily('annotation-label')).toBe('annotation');
+        expect(semanticVisualFamily('bar')).toBe('element');
+    });
+
+    it('projects element and legend actions with point geometry', () => {
+        const element = toCanvasInteractionEvent({
+            type: 'semantic',
+            source: 'element',
+            phase: 'commit',
+            point: { x: 20, y: 30 },
+            target: {
+                visual: { kind: 'mark', role: 'bar' },
+                elements: [{ key: { Country: 'Japan' } }],
+            },
+        }, clickTrigger);
+        const legend = toCanvasInteractionEvent({
+            type: 'semantic',
+            source: 'element',
+            phase: 'preview',
+            point: { x: 200, y: 30 },
+            target: {
+                visual: { kind: 'widget', role: 'legend-symbol' },
+                elements: [{ key: { Country: 'Japan' } }],
+            },
+        }, hoverTrigger);
+
+        expect(element.action).toBe('click-element');
+        expect(element.geometry.plot).toEqual({ kind: 'point', point: { x: 20, y: 30 } });
+        expect(legend.action).toBe('hover-legend');
+    });
+
+    it('projects region and navigation events', () => {
+        const brush = toCanvasInteractionEvent({
+            type: 'semantic',
+            source: 'region',
+            phase: 'preview',
+            axis: 'x',
+            operation: 'resize-trailing',
+            region: { x: 10, y: 0, width: 40, height: 100 },
+            target: null,
+        }, xBrushTrigger());
+        const zoom = toCanvasInteractionEvent({
+            type: 'navigation',
+            phase: 'commit',
+            operation: 'zoom',
+            axes: 'xy',
+            factor: 1.2,
+            anchor: { x: 0.5, y: 0.4 },
+        }, navigationTrigger({ axes: 'xy' }));
+
+        expect(brush).toMatchObject({
+            action: 'brush-x',
+            operation: 'resize-trailing',
+            geometry: { plot: { kind: 'rect', axis: 'x' } },
+        });
+        expect(zoom).toMatchObject({
+            action: 'zoom-viewport',
+            operation: 'zoom',
+            geometry: {
+                plot: {
+                    kind: 'viewport',
+                    axes: 'xy',
+                    factor: 1.2,
+                    anchor: { x: 0.5, y: 0.4 },
+                },
+            },
+            target: null,
+        });
+    });
+});
+
+describe('hover presentation policy', () => {
+    it('maps area segments to their path but keeps line segments local', () => {
+        const areaMark = {
+            marktype: 'area',
+            items: [
+                { datum: { [INTERACTION_KEY]: 'first' } },
+                { datum: { [INTERACTION_KEY]: 'second' } },
+            ],
+        };
+        const areaItems = areaMark.items.map((item) => ({ ...item, mark: areaMark }));
+        const lineMark = { ...areaMark, marktype: 'line' };
+        const lineItems = lineMark.items.map((item) => ({ ...item, mark: lineMark }));
+
+        expect(pathHoverPresentationKey(areaItems, `second${PATH_KEY_SUFFIX}`))
+            .toBe(`first${PATH_KEY_SUFFIX}`);
+        expect(pathHoverPresentationKey(lineItems, `second${PATH_KEY_SUFFIX}`))
+            .toBe(`second${PATH_KEY_SUFFIX}`);
+        expect(pathHoverPresentationKey(areaItems, 'ordinary-mark')).toBe('ordinary-mark');
+    });
+
+    it('computes generic overlay opacity contrast', () => {
+        expect(hoverContrastOpacity(0.6)).toBe(1);
+        expect(hoverContrastOpacity(1)).toBe(0.9);
+    });
+
+    it('includes click presets but not output-only click observers', () => {
+        const preset = clickHighlight();
+        const observer: InteractionDef = { id: 'click-observer', eventSource: clickTrigger };
+        const hover: InteractionDef = { id: 'hover-observer', eventSource: hoverTrigger };
+
+        expect(interactionsForHoverPresentation([preset, observer], [hover]).map(({ id }) => id))
+            .toEqual(['hover-observer', 'click-highlight']);
+    });
+
+    it('expands group hover presentation to the committed cohort', () => {
+        const interaction = clickGroupHighlight();
+        const target = {
+            visual: { kind: 'mark' as const, role: 'bar' },
+            elements: [{ key: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
+        };
+        const context = {
+            chartType: 'Grouped Bar Chart',
+            selected: [],
+            seriesField: 'Segment',
+            available: [
+                ...target.elements,
+                { key: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
+                { key: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
+            ],
+        };
+
+        expect(semanticUpdate(interaction, target, context, { phase: 'preview' })?.ops[0]).toMatchObject({
+            targets: [{ elements: [
+                    { key: { key: 'west-a' } },
+                    { key: { key: 'east-a' } },
+                ] }],
+        });
+    });
+});
+
+describe('public chart update requests', () => {
+    const target = {
+        visual: { kind: 'mark' as const, role: 'bar' },
+        elements: [{ key: { __flint_interaction_key: 'japan' } }],
+    };
+
+    it('constructs target-bearing semantic operations', () => {
+        expect(emphasize({ targets: [target] })).toEqual({
+            op: 'emphasize',
+            targets: [target],
+            mode: 'replace',
+            dimOpacity: 0.25,
+        });
+        expect(emphasize({
+            targets: [target, { select: { key: { Country: 'Japan' } } }],
+            mode: 'replace',
+            dimOpacity: 0.25,
+        })).toEqual({
+            op: 'emphasize',
+            targets: [target, { select: { key: { Country: 'Japan' } } }],
+            mode: 'replace',
+            dimOpacity: 0.25,
+        });
+        expect(annotate({ target, text: 'Selected' })).toEqual({
+            op: 'annotate', target, text: 'Selected',
+        });
+    });
+
+    it('constructs annotation, navigation, and reset operations', () => {
+        expect(clearAnnotation()).toEqual({ op: 'clear-annotation' });
+        expect(navigateViewport({
+            operation: 'zoom',
+            axes: 'x',
+            factor: 1.2,
+        })).toMatchObject({
+            op: 'navigate-viewport',
+            operation: 'zoom',
+            axes: 'x',
+            domainGuard: {
+                minVisibleFraction: 0.02,
+                maxVisibleFraction: 1,
+                overscrollFraction: 0,
+            },
+        });
+        expect(resetUpdate()).toEqual({ op: 'reset' });
+    });
+
+    it('matches selectors only against declared semantic fields', () => {
+        const selector = { select: { key: { Country: 'Japan', Year: 2024 } } };
+        const row = { Country: 'Japan', Year: 2024, Revenue: 42 };
+
+        expect(matchesSemanticTargetSelector(selector, ['Country', 'Year'], row)).toBe(true);
+        expect(matchesSemanticTargetSelector(selector, ['Country'], row)).toBe(false);
+        expect(matchesSemanticTargetSelector(
+            { select: { key: {} } },
+            ['Country'],
+            row,
+        )).toBe(false);
+    });
+});
+
+describe('selection state updates', () => {
+    it('replaces or toggles keys without mutating the current set', () => {
+        const current = new Set(['a', 'b']);
+
+        expect([...applySelectionMode(current, ['c'], 'replace')]).toEqual(['c']);
+        expect([...applySelectionMode(current, ['b', 'c'], 'toggle')]).toEqual(['a', 'b', 'c']);
+        expect([...applySelectionMode(current, ['a', 'b'], 'toggle')]).toEqual([]);
+        expect([...current]).toEqual(['a', 'b']);
+    });
+
+    it('keeps interaction-owned selections independent', () => {
+        const state = new ScopedSelectionState();
+        state.set(new Set(['first', 'second']), 'brush-x');
+        state.set(new Set(['third']), 'linked-view');
+
+        state.set(new Set(['second']), 'brush-x');
+        expect([...state.get('brush-x')]).toEqual(['second']);
+        expect([...state.combined()]).toEqual(['second', 'third']);
+
+        state.clear('brush-x');
+        expect([...state.combined()]).toEqual(['third']);
+        state.clear();
+        expect([...state.combined()]).toEqual([]);
+    });
+});
+
 describe('viewport navigation', () => {
+    it('allows an interaction observer without a handler', () => {
+        const interaction: InteractionDef = {
+            id: 'click-observer',
+            eventSource: clickTrigger,
+        };
+
+        expect(interaction.handle).toBeUndefined();
+    });
+
     it('normalizes pan movement and wheel deltas without renderer state', () => {
         const pan = new PanSession({ x: 20, y: 30 }, { width: 200, height: 100 });
         expect(pan.move({ x: 40, y: 20 })).toEqual({ x: 0.1, y: -0.1 });
@@ -116,17 +385,17 @@ describe('viewport navigation', () => {
         expect(wheelZoomFactor(1, 1, 400, 0.002)).toBeCloseTo(Math.exp(-0.032));
     });
 
-    it('declares navigation input separately from its viewport update policy', () => {
+    it('declares navigation input separately from its viewport handler', () => {
         const interaction = navigate({ axes: 'xy' });
-        expect(interaction).toBeInstanceOf(NavigateInteraction);
         expect(interaction.eventSource).toEqual(navigationTrigger({ axes: 'xy' }));
-        expect(interaction.update({
+        expect(interaction.handle!(toCanvasInteractionEvent({
             type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy',
             factor: 1.5, anchor: { x: 0.25, y: 0.75 },
-        }, { chartType: 'Scatter Plot', selected: [] })).toEqual({
+        }, interaction.eventSource), { chartType: 'Scatter Plot', selected: [] })).toEqual({
+            updateId: 'navigate',
             phase: 'commit',
             ops: [{
-                op: 'navigate-viewport', phase: 'commit', operation: 'zoom', axes: 'xy',
+                op: 'navigate-viewport', operation: 'zoom', axes: 'xy',
                 factor: 1.5, anchor: { x: 0.25, y: 0.75 },
                 domainGuard: {
                     minVisibleFraction: 0.02,
@@ -165,6 +434,142 @@ describe('viewport navigation', () => {
 });
 
 describe('interaction definitions', () => {
+    it('resolves reorder destinations by nearest axis slot, including gaps and plot edges', () => {
+        const items = ['A', 'B', 'C'].map((Category, index) => ({
+            datum: { [INTERACTION_KEY]: Category, Category },
+            mark: { marktype: 'rect', name: 'bars' },
+            bounds: { x1: index * 100, x2: index * 100 + 40, y1: 0, y2: 80 },
+        }));
+
+        expect(nearestReorderHit(items, 'x', 'Category', 78)?.datum.Category).toBe('B');
+        expect(nearestReorderHit(items, 'x', 'Category', -200)?.datum.Category).toBe('A');
+        expect(nearestReorderHit(items, 'x', 'Category', 500)?.datum.Category).toBe('C');
+    });
+
+    it('moves category values to the destination slot in either direction', () => {
+        expect(reorderValues(['A', 'B', 'C', 'D'], 'A', 'C')).toEqual(['B', 'C', 'A', 'D']);
+        expect(reorderValues(['A', 'B', 'C', 'D'], 'D', 'B')).toEqual(['A', 'D', 'B', 'C']);
+        expect(reorderValues(['A', 'B'], 'A', 'A')).toEqual(['A', 'B']);
+    });
+
+    it('lowers a committed bar drag to a category-order update', () => {
+        const interaction = dragReorder();
+        const elements = ['A', 'B', 'C'].map((Category) => ({
+            key: { key: Category }, records: [{ Category }],
+        }));
+        const update = interaction.handle!({
+            action: 'drag-element',
+            phase: 'commit',
+            geometry: { plot: { kind: 'drag', start: { x: 10, y: 20 }, current: { x: 80, y: 20 }, delta: { x: 70, y: 0 } } },
+            target: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[0]] },
+            dropTarget: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[2]] },
+        }, {
+            chartType: 'Bar Chart', selected: [], available: elements,
+            categoryField: 'Category', categoryAxis: 'x',
+        });
+
+        expect(update).toEqual({
+            updateId: 'drag-reorder', phase: 'commit',
+            ops: [{ op: 'reorder-category', axis: 'x', field: 'Category', orderedValues: ['B', 'C', 'A'] }],
+        });
+    });
+
+    it('composes sequential category reorders against the current order', () => {
+        const interaction = dragReorder();
+        const elements = ['1', '2', '3', '4', '5'].map((Category) => ({
+            key: { key: Category }, records: [{ Category }],
+        }));
+        const drag = (source: number, destination: number, categoryOrder: readonly string[]) =>
+            interaction.handle!({
+                action: 'drag-element', phase: 'commit',
+                geometry: { plot: { kind: 'drag', start: { x: 0, y: 0 }, current: { x: 1, y: 0 }, delta: { x: 1, y: 0 } } },
+                target: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[source]] },
+                dropTarget: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[destination]] },
+            }, {
+                chartType: 'Bar Chart', selected: [], available: elements,
+                categoryField: 'Category', categoryAxis: 'x', categoryOrder,
+            })?.ops[0];
+
+        const first = drag(4, 2, ['1', '2', '3', '4', '5']);
+        expect(first).toMatchObject({ orderedValues: ['1', '2', '5', '3', '4'] });
+        const second = drag(3, 4, first?.op === 'reorder-category' ? first.orderedValues as string[] : []);
+        expect(second).toMatchObject({ orderedValues: ['1', '2', '4', '5', '3'] });
+    });
+
+    it.each([
+        [{ x: 70, y: 10 }, 'x', 'column', ['B', 'A']],
+        [{ x: 10, y: 70 }, 'y', 'row', ['R2', 'R1']],
+    ] as const)('selects a Heatmap reorder axis from drag direction', (delta, axis, field, orderedValues) => {
+        const interaction = dragReorder();
+        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { key: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
+        const update = interaction.handle!({
+            action: 'drag-element', phase: 'commit',
+            geometry: { plot: { kind: 'drag', start: { x: 0, y: 0 }, current: delta, delta } },
+            target: { visual: { kind: 'mark', role: 'cell' }, elements: [source] },
+            dropTarget: { visual: { kind: 'mark', role: 'cell' }, elements: [destination] },
+        }, {
+            chartType: 'Heatmap', selected: [],
+            reorderAxes: [
+                { axis: 'x', field: 'column', order: ['A', 'B'] },
+                { axis: 'y', field: 'row', order: ['R1', 'R2'] },
+            ],
+        });
+
+        expect(update?.ops[0]).toEqual({ op: 'reorder-category', axis, field, orderedValues });
+    });
+
+    it('keeps a Heatmap drag on its locked axis after the pointer changes direction', () => {
+        const interaction = dragReorder();
+        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { key: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
+        const update = interaction.handle!({
+            action: 'drag-element', phase: 'commit',
+            geometry: {
+                plot: {
+                    kind: 'drag', start: { x: 0, y: 0 }, current: { x: 10, y: 100 },
+                    delta: { x: 10, y: 100 }, axis: 'x',
+                },
+            },
+            target: { visual: { kind: 'mark', role: 'cell' }, elements: [source] },
+            dropTarget: { visual: { kind: 'mark', role: 'cell' }, elements: [destination] },
+        }, {
+            chartType: 'Heatmap', selected: [],
+            reorderAxes: [
+                { axis: 'x', field: 'column', order: ['A', 'B'] },
+                { axis: 'y', field: 'row', order: ['R1', 'R2'] },
+            ],
+        });
+
+        expect(update?.ops[0]).toEqual({
+            op: 'reorder-category', axis: 'x', field: 'column', orderedValues: ['B', 'A'],
+        });
+    });
+
+    it('keeps a locked Heatmap drag active but commits no reorder over its source slot', () => {
+        const interaction = dragReorder();
+        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { key: { key: 'A/R2' }, records: [{ column: 'A', row: 'R2' }] };
+        const update = interaction.handle!({
+            action: 'drag-element', phase: 'commit',
+            geometry: {
+                plot: {
+                    kind: 'drag', start: { x: 0, y: 0 }, current: { x: 0, y: 100 },
+                    delta: { x: 0, y: 100 }, axis: 'x',
+                },
+            },
+            target: { visual: { kind: 'mark', role: 'cell' }, elements: [source] },
+            dropTarget: { visual: { kind: 'mark', role: 'cell' }, elements: [destination] },
+        }, {
+            chartType: 'Heatmap', selected: [],
+            reorderAxes: [
+                { axis: 'x', field: 'column', order: ['A', 'B'] },
+                { axis: 'y', field: 'row', order: ['R1', 'R2'] },
+            ],
+        });
+
+        expect(update).toBeNull();
+    });
     it('declares normalized event sources for built-in presets', () => {
         expect(clickHighlight().eventSource).toBe(clickTrigger);
         expect(clickGroupHighlight().eventSource).toBe(clickTrigger);
@@ -202,35 +607,33 @@ describe('interaction definitions', () => {
             elements: [{ key: { category: 'A' }, records: [{ category: 'A', value: 4 }] }],
         };
 
-        expect(clickHighlight().update?.({
+        expect(handleSemanticEvent(clickHighlight(), {
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, context)).toEqual({
-            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+            updateId: 'click-highlight',
+            phase: 'commit',
+            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
         });
-        expect(select().update?.({
+        expect(handleSemanticEvent(select(), {
             type: 'semantic', source: 'region', phase: 'preview', target,
         }, context)).toEqual({
-            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+            updateId: 'select',
+            phase: 'preview',
+            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
         });
     });
 
     it('creates preset definitions with stable defaults', () => {
-        expect(clickHighlight()).toBeInstanceOf(ClickHighlightInteraction);
         expect(clickHighlight()).toMatchObject({ id: 'click-highlight', eventSource: clickTrigger });
-        expect(clickGroupHighlight()).toBeInstanceOf(ClickGroupHighlightInteraction);
         expect(clickGroupHighlight()).toMatchObject({ id: 'click-group-highlight', eventSource: clickTrigger });
-        expect(clickAnnotate()).toBeInstanceOf(ClickAnnotateInteraction);
         expect(clickAnnotate()).toMatchObject({ id: 'click-annotate', eventSource: clickTrigger });
-        expect(select()).toBeInstanceOf(SelectInteraction);
         expect(select()).toMatchObject({
             id: 'select',
             eventSource: rectangleTrigger('intersect'),
         });
-        expect(brushX()).toBeInstanceOf(BrushInteraction);
         expect(brushX()).toMatchObject({ id: 'brush-x', axis: 'x', eventSource: xBrushTrigger() });
         expect(brushY()).toMatchObject({ id: 'brush-y', axis: 'y', eventSource: yBrushTrigger() });
         expect(brushX({ mode: 'stateful' }).eventSource).toEqual(xBrushTrigger('intersect', 'stateful'));
-        expect(brushAngle()).toBeInstanceOf(AngularBrushInteraction);
         expect(brushAngle()).toMatchObject({ id: 'brush-angle', eventSource: angularBrushTrigger() });
     });
 
@@ -246,17 +649,21 @@ describe('interaction definitions', () => {
             phase: 'preview' as const,
             target,
         };
-        expect(brushX().update({ ...event, axis: 'x' }, context)).toEqual({
-            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+        expect(handleSemanticEvent(brushX(), { ...event, axis: 'x' }, context)).toEqual({
+            updateId: 'brush-x',
+            phase: 'preview',
+            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
         });
-        expect(brushX().update({ ...event, axis: 'y' }, context)).toBeNull();
-        expect(brushX({ mode: 'stateful' }).update({
+        expect(handleSemanticEvent(brushX(), { ...event, axis: 'y' }, context)).toBeNull();
+        expect(handleSemanticEvent(brushX({ mode: 'stateful' }), {
             ...event, axis: 'x', phase: 'commit', operation: 'clear', target: null,
-        }, context)).toEqual({ ops: [{ op: 'reset' }] });
-        expect(brushAngle().update({ ...event, axis: 'angle' }, context)).toEqual({
-            ops: [{ op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 }],
+        }, context)).toEqual({ updateId: 'brush-x', phase: 'commit', ops: [{ op: 'reset' }] });
+        expect(handleSemanticEvent(brushAngle(), { ...event, axis: 'angle' }, context)).toEqual({
+            updateId: 'brush-angle',
+            phase: 'preview',
+            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
         });
-        expect(brushAngle().update({ ...event, axis: 'x' }, context)).toBeNull();
+        expect(handleSemanticEvent(brushAngle(), { ...event, axis: 'x' }, context)).toBeNull();
     });
 
     it('normalizes axis brushes across the orthogonal plot extent', () => {
@@ -305,7 +712,7 @@ describe('interaction definitions', () => {
         const interaction = select();
         const context = { chartType: 'Waterfall Chart', selected: [{ key: { Step: 'Revenue' } }] };
         expect(semanticUpdate(interaction, null, context, { source: 'region' }))
-            .toEqual({ ops: [{ op: 'reset' }] });
+            .toEqual({ updateId: 'select', phase: 'commit', ops: [{ op: 'reset' }] });
     });
 
     it('maps the deprecated focusOnClick alias without duplicating an explicit definition', () => {
@@ -356,13 +763,13 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(clickHighlight(), target, context)?.ops[0]).toMatchObject({
-            elements: [{ key: { key: 'west-consumer' } }],
+            targets: [{ elements: [{ key: { key: 'west-consumer' } }] }],
         });
         expect(semanticUpdate(clickGroupHighlight(), target, context)?.ops[0]).toMatchObject({
-            elements: [
-                { key: { key: 'west-consumer' } },
-                { key: { key: 'east-consumer' } },
-            ],
+            targets: [{ elements: [
+                    { key: { key: 'west-consumer' } },
+                    { key: { key: 'east-consumer' } },
+                ] }],
         });
     });
 
@@ -385,9 +792,8 @@ describe('interaction definitions', () => {
             ],
         };
 
-        expect(interaction.actOn?.(target, context)?.elements).toEqual(context.available.slice(0, 3));
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: context.available.slice(0, 3),
+            targets: [{ elements: context.available.slice(0, 3) }],
         });
     });
 
@@ -418,9 +824,9 @@ describe('interaction definitions', () => {
             ],
         };
 
-        expect(brushX().update({
+        expect(handleSemanticEvent(brushX(), {
             type: 'semantic', source: 'region', phase: 'commit', axis: 'x', target,
-        }, context)?.ops[0]).toMatchObject({ elements: selected });
+        }, context)?.ops[0]).toMatchObject({ targets: [{ elements: selected }] });
     });
 
     it('uses implicit rendered color for Waterfall grouping', () => {
@@ -441,10 +847,10 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: [
-                { key: { key: 'asia' } },
-                { key: { key: 'africa' } },
-            ],
+            targets: [{ elements: [
+                    { key: { key: 'asia' } },
+                    { key: { key: 'africa' } },
+                ] }],
         });
     });
 
@@ -469,10 +875,10 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: [
-                { key: { key: 'west-consumer' } },
-                { key: { key: 'east-consumer' } },
-            ],
+            targets: [{ elements: [
+                    { key: { key: 'west-consumer' } },
+                    { key: { key: 'east-consumer' } },
+                ] }],
         });
     });
 
@@ -496,7 +902,7 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: target.elements,
+            targets: [{ elements: target.elements }],
         });
     });
 
@@ -519,10 +925,10 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: [
-                { key: { key: 'control-4.1' } },
-                { key: { key: 'control-5.2' } },
-            ],
+            targets: [{ elements: [
+                    { key: { key: 'control-4.1' } },
+                    { key: { key: 'control-5.2' } },
+                ] }],
         });
     });
 
@@ -546,14 +952,14 @@ describe('interaction definitions', () => {
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            elements: [
-                { key: { key: 'west-a' } },
-                { key: { key: 'west-b' } },
-            ],
+            targets: [{ elements: [
+                    { key: { key: 'west-a' } },
+                    { key: { key: 'west-b' } },
+                ] }],
         });
     });
 
-    it('creates element-level annotation content without selecting the mark', () => {
+    it('creates element-level annotation intent without selecting the mark', () => {
         const interaction = clickAnnotate();
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
@@ -565,14 +971,45 @@ describe('interaction definitions', () => {
         const context = { chartType: 'Strip Plot', selected: [] };
 
         expect(semanticUpdate(interaction, target, context)).toEqual({
+            updateId: 'click-annotate',
+            phase: 'commit',
             ops: [
-                { op: 'annotate', element: target.elements[0], text: '1.4', point: undefined },
-                { op: 'emphasize', elements: target.elements, mode: 'replace', dimOpacity: 0.25 },
+                {
+                    op: 'annotate',
+                    target: { visual: target.visual, elements: target.elements },
+                },
+                { op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 },
             ],
         });
         expect(semanticUpdate(interaction, null, context)).toEqual({
+            updateId: 'click-annotate',
+            phase: 'commit',
             ops: [{ op: 'clear-annotation' }, { op: 'reset' }],
         });
+    });
+
+    it('leaves default annotation formatting to the ChartDef', () => {
+        const interaction = clickAnnotate();
+        const end = Date.UTC(2024, 3, 15);
+        const target = {
+            visual: { kind: 'mark' as const, role: 'task' },
+            elements: [{
+                key: { key: 'launch' },
+                records: [{ task: 'Launch', start: Date.UTC(2024, 3, 1), end, phase: 'Release' }],
+            }],
+        };
+
+        expect(semanticUpdate(interaction, target, {
+            chartType: 'Gantt Chart',
+            selected: [],
+            categoryField: 'task',
+            seriesField: 'phase',
+        })?.ops[0]).toMatchObject({
+            op: 'annotate',
+        });
+        expect(semanticUpdate(interaction, target, {
+            chartType: 'Gantt Chart', selected: [], categoryField: 'task', seriesField: 'phase',
+        })?.ops[0]).not.toHaveProperty('text');
     });
 
     it('lets the chart turn annotation intent into a render plan', () => {
@@ -580,9 +1017,8 @@ describe('interaction definitions', () => {
             key: { key: 'setosa-1.4' },
             records: [{ Species: 'Setosa', Length: 1.4, __jitter: -2.1 }],
         };
-        const presentUpdate = presentInteractionUpdate(() => ({
-            anchor: 'center',
-            placement: 'above',
+        const presentUpdate = presentAnnotationUpdate(() => ({
+            connection: 'center',
         }));
 
         expect(presentUpdate(
@@ -592,13 +1028,420 @@ describe('interaction definitions', () => {
             ops: [{
                 op: 'render-annotation',
                 element,
-                point: undefined,
                 annotation: {
                     text: '1.4',
-                    placement: 'above',
-                    anchor: 'center',
+                    candidates: [{
+                        connection: 'center',
+                    }],
                 },
             }],
         });
+    });
+
+    it('lets the chart supply default annotation text', () => {
+        const element = {
+            key: { key: 'setosa-1.4' },
+            records: [{ Species: 'Setosa', Length: 1.4, __jitter: -2.1 }],
+        };
+        const presentUpdate = presentAnnotationUpdate(() => ({ connection: 'center' }));
+
+        expect(presentUpdate(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Strip Plot', selected: [], categoryField: 'Species' },
+        ).ops[0]).toMatchObject({
+            op: 'render-annotation',
+            annotation: { text: '1.4' },
+        });
+    });
+
+    it('uses a rendered histogram count instead of an empty raw-field fallback', () => {
+        const element = {
+            key: { key: '4|4.5' },
+            records: [{ __bin_start: 4, __bin_end: 4.5, __count: 8 }],
+        };
+        const presentUpdate = presentAnnotationUpdate(
+            () => ({ connection: 'value-end' }),
+            countAnnotationText,
+        );
+
+        expect(presentUpdate(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Histogram', selected: [] },
+        ).ops[0]).toMatchObject({
+            op: 'render-annotation',
+            annotation: { text: '8', candidates: [{ connection: 'value-end' }] },
+        });
+    });
+
+    it('gives histogram counts focal side ports when the value end cannot fit', () => {
+        const semantics = histogramDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Duration', type: 'quantitative' } },
+        } as any);
+        const element = {
+            key: { key: '1.5|2' },
+            records: [{ __bin_start: 1.5, __bin_end: 2, __count: 9 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Histogram', selected: [] },
+        ).ops[0]).toEqual({
+            op: 'render-annotation',
+            element,
+            annotation: {
+                text: '9',
+                candidates: [
+                    { connection: 'value-end', valueAxis: 'y', priority: 0 },
+                    {
+                        connection: 'value-side',
+                        valueAxis: 'y',
+                        crossSide: 'start',
+                        valueInset: 1 / 8,
+                        priority: 1,
+                    },
+                    {
+                        connection: 'value-side',
+                        valueAxis: 'y',
+                        crossSide: 'end',
+                        valueInset: 1 / 8,
+                        priority: 1,
+                    },
+                ],
+            },
+        });
+    });
+
+    it('keeps a short vertical histogram bin anchored at its top value end', () => {
+        const shortBin = { bounds: { x1: 0, x2: 40, y1: 80, y2: 100 } };
+        const tallerBin = { bounds: { x1: 41, x2: 81, y1: 20, y2: 100 } };
+
+        expect(valueEndConnectionPoint(shortBin, [shortBin, tallerBin], 'y')).toEqual({
+            point: { x: 20, y: 80 },
+            preferredAngle: Math.PI * 1.5,
+        });
+    });
+
+    it('places vertical bar side ports one-eighth below the top value end', () => {
+        const bar = { bounds: { x1: 10, x2: 30, y1: 20, y2: 100 } };
+        const peer = { bounds: { x1: 40, x2: 60, y1: 50, y2: 100 } };
+
+        expect(valueSideConnectionPoint(bar, [bar, peer], 'y', 'end')).toEqual({
+            point: { x: 30, y: 30 },
+            preferredAngle: 0,
+        });
+    });
+
+    it('places horizontal bar side ports one-eighth before the right value end', () => {
+        const bar = { bounds: { x1: 10, x2: 90, y1: 20, y2: 40 } };
+        const peer = { bounds: { x1: 10, x2: 60, y1: 50, y2: 70 } };
+
+        expect(valueSideConnectionPoint(bar, [bar, peer], 'x', 'start')).toEqual({
+            point: { x: 80, y: 20 },
+            preferredAngle: Math.PI * 1.5,
+        });
+    });
+
+    it('allows a vertical lollipop annotation to route sideways near the canvas edge', () => {
+        const semantics = lollipopChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Country', type: 'nominal' },
+                y: { field: 'Tonnes', type: 'quantitative' },
+            },
+        } as any);
+        const element = {
+            key: { key: '37' },
+            records: [{ Country: 'A', Tonnes: 37 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Lollipop Chart', selected: [], categoryField: 'Country' },
+        ).ops[0]).toMatchObject({
+            annotation: {
+                text: '37',
+                candidates: [
+                    { connection: 'value-end', valueAxis: 'y', anglePreference: 'oblique', priority: 0 },
+                    { connection: 'right', anglePreference: 'oblique', priority: 1 },
+                    { connection: 'left', anglePreference: 'oblique', priority: 2 },
+                ],
+            },
+        });
+    });
+
+    it('anchors Waterfall annotations around the bar body', () => {
+        const semantics = waterfallChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Step', type: 'nominal' },
+                y: { field: 'Population', type: 'quantitative' },
+            },
+        } as any);
+        const element = {
+            key: { key: 'Asia' },
+            records: [{ Step: 'Asia', __wf_prev_sum: 2536, __wf_sum: 5773 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Waterfall Chart', selected: [] },
+        ).ops[0]).toMatchObject({
+            annotation: {
+                text: '2,536 → 5,773',
+                markType: 'rect',
+                candidates: [
+                    { connection: 'value-end', valueAxis: 'y', priority: 0 },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
+                    { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2, priority: 1 },
+                ],
+            },
+        });
+    });
+
+    it('does not count decorative grid lines as annotation obstacles', () => {
+        expect(isAnnotationObstacle({ mark: { role: 'axis-grid', marktype: 'rule' } })).toBe(false);
+        expect(isAnnotationObstacle({ bounds: { x1: 0, x2: 100, y1: 0, y2: 100 } })).toBe(false);
+        expect(isAnnotationObstacle({ mark: { role: 'axis-label', marktype: 'text' } })).toBe(true);
+        expect(isAnnotationObstacle({ mark: { role: 'mark', marktype: 'rule' } })).toBe(true);
+    });
+
+    it('excludes the stem direction from lollipop leader angles', () => {
+        const stemDirection = Math.PI * 1.5;
+        const angles = annotationCandidateAngles(stemDirection, 'oblique');
+
+        expect(angles).toHaveLength(4);
+        expect(angles.every((angle) => Math.abs(angle - stemDirection) > 0.001)).toBe(true);
+    });
+
+    it('ranks legend, solid, and dimmed annotation obstacles', () => {
+        expect(annotationObstacleTier({ mark: { role: 'legend-label' }, opacity: 0.25 })).toBe(3);
+        expect(annotationObstacleTier({ mark: { role: 'axis-label' }, opacity: 1 })).toBe(3);
+        expect(annotationObstacleTier({ mark: { role: 'mark' }, opacity: 1 })).toBe(2);
+        expect(annotationObstacleTier({ mark: { role: 'mark' }, opacity: 0.25 })).toBe(1);
+        expect(annotationObstacleOverlapCost(1, 10)).toBeLessThan(annotationObstacleOverlapCost(2, 10));
+        expect(annotationObstacleOverlapCost(2, 10)).toBeLessThan(annotationObstacleOverlapCost(3, 10));
+    });
+
+    it('routes an area segment annotation normal to and away from the fill', () => {
+        const item = {
+            interactionGeometry: {
+                kind: 'slice',
+                annotationPoints: [{ x: 0, y: 60 }, { x: 40, y: 20 }],
+                points: [
+                    { x: 0, y: 60 },
+                    { x: 40, y: 20 },
+                    { x: 40, y: 100 },
+                    { x: 0, y: 100 },
+                ],
+            },
+        };
+
+        const connection = segmentMidpointConnectionPoint(item, { x: 20, y: 50 });
+        expect(connection.point).toEqual({ x: 20, y: 40 });
+        expect(connection.preferredAngle).toBeCloseTo(Math.PI * 1.25);
+    });
+
+    it.each([
+        ['Line Chart', lineChartDef, { x: { field: 'Month', type: 'nominal' }, y: { field: 'Sales', type: 'quantitative' } }],
+        ['Area Chart', areaChartDef, { x: { field: 'Month', type: 'nominal' }, y: { field: 'Sales', type: 'quantitative' } }],
+    ] as const)('formats a clicked %s segment as an endpoint transition', (chartType, chartDef, resolvedEncodings) => {
+        const semantics = chartDef.semanticInteractions!({ resolvedEncodings } as any);
+        const element = {
+            key: { key: 'Jan' },
+            records: [{ Month: 'Jan', Sales: 10 }, { Month: 'Feb', Sales: 14 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType, selected: [], categoryField: 'Month' },
+        ).ops[0]).toMatchObject({ annotation: { text: '10 → 14' } });
+    });
+
+    it('gives line paths segment presentation and line points glyph presentation', () => {
+        const semantics = lineChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Miles', type: 'quantitative' },
+                y: { field: 'Price', type: 'quantitative' },
+            },
+        } as any);
+        const pathElement = {
+            key: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
+            records: [{ Miles: 7200, Price: 2.36 }, { Miles: 7600, Price: 1.78 }],
+        };
+        const pointElement = {
+            key: { [INTERACTION_KEY]: 'A' },
+            records: [{ Miles: 7200, Price: 2.36 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: pathElement, visual: { kind: 'path', role: 'line' } }] },
+            { chartType: 'Line Chart', selected: [] },
+        ).ops[0]).toMatchObject({ annotation: { text: '2.36 → 1.78' } });
+        expect((semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: pathElement, visual: { kind: 'path', role: 'line' } }] },
+            { chartType: 'Line Chart', selected: [] },
+        ).ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: pointElement, visual: { kind: 'mark', role: 'symbol' } }] },
+            { chartType: 'Line Chart', selected: [] },
+        ).ops[0]).toMatchObject({ annotation: { text: '2.36' } });
+        expect((semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: pointElement, visual: { kind: 'mark', role: 'symbol' } }] },
+            { chartType: 'Line Chart', selected: [] },
+        ).ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+    });
+
+    it('gives connected-scatter paths transitions and vertices single-value glyph presentation', () => {
+        const semantics = connectedScatterDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Miles', type: 'quantitative' },
+                y: { field: 'Price', type: 'quantitative' },
+                order: { field: 'Year', type: 'temporal' },
+            },
+        } as any);
+        const segment = {
+            key: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
+            records: [{ Miles: 9800, Price: 2.14 }, { Miles: 10000, Price: 2.53 }],
+        };
+        const vertex = {
+            key: { [INTERACTION_KEY]: 'A' },
+            records: [{ Miles: 9800, Price: 2.14 }],
+        };
+        const pathUpdate = semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: segment, visual: { kind: 'path', role: 'line' } }] },
+            { chartType: 'Connected Scatter Plot', selected: [] },
+        );
+        const pointUpdate = semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element: vertex, visual: { kind: 'mark', role: 'symbol' } }] },
+            { chartType: 'Connected Scatter Plot', selected: [] },
+        );
+
+        expect(pathUpdate.ops[0]).toMatchObject({ annotation: { text: '2.14 → 2.53' } });
+        expect((pathUpdate.ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        expect(pointUpdate.ops[0]).toMatchObject({ annotation: { text: '2.14' } });
+        expect((pointUpdate.ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+    });
+
+    it('resolves a path-suffixed annotation key to segment geometry instead of its point glyph', () => {
+        const point = { datum: { [INTERACTION_KEY]: 'A' }, bounds: { x1: 9, x2: 11, y1: 9, y2: 11 } };
+        const segment = {
+            datum: { [INTERACTION_KEY]: 'A' },
+            bounds: { x1: 10, x2: 40, y1: 10, y2: 30 },
+            interactionGeometry: { kind: 'segment', points: [{ x: 10, y: 10 }, { x: 40, y: 30 }] },
+        };
+
+        expect(annotationItem([point, segment], `A${PATH_KEY_SUFFIX}`)).toBe(segment);
+        expect(annotationItem([point, segment], 'A')).toBe(point);
+    });
+
+    it('resolves radial annotations to the slice instead of a same-key text label', () => {
+        const arc = {
+            mark: { marktype: 'arc' },
+            datum: { [INTERACTION_KEY]: 'Jan' },
+            bounds: { x1: 20, x2: 80, y1: 20, y2: 80 },
+        };
+        const label = {
+            mark: { marktype: 'text' },
+            datum: { [INTERACTION_KEY]: 'Jan' },
+            bounds: { x1: 45, x2: 55, y1: 10, y2: 20 },
+        };
+
+        expect(annotationItem([arc, label], 'Jan', undefined, 'arc')).toBe(arc);
+    });
+
+    it('resolves bar annotations to the rect instead of a same-key connector rule', () => {
+        const bar = {
+            mark: { marktype: 'rect' },
+            datum: { [INTERACTION_KEY]: 'Asia' },
+            bounds: { x1: 20, x2: 60, y1: 80, y2: 220 },
+        };
+        const connector = {
+            mark: { marktype: 'rule' },
+            datum: { [INTERACTION_KEY]: 'Asia' },
+            bounds: { x1: 20, x2: 100, y1: 80, y2: 80 },
+        };
+
+        expect(annotationItem([bar, connector], 'Asia', undefined, 'rect')).toBe(bar);
+    });
+
+    it.each([
+        [
+            'Range Area Chart',
+            rangeAreaChartDef,
+            { x: { field: 'Month', type: 'nominal' }, y: { field: 'Low', type: 'quantitative' }, y2: { field: 'High', type: 'quantitative' } },
+            { Month: 'Jan', Low: 8, High: 13 },
+            '8 → 13',
+        ],
+        [
+            'Candlestick Chart',
+            candlestickChartDef,
+            { x: { field: 'Day', type: 'temporal' }, open: { field: 'Open', type: 'quantitative' }, close: { field: 'Close', type: 'quantitative' } },
+            { Day: '2026-08-25', Open: 101, Close: 106 },
+            '101 → 106',
+        ],
+        [
+            'Gantt Chart',
+            ganttChartDef,
+            { y: { field: 'Task', type: 'nominal' }, x: { field: 'Start', type: 'temporal' }, x2: { field: 'End', type: 'temporal' } },
+            { Task: 'Build', Start: '2026-08-25', End: '2026-08-27' },
+            '2026-08-25 → 2026-08-27',
+        ],
+        [
+            'Waterfall Chart',
+            waterfallChartDef,
+            { x: { field: 'Step', type: 'nominal' }, y: { field: 'Delta', type: 'quantitative' } },
+            { Step: 'Revenue', Delta: 15, __wf_prev_sum: 100, __wf_sum: 115, __wf_color: 'increase' },
+            '100 → 115',
+        ],
+    ] as const)('formats a clicked %s interval from its semantic endpoints', (chartType, chartDef, resolvedEncodings, record, text) => {
+        const semantics = chartDef.semanticInteractions!({ resolvedEncodings } as any);
+        const element = { key: { key: chartType }, records: [record] };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType, selected: [] },
+        ).ops[0]).toMatchObject({ annotation: { text } });
+    });
+
+    it('suppresses boxplot annotation until composite roles and statistics are semantic', () => {
+        const semantics = boxplotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Species', type: 'nominal' },
+                y: { field: 'Body mass (g)', type: 'quantitative' },
+            },
+        } as any);
+        const element = {
+            key: { key: 'Gentoo' },
+            records: [{ Species: 'Gentoo', 'Body mass (g)': 5950 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            { ops: [{ op: 'annotate', element }] },
+            { chartType: 'Boxplot', selected: [], categoryField: 'Species' },
+        ).ops).toEqual([]);
+    });
+
+    it.each([
+        'value-end',
+        'outer-radial',
+        'center',
+    ] as const)('preserves the ChartDef %s annotation candidate', (connection) => {
+        const element = { key: { key: 'datum' } };
+        const presentUpdate = presentAnnotationUpdate(() => ({ connection }));
+        const update = presentUpdate(
+            { ops: [{ op: 'annotate', element, text: 'Value' }] },
+            { chartType: 'Test', selected: [] },
+        );
+
+        expect(update.ops[0]).toMatchObject({
+            op: 'render-annotation',
+            annotation: { candidates: [{ connection }] },
+        });
+    });
+
+    it('lets a ChartDef offer an ordered space of annotation connections', () => {
+        expect(annotationCandidates('value-end', 'center', 'top')).toEqual([
+            { connection: 'value-end', priority: 0 },
+            { connection: 'center', priority: 1 },
+            { connection: 'top', priority: 2 },
+        ]);
     });
 });

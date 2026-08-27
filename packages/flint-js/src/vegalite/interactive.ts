@@ -7,6 +7,7 @@ import {
     addVegaLiteInteractions,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
+    injectVegaReorderSignal,
     withoutSemanticInteractionField,
 } from './interactions/compile';
 import { mountVegaInteractions } from './interactions/runtime';
@@ -72,6 +73,10 @@ export function createVegaInteractiveRenderer(
                     vegaSpec,
                     interactionPlan.navigationChannels,
                 );
+                interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
+                    .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
+                    .filter((axis): axis is NonNullable<typeof axis> => !!axis);
+                interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
             }
             const source = vegaSpec.data?.find((entry: any) => Array.isArray(entry.values))?.name as string | undefined;
             if (viewports.length > 0 && !source) {
@@ -134,6 +139,18 @@ export function createVegaInteractiveRenderer(
                 viewports,
                 dispatchInteraction(event) {
                     return interactionController?.dispatch(event);
+                },
+                async applyUpdate(update) {
+                    if (interactionController) return interactionController.applyUpdate(update);
+                    return {
+                        status: 'unsupported',
+                        resolvedTargets: 0,
+                        unresolvedTargets: [],
+                        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+                    };
+                },
+                async clearUpdate(updateId) {
+                    await interactionController?.clearUpdate(updateId);
                 },
                 getViewportGeometry(channel) {
                     const [left, top] = view.origin();

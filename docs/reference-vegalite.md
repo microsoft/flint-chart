@@ -31,7 +31,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-scatter.svg) Scatter Plot
 
-**Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `detail`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -111,9 +111,6 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
 **Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
-
-For grouped bars, `color` is an alias for `group`; either channel creates the
-colored side-by-side subdivision.
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

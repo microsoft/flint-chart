@@ -11,7 +11,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
 
 export const stripPlotDef: ChartTemplateDef = {
     chart: "Strip Plot",
@@ -44,7 +44,9 @@ export const stripPlotDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
         };
     },
     declareLayoutMode: () => ({

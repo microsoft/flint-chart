@@ -1,5 +1,6 @@
 export interface RenderHit {
     datum: Record<string, unknown>;
+    endDatum?: Record<string, unknown>;
     source: 'mark' | 'legend-item';
     markType?: string;
     markName?: string;
@@ -8,6 +9,7 @@ export interface RenderHit {
 
 export interface SemanticElement {
     key: Record<string, unknown>;
+    value?: Record<string, unknown>;
     records?: readonly Record<string, unknown>[];
 }
 
@@ -17,6 +19,16 @@ export interface SemanticTarget {
         role: string;
     };
     elements: readonly SemanticElement[];
+}
+
+export type SemanticVisualFamily = 'legend' | 'axis' | 'facet' | 'annotation' | 'element';
+
+export function semanticVisualFamily(role: string | undefined): SemanticVisualFamily {
+    if (role?.startsWith('legend-')) return 'legend';
+    if (role?.startsWith('axis-')) return 'axis';
+    if (role?.startsWith('facet-')) return 'facet';
+    if (role?.startsWith('annotation')) return 'annotation';
+    return 'element';
 }
 
 export interface SemanticResolveEvent {
@@ -50,7 +62,11 @@ export function elementsFromHits(hits: readonly RenderHit[], keyField: string): 
         const key = hit.datum[keyField];
         if (typeof key !== 'string' || seen.has(key)) continue;
         seen.add(key);
-        elements.push({ key: { [keyField]: key }, records: [hit.datum] });
+        elements.push({
+            key: { [keyField]: key },
+            value: hit.datum,
+            records: hit.endDatum ? [hit.datum, hit.endDatum] : [hit.datum],
+        });
     }
     return elements;
 }
@@ -94,4 +110,20 @@ export function targetFromHits(
 ): SemanticTarget | null {
     const elements = elementsFromHits(hits, keyField);
     return elements.length > 0 ? { visual, elements } : null;
+}
+
+export function resolveSeriesTarget(
+    event: SemanticResolveEvent,
+    context: SemanticResolveContext,
+    seriesField: string | undefined,
+): SemanticTarget | null {
+    const legendField = event.legendField ?? seriesField;
+    const hits = event.role === 'legend-item' && legendField
+        ? legendMatchedHits(event, context, legendField)
+        : event.hits;
+    const markType = event.hits[0]?.markType;
+    return targetFromHits(hits, context.keyField, {
+        kind: markType === 'line' || markType === 'area' ? 'path' : 'mark',
+        role: event.role === 'legend-item' ? 'legend-item' : markType ?? event.role,
+    });
 }
