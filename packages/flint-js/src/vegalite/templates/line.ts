@@ -8,7 +8,7 @@ import {
     MUTED_HOVER_STROKE,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 export const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [

@@ -1,25 +1,19 @@
-export interface RenderHit {
-    datum: Record<string, unknown>;
-    endDatum?: Record<string, unknown>;
-    source: 'mark' | 'legend-item';
-    markType?: string;
-    markName?: string;
-    layerRole?: string;
-}
+import type {
+    RenderHit,
+    SemanticElement,
+    SemanticResolveContext,
+    SemanticResolveEvent,
+    SemanticTarget,
+} from './interaction-contracts';
 
-export interface SemanticElement {
-    key: Record<string, unknown>;
-    value?: Record<string, unknown>;
-    records?: readonly Record<string, unknown>[];
-}
-
-export interface SemanticTarget {
-    visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle';
-        role: string;
-    };
-    elements: readonly SemanticElement[];
-}
+export type {
+    ChartInteractionResolver,
+    RenderHit,
+    SemanticElement,
+    SemanticResolveContext,
+    SemanticResolveEvent,
+    SemanticTarget,
+} from './interaction-contracts';
 
 export type SemanticVisualFamily = 'legend' | 'axis' | 'facet' | 'annotation' | 'element';
 
@@ -30,26 +24,6 @@ export function semanticVisualFamily(role: string | undefined): SemanticVisualFa
     if (role?.startsWith('annotation')) return 'annotation';
     return 'element';
 }
-
-export interface SemanticResolveEvent {
-    gesture: 'click' | 'hover' | 'rectangle' | 'angular';
-    role: string;
-    hits: readonly RenderHit[];
-    legendValue?: unknown;
-    legendField?: string;
-}
-
-export interface SemanticResolveContext {
-    allHits: readonly RenderHit[];
-    keyField: string;
-    categoryField?: string;
-    seriesField?: string;
-}
-
-export type ChartInteractionResolver = (
-    event: SemanticResolveEvent,
-    context: SemanticResolveContext,
-) => SemanticTarget | null;
 
 /** Neutral hover ink that blends with the mark instead of reading as a hard outline. */
 export const MUTED_HOVER_STROKE = 'rgba(71, 82, 92, 0.58)';

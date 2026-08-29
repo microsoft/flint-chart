@@ -36,7 +36,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 /**
  * Pick a *sortable* Vega-Lite type for the order encoding. The order channel

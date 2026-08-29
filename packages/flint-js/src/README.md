@@ -165,10 +165,10 @@ Each backend has its own assembly function. All accept the same
 
 ### Interactive surface
 
-Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
+Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns interaction coordination, viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
 
 ```ts
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import { buildInteractiveChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
 
 const surface = buildInteractiveChart(
   container,
@@ -176,7 +176,7 @@ const surface = buildInteractiveChart(
   {
     backend: 'vegalite',
     renderer: 'canvas',
-    focusOnClick: true,
+    interactions: [clickHighlight()],
   },
 );
 
@@ -184,7 +184,27 @@ await surface.ready;
 // Later: surface.destroy();
 ```
 
-The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite discrete marks also enable local click focus by default: click selects, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Set `focusOnClick: false` to disable it. Other backends currently ignore this option. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+Application input is transport-neutral. Register an external handler with the chart,
+then dispatch payloads by interaction ID from React state, a DOM listener, a WebSocket,
+or another chart:
+
+```ts
+const countryPicker = externalInteraction<{ country: string }>({
+  id: 'country-picker',
+  handle: ({ country }) => ({
+    id: 'country-selection',
+    ops: [{
+      op: 'set-presentation',
+      targets: [{ select: { key: { Country: country } } }],
+      value: { state: 'emphasized' },
+    }],
+  }),
+});
+
+await surface.dispatch('country-picker', { country: 'Japan' });
+```
+
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` selects marks, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
 
 ### Input types
 

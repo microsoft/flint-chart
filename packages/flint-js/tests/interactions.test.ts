@@ -1,24 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, externalInteraction, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
-import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/updates/annotation';
-import { applySelectionMode } from '../src/interactive/updates/emphasis';
-import { ScopedSelectionState } from '../src/interactive/selection-state';
+import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
 import { semanticVisualFamily } from '../src/core/interaction-semantics';
 import {
-    annotate,
-    clearAnnotation,
-    emphasize,
-    navigateViewport,
-    resetUpdate,
     matchesSemanticTargetSelector,
-} from '../src/interactive/updates/request';
+} from '../src/interactive/language/updates';
 import {
     axisBrushTrigger,
     angularBrushTrigger,
     clickTrigger,
-    externalTrigger,
     hoverTrigger,
     navigationTrigger,
     rectangleTrigger,
@@ -40,14 +32,29 @@ import {
     PATH_KEY_SUFFIX,
     pathHoverPresentationKey,
     normalizeVegaRegionEvent,
+    renderHit,
+    sceneItems,
 } from '../src/vegalite/interactions/hit-adapter';
-import { interactionsForHoverPresentation, nearestReorderHit } from '../src/vegalite/interactions/runtime';
+import {
+    interactionsForHoverPresentation,
+    nearestReorderHit,
+    resolveSupportedOperation,
+} from '../src/vegalite/interactions/runtime';
+import { reorderOwnedItems } from '../src/vegalite/interactions/presentation/drag-reorder-overlay';
 import { hoverContrastOpacity } from '../src/vegalite/interactions/presentation/focus-overlay';
+import {
+    annotationFacingEdges,
+    annotationLeaderPorts,
+    routeAnnotationLeaders,
+} from '../src/vegalite/interactions/presentation/annotation-leader-routing';
 import {
     annotationCandidateAngles,
     annotationItem,
     annotationObstacleOverlapCost,
     annotationObstacleTier,
+    annotationSourceBounds,
+    sourceEdgeAttachment,
+    isAnnotationSourceItem,
     isAnnotationObstacle,
     segmentMidpointConnectionPoint,
     valueEndConnectionPoint,
@@ -64,16 +71,34 @@ import { rangeAreaChartDef } from '../src/vegalite/templates/range-area';
 import { boxplotDef } from '../src/vegalite/templates/scatter';
 import { waterfallChartDef } from '../src/vegalite/templates/waterfall';
 import type {
+    CanvasInteractionDef,
     InteractionContext,
     InteractionDef,
     InteractionModifiers,
     InteractionPhase,
+    ChartUpdateOp,
     SemanticInteractionEvent,
+    SemanticElement,
     SemanticTarget,
 } from '../src/interactive/interactions';
 
+function annotationUpdate(
+    element: SemanticElement,
+    visual: SemanticTarget['visual'] = { kind: 'mark', role: 'test' },
+    text?: string,
+) {
+    return {
+        id: 'test-annotation',
+        ops: [{
+            op: 'set-annotation' as const,
+            target: { visual, elements: [element] },
+            value: text === undefined ? {} : { text },
+        }],
+    };
+}
+
 function handleSemanticEvent(
-    interaction: InteractionDef,
+    interaction: CanvasInteractionDef,
     event: SemanticInteractionEvent,
     context: InteractionContext,
 ) {
@@ -81,7 +106,7 @@ function handleSemanticEvent(
 }
 
 function semanticUpdate(
-    interaction: InteractionDef,
+    interaction: CanvasInteractionDef,
     target: SemanticTarget | null,
     context: InteractionContext,
     options: {
@@ -279,51 +304,35 @@ describe('hover presentation policy', () => {
     });
 });
 
-describe('public chart update requests', () => {
+describe('public chart updates', () => {
     const target = {
         visual: { kind: 'mark' as const, role: 'bar' },
         elements: [{ key: { __flint_interaction_key: 'japan' } }],
     };
 
-    it('constructs target-bearing semantic operations', () => {
-        expect(emphasize({ targets: [target] })).toEqual({
-            op: 'emphasize',
-            targets: [target],
-            mode: 'replace',
-            dimOpacity: 0.25,
-        });
-        expect(emphasize({
+    it('uses direct declarative operation JSON', () => {
+        const ops: ChartUpdateOp[] = [{
+            op: 'set-presentation',
             targets: [target, { select: { key: { Country: 'Japan' } } }],
-            mode: 'replace',
-            dimOpacity: 0.25,
-        })).toEqual({
-            op: 'emphasize',
+            value: { state: 'emphasized', mutedOpacity: 0.25 },
+        }, {
+            op: 'set-annotation', target, value: { text: 'Selected' },
+        }, {
+            op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
+        }, {
+            op: 'set-order', scope: 'category', field: 'Country', values: ['Japan'],
+        }];
+        expect(ops).toEqual([{
+            op: 'set-presentation',
             targets: [target, { select: { key: { Country: 'Japan' } } }],
-            mode: 'replace',
-            dimOpacity: 0.25,
-        });
-        expect(annotate({ target, text: 'Selected' })).toEqual({
-            op: 'annotate', target, text: 'Selected',
-        });
-    });
-
-    it('constructs annotation, navigation, and reset operations', () => {
-        expect(clearAnnotation()).toEqual({ op: 'clear-annotation' });
-        expect(navigateViewport({
-            operation: 'zoom',
-            axes: 'x',
-            factor: 1.2,
-        })).toMatchObject({
-            op: 'navigate-viewport',
-            operation: 'zoom',
-            axes: 'x',
-            domainGuard: {
-                minVisibleFraction: 0.02,
-                maxVisibleFraction: 1,
-                overscrollFraction: 0,
-            },
-        });
-        expect(resetUpdate()).toEqual({ op: 'reset' });
+            value: { state: 'emphasized', mutedOpacity: 0.25 },
+        }, {
+            op: 'set-annotation', target, value: { text: 'Selected' },
+        }, {
+            op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
+        }, {
+            op: 'set-order', scope: 'category', field: 'Country', values: ['Japan'],
+        }]);
     });
 
     it('matches selectors only against declared semantic fields', () => {
@@ -337,32 +346,6 @@ describe('public chart update requests', () => {
             ['Country'],
             row,
         )).toBe(false);
-    });
-});
-
-describe('selection state updates', () => {
-    it('replaces or toggles keys without mutating the current set', () => {
-        const current = new Set(['a', 'b']);
-
-        expect([...applySelectionMode(current, ['c'], 'replace')]).toEqual(['c']);
-        expect([...applySelectionMode(current, ['b', 'c'], 'toggle')]).toEqual(['a', 'b', 'c']);
-        expect([...applySelectionMode(current, ['a', 'b'], 'toggle')]).toEqual([]);
-        expect([...current]).toEqual(['a', 'b']);
-    });
-
-    it('keeps interaction-owned selections independent', () => {
-        const state = new ScopedSelectionState();
-        state.set(new Set(['first', 'second']), 'brush-x');
-        state.set(new Set(['third']), 'linked-view');
-
-        state.set(new Set(['second']), 'brush-x');
-        expect([...state.get('brush-x')]).toEqual(['second']);
-        expect([...state.combined()]).toEqual(['second', 'third']);
-
-        state.clear('brush-x');
-        expect([...state.combined()]).toEqual(['third']);
-        state.clear();
-        expect([...state.combined()]).toEqual([]);
     });
 });
 
@@ -385,28 +368,54 @@ describe('viewport navigation', () => {
         expect(wheelZoomFactor(1, 1, 400, 0.002)).toBeCloseTo(Math.exp(-0.032));
     });
 
-    it('declares navigation input separately from its viewport handler', () => {
+    it('resolves normalized navigation input through its viewport handler', () => {
         const interaction = navigate({ axes: 'xy' });
         expect(interaction.eventSource).toEqual(navigationTrigger({ axes: 'xy' }));
-        expect(interaction.handle!(toCanvasInteractionEvent({
-            type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy',
-            factor: 1.5, anchor: { x: 0.25, y: 0.75 },
-        }, interaction.eventSource), { chartType: 'Scatter Plot', selected: [] })).toEqual({
-            updateId: 'navigate',
-            phase: 'commit',
-            ops: [{
-                op: 'navigate-viewport', operation: 'zoom', axes: 'xy',
-                factor: 1.5, anchor: { x: 0.25, y: 0.75 },
-                domainGuard: {
-                    minVisibleFraction: 0.02,
-                    maxVisibleFraction: 1,
-                    overscrollFraction: 0,
-                },
-            }],
+        expect(interaction.handle).toBeTypeOf('function');
+        expect(interaction.navigationDomainGuard).toEqual({
+            minVisibleFraction: 0.02,
+            maxVisibleFraction: 1,
+            overscrollFraction: 0,
         });
+        const resolveNavigation = vi.fn(() => ({
+            op: 'set-viewport' as const,
+            axes: 'x' as const,
+            value: { x: [10, 20] as const },
+        }));
+        const update = interaction.handle!(toCanvasInteractionEvent({
+            type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'x',
+            factor: 2, anchor: { x: 0.5, y: 0.5 },
+        }, interaction.eventSource), {
+            chartType: 'Line Chart', selected: [], resolveNavigation,
+        });
+        expect(update).toEqual({ id: 'navigate', ops: [{
+            op: 'set-viewport', axes: 'x', value: { x: [10, 20] },
+        }] });
+        expect(resolveNavigation).toHaveBeenCalledWith(expect.objectContaining({
+            operation: 'zoom', axes: 'x', factor: 2,
+        }), interaction.navigationDomainGuard);
         expect(() => navigate({
             domainGuard: { minVisibleFraction: 0.5, maxVisibleFraction: 0.25 },
         })).toThrow(/maxVisibleFraction/);
+    });
+
+    it('filters update operations against compiled chart capabilities', () => {
+        const plan = {
+            navigationAxes: { x: { scale: 'x', signal: 'xDomain', type: 'linear' as const } },
+            reorderAxes: [{ axis: 'x' as const, field: 'Month', scale: 'x', signal: 'xOrder' }],
+        };
+        expect(resolveSupportedOperation({
+            op: 'set-viewport', axes: 'xy', value: { x: [0, 5], y: [0, 10] },
+        }, plan)).toEqual({
+            op: { op: 'set-viewport', axes: 'x', value: { x: [0, 5] } },
+            unsupported: true,
+        });
+        expect(resolveSupportedOperation({
+            op: 'set-order', scope: 'series', field: 'Month', values: ['Jan'],
+        }, plan)).toEqual({ op: null, unsupported: true });
+        expect(resolveSupportedOperation({
+            op: 'set-order', scope: 'category', field: 'Month', values: ['Jan'],
+        }, plan).unsupported).toBe(false);
     });
 
     it('guards linear, temporal, and logarithmic domains against the initial extent', () => {
@@ -469,8 +478,8 @@ describe('interaction definitions', () => {
         });
 
         expect(update).toEqual({
-            updateId: 'drag-reorder', phase: 'commit',
-            ops: [{ op: 'reorder-category', axis: 'x', field: 'Category', orderedValues: ['B', 'C', 'A'] }],
+            id: 'drag-reorder',
+            ops: [{ op: 'set-order', scope: 'category', field: 'Category', values: ['B', 'C', 'A'] }],
         });
     });
 
@@ -491,9 +500,9 @@ describe('interaction definitions', () => {
             })?.ops[0];
 
         const first = drag(4, 2, ['1', '2', '3', '4', '5']);
-        expect(first).toMatchObject({ orderedValues: ['1', '2', '5', '3', '4'] });
-        const second = drag(3, 4, first?.op === 'reorder-category' ? first.orderedValues as string[] : []);
-        expect(second).toMatchObject({ orderedValues: ['1', '2', '4', '5', '3'] });
+        expect(first).toMatchObject({ values: ['1', '2', '5', '3', '4'] });
+        const second = drag(3, 4, first?.op === 'set-order' ? first.values as string[] : []);
+        expect(second).toMatchObject({ values: ['1', '2', '4', '5', '3'] });
     });
 
     it.each([
@@ -516,7 +525,7 @@ describe('interaction definitions', () => {
             ],
         });
 
-        expect(update?.ops[0]).toEqual({ op: 'reorder-category', axis, field, orderedValues });
+        expect(update?.ops[0]).toEqual({ op: 'set-order', scope: 'category', field, values: orderedValues });
     });
 
     it('keeps a Heatmap drag on its locked axis after the pointer changes direction', () => {
@@ -542,7 +551,7 @@ describe('interaction definitions', () => {
         });
 
         expect(update?.ops[0]).toEqual({
-            op: 'reorder-category', axis: 'x', field: 'column', orderedValues: ['B', 'A'],
+            op: 'set-order', scope: 'category', field: 'column', values: ['B', 'A'],
         });
     });
 
@@ -597,7 +606,13 @@ describe('interaction definitions', () => {
         expect(angularBrushTrigger('contain')).toEqual({
             type: 'region', gesture: 'drag', regionGeometry: 'angular', match: 'contain', mode: 'ephemeral',
         });
-        expect(externalTrigger('story-scroll')).toEqual({ type: 'external', source: 'story-scroll' });
+        const external = externalInteraction<{ selected: boolean }>({
+            id: 'story-scroll',
+            handle: (payload) => payload.selected ? { id: 'story-scroll', ops: [] } : null,
+        });
+        expect(external.external).toBe(true);
+        expect(external.handle({ selected: true }, { chartType: 'Bar Chart', selected: [] }))
+            .toEqual({ id: 'story-scroll', ops: [] });
     });
 
     it('processes resolved semantic events through normalized update policies', () => {
@@ -610,16 +625,20 @@ describe('interaction definitions', () => {
         expect(handleSemanticEvent(clickHighlight(), {
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, context)).toEqual({
-            updateId: 'click-highlight',
-            phase: 'commit',
-            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
+            id: 'click-highlight',
+            ops: [{
+                op: 'set-presentation', targets: [target],
+                value: { state: 'emphasized', mutedOpacity: 0.25 },
+            }],
         });
         expect(handleSemanticEvent(select(), {
             type: 'semantic', source: 'region', phase: 'preview', target,
         }, context)).toEqual({
-            updateId: 'select',
-            phase: 'preview',
-            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
+            id: 'select',
+            ops: [{
+                op: 'set-presentation', targets: [target],
+                value: { state: 'emphasized', mutedOpacity: 0.25 },
+            }],
         });
     });
 
@@ -650,18 +669,25 @@ describe('interaction definitions', () => {
             target,
         };
         expect(handleSemanticEvent(brushX(), { ...event, axis: 'x' }, context)).toEqual({
-            updateId: 'brush-x',
-            phase: 'preview',
-            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
+            id: 'brush-x',
+            ops: [{
+                op: 'set-presentation', targets: [target],
+                value: { state: 'emphasized', mutedOpacity: 0.25 },
+            }],
         });
         expect(handleSemanticEvent(brushX(), { ...event, axis: 'y' }, context)).toBeNull();
         expect(handleSemanticEvent(brushX({ mode: 'stateful' }), {
             ...event, axis: 'x', phase: 'commit', operation: 'clear', target: null,
-        }, context)).toEqual({ updateId: 'brush-x', phase: 'commit', ops: [{ op: 'reset' }] });
+        }, context)).toEqual({
+            id: 'brush-x',
+            ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+        });
         expect(handleSemanticEvent(brushAngle(), { ...event, axis: 'angle' }, context)).toEqual({
-            updateId: 'brush-angle',
-            phase: 'preview',
-            ops: [{ op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 }],
+            id: 'brush-angle',
+            ops: [{
+                op: 'set-presentation', targets: [target],
+                value: { state: 'emphasized', mutedOpacity: 0.25 },
+            }],
         });
         expect(handleSemanticEvent(brushAngle(), { ...event, axis: 'x' }, context)).toBeNull();
     });
@@ -712,20 +738,21 @@ describe('interaction definitions', () => {
         const interaction = select();
         const context = { chartType: 'Waterfall Chart', selected: [{ key: { Step: 'Revenue' } }] };
         expect(semanticUpdate(interaction, null, context, { source: 'region' }))
-            .toEqual({ updateId: 'select', phase: 'commit', ops: [{ op: 'reset' }] });
+            .toEqual({
+                id: 'select',
+                ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+            });
     });
 
-    it('maps the deprecated focusOnClick alias without duplicating an explicit definition', () => {
-        expect(normalizeInteractions(undefined, undefined)).toEqual([]);
-        expect(normalizeInteractions(undefined, true).map((interaction) => interaction.id)).toEqual(['click-highlight']);
-        expect(normalizeInteractions([clickHighlight()], true).map((interaction) => interaction.id)).toEqual(['click-highlight']);
+    it('normalizes omitted interactions to an empty collection', () => {
+        expect(normalizeInteractions(undefined)).toEqual([]);
     });
 
     it('rejects duplicate interaction ids', () => {
         expect(() => normalizeInteractions([
             clickHighlight({ id: 'selection' }),
             select({ id: 'selection' }),
-        ], false)).toThrow('Duplicate interaction id: "selection".');
+        ])).toThrow('Duplicate interaction id: "selection".');
     });
 
     it('produces replace and toggle emphasis updates', () => {
@@ -742,8 +769,12 @@ describe('interaction definitions', () => {
             modifiers: { shift: true, ctrl: false, meta: false },
         });
 
-        expect(replace?.ops[0]).toMatchObject({ op: 'emphasize', mode: 'replace', dimOpacity: 0.2 });
-        expect(toggle?.ops[0]).toMatchObject({ op: 'emphasize', mode: 'toggle' });
+        expect(replace?.ops[0]).toMatchObject({
+            op: 'set-presentation', value: { state: 'emphasized', mutedOpacity: 0.2 },
+        });
+        expect(toggle?.ops[0]).toMatchObject({
+            op: 'set-presentation', value: { state: 'emphasized' },
+        });
     });
 
     it('keeps basic clicks local and lets group clicks propagate to the series', () => {
@@ -831,6 +862,13 @@ describe('interaction definitions', () => {
 
     it('uses implicit rendered color for Waterfall grouping', () => {
         const interaction = clickGroupHighlight();
+        const semantics = waterfallChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Region', type: 'ordinal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Type', type: 'nominal' },
+            },
+        });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{ key: { key: 'asia' }, records: [{ Type: 'delta', __wf_color: 'increase' }] }],
@@ -839,6 +877,7 @@ describe('interaction definitions', () => {
             chartType: 'Waterfall Chart',
             selected: [],
             seriesField: 'Type',
+            resolveGroupValue: semantics.resolveGroupValue,
             available: [
                 ...target.elements,
                 { key: { key: 'africa' }, records: [{ Type: 'delta', __wf_color: 'increase' }] },
@@ -971,20 +1010,25 @@ describe('interaction definitions', () => {
         const context = { chartType: 'Strip Plot', selected: [] };
 
         expect(semanticUpdate(interaction, target, context)).toEqual({
-            updateId: 'click-annotate',
-            phase: 'commit',
+            id: 'click-annotate',
             ops: [
                 {
-                    op: 'annotate',
+                    op: 'set-annotation',
                     target: { visual: target.visual, elements: target.elements },
+                    value: {},
                 },
-                { op: 'emphasize', targets: [target], mode: 'replace', dimOpacity: 0.25 },
+                {
+                    op: 'set-presentation', targets: [target],
+                    value: { state: 'emphasized', mutedOpacity: 0.25 },
+                },
             ],
         });
         expect(semanticUpdate(interaction, null, context)).toEqual({
-            updateId: 'click-annotate',
-            phase: 'commit',
-            ops: [{ op: 'clear-annotation' }, { op: 'reset' }],
+            id: 'click-annotate',
+            ops: [
+                { op: 'set-annotation', target: { select: { key: {} } }, value: null },
+                { op: 'set-presentation', targets: [], value: { state: 'normal' } },
+            ],
         });
     });
 
@@ -1005,11 +1049,11 @@ describe('interaction definitions', () => {
             categoryField: 'task',
             seriesField: 'phase',
         })?.ops[0]).toMatchObject({
-            op: 'annotate',
+            op: 'set-annotation',
         });
         expect(semanticUpdate(interaction, target, {
             chartType: 'Gantt Chart', selected: [], categoryField: 'task', seriesField: 'phase',
-        })?.ops[0]).not.toHaveProperty('text');
+        })?.ops[0]).toMatchObject({ value: {} });
     });
 
     it('lets the chart turn annotation intent into a render plan', () => {
@@ -1022,17 +1066,19 @@ describe('interaction definitions', () => {
         }));
 
         expect(presentUpdate(
-            { ops: [{ op: 'annotate', element, text: '1.4' }] },
+            annotationUpdate(element, undefined, '1.4'),
             { chartType: 'Strip Plot', selected: [] },
         )).toEqual({
+            id: 'test-annotation',
             ops: [{
-                op: 'render-annotation',
-                element,
-                annotation: {
+                op: 'set-annotation',
+                target: { visual: { kind: 'mark', role: 'test' }, elements: [element] },
+                value: {
                     text: '1.4',
                     candidates: [{
                         connection: 'center',
                     }],
+                    subject: { kind: 'mark', role: 'test' },
                 },
             }],
         });
@@ -1046,11 +1092,11 @@ describe('interaction definitions', () => {
         const presentUpdate = presentAnnotationUpdate(() => ({ connection: 'center' }));
 
         expect(presentUpdate(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Strip Plot', selected: [], categoryField: 'Species' },
         ).ops[0]).toMatchObject({
-            op: 'render-annotation',
-            annotation: { text: '1.4' },
+            op: 'set-annotation',
+            value: { text: '1.4' },
         });
     });
 
@@ -1065,11 +1111,11 @@ describe('interaction definitions', () => {
         );
 
         expect(presentUpdate(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Histogram', selected: [] },
         ).ops[0]).toMatchObject({
-            op: 'render-annotation',
-            annotation: { text: '8', candidates: [{ connection: 'value-end' }] },
+            op: 'set-annotation',
+            value: { text: '8', candidates: [{ connection: 'value-end' }] },
         });
     });
 
@@ -1083,13 +1129,14 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Histogram', selected: [] },
         ).ops[0]).toEqual({
-            op: 'render-annotation',
-            element,
-            annotation: {
+            op: 'set-annotation',
+            target: { visual: { kind: 'mark', role: 'test' }, elements: [element] },
+            value: {
                 text: '9',
+                subject: { kind: 'mark', role: 'test' },
                 candidates: [
                     { connection: 'value-end', valueAxis: 'y', priority: 0 },
                     {
@@ -1106,6 +1153,8 @@ describe('interaction definitions', () => {
                         valueInset: 1 / 8,
                         priority: 1,
                     },
+                    { connection: 'top', priority: 2 },
+                    { connection: 'bottom', priority: 2 },
                 ],
             },
         });
@@ -1154,10 +1203,10 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Lollipop Chart', selected: [], categoryField: 'Country' },
         ).ops[0]).toMatchObject({
-            annotation: {
+            value: {
                 text: '37',
                 candidates: [
                     { connection: 'value-end', valueAxis: 'y', anglePreference: 'oblique', priority: 0 },
@@ -1181,12 +1230,11 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Waterfall Chart', selected: [] },
         ).ops[0]).toMatchObject({
-            annotation: {
+            value: {
                 text: '2,536 → 5,773',
-                markType: 'rect',
                 candidates: [
                     { connection: 'value-end', valueAxis: 'y', priority: 0 },
                     { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
@@ -1211,6 +1259,14 @@ describe('interaction definitions', () => {
         expect(angles.every((angle) => Math.abs(angle - stemDirection) > 0.001)).toBe(true);
     });
 
+    it('searches the full circle for normal edge-target annotations', () => {
+        const preferred = Math.PI / 3;
+        const angles = annotationCandidateAngles(preferred);
+
+        expect(angles).toHaveLength(12);
+        expect(angles.some((angle) => Math.abs(angle - (preferred + Math.PI)) < 1e-10)).toBe(true);
+    });
+
     it('ranks legend, solid, and dimmed annotation obstacles', () => {
         expect(annotationObstacleTier({ mark: { role: 'legend-label' }, opacity: 0.25 })).toBe(3);
         expect(annotationObstacleTier({ mark: { role: 'axis-label' }, opacity: 1 })).toBe(3);
@@ -1218,6 +1274,66 @@ describe('interaction definitions', () => {
         expect(annotationObstacleTier({ mark: { role: 'mark' }, opacity: 0.25 })).toBe(1);
         expect(annotationObstacleOverlapCost(1, 10)).toBeLessThan(annotationObstacleOverlapCost(2, 10));
         expect(annotationObstacleOverlapCost(2, 10)).toBeLessThan(annotationObstacleOverlapCost(3, 10));
+    });
+
+    describe('annotation leader routing', () => {
+        const card = { left: 100, top: 100, width: 120, height: 80 };
+
+        it.each([
+            [{ x: 80, y: 140 }, ['left']],
+            [{ x: 240, y: 140 }, ['right']],
+            [{ x: 160, y: 80 }, ['top']],
+            [{ x: 160, y: 200 }, ['bottom']],
+            [{ x: 80, y: 80 }, ['left', 'top']],
+            [{ x: 240, y: 80 }, ['right', 'top']],
+            [{ x: 80, y: 200 }, ['left', 'bottom']],
+            [{ x: 240, y: 200 }, ['right', 'bottom']],
+            [{ x: 225, y: 230 }, ['bottom']],
+            [{ x: 260, y: 185 }, ['right']],
+        ] as const)('uses only card edges facing source %j', (source, edges) => {
+            expect(annotationFacingEdges(source, card)).toEqual(edges);
+            expect(edges).toContain(routeAnnotationLeaders({ card, sources: [source] })[0].port.edge);
+        });
+
+        it('avoids top-center and bottom-center ports on the text box', () => {
+            const ports = annotationLeaderPorts(card);
+            expect(ports).toHaveLength(10);
+            expect(ports.filter((port) => port.edge === 'top').map((port) => port.fraction))
+                .toEqual([0.25, 0.75]);
+            expect(ports.filter((port) => port.edge === 'bottom').map((port) => port.fraction))
+                .toEqual([0.25, 0.75]);
+            expect(ports.filter((port) => port.edge === 'left').map((port) => port.fraction))
+                .toEqual([0.25, 0.5, 0.75]);
+            expect(ports.filter((port) => port.edge === 'right').map((port) => port.fraction))
+                .toEqual([0.25, 0.5, 0.75]);
+        });
+
+        it('preserves source order and assigns distinct ports on a shared edge', () => {
+            const sources = [{ x: 60, y: 112 }, { x: 55, y: 165 }];
+            const routes = routeAnnotationLeaders({ card, sources });
+
+            expect(routes.map((route) => route.port.edge)).toEqual(['left', 'left']);
+            expect(routes[0].port.fraction).toBeLessThan(routes[1].port.fraction);
+            expect(routes[0].port).not.toEqual(routes[1].port);
+        });
+
+        it('is stable for a diagonal multi-source assignment', () => {
+            const sources = [{ x: 70, y: 70 }, { x: 250, y: 72 }, { x: 255, y: 205 }];
+            const first = routeAnnotationLeaders({ card, sources });
+            const second = routeAnnotationLeaders({ card, sources });
+
+            expect(first).toEqual(second);
+            expect(first).toHaveLength(sources.length);
+            expect(new Set(first.map((route) => `${route.port.x},${route.port.y}`)).size).toBe(sources.length);
+        });
+
+        it('avoids the top-middle of a rectangular source mark', () => {
+            const source = { left: 240, top: 144, width: 32, height: 52 };
+            const upperLeftCard = { left: 20, top: 40, width: 270, height: 66 };
+
+            expect(sourceEdgeAttachment(source, upperLeftCard, 'top', { x: 256, y: 144 }))
+                .toEqual({ x: 248, y: 144 });
+        });
     });
 
     it('routes an area segment annotation normal to and away from the fill', () => {
@@ -1250,9 +1366,9 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType, selected: [], categoryField: 'Month' },
-        ).ops[0]).toMatchObject({ annotation: { text: '10 → 14' } });
+        ).ops[0]).toMatchObject({ value: { text: '10 → 14' } });
     });
 
     it('gives line paths segment presentation and line points glyph presentation', () => {
@@ -1272,21 +1388,21 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: pathElement, visual: { kind: 'path', role: 'line' } }] },
+            annotationUpdate(pathElement, { kind: 'path', role: 'line' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0]).toMatchObject({ annotation: { text: '2.36 → 1.78' } });
+        ).ops[0]).toMatchObject({ value: { text: '2.36 → 1.78' } });
         expect((semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: pathElement, visual: { kind: 'path', role: 'line' } }] },
+            annotationUpdate(pathElement, { kind: 'path', role: 'line' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: pointElement, visual: { kind: 'mark', role: 'symbol' } }] },
+            annotationUpdate(pointElement, { kind: 'mark', role: 'symbol' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0]).toMatchObject({ annotation: { text: '2.36' } });
+        ).ops[0]).toMatchObject({ value: { text: '2.36' } });
         expect((semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: pointElement, visual: { kind: 'mark', role: 'symbol' } }] },
+            annotationUpdate(pointElement, { kind: 'mark', role: 'symbol' }),
             { chartType: 'Line Chart', selected: [] },
-        ).ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        ).ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
     });
 
     it('gives connected-scatter paths transitions and vertices single-value glyph presentation', () => {
@@ -1306,18 +1422,18 @@ describe('interaction definitions', () => {
             records: [{ Miles: 9800, Price: 2.14 }],
         };
         const pathUpdate = semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: segment, visual: { kind: 'path', role: 'line' } }] },
+            annotationUpdate(segment, { kind: 'path', role: 'line' }),
             { chartType: 'Connected Scatter Plot', selected: [] },
         );
         const pointUpdate = semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: vertex, visual: { kind: 'mark', role: 'symbol' } }] },
+            annotationUpdate(vertex, { kind: 'mark', role: 'symbol' }),
             { chartType: 'Connected Scatter Plot', selected: [] },
         );
 
-        expect(pathUpdate.ops[0]).toMatchObject({ annotation: { text: '2.14 → 2.53' } });
-        expect((pathUpdate.ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
-        expect(pointUpdate.ops[0]).toMatchObject({ annotation: { text: '2.14' } });
-        expect((pointUpdate.ops[0] as any).annotation.candidates[0]).toEqual({ connection: 'center', priority: 0 });
+        expect(pathUpdate.ops[0]).toMatchObject({ value: { text: '2.14 → 2.53' } });
+        expect((pathUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'segment-midpoint', priority: 0 });
+        expect(pointUpdate.ops[0]).toMatchObject({ value: { text: '2.14' } });
+        expect((pointUpdate.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
     });
 
     it('resolves a path-suffixed annotation key to segment geometry instead of its point glyph', () => {
@@ -1330,6 +1446,100 @@ describe('interaction definitions', () => {
 
         expect(annotationItem([point, segment], `A${PATH_KEY_SUFFIX}`)).toBe(segment);
         expect(annotationItem([point, segment], 'A')).toBe(point);
+    });
+
+    it('resolves the clicked generated segment when path points share a series key', () => {
+        const first = {
+            datum: { [INTERACTION_KEY]: 'Setosa', Species: 'Setosa', value: 4.8, density: 0.3 },
+            bounds: { x1: 10, x2: 20, y1: 30, y2: 50 },
+            interactionGeometry: { kind: 'segment', points: [{ x: 10, y: 50 }, { x: 20, y: 30 }] },
+        };
+        const selected = {
+            datum: { [INTERACTION_KEY]: 'Setosa', Species: 'Setosa', value: 5.1, density: 0.4 },
+            bounds: { x1: 20, x2: 30, y1: 20, y2: 30 },
+            interactionGeometry: { kind: 'segment', points: [{ x: 20, y: 30 }, { x: 30, y: 20 }] },
+        };
+
+        expect(annotationItem(
+            [first, selected],
+            `Setosa${PATH_KEY_SUFFIX}`,
+            { kind: 'path' },
+            undefined,
+            undefined,
+            { Species: 'Setosa', value: 5.1, density: 0.4 },
+        )).toBe(selected);
+    });
+
+    it('uses the widest generated slice for a record-free series annotation', () => {
+        const tail = {
+            datum: { [INTERACTION_KEY]: 'Class A' },
+            bounds: { x1: 19, x2: 21, y1: 20, y2: 30 },
+            interactionGeometry: { kind: 'slice', points: [] },
+        };
+        const mode = {
+            datum: { [INTERACTION_KEY]: 'Class A' },
+            bounds: { x1: 8, x2: 32, y1: 30, y2: 40 },
+            interactionGeometry: { kind: 'slice', points: [] },
+        };
+
+        expect(annotationItem([tail, mode], `Class A${PATH_KEY_SUFFIX}`, { kind: 'path' }))
+            .toBe(mode);
+    });
+
+    it('treats sibling area slices as one annotation source shape', () => {
+        const mark = { marktype: 'area' };
+        const sourceDatum = { [INTERACTION_KEY]: 'Class A', value: 72 };
+        const source = {
+            mark, orient: 'horizontal', datum: sourceDatum, bounds: { x1: 20, x2: 30, y1: 30, y2: 40 },
+            interactionGeometry: { annotationPoints: [{ x: 25, y: 30 }, { x: 26, y: 40 }] },
+        };
+        const sibling = {
+            mark, orient: 'horizontal', datum: { [INTERACTION_KEY]: 'Class A', value: 73 },
+            bounds: { x1: 8, x2: 42, y1: 40, y2: 50 },
+        };
+
+        expect(isAnnotationSourceItem({ mark, datum: sourceDatum }, source)).toBe(true);
+        expect(isAnnotationSourceItem(sibling, source)).toBe(true);
+        expect(annotationSourceBounds([source, sibling], source)).toEqual({
+            x1: 8, x2: 42, y1: 30, y2: 50,
+        });
+    });
+
+    it('indexes horizontal area segments used by Violin plots', () => {
+        const mark: any = { marktype: 'area', items: [] };
+        const first = {
+            mark, datum: { [INTERACTION_KEY]: 'Class A', value: 4.8, density: 0.3 },
+            x: 20, x2: 10, y: 50, bounds: { x1: 10, x2: 20, y1: 50, y2: 50 },
+        };
+        const second = {
+            mark, datum: { [INTERACTION_KEY]: 'Class A', value: 5.1, density: 0.4 },
+            x: 25, x2: 5, y: 30, bounds: { x1: 5, x2: 25, y1: 30, y2: 30 },
+        };
+        mark.items = [first, second];
+        const view = { scenegraph: () => ({ root: { items: [first, second] } }) };
+
+        const segments = sceneItems(view);
+
+        expect(segments).toHaveLength(1);
+        expect(segments[0].interactionGeometry).toMatchObject({
+            kind: 'slice',
+            points: [
+                { x: 20, y: 50 }, { x: 25, y: 30 },
+                { x: 5, y: 30 }, { x: 10, y: 50 },
+            ],
+        });
+        expect(renderHit(segments[0])?.datum[INTERACTION_KEY])
+            .toBe(`Class A${PATH_KEY_SUFFIX}`);
+    });
+
+    it('excludes connective rules from reorder-owned destination geometry', () => {
+        const items = [
+            { mark: { marktype: 'rect' }, datum: { [INTERACTION_KEY]: 'B', step: 'B' } },
+            { mark: { marktype: 'rule' }, datum: { [INTERACTION_KEY]: 'B', step: 'B' } },
+        ];
+
+        expect(reorderOwnedItems(items, { field: 'step', markTypes: ['rect'] }, 'B'))
+            .toEqual([items[0]]);
     });
 
     it('resolves radial annotations to the slice instead of a same-key text label', () => {
@@ -1396,9 +1606,9 @@ describe('interaction definitions', () => {
         const element = { key: { key: chartType }, records: [record] };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType, selected: [] },
-        ).ops[0]).toMatchObject({ annotation: { text } });
+        ).ops[0]).toMatchObject({ value: { text } });
     });
 
     it('suppresses boxplot annotation until composite roles and statistics are semantic', () => {
@@ -1414,7 +1624,7 @@ describe('interaction definitions', () => {
         };
 
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element }] },
+            annotationUpdate(element),
             { chartType: 'Boxplot', selected: [], categoryField: 'Species' },
         ).ops).toEqual([]);
     });
@@ -1427,13 +1637,13 @@ describe('interaction definitions', () => {
         const element = { key: { key: 'datum' } };
         const presentUpdate = presentAnnotationUpdate(() => ({ connection }));
         const update = presentUpdate(
-            { ops: [{ op: 'annotate', element, text: 'Value' }] },
+            annotationUpdate(element, undefined, 'Value'),
             { chartType: 'Test', selected: [] },
         );
 
         expect(update.ops[0]).toMatchObject({
-            op: 'render-annotation',
-            annotation: { candidates: [{ connection }] },
+            op: 'set-annotation',
+            value: { candidates: [{ connection }] },
         });
     });
 

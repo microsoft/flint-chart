@@ -11,8 +11,7 @@ import {
   brushY,
   clickGroupHighlight,
   clickHighlight,
-  emphasize,
-  resetUpdate,
+  externalInteraction,
   select,
 } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
@@ -42,6 +41,7 @@ const focusCountries = new Set([
 
 type DashboardMetric = 'Life expectancy' | 'GDP per capita';
 const DASHBOARD_SELECTION_ID = 'dashboard-selection';
+const DASHBOARD_LINKED_SELECTION_ID = 'dashboard-linked-selection';
 
 const semanticTypes = {
   Observation: 'Category',
@@ -214,7 +214,25 @@ function DashboardPanel({
   registerSurface: (id: string, surface: InteractiveChartSurface | null) => void;
   routeEvent: (detail: FlintInteractionEventDetail) => void;
 }) {
-  const interactions = useMemo(() => [chart.interaction], [chart.interaction]);
+  const interactions = useMemo(() => [
+    chart.interaction,
+    externalInteraction<{ observationIds: string[] }>({
+      id: DASHBOARD_LINKED_SELECTION_ID,
+      handle: ({ observationIds: ids }) => {
+        const targets = linkedTargets(chart.id, ids);
+        return {
+          id: DASHBOARD_SELECTION_ID,
+          ops: targets.length > 0
+            ? [{
+                op: 'set-presentation',
+                targets,
+                value: { state: 'emphasized', mutedOpacity: 0.22 },
+              }]
+            : [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+        };
+      },
+    }),
+  ], [chart.id, chart.interaction]);
   const handleSurface = useCallback(
     (surface: InteractiveChartSurface | null) => registerSurface(chart.id, surface),
     [chart.id, registerSurface],
@@ -253,14 +271,7 @@ export function InteractionDashboardLab() {
   const dispatchSelection = useCallback((ids: string[], excludeId?: string) => {
     for (const [id, surface] of surfaces.current) {
       if (id === excludeId) continue;
-      const targets = linkedTargets(id, ids);
-      void surface.applyUpdate({
-        updateId: DASHBOARD_SELECTION_ID,
-        phase: 'commit',
-        ops: targets.length > 0
-          ? [emphasize({ targets, dimOpacity: 0.22 })]
-          : [resetUpdate()],
-      });
+      void surface.dispatch(DASHBOARD_LINKED_SELECTION_ID, { observationIds: ids });
     }
   }, []);
 

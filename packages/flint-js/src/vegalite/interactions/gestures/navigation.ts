@@ -1,5 +1,5 @@
 import type {
-    InteractionDef,
+    CanvasInteractionDef,
     NavigationAxes,
     NavigationInteractionEvent,
     PlotPoint,
@@ -9,7 +9,7 @@ import { clientToPlotPoint, interactionModifiers, type RendererCoordinateSpace }
 
 export interface VegaNavigationGestureOptions {
     container: HTMLElement;
-    interaction: InteractionDef;
+    interaction: CanvasInteractionDef;
     availableAxes: readonly ('x' | 'y')[];
     coordinateSpace(): RendererCoordinateSpace;
     dispatch(event: NavigationInteractionEvent): Promise<void>;
@@ -51,9 +51,11 @@ export function mountVegaNavigationGesture(
 
     const previousCursor = container.style.cursor;
     const previousTouchAction = container.style.touchAction;
+    const previousUserSelect = container.style.userSelect;
     if (source.pan) {
         container.style.cursor = 'grab';
         container.style.touchAction = 'none';
+        container.style.userSelect = 'none';
     }
 
     const localPoint = (event: PointerEvent): PlotPoint => clientToPlotPoint(
@@ -168,6 +170,7 @@ export function mountVegaNavigationGesture(
             container.removeEventListener('dblclick', doubleClick);
             container.style.cursor = previousCursor;
             container.style.touchAction = previousTouchAction;
+            container.style.userSelect = previousUserSelect;
             setDragging(false);
         },
     };

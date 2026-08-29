@@ -910,6 +910,7 @@ export interface ChartTemplateDef {
     reorder?: false | {
         axes?: readonly ('x' | 'y')[];
         includeConnectiveMarks?: boolean;
+        markTypes?: readonly string[];
     };
 
     /**
@@ -931,10 +932,13 @@ export interface ChartTemplateDef {
         fields: string[];
         categoryField?: string;
         seriesField?: string;
-        reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean };
-        reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean }[];
+        resolveGroupValue?: (element: import('./interaction-contracts').SemanticElement) => unknown;
+        reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
+        reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
         legendFields?: Record<string, string>;
         selectableMarks: string[];
+        /** Backend marktype to anchor annotations to when one key matches several marks. */
+        annotationMarkType?: string;
         supportedRegionGestures?: ('cartesian' | 'angular')[];
         renderHoverStyles?: Record<string, {
             fill?: string;
@@ -947,8 +951,8 @@ export interface ChartTemplateDef {
             strokeWidthMultiplier?: number;
             boundary?: 'contiguous-region';
         }>;
-        resolve: import('./interaction-semantics').ChartInteractionResolver;
-        presentUpdate: import('../interactive/interactions').ChartUpdatePresenter;
+        resolve: import('./interaction-contracts').ChartInteractionResolver;
+        presentUpdate: import('./interaction-contracts').ChartUpdatePresenter;
     };
 
     /**

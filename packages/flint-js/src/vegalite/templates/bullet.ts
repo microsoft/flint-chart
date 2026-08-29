@@ -8,7 +8,12 @@ import {
     MUTED_HOVER_STROKE,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    annotationCandidates,
+    comparisonAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
+import { INTERACTION_ROLE } from '../interactions/hit-adapter';
 
 /**
  * Bullet chart — a compact KPI panel: one row per label, each showing a measure
@@ -52,6 +57,8 @@ export const bulletChartDef: ChartTemplateDef = {
         const categoryField = resolvedEncodings.y?.field;
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const actualField = resolvedEncodings.x?.field;
+        const expectedField = resolvedEncodings.goal?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'goal', 'color', 'column', 'row']),
             categoryField,
@@ -63,9 +70,16 @@ export const bulletChartDef: ChartTemplateDef = {
                 tick: { strokeWidth: 5 },
             },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
-            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
-                'right', 'left', 'top', 'bottom', 'center',
-            )),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('right', 'left', 'top', 'bottom', 'center').map((candidate) => ({
+                    ...candidate,
+                    connectorAnchors: [
+                        { role: 'bullet-actual', connection: 'value-end' as const, valueAxis: 'x' as const },
+                        { role: 'bullet-expected', connection: 'center' as const },
+                    ],
+                })),
+                comparisonAnnotationText(actualField, expectedField),
+            ),
         };
     },
     declareLayoutMode: () => ({
@@ -147,6 +161,10 @@ export const bulletChartDef: ChartTemplateDef = {
                 title: null,
             };
         }
+        barLayer.transform = [
+            ...(barLayer.transform ?? []),
+            { calculate: "'bullet-actual'", as: INTERACTION_ROLE },
+        ];
         layers.push(barLayer);
 
         // --- Target marker — a dark tick at the goal, sized to the row band ---
@@ -161,6 +179,7 @@ export const bulletChartDef: ChartTemplateDef = {
                 ? Math.min(band, Math.max(8, Math.round(band * 0.72)))
                 : 22;
             layers.push({
+                transform: [{ calculate: "'bullet-expected'", as: INTERACTION_ROLE }],
                 mark: { type: 'tick', color: '#1a1a1a', thickness: 3, opacity: 1, size: tickSize },
                 encoding: {
                     x: { field: goal.field, type: 'quantitative', axis: xAxis },

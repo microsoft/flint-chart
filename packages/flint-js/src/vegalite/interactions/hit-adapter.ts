@@ -8,7 +8,7 @@ import type {
     RegionAxis,
     RegionInteractionEvent,
     RegionOperation,
-} from '../../interactive/triggers/events';
+} from '../../interactive/language/events';
 import { angularSegments } from '../../interactive/geometry/angular';
 export {
     clientRectToLayoutRect,
@@ -16,6 +16,7 @@ export {
     clientToPlotPoint,
     interactionModifiers,
     plotToClientPoint,
+    rendererPlotOrigin,
     type RendererCoordinateSpace,
 } from '../../interactive/geometry/coordinate-space';
 
@@ -80,17 +81,29 @@ function pathGeometry(item: any, offsetX: number, offsetY: number): PathGeometry
             endDatum: items[index + 1].datum,
         };
     }
-    if (item.mark.marktype !== 'area' || typeof item.y2 !== 'number') return null;
+    if (item.mark.marktype !== 'area'
+        || (typeof item.y2 !== 'number' && typeof item.x2 !== 'number')) return null;
     const next = items[index + 1];
-    if (!next || typeof next.y2 !== 'number') return null;
+    if (!next) return null;
     const annotationPoints = [point(item), point(next)];
+    const secondaryPoints = typeof item.y2 === 'number' && typeof next.y2 === 'number'
+        ? [
+            { x: next.x + offsetX, y: next.y2 + offsetY },
+            { x: item.x + offsetX, y: item.y2 + offsetY },
+        ]
+        : typeof item.x2 === 'number' && typeof next.x2 === 'number'
+            ? [
+                { x: next.x2 + offsetX, y: next.y + offsetY },
+                { x: item.x2 + offsetX, y: item.y + offsetY },
+            ]
+            : undefined;
+    if (!secondaryPoints) return null;
     return {
         kind: 'slice',
         points: [
             point(item),
             point(next),
-            { x: next.x + offsetX, y: next.y2 + offsetY },
-            { x: item.x + offsetX, y: item.y2 + offsetY },
+            ...secondaryPoints,
         ],
         annotationPoints,
         offset: { x: offsetX, y: offsetY },

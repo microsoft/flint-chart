@@ -6,7 +6,7 @@ import {
     fieldsFromEncodingChannels,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 import { withInteractionDecorative, withInteractionTextLabel } from '../interaction-provenance';
 
 /**

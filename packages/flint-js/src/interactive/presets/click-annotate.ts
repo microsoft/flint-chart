@@ -1,11 +1,11 @@
 import type {
     ClickAnnotateOptions,
-    InteractionDef,
+    CanvasInteractionDef,
 } from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from '../updates/emphasis';
+import { emphasisUpdate, normalizedOpacity } from './utils';
 import { clickTrigger } from '../triggers';
 
-export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {}): InteractionDef {
+export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'click-annotate';
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
@@ -15,22 +15,23 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
             if (!event.action.startsWith('click-') || event.phase !== 'commit') return null;
             if (!event.target) {
                 return {
-                    updateId: id,
-                    phase: event.phase,
-                    ops: [{ op: 'clear-annotation' }, { op: 'reset' }],
+                    id,
+                    ops: [
+                        { op: 'set-annotation', target: { select: { key: {} } }, value: null },
+                        { op: 'set-presentation', targets: [], value: { state: 'normal' } },
+                    ],
                 };
             }
             const element = event.target.elements[0];
             if (!element) return null;
-            const emphasis = emphasisUpdate(id, event, event.target, dimOpacity);
+            const emphasis = emphasisUpdate(id, event, event.target, dimOpacity, context);
             const text = options.format?.(element, context);
             return {
-                updateId: id,
-                phase: event.phase,
+                id,
                 ops: [{
-                    op: 'annotate',
+                    op: 'set-annotation',
                     target: { visual: event.target.visual, elements: [element] },
-                    ...(text === undefined ? {} : { text }),
+                    value: text === undefined ? {} : { text },
                 }, ...(emphasis?.ops ?? [])],
             };
         },

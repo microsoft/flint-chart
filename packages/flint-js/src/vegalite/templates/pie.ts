@@ -13,7 +13,7 @@ import {
     annotationCandidates,
     categoryValueAnnotationText,
     presentAnnotationUpdate,
-} from '../../interactive/updates/annotation';
+} from '../../interactive/presentation/annotation';
 import { setMarkProp } from './utils';
 
 export const pieChartDef: ChartTemplateDef = {
@@ -30,6 +30,7 @@ export const pieChartDef: ChartTemplateDef = {
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['arc'],
+            annotationMarkType: 'arc',
             supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
@@ -42,7 +43,6 @@ export const pieChartDef: ChartTemplateDef = {
             presentUpdate: presentAnnotationUpdate(
                 () => annotationCandidates('radial-midpoint', 'outer-radial'),
                 categoryValueAnnotationText(seriesField, valueField),
-                'arc',
             ),
         };
     },

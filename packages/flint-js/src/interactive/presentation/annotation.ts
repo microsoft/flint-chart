@@ -44,10 +44,14 @@ export function lollipopAnnotationCandidates(
 export function barAnnotationCandidates(
     valueAxis: 'x' | 'y',
 ): readonly AnnotationCandidate[] {
+    const crossAxisEdges: readonly AnnotationConnection[] = valueAxis === 'y'
+        ? ['top', 'bottom']
+        : ['right', 'left'];
     return [
         { connection: 'value-end', valueAxis, priority: 0 },
         { connection: 'value-side', valueAxis, crossSide: 'start', valueInset: 1 / 8, priority: 1 },
         { connection: 'value-side', valueAxis, crossSide: 'end', valueInset: 1 / 8, priority: 1 },
+        ...crossAxisEdges.map((connection) => ({ connection, priority: 2 })),
     ];
 }
 
@@ -62,22 +66,23 @@ export function presentAnnotationUpdate(
         context: InteractionContext,
         visual?: Partial<import('../../core/interaction-semantics').SemanticTarget['visual']>,
     ) => string | undefined = defaultAnnotationText,
-    markType?: string,
 ): ChartUpdatePresenter {
     return (update, context) => ({
+        id: update.id,
         ops: update.ops.flatMap((op) => {
-            if (op.op !== 'annotate') return op;
-            const presentation = presentAnnotation(op.element, context, op.visual);
-            const text = op.text ?? formatAnnotation(op.element, context, op.visual);
+            if (op.op !== 'set-annotation' || op.value === null || 'select' in op.target) return op;
+            const element = op.target.elements[0];
+            if (!element) return [];
+            const presentation = presentAnnotation(element, context, op.target.visual);
+            const text = op.value.text ?? formatAnnotation(element, context, op.target.visual);
             if (!text) return [];
             return {
-                op: 'render-annotation',
-                element: op.element,
-                annotation: {
+                ...op,
+                value: {
+                    ...op.value,
                     text,
                     candidates: Array.isArray(presentation) ? presentation : [presentation],
-                    subject: op.visual,
-                    ...(markType ? { markType } : {}),
+                    subject: op.target.visual,
                 },
             };
         }),
@@ -85,7 +90,8 @@ export function presentAnnotationUpdate(
 }
 
 export const suppressAnnotationUpdate: ChartUpdatePresenter = (update) => ({
-    ops: update.ops.filter((op) => op.op !== 'annotate'),
+    id: update.id,
+    ops: update.ops.filter((op) => op.op !== 'set-annotation'),
 });
 
 function displayValue(field: string | undefined, value: unknown): string | undefined {
@@ -163,6 +169,20 @@ export function valueAnnotationText(
         if (!valueField) return undefined;
         const record = element.records?.[0] ?? element.value ?? {};
         return displayValue(valueField, record[valueField]);
+    };
+}
+
+export function comparisonAnnotationText(
+    actualField: string | undefined,
+    expectedField: string | undefined,
+): (element: SemanticElement) => string | undefined {
+    return (element) => {
+        if (!actualField || !expectedField) return undefined;
+        const record = element.records?.[0] ?? element.value ?? {};
+        const actual = displayValue(actualField, record[actualField]);
+        const expected = displayValue(expectedField, record[expectedField]);
+        if (!actual || !expected) return actual ?? expected;
+        return `Actual: ${actual}\nExpected: ${expected}`;
     };
 }
 

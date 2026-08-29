@@ -131,21 +131,12 @@ export function createFocusOverlay({
             const selectionStyle = typeof key === 'string' && selected.has(key)
                 ? plan.renderSelectionStyles?.[item.mark.marktype]
                 : undefined;
-            const basePath = renderer
-                ? [...renderer.querySelectorAll<SVGGraphicsElement>('[role="graphics-symbol"]')]
-                    .find((candidate) => (candidate as any).__data__?.mark === item.mark)
-                : undefined;
-            const matrix = basePath?.getCTM();
-            const points = item.interactionGeometry.points.map((plotPoint: PlotPoint) => {
-                if (!matrix || !renderer) {
-                    return { x: plotPoint.x + space.originX, y: plotPoint.y + space.originY };
-                }
-                const local = renderer.createSVGPoint();
-                local.x = plotPoint.x - item.interactionGeometry.offset.x;
-                local.y = plotPoint.y - item.interactionGeometry.offset.y;
-                const transformed = local.matrixTransform(matrix);
-                return { x: transformed.x, y: transformed.y };
-            });
+            // Points already carry nested facet/group offsets, so renderer
+            // coordinates are just the plot point plus the plot origin.
+            const points = item.interactionGeometry.points.map((plotPoint: PlotPoint) => ({
+                x: plotPoint.x + space.originX,
+                y: plotPoint.y + space.originY,
+            }));
             const segment = item.interactionGeometry.kind === 'segment';
             const shape = document.createElementNS('http://www.w3.org/2000/svg', segment ? 'path' : 'polygon');
             if (segment) {

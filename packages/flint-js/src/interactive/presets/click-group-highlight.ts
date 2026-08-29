@@ -1,11 +1,11 @@
 import type {
 	ClickGroupHighlightOptions,
 	InteractionContext,
-	InteractionDef,
+	CanvasInteractionDef,
 	SemanticElement,
 	SemanticTarget,
 } from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from '../updates/emphasis';
+import { emphasisUpdate, normalizedOpacity } from './utils';
 import { clickTrigger } from '../triggers';
 
 function groupValue(
@@ -17,10 +17,9 @@ function groupValue(
 		const record = element.records?.[0];
 		if (!record) return undefined;
 		if (typeof groupBy === 'string') return record[groupBy];
+		if (context.resolveGroupValue) return context.resolveGroupValue(element);
 
-		const field = context.chartType === 'Waterfall Chart'
-			? '__wf_color'
-			: context.chartType === 'Strip Plot' ? context.categoryField : context.seriesField;
+		const field = context.chartType === 'Strip Plot' ? context.categoryField : context.seriesField;
 		return field ? record[field] : undefined;
 }
 
@@ -43,7 +42,7 @@ function groupElements(
 		return cohort.length > 1 ? cohort : target.elements;
 }
 
-export function createClickGroupHighlightInteraction(options: ClickGroupHighlightOptions = {}): InteractionDef {
+export function createClickGroupHighlightInteraction(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
 	const id = options.id ?? 'click-group-highlight';
 	const dimOpacity = normalizedOpacity(options.dimOpacity);
 	return {
@@ -54,7 +53,7 @@ export function createClickGroupHighlightInteraction(options: ClickGroupHighligh
 			const target = event.target
 				? { ...event.target, elements: groupElements(event.target, context, options.groupBy) }
 				: null;
-			return emphasisUpdate(id, event, target, dimOpacity);
+			return emphasisUpdate(id, event, target, dimOpacity, context);
 		},
 	};
 }

@@ -1,31 +1,7 @@
-import type { NavigationAxes, NormalizedInteractionEvent } from './events';
-
-export type {
-    ElementInteractionEvent,
-    ExternalInteractionEvent,
-    InteractionModifiers,
-    InteractionPhase,
-    NavigationAxes,
-    NavigationInteractionEvent,
-    NavigationOperation,
-    NormalizedInteractionEvent,
-    PlotPoint,
-    PlotAngularSector,
-    PlotPolygon,
-    PlotRect,
-    RegionAxis,
-    RegionInteractionEvent,
-    RegionOperation,
-    SemanticInteractionEvent,
-} from './events';
-
-export interface InteractionEventSourceContext {
-    readonly container: HTMLElement;
-    emit(event: NormalizedInteractionEvent): void;
-}
+import type { NavigationAxes } from './language/events';
 
 export interface InteractionEventSource {
-    readonly type: 'element' | 'region' | 'external' | (string & {});
+    readonly type: 'element' | 'region' | (string & {});
     readonly gesture?: 'click' | 'hover' | 'drag' | 'drag-element' | 'navigate';
     readonly match?: 'intersect' | 'contain';
     readonly axis?: 'x' | 'y' | 'xy';
@@ -35,8 +11,6 @@ export interface InteractionEventSource {
     readonly pan?: boolean;
     readonly zoom?: boolean;
     readonly wheelSensitivity?: number;
-    readonly source?: string;
-    mount?(context: InteractionEventSourceContext): void | (() => void);
 }
 
 export function elementDragTrigger(): InteractionEventSource {
@@ -101,8 +75,4 @@ export function navigationTrigger(options: {
         zoom: options.zoom ?? true,
         wheelSensitivity: options.wheelSensitivity ?? 0.002,
     };
-}
-
-export function externalTrigger(source?: string): InteractionEventSource {
-    return { type: 'external', source };
 }

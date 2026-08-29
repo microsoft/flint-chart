@@ -4,7 +4,7 @@
 import { ChartTemplateDef } from '../../core/types';
 import { adjustBarMarks } from './utils';
 import { elementsFromHits, fieldsFromEncodingChannels } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/presentation/annotation';
 
 export const candlestickChartDef: ChartTemplateDef = {
     chart: "Candlestick Chart",

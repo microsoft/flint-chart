@@ -21,7 +21,7 @@ import {
     presentAnnotationUpdate,
     seriesValuesAnnotationText,
     suppressAnnotationUpdate,
-} from '../../interactive/updates/annotation';
+} from '../../interactive/presentation/annotation';
 
 const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 

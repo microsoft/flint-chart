@@ -10,7 +10,7 @@ import {
 } from '../../core/interaction-semantics';
 import { formatSpecToVegaExpr } from '../format';
 import { interpolateConfigProperty, applyInterpolate } from './line';
-import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
+import { suppressAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 /**
  * Sparkline — a "sparkline table" / small-multiples strip layout.

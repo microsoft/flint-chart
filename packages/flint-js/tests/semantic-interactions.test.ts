@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { brushAngle, clickHighlight, dragReorder, navigate, select } from '../src/interactive/interactions';
+import { brushAngle, clickAnnotate, clickHighlight, dragReorder, externalInteraction, navigate, select } from '../src/interactive/interactions';
+import type { SemanticElement, SemanticTarget } from '../src/interactive/interactions';
 import { MUTED_HOVER_FILL, MUTED_HOVER_STROKE } from '../src/core/interaction-semantics';
 import { areaChartDef, streamgraphDef } from '../src/vegalite/templates/area';
 import {
@@ -34,6 +35,7 @@ import {
     INTERACTION_ROLE,
     PATH_KEY_SUFFIX,
     plotToClientPoint,
+    rendererPlotOrigin,
     renderHit,
     sceneItems,
 } from '../src/vegalite/interactions/hit-adapter';
@@ -44,7 +46,10 @@ import {
     LEGEND_SELECTION_STORE,
 } from '../src/vegalite/interactions/stores';
 import { mergeContiguousSelectionBounds } from '../src/vegalite/interactions/presentation/focus-overlay';
-import { annotationBounds } from '../src/vegalite/interactions/presentation/annotation-overlay';
+import {
+    annotationBounds,
+    annotationConnectionPoint,
+} from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
 import { THEME_PRESETS } from '../src/core/theme/presets';
@@ -61,6 +66,20 @@ import { violinPlotDef } from '../src/vegalite/templates/violin';
 import { bulletChartDef } from '../src/vegalite/templates/bullet';
 import { kpiCardDef } from '../src/vegalite/templates/kpi-card';
 import { radarChartDef } from '../src/vegalite/templates/radar';
+
+function annotationUpdate(
+    element: SemanticElement,
+    visual: SemanticTarget['visual'] = { kind: 'mark', role: 'test' },
+) {
+    return {
+        id: 'test-annotation',
+        ops: [{
+            op: 'set-annotation' as const,
+            target: { visual, elements: [element] },
+            value: {},
+        }],
+    };
+}
 
 function instrument(spec: Record<string, any>, interactions = [clickHighlight()]) {
     const plan = addVegaLiteInteractions(spec, interactions);
@@ -81,6 +100,25 @@ function allSceneItems(view: View): any[] {
 }
 
 describe('Vega-Lite semantic interactions', () => {
+    it('keeps path fallback connections anchored to the selected segment midpoint', () => {
+        const item = {
+            bounds: { x1: 56, y1: 52, x2: 196, y2: 220 },
+            interactionGeometry: {
+                kind: 'segment',
+                points: [{ x: 56, y: 220 }, { x: 196, y: 52 }],
+                annotationPoints: [{ x: 56, y: 220 }, { x: 196, y: 52 }],
+            },
+        };
+        const plotCenter = { x: 126, y: 136 };
+
+        const midpoint = annotationConnectionPoint(item, 'segment-midpoint', [item], plotCenter);
+        const rightFallback = annotationConnectionPoint(item, 'right', [item], plotCenter);
+
+        expect(midpoint.point).toEqual({ x: 126, y: 136 });
+        expect(rightFallback.point).toEqual(midpoint.point);
+        expect(rightFallback.preferredAngle).toBe(0);
+    });
+
     it('uses a borderless spotlight for area hover', () => {
         const hoverStyle = (resolvedEncodings: Record<string, any>) =>
             areaChartDef.semanticInteractions!({ resolvedEncodings }).renderHoverStyles?.area;
@@ -115,6 +153,38 @@ describe('Vega-Lite semantic interactions', () => {
         ]));
         expect(compiled.marks.filter((mark: any) => mark.type === 'symbol'))
             .toEqual(expect.arrayContaining([expect.objectContaining({ clip: true })]));
+    });
+
+    it('leaves reorder unwired when no reorder interaction is configured', () => {
+        const spec = assembleVegaLite({
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: { field: 'category' }, y: { field: 'value' } } },
+            semantic_types: { category: 'Category', value: 'Number' },
+            data: { values: [{ category: 'A', value: 1 }, { category: 'B', value: 2 }] },
+        }) as any;
+
+        const plan = addVegaLiteInteractions(spec, [clickHighlight()])!;
+
+        expect(plan.reorderAxis).toBeUndefined();
+        expect(plan.reorderAxes).toEqual([]);
+    });
+
+    it('resolves an axis scale renamed by a composed spec', () => {
+        const composed = {
+            scales: [{ name: 'concat_0_x', type: 'band' }, { name: 'concat_0_y', type: 'linear' }],
+        } as any;
+
+        expect(injectVegaReorderSignal(composed, { axis: 'x', field: 'category' })).toEqual({
+            axis: 'x', field: 'category', scale: 'concat_0_x', signal: '__flint_reorder_x_domain',
+        });
+        expect(composed.scales[0].domainRaw).toEqual({ signal: '__flint_reorder_x_domain' });
+        expect(injectVegaNavigationSignals(composed, ['y']).y)
+            .toEqual({ scale: 'concat_0_y', signal: '__flint_navigation_y_domain', type: 'linear' });
+
+        // An ambiguous multi-panel concat must not silently pick a panel.
+        expect(() => injectVegaReorderSignal(
+            { scales: [{ name: 'concat_0_x', type: 'band' }, { name: 'concat_1_x', type: 'band' }] } as any,
+            { axis: 'x', field: 'category' },
+        )).toThrow(/discrete "x" scale/);
     });
 
     it.each([
@@ -258,6 +328,24 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual([{ axis: 'x', field: 'period' }]);
     });
 
+    it('moves only Waterfall bars during reorder preview', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Waterfall Chart',
+                encodings: { x: { field: 'step' }, y: { field: 'amount' } },
+            },
+            semantic_types: { step: 'Category', amount: 'Number' },
+            data: { values: [
+                { step: 'Revenue', amount: 100 },
+                { step: 'Costs', amount: -40 },
+            ] },
+        }) as any;
+
+        expect(spec._interactionSemantics.reorderAxes).toEqual([
+            { axis: 'x', field: 'step', markTypes: ['rect'] },
+        ]);
+    });
+
     it('rejects built-in interactions when a chart has no semantic contract', () => {
         expect(() => addVegaLiteInteractions({ mark: 'line' }, [clickHighlight()]))
             .toThrow('requires chart interaction semantics');
@@ -265,6 +353,49 @@ describe('Vega-Lite semantic interactions', () => {
             mark: 'line',
             _interactionSemantics: { fields: [], selectableMarks: [], navigationAxes: ['x'] },
         }, [clickHighlight()])).toThrow('requires chart element semantics');
+    });
+
+    it('instruments semantic targets for external interactions without adding canvas gestures', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: { field: 'category' }, y: { field: 'value' } },
+            },
+            semantic_types: { category: 'Category', value: 'Number' },
+            data: { values: [{ category: 'A', value: 2 }] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [externalInteraction<{ category: string }>({
+            id: 'category-picker',
+            handle: ({ category }) => ({
+                id: 'category-picker',
+                ops: [{
+                    op: 'set-presentation',
+                    targets: [{ select: { key: { category } } }],
+                    value: { state: 'emphasized' },
+                }],
+            }),
+        })]);
+
+        expect(plan).not.toBeNull();
+        expect(spec.transform).toEqual(expect.arrayContaining([
+            expect.objectContaining({ as: INTERACTION_KEY }),
+        ]));
+    });
+
+    it('instruments semantic updates without passing external definitions to the renderer', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: { field: 'category' }, y: { field: 'value' } },
+            },
+            semantic_types: { category: 'Category', value: 'Number' },
+            data: { values: [{ category: 'A', value: 2 }] },
+        }) as any;
+
+        expect(addVegaLiteInteractions(spec, [], true)).not.toBeNull();
+        expect(spec.transform).toEqual(expect.arrayContaining([
+            expect.objectContaining({ as: INTERACTION_KEY }),
+        ]));
     });
 
     it('clips every generated layer when navigation is combined with semantic interaction', () => {
@@ -306,18 +437,22 @@ describe('Vega-Lite semantic interactions', () => {
         const initial = view.scale('x').domain().map(Number);
         const controller = createVegaNavigationController(view, axes);
 
-        await controller.apply({
-            op: 'navigate-viewport', phase: 'commit', operation: 'zoom', axes: 'x',
+        const guard = { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 };
+        const zoom = controller.resolve({
+            type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'x',
             factor: 2, anchor: { x: 0.5, y: 0.5 },
-            domainGuard: { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 },
-        });
+        }, guard);
+        expect(zoom).not.toBeNull();
+        controller.apply(zoom!);
+        await view.runAsync();
         const zoomed = view.scale('x').domain().map(Number);
         expect(zoomed[1] - zoomed[0]).toBeCloseTo((initial[1] - initial[0]) / 2);
 
-        await controller.apply({
-            op: 'navigate-viewport', phase: 'commit', operation: 'reset', axes: 'x',
-            domainGuard: { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 },
-        });
+        const reset = controller.resolve({
+            type: 'navigation', phase: 'commit', operation: 'reset', axes: 'x',
+        }, guard);
+        controller.apply(reset!);
+        await view.runAsync();
         expect(view.scale('x').domain().map(Number)).toEqual(initial);
         view.finalize();
     });
@@ -559,14 +694,150 @@ describe('Vega-Lite semantic interactions', () => {
             }],
         };
         const update = semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'polar-bar' } }] },
+            annotationUpdate(element, { kind: 'mark', role: 'polar-bar' }),
             { chartType: 'Rose Chart', selected: [], categoryField: 'Month' },
         );
 
-        expect(update.ops[0]).toMatchObject({ annotation: { text: '140' } });
-        expect((update.ops[0] as any).annotation.candidates).toEqual([
+        expect(update.ops[0]).toMatchObject({ value: { text: '140' } });
+        expect((update.ops[0] as any).value.candidates).toEqual([
             { connection: 'outer-radial', priority: 0 },
         ]);
+    });
+
+    it('formats Bar Table and Bullet annotations from their authored measures', async () => {
+        const barTable = barTableDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'GDP ($T)', type: 'quantitative' },
+                y: { field: 'Country', type: 'nominal' },
+            },
+        });
+        const bullet = bulletChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Share', type: 'quantitative' },
+                y: { field: 'Country', type: 'nominal' },
+                goal: { field: 'Target', type: 'quantitative' },
+            },
+        });
+        const barTableElement = {
+            key: { [INTERACTION_KEY]: 'China' },
+            records: [{ Country: 'China', 'GDP ($T)': 17.8, period_end: 0 }],
+        };
+        const bulletElement = {
+            key: { [INTERACTION_KEY]: 'Germany' },
+            records: [{ Country: 'Germany', Share: 51.6, Target: 80 }],
+        };
+
+        expect(barTable.presentUpdate!(
+            annotationUpdate(barTableElement),
+            { chartType: 'Bar Table', selected: [], categoryField: 'Country' },
+        ).ops[0]).toMatchObject({ value: { text: '17.8' } });
+        const bulletUpdate = bullet.presentUpdate!(
+            annotationUpdate(bulletElement),
+            { chartType: 'Bullet Chart', selected: [], categoryField: 'Country' },
+        );
+        expect(bulletUpdate.ops[0]).toMatchObject({
+            value: {
+                text: 'Actual: 51.6\nExpected: 80',
+                candidates: expect.arrayContaining([expect.objectContaining({
+                    connectorAnchors: [
+                        { role: 'bullet-actual', connection: 'value-end', valueAxis: 'x' },
+                        { role: 'bullet-expected', connection: 'center' },
+                    ],
+                })]),
+            },
+        });
+
+        const bulletSpec = assembleVegaLite({
+            data: { values: [{ Country: 'Germany', Share: 51.6, Target: 80 }] },
+            semantic_types: { Country: 'Country', Share: 'Quantity', Target: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bullet Chart',
+                encodings: { y: 'Country', x: 'Share', goal: 'Target' },
+            },
+        } as never) as any;
+        const { compiled } = instrument(bulletSpec, [clickAnnotate()]);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const roles = sceneItems(view)
+            .filter((item) => item.datum.Country === 'Germany' && item.datum[INTERACTION_ROLE])
+            .map((item) => item.datum[INTERACTION_ROLE]);
+
+        expect(new Set(roles)).toEqual(new Set(['bullet-actual', 'bullet-expected']));
+    });
+
+    it('presents Choropleth regions and Density segments with semantic values', () => {
+        const choropleth = choroplethDef.semanticInteractions!({
+            resolvedEncodings: {
+                id: { field: 'State', type: 'nominal' },
+                color: { field: 'Value', type: 'quantitative' },
+            },
+        });
+        const density = densityPlotDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Score', type: 'quantitative' } },
+        });
+
+        const regionUpdate = choropleth.presentUpdate!(
+            annotationUpdate(
+                { key: { [INTERACTION_KEY]: '35' }, records: [{ State: 'New Mexico', Value: 35 }] },
+                { kind: 'region', role: 'geographic-region' },
+            ),
+            { chartType: 'Choropleth', selected: [], categoryField: 'State' },
+        );
+        const densityUpdate = density.presentUpdate!(
+            annotationUpdate({
+                    key: { [INTERACTION_KEY]: 'segment' },
+                    records: [{ value: 72.5, density: 0.33 }, { value: 75, density: 0.32 }],
+                }, { kind: 'path', role: 'area' }),
+            { chartType: 'Density Plot', selected: [] },
+        );
+
+        expect(regionUpdate.ops[0]).toMatchObject({
+            value: { text: 'New Mexico: 35', candidates: [{ connection: 'center' }] },
+        });
+        expect(densityUpdate.ops[0]).toMatchObject({
+            value: { text: '72.5: 0.33', candidates: [{ connection: 'segment-midpoint' }] },
+        });
+    });
+
+    it('presents transformed ECDF, Calendar, and Violin values', () => {
+        const ecdf = ecdfPlotDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Score', type: 'quantitative' } },
+        });
+        const calendar = vlCalendarHeatmapDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Day', type: 'temporal' },
+                color: { field: 'Commits', type: 'quantitative' },
+            },
+        });
+        const violin = violinPlotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Species', type: 'nominal' },
+                y: { field: 'Length', type: 'quantitative' },
+            },
+        });
+
+        const ecdfUpdate = ecdf.presentUpdate!(
+            annotationUpdate({ key: { [INTERACTION_KEY]: 'step' }, records: [{ Score: 42 }, { Score: 44 }] }),
+            { chartType: 'ECDF Plot', selected: [] },
+        );
+        const calendarUpdate = calendar.presentUpdate!(
+            annotationUpdate({
+                    key: { [INTERACTION_KEY]: 'day' },
+                    records: [{ __calendar_date: Date.UTC(2026, 7, 27), Commits: 12 }],
+                }),
+            { chartType: 'Calendar Heatmap', selected: [] },
+        );
+        const violinUpdate = violin.presentUpdate!(
+            annotationUpdate({
+                    key: { [INTERACTION_KEY]: 'curve' },
+                    records: [{ Species: 'Setosa', Length: 5.1, density: 0.4 }],
+                }),
+            { chartType: 'Violin Plot', selected: [] },
+        );
+
+        expect(ecdfUpdate.ops[0]).toMatchObject({ value: { text: '42' } });
+        expect((calendarUpdate.ops[0] as any).value.text).toContain('12');
+        expect(violinUpdate.ops[0]).toMatchObject({ value: { text: 'Setosa: 5.1' } });
     });
 
     it('uses one local hover rule across color semantics', () => {
@@ -753,10 +1024,10 @@ describe('Vega-Lite semantic interactions', () => {
         expect(annotationBounds(finalSegment).y2).toBeLessThan(finalSegment.bounds.y2);
         expect(target.elements[0].records?.map((record) => record.Users)).toEqual([60, 67]);
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: target.elements[0] }] },
+            annotationUpdate(target.elements[0]),
             { chartType: 'Area Chart', selected: [] },
         ).ops[0]).toMatchObject({
-            annotation: {
+            value: {
                 text: '60 → 67',
                 candidates: [{ connection: 'segment-midpoint', priority: 0 }],
             },
@@ -1010,6 +1281,32 @@ describe('Vega-Lite semantic interactions', () => {
         expect(boundsIntersectRect({ x1: 29, y1: 10, x2: 50, y2: 30 }, selection)).toBe(true);
     });
 
+    it('reports the plot origin in renderer units when the SVG is CSS-scaled', () => {
+        // Vega renders a 370x305 chart that CSS shrinks to 326px wide.
+        const cssScale = 326 / 370;
+        const matrix = { a: cssScale, e: 39 * cssScale, f: 10 * cssScale };
+
+        expect(rendererPlotOrigin(matrix, { x: 0, y: 0 })).toEqual({ x: 39, y: 10 });
+        expect(rendererPlotOrigin({ a: 1, e: 39, f: 10 }, { x: 0, y: 0 }))
+            .toEqual({ x: 39, y: 10 });
+        expect(rendererPlotOrigin(undefined, { x: 5, y: 6 })).toEqual({ x: 5, y: 6 });
+
+        const space = {
+            rect: { left: 0, top: 0, width: 370 * cssScale, height: 305 * cssScale } as DOMRect,
+            logicalWidth: 370,
+            logicalHeight: 305,
+            ...(({ x, y }) => ({ originX: x, originY: y }))(rendererPlotOrigin(matrix, { x: 0, y: 0 })),
+            plotWidth: 320,
+            plotHeight: 260,
+        };
+
+        // A plot-space point must land where the scaled mark actually renders.
+        expect(plotToClientPoint({ x: 0, y: 0 }, space).x).toBeCloseTo(39 * cssScale, 6);
+        const roundTrip = clientToPlotPoint({ x: 39 * cssScale, y: 10 * cssScale }, space);
+        expect(roundTrip.x).toBeCloseTo(0, 6);
+        expect(roundTrip.y).toBeCloseTo(0, 6);
+    });
+
     it('round-trips coordinates through SVG scaling and Vega plot padding', () => {
         const space = {
             rect: { left: 100, top: 50, width: 250, height: 150 } as DOMRect,
@@ -1179,7 +1476,7 @@ describe('Vega-Lite semantic interactions', () => {
         const makeUpdate = (definition: typeof barChartDef, resolvedEncodings: Record<string, any>) => {
             const semantics = definition.semanticInteractions!({ resolvedEncodings });
             return semantics.presentUpdate!(
-                { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'bar' } }] },
+                annotationUpdate(element, { kind: 'mark', role: 'bar' }),
                 { chartType: definition.chart, selected: [] },
             );
         };
@@ -1190,8 +1487,8 @@ describe('Vega-Lite semantic interactions', () => {
         };
         for (const definition of [barChartDef, groupedBarChartDef, stackedBarChartDef, pyramidChartDef]) {
             const update = makeUpdate(definition, horizontalEncodings);
-            expect(update.ops[0]).toMatchObject({ annotation: { text: '1,428.6' } });
-            expect((update.ops[0] as any).annotation.candidates[0]).toMatchObject({ valueAxis: 'x' });
+            expect(update.ops[0]).toMatchObject({ value: { text: '1,428.6' } });
+            expect((update.ops[0] as any).value.candidates[0]).toMatchObject({ valueAxis: 'x' });
         }
 
         const flipped = makeUpdate(pyramidChartDef, {
@@ -1199,8 +1496,8 @@ describe('Vega-Lite semantic interactions', () => {
             y: { field: 'Population', type: 'quantitative' },
         });
 
-        expect(flipped.ops[0]).toMatchObject({ annotation: { text: '1,428.6' } });
-        expect((flipped.ops[0] as any).annotation.candidates[0]).toMatchObject({ valueAxis: 'y' });
+        expect(flipped.ops[0]).toMatchObject({ value: { text: '1,428.6' } });
+        expect((flipped.ops[0] as any).value.candidates[0]).toMatchObject({ valueAxis: 'y' });
     });
 
     it('hovers Pyramid bars without changing their geometry or center gap', async () => {
@@ -1383,10 +1680,10 @@ describe('Vega-Lite semantic interactions', () => {
         expect(target?.visual).toEqual({ kind: 'path', role: 'line' });
         expect(target?.elements[0].records).toEqual([connector.datum, connector.endDatum]);
         expect(semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element: target!.elements[0], visual: target!.visual }] },
+            annotationUpdate(target!.elements[0], target!.visual),
             { chartType: 'Ranged Dot Plot', selected: [], categoryField: 'Country', seriesField: 'Sex' },
         ).ops[0]).toMatchObject({
-            annotation: {
+            value: {
                 text: 'Male: 81.5, Female: 87.6',
                 candidates: [{ connection: 'segment-midpoint', priority: 0 }],
             },
@@ -1406,12 +1703,12 @@ describe('Vega-Lite semantic interactions', () => {
         };
 
         const update = semantics.presentUpdate!(
-            { ops: [{ op: 'annotate', element, visual: { kind: 'mark', role: 'slice' } }] },
+            annotationUpdate(element, { kind: 'mark', role: 'slice' }),
             { chartType: 'Pie Chart', selected: [], seriesField: 'Browser' },
         );
 
-        expect(update.ops[0]).toMatchObject({ annotation: { text: 'Chrome: 65' } });
-        expect((update.ops[0] as any).annotation.candidates).toEqual([
+        expect(update.ops[0]).toMatchObject({ value: { text: 'Chrome: 65' } });
+        expect((update.ops[0] as any).value.candidates).toEqual([
             { connection: 'radial-midpoint', priority: 0 },
             { connection: 'outer-radial', priority: 1 },
         ]);

@@ -1,14 +1,14 @@
 # Interaction Presets
 
 Presets translate `CanvasInteractionEvent` values into renderer-neutral
-`ChartUpdateRequest` operations. They decide what action to take, not how a particular
-mark should draw that action. Returned requests use the same `applyUpdate()` path as
-application-authored requests.
+`ChartUpdate` JSON. They decide what action to take, not how a particular mark should
+draw that action. Returned updates use the same retained state and private gesture
+preview state as other canvas interactions.
 
 Presets are a small convenience layer, not the primary interaction API. Flint separately
-provides predefined interaction observers that emit resolved events and update factories
-that construct `ChartUpdateRequestOp` values. Applications compose those output and input contracts
-with ordinary JavaScript when behavior is product-specific.
+provides canvas definitions that emit resolved events, external definitions that bind
+application payloads, and the `ChartUpdateOp` data language. Applications compose these
+contracts with ordinary JavaScript when behavior is product-specific.
 
 A preset earns a built-in when the action-to-update pairing is broadly useful and has
 non-trivial lifecycle behavior that Flint should implement consistently. The intended
@@ -21,32 +21,36 @@ core set is:
 
 Flint should not add a preset for every combination of action and update. Legend
 toggle/isolate, annotation text formatting, group expansion, linked views, tooltips,
-drilldown, and application-specific relationships are usually recipes. Existing helpers
-may remain for compatibility without expanding into a combinatorial preset catalogue.
+drilldown, and application-specific relationships are usually recipes. Built-ins remain
+only when they represent broadly reusable canvas policies.
 
 ```ts
-surface.addEventListener('flint-interaction', ({ detail }) => {
-	const { event } = detail;
-	if (event.action !== 'click-legend' || !event.target) return;
-
-	void surface.applyUpdate({
-		updateId: 'legend-selection',
-		phase: 'commit',
-		ops: [
-			emphasize({ targets: [event.target], mode: 'replace' }),
-			annotate({ target: event.target, text: 'Selected series' }),
-		],
-	});
-});
+const legendSelection: CanvasInteractionDef = {
+	id: 'legend-selection',
+	eventSource: clickTrigger,
+	handle: (event) => {
+		if (event.action !== 'click-legend' || !event.target) return null;
+		return {
+			id: 'legend-selection',
+			ops: [
+				{
+					op: 'set-presentation', targets: [event.target],
+					value: { state: 'emphasized' },
+				},
+				{ op: 'set-annotation', target: event.target, value: { text: 'Selected series' } },
+			],
+		};
+	},
+};
 ```
 
-`CanvasInteractionEvent`, public `surface.applyUpdate()`, and output-only interaction
-definitions are implemented for the Vega-Lite semantic runtime. Current presets consume
-the public event shape and produce public update requests; resolved renderer operations
-remain internal. Other interactive backends and additional public appearance/visibility
-operations remain future work.
+`CanvasInteractionEvent`, `externalInteraction()`, `surface.dispatch()`, direct update
+state APIs, and output-only canvas definitions are implemented for the Vega-Lite
+semantic runtime. Current presets consume the public canvas event shape and produce
+public update JSON; target resolution and backend application remain internal. Other
+interactive backends and additional appearance/visibility operations remain future work.
 
-Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, and rose. All three produce the same semantic `emphasize` operation after the owning ChartDef resolves physical hits.
+Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, and rose. All three produce the same semantic `set-presentation` operation after the owning ChartDef resolves physical hits.
 
 ## Emphasis Behavior
 
@@ -56,7 +60,7 @@ Built-in selection presets use one clear opacity rule:
 - unfocused elements use `0.25` opacity;
 - categorical color does not introduce a separate dimming range.
 
-Keeping one value makes linked views predictable. A bar, point, arc, line, or cell receives the same semantic emphasis operation even when its chart presents focus differently.
+Keeping one value makes linked views predictable. A bar, point, arc, line, or cell receives the same emphasized presentation state even when its chart presents focus differently.
 
 ## Representation-Aware Presentation
 
@@ -83,7 +87,7 @@ The stages remain separate:
 1. Trigger normalization reports physical hits.
 2. ChartDef resolution converts hits into semantic elements.
 3. The coordinator emits the resolved event whether or not a preset is configured.
-4. An optional preset emits `emphasize` with selected elements and dim opacity.
+4. An optional preset emits `set-presentation` with selected elements and muted-peer opacity.
 5. ChartDef presentation declares representation-specific focus styling.
 6. The renderer applies opacity, proportional line width, or region boundaries mechanically.
 

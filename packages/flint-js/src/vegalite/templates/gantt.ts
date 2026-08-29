@@ -8,7 +8,7 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentAnnotationUpdate, rangeAnnotationText, valueEndAnnotationCandidates } from '../../interactive/updates/annotation';
+import { presentAnnotationUpdate, rangeAnnotationText, valueEndAnnotationCandidates } from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     coerceGanttEndpoint,

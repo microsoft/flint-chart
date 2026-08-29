@@ -1,16 +1,16 @@
-import type { InteractionDef, SelectOptions } from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from '../updates/emphasis';
+import type { CanvasInteractionDef, SelectOptions } from '../interactions';
+import { emphasisUpdate, normalizedOpacity } from './utils';
 import { rectangleTrigger } from '../triggers';
 
-export function createSelectInteraction(options: SelectOptions = {}): InteractionDef {
+export function createSelectInteraction(options: SelectOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'select';
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
         eventSource: rectangleTrigger(options.match ?? 'intersect'),
-        handle(event) {
+        handle(event, context) {
             if (event.action !== 'select-region' || event.phase === 'start' || event.phase === 'cancel') return null;
-            return emphasisUpdate(id, event, event.target, dimOpacity);
+            return emphasisUpdate(id, event, event.target, dimOpacity, context);
         },
     };
 }

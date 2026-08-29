@@ -1,10 +1,13 @@
-import type { SemanticElement, SemanticTarget } from '../core/interaction-semantics';
+import type {
+    ChartUpdate,
+    InteractionContext,
+    NavigationDomainGuard,
+    SemanticElement,
+} from '../core/interaction-contracts';
 import type { InteractionEventSource } from './triggers';
 import type {
-    InteractionPhase,
     NavigationAxes,
-    PlotPoint,
-} from './triggers/events';
+} from './language/events';
 import {
     createBrushInteraction,
     createAngularBrushInteraction,
@@ -15,9 +18,17 @@ import {
     createNavigateInteraction,
     createDragReorderInteraction,
 } from './presets';
-import type { CanvasInteractionEvent } from './canvas-interaction';
-export type { RenderHit, SemanticElement, SemanticTarget } from '../core/interaction-semantics';
-export type ChartUpdateRequest = import('./updates/request').ChartUpdateRequest;
+import type { CanvasInteractionEvent } from './language/events';
+export type {
+    ChartUpdatePresenter,
+    InteractionContext,
+    NavigationDomainGuard,
+    NavigationRequest,
+    NavigationUpdate,
+    RenderHit,
+    SemanticElement,
+    SemanticTarget,
+} from '../core/interaction-contracts';
 
 export interface FlintInteractionEventDetail {
     chartId: string;
@@ -33,17 +44,15 @@ export type {
     DomainCoordinate,
     DomainGeometry,
     PlotGeometry,
-} from './canvas-interaction';
+} from './language/events';
 
 export type {
     ElementInteractionEvent,
-    ExternalInteractionEvent,
     InteractionModifiers,
     InteractionPhase,
     NavigationAxes,
     NavigationInteractionEvent,
     NavigationOperation,
-    NormalizedInteractionEvent,
     PlotPoint,
     PlotAngularSector,
     PlotPolygon,
@@ -52,96 +61,50 @@ export type {
     RegionOperation,
     RegionInteractionEvent,
     SemanticInteractionEvent,
-} from './triggers/events';
+} from './language/events';
 
-export type SelectionMode = 'replace' | 'toggle';
+export type {
+    AnnotationCandidate,
+    AnnotationConnection,
+    AnnotationConnectorAnchor,
+    AnnotationSpec,
+    ChartUpdate,
+    ChartUpdateOp,
+    PresentationSpec,
+    SemanticTargetRef,
+    SemanticTargetSelector,
+    UpdateDomain,
+    UpdateTarget,
+} from './language/updates';
 
-export type AnnotationConnection =
-    | 'center'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'value-end'
-    | 'value-side'
-    | 'segment-midpoint'
-    | 'radial-midpoint'
-    | 'outer-radial';
-
-export interface AnnotationCandidate {
-    connection: AnnotationConnection;
-    valueAxis?: 'x' | 'y';
-    crossSide?: 'start' | 'end';
-    valueInset?: number;
-    anglePreference?: 'normal' | 'oblique';
-    textAlign?: 'left' | 'center' | 'right';
-    connector?: 'line' | 'none';
-    maxWidth?: number;
-    maxDistance?: number;
-    priority?: number;
-}
-
-export interface AnnotationRenderPlan {
-    text: string;
-    candidates: readonly AnnotationCandidate[];
-    subject?: Partial<SemanticTarget['visual']>;
-    markType?: string;
-}
-
-export interface NavigationDomainGuard {
-    minVisibleFraction: number;
-    maxVisibleFraction: number;
-    overscrollFraction: number;
-}
-
-export type UpdateOp =
-    | { op: 'emphasize'; elements: readonly SemanticElement[]; mode: SelectionMode; dimOpacity: number }
-    | { op: 'annotate'; element: SemanticElement; visual?: Partial<SemanticTarget['visual']>; text?: string }
-    | { op: 'render-annotation'; element: SemanticElement; annotation: AnnotationRenderPlan }
-    | { op: 'clear-annotation' }
-    | {
-        op: 'navigate-viewport';
-        phase: InteractionPhase;
-        operation: import('./triggers/events').NavigationOperation;
-        axes: NavigationAxes;
-        delta?: PlotPoint;
-        factor?: number;
-        anchor?: PlotPoint;
-        domainGuard: NavigationDomainGuard;
-    }
-    | { op: 'reorder-category'; axis: 'x' | 'y'; field: string; orderedValues: readonly unknown[] }
-    | { op: 'reset' };
-
-export interface ChartUpdate {
-    phase?: InteractionPhase;
-    ops: readonly UpdateOp[];
-}
-
-export type ChartUpdatePresenter = (
-    update: ChartUpdate,
-    context: InteractionContext,
-) => ChartUpdate;
-
-export interface InteractionContext {
-    readonly chartType: string;
-    readonly selected: readonly SemanticElement[];
-    readonly available?: readonly SemanticElement[];
-    readonly categoryField?: string;
-    readonly seriesField?: string;
-    readonly categoryAxis?: 'x' | 'y';
-    /** Current rendered order for the active category axis. */
-    readonly categoryOrder?: readonly unknown[];
-    readonly reorderAxes?: readonly {
-        axis: 'x' | 'y';
-        field: string;
-        order: readonly unknown[];
-    }[];
-}
-
-export interface InteractionDef {
+export interface CanvasInteractionDef {
     readonly id: string;
     readonly eventSource: InteractionEventSource;
-    handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdateRequest | null;
+    readonly navigationDomainGuard?: NavigationDomainGuard;
+    handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdate | null;
+}
+
+export interface ExternalInteractionDef<TPayload = unknown> {
+    readonly id: string;
+    readonly external: true;
+    handle(payload: TPayload, context: InteractionContext): ChartUpdate | null;
+}
+
+export type InteractionDef = CanvasInteractionDef | ExternalInteractionDef<unknown>;
+
+export function externalInteraction<TPayload>(definition: {
+    id: string;
+    handle(payload: TPayload, context: InteractionContext): ChartUpdate | null;
+}): ExternalInteractionDef<TPayload> {
+    return { ...definition, external: true };
+}
+
+export function isCanvasInteraction(interaction: InteractionDef): interaction is CanvasInteractionDef {
+    return !('external' in interaction);
+}
+
+export function isExternalInteraction(interaction: InteractionDef): interaction is ExternalInteractionDef<unknown> {
+    return 'external' in interaction;
 }
 
 export interface ClickHighlightOptions {
@@ -182,50 +145,46 @@ export interface DragReorderOptions {
     id?: string;
 }
 
-export function clickHighlight(options: ClickHighlightOptions = {}): InteractionDef {
+export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
     return createClickHighlightInteraction(options);
 }
 
-export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): InteractionDef {
+export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
     return createClickGroupHighlightInteraction(options);
 }
 
-export function clickAnnotate(options: ClickAnnotateOptions = {}): InteractionDef {
+export function clickAnnotate(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
     return createClickAnnotateInteraction(options);
 }
 
-export function select(options: SelectOptions = {}): InteractionDef {
+export function select(options: SelectOptions = {}): CanvasInteractionDef {
     return createSelectInteraction(options);
 }
 
-export function brushX(options: BrushOptions = {}): InteractionDef {
+export function brushX(options: BrushOptions = {}): CanvasInteractionDef {
     return createBrushInteraction('x', options);
 }
 
-export function brushY(options: BrushOptions = {}): InteractionDef {
+export function brushY(options: BrushOptions = {}): CanvasInteractionDef {
     return createBrushInteraction('y', options);
 }
 
-export function brushAngle(options: AngularBrushOptions = {}): InteractionDef {
+export function brushAngle(options: AngularBrushOptions = {}): CanvasInteractionDef {
     return createAngularBrushInteraction(options);
 }
 
-export function navigate(options: NavigateOptions = {}): InteractionDef {
+export function navigate(options: NavigateOptions = {}): CanvasInteractionDef {
     return createNavigateInteraction(options);
 }
 
-export function dragReorder(options: DragReorderOptions = {}): InteractionDef {
+export function dragReorder(options: DragReorderOptions = {}): CanvasInteractionDef {
     return createDragReorderInteraction(options);
 }
 
 export function normalizeInteractions(
     interactions: readonly InteractionDef[] | undefined,
-    focusOnClick: boolean | undefined,
 ): readonly InteractionDef[] {
     const normalized = [...(interactions ?? [])];
-    if (focusOnClick === true && !normalized.some((interaction) => interaction.id === 'click-highlight')) {
-        normalized.push(clickHighlight());
-    }
     const ids = new Set<string>();
     for (const interaction of normalized) {
         if (ids.has(interaction.id)) throw new Error(`Duplicate interaction id: "${interaction.id}".`);

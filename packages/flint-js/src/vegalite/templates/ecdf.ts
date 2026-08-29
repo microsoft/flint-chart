@@ -35,7 +35,11 @@ import {
     MUTED_HOVER_STROKE,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/presentation/annotation';
 import { setMarkProp } from './utils';
 
 const showPointsProperty: ChartPropertyDef = {
@@ -65,6 +69,7 @@ export const ecdfPlotDef: ChartTemplateDef = {
     navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
+        const valueField = resolvedEncodings.x?.field;
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);
         const colorField = resolvedEncodings.color?.field;
         return {
@@ -78,7 +83,10 @@ export const ecdfPlotDef: ChartTemplateDef = {
             },
             renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
-            presentUpdate: suppressAnnotationUpdate,
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint'),
+                valueAnnotationText(valueField),
+            ),
         };
     },
     declareLayoutMode: () => ({

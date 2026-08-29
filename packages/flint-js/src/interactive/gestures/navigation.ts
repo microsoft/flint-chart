@@ -1,4 +1,4 @@
-import type { PlotPoint } from '../triggers/events';
+import type { PlotPoint } from '../language/events';
 
 export interface PlotSize {
     width: number;

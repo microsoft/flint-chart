@@ -11,7 +11,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const stripPlotDef: ChartTemplateDef = {
     chart: "Strip Plot",

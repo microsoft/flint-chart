@@ -1,7 +1,12 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
-import type { ChartUpdatePresenter, InteractionDef } from '../../interactive/interactions';
+import {
+    isCanvasInteraction,
+    type ChartUpdatePresenter,
+    type InteractionContext,
+    type InteractionDef,
+} from '../../interactive/interactions';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
-import { DEFAULT_DIM_OPACITY } from '../../interactive/updates/emphasis';
+import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
 import type {
     HoverStyle,
@@ -24,12 +29,14 @@ interface TemplateInteractionSemantics {
     fields: string[];
     categoryField?: string;
     seriesField?: string;
+    resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Record<string, string>;
     selectableMarks: string[];
+    annotationMarkType?: string;
     supportedRegionGestures?: ('cartesian' | 'angular')[];
     navigationAxes?: ('x' | 'y')[];
-    reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean };
-    reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean }[];
+    reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
+    reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
     renderHoverStyles?: Record<string, HoverStyle>;
     renderSelectionStyles?: Record<string, SelectionStyle>;
     selectionBoundary?: SelectionBoundaryStyle;
@@ -198,7 +205,9 @@ function addLocalKeyTransforms(
     const type = markType(spec.mark);
     const provenance = spec[INTERACTION_PROVENANCE] as InteractionProvenance | undefined;
     if (provenance?.role === 'decorative') return;
-    if (type && SUPPORTED_SPEC_MARKS.has(type) && selectableMarks.has(type) && spec.data) {
+    // A composition can hoist `data` to an ancestor, so a unit is keyed on its
+    // own mark rather than on owning a data source.
+    if (type && SUPPORTED_SPEC_MARKS.has(type) && selectableMarks.has(type)) {
         spec.transform = [
             ...(Array.isArray(spec.transform) ? spec.transform : []),
             { calculate: keyExpression(fields), as: INTERACTION_KEY },
@@ -237,26 +246,26 @@ function clipNavigableMarks(spec: Record<string, any>): void {
 export function addVegaLiteInteractions(
     spec: Record<string, any>,
     interactions: readonly InteractionDef[],
+    enableSemanticUpdates = false,
 ): VegaInteractionPlan | null {
-    if (interactions.length === 0) return null;
+    if (interactions.length === 0 && !enableSemanticUpdates) return null;
+    const canvasInteractions = interactions.filter(isCanvasInteraction);
     const templateSemantics = spec._interactionSemantics as TemplateInteractionSemantics | undefined;
     delete spec._interactionSemantics;
-    const reorderInteraction = interactions.find(
+    const reorderInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.gesture === 'drag-element',
     );
     if (!templateSemantics) {
         if (reorderInteraction) {
             throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
         }
-        const builtInInteraction = interactions.find(
-            (interaction) => interaction.eventSource.type !== 'external',
-        );
+        const builtInInteraction = canvasInteractions[0];
         if (builtInInteraction) {
             throw new Error(`Interaction "${builtInInteraction.id}" requires chart interaction semantics.`);
         }
         return null;
     }
-    const navigationInteraction = interactions.find(
+    const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
     const declaredReorderAxes = templateSemantics.reorderAxes
@@ -264,7 +273,7 @@ export function addVegaLiteInteractions(
     if (reorderInteraction && declaredReorderAxes.length === 0) {
         throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
     }
-    const semanticGestureInteraction = interactions.find(
+    const semanticGestureInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'element'
             || interaction.eventSource.type === 'region',
     );
@@ -274,9 +283,12 @@ export function addVegaLiteInteractions(
         && templateSemantics.selectableMarks.length === 0) {
         throw new Error(`Interaction "${semanticGestureInteraction.id}" requires chart element semantics.`);
     }
-    const semanticInteractions = interactions.filter(
+    const semanticInteractions = canvasInteractions.filter(
         (interaction) => interaction.eventSource.type !== 'navigation',
     );
+    const needsSemanticPresentation = enableSemanticUpdates
+        || semanticInteractions.length > 0
+        || canvasInteractions.length < interactions.length;
     if (navigationInteraction?.eventSource.pan
         && semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'drag')) {
         throw new Error('Pan navigation cannot share an unmodified drag gesture with a region interaction.');
@@ -300,7 +312,7 @@ export function addVegaLiteInteractions(
             `Interaction "${navigationInteraction?.id}" requested unsupported navigation axis: ${unsupportedNavigationAxes.join(', ')}.`,
         );
     }
-    const angularInteraction = interactions.find(
+    const angularInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.regionGeometry === 'angular',
     );
     if (angularInteraction && !templateSemantics.supportedRegionGestures?.includes('angular')) {
@@ -310,11 +322,11 @@ export function addVegaLiteInteractions(
     }
     const selectableMarks = new Set(templateSemantics.selectableMarks ?? SUPPORTED_SPEC_MARKS);
     const fields = templateSemantics.fields ?? [];
-    if (semanticInteractions.length > 0) expandInteractiveLinePoints(spec);
+    if (needsSemanticPresentation) expandInteractiveLinePoints(spec);
     if (navigationInteraction) clipNavigableMarks(spec);
 
     const dimOpacity = semanticInteractions.reduce((value, interaction) => {
-        if (interaction.eventSource.type === 'external' || !interaction.handle) return value;
+        if (!interaction.handle) return value;
         const semanticEvent = {
             type: 'semantic',
             source: interaction.eventSource.type === 'region' ? 'region' : 'element',
@@ -326,16 +338,18 @@ export function addVegaLiteInteractions(
         } as const;
         const interactionContext = { chartType: 'Unknown', selected: [] };
         const update = interaction.handle(toCanvasInteractionEvent(semanticEvent, interaction.eventSource), interactionContext);
-        const emphasize = update?.ops.find((op) => op.op === 'emphasize');
-        return emphasize?.op === 'emphasize' ? Math.min(value, emphasize.dimOpacity) : value;
+        const presentation = update?.ops.find((op) => op.op === 'set-presentation');
+        return presentation?.op === 'set-presentation'
+            ? Math.min(value, presentation.value.mutedOpacity ?? DEFAULT_DIM_OPACITY)
+            : value;
     }, DEFAULT_DIM_OPACITY);
 
     const clickCursor = semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'click')
         && !semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'drag');
-    const instrumented = semanticInteractions.length > 0
+    const instrumented = needsSemanticPresentation
         ? instrumentMarks(spec, {}, fields, dimOpacity, selectableMarks, clickCursor)
         : false;
-    if (semanticInteractions.length > 0 && !instrumented) return null;
+    if (needsSemanticPresentation && !instrumented) return null;
     if (instrumented) addLocalKeyTransforms(spec, fields, selectableMarks);
     stripInteractionProvenance(spec);
     if (instrumented) {
@@ -348,34 +362,55 @@ export function addVegaLiteInteractions(
         fields,
         categoryField: templateSemantics.categoryField,
         seriesField: templateSemantics.seriesField,
+        resolveGroupValue: templateSemantics.resolveGroupValue,
         legendFields: templateSemantics.legendFields,
+        annotationMarkType: templateSemantics.annotationMarkType,
+        semanticStores: instrumented,
         dimOpacity,
         renderHoverStyles: templateSemantics.renderHoverStyles,
         renderSelectionStyles: templateSemantics.renderSelectionStyles,
         selectionBoundary: templateSemantics.selectionBoundary,
         navigationChannels: [...requestedNavigationAxes],
-        reorderAxis: declaredReorderAxes[0]
+        reorderAxis: reorderInteraction && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
             : undefined,
-        reorderAxes: declaredReorderAxes.map((axis) => ({ ...axis, scale: '', signal: '' })),
+        reorderAxes: reorderInteraction
+            ? declaredReorderAxes.map((axis) => ({ ...axis, scale: '', signal: '' }))
+            : [],
         resolve: templateSemantics.resolve,
         presentUpdate: templateSemantics.presentUpdate,
     };
 }
 
+/**
+ * Composed specs (a themed `vconcat`, for example) rename `x` to `concat_0_x`,
+ * so an axis is matched by suffix when it is unambiguous.
+ */
+export function findVegaAxisScale(
+    vegaSpec: Record<string, any>,
+    axis: 'x' | 'y',
+): Record<string, any> | undefined {
+    const scales: any[] = vegaSpec.scales ?? [];
+    const exact = scales.find((candidate) => candidate.name === axis);
+    if (exact) return exact;
+    const suffixed = scales.filter((candidate) => typeof candidate.name === 'string'
+        && candidate.name.endsWith(`_${axis}`));
+    return suffixed.length === 1 ? suffixed[0] : undefined;
+}
+
 export function injectVegaReorderSignal(
     vegaSpec: Record<string, any>,
-    reorderAxis: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean } | undefined,
+    reorderAxis: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] } | undefined,
 ): import('./contracts').VegaReorderAxis | undefined {
     if (!reorderAxis) return undefined;
-    const scale = (vegaSpec.scales ?? []).find((candidate: any) => candidate.name === reorderAxis.axis);
+    const scale = findVegaAxisScale(vegaSpec, reorderAxis.axis);
     if (!scale || !['band', 'point', 'ordinal'].includes(scale.type)) {
         throw new Error(`Vega category reorder requires a top-level discrete "${reorderAxis.axis}" scale.`);
     }
     const signal = `__flint_reorder_${reorderAxis.axis}_domain`;
     vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: null }];
     scale.domainRaw = { signal };
-    return { ...reorderAxis, scale: reorderAxis.axis, signal };
+    return { ...reorderAxis, scale: scale.name, signal };
 }
 
 export function injectVegaNavigationSignals(
@@ -384,14 +419,14 @@ export function injectVegaNavigationSignals(
 ): Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> {
     const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
     for (const channel of channels) {
-        const scale = (vegaSpec.scales ?? []).find((candidate: any) => candidate.name === channel);
+        const scale = findVegaAxisScale(vegaSpec, channel);
         if (!scale || !['linear', 'log', 'time', 'utc'].includes(scale.type)) {
             throw new Error(`Vega navigation requires a top-level continuous "${channel}" scale.`);
         }
         const signal = `__flint_navigation_${channel}_domain`;
         vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: null }];
         scale.domainRaw = { signal };
-        result[channel] = { scale: channel, signal, type: scale.type };
+        result[channel] = { scale: scale.name, signal, type: scale.type };
     }
     return result;
 }

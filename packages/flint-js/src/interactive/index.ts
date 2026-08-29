@@ -1,10 +1,12 @@
 import type { ChartAssemblyInput } from '../core/types';
-import { normalizeInteractions } from './interactions';
+import { isCanvasInteraction, normalizeInteractions } from './interactions';
 import { mountInteractiveChartSurface } from './surface';
 import type { BuildInteractiveChartOptions, InteractiveChartSurface } from './types';
 
 export type {
     BuildInteractiveChartOptions,
+    ChartUpdateApplyOptions,
+    ChartUpdateComposition,
     InteractiveBackend,
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
@@ -17,8 +19,9 @@ export type {
 export type {
     AnnotationCandidate,
     AnnotationConnection,
-    AnnotationRenderPlan,
+    AnnotationSpec,
     ChartUpdate,
+    ChartUpdateOp,
     ChartUpdatePresenter,
     BrushOptions,
     AngularBrushOptions,
@@ -26,11 +29,12 @@ export type {
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
     ElementInteractionEvent,
-    ExternalInteractionEvent,
     FlintInteractionEventDetail,
     InteractionPhase,
     InteractionContext,
     InteractionDef,
+    CanvasInteractionDef,
+    ExternalInteractionDef,
     InteractionModifiers,
     NavigateOptions,
     NavigationAxes,
@@ -45,12 +49,12 @@ export type {
     RegionOperation,
     RenderHit,
     SelectOptions,
-    SelectionMode,
     SemanticElement,
     SemanticInteractionEvent,
     SemanticTarget,
-    NormalizedInteractionEvent,
-    UpdateOp,
+    PresentationSpec,
+    UpdateDomain,
+    UpdateTarget,
 } from './interactions';
 export type {
     CanvasInteractionAction,
@@ -58,30 +62,20 @@ export type {
     DomainCoordinate,
     DomainGeometry,
     PlotGeometry,
-} from './canvas-interaction';
+} from './language/events';
 export { toCanvasInteractionEvent } from './canvas-interaction';
 export type {
-    ChartUpdateRequest,
-    ChartUpdateRequestOp,
     ChartUpdateResult,
     SemanticTargetRef,
     SemanticTargetSelector,
-    UpdateTarget,
-} from './updates/request';
-export {
-    annotate,
-    clearAnnotation,
-    emphasize,
-    navigateViewport,
-    resetUpdate,
-} from './updates/request';
-export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, navigate, select } from './interactions';
-export type { InteractionEventSource, InteractionEventSourceContext } from './triggers';
+} from './language/updates';
+export { matchesSemanticTargetSelector } from './language/updates';
+export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, externalInteraction, isCanvasInteraction, isExternalInteraction, navigate, select } from './interactions';
+export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
     angularBrushTrigger,
     clickTrigger,
-    externalTrigger,
     hoverTrigger,
     navigationTrigger,
     rectangleTrigger,
@@ -95,8 +89,12 @@ export function buildInteractiveChart(
     input: ChartAssemblyInput,
     options: BuildInteractiveChartOptions,
 ): InteractiveChartSurface {
-    const { backend, renderer, focusOnClick, expressionInterpreter, background, className, ariaLabel, chartId } = options;
-    const interactions = normalizeInteractions(options.interactions, focusOnClick);
+    const {
+        backend, renderer, expressionInterpreter, background,
+        className, ariaLabel, chartId, updates,
+    } = options;
+    const interactions = normalizeInteractions(options.interactions);
+    const canvasInteractions = interactions.filter(isCanvasInteraction);
     if (backend !== 'vegalite' && interactions.length > 0) {
         return mountInteractiveChartSurface(
             container,
@@ -106,7 +104,7 @@ export function buildInteractiveChart(
                     throw new Error(`Semantic interactions are not supported by backend "${backend}".`);
                 },
             },
-            { className, ariaLabel, chartId },
+            { className, ariaLabel, chartId, updates },
         );
     }
     switch (backend) {
@@ -119,13 +117,15 @@ export function buildInteractiveChart(
                         const { createVegaInteractiveRenderer } = await import('../vegalite/interactive');
                         return createVegaInteractiveRenderer({
                             renderer,
-                            interactions,
+                            interactions: canvasInteractions,
+                            enableSemanticUpdates: canvasInteractions.length < interactions.length
+                                || (updates?.length ?? 0) > 0,
                             expressionInterpreter,
                             background,
                         }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'echarts':
             return mountInteractiveChartSurface(
@@ -137,7 +137,7 @@ export function buildInteractiveChart(
                         return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'chartjs':
             return mountInteractiveChartSurface(
@@ -149,7 +149,7 @@ export function buildInteractiveChart(
                         return createChartjsInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'plotly':
             return mountInteractiveChartSurface(
@@ -161,7 +161,7 @@ export function buildInteractiveChart(
                         return createPlotlyInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
     }
 }

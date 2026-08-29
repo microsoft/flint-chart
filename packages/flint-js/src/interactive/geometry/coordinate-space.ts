@@ -1,4 +1,4 @@
-import type { InteractionModifiers, PlotPoint } from '../triggers/events';
+import type { InteractionModifiers, PlotPoint } from '../language/events';
 
 export interface RendererCoordinateSpace {
     rect: DOMRect;
@@ -12,6 +12,20 @@ export interface RendererCoordinateSpace {
 
 function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Converts a rendered root-frame matrix into a plot origin expressed in the
+ * renderer's own units. `getCTM()` reports CSS pixels, so a CSS-scaled SVG
+ * would otherwise report an origin that disagrees with `logicalWidth`.
+ */
+export function rendererPlotOrigin(
+    matrix: { a: number; e: number; f: number } | null | undefined,
+    viewOrigin: PlotPoint,
+): PlotPoint {
+    if (!matrix) return viewOrigin;
+    const scale = matrix.a || 1;
+    return { x: matrix.e / scale, y: matrix.f / scale };
 }
 
 export function interactionModifiers(event: MouseEvent | PointerEvent): InteractionModifiers {

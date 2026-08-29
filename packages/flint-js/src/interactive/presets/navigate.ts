@@ -1,5 +1,5 @@
 import type {
-    InteractionDef,
+    CanvasInteractionDef,
     NavigateOptions,
     NavigationDomainGuard,
 } from '../interactions';
@@ -15,7 +15,7 @@ function normalizedFraction(value: number | undefined, fallback: number, min: nu
     return Number.isFinite(value) ? Math.max(min, value!) : fallback;
 }
 
-export function createNavigateInteraction(options: NavigateOptions = {}): InteractionDef {
+export function createNavigateInteraction(options: NavigateOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'navigate';
     const domainGuard = {
             minVisibleFraction: normalizedFraction(
@@ -39,29 +39,25 @@ export function createNavigateInteraction(options: NavigateOptions = {}): Intera
     }
     return {
         id,
+        navigationDomainGuard: domainGuard,
         eventSource: navigationTrigger({
             axes: options.axes ?? 'available',
             pan: options.pan ?? true,
             zoom: options.zoom ?? true,
             wheelSensitivity: options.wheelSensitivity ?? 0.002,
         }),
-        handle(event) {
-            if (event.geometry.plot?.kind !== 'viewport' || !event.operation
-                || !['pan', 'zoom', 'reset'].includes(event.operation)) return null;
-            const operation = event.operation as 'pan' | 'zoom' | 'reset';
-            return {
-                updateId: id,
+        handle(event, context) {
+            const viewport = event.geometry.plot;
+            if (!context.resolveNavigation || viewport?.kind !== 'viewport' || !event.operation) return null;
+            const op = context.resolveNavigation({
                 phase: event.phase,
-                ops: [{
-                    op: 'navigate-viewport',
-                    operation,
-                    axes: event.geometry.plot.axes,
-                    delta: event.geometry.plot.delta,
-                    factor: event.geometry.plot.factor,
-                    anchor: event.geometry.plot.anchor,
-                    domainGuard,
-                }],
-            };
+                operation: event.operation as 'pan' | 'zoom' | 'reset',
+                axes: viewport.axes,
+                delta: viewport.delta,
+                factor: viewport.factor,
+                anchor: viewport.anchor,
+            }, domainGuard);
+            return op ? { id, ops: [op] } : null;
         },
     };
 }

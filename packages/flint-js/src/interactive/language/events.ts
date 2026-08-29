@@ -69,20 +69,6 @@ export interface NavigationInteractionEvent {
     modifiers?: InteractionModifiers;
 }
 
-export interface ExternalInteractionEvent<TPayload = unknown> {
-    type: 'external';
-    source: string;
-    phase: InteractionPhase;
-    payload: TPayload;
-    transactionId?: string;
-}
-
-export type NormalizedInteractionEvent<TPayload = unknown> =
-    | ElementInteractionEvent
-    | RegionInteractionEvent
-    | NavigationInteractionEvent
-    | ExternalInteractionEvent<TPayload>;
-
 export interface SemanticInteractionEvent {
     type: 'semantic';
     source: 'element' | 'region';
@@ -92,5 +78,67 @@ export interface SemanticInteractionEvent {
     region?: PlotRect | PlotPolygon | PlotAngularSector;
     axis?: RegionAxis;
     operation?: RegionOperation;
+    modifiers?: InteractionModifiers;
+}
+
+export type CanvasInteractionAction =
+    | 'hover-element'
+    | 'click-element'
+    | 'hover-legend'
+    | 'click-legend'
+    | 'hover-axis'
+    | 'click-axis'
+    | 'hover-facet'
+    | 'click-facet'
+    | 'hover-annotation'
+    | 'click-annotation'
+    | 'drag-element'
+    | 'select-region'
+    | 'brush-x'
+    | 'brush-y'
+    | 'brush-angle'
+    | 'pan-viewport'
+    | 'zoom-viewport'
+    | 'reset-viewport'
+    | 'inspect-x'
+    | 'inspect-y'
+    | 'inspect-nearest'
+    | 'select-lasso'
+    | 'focus-element'
+    | 'activate-element';
+
+export type PlotGeometry =
+    | { kind: 'point'; point: PlotPoint }
+    | { kind: 'drag'; start: PlotPoint; current: PlotPoint; delta: PlotPoint; axis?: 'x' | 'y' }
+    | { kind: 'rect'; rect: PlotRect; axis: Exclude<RegionAxis, 'angle'> }
+    | { kind: 'polygon'; polygon: PlotPolygon }
+    | { kind: 'angular-sector'; sector: PlotAngularSector }
+    | {
+        kind: 'viewport';
+        axes: 'x' | 'y' | 'xy';
+        delta?: PlotPoint;
+        factor?: number;
+        anchor?: PlotPoint;
+    };
+
+export interface DomainGeometry {
+    x?: DomainCoordinate;
+    y?: DomainCoordinate;
+}
+
+export type DomainCoordinate =
+    | { kind: 'value'; value: unknown }
+    | { kind: 'interval'; start: unknown; end: unknown };
+
+export interface CanvasInteractionEvent {
+    action: CanvasInteractionAction;
+    phase: InteractionPhase;
+    operation?: RegionOperation | 'pan' | 'zoom' | 'reset';
+    geometry: {
+        plot?: PlotGeometry;
+        domain?: DomainGeometry;
+    };
+    target: SemanticTarget | null;
+    dropTarget?: SemanticTarget | null;
     modifiers?: InteractionModifiers;
 }

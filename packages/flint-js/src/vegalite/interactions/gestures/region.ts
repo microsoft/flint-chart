@@ -1,5 +1,5 @@
 import type {
-    InteractionDef,
+    CanvasInteractionDef,
     PlotAngularSector,
     PlotPoint,
     RenderHit,
@@ -33,7 +33,7 @@ import {
 export interface VegaRegionGestureOptions {
     view: any;
     container: HTMLElement;
-    interaction: InteractionDef;
+    interaction: CanvasInteractionDef;
     getSelected(): ReadonlySet<string>;
     setSelected(selected: Set<string>): void;
     coordinateSpace(): RendererCoordinateSpace;
@@ -52,6 +52,7 @@ export interface VegaRegionGestureOptions {
 }
 
 export interface VegaRegionGestureController {
+    sync(): void;
     destroy(): void;
 }
 
@@ -357,6 +358,9 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     container.addEventListener('keydown', keyDown);
 
     return {
+        sync(): void {
+            if (statefulBrush && activeInterval) showInterval(activeInterval);
+        },
         destroy(): void {
             container.removeEventListener('pointerdown', pointerDown, true);
             container.removeEventListener('pointermove', pointerMove, true);

@@ -10,7 +10,7 @@ import {
     MUTED_HOVER_STROKE,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 /** Semantic types that indicate a rank-like field */
 const RANK_SEMANTIC_TYPES = new Set(['Rank', 'Score', 'Level']);

@@ -10,7 +10,7 @@ import {
     targetFromHits,
 } from '../../core/interaction-semantics';
 import type { AnnotationCandidate } from '../../interactive/interactions';
-import { presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/updates/annotation';
+import { presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
 
@@ -38,6 +38,7 @@ export const waterfallChartDef: ChartTemplateDef = {
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     navigation: {},
+    reorder: { markTypes: ['rect'] },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
@@ -47,8 +48,10 @@ export const waterfallChartDef: ChartTemplateDef = {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
             categoryField,
             seriesField,
+            resolveGroupValue: (element) => element.records?.[0]?.__wf_color,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['bar'],
+            annotationMarkType: 'rect',
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
                 const legendField = event.legendField ?? seriesField;
@@ -63,7 +66,6 @@ export const waterfallChartDef: ChartTemplateDef = {
             presentUpdate: presentAnnotationUpdate(
                 waterfallAnnotationCandidates,
                 rangeAnnotationText('__wf_prev_sum', '__wf_sum'),
-                'rect',
             ),
         };
     },

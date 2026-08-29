@@ -3,7 +3,7 @@ import type {
   InteractionDef,
   InteractiveChartSurface,
 } from 'flint-chart/interactive';
-import { clickTrigger, emphasize, resetUpdate } from 'flint-chart/interactive';
+import { externalInteraction } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
   countriesFixture,
@@ -219,10 +219,20 @@ const demos: ExternalDemo[] = [
 function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const [lastPayload, setLastPayload] = useState<MatchPayload | null>(null);
-  const interactions = useMemo<InteractionDef[]>(() => [{
-    id: `${demo.id}-semantic-index`,
-    eventSource: clickTrigger,
-  }], [demo.id]);
+  const interactionId = `${demo.id}-control`;
+  const interactions = useMemo<InteractionDef[]>(() => [externalInteraction<MatchPayload>({
+    id: interactionId,
+    handle: (payload) => ({
+      id: interactionId,
+      ops: payload.match
+        ? [{
+            op: 'set-presentation',
+            targets: [{ select: { key: selectorKey(payload.match) } }],
+            value: { state: 'emphasized', mutedOpacity: 0.25 },
+          }]
+        : [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+    }),
+  })], [interactionId]);
   const handleSurface = useCallback((surface: InteractiveChartSurface | null) => {
     surfaceRef.current = surface;
   }, []);
@@ -230,13 +240,7 @@ function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
     setLastPayload(payload);
     const surface = surfaceRef.current;
     if (!surface) return;
-    void surface.applyUpdate({
-      updateId: `${demo.id}-control`,
-      phase: 'commit',
-      ops: payload.match
-        ? [emphasize({ targets: [{ select: { key: selectorKey(payload.match) } }] })]
-        : [resetUpdate()],
-    });
+    void surface.dispatch(interactionId, payload);
   };
 
   return (

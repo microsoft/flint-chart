@@ -33,7 +33,10 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { resolveSeriesTarget } from '../../core/interaction-semantics';
-import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 import { detectBandedAxisForceDiscrete } from '../../core/axis-detection';
 import { planBandDodge } from '../../core/band-dodge';
 
@@ -149,6 +152,7 @@ export const violinPlotDef: ChartTemplateDef = {
     markCognitiveChannel: 'area',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = resolvedEncodings.x?.field;
+        const measureField = resolvedEncodings.y?.field;
         const colorField = resolvedEncodings.color?.field;
         const rowField = resolvedEncodings.row?.field;
         const seriesField = colorField ?? categoryField;
@@ -161,7 +165,10 @@ export const violinPlotDef: ChartTemplateDef = {
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
-            presentUpdate: suppressAnnotationUpdate,
+            presentUpdate: presentAnnotationUpdate(
+                () => ({ connection: 'segment-midpoint', maxDistance: 120, maxWidth: 120 }),
+                categoryValueAnnotationText(categoryField, measureField),
+            ),
         };
     },
     declareLayoutMode: (cs, table) => {

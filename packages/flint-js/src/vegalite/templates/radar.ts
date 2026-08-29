@@ -3,7 +3,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { resolveSeriesTarget } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 /**
  * Radar / Spider Chart

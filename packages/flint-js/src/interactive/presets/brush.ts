@@ -1,9 +1,9 @@
-import type { BrushOptions, InteractionDef } from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from '../updates/emphasis';
+import type { BrushOptions, CanvasInteractionDef } from '../interactions';
+import { emphasisUpdate, normalizedOpacity } from './utils';
 import { axisBrushTrigger } from '../triggers';
 import { expandRangedDotTarget } from './ranged-dot-target';
 
-export function createBrushInteraction(axis: 'x' | 'y', options: BrushOptions = {}): InteractionDef {
+export function createBrushInteraction(axis: 'x' | 'y', options: BrushOptions = {}): CanvasInteractionDef {
     const id = options.id ?? `brush-${axis}`;
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
@@ -13,7 +13,7 @@ export function createBrushInteraction(axis: 'x' | 'y', options: BrushOptions = 
         handle(event, context) {
             if (event.action !== `brush-${axis}` || event.phase === 'start' || event.phase === 'cancel') return null;
             const target = expandRangedDotTarget(event.target, context);
-            return emphasisUpdate(id, event, target, dimOpacity);
+            return emphasisUpdate(id, event, target, dimOpacity, context);
         },
-    } as InteractionDef & { axis: 'x' | 'y' };
+    } as CanvasInteractionDef & { axis: 'x' | 'y' };
 }

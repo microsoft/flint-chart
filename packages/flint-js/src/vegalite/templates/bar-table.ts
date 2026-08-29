@@ -10,7 +10,11 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { barAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    barAnnotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/presentation/annotation';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -47,6 +51,7 @@ export const barTableDef: ChartTemplateDef = {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const valueField = resolvedEncodings.x?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color']),
             categoryField,
@@ -61,7 +66,10 @@ export const barTableDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'bar-table-row' });
             },
-            presentUpdate: presentAnnotationUpdate(() => barAnnotationCandidates('x')),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates('x'),
+                valueAnnotationText(valueField),
+            ),
         };
     },
     suppressValueLabels: true,

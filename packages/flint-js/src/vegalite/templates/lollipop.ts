@@ -13,7 +13,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { lollipopAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import { lollipopAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const lollipopChartDef: ChartTemplateDef = {
     chart: "Lollipop Chart",

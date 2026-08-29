@@ -31,7 +31,7 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/updates/annotation';
+import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/presentation/annotation';
 import { defaultBuildEncodings, setMarkProp } from './utils';
 
 const interpolateConfigProperty: ChartPropertyDef = {

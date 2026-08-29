@@ -1,6 +1,6 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
-import type { InteractionDef } from '../interactive/interactions';
+import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
 import type { InteractiveRendererAdapter, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import {
@@ -18,6 +18,7 @@ import { Handler } from 'vega-tooltip';
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
     interactions?: readonly InteractionDef[];
+    enableSemanticUpdates?: boolean;
     expressionInterpreter?: unknown;
     background?: string;
 }
@@ -63,10 +64,15 @@ export function createVegaInteractiveRenderer(
             const vlSpec = assembleVegaLite(firstInput) as any;
             applyViewportSorts(vlSpec, viewports);
             const interactions = options.interactions ?? [];
-            const interactionPlan = addVegaLiteInteractions(vlSpec, interactions);
+            const canvasInteractions = interactions.filter(isCanvasInteraction);
+            const interactionPlan = addVegaLiteInteractions(
+                vlSpec,
+                interactions,
+                options.enableSemanticUpdates,
+            );
             const vegaSpec = compile(vlSpec).spec as any;
             if (interactionPlan) {
-                if (interactions.some((interaction) => interaction.eventSource.type !== 'navigation')) {
+                if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
                 }
                 interactionPlan.navigationAxes = injectVegaNavigationSignals(
@@ -137,11 +143,14 @@ export function createVegaInteractiveRenderer(
 
             return {
                 viewports,
-                dispatchInteraction(event) {
-                    return interactionController?.dispatch(event);
+                getInteractionContext() {
+                    return interactionController?.getInteractionContext() ?? {
+                        chartType: input.chart_spec.chartType,
+                        selected: [],
+                    };
                 },
-                async applyUpdate(update) {
-                    if (interactionController) return interactionController.applyUpdate(update);
+                async applyUpdate(update, options) {
+                    if (interactionController) return interactionController.applyUpdate(update, options);
                     return {
                         status: 'unsupported',
                         resolvedTargets: 0,
@@ -149,8 +158,20 @@ export function createVegaInteractiveRenderer(
                         unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
                     };
                 },
-                async clearUpdate(updateId) {
-                    await interactionController?.clearUpdate(updateId);
+                async setUpdates(updates) {
+                    if (interactionController) return interactionController.setUpdates(updates);
+                    return updates.map((update) => ({
+                        status: 'unsupported' as const,
+                        resolvedTargets: 0,
+                        unresolvedTargets: [],
+                        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+                    }));
+                },
+                async clearUpdate(id) {
+                    await interactionController?.clearUpdate(id);
+                },
+                refresh() {
+                    interactionController?.refresh();
                 },
                 getViewportGeometry(channel) {
                     const [left, top] = view.origin();

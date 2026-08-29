@@ -1,5 +1,5 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
-import type { ChartUpdatePresenter } from '../../interactive/interactions';
+import type { ChartUpdatePresenter, InteractionContext } from '../../interactive/interactions';
 
 export interface HoverStyle {
     fill?: string;
@@ -33,6 +33,7 @@ export interface VegaReorderAxis {
     axis: 'x' | 'y';
     field: string;
     includeConnectiveMarks?: boolean;
+    markTypes?: readonly string[];
     scale: string;
     signal: string;
 }
@@ -41,7 +42,11 @@ export interface VegaInteractionPlan {
     fields: readonly string[];
     categoryField?: string;
     seriesField?: string;
+    resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Readonly<Record<string, string>>;
+    annotationMarkType?: string;
+    /** The compiled spec carries the semantic selection stores. */
+    semanticStores?: boolean;
     dimOpacity: number;
     renderHoverStyles?: Readonly<Record<string, HoverStyle>>;
     renderSelectionStyles?: Readonly<Record<string, SelectionStyle>>;

@@ -7,7 +7,11 @@ import {
     firstDiscreteEncodingField,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { suppressAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 /**
  * Silverman/Scott rule-of-thumb bandwidth, matching vega-statistics' bandwidth.js
@@ -83,7 +87,10 @@ export const densityPlotDef: ChartTemplateDef = {
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
-            presentUpdate: suppressAnnotationUpdate,
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint'),
+                categoryValueAnnotationText('value', 'density'),
+            ),
         };
     },
     instantiate: (spec, ctx) => {

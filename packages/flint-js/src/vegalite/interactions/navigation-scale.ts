@@ -1,7 +1,10 @@
-import type { NavigationDomainGuard, UpdateOp } from '../../interactive/interactions';
+import type {
+    NavigationDomainGuard,
+    NavigationRequest,
+    NavigationUpdate,
+} from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
 
-type NavigationUpdate = Extract<UpdateOp, { op: 'navigate-viewport' }>;
 type Axis = 'x' | 'y';
 
 interface AxisState extends VegaNavigationAxis {
@@ -58,7 +61,8 @@ export function guardNavigationDomain(
 }
 
 export interface VegaNavigationController {
-    apply(update: NavigationUpdate): Promise<void>;
+    resolve(event: NavigationRequest, guard: NavigationDomainGuard): NavigationUpdate | null;
+    apply(update: NavigationUpdate): boolean;
 }
 
 export function createVegaNavigationController(
@@ -69,41 +73,19 @@ export function createVegaNavigationController(
         const domain = view.scale(config.scale).domain();
         return [axis, { ...config, initialDomain: [domain[0], domain[domain.length - 1]] }];
     })) as Partial<Record<Axis, AxisState>>;
-    let gestureSnapshot: Partial<Record<Axis, [unknown, unknown]>> | undefined;
-
     const affectedAxes = (axesValue: NavigationUpdate['axes']): Axis[] => {
         const requested: Axis[] = axesValue === 'xy' ? ['x', 'y'] : [axesValue];
         return requested.filter((axis) => states[axis]);
     };
 
     return {
-        async apply(update): Promise<void> {
-            const activeAxes = affectedAxes(update.axes);
-            if (update.phase === 'start') {
-                gestureSnapshot = Object.fromEntries(activeAxes.map((axis) => {
-                    const state = states[axis]!;
-                    const domain = view.scale(state.scale).domain();
-                    return [axis, [domain[0], domain[domain.length - 1]]];
-                }));
-                return;
-            }
-
-            let changed = false;
-            for (const axis of activeAxes) {
+        resolve(event, guard): NavigationUpdate | null {
+            if (event.phase === 'start' || event.phase === 'cancel'
+                || (event.phase === 'commit' && event.operation === 'pan' && !event.delta)) return null;
+            if (event.operation === 'reset') return { op: 'set-viewport', axes: event.axes, value: {} };
+            const value: { x?: [unknown, unknown]; y?: [unknown, unknown] } = {};
+            for (const axis of affectedAxes(event.axes)) {
                 const state = states[axis]!;
-                if (update.phase === 'cancel') {
-                    const snapshot = gestureSnapshot?.[axis];
-                    if (snapshot) {
-                        view.signal(state.signal, snapshot);
-                        changed = true;
-                    }
-                    continue;
-                }
-                if (update.operation === 'reset') {
-                    view.signal(state.signal, null);
-                    changed = true;
-                    continue;
-                }
                 const scale = view.scale(state.scale);
                 const domain = scale.domain();
                 const current: [unknown, unknown] = [domain[0], domain[domain.length - 1]];
@@ -112,29 +94,38 @@ export function createVegaNavigationController(
                 const rangeEnd = Number(range[range.length - 1]);
                 const rangeExtent = Math.abs(rangeEnd - rangeStart);
                 let proposed: [unknown, unknown] | undefined;
-                if (update.operation === 'pan' && update.delta) {
-                    const fraction = axis === 'x' ? update.delta.x : update.delta.y;
+                if (event.operation === 'pan' && event.delta) {
+                    const fraction = axis === 'x' ? event.delta.x : event.delta.y;
                     const pixelDelta = fraction * rangeExtent;
                     proposed = [scale.invert(rangeStart - pixelDelta), scale.invert(rangeEnd - pixelDelta)];
-                } else if (update.operation === 'zoom' && update.factor && update.factor > 0 && update.anchor) {
-                    const fraction = axis === 'x' ? update.anchor.x : update.anchor.y;
+                } else if (event.operation === 'zoom' && event.factor && event.factor > 0 && event.anchor) {
+                    const fraction = axis === 'x' ? event.anchor.x : event.anchor.y;
                     const anchor = Math.min(rangeStart, rangeEnd) + fraction * rangeExtent;
                     proposed = [
-                        scale.invert(anchor + (rangeStart - anchor) / update.factor),
-                        scale.invert(anchor + (rangeEnd - anchor) / update.factor),
+                        scale.invert(anchor + (rangeStart - anchor) / event.factor),
+                        scale.invert(anchor + (rangeEnd - anchor) / event.factor),
                     ];
                 }
                 if (!proposed) continue;
-                view.signal(state.signal, guardNavigationDomain(
+                value[axis] = guardNavigationDomain(
                     proposed,
                     state.initialDomain,
                     state.type,
-                    update.domainGuard,
-                ));
+                    guard,
+                );
+            }
+            return Object.keys(value).length > 0
+                ? { op: 'set-viewport', axes: event.axes, value }
+                : null;
+        },
+        apply(update): boolean {
+            let changed = false;
+            for (const axis of affectedAxes(update.axes)) {
+                const state = states[axis]!;
+                view.signal(state.signal, update.value[axis] ?? null);
                 changed = true;
             }
-            if (update.phase === 'commit' || update.phase === 'cancel') gestureSnapshot = undefined;
-            if (changed) await view.runAsync();
+            return changed;
         },
     };
 }

@@ -905,6 +905,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
                         ...(chartTemplate.reorder && chartTemplate.reorder.includeConnectiveMarks
                             ? { includeConnectiveMarks: true }
                             : {}),
+                        ...(chartTemplate.reorder && chartTemplate.reorder.markTypes
+                            ? { markTypes: chartTemplate.reorder.markTypes }
+                            : {}),
                     }]
                     : [];
             })

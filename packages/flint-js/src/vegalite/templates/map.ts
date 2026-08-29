@@ -14,7 +14,11 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/updates/annotation';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 const mapProjections = [
     { value: "mercator", label: "Mercator" },
@@ -319,7 +323,10 @@ export const choroplethDef: ChartTemplateDef = {
                 kind: 'region',
                 role: 'geographic-region',
             }),
-            presentUpdate: presentAnnotationUpdate(() => annotationCandidates('center')),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('center'),
+                categoryValueAnnotationText(idField, colorField),
+            ),
             legendFields: colorField ? { color: colorField } : undefined,
         };
     },

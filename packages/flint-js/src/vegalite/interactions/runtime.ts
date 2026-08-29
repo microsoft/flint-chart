@@ -1,27 +1,28 @@
 import { changeset } from 'vega';
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type {
+    CanvasInteractionDef,
     ChartUpdate,
+    ChartUpdateOp,
     ChartUpdatePresenter,
-    ExternalInteractionEvent,
     FlintInteractionEventDetail,
     InteractionDef,
     NavigationInteractionEvent,
-    NormalizedInteractionEvent,
     RenderHit,
     SemanticTarget,
     SemanticInteractionEvent,
 } from '../../interactive/interactions';
+import { isCanvasInteraction } from '../../interactive/interactions';
 import type {
-    ChartUpdateRequest,
     ChartUpdateResult,
+    SemanticTargetRef,
     UpdateTarget,
-} from '../../interactive/updates/request';
-import { matchesSemanticTargetSelector } from '../../interactive/updates/request';
-import { applySelectionMode } from '../../interactive/updates/emphasis';
-import { ScopedSelectionState } from '../../interactive/selection-state';
+} from '../../interactive/language/updates';
+import { matchesSemanticTargetSelector } from '../../interactive/language/updates';
 import type { VegaInteractionPlan } from './contracts';
-import { toCanvasInteractionEvent, type CanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import type { CanvasInteractionEvent } from '../../interactive/language/events';
+import type { ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
@@ -30,6 +31,7 @@ import {
     normalizeVegaElementEvent,
     pathHoverPresentationKey,
     renderHit,
+    rendererPlotOrigin,
     sceneItems,
     type RendererCoordinateSpace,
 } from './hit-adapter';
@@ -48,6 +50,35 @@ import {
 } from './stores';
 
 export { mergeContiguousSelectionBounds } from './presentation/focus-overlay';
+
+export function resolveSupportedOperation(
+    op: ChartUpdateOp,
+    plan: Pick<VegaInteractionPlan, 'navigationAxes' | 'reorderAxis' | 'reorderAxes'>,
+): { op: ChartUpdateOp | null; unsupported: boolean } {
+    if (op.op === 'set-viewport') {
+        const requestedAxes = op.axes === 'xy' ? ['x', 'y'] as const : [op.axes];
+        const supportedAxes = requestedAxes.filter((axis) => plan.navigationAxes?.[axis]);
+        if (supportedAxes.length === 0) return { op: null, unsupported: true };
+        const axes = supportedAxes.length === 2 ? 'xy' : supportedAxes[0];
+        return {
+            op: {
+                ...op,
+                axes,
+                value: Object.fromEntries(supportedAxes
+                    .filter((axis) => op.value[axis] !== undefined)
+                    .map((axis) => [axis, op.value[axis]])),
+            },
+            unsupported: supportedAxes.length < requestedAxes.length,
+        };
+    }
+    if (op.op === 'set-order') {
+        const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+        const supported = op.scope === 'category'
+            && reorderAxes.some((axis) => axis.field === op.field);
+        return { op: supported ? op : null, unsupported: !supported };
+    }
+    return { op, unsupported: false };
+}
 
 export function nearestReorderHit(
     items: readonly any[],
@@ -73,16 +104,18 @@ export function nearestReorderHit(
 }
 
 export interface VegaInteractionController {
-    dispatch(event: ExternalInteractionEvent): Promise<void>;
-    applyUpdate(update: ChartUpdateRequest): Promise<ChartUpdateResult>;
-    clearUpdate(updateId: string): Promise<void>;
+    getInteractionContext(): import('../../interactive/interactions').InteractionContext;
+    applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
+    setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
+    clearUpdate(id: string): Promise<void>;
+    refresh(): void;
     destroy(): void;
 }
 
 export function interactionsForHoverPresentation(
-    clickInteractions: readonly InteractionDef[],
-    hoverInteractions: readonly InteractionDef[],
-): InteractionDef[] {
+    clickInteractions: readonly CanvasInteractionDef[],
+    hoverInteractions: readonly CanvasInteractionDef[],
+): CanvasInteractionDef[] {
     return [
         ...hoverInteractions,
         ...clickInteractions.filter((interaction) => interaction.handle),
@@ -100,32 +133,33 @@ export function mountVegaInteractions(
     resolve: ChartInteractionResolver | undefined,
     presentUpdate: ChartUpdatePresenter,
 ): VegaInteractionController {
+    const canvasInteractions = interactions.filter(isCanvasInteraction);
     const clickInteractions = resolve
-        ? interactions.filter((interaction) => interaction.eventSource.gesture === 'click')
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'click')
         : [];
     const hoverInteractions = resolve
-        ? interactions.filter((interaction) => interaction.eventSource.gesture === 'hover')
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'hover')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
         clickInteractions,
         hoverInteractions,
     );
     const regionInteraction = resolve
-        ? interactions.find((interaction) => interaction.eventSource.gesture === 'drag')
+        ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag')
         : undefined;
-    const navigationInteraction = interactions.find(
+    const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
     const elementDragInteraction = resolve
-        ? interactions.find((interaction) => interaction.eventSource.gesture === 'drag-element')
+        ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag-element')
         : undefined;
-    const selectionState = new ScopedSelectionState();
+    const retainedUpdates = new Map<string, ChartUpdate>();
+    const previewUpdates = new Map<string, ChartUpdate>();
+    const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
     let selectedLegend: { channel: string; value: unknown } | null = null;
     let hoveredPathKeys = new Set<string>();
     let suppressClick = false;
     let regionDragging = false;
-    let syncRunning = false;
-    let syncRequested = false;
 
     const containerLayoutSize = (): { width: number; height: number } => {
         const rect = container.getBoundingClientRect();
@@ -144,10 +178,11 @@ export function mountVegaInteractions(
         // final plot translation. The rendered root-frame CTM is authoritative.
         const rootFrame = svg?.querySelector<SVGGraphicsElement>('.mark-group.role-frame.root');
         const rootMatrix = rootFrame?.getCTM();
-        const originX = rootMatrix?.e ?? viewOriginX;
-        const originY = rootMatrix?.f ?? viewOriginY;
         const logicalWidth = svg?.viewBox.baseVal.width || rect.width;
         const logicalHeight = svg?.viewBox.baseVal.height || rect.height;
+        const origin = rendererPlotOrigin(rootMatrix, { x: viewOriginX, y: viewOriginY });
+        const originX = origin.x;
+        const originY = origin.y;
         const viewWidth = view.width();
         const viewHeight = view.height();
         return {
@@ -162,7 +197,13 @@ export function mountVegaInteractions(
     };
 
     const focusOverlay = createFocusOverlay({ view, container, plan, coordinateSpace, containerLayoutSize });
-    const annotationOverlay = createAnnotationOverlay({ view, container, coordinateSpace, containerLayoutSize });
+    const annotationOverlay = createAnnotationOverlay({
+        view,
+        container,
+        coordinateSpace,
+        containerLayoutSize,
+        annotationMarkType: plan.annotationMarkType,
+    });
     const dragReorderOverlay = createDragReorderOverlay({
         view, container,
         reorderAxes: plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
@@ -174,12 +215,19 @@ export function mountVegaInteractions(
         isActive: (axis) => Array.isArray(view.signal(axis.signal)),
         reset: (axis) => {
             dragReorderOverlay.clear();
-            view.signal(axis.signal, null);
-            void view.runAsync().then(() => reorderResetControls.layout());
+            for (const layer of [retainedUpdates, previewUpdates]) {
+                for (const [id, update] of layer) {
+                    const ops = update.ops.filter((op) =>
+                        op.op !== 'set-order' || op.scope !== 'category' || op.field !== axis.field);
+                    if (ops.length > 0) layer.set(id, { id, ops });
+                    else layer.delete(id);
+                }
+            }
+            void renderUpdates();
         },
     });
     const navigationController = createVegaNavigationController(view, plan.navigationAxes ?? {});
-    const selectedKeys = (): Set<string> => selectionState.combined();
+    const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
     const clearAnnotation = (): void => annotationOverlay.clear();
     renderPathFocus();
@@ -194,11 +242,16 @@ export function mountVegaInteractions(
         seriesField: plan.seriesField,
     });
     const context = (includeAvailable = true) => {
-        const hits = allHits();
-        const available = includeAvailable ? resolve?.(
-            { gesture: 'rectangle', role: 'region', hits },
-            resolveContext(hits),
-        )?.elements : undefined;
+        // Navigation resolves per gesture frame, so the scenegraph scan stays behind this flag.
+        const available = includeAvailable
+            ? (() => {
+                const hits = allHits();
+                return resolve?.(
+                    { gesture: 'rectangle', role: 'region', hits },
+                    resolveContext(hits),
+                )?.elements;
+            })()
+            : undefined;
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         const currentReorderAxes = reorderAxes.map((axis) => {
             const signaledOrder = view.signal(axis.signal);
@@ -214,8 +267,10 @@ export function mountVegaInteractions(
             : undefined;
         return {
             chartType,
-            selected: [...selectedKeys()].map((key) => ({ key: { [INTERACTION_KEY]: key } })),
+            selected: [...selectedElements.values()],
             available,
+            resolveGroupValue: plan.resolveGroupValue,
+            resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
             seriesField: plan.seriesField,
             categoryAxis: reorderAxis?.axis,
@@ -223,162 +278,185 @@ export function mountVegaInteractions(
             reorderAxes: currentReorderAxes,
         };
     };
-    const sync = async (): Promise<void> => {
-        syncRequested = true;
-        if (syncRunning) return;
-        syncRunning = true;
-        try {
-            while (syncRequested) {
-                syncRequested = false;
-                const keys = [...selectedKeys()];
-                view.change(
-                    INTERACTION_STORE,
-                    changeset().remove(() => true).insert(keys.map((key) => ({ key }))),
-                );
-                view.change(
-                    LEGEND_SELECTION_STORE,
-                    changeset().remove(() => true).insert(selectedLegend ? [selectedLegend] : []),
-                );
-                await view.runAsync();
-                renderPathFocus();
-            }
-        } finally {
-            syncRunning = false;
-        }
-    };
-    const applyUpdate = async (
-        update: ChartUpdate | null,
-        legendSelection: { channel: string; value: unknown } | null = null,
-        updateId?: string,
-    ): Promise<void> => {
-        if (!update) return;
-        let requiresSemanticSync = false;
-        for (const op of update.ops) {
-            if (op.op === 'reset') {
-                if (updateId) selectionState.clear(updateId);
-                else {
-                    selectionState.clear();
-                    selectedLegend = null;
-                    clearAnnotation();
-                }
-                requiresSemanticSync = true;
-            } else if (op.op === 'clear-annotation') {
-                clearAnnotation();
-            } else if (op.op === 'render-annotation') {
-                annotationOverlay.render(op.element, op.annotation);
-            } else if (op.op === 'emphasize') {
-                requiresSemanticSync = true;
-                const keys = op.elements
-                    .map((element) => element.key[INTERACTION_KEY])
-                    .filter((key): key is string => typeof key === 'string');
-                let targetSelection = new Set(selectionState.get(updateId));
-                targetSelection = applySelectionMode(targetSelection, keys, op.mode);
-                selectionState.set(targetSelection, updateId);
-                const combined = selectedKeys();
-                selectedLegend = legendSelection && keys.some((key) => combined.has(key))
-                    ? legendSelection
-                    : null;
-            } else if (op.op === 'navigate-viewport') {
-                await navigationController.apply(op);
-            } else if (op.op === 'reorder-category') {
-                const reorderAxis = (plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []))
-                    .find((axis) => axis.axis === op.axis && axis.field === op.field);
-                if (reorderAxis && reorderAxis.axis === op.axis && reorderAxis.field === op.field) {
-                    view.signal(reorderAxis.signal, op.orderedValues);
-                    await view.runAsync();
-                    renderPathFocus();
-                    reorderResetControls.layout();
-                }
-            }
-        }
-        if (requiresSemanticSync) await sync();
-    };
-
-    const resolveUpdateTarget = (target: UpdateTarget): readonly import('../../core/interaction-semantics').SemanticElement[] => {
+    const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
         if (!('select' in target)) {
             const renderedKeys = new Set(allHits()
                 .map((hit) => hit.datum[INTERACTION_KEY])
                 .filter((key): key is string => typeof key === 'string'));
-            return target.elements.filter((element) => {
+            const elements = target.elements.filter((element) => {
                 const key = element.key[INTERACTION_KEY];
                 return typeof key === 'string' && renderedKeys.has(key);
             });
+            return elements.length > 0 ? { ...target, elements } : null;
         }
 
         const entries = Object.entries(target.select.key);
-        if (entries.length === 0) return [];
+        if (entries.length === 0) return null;
         const hits = allHits().filter((hit) => matchesSemanticTargetSelector(target, plan.fields, hit.datum));
-        if (hits.length === 0 || !resolve) return [];
+        if (hits.length === 0 || !resolve) return null;
         const resolved = resolve({
             gesture: 'rectangle',
             role: target.select.visual?.role ?? 'external-selection',
             hits,
         }, resolveContext(hits));
-        if (!resolved) return [];
-        if (target.select.visual?.kind && target.select.visual.kind !== resolved.visual.kind) return [];
-        if (target.select.visual?.role && target.select.visual.role !== resolved.visual.role) return [];
-        return resolved.elements;
+        if (!resolved) return null;
+        if (target.select.visual?.kind && target.select.visual.kind !== resolved.visual.kind) return null;
+        if (target.select.visual?.role && target.select.visual.role !== resolved.visual.role) return null;
+        return resolved;
     };
 
-    const applyRequestedUpdate = async (
-        request: ChartUpdateRequest,
-        legendSelection: { channel: string; value: unknown } | null = null,
-    ): Promise<ChartUpdateResult> => {
+    const resolveUpdate = (
+        update: ChartUpdate,
+    ): { update: ChartUpdate; result: ChartUpdateResult } => {
         const unresolvedTargets: UpdateTarget[] = [];
+        const unsupportedOps: ChartUpdateOp['op'][] = [];
         let resolvedTargets = 0;
-        const ops: ChartUpdate['ops'][number][] = [];
-        for (const op of request.ops) {
-            if (op.op === 'emphasize') {
-                const elements = op.targets.flatMap((target) => {
+        const ops: ChartUpdateOp[] = [];
+        for (const op of update.ops) {
+            if (op.op === 'set-presentation') {
+                const targets = op.targets.flatMap((target) => {
                     const resolved = resolveUpdateTarget(target);
-                    if (resolved.length === 0) unresolvedTargets.push(target);
-                    resolvedTargets += resolved.length;
-                    return [...resolved];
+                    if (!resolved) {
+                        unresolvedTargets.push(target);
+                        return [];
+                    }
+                    resolvedTargets += resolved.elements.length;
+                    return [resolved];
                 });
-                if (elements.length > 0) {
-                    ops.push({
-                        op: 'emphasize',
-                        elements,
-                        mode: op.mode,
-                        dimOpacity: op.dimOpacity,
-                    });
-                }
-            } else if (op.op === 'annotate') {
-                const elements = resolveUpdateTarget(op.target);
-                if (elements.length !== 1) unresolvedTargets.push(op.target);
+                if (targets.length > 0) ops.push({ ...op, targets });
+            } else if (op.op === 'set-annotation' && op.value !== null) {
+                const target = resolveUpdateTarget(op.target);
+                if (!target || target.elements.length !== 1) unresolvedTargets.push(op.target);
                 else {
                     resolvedTargets += 1;
-                    const visual = 'visual' in op.target ? op.target.visual : op.target.select.visual;
-                    ops.push({
-                        op: 'annotate',
-                        element: elements[0],
-                        ...(visual === undefined ? {} : { visual }),
-                        ...(op.text === undefined ? {} : { text: op.text }),
-                    });
+                    ops.push({ ...op, target });
                 }
-            } else if (op.op === 'navigate-viewport') {
-                ops.push({ ...op, phase: request.phase ?? 'commit' });
+            } else if (op.op === 'set-viewport') {
+                const supported = resolveSupportedOperation(op, plan);
+                if (supported.unsupported) unsupportedOps.push(op.op);
+                if (supported.op) ops.push(supported.op);
+            } else if (op.op === 'set-order') {
+                const supported = resolveSupportedOperation(op, plan);
+                if (supported.unsupported) unsupportedOps.push(op.op);
+                if (supported.op) ops.push(supported.op);
             } else {
                 ops.push(op);
             }
         }
-
-        if (ops.length > 0) {
-            const interactionContext = context();
-            const update = { phase: request.phase, ops };
-            await applyUpdate(presentUpdate(update, interactionContext), legendSelection, request.updateId);
-        }
+        const hasUnsupported = unresolvedTargets.length > 0 || unsupportedOps.length > 0;
         return {
-            status: unresolvedTargets.length === 0
-                ? 'applied'
-                : ops.length > 0 ? 'partially-applied' : 'unsupported',
-            resolvedTargets,
-            unresolvedTargets,
-            unsupportedOps: [],
+            update: { id: update.id, ops },
+            result: {
+                status: !hasUnsupported
+                    ? 'applied'
+                    : ops.length > 0 ? 'partially-applied' : 'unsupported',
+                resolvedTargets,
+                unresolvedTargets,
+                unsupportedOps: [...new Set(unsupportedOps)],
+            },
         };
     };
-    const emitCanvasInteractionEvent = (
+
+    const renderUpdates = async (): Promise<void> => {
+        const displayUpdates = [...retainedUpdates.values(), ...previewUpdates.values()];
+        selectedElements.clear();
+        let annotation: Extract<ChartUpdateOp, { op: 'set-annotation' }> | undefined;
+        const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+        for (const axis of reorderAxes) view.signal(axis.signal, null);
+        for (const axis of Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[]) {
+            navigationController.apply({ op: 'set-viewport', axes: axis, value: {} });
+        }
+        for (const update of displayUpdates) {
+            for (const op of update.ops) {
+                if (op.op === 'set-presentation'
+                    && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
+                    for (const target of op.targets) {
+                        if ('select' in target) continue;
+                        for (const element of target.elements) {
+                            const key = element.key[INTERACTION_KEY];
+                            if (typeof key === 'string') selectedElements.set(key, element);
+                        }
+                    }
+                } else if (op.op === 'set-annotation') {
+                    annotation = op;
+                } else if (op.op === 'set-viewport') {
+                    navigationController.apply(op);
+                } else if (op.op === 'set-order' && op.scope === 'category') {
+                    const axis = reorderAxes.find((candidate) => candidate.field === op.field);
+                    if (axis) view.signal(axis.signal, op.values);
+                }
+            }
+        }
+        const keys = [...selectedKeys()];
+        if (keys.length === 0) selectedLegend = null;
+        // A navigation-only chart compiles without the selection stores.
+        if (plan.semanticStores !== false) {
+            view.change(
+                INTERACTION_STORE,
+                changeset().remove(() => true).insert(keys.map((key) => ({ key }))),
+            );
+            view.change(
+                LEGEND_SELECTION_STORE,
+                changeset().remove(() => true).insert(selectedLegend ? [selectedLegend] : []),
+            );
+        }
+        await view.runAsync();
+        observeRenderer();
+        renderPathFocus();
+        reorderResetControls.layout();
+        clearAnnotation();
+        if (annotation?.value && !('select' in annotation.target)) {
+            const element = annotation.target.elements[0];
+            if (element && annotation.value.text && annotation.value.candidates) {
+                annotationOverlay.render(element, {
+                    ...annotation.value,
+                    text: annotation.value.text,
+                    candidates: annotation.value.candidates,
+                });
+            }
+        }
+    };
+
+    const storeUpdate = async (
+        update: ChartUpdate,
+        destination: Map<string, ChartUpdate>,
+        legendSelection: { channel: string; value: unknown } | null = null,
+    ): Promise<ChartUpdateResult> => {
+        const resolved = resolveUpdate(update);
+        const presented = presentUpdate(resolved.update, context());
+        destination.set(update.id, presented);
+        if (legendSelection) selectedLegend = legendSelection;
+        await renderUpdates();
+        return resolved.result;
+    };
+
+    const applyInteractionUpdate = async (
         interaction: InteractionDef,
+        phase: import('../../interactive/interactions').InteractionPhase,
+        update: ChartUpdate | null,
+        legendSelection: { channel: string; value: unknown } | null = null,
+    ): Promise<void> => {
+        if (phase === 'cancel') {
+            if (previewUpdates.delete(interaction.id)) await renderUpdates();
+            return;
+        }
+        if (update) {
+            const preview = phase === 'start' || phase === 'preview';
+            if (!preview) previewUpdates.delete(interaction.id);
+            await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection);
+            return;
+        }
+        if (phase === 'commit') {
+            const pending = previewUpdates.get(interaction.id);
+            if (pending) {
+                retainedUpdates.set(interaction.id, pending);
+                previewUpdates.delete(interaction.id);
+                await renderUpdates();
+            }
+        }
+    };
+    const emitCanvasInteractionEvent = (
+        interaction: CanvasInteractionDef,
         event: CanvasInteractionEvent,
         transactionId?: string,
     ): void => {
@@ -397,7 +475,7 @@ export function mountVegaInteractions(
         }));
     };
     const emitInteractionEvent = (
-        interaction: InteractionDef,
+        interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent | NavigationInteractionEvent,
         transactionId?: string,
     ): void => emitCanvasInteractionEvent(
@@ -406,7 +484,7 @@ export function mountVegaInteractions(
         transactionId,
     );
     const dispatch = async (
-        interaction: InteractionDef,
+        interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
         legendSelection: { channel: string; value: unknown } | null = null,
     ): Promise<void> => {
@@ -414,31 +492,21 @@ export function mountVegaInteractions(
         const canvasEvent = toCanvasInteractionEvent(event, interaction.eventSource);
         emitInteractionEvent(interaction, event);
         const request = interaction.handle?.(canvasEvent, interactionContext) ?? null;
-        if (request) {
-            await applyRequestedUpdate(request, legendSelection);
-        }
+        await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
     };
     let navigationDispatch = Promise.resolve();
     const dispatchNavigation = (
-        interaction: InteractionDef,
+        interaction: CanvasInteractionDef,
         event: NavigationInteractionEvent,
     ): Promise<void> => {
         const run = async (): Promise<void> => {
-            const interactionContext = context(false);
             const canvasEvent = toCanvasInteractionEvent(event, interaction.eventSource);
-            emitInteractionEvent(interaction, event);
-            const request = interaction.handle?.(canvasEvent, interactionContext) ?? null;
-            if (request) {
-                await applyRequestedUpdate(request);
-            }
+            emitCanvasInteractionEvent(interaction, canvasEvent);
+            const request = interaction.handle?.(canvasEvent, context(false)) ?? null;
+            await applyInteractionUpdate(interaction, event.phase, request);
         };
         navigationDispatch = navigationDispatch.then(run, run);
         return navigationDispatch;
-    };
-    const dispatchExternal = async (event: ExternalInteractionEvent): Promise<void> => {
-        throw new Error(
-            `External interaction dispatch from "${event.source}" no longer runs update policies; use applyUpdate().`,
-        );
     };
     const resolveTarget = (
         gesture: 'click' | 'hover' | 'rectangle' | 'angular',
@@ -531,7 +599,8 @@ export function mountVegaInteractions(
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                 modifiers: normalized.event.modifiers,
             }, interaction.eventSource), interactionContext);
-            return preview?.ops.flatMap((op) => op.op === 'emphasize'
+            return preview?.ops.flatMap((op) => op.op === 'set-presentation'
+                && (op.value.state === 'emphasized' || op.value.state === 'focused')
                 ? op.targets.flatMap((target) => 'select' in target ? [] : target.elements)
                 : []) ?? [];
         });
@@ -632,7 +701,7 @@ export function mountVegaInteractions(
         };
         emitCanvasInteractionEvent(elementDragInteraction, canvasEvent);
         const request = elementDragInteraction.handle?.(canvasEvent, context()) ?? null;
-        if (request) await applyRequestedUpdate(request);
+        await applyInteractionUpdate(elementDragInteraction, phase, request);
     };
     const elementDragStart = (event: PointerEvent): void => {
         if (!elementDragInteraction || (event.button !== undefined && event.button !== 0)) return;
@@ -711,15 +780,27 @@ export function mountVegaInteractions(
         view,
         container,
         interaction: regionInteraction,
-        getSelected: () => selectionState.get(regionInteraction.id),
-        setSelected: (next) => { selectionState.set(next, regionInteraction.id); },
+        getSelected: selectedKeys,
+        setSelected: (next) => {
+            previewUpdates.set(regionInteraction.id, {
+                id: regionInteraction.id,
+                ops: [{
+                    op: 'set-presentation',
+                    targets: next.size > 0 ? [{
+                        visual: { kind: 'region', role: 'selection' },
+                        elements: [...next].map((key) => ({ key: { [INTERACTION_KEY]: key } })),
+                    }] : [],
+                    value: { state: next.size > 0 ? 'emphasized' : 'normal' },
+                }],
+            });
+        },
         coordinateSpace,
         containerLayoutSize,
         resolveTarget: (gesture, role, hits) => resolveTarget(gesture, role, hits),
         dispatch: (event) => dispatch(regionInteraction, event),
         clearHover,
         clearAnnotation,
-        sync,
+        sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
     }) : undefined;
@@ -734,46 +815,55 @@ export function mountVegaInteractions(
     }) : undefined;
     const clickOnlyKeyDown = (event: KeyboardEvent): void => {
         if (regionInteraction || event.key !== 'Escape') return;
-        selectionState.clear();
+        for (const layer of [retainedUpdates, previewUpdates]) {
+            for (const [id, update] of layer) {
+                const ops = update.ops.filter((op) =>
+                    op.op !== 'set-presentation' && op.op !== 'set-annotation');
+                if (ops.length > 0) layer.set(id, { id, ops });
+                else layer.delete(id);
+            }
+        }
         selectedLegend = null;
-        clearAnnotation();
-        void sync();
+        void renderUpdates();
     };
     if (clickInteractions.length > 0 && !regionInteraction) container.addEventListener('keydown', clickOnlyKeyDown);
 
-    const customSourceCleanups = interactions.flatMap((interaction) => {
-        if (!interaction.eventSource?.mount) return [];
-        const cleanup = interaction.eventSource.mount({
-            container,
-            emit(event: NormalizedInteractionEvent) {
-                if (event.type === 'external') {
-                    void dispatchExternal(event);
-                    return;
-                }
-                if (event.type === 'navigation') {
-                    void dispatchNavigation(interaction, event);
-                    return;
-                }
-                const gesture = event.type === 'region'
-                    ? event.axis === 'angle' ? 'angular' : 'rectangle'
-                    : 'click';
-                const role = event.type === 'region' ? 'region' : 'mark';
-                const target = resolveTarget(gesture, role, event.hits);
-                void dispatch(interaction, {
-                    type: 'semantic',
-                    source: event.type,
-                    phase: event.phase,
-                    target,
-                    point: event.type === 'element' ? event.point : undefined,
-                    region: event.type === 'region' ? event.region : undefined,
-                    axis: event.type === 'region' ? event.axis : undefined,
-                    operation: event.type === 'region' ? event.operation : undefined,
-                    modifiers: event.modifiers,
-                });
-            },
+    // Overlays project scenegraph geometry into screen pixels, so every one of
+    // them is re-projected whenever the rendered size changes.
+    const syncOverlays = (): void => {
+        renderPathFocus();
+        annotationOverlay.sync();
+        regionGesture?.sync();
+        reorderResetControls.layout();
+    };
+    let observedRenderer: Element | undefined;
+    // A drag-resize fires per frame, so repeated observations collapse into one pass.
+    let syncFrame: number | undefined;
+    const scheduleSync = (): void => {
+        if (typeof requestAnimationFrame === 'undefined') {
+            syncOverlays();
+            return;
+        }
+        if (syncFrame !== undefined) return;
+        syncFrame = requestAnimationFrame(() => {
+            syncFrame = undefined;
+            syncOverlays();
         });
-        return cleanup ? [cleanup] : [];
-    });
+    };
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(() => scheduleSync());
+    // The container catches responsive layout; the renderer catches the chart
+    // itself being sized independently of it.
+    resizeObserver?.observe(container);
+    const observeRenderer = (): void => {
+        const renderer = container.querySelector('canvas, svg');
+        if (!renderer || renderer === observedRenderer) return;
+        if (observedRenderer) resizeObserver?.unobserve(observedRenderer);
+        resizeObserver?.observe(renderer);
+        observedRenderer = renderer;
+    };
+    observeRenderer();
 
     const destroy = (): void => {
         if (clickInteractions.length > 0) {
@@ -798,19 +888,40 @@ export function mountVegaInteractions(
         annotationOverlay.destroy();
         dragReorderOverlay.destroy();
         reorderResetControls.destroy();
+        resizeObserver?.disconnect();
+        observedRenderer = undefined;
+        if (syncFrame !== undefined && typeof cancelAnimationFrame !== 'undefined') {
+            cancelAnimationFrame(syncFrame);
+            syncFrame = undefined;
+        }
         if (elementDragInteraction) container.style.userSelect = previousUserSelect;
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
-        for (const cleanup of customSourceCleanups) cleanup();
     };
-    const clearRequestedUpdate = async (updateId: string): Promise<void> => {
-        if (selectionState.get(updateId).size === 0) return;
-        selectionState.clear(updateId);
-        await sync();
+    const clearUpdate = async (id: string): Promise<void> => {
+        if (retainedUpdates.delete(id)) await renderUpdates();
+    };
+    const replaceUpdates = async (
+        nextUpdates: readonly ChartUpdate[],
+    ): Promise<readonly ChartUpdateResult[]> => {
+        retainedUpdates.clear();
+        const results: ChartUpdateResult[] = [];
+        for (const update of nextUpdates) {
+            const resolved = resolveUpdate(update);
+            retainedUpdates.set(update.id, presentUpdate(resolved.update, context()));
+            results.push(resolved.result);
+        }
+        await renderUpdates();
+        return results;
     };
     return {
-        dispatch: dispatchExternal,
-        applyUpdate: applyRequestedUpdate,
-        clearUpdate: clearRequestedUpdate,
+        getInteractionContext: context,
+        applyUpdate: (update, _options) => storeUpdate(update, retainedUpdates),
+        setUpdates: replaceUpdates,
+        clearUpdate,
+        refresh: () => {
+            observeRenderer();
+            syncOverlays();
+        },
         destroy,
     };
 }

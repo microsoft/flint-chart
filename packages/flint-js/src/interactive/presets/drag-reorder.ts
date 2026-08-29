@@ -1,4 +1,4 @@
-import type { DragReorderOptions, InteractionDef, SemanticElement } from '../interactions';
+import type { CanvasInteractionDef, DragReorderOptions, SemanticElement } from '../interactions';
 import { elementDragTrigger } from '../triggers';
 
 function categoryValue(element: SemanticElement | undefined, field: string): unknown {
@@ -19,7 +19,7 @@ export function reorderValues(
     return reordered;
 }
 
-export function createDragReorderInteraction(options: DragReorderOptions = {}): InteractionDef {
+export function createDragReorderInteraction(options: DragReorderOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'drag-reorder';
     return {
         id,
@@ -53,9 +53,8 @@ export function createDragReorderInteraction(options: DragReorderOptions = {}): 
             const orderedValues = reorderValues(values, source, destination);
             if (orderedValues.every((value, index) => Object.is(value, values[index]))) return null;
             return {
-                updateId: id,
-                phase: event.phase,
-                ops: [{ op: 'reorder-category', axis, field, orderedValues }],
+                id,
+                ops: [{ op: 'set-order', scope: 'category', field, values: orderedValues }],
             };
         },
     };

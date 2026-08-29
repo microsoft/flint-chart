@@ -27,11 +27,11 @@ import { ThemePicker } from './ThemePicker';
 import { navigationDemoCases } from './navigation-demo-data';
 import './click-focus-lab.css';
 
-type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
+export type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
   | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
-interface NavigationGuard {
+export interface NavigationGuard {
   minVisibleFraction: number;
   maxVisibleFraction: number;
   overscrollFraction: number;
@@ -51,7 +51,7 @@ const interactionModes = [
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
 ] as const;
 
-interface InteractionCase {
+export interface InteractionCase {
   id: string;
   input: ChartAssemblyInput;
   navigationAxes?: 'x' | 'y' | 'xy';
@@ -182,6 +182,30 @@ const interactionCases: InteractionCase[] = [
   multiLegendCase('shape'),
   multiLegendCase('size'),
 ];
+
+const ANNOTATION_CHART_TYPES = [
+  'Area Chart',
+  'Bar Chart',
+  'Bar Table',
+  'Bullet Chart',
+  'Calendar Heatmap',
+  'Candlestick Chart',
+  'Choropleth',
+  'Connected Scatter Plot',
+  'Density Plot',
+  'Heatmap',
+  'Pie Chart',
+  'Ranged Dot Plot',
+  'Scatter Plot',
+  'Slope Chart',
+  'Violin Plot',
+  'Waterfall Chart',
+] as const;
+
+export const annotationCases = ANNOTATION_CHART_TYPES.flatMap((chartType) => {
+  const item = interactionCases.find((candidate) => candidate.chartType === chartType);
+  return item ? [item] : [];
+});
 
 const navigationCases: InteractionCase[] = navigationDemoCases.map((item) => ({
   ...item,
@@ -336,7 +360,7 @@ function InteractiveChart({
   return <div className="cf-mount" ref={containerRef} />;
 }
 
-function CaseCard({
+export function CaseCard({
   item,
   mode,
   themeId,
@@ -531,7 +555,7 @@ export function ClickFocusLab() {
           </div>
         )}
       </header>
-      <div className="cf-grid">
+      <div className={mode === 'navigate' ? 'cf-grid cf-grid-wide' : 'cf-grid'}>
         {visibleCases.map((item) => (
           <CaseCard
             key={item.id}

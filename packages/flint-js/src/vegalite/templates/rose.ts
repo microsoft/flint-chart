@@ -27,7 +27,7 @@ import {
     annotationCandidates,
     presentAnnotationUpdate,
     valueAnnotationText,
-} from '../../interactive/updates/annotation';
+} from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import { setMarkProp } from './utils';
 
@@ -55,6 +55,7 @@ export const roseChartDef: ChartTemplateDef = {
             seriesField,
             legendFields: colorLegendField ? { color: colorLegendField } : undefined,
             selectableMarks: ['arc'],
+            annotationMarkType: 'arc',
             supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
@@ -74,7 +75,6 @@ export const roseChartDef: ChartTemplateDef = {
             presentUpdate: presentAnnotationUpdate(
                 () => annotationCandidates('outer-radial'),
                 valueAnnotationText(valueField),
-                'arc',
             ),
         };
     },

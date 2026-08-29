@@ -19,7 +19,7 @@ import {
     countAnnotationText,
     presentAnnotationUpdate,
     valueAnnotationText,
-} from '../../interactive/updates/annotation';
+} from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     detectBandedAxisFromSemantics, detectBandedAxisForceDiscrete,

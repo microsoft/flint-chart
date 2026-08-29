@@ -2,17 +2,28 @@ import type { SemanticElement, SemanticTarget } from '../../../core/interaction-
 import type {
     AnnotationCandidate,
     AnnotationConnection,
-    AnnotationRenderPlan,
+    AnnotationSpec,
     PlotPoint,
 } from '../../../interactive/interactions';
+
+type RenderableAnnotation = AnnotationSpec & {
+    text: string;
+    candidates: readonly AnnotationCandidate[];
+};
 import {
     INTERACTION_KEY,
+    INTERACTION_ROLE,
     PATH_KEY_SUFFIX,
     clientToLayoutPoint,
     plotToClientPoint,
     sceneItems,
     type RendererCoordinateSpace,
 } from '../hit-adapter';
+import {
+    routeAnnotationLeaders,
+    type AnnotationLeaderRoute,
+    type AnnotationPortEdge,
+} from './annotation-leader-routing';
 
 function keyOfDatum(datum: unknown): string | undefined {
     if (!datum || typeof datum !== 'object') return undefined;
@@ -71,6 +82,28 @@ export function annotationObstacleTier(item: any): 1 | 2 | 3 {
 
 export function isAnnotationObstacle(item: any): boolean {
     return !!item?.mark?.marktype && item.mark.role !== 'axis-grid';
+}
+
+export function isAnnotationSourceItem(candidate: any, source: any): boolean {
+    if (candidate.mark !== source.mark) return false;
+    return source.mark?.marktype === 'area' && source.orient === 'horizontal'
+        ? keyOfDatum(candidate.datum) === keyOfDatum(source.datum)
+        : candidate.datum === source.datum;
+}
+
+export function annotationSourceBounds(items: readonly any[], source: any): {
+    x1: number; x2: number; y1: number; y2: number;
+} {
+    const sourceBounds = annotationBounds(source);
+    if (source.mark?.marktype !== 'area' || source.orient !== 'horizontal') return sourceBounds;
+    const sourceItems = items.filter((candidate) => isAnnotationSourceItem(candidate, source));
+    if (sourceItems.length < 2) return sourceBounds;
+    return sourceItems.reduce((bounds, candidate) => ({
+        x1: Math.min(bounds.x1, candidate.bounds.x1),
+        x2: Math.max(bounds.x2, candidate.bounds.x2),
+        y1: Math.min(bounds.y1, candidate.bounds.y1),
+        y2: Math.max(bounds.y2, candidate.bounds.y2),
+    }), { ...sourceBounds });
 }
 
 function sceneObstacles(view: any): any[] {
@@ -147,24 +180,40 @@ function segmentIntersectsRect(
     return ignoreStartTouch ? exit > 0.02 && entry < 0.98 : exit >= 0 && entry <= 1;
 }
 
-function textAttachment(
+function textAlignForPort(edge: AnnotationPortEdge): 'left' | 'center' | 'right' {
+    if (edge === 'left') return 'left';
+    if (edge === 'right') return 'right';
+    return 'center';
+}
+
+export function sourceEdgeAttachment(
+    source: LayoutRect,
     card: LayoutRect,
-    angle: number,
-): { end: PlotPoint; align: 'left' | 'center' | 'right' } {
-    const horizontal = Math.cos(angle);
-    const vertical = Math.sin(angle);
-    if (Math.abs(horizontal) > Math.abs(vertical)) {
-        return horizontal > 0
-            ? { end: { x: card.left, y: card.top + card.height / 2 }, align: 'left' }
-            : { end: { x: card.left + card.width, y: card.top + card.height / 2 }, align: 'right' };
+    connection: AnnotationConnection,
+    fallback: PlotPoint,
+): PlotPoint {
+    const cardCenterX = card.left + card.width / 2;
+    const cardCenterY = card.top + card.height / 2;
+    const sourceCenterX = source.left + source.width / 2;
+    const sourceCenterY = source.top + source.height / 2;
+    if (connection === 'top' || connection === 'bottom') {
+        return {
+            x: source.left + source.width * (cardCenterX < sourceCenterX ? 0.25 : 0.75),
+            y: connection === 'top' ? source.top : source.top + source.height,
+        };
     }
-    return {
-        end: {
-            x: card.left + card.width / 2,
-            y: vertical > 0 ? card.top : card.top + card.height,
-        },
-        align: 'center',
-    };
+    if (connection === 'left' || connection === 'right') {
+        return {
+            x: connection === 'left' ? source.left : source.left + source.width,
+            y: source.top + source.height * (cardCenterY < sourceCenterY ? 0.25 : 0.75),
+        };
+    }
+    return fallback;
+}
+
+function routeIntersectsRect(route: AnnotationLeaderRoute, rect: LayoutRect, ignoreStartTouch = false): boolean {
+    return route.points.slice(1).some((point, index) =>
+        segmentIntersectsRect(route.points[index], point, rect, ignoreStartTouch && index === 0));
 }
 
 function vectorAngle(deltaX: number, deltaY: number): number {
@@ -238,7 +287,9 @@ export function annotationCandidateAngles(
     preference: AnnotationCandidate['anglePreference'] = 'normal',
 ): readonly number[] {
     if (preferredAngle === undefined) return FREE_ANGLES;
-    const offsets = preference === 'oblique' ? [-1, 1, -2, 2] : [0, -1, 1, -2, 2, -3, 3];
+    const offsets = preference === 'oblique'
+        ? [-1, 1, -2, 2]
+        : [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, 6];
     return offsets.map((offset) => (preferredAngle + offset * ANGLE_STEP + TAU) % TAU);
 }
 
@@ -247,6 +298,8 @@ export function annotationItem(
     key: string,
     subject?: Partial<SemanticTarget['visual']>,
     preferredMarktype?: string,
+    preferredRole?: string,
+    preferredRecord?: Readonly<Record<string, unknown>>,
 ): any | undefined {
     const pathKey = key.endsWith(PATH_KEY_SUFFIX);
     const pathTarget = subject?.kind === 'path' || (subject?.kind === undefined && pathKey);
@@ -257,14 +310,29 @@ export function annotationItem(
     const semanticCandidates = pathTarget
         ? matching.filter((candidate) => candidate.interactionGeometry)
         : matching.filter((candidate) => !candidate.interactionGeometry);
-    const candidates = preferredMarktype
-        ? semanticCandidates.filter((candidate) => candidate.mark?.marktype === preferredMarktype)
+    const roleCandidates = preferredRole
+        ? semanticCandidates.filter((candidate) => candidate.datum?.[INTERACTION_ROLE] === preferredRole)
         : semanticCandidates;
-    return (candidates.length > 0 ? candidates : matching)
+    if (preferredRole && roleCandidates.length === 0) return undefined;
+    const candidates = preferredMarktype
+        ? roleCandidates.filter((candidate) => candidate.mark?.marktype === preferredMarktype)
+        : roleCandidates;
+    const available = candidates.length > 0 ? candidates : preferredRole ? roleCandidates : matching;
+    const recordFields = preferredRecord
+        ? Object.entries(preferredRecord).filter(([field, value]) => !field.startsWith('__')
+            && value !== undefined && value !== null && typeof value !== 'object')
+        : [];
+    const recordMatches = recordFields.length > 0
+        ? available.filter((candidate) => recordFields.every(([field, value]) =>
+            candidate.datum?.[field] === undefined || Object.is(candidate.datum[field], value)))
+        : [];
+    const resolved = recordMatches.length > 0 ? recordMatches : available;
+    const preferRepresentativePath = pathTarget && recordMatches.length === 0 && resolved.length > 1;
+    return resolved
         .sort((a, b) => {
             const aSpan = Math.max(a.bounds.x2 - a.bounds.x1, a.bounds.y2 - a.bounds.y1);
             const bSpan = Math.max(b.bounds.x2 - b.bounds.x1, b.bounds.y2 - b.bounds.y1);
-            return aSpan - bSpan;
+            return preferRepresentativePath ? bSpan - aSpan : aSpan - bSpan;
         })[0];
 }
 
@@ -305,7 +373,7 @@ export function segmentMidpointConnectionPoint(
     return { point, preferredAngle: vectorAngle(point.x - plotCenter.x, point.y - plotCenter.y) };
 }
 
-function connectionPoint(
+export function annotationConnectionPoint(
     item: any,
     connection: AnnotationConnection,
     items: readonly any[],
@@ -318,6 +386,16 @@ function connectionPoint(
         x: (item.bounds.x1 + item.bounds.x2) / 2,
         y: (item.bounds.y1 + item.bounds.y2) / 2,
     };
+    if (item.interactionGeometry && ['top', 'right', 'bottom', 'left'].includes(connection)) {
+        const segment = segmentMidpointConnectionPoint(item, plotCenter);
+        const preferredAngle = {
+            top: TAU * 0.75,
+            right: 0,
+            bottom: TAU * 0.25,
+            left: TAU * 0.5,
+        }[connection as 'top' | 'right' | 'bottom' | 'left'];
+        return { point: segment.point, preferredAngle };
+    }
     if (connection === 'top') return { point: { x: center.x, y: item.bounds.y1 }, preferredAngle: TAU * 0.75 };
     if (connection === 'right') return { point: { x: item.bounds.x2, y: center.y }, preferredAngle: 0 };
     if (connection === 'bottom') return { point: { x: center.x, y: item.bounds.y2 }, preferredAngle: TAU * 0.25 };
@@ -350,8 +428,9 @@ function connectionPoint(
 }
 
 export interface AnnotationOverlayController {
-    render(element: SemanticElement, annotation: AnnotationRenderPlan): void;
+    render(element: SemanticElement, annotation: RenderableAnnotation): void;
     clear(): void;
+    sync(): void;
     destroy(): void;
 }
 
@@ -360,6 +439,8 @@ export interface AnnotationOverlayOptions {
     container: HTMLElement;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
+    /** Vega marktype the chart anchors annotations to when a key matches several marks. */
+    annotationMarkType?: string;
 }
 
 export function createAnnotationOverlay({
@@ -367,6 +448,7 @@ export function createAnnotationOverlay({
     container,
     coordinateSpace,
     containerLayoutSize,
+    annotationMarkType,
 }: AnnotationOverlayOptions): AnnotationOverlayController {
     const annotationLayer = document.createElement('div');
     Object.assign(annotationLayer.style, {
@@ -389,12 +471,27 @@ export function createAnnotationOverlay({
     });
     annotationLayer.append(annotationSvg, annotationCard);
 
-    const clear = (): void => annotationLayer.remove();
-    const render = (element: SemanticElement, annotation: AnnotationRenderPlan): void => {
+    // Placement is derived from rendered geometry, so the runtime re-syncs it
+    // whenever the renderer is resized or the host rescales the chart.
+    let current: { element: SemanticElement; annotation: RenderableAnnotation } | undefined;
+
+    const clear = (): void => {
+        current = undefined;
+        annotationLayer.remove();
+    };
+    const render = (element: SemanticElement, annotation: RenderableAnnotation): void => {
+        current = { element, annotation };
         const key = element.key[INTERACTION_KEY];
         const items = sceneItems(view);
         const item = typeof key === 'string'
-            ? annotationItem(items, key, annotation.subject, annotation.markType)
+            ? annotationItem(
+                items,
+                key,
+                annotation.subject,
+                annotationMarkType,
+                undefined,
+                element.records?.[0],
+            )
             : undefined;
         if (!item?.bounds) {
             clear();
@@ -404,6 +501,7 @@ export function createAnnotationOverlay({
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
 
         annotationCard.textContent = annotation.text;
+        annotationCard.style.whiteSpace = annotation.text.includes('\n') ? 'pre-line' : 'normal';
         const directValue = annotation.text.length <= 18 && !annotation.text.includes('\n');
         annotationCard.style.padding = directValue ? '1px 3px' : '2px 3px';
 
@@ -415,9 +513,8 @@ export function createAnnotationOverlay({
         const toLayout = (point: PlotPoint): PlotPoint => clientToLayoutPoint(
             plotToClientPoint(point, space), containerRect, layoutSize,
         );
-        const sourceKey = keyOfDatum(item.datum);
         const obstacles: LayoutObstacle[] = sceneObstacles(view).flatMap((candidate) => {
-            if (candidate.mark === item.mark && keyOfDatum(candidate.datum) === sourceKey) return [];
+            if (isAnnotationSourceItem(candidate, item)) return [];
             const leading = toLayout({ x: candidate.bounds.x1, y: candidate.bounds.y1 });
             const trailing = toLayout({ x: candidate.bounds.x2, y: candidate.bounds.y2 });
             return [{
@@ -439,7 +536,7 @@ export function createAnnotationOverlay({
             width: Math.abs(plotTrailing.x - plotLeading.x),
             height: Math.abs(plotTrailing.y - plotLeading.y),
         };
-        const sourceBounds = annotationBounds(item);
+        const sourceBounds = annotationSourceBounds(items, item);
         const sourceLeading = toLayout({ x: sourceBounds.x1, y: sourceBounds.y1 });
         const sourceTrailing = toLayout({ x: sourceBounds.x2, y: sourceBounds.y2 });
         const markSourceRect: LayoutRect = {
@@ -452,8 +549,9 @@ export function createAnnotationOverlay({
         const plotCenter = { x: space.plotWidth / 2, y: space.plotHeight / 2 };
         const sourceGap = 10;
         let best: AnnotationLayout | undefined;
+        let fallback: AnnotationLayout | undefined;
         for (const candidate of annotation.candidates) {
-            const connection = connectionPoint(
+            const connection = annotationConnectionPoint(
                 item,
                 candidate.connection,
                 items,
@@ -464,12 +562,15 @@ export function createAnnotationOverlay({
             );
             const anchor = toLayout(connection.point);
             const boundarySourceRect = { left: anchor.x - 0.5, top: anchor.y - 0.5, width: 1, height: 1 };
-            const sourceRect = candidate.connection === 'segment-midpoint'
+            const sourceRect = annotation.subject?.kind === 'region'
+                || (candidate.connection === 'segment-midpoint'
+                    && !(item.mark?.marktype === 'area' && item.orient === 'horizontal'))
                 || candidate.connection === 'outer-radial'
                 || candidate.connection === 'radial-midpoint'
                 ? { left: anchor.x - 0.5, top: anchor.y - 0.5, width: 1, height: 1 }
                 : markSourceRect;
-            const connectorSourceRect = candidate.connection === 'outer-radial'
+            const connectorSourceRect = annotation.subject?.kind === 'region'
+                || candidate.connection === 'outer-radial'
                 || candidate.connection === 'radial-midpoint'
                 ? boundarySourceRect
                 : sourceRect;
@@ -494,41 +595,54 @@ export function createAnnotationOverlay({
                         width: cardWidth,
                         height: cardHeight,
                     };
-                    const attachment = textAttachment(card, angle);
-                    const align = candidate.textAlign ?? attachment.align;
+                    const route = routeAnnotationLeaders({ card, sources: [anchor] })[0];
+                    if (!route) continue;
+                    const align = candidate.textAlign ?? textAlignForPort(route.port.edge);
                     annotationCard.style.textAlign = align;
-                    const end = attachment.end;
+                    const end = route.port;
                     const canvasOverflow = overflowDistance(card, canvasRect, 8);
                     const plotOverflow = overflowDistance(card, plotRect, 6);
                     const sourceCollision = overlapArea(card, sourceRect);
                     const sourceClearance = rectDistance(card, sourceRect);
                     const obstacleOverlapPenalty = obstacles.reduce((sum, obstacle) => sum
                         + annotationObstacleOverlapCost(obstacle.tier, overlapArea(card, obstacle.rect)), 0);
-                    const connectorLength = Math.hypot(end.x - anchor.x, end.y - anchor.y);
+                    const connectorLength = route.points.slice(1).reduce((sum, point, index) =>
+                        sum + Math.hypot(point.x - route.points[index].x, point.y - route.points[index].y), 0);
                     const drawsConnector = connectorFor(candidate) === 'line';
                     const leavesInward = connection.preferredAngle !== undefined
                         && angularDistance(angle, connection.preferredAngle) > Math.PI / 2 + 1e-6;
                     const crossesSource = drawsConnector
+                        && annotation.subject?.kind !== 'region'
                         && candidate.connection !== 'outer-radial'
                         && candidate.connection !== 'radial-midpoint'
-                        && segmentIntersectsRect(anchor, end, connectorSourceRect, true);
+                        && routeIntersectsRect(route, connectorSourceRect, true);
                     const obstacleCrossingPenalty = drawsConnector
                         ? obstacles.reduce((sum, obstacle) => sum + (
-                            segmentIntersectsRect(anchor, end, obstacle.rect)
+                            routeIntersectsRect(route, obstacle.rect)
                                 ? annotationObstacleOverlapCost(obstacle.tier, CONNECTOR_CROSSING_AREA)
                                 : 0
                         ), 0)
                         : 0;
-                    if (canvasOverflow > 0 || leavesInward || crossesSource || sourceClearance < sourceGap) continue;
                     const directionPenalty = connection.preferredAngle === undefined
                         ? 0
                         : angularDistance(angle, connection.preferredAngle);
+                    const inwardPenalty = leavesInward ? 50 : 0;
                     const lineCount = Math.max(1, Math.round((cardHeight - 4) / 15));
                     const wrappingPenalty = Math.max(0, lineCount - 1) * 10;
                     const score = plotOverflow * PLOT_ESCAPE_WEIGHT
                         + obstacleCrossingPenalty + obstacleOverlapPenalty
                         + sourceCollision * OBSTACLE_WEIGHT[2] + connectorLength / 100
-                        + directionPenalty + wrappingPenalty + (candidate.priority ?? 0) / 100;
+                        + directionPenalty + inwardPenalty + wrappingPenalty + (candidate.priority ?? 0) / 100;
+                    const fallbackScore = score + canvasOverflow * 10_000
+                        + (crossesSource ? 100_000 : 0)
+                        + Math.max(0, sourceGap - sourceClearance) * 1_000;
+                    if (!fallback || fallbackScore < fallback.score) {
+                        fallback = {
+                            candidate, connection, angle, distance, align, maxWidth, card, end,
+                            score: fallbackScore,
+                        };
+                    }
+                    if (canvasOverflow > 0 || crossesSource || sourceClearance < sourceGap) continue;
                     if (!best || score < best.score) {
                         best = { candidate, connection, angle, distance, align, maxWidth, card, end, score };
                     }
@@ -536,22 +650,70 @@ export function createAnnotationOverlay({
                 }
             }
         }
+        if (!best && fallback) {
+            const card = {
+                ...fallback.card,
+                left: Math.min(width - fallback.card.width - 8, Math.max(8, fallback.card.left)),
+                top: Math.min(height - fallback.card.height - 8, Math.max(8, fallback.card.top)),
+            };
+            const anchor = toLayout(fallback.connection.point);
+            const angle = vectorAngle(
+                card.left + card.width / 2 - anchor.x,
+                card.top + card.height / 2 - anchor.y,
+            );
+            const route = routeAnnotationLeaders({ card, sources: [anchor] })[0];
+            if (!route) {
+                clear();
+                return;
+            }
+            best = {
+                ...fallback,
+                card,
+                angle,
+                align: fallback.candidate.textAlign ?? textAlignForPort(route.port.edge),
+                end: route.port,
+            };
+        }
         if (!best) {
             clear();
             return;
         }
-        const anchor = toLayout(best.connection.point);
         annotationCard.style.maxWidth = `${best.maxWidth}px`;
         annotationCard.style.textAlign = best.align;
         annotationCard.style.left = `${best.card.left}px`;
         annotationCard.style.top = `${best.card.top}px`;
         const connector = connectorFor(best.candidate);
-        const showConnector = connector === 'line';
+        const connectorAnchors = best.candidate.connectorAnchors?.flatMap((connectorAnchor) => {
+            const connectorItem = typeof key === 'string'
+                ? annotationItem(items, key, annotation.subject, undefined, connectorAnchor.role)
+                : undefined;
+            if (!connectorItem) return [];
+            const connection = annotationConnectionPoint(
+                connectorItem,
+                connectorAnchor.connection,
+                items,
+                plotCenter,
+                connectorAnchor.valueAxis,
+            );
+            return [toLayout(connection.point)];
+        });
+        const fallbackAnchor = toLayout(best.connection.point);
+        const primaryAnchor = sourceEdgeAttachment(
+            markSourceRect,
+            best.card,
+            best.candidate.connection,
+            fallbackAnchor,
+        );
+        const anchors = connectorAnchors?.length ? connectorAnchors : [primaryAnchor];
+        const showConnector = connector === 'line' && anchors.length > 0;
+        const routes = showConnector ? routeAnnotationLeaders({ card: best.card, sources: anchors }) : [];
         annotationSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        annotationPath.setAttribute('d', showConnector
-            ? `M ${anchor.x} ${anchor.y} L ${best.end.x} ${best.end.y}`
+        annotationPath.setAttribute('d', showConnector && routes.length === anchors.length
+            ? routes.map((route) => route.points
+                .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+                .join(' ')).join(' ')
             : '');
-        annotationPath.style.display = showConnector ? '' : 'none';
+        annotationPath.style.display = showConnector && routes.length === anchors.length ? '' : 'none';
         annotationLayer.dataset.connection = best.candidate.connection;
         annotationLayer.dataset.angle = String(Math.round(best.angle * 180 / Math.PI));
         annotationLayer.dataset.distance = String(best.distance);
@@ -563,6 +725,11 @@ export function createAnnotationOverlay({
     return {
         render,
         clear,
-        destroy: clear,
+        sync: () => {
+            if (current) render(current.element, current.annotation);
+        },
+        destroy: () => {
+            clear();
+        },
     };
 }

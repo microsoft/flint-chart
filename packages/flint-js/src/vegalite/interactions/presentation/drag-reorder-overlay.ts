@@ -54,6 +54,15 @@ export function activeReorderAxis<T extends Pick<VegaReorderAxis, 'axis' | 'fiel
         : changed.find(({ axis }) => axis === preferred) ?? changed[0] ?? axes.find(({ axis }) => axis === preferred);
 }
 
+export function reorderOwnedItems(
+    items: readonly any[],
+    axis: Pick<VegaReorderAxis, 'field' | 'markTypes'>,
+    value: unknown,
+): any[] {
+    return items.filter((item) => renderHit(item)?.datum[axis.field] === value
+        && (!axis.markTypes || axis.markTypes.includes(item.mark?.marktype)));
+}
+
 export function createDragReorderOverlay({
     view,
     container,
@@ -73,8 +82,8 @@ export function createDragReorderOverlay({
         const sourceValue = targetValue(preview.source, active.field);
         const destinationValue = targetValue(preview.destination, active.field);
         const scene = sceneItems(view);
-        const sourceCandidates = scene.filter((item) => renderHit(item)?.datum[active.field] === sourceValue
-            && (item.interactionGeometry?.points?.length >= 2 || item.bounds));
+        const sourceCandidates = reorderOwnedItems(scene, active, sourceValue)
+            .filter((item) => item.interactionGeometry?.points?.length >= 2 || item.bounds);
         const discreteSourceItems = sourceCandidates.filter((item) => {
             const markType = item.mark?.marktype;
             return markType !== 'line' && markType !== 'area';
@@ -82,8 +91,8 @@ export function createDragReorderOverlay({
         const sourceItems = active.includeConnectiveMarks || discreteSourceItems.length === 0
             ? sourceCandidates
             : discreteSourceItems;
-        const destinationItems = scene.filter((item) => renderHit(item)?.datum[active.field] === destinationValue
-            && item.bounds);
+        const destinationItems = reorderOwnedItems(scene, active, destinationValue)
+            .filter((item) => item.bounds);
         if (sourceItems.length === 0 || destinationItems.length === 0) return clear();
 
         layer.replaceChildren();

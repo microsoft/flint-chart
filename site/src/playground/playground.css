@@ -1,8 +1,11 @@
 .dev-shell {
   --dev-grid-line: rgba(0, 0, 0, 0.035);
+  --dev-text: #1f2328;
+  --dev-muted: #66707a;
+  --dev-accent: #2878a8;
   min-height: 100vh;
   box-sizing: border-box;
-  color: #1f2328;
+  color: var(--dev-text);
   background-color: #fff;
   background-image:
     linear-gradient(90deg, var(--dev-grid-line) 1px, transparent 1px),
@@ -152,6 +155,33 @@
   letter-spacing: 0;
 }
 
+.illustration-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(100%, 1400px);
+}
+
+.illustration-page-switch {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 18px;
+  font-size: 13px;
+}
+
+.illustration-page-switch a,
+.illustration-page-switch span {
+  padding-bottom: 5px;
+  color: var(--dev-muted);
+  text-decoration: none;
+}
+
+.illustration-page-switch span {
+  color: var(--dev-text);
+  border-bottom: 2px solid var(--dev-accent);
+}
+
 .dev-figure-wide {
   width: 960px;
   max-width: 100%;
@@ -173,5 +203,9 @@
 
   .dev-content {
     padding: 20px 14px 36px;
+  }
+
+  .illustration-page-heading {
+    align-items: flex-start;
   }
 }
