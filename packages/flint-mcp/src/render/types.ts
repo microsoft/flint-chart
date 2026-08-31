@@ -21,6 +21,8 @@ export interface RenderOptions {
   background?: string;
   /** When true, reject local `data.url` file references (inline rows only). */
   disableFileReference?: boolean;
+  /** Base directory for resolving relative `data.url` paths. Defaults to cwd. */
+  cwd?: string;
 }
 
 /** A rendered artifact plus the assembly warnings that produced it. */
