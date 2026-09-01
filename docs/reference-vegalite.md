@@ -415,7 +415,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `color`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 
