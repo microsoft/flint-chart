@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, doubleActivate, dragReorder, externalInteraction, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, doubleActivate, dragReorder, externalInteraction, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
 import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
@@ -55,6 +55,7 @@ import {
 import {
     interactionsForHoverPresentation,
     domainForPlotGeometry,
+    keyboardTargetItems,
     nearestReorderHit,
     resolveSupportedOperation,
 } from '../src/vegalite/interactions/runtime';
@@ -65,6 +66,11 @@ import {
     reorderOwnedItems,
 } from '../src/vegalite/interactions/presentation/drag-reorder-overlay';
 import { hoverContrastOpacity } from '../src/vegalite/interactions/presentation/focus-overlay';
+import {
+    targetFeedbackDetailsPosition,
+    targetFeedbackEntries,
+    targetFeedbackPoint,
+} from '../src/vegalite/interactions/presentation/target-feedback-overlay';
 import { inspectGuideLine } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
 import {
     annotationFacingEdges,
@@ -84,6 +90,7 @@ import {
     valueEndConnectionPoint,
     valueSideConnectionPoint,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
+import { withoutSemanticInteractionField } from '../src/vegalite/interactions/compile';
 import { histogramDef } from '../src/vegalite/templates/bar';
 import { areaChartDef } from '../src/vegalite/templates/area';
 import { candlestickChartDef } from '../src/vegalite/templates/candlestick';
@@ -374,7 +381,7 @@ describe('public chart updates', () => {
 
     it('uses direct declarative operation JSON', () => {
         const ops: ChartUpdateOp[] = [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [target, { select: { key: { Country: 'Japan' } } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
         }, {
@@ -385,7 +392,7 @@ describe('public chart updates', () => {
             op: 'set-order', scope: 'category', field: 'Country', values: ['Japan'],
         }];
         expect(ops).toEqual([{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [target, { select: { key: { Country: 'Japan' } } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
         }, {
@@ -746,7 +753,7 @@ describe('interaction definitions', () => {
         }, context)).toEqual({
             id: 'click-highlight',
             ops: [{
-                op: 'set-presentation', targets: [target],
+                op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
             }],
         });
@@ -755,7 +762,7 @@ describe('interaction definitions', () => {
         }, context)).toEqual({
             id: 'select',
             ops: [{
-                op: 'set-presentation', targets: [target],
+                op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
             }],
         });
@@ -763,6 +770,10 @@ describe('interaction definitions', () => {
 
     it('creates preset definitions with stable defaults', () => {
         expect(clickHighlight()).toMatchObject({ id: 'click-highlight', eventSource: clickTrigger });
+        expect(axisHighlight()).toMatchObject({
+            id: 'axis-highlight', eventSource: clickTrigger, claimsAxisActivation: true,
+        });
+        expect(axisHighlight({ event: 'hover' }).eventSource).toBe(hoverTrigger);
         expect(clickGroupHighlight()).toMatchObject({ id: 'click-group-highlight', eventSource: clickTrigger });
         expect(clickAnnotate()).toMatchObject({ id: 'click-annotate', eventSource: clickTrigger });
         expect(select()).toMatchObject({
@@ -790,7 +801,7 @@ describe('interaction definitions', () => {
         expect(handleSemanticEvent(brushX(), { ...event, axis: 'x' }, context)).toEqual({
             id: 'brush-x',
             ops: [{
-                op: 'set-presentation', targets: [target],
+                op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
             }],
         });
@@ -798,7 +809,7 @@ describe('interaction definitions', () => {
         expect(handleSemanticEvent(brushX(), { ...event, axis: 'angle' }, context)).toEqual({
             id: 'brush-x',
             ops: [{
-                op: 'set-presentation', targets: [target],
+                op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
             }],
         });
@@ -806,12 +817,12 @@ describe('interaction definitions', () => {
             ...event, axis: 'angle', phase: 'commit', operation: 'clear', target: null,
         }, context)).toEqual({
             id: 'brush-x',
-            ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+            ops: [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
         });
         expect(handleSemanticEvent(brushAngle(), { ...event, axis: 'angle' }, context)).toEqual({
             id: 'brush-angle',
             ops: [{
-                op: 'set-presentation', targets: [target],
+                op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
             }],
         });
@@ -866,7 +877,7 @@ describe('interaction definitions', () => {
         expect(semanticUpdate(interaction, null, context, { source: 'region' }))
             .toEqual({
                 id: 'select',
-                ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+                ops: [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
             });
     });
 
@@ -896,10 +907,10 @@ describe('interaction definitions', () => {
         });
 
         expect(replace?.ops[0]).toMatchObject({
-            op: 'set-presentation', value: { state: 'emphasized', mutedOpacity: 0.2 },
+            op: 'set-style', value: { state: 'emphasized', mutedOpacity: 0.2 },
         });
         expect(toggle?.ops[0]).toMatchObject({
-            op: 'set-presentation', value: { state: 'emphasized' },
+            op: 'set-style', value: { state: 'emphasized' },
         });
     });
 
@@ -1144,7 +1155,7 @@ describe('interaction definitions', () => {
                     value: {},
                 },
                 {
-                    op: 'set-presentation', targets: [target],
+                    op: 'set-style', targets: [target],
                     value: { state: 'emphasized', mutedOpacity: 0.25 },
                 },
             ],
@@ -1153,7 +1164,7 @@ describe('interaction definitions', () => {
             id: 'click-annotate',
             ops: [
                 { op: 'set-annotation', target: { select: { key: {} } }, value: null },
-                { op: 'set-presentation', targets: [], value: { state: 'normal' } },
+                { op: 'set-style', targets: [], value: { state: 'normal' } },
             ],
         });
     });
@@ -2011,7 +2022,7 @@ describe('assisted, keyboard, and lasso acquisition', () => {
         }, interaction.eventSource), context);
 
         expect(update?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ elements: target.elements }],
         });
         expect(interaction.handle!(toCanvasInteractionEvent({
@@ -2033,7 +2044,7 @@ describe('assisted, keyboard, and lasso acquisition', () => {
         };
 
         expect(clickHighlight().handle!(activation, context)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
         });
         expect(clickAnnotate().handle!(activation, context)?.ops[0]).toMatchObject({
             op: 'set-annotation',
@@ -2068,6 +2079,33 @@ describe('keyboard spatial navigation', () => {
         const items = [at('diagonal', 62, 26), at('aligned', 90, 50)];
 
         expect(keyOf(nextItemInDirection(items, from, 'right'))).toBe('aligned');
+    });
+
+    it('follows the next discrete row even when bar lengths differ', () => {
+        const bars = [
+            { ...at('long', 100, 10), bounds: { x1: 0, y1: 7, x2: 200, y2: 13 } },
+            { ...at('short', 25, 30), bounds: { x1: 0, y1: 27, x2: 50, y2: 33 } },
+            { ...at('aligned-later', 100, 50), bounds: { x1: 0, y1: 47, x2: 200, y2: 53 } },
+        ];
+
+        expect(keyOf(nextItemInDirection(bars, { x: 100, y: 10 }, 'down', 'y'))).toBe('short');
+    });
+
+    it('uses the box body as the single target for a composite boxplot', () => {
+        const datum = { [INTERACTION_KEY]: 'Adele' };
+        const component = (marktype: string, bounds: Record<string, number>) => ({
+            mark: { marktype }, datum, bounds,
+        });
+        const box = component('rect', { x1: 3, y1: 80, x2: 17, y2: 115 });
+        const targets = keyboardTargetItems([
+            component('rule', { x1: 9, y1: 64, x2: 11, y2: 121 }),
+            box,
+            component('rect', { x1: 3, y1: 109.5, x2: 17, y2: 110.5 }),
+            component('symbol', { x1: 7, y1: 52, x2: 13, y2: 58 }),
+        ]);
+
+        expect(targets).toEqual([box]);
+        expect(targetFeedbackPoint(targets[0])).toEqual({ x: 10, y: 97.5 });
     });
 
     it('stops at the edge instead of wrapping around', () => {
@@ -2118,6 +2156,54 @@ describe('lasso capture semantics', () => {
 });
 
 describe('legend, inspect, zoom, and touch presets', () => {
+    it('removes renderer and template-derived fields from tooltip values', () => {
+        expect(withoutSemanticInteractionField({
+            Country: 'United States',
+            'GDP ($T)': 27.4,
+            __flint_interaction_key: 'mark:0',
+            __bt_sort: 0,
+            __bt_others: false,
+            _vgsid_: 3,
+        })).toEqual({ Country: 'United States', 'GDP ($T)': 27.4 });
+    });
+
+    it('uses the compiled hover tooltip fields for keyboard details', () => {
+        expect(targetFeedbackEntries({
+            tooltip: { Country: 'Norway', Share: 98.6 },
+        }, {
+            Country: 'Norway', Share: 98.6, start: 0, end: 98.6,
+        })).toEqual([['Country', 'Norway'], ['Share', 98.6]]);
+    });
+
+    it('centers target feedback within an arc wedge', () => {
+        expect(targetFeedbackPoint({
+            mark: { marktype: 'arc' },
+            x: 100,
+            y: 100,
+            innerRadius: 20,
+            outerRadius: 80,
+            startAngle: 0,
+            endAngle: Math.PI / 2,
+            bounds: { x1: 100, y1: 20, x2: 180, y2: 100 },
+        })).toEqual({
+            x: 100 + 50 * Math.sin(Math.PI / 4),
+            y: 100 - 50 * Math.cos(Math.PI / 4),
+        });
+    });
+
+    it('places target details away from the target and flips at viewport edges', () => {
+        expect(targetFeedbackDetailsPosition(
+            { x: 100, y: 80 },
+            { width: 120, height: 50 },
+            { width: 400, height: 300 },
+        )).toEqual({ left: 114, top: 94 });
+        expect(targetFeedbackDetailsPosition(
+            { x: 390, y: 290 },
+            { width: 120, height: 50 },
+            { width: 400, height: 300 },
+        )).toEqual({ left: 256, top: 226 });
+    });
+
     const context = { chartType: 'Line Chart', selected: [] };
     const seriesTarget = (name: string) => ({
         visual: { kind: 'legend' as const, role: 'legend-item' },
@@ -2135,7 +2221,7 @@ describe('legend, inspect, zoom, and touch presets', () => {
         const interaction = legendToggle();
 
         expect(activate(interaction, seriesTarget('A'))?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ elements: [{ value: { channel: 'color', field: 'Series', value: 'A' } }] }],
             value: { visible: false, mutedOpacity: 0.25 },
         });
@@ -2265,17 +2351,17 @@ describe('legend, inspect, zoom, and touch presets', () => {
 
         expect(event).toMatchObject({ action: 'click-legend', target });
         expect(activate(clickHighlight(), target)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { state: 'emphasized' },
         });
         expect(activate(clickGroupHighlight(), target)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { state: 'emphasized' },
         });
         expect(activate(legendToggle(), target)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { visible: false },
         });
@@ -2445,14 +2531,14 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(longPress().handle!(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, longPressTrigger()), context)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { state: 'emphasized' },
         });
         expect(doubleActivate().handle!(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, doubleActivateTrigger), context)?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { state: 'emphasized' },
         });

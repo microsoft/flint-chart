@@ -1,10 +1,11 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
 import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
-import type { InteractionDismissPolicy, InteractiveRendererAdapter, ViewportState } from '../interactive/types';
+import type { InteractionDismissPolicy, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import {
     addVegaLiteInteractions,
+    collectVegaAxisTargets,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
@@ -24,6 +25,7 @@ export interface VegaInteractiveRendererOptions {
     background?: string;
     assistDistance?: number;
     keyboardTargeting?: boolean;
+    targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
     dismiss?: InteractionDismissPolicy | false;
 }
 
@@ -76,6 +78,7 @@ export function createVegaInteractiveRenderer(
             );
             const vegaSpec = compile(vlSpec).spec as any;
             if (interactionPlan) {
+                interactionPlan.axisTargets = collectVegaAxisTargets(vegaSpec, interactionPlan.axisFields);
                 if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
                 }
@@ -119,6 +122,7 @@ export function createVegaInteractiveRenderer(
                     interactionPlan.presentUpdate ?? ((update) => update),
                     options.assistDistance ?? 0,
                     options.keyboardTargeting ?? false,
+                    options.targetFeedback,
                     options.dismiss,
                 )
                 : undefined;

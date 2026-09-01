@@ -1,7 +1,5 @@
 import {
-    associateSemanticElementRenderKeys,
     semanticVisualFamily,
-    semanticElementRenderKeys,
     type RenderHit,
     type SemanticTarget,
     type LegendTargetValue,
@@ -737,6 +735,22 @@ export function legendSemanticTarget(
     };
 }
 
+export function axisTargetIdentity(
+    item: any,
+    targets: Readonly<Record<string, import('./contracts').VegaAxisTarget>> | undefined,
+): (import('./contracts').VegaAxisTarget & { value: unknown; role: string }) | null {
+    const role = item?.mark?.role;
+    if (role !== 'axis-label' && role !== 'axis-tick') return null;
+    let group = item?.mark?.group;
+    while (group && group.mark?.role !== 'axis') group = group.mark?.group;
+    const scale = group?.datum?.scale;
+    const target = typeof scale === 'string' ? targets?.[scale] : undefined;
+    if (!target || (target.type !== 'nominal' && target.type !== 'ordinal') || item?.datum?.value === undefined) {
+        return null;
+    }
+    return { ...target, value: item.datum.value, role };
+}
+
 export interface NormalizedVegaElement {
     event: ElementInteractionEvent;
     role: 'mark' | 'legend-item' | 'text-label';
@@ -862,8 +876,10 @@ export function nextItemInDirection(
     items: readonly any[],
     from: PlotPoint,
     direction: SpatialDirection,
+    discreteAxis?: 'x' | 'y',
 ): any | undefined {
     const horizontal = direction === 'left' || direction === 'right';
+    const followsDiscreteAxis = discreteAxis === (horizontal ? 'x' : 'y');
     let best: { item: any; score: number } | undefined;
     for (const item of items) {
         if (!item?.bounds) continue;
@@ -873,7 +889,7 @@ export function nextItemInDirection(
         const along = direction === 'right' ? dx : direction === 'left' ? -dx : direction === 'down' ? dy : -dy;
         if (along <= 0.5) continue;
         const across = Math.abs(horizontal ? dy : dx);
-        const score = along + across * 3;
+        const score = followsDiscreteAxis ? along + across * 0.001 : along + across * 3;
         if (!best || score < best.score) best = { item, score };
     }
     return best?.item;

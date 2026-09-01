@@ -19,7 +19,7 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
                     id,
                     ops: [
                         { op: 'set-annotation', target: { select: { key: {} } }, value: null },
-                        { op: 'set-presentation', targets: [], value: { state: 'normal' } },
+                        { op: 'set-style', targets: [], value: { state: 'normal' } },
                     ],
                 };
             }

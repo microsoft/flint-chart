@@ -43,7 +43,7 @@ const selectCountry: CanvasInteractionDef = {
     handle: (event) => event.target ? {
         id: 'country-selection',
         ops: [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [event.target],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
         }],
@@ -66,7 +66,7 @@ const countryPicker = externalInteraction<{ country: string; selected: boolean }
     handle: ({ country, selected }) => ({
         id: 'country-selection',
         ops: [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: selected ? [{ select: { key: { Country: country } } }] : [],
             value: { state: selected ? 'emphasized' : 'normal' },
         }],
@@ -447,7 +447,7 @@ Canvas definitions have two declarative halves:
 2. Optional `handle()` declares **what update JSON to produce** after normalization.
     Target-bearing events first pass through ChartDef semantic resolution. The handler
     consumes the same `CanvasInteractionEvent` emitted to applications and returns a
-    `ChartUpdate` containing renderer-neutral `set-presentation`, `set-annotation`,
+    `ChartUpdate` containing renderer-neutral `set-style`, `set-annotation`,
     `set-viewport`, or `set-order` operations.
 
 The backend mount reads `eventSource`; it does not infer a gesture from pointer motion. It installs the required native listeners, supplies renderer coordinates and hit testing, and runs the recognizer requested by the interaction. This keeps an identical drag stream deterministic and author-controlled.
@@ -474,7 +474,7 @@ renderer-neutral gesture-guide styles. Retained guides such as reference lines i
 to chart presentation state and may be created by effects through chart updates.
 
 Chart-specific action processing belongs in the handler. For example, ranged-dot region targets
-are expanded to complete category units before producing a `set-presentation` update. Direct ranged-dot
+are expanded to complete category units before producing a `set-style` update. Direct ranged-dot
 clicks already resolve to the complete dumbbell in the owning ChartDef.
 
 The coordinator always emits a resolved canvas event and invokes `handle()` only when
@@ -663,6 +663,27 @@ Vega interaction code imports its concrete owner directly. Compile instrumentati
 
 A custom source may register listeners and emit normalized events. Renderer-specific mounting code may additionally compute renderer geometry and inspect rendered marks. Neither source descriptors nor mounts may resolve semantic targets, contain chart-type behavior, or construct chart updates.
 
+### Target feedback
+
+Assisted pointer and keyboard targeting share a transient target indicator and a floating semantic tooltip. Keyboard arrows move the indicator and apply the active hover styling; Enter or Space invokes the configured click preset. The tooltip uses the compiled pointer-hover fields, stays clear of the active mark, may extend beyond the chart canvas, and scrolls with the chart.
+
+Assisted pointer targeting can customize the compact semantic details:
+
+```ts
+buildInteractiveChart(container, input, {
+    backend: 'vegalite',
+    interactions: [clickHighlight(), axisHighlight()],
+    assistedTargeting: {
+        maxDistance: 16,
+        indicator: true,
+        details: { fields: ['country', 'value'], maxRows: 4 },
+    },
+    keyboardTargeting: true,
+});
+```
+
+`axisHighlight()` treats native categorical axis ticks as semantic controls. The compiler maps each Vega scale back to its authored field, and the runtime associates a tick with represented mark keys. Quantitative and temporal ticks remain inert until a nearest-value or interval policy is specified.
+
 ## Update Language
 
 Presets and applications produce one renderer-neutral `ChartUpdate` format. There is no
@@ -675,7 +696,7 @@ interface ChartUpdate {
 }
 
 type ChartUpdateOp =
-    | { op: 'set-presentation'; targets: readonly UpdateTarget[]; value: PresentationSpec }
+    | { op: 'set-style'; targets: readonly UpdateTarget[]; value: StyleSpec }
     | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null }
     | { op: 'set-viewport'; axes: 'x' | 'y' | 'xy'; value: { x?: Domain; y?: Domain } }
     | {
@@ -684,6 +705,16 @@ type ChartUpdateOp =
         field: string;
         values: readonly unknown[];
     };
+
+interface StyleSpec {
+    visible?: boolean;
+    opacity?: number;
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    state?: 'normal' | 'focused' | 'emphasized' | 'muted';
+    mutedOpacity?: number;
+}
 ```
 
 Operators are plain JSON. Presets and applications construct object literals directly;
@@ -718,7 +749,7 @@ future composition modes can extend the API without changing this default behavi
 
 Relative gesture data is not update state. Pan deltas, zoom factors, toggle modifiers,
 and drag positions are reduced by interaction state into absolute `set-viewport`,
-`set-presentation`, or `set-order` values. Cancelling a gesture requires no inverse
+`set-style`, or `set-order` values. Cancelling a gesture requires no inverse
 chart command: the interaction drops its preview and sends the prior effective updates.
 
 Targets may be exact event-derived refs or unresolved equality selectors:
@@ -771,7 +802,7 @@ and apply that precomputed state directly:
 const result = await surface.applyUpdate({
     id: 'external-country-selection',
     ops: [{
-        op: 'set-presentation',
+        op: 'set-style',
         targets: [{
             select: {
                 key: { Country: 'Japan' },
@@ -802,7 +833,7 @@ const countryPicker = externalInteraction<{ country: string; selected: boolean }
     handle: ({ country, selected }) => ({
         id: 'country-picker',
         ops: [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: selected ? [{ select: { key: { Country: country } } }] : [],
             value: { state: selected ? 'emphasized' : 'normal' },
         }],

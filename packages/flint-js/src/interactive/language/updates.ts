@@ -11,7 +11,7 @@ export type {
     AnnotationSpec,
     ChartUpdate,
     ChartUpdateOp,
-    PresentationSpec,
+    StyleSpec,
     SemanticTargetRef,
     SemanticTargetSelector,
     UpdateDomain,

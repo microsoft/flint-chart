@@ -13,7 +13,17 @@ export interface ViewportGeometry {
 export type ChartUpdateComposition = 'auto';
 
 /** Pointer acquisition that snaps to a nearby mark instead of requiring a direct hit. */
-export interface AssistedTargetingOptions {
+export interface TargetDetailsOptions {
+    fields?: readonly string[];
+    maxRows?: number;
+}
+
+export interface TargetFeedbackOptions {
+    indicator?: boolean;
+    details?: boolean | TargetDetailsOptions;
+}
+
+export interface AssistedTargetingOptions extends TargetFeedbackOptions {
     maxDistance?: number;
 }
 

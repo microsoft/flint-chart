@@ -224,11 +224,11 @@ function DashboardPanel({
           id: DASHBOARD_SELECTION_ID,
           ops: targets.length > 0
             ? [{
-                op: 'set-presentation',
+                op: 'set-style',
                 targets,
                 value: { state: 'emphasized', mutedOpacity: 0.22 },
               }]
-            : [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+            : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
         };
       },
     }),

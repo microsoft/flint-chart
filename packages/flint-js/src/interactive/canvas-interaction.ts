@@ -3,7 +3,6 @@ import type { InteractionEventSource } from './triggers';
 import type {
     CanvasInteractionAction,
     CanvasInteractionEvent,
-    InteractionModifiers,
     NavigationInteractionEvent,
     PlotGeometry,
     SemanticInteractionEvent,

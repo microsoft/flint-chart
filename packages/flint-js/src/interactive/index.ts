@@ -5,6 +5,8 @@ import type { BuildInteractiveChartOptions, InteractiveChartSurface } from './ty
 
 export type {
     AssistedTargetingOptions,
+    TargetDetailsOptions,
+    TargetFeedbackOptions,
     BuildInteractiveChartOptions,
     ChartUpdateApplyOptions,
     ChartUpdateComposition,
@@ -36,6 +38,7 @@ export type {
     BrushOptions,
     BrushZoomOptions,
     AngularBrushOptions,
+    AxisHighlightOptions,
     ClickAnnotateOptions,
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
@@ -65,7 +68,7 @@ export type {
     SemanticElement,
     SemanticInteractionEvent,
     SemanticTarget,
-    PresentationSpec,
+    StyleSpec,
     UpdateDomain,
     UpdateTarget,
 } from './interactions';
@@ -83,7 +86,7 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
 export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
@@ -149,6 +152,10 @@ export function buildInteractiveChart(
                                 ? (typeof assistedTargeting === 'object' ? assistedTargeting.maxDistance : undefined)
                                     ?? DEFAULT_ASSIST_DISTANCE
                                 : 0,
+                            targetFeedback: {
+                                assisted: typeof assistedTargeting === 'object' ? assistedTargeting : assistedTargeting ? {} : false,
+                                keyboard: keyboardTargeting ? {} : false,
+                            },
                             keyboardTargeting,
                             dismiss,
                         }).mount(chartContainer, chartInput);

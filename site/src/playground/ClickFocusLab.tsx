@@ -9,6 +9,7 @@ import {
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
+  axisHighlight,
   brushX,
   brushY,
   brushZoom,
@@ -38,7 +39,7 @@ export type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
   | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder'
   | 'lasso' | 'assisted' | 'keyboard' | 'select-comment'
   | 'legend-toggle' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
-  | 'brush-zoom' | 'long-press' | 'double-activate';
+  | 'brush-zoom' | 'long-press' | 'double-activate' | 'axis-highlight';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 export interface NavigationGuard {
@@ -62,6 +63,7 @@ const interactionModes = [
   { value: 'select-comment', label: 'Select & comment', icon: MessageSquarePlus },
   { value: 'assisted', label: 'Assisted click', icon: Crosshair },
   { value: 'keyboard', label: 'Keyboard', icon: Keyboard },
+  { value: 'axis-highlight', label: 'Axis highlight', icon: Ruler },
   { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
   { value: 'inspect', label: 'Inspect xy', icon: Target },
   { value: 'inspect-quadrant', label: 'Inspect quadrant', icon: Crosshair },
@@ -84,6 +86,7 @@ function modeInteractions(
 ): MountedInteraction[] {
   switch (mode) {
     case 'element': return [clickHighlight()];
+    case 'axis-highlight': return [axisHighlight()];
     case 'group': return [clickGroupHighlight()];
     case 'annotate': return [clickAnnotate()];
     case 'select': return [rectangleSelect()];
@@ -750,6 +753,8 @@ export function ClickFocusLab() {
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel or trackpad to zoom.</li>
+          <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
+          <li><strong>Axis highlight:</strong> Click a categorical tick or label to focus the marks it represents.</li>
         </ul>
         <div className="cf-summary"><span><strong>{visibleCases.length}</strong> test cases</span></div>
         <div className="cf-theme-picker">

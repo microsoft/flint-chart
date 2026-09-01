@@ -194,7 +194,7 @@ const countryPicker = externalInteraction<{ country: string }>({
   handle: ({ country }) => ({
     id: 'country-selection',
     ops: [{
-      op: 'set-presentation',
+      op: 'set-style',
       targets: [{ select: { key: { Country: country } } }],
       value: { state: 'emphasized' },
     }],

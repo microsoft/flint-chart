@@ -33,7 +33,7 @@ export function emphasisUpdate(
     dimOpacity: number,
     context: InteractionContext,
 ): ChartUpdate | null {
-    if (!target) return { id, ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }] };
+    if (!target) return { id, ops: [{ op: 'set-style', targets: [], value: { state: 'normal' } }] };
     if (target.elements.length === 0) return null;
     const toggle = selectionMode(event.modifiers) === 'toggle';
     const targetKeys = new Set(target.elements.map(semanticElementIdentity));
@@ -48,7 +48,7 @@ export function emphasisUpdate(
     return {
         id,
         ops: [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: elements.length > 0 ? [{ visual: target.visual, elements }] : [],
             value: { state: elements.length > 0 ? 'emphasized' : 'normal', mutedOpacity: dimOpacity },
         }],

@@ -193,7 +193,7 @@ async function waitForStableChartLayout(container: HTMLElement): Promise<void> {
             ops: [
               { op: 'set-annotation', target, value: { text: fixture.text } },
               {
-                op: 'set-presentation',
+                op: 'set-style',
                 targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
               },

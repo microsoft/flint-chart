@@ -233,7 +233,7 @@ export function InteractionArchitectureIllustration() {
             title="Chart update spec"
             lines={[
               { text: '- Update target' },
-              { text: '- Ops (set-presentation,' },
+              { text: '- Ops (set-style,' },
               { text: 'set-annotation, set-viewport,', indent: true },
               { text: 'set-order)', indent: true },
             ]}

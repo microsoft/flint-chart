@@ -226,11 +226,11 @@ function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
       id: interactionId,
       ops: payload.match
         ? [{
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{ select: { key: selectorKey(payload.match) } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
           }]
-        : [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
+        : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
   })], [interactionId]);
   const handleSurface = useCallback((surface: InteractiveChartSurface | null) => {

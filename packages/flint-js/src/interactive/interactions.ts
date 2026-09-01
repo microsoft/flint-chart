@@ -15,6 +15,7 @@ import {
     createBrushInteraction,
     createBrushZoomInteraction,
     createAngularBrushInteraction,
+    createAxisHighlightInteraction,
     createClickAnnotateInteraction,
     createClickGroupHighlightInteraction,
     createClickHighlightInteraction,
@@ -80,7 +81,7 @@ export type {
     AnnotationSpec,
     ChartUpdate,
     ChartUpdateOp,
-    PresentationSpec,
+    StyleSpec,
     SemanticTargetRef,
     SemanticTargetSelector,
     UpdateDomain,
@@ -93,6 +94,8 @@ export interface CanvasInteractionDef {
     readonly navigationDomainGuard?: NavigationDomainGuard;
     /** Claims legend activations exclusively, so a legend click never also reads as an element click. */
     readonly claimsLegendActivation?: boolean;
+        /** Claims native axis tick activations instead of treating them as mark activations. */
+        readonly claimsAxisActivation?: boolean;
     handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdate | null;
 }
 
@@ -124,6 +127,13 @@ export interface ClickHighlightOptions {
     dimOpacity?: number;
     /** Whether legend activation focuses the represented series. Defaults to true. */
     legend?: boolean;
+}
+
+export interface AxisHighlightOptions {
+    id?: string;
+    axis?: 'x' | 'y';
+    event?: 'hover' | 'click';
+    dimOpacity?: number;
 }
 
 export interface ClickGroupHighlightOptions extends ClickHighlightOptions {
@@ -206,6 +216,10 @@ export interface DragReorderOptions {
 
 export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
     return createClickHighlightInteraction(options);
+}
+
+export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInteractionDef {
+    return createAxisHighlightInteraction(options);
 }
 
 export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {

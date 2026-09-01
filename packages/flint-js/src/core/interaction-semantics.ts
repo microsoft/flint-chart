@@ -1,6 +1,5 @@
 import type {
     RenderHit,
-    LegendTargetValue,
     SemanticElement,
     SemanticResolveContext,
     SemanticResolveEvent,
@@ -9,6 +8,7 @@ import type {
 
 export type {
     ChartInteractionResolver,
+    AxisTargetValue,
     RenderHit,
     LegendDomain,
     LegendTargetValue,
@@ -146,12 +146,12 @@ export function legendMatchedHits(
     const domain = event.legend?.domain;
     if (!domain) return [];
     const matches = (datum: Record<string, unknown>): boolean => {
-            if (domain.kind === 'value') return datum[field] === domain.value;
-            const rawValue = datum[field];
-            const value = rawValue instanceof Date ? rawValue.getTime() : rawValue;
-            return typeof value === 'number'
-                && (domain.start === undefined || value >= domain.start)
-                && (domain.end === undefined || value < domain.end);
+        if (domain.kind === 'value') return datum[field] === domain.value;
+        const rawValue = datum[field];
+        const value = rawValue instanceof Date ? rawValue.getTime() : rawValue;
+        return typeof value === 'number'
+            && (domain.start === undefined || value >= domain.start)
+            && (domain.end === undefined || value < domain.end);
         };
     return context.allHits
         .filter((hit) => matches(hit.datum))

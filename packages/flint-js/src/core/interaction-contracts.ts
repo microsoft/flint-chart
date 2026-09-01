@@ -32,10 +32,16 @@ export interface LegendTargetValue extends Record<string, unknown> {
     domain: LegendDomain;
 }
 
+    export interface AxisTargetValue extends Record<string, unknown> {
+        axis: 'x' | 'y';
+        field: string;
+        value: unknown;
+    }
+
 /** A semantic subject: its visual role plus represented values and provenance. */
 export interface SemanticTarget {
     visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend';
+        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend' | 'axis';
         role: string;
     };
     elements: readonly SemanticElement[];
@@ -114,9 +120,10 @@ export interface AnnotationSpec {
     subject?: Partial<SemanticTarget['visual']>;
 }
 
-export interface PresentationSpec {
+export interface StyleSpec {
     visible?: boolean;
     opacity?: number;
+    fill?: string;
     stroke?: string;
     strokeWidth?: number;
     state?: 'normal' | 'focused' | 'emphasized' | 'muted';
@@ -125,9 +132,9 @@ export interface PresentationSpec {
 
 export type ChartUpdateOp =
     | {
-        op: 'set-presentation';
+        op: 'set-style';
         targets: readonly UpdateTarget[];
-        value: PresentationSpec;
+        value: StyleSpec;
     }
     | {
         op: 'set-annotation';

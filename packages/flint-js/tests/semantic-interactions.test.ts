@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
+import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
 import type { RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
 import {
     associateSemanticElementRenderKeys,
@@ -27,6 +27,7 @@ import { roseChartDef } from '../src/vegalite/templates/rose';
 import { rangedDotPlotDef, scatterPlotDef } from '../src/vegalite/templates/scatter';
 import {
     addVegaLiteInteractions,
+    collectVegaAxisTargets,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
@@ -34,6 +35,7 @@ import {
 import { angularSectorPath } from '../src/interactive/geometry/angular';
 import {
     arcIntersectsAngularSector,
+    axisTargetIdentity,
     arcIntersectsRect,
     boundsIntersectRect,
     clientRectToLayoutRect,
@@ -65,6 +67,7 @@ import {
     LEGEND_HIDDEN_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
+    STYLE_SIGNAL,
 } from '../src/vegalite/interactions/stores';
 import {
     mergeContiguousSelectionBounds,
@@ -559,7 +562,7 @@ describe('Vega-Lite semantic interactions', () => {
             handle: ({ category }) => ({
                 id: 'category-picker',
                 ops: [{
-                    op: 'set-presentation',
+                    op: 'set-style',
                     targets: [{ select: { key: { category } } }],
                     value: { state: 'emphasized' },
                 }],
@@ -2631,7 +2634,7 @@ describe('Vega-Lite semantic interactions', () => {
         } as any, { available: [], selected: [] } as any);
 
         expect(update?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [{
                 visual: { kind: 'legend', role: 'legend-item' },
                 elements: target?.elements,
@@ -2650,7 +2653,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         } as any, { available: [], selected: [] } as any);
         expect(restored?.ops[0]).toMatchObject({
-            op: 'set-presentation',
+            op: 'set-style',
             targets: [],
             value: { visible: false },
         });
@@ -3459,7 +3462,68 @@ describe('Vega-Lite semantic interactions', () => {
         view.finalize();
     });
 });
-describe('set-presentation visibility', () => {
+describe('set-style visibility', () => {
+    it('injects absolute runtime style channels keyed by semantic identity', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: { fields: ['Category'], selectableMarks: ['bar'] },
+            data: { values: [{ Category: 'A', Value: 1 }] },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Category', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { value: '#4472c4' },
+            },
+        };
+        const { compiled } = instrument(spec);
+        expect(compiled.signals).toContainEqual({ name: STYLE_SIGNAL, value: {} });
+        expect(JSON.stringify(compiled.marks)).toContain(`${STYLE_SIGNAL}[datum.${INTERACTION_KEY}]`);
+    });
+
+    it('maps compiled axis scales to authored discrete fields and resolves native ticks', async () => {
+        const compiled = compile({
+            data: { values: [{ Category: 'A', Value: 1 }] },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Category', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+            },
+        }).spec as Record<string, any>;
+        const targets = collectVegaAxisTargets(compiled, {
+            x: { field: 'Category', type: 'nominal' },
+            y: { field: 'Value', type: 'quantitative' },
+        });
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const labels = allSceneItems(view).filter((item) => item.mark?.role === 'axis-label');
+        const categoryLabel = labels.find((item) => item.datum?.value === 'A');
+        const quantityLabel = labels.find((item) => item.datum?.value === 1);
+        expect(axisTargetIdentity(categoryLabel, targets)).toMatchObject({
+            axis: 'x', field: 'Category', value: 'A', role: 'axis-label',
+        });
+        expect(axisTargetIdentity(quantityLabel, targets)).toBeNull();
+        expect(JSON.stringify(compiled.axes)).toContain('"interactive":true');
+        view.finalize();
+    });
+
+    it('turns an axis target into a style update without accepting mark targets', () => {
+        const interaction = axisHighlight({ axis: 'x', dimOpacity: 0.2 });
+        const context = { chartType: 'Bar Chart', selected: [] };
+        const axisTarget = {
+            visual: { kind: 'axis' as const, role: 'axis-label' },
+            elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
+        };
+        const update = interaction.handle!({
+            action: 'click-axis', phase: 'commit', geometry: {}, target: axisTarget,
+        }, context);
+        expect(update?.ops[0]).toMatchObject({
+            op: 'set-style', targets: [axisTarget], value: { state: 'emphasized', mutedOpacity: 0.2 },
+        });
+        expect(interaction.handle!({
+            action: 'click-element', phase: 'commit', geometry: {},
+            target: { visual: { kind: 'mark', role: 'bar' }, elements: [] },
+        }, context)).toBeNull();
+    });
+
     it('pins the legend domain so a hidden series keeps a key to click', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {

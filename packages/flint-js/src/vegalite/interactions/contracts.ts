@@ -46,6 +46,12 @@ export interface VegaReorderAxis {
     signal: string;
 }
 
+export interface VegaAxisTarget {
+    axis: 'x' | 'y';
+    field: string;
+    type: string;
+}
+
 export interface VegaInteractionPlan {
     fields: readonly string[];
     sourceRecords: readonly Record<string, unknown>[];
@@ -56,6 +62,8 @@ export interface VegaInteractionPlan {
     seriesField?: string;
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Readonly<Record<string, string>>;
+    axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
+    axisTargets?: Readonly<Record<string, VegaAxisTarget>>;
     rangeLegendChannels?: readonly string[];
     annotationMarkType?: string;
     /** The compiled spec carries the semantic selection stores. */

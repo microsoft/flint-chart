@@ -34,7 +34,7 @@ const legendSelection: CanvasInteractionDef = {
 			id: 'legend-selection',
 			ops: [
 				{
-					op: 'set-presentation', targets: [event.target],
+					op: 'set-style', targets: [event.target],
 					value: { state: 'emphasized' },
 				},
 				{ op: 'set-annotation', target: event.target, value: { text: 'Selected series' } },
@@ -50,7 +50,7 @@ semantic runtime. Current presets consume the public canvas event shape and prod
 public update JSON; target resolution and backend application remain internal. Other
 interactive backends and additional appearance/visibility operations remain future work.
 
-Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, and rose. All three produce the same semantic `set-presentation` operation after the owning ChartDef resolves physical hits.
+Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, and rose. All three produce the same semantic `set-style` operation after the owning ChartDef resolves physical hits.
 
 ## Emphasis Behavior
 
@@ -87,7 +87,7 @@ The stages remain separate:
 1. Trigger normalization reports physical hits.
 2. ChartDef resolution converts hits into semantic elements.
 3. The coordinator emits the resolved event whether or not a preset is configured.
-4. An optional preset emits `set-presentation` with selected elements and muted-peer opacity.
+4. An optional preset emits `set-style` with selected elements and muted-peer opacity.
 5. ChartDef presentation declares representation-specific focus styling.
 6. The renderer applies opacity, proportional line width, or region boundaries mechanically.
 

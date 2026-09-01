@@ -29,6 +29,7 @@ import {
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
+    STYLE_SIGNAL,
 } from './stores';
 
 const CLEAR_MARK = '__flint_interaction_clear';
@@ -45,6 +46,7 @@ interface TemplateInteractionSemantics {
     seriesField?: string;
     resolveGroupValue?: InteractionContext['resolveGroupValue'];
     legendFields?: Record<string, string>;
+    axisFields?: Partial<Record<'x' | 'y', { field: string; type: string }>>;
     rangeLegendChannels?: readonly string[];
     selectableMarks: string[];
     annotationMarkType?: string;
@@ -63,9 +65,8 @@ interface TemplateInteractionSemantics {
 
 export function withoutSemanticInteractionField(value: unknown): unknown {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
-    const filtered = { ...(value as Record<string, unknown>) };
-    delete filtered[INTERACTION_KEY];
-    return filtered;
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+        .filter(([field]) => field !== '_vgsid_' && !field.startsWith('__')));
 }
 
 function markType(mark: unknown): string | undefined {
@@ -473,9 +474,9 @@ export function addVegaLiteInteractions(
         } as const;
         const interactionContext = { chartType: 'Unknown', selected: [] };
         const update = interaction.handle(toCanvasInteractionEvent(semanticEvent, interaction.eventSource), interactionContext);
-        const presentation = update?.ops.find((op) => op.op === 'set-presentation');
-        return presentation?.op === 'set-presentation'
-            ? Math.min(value, presentation.value.mutedOpacity ?? DEFAULT_DIM_OPACITY)
+        const style = update?.ops.find((op) => op.op === 'set-style');
+        return style?.op === 'set-style'
+            ? Math.min(value, style.value.mutedOpacity ?? DEFAULT_DIM_OPACITY)
             : value;
     }, DEFAULT_DIM_OPACITY);
 
@@ -510,6 +511,7 @@ export function addVegaLiteInteractions(
         seriesField: templateSemantics.seriesField,
         resolveGroupValue: templateSemantics.resolveGroupValue,
         legendFields: templateSemantics.legendFields,
+        axisFields: templateSemantics.axisFields,
         rangeLegendChannels: templateSemantics.rangeLegendChannels,
         annotationMarkType: templateSemantics.annotationMarkType,
         semanticStores: instrumented,
@@ -580,6 +582,38 @@ export function injectVegaNavigationSignals(
     return result;
 }
 
+export function collectVegaAxisTargets(
+    vegaSpec: Record<string, any>,
+    axisFields: VegaInteractionPlan['axisFields'],
+): Record<string, import('./contracts').VegaAxisTarget> {
+    const targets: Record<string, import('./contracts').VegaAxisTarget> = {};
+    const visit = (scope: Record<string, any>): void => {
+        for (const axis of scope.axes ?? []) {
+            const channel = axis.orient === 'top' || axis.orient === 'bottom' ? 'x'
+                : axis.orient === 'left' || axis.orient === 'right' ? 'y' : undefined;
+            const field = channel ? axisFields?.[channel] : undefined;
+            if (!channel || !field || typeof axis.scale !== 'string') continue;
+            targets[axis.scale] = { axis: channel, ...field };
+            axis.encode = {
+                ...(axis.encode ?? {}),
+                labels: {
+                    ...(axis.encode?.labels ?? {}),
+                    interactive: true,
+                    update: { ...(axis.encode?.labels?.update ?? {}), cursor: { value: 'pointer' } },
+                },
+                ticks: {
+                    ...(axis.encode?.ticks ?? {}),
+                    interactive: true,
+                    update: { ...(axis.encode?.ticks?.update ?? {}), cursor: { value: 'pointer' } },
+                },
+            };
+        }
+        for (const mark of scope.marks ?? []) visit(mark);
+    };
+    visit(vegaSpec);
+    return targets;
+}
+
 function applyCompiledHoverStyles(
     marks: Record<string, any>[],
     renderHoverStyles: Readonly<Record<string, HoverStyle>>,
@@ -631,6 +665,24 @@ function applyCompiledHoverStyles(
     }
 }
 
+function applyCompiledStyleChannels(marks: Record<string, any>[]): void {
+    for (const mark of marks) {
+        if (Array.isArray(mark.marks)) applyCompiledStyleChannels(mark.marks);
+        const update = mark.encode?.update;
+        if (!update || !JSON.stringify(mark.encode).includes(INTERACTION_KEY)) continue;
+        const key = `datum.${INTERACTION_KEY}`;
+        for (const channel of ['opacity', 'fill', 'stroke', 'strokeWidth'] as const) {
+            const existing = update[channel] ?? mark.encode?.enter?.[channel];
+            if (existing === undefined) continue;
+            const styleValue = `${STYLE_SIGNAL}[${key}] && ${STYLE_SIGNAL}[${key}].${channel}`;
+            update[channel] = [
+                { test: `isValid(${styleValue})`, signal: styleValue },
+                ...(Array.isArray(existing) ? existing : [existing]),
+            ];
+        }
+    }
+}
+
 export function injectVegaInteractionStore(
     vegaSpec: Record<string, any>,
     plan?: Pick<VegaInteractionPlan, 'dimOpacity' | 'renderHoverStyles' | 'selectionBoundary'>,
@@ -645,6 +697,10 @@ export function injectVegaInteractionStore(
         { name: LEGEND_HOVER_STORE, values: [] },
         { name: LEGEND_SELECTION_STORE, values: [] },
         ...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []),
+    ];
+    vegaSpec.signals = [
+        ...(Array.isArray(vegaSpec.signals) ? vegaSpec.signals : []),
+        { name: STYLE_SIGNAL, value: {} },
     ];
     const instrumentLegends = (scope: Record<string, any>): void => {
         for (const legend of scope.legends ?? []) {
@@ -750,6 +806,7 @@ export function injectVegaInteractionStore(
     instrumentLegends(vegaSpec);
     if (!Array.isArray(vegaSpec.marks)) return;
     if (plan?.renderHoverStyles) applyCompiledHoverStyles(vegaSpec.marks, plan.renderHoverStyles);
+    applyCompiledStyleChannels(vegaSpec.marks);
     vegaSpec.marks.unshift({
         type: 'rect',
         name: CLEAR_MARK,

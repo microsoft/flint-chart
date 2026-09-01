@@ -938,6 +938,12 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             ) === index);
         result._interactionSemantics = {
             ...templateSemantics,
+            axisFields: Object.fromEntries((['x', 'y'] as const).flatMap((axis) => {
+                const encoding = resolvedEncodings[axis];
+                return encoding?.field
+                    ? [[axis, { field: encoding.field, type: encoding.type ?? 'nominal' }]]
+                    : [];
+            })),
             sourceRecords: values.map((record) => ({ ...record })),
             provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
             temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,

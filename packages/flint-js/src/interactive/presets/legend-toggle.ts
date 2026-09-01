@@ -85,7 +85,7 @@ export function createLegendToggleInteraction(options: LegendToggleOptions = {})
             return {
                 id,
                 ops: [{
-                    op: 'set-presentation',
+                    op: 'set-style',
                     targets: hidden.length > 0
                         ? [{ visual: { kind: 'legend', role: 'legend-item' }, elements: hidden }]
                         : [],

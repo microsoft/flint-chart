@@ -1,6 +1,7 @@
 export { createBrushInteraction } from './brush';
 export { createBrushZoomInteraction } from './brush-zoom';
 export { createAngularBrushInteraction } from './angular-brush';
+export { createAxisHighlightInteraction } from './axis-highlight';
 export { createClickAnnotateInteraction } from './click-annotate';
 export { createClickGroupHighlightInteraction } from './click-group-highlight';
 export { createClickHighlightInteraction } from './click-highlight';

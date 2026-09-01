@@ -35,12 +35,11 @@ import type { ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
-    axisIntersectingHits,
+    axisTargetIdentity,
     clientToPlotPoint,
     clientToRendererPoint,
     interactionModifiers,
     normalizeVegaElementEvent,
-    nearestItemByBounds,
     nearestInteractiveSceneItem,
     nearestSceneItem,
     nextItemInDirection,
@@ -66,6 +65,7 @@ import {
     eligibleReorderAxesForHit,
 } from './presentation/drag-reorder-overlay';
 import { createFocusOverlay } from './presentation/focus-overlay';
+import { createTargetFeedbackOverlay } from './presentation/target-feedback-overlay';
 import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
 import { createReorderResetControls } from './presentation/reorder-reset-controls';
 import { createViewportResetControl } from './presentation/viewport-reset-control';
@@ -77,6 +77,7 @@ import {
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
+    STYLE_SIGNAL,
 } from './stores';
 
 const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
@@ -249,6 +250,34 @@ export function interactionsForHoverPresentation(
     );
 }
 
+function keyboardRepresentativeRank(item: any): [number, number] {
+    const markType = item?.mark?.marktype;
+    const width = Math.max(0, (item?.bounds?.x2 ?? 0) - (item?.bounds?.x1 ?? 0));
+    const height = Math.max(0, (item?.bounds?.y2 ?? 0) - (item?.bounds?.y1 ?? 0));
+    const markRank = markType === 'rect' ? 3 : markType === 'arc' ? 2 : markType === 'rule' ? 0 : 1;
+    return [markRank, width * height];
+}
+
+export function keyboardTargetItems(scene: readonly any[]): any[] {
+    const itemsByKey = new Map<string, any>();
+    for (const item of scene) {
+        const key = renderHit(item)?.datum[INTERACTION_KEY];
+        if (typeof key !== 'string' || !item.bounds) continue;
+        const existing = itemsByKey.get(key);
+        if (!existing) {
+            itemsByKey.set(key, item);
+            continue;
+        }
+        const [rank, area] = keyboardRepresentativeRank(item);
+        const [existingRank, existingArea] = keyboardRepresentativeRank(existing);
+        if (rank > existingRank || (rank === existingRank && area > existingArea)) {
+            itemsByKey.set(key, item);
+        }
+    }
+    return [...itemsByKey.values()].sort((left, right) =>
+        (left.bounds.x1 - right.bounds.x1) || (left.bounds.y1 - right.bounds.y1));
+}
+
 export function enrichTargetWithSourceProvenance(
     target: SemanticTarget | null,
     plan: Pick<VegaInteractionPlan,
@@ -286,6 +315,10 @@ export function mountVegaInteractions(
     presentUpdate: ChartUpdatePresenter,
     assistDistance = 0,
     keyboardTargeting = false,
+    targetFeedback: {
+        assisted: import('../../interactive/types').TargetFeedbackOptions | false;
+        keyboard: import('../../interactive/types').TargetFeedbackOptions | false;
+    } | undefined = undefined,
     dismiss: import('../../interactive/types').InteractionDismissPolicy | false | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
@@ -295,6 +328,10 @@ export function mountVegaInteractions(
     const hoverInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'hover')
         : [];
+    const axisClickInteractions = clickInteractions.filter((interaction) => interaction.claimsAxisActivation);
+    const markClickInteractions = clickInteractions.filter((interaction) => !interaction.claimsAxisActivation);
+    const axisHoverInteractions = hoverInteractions.filter((interaction) => interaction.claimsAxisActivation);
+    const markHoverInteractions = hoverInteractions.filter((interaction) => !interaction.claimsAxisActivation);
     const contextInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'context')
         : [];
@@ -308,8 +345,8 @@ export function mountVegaInteractions(
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'double')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
-        clickInteractions,
-        hoverInteractions,
+        markClickInteractions,
+        markHoverInteractions,
     );
     const regionInteraction = resolve
         ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag')
@@ -367,6 +404,12 @@ export function mountVegaInteractions(
     };
 
     const focusOverlay = createFocusOverlay({ view, container, plan, coordinateSpace, containerLayoutSize });
+    const targetFeedbackOverlay = createTargetFeedbackOverlay({
+        container,
+        feedback: targetFeedback?.assisted || targetFeedback?.keyboard || {},
+        coordinateSpace,
+        containerLayoutSize,
+    });
     const legendRangeOverlay = createLegendRangeOverlay({ container, coordinateSpace, containerLayoutSize });
     const annotationOverlay = createAnnotationOverlay({
         view,
@@ -535,7 +578,7 @@ export function mountVegaInteractions(
         let resolvedTargets = 0;
         const ops: ChartUpdateOp[] = [];
         for (const op of update.ops) {
-            if (op.op === 'set-presentation') {
+            if (op.op === 'set-style') {
                 const targets = op.targets.flatMap((target) => {
                     const resolved = resolveUpdateTarget(target);
                     if (!resolved) {
@@ -590,6 +633,8 @@ export function mountVegaInteractions(
         ];
         const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
         const activeHiddenLegendDomains = new Set<string>();
+        const stylesByKey: Record<string, Pick<import('../../core/interaction-contracts').StyleSpec,
+            'opacity' | 'fill' | 'stroke' | 'strokeWidth'>> = {};
         selectedElements.clear();
         hiddenKeys.clear();
         let annotation: Extract<ChartUpdateOp, { op: 'set-annotation' }> | undefined;
@@ -600,7 +645,7 @@ export function mountVegaInteractions(
         }
         for (const update of displayUpdates) {
             for (const op of update.ops) {
-                if (op.op === 'set-presentation' && op.value.visible === false) {
+                if (op.op === 'set-style' && op.value.visible === false) {
                     for (const target of op.targets) {
                         if ('select' in target) continue;
                         for (const element of target.elements) {
@@ -624,12 +669,24 @@ export function mountVegaInteractions(
                             }
                         }
                     }
-                } else if (op.op === 'set-presentation'
-                    && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
+                }
+                if (op.op === 'set-style') {
                     for (const target of op.targets) {
                         if ('select' in target) continue;
                         for (const element of target.elements) {
-                            for (const key of semanticElementRenderKeys(element)) selectedElements.set(key, element);
+                            for (const key of semanticElementRenderKeys(element)) {
+                                if (op.value.state === 'emphasized' || op.value.state === 'focused') {
+                                    selectedElements.set(key, element);
+                                }
+                                const style = Object.fromEntries(
+                                    (['opacity', 'fill', 'stroke', 'strokeWidth'] as const)
+                                        .filter((channel) => op.value[channel] !== undefined)
+                                        .map((channel) => [channel, op.value[channel]]),
+                                );
+                                if (Object.keys(style).length > 0) {
+                                    stylesByKey[key] = { ...stylesByKey[key], ...style };
+                                }
+                            }
                         }
                     }
                 } else if (op.op === 'set-annotation') {
@@ -649,6 +706,7 @@ export function mountVegaInteractions(
         if (keys.length === 0) selectedLegend = null;
         // A navigation-only chart compiles without the selection stores.
         if (plan.semanticStores !== false) {
+            view.signal(STYLE_SIGNAL, stylesByKey);
             view.change(
                 INTERACTION_STORE,
                 changeset().remove(() => true).insert(keys.map((key) => ({ key }))),
@@ -799,6 +857,22 @@ export function mountVegaInteractions(
             resolveContext(availableHits),
         ));
     };
+    const resolveAxisTarget = (item: any): SemanticTarget | null => {
+        const identity = axisTargetIdentity(item, plan.axisTargets);
+        if (!identity) return null;
+        const hits = allHits().filter((hit) => Object.is(hit.datum[identity.field], identity.value));
+        if (hits.length === 0) return null;
+        const represented = resolveTarget('click', 'axis-tick', hits);
+        const records = [...new Set(represented?.elements.flatMap((element) => element.records ?? []) ?? [])];
+        const keys = [...new Set(represented?.elements.flatMap(semanticElementRenderKeys) ?? [])];
+        return {
+            visual: { kind: 'axis', role: identity.role },
+            elements: [associateSemanticElementRenderKeys({
+                value: { axis: identity.axis, field: identity.field, value: identity.value },
+                ...(records.length > 0 ? { records } : {}),
+            }, keys)],
+        };
+    };
     let hoveredKeys = '\u0001\u0000';
     let hoverActive = false;
     const setHover = async (
@@ -828,6 +902,7 @@ export function mountVegaInteractions(
         renderLegendRange();
     };
     const clearHover = (): void => {
+        targetFeedbackOverlay.clear();
         void setHover([]);
         if (hoverInteractions.length > 0 && hoverActive) {
             hoverActive = false;
@@ -852,7 +927,7 @@ export function mountVegaInteractions(
         const direct = normalizeVegaElementEvent(
             view, item, point, phase, modifiers, plan.legendFields, plan.rangeLegendChannels, rootPoint,
         );
-        if (assistDistance <= 0 || direct.legend || direct.event.hits.length > 0) return direct;
+        if (assistDistance <= 0 || direct.legend || direct.event.hits.length > 0) return { ...direct, feedbackItem: null };
         const rawPlotPoint = { x: rootPoint.x - space.originX, y: rootPoint.y - space.originY };
         const overPlot = rawPlotPoint.x >= 0 && rawPlotPoint.x <= space.plotWidth
             && rawPlotPoint.y >= 0 && rawPlotPoint.y <= space.plotHeight;
@@ -860,21 +935,34 @@ export function mountVegaInteractions(
             view, rawPlotPoint, assistDistance, rootPoint, overPlot,
         );
         return snapped
-            ? normalizeVegaElementEvent(
+            ? { ...normalizeVegaElementEvent(
                 view, snapped, point, phase, modifiers, plan.legendFields, plan.rangeLegendChannels, rootPoint,
-            )
-            : direct;
+            ), feedbackItem: snapped }
+            : { ...direct, feedbackItem: null };
     };
     const hoverHandler = (event: MouseEvent, item: any): void => {
-        if (hoverPresentationInteractions.length === 0 || regionDragging) return;
+        if ((hoverPresentationInteractions.length === 0 && axisHoverInteractions.length === 0) || regionDragging) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const axisTarget = resolveAxisTarget(item);
+        if (axisTarget) {
+            hoverActive = true;
+            container.style.cursor = 'pointer';
+            for (const interaction of axisHoverInteractions) {
+                void dispatch(interaction, {
+                    type: 'semantic', source: 'element', phase: 'preview', target: axisTarget, point,
+                    modifiers: interactionModifiers(event),
+                });
+            }
+            void setHover(axisTarget.elements.flatMap(semanticElementRenderKeys));
+            return;
+        }
         const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event));
         const legend = normalized.legend;
         if (legend) {
             if (!regionInteraction && !navigationInteraction) container.style.cursor = 'pointer';
             const resolved = legendSemanticTarget(legend);
             hoverActive = true;
-            for (const interaction of hoverInteractions) {
+            for (const interaction of markHoverInteractions) {
                 void dispatch(interaction, {
                     type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                     modifiers: normalized.event.modifiers,
@@ -890,6 +978,11 @@ export function mountVegaInteractions(
         }
         if (!regionInteraction && !navigationInteraction) container.style.cursor = 'pointer';
         const resolved = resolveTarget('hover', normalized.role, normalized.event.hits);
+        if (normalized.feedbackItem && targetFeedback?.assisted) {
+            targetFeedbackOverlay.render(normalized.feedbackItem, resolved, 'assisted');
+        } else {
+            targetFeedbackOverlay.clear();
+        }
         hoverActive = true;
         const interactionContext = context();
         const presentationElements = hoverPresentationInteractions.flatMap((interaction) => {
@@ -898,12 +991,12 @@ export function mountVegaInteractions(
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                 modifiers: normalized.event.modifiers,
             }, interaction.eventSource), interactionContext);
-            return preview?.ops.flatMap((op) => op.op === 'set-presentation'
+            return preview?.ops.flatMap((op) => op.op === 'set-style'
                 && (op.value.state === 'emphasized' || op.value.state === 'focused')
                 ? op.targets.flatMap((target) => 'select' in target ? [] : target.elements)
                 : []) ?? [];
         });
-        for (const interaction of hoverInteractions) {
+        for (const interaction of markHoverInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                 modifiers: normalized.event.modifiers,
@@ -916,6 +1009,16 @@ export function mountVegaInteractions(
     const clickHandler = (event: MouseEvent, item: any): void => {
         if (clickInteractions.length === 0 || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const axisTarget = resolveAxisTarget(item);
+        if (axisTarget) {
+            for (const interaction of axisClickInteractions) {
+                void dispatch(interaction, {
+                    type: 'semantic', source: 'element', phase: 'commit', target: axisTarget, point,
+                    modifiers: interactionModifiers(event),
+                });
+            }
+            return;
+        }
         const normalized = acquire(item, point, rootPoint, 'commit', interactionModifiers(event));
         const { legend } = normalized;
         const target = legend ? resolvedLegendInteractionTarget(
@@ -923,7 +1026,7 @@ export function mountVegaInteractions(
             resolveTarget('click', 'legend-item', [], legend),
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        for (const interaction of clickInteractions) {
+        for (const interaction of markClickInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
@@ -1072,7 +1175,7 @@ export function mountVegaInteractions(
         for (const layer of [retainedUpdates, previewUpdates]) {
             for (const [id, update] of layer) {
                 const ops = update.ops.filter((op) =>
-                    op.op !== 'set-presentation' && op.op !== 'set-annotation');
+                    op.op !== 'set-style' && op.op !== 'set-annotation');
                 if (ops.length > 0) layer.set(id, { id, ops });
                 else layer.delete(id);
                 changed = changed || ops.length !== update.ops.length;
@@ -1342,7 +1445,7 @@ export function mountVegaInteractions(
             previewUpdates.set(mountedRegionInteraction.id, {
                 id: mountedRegionInteraction.id,
                 ops: [{
-                    op: 'set-presentation',
+                    op: 'set-style',
                     targets: next.size > 0 ? [{
                         visual: { kind: 'region', role: 'selection' },
                         elements: [...next].map((key) => associateSemanticElementRenderKeys({ value: {} }, [key])),
@@ -1382,18 +1485,7 @@ export function mountVegaInteractions(
 
     // One tab stop enters the chart; arrows move to the nearest target in that direction.
     let activeKeyboardKey: string | undefined;
-    const keyboardTargets = (): any[] => {
-        const seen = new Set<string>();
-        const items: any[] = [];
-        for (const item of sceneItems(view)) {
-            const key = renderHit(item)?.datum[INTERACTION_KEY];
-            if (typeof key !== 'string' || seen.has(key) || !item.bounds) continue;
-            seen.add(key);
-            items.push(item);
-        }
-        return items.sort((left, right) =>
-            (left.bounds.x1 - right.bounds.x1) || (left.bounds.y1 - right.bounds.y1));
-    };
+    const keyboardTargets = (): any[] => keyboardTargetItems(sceneItems(view));
     const keyboardFocus = (item: any) => {
         const hit = renderHit(item);
         if (!hit) return undefined;
@@ -1409,6 +1501,11 @@ export function mountVegaInteractions(
     const moveKeyboardTarget = (direction: SpatialDirection): void => {
         const items = keyboardTargets();
         if (items.length === 0) return;
+        const movementAxis = direction === 'left' || direction === 'right' ? 'x' : 'y';
+        const movementType = plan.axisFields?.[movementAxis]?.type;
+        const discreteAxis = movementType === 'nominal' || movementType === 'ordinal'
+            ? movementAxis
+            : undefined;
         const current = activeKeyboardKey === undefined
             ? undefined
             : items.find((item) => renderHit(item)?.datum[INTERACTION_KEY] === activeKeyboardKey);
@@ -1416,12 +1513,13 @@ export function mountVegaInteractions(
             ? nextItemInDirection(items, {
                 x: (current.bounds.x1 + current.bounds.x2) / 2,
                 y: (current.bounds.y1 + current.bounds.y2) / 2,
-            }, direction)
+            }, direction, discreteAxis)
             : direction === 'right' || direction === 'down' ? items[0] : items[items.length - 1];
         if (!next) return;
         const active = keyboardFocus(next);
         if (!active) return;
         activeKeyboardKey = typeof active.key === 'string' ? active.key : undefined;
+        if (targetFeedback?.keyboard) targetFeedbackOverlay.render(next, active.target, 'keyboard');
         const interaction = clickInteractions[0];
         if (interaction) {
             emitCanvasInteractionEvent(interaction, toCanvasInteractionEvent({
@@ -1469,15 +1567,23 @@ export function mountVegaInteractions(
                 return;
             case 'Escape':
                 activeKeyboardKey = undefined;
+                targetFeedbackOverlay.clear();
                 void setHover([]);
                 return;
             default:
         }
     };
     const keyboardEnabled = keyboardTargeting && clickInteractions.length > 0;
+    const keyboardFocusOut = (event: FocusEvent): void => {
+        if (event.relatedTarget instanceof Node && container.contains(event.relatedTarget)) return;
+        activeKeyboardKey = undefined;
+        targetFeedbackOverlay.clear();
+        void setHover([]);
+    };
     if (keyboardEnabled) {
         container.tabIndex = container.tabIndex >= 0 ? container.tabIndex : 0;
         container.addEventListener('keydown', keyboardKeyDown);
+        container.addEventListener('focusout', keyboardFocusOut);
     }
 
     // Overlays project scenegraph geometry into screen pixels, so every one of
@@ -1529,7 +1635,10 @@ export function mountVegaInteractions(
         if (dismissPolicy.escape && !regionInteraction) {
             container.removeEventListener('keydown', dismissKeyDown);
         }
-        if (keyboardEnabled) container.removeEventListener('keydown', keyboardKeyDown);
+        if (keyboardEnabled) {
+            container.removeEventListener('keydown', keyboardKeyDown);
+            container.removeEventListener('focusout', keyboardFocusOut);
+        }
         if (contextInteractions.length > 0) container.removeEventListener('contextmenu', contextHandler);
         if (longPressInteractions.length > 0) {
             cancelLongPress();
@@ -1558,6 +1667,7 @@ export function mountVegaInteractions(
             container.removeEventListener('pointercancel', elementDragCancel, true);
         }
         focusOverlay.destroy();
+        targetFeedbackOverlay.destroy();
         legendRangeOverlay.destroy();
         annotationOverlay.destroy();
         inspectGuideOverlay.destroy();
