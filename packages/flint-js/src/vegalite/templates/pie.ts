@@ -34,7 +34,7 @@ export const pieChartDef: ChartTemplateDef = {
             supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;

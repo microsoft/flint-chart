@@ -12,8 +12,18 @@ export interface ViewportGeometry {
 
 export type ChartUpdateComposition = 'auto';
 
+/** Pointer acquisition that snaps to a nearby mark instead of requiring a direct hit. */
+export interface AssistedTargetingOptions {
+    maxDistance?: number;
+}
+
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
+}
+
+export interface InteractionDismissPolicy {
+    click?: 'any' | 'non-element' | 'plot-background' | false;
+    escape?: boolean;
 }
 
 export interface InteractiveRenderer {
@@ -40,6 +50,10 @@ export interface InteractiveChartSurfaceOptions {
     chartId?: string;
     updates?: readonly ChartUpdate[];
     interactions?: readonly InteractionDef[];
+    assistedTargeting?: boolean | AssistedTargetingOptions;
+    keyboardTargeting?: boolean;
+    /** How committed presentation and annotation state is cleared. */
+    dismiss?: InteractionDismissPolicy | false;
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';

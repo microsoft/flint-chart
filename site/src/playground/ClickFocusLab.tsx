@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, GripVertical, Layers3, MessageSquareText, MousePointer2, Move, MoveHorizontal, MoveVertical, RotateCcw, RotateCw, Scan } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, MessageSquarePlus, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
   genBarTests,
@@ -8,13 +9,19 @@ import {
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
-  brushAngle,
   brushX,
   brushY,
+  brushZoom,
   clickAnnotate,
   clickGroupHighlight,
   clickHighlight,
+  contextActivate,
+  doubleActivate,
   dragReorder,
+  inspect,
+  lassoSelect,
+  legendToggle,
+  longPress,
   navigate,
   select as rectangleSelect,
   type FlintInteractionEventDetail,
@@ -28,7 +35,10 @@ import { navigationDemoCases } from './navigation-demo-data';
 import './click-focus-lab.css';
 
 export type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
-  | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder';
+  | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder'
+  | 'lasso' | 'assisted' | 'keyboard' | 'select-comment'
+  | 'legend-toggle' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
+  | 'brush-zoom' | 'long-press' | 'double-activate';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 export interface NavigationGuard {
@@ -44,12 +54,61 @@ const interactionModes = [
   { value: 'select', label: 'Select', icon: Scan },
   { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
   { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
-  { value: 'brush-angle', label: 'Angular brush', icon: RotateCw },
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
   { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
+  { value: 'lasso', label: 'Lasso', icon: Lasso },
+  { value: 'select-comment', label: 'Select & comment', icon: MessageSquarePlus },
+  { value: 'assisted', label: 'Assisted click', icon: Crosshair },
+  { value: 'keyboard', label: 'Keyboard', icon: Keyboard },
+  { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
+  { value: 'inspect', label: 'Inspect xy', icon: Target },
+  { value: 'inspect-quadrant', label: 'Inspect quadrant', icon: Crosshair },
+  { value: 'inspect-x', label: 'Inspect x', icon: Ruler },
+  { value: 'brush-zoom', label: 'Brush to zoom', icon: ZoomIn },
+  { value: 'long-press', label: 'Long press', icon: Timer },
+  { value: 'double-activate', label: 'Double click', icon: MousePointerClick },
 ] as const;
+
+type MountedInteraction = ReturnType<typeof clickHighlight>;
+
+/**
+ * Modes mount the set of presets a real chart would ship together, not one preset each.
+ * Legend, press and inspect gestures are only meaningful alongside ordinary element clicks.
+ */
+function modeInteractions(
+  mode: InteractionMode,
+  navigationAxes: 'x' | 'y' | 'xy' | undefined,
+  navigationGuard: NavigationGuard | undefined,
+): MountedInteraction[] {
+  switch (mode) {
+    case 'element': return [clickHighlight()];
+    case 'group': return [clickGroupHighlight()];
+    case 'annotate': return [clickAnnotate()];
+    case 'select': return [rectangleSelect()];
+    case 'brush-x': return [brushX()];
+    case 'brush-y': return [brushY()];
+    case 'brush-x-stateful': return [brushX({ mode: 'stateful' })];
+    case 'brush-y-stateful': return [brushY({ mode: 'stateful' })];
+    case 'drag-reorder': return [dragReorder()];
+    case 'lasso': return [lassoSelect()];
+    case 'inspect': return [inspect()];
+    case 'inspect-quadrant': return [inspect({
+      mode: 'x>=;y<=',
+      cycle: ['x>=;y<=', 'x>=;y>=', 'x<=;y>=', 'x<=;y<='],
+      dimOpacity: 0.14,
+    })];
+    case 'inspect-x': return [inspect({ mode: 'x' })];
+    case 'assisted': case 'keyboard': return [clickHighlight()];
+    case 'select-comment': return [rectangleSelect(), contextActivate()];
+    case 'legend-toggle': return [clickHighlight({ legend: false }), legendToggle()];
+    case 'long-press': return [longPress()];
+    case 'double-activate': return [doubleActivate()];
+    case 'brush-zoom': return [clickHighlight(), brushZoom()];
+    default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
+  }
+}
 
 export interface InteractionCase {
   id: string;
@@ -224,19 +283,113 @@ const reorderAxesByCase = new Map(interactionCases.flatMap((item) => {
   return axes?.length ? [[item.id, axes] as const] : [];
 }));
 
-const ITEM_PREVIEW_LIMIT = 5;
+function hasContinuousInspectAxes(spec: any): boolean {
+  if (!spec || typeof spec !== 'object') return false;
+  const xType = spec.encoding?.x?.type;
+  const yType = spec.encoding?.y?.type;
+  if ((xType === 'quantitative' || xType === 'temporal') && yType === 'quantitative') return true;
+  const children = ['layer', 'hconcat', 'vconcat', 'concat']
+    .flatMap((property) => Array.isArray(spec[property]) ? spec[property] : []);
+  return [...children, spec.spec].some((child) => hasContinuousInspectAxes(child));
+}
+
+const inspectQuadrantCases = new Set(interactionCases.flatMap((item) => {
+  const spec = assembleVegaLite(item.input) as any;
+  return hasContinuousInspectAxes(spec) ? [item.id] : [];
+}));
+
+function hasDiscreteLegendChannel(spec: any, channel: string, field: string): boolean {
+  if (!spec || typeof spec !== 'object') return false;
+  const encoding = spec.encoding?.[channel];
+  if (encoding?.field === field && (encoding.type === 'nominal' || encoding.type === 'ordinal')) return true;
+  const children = ['layer', 'hconcat', 'vconcat', 'concat']
+    .flatMap((property) => Array.isArray(spec[property]) ? spec[property] : []);
+  return [...children, spec.spec].some((child) => hasDiscreteLegendChannel(child, channel, field));
+}
+
+/** Toggling a legend key only means something when its entries are series, not scale ticks. */
+const discreteLegendCases = new Set(interactionCases.flatMap((item) => {
+  const spec = assembleVegaLite(item.input) as any;
+  const legendFields = spec._interactionSemantics?.legendFields as Record<string, string> | undefined;
+  const discrete = Object.entries(legendFields ?? {})
+    .some(([channel, field]) => hasDiscreteLegendChannel(spec, channel, field));
+  return discrete ? [item.id] : [];
+}));
+
+type ProbeElement = NonNullable<FlintInteractionEventDetail['event']['target']>['elements'][number];
+
+function compactEntries(record: Record<string, unknown> | undefined): string {
+  return Object.entries(record ?? {})
+    .filter(([field, value]) => !field.startsWith('__') && value != null && typeof value !== 'object')
+    .map(([field, value]) => `${field}=${String(value)}`)
+    .join(', ');
+}
+
+function describeElement(element: ProbeElement): { value: string; records: string[] } {
+  const legendChannel = element.value.channel;
+  const legendField = element.value.field;
+  const legendDomain = element.value.domain;
+  const representedRange = element.value.range;
+  const domainText = legendDomain && typeof legendDomain === 'object' && !Array.isArray(legendDomain)
+    ? (() => {
+      const domain = legendDomain as { kind?: unknown; value?: unknown; start?: unknown; end?: unknown };
+      if (domain.kind === 'value') return `value=${String(domain.value)}`;
+      if (domain.kind === 'interval') {
+        return `domain=${domain.start === undefined ? '(-inf' : `[${String(domain.start)}`}, ${domain.end === undefined ? '+inf)' : `${String(domain.end)})`}`;
+      }
+      return undefined;
+    })()
+    : undefined;
+  const rangeText = representedRange && typeof representedRange === 'object' && !Array.isArray(representedRange)
+    ? (() => {
+      const range = representedRange as { start?: unknown; end?: unknown };
+      const field = typeof element.value.field === 'string' ? element.value.field : 'range';
+      const count = typeof element.value.count === 'number' ? `, count=${element.value.count}` : '';
+      return `${field}=[${String(range.start)}, ${String(range.end)})${count}`;
+    })()
+    : undefined;
+  const value = typeof legendChannel === 'string'
+    ? [
+      `channel=${legendChannel}`,
+      ...(typeof legendField === 'string' ? [`field=${legendField}`] : []),
+      ...(domainText ? [domainText] : []),
+    ].join(', ')
+    : rangeText ?? (compactEntries(element.value) || 'none');
+  return {
+    value,
+    records: element.records?.map((record) => compactEntries(record) || 'empty') ?? [],
+  };
+}
 
 function summarizeElement(
-  element: NonNullable<FlintInteractionEventDetail['event']['target']>['elements'][number],
+  element: ProbeElement,
 ): string {
-  const values = Object.entries(element.value ?? {})
-    .filter(([field, value]) => !field.startsWith('__')
-      && !['value', 'density', 'density_start', 'density_end'].includes(field)
-      && value != null
-      && typeof value !== 'object')
-    .slice(0, 3)
-    .map(([field, value]) => `${field}: ${String(value)}`);
-  return values.length ? values.join(' · ') : Object.values(element.key).map(String).join(' · ');
+  const description = describeElement(element);
+  return `value: ${description.value} · records: ${description.records.length}${description.records.length > 0
+    ? ` [${description.records.map((record, index) => `${index + 1}. ${record}`).join(' ; ')}]`
+    : ''}`;
+}
+
+function SemanticElementRows({ element }: { element: ProbeElement }) {
+  const description = describeElement(element);
+  return (
+    <>
+      <div className="cf-semantic-row cf-semantic-value-row">
+        <span className="cf-semantic-label">value</span>
+        <span className="cf-semantic-content">{description.value}</span>
+      </div>
+      <div className="cf-semantic-row cf-semantic-records-row">
+        <span className="cf-semantic-label">records({description.records.length})</span>
+        <span className="cf-semantic-content">
+          {description.records.length > 0
+            ? description.records.map((record, index) => (
+              <span className="cf-semantic-record" key={`${index}-${record}`}>{index + 1}. {record}</span>
+            ))
+            : 'none'}
+        </span>
+      </div>
+    </>
+  );
 }
 
 type InteractionEvent = FlintInteractionEventDetail['event'];
@@ -307,6 +460,13 @@ function InteractiveChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef(onStatus);
   const semanticEventRef = useRef(onSemanticEvent);
+  const surfaceRef = useRef<ReturnType<typeof buildInteractiveChart> | null>(null);
+  const pointerRef = useRef({ x: 0, y: 0 });
+  const selectionRef = useRef<FlintInteractionEventDetail['event']['target']>(null);
+  const [contextMenu, setContextMenu] = useState<
+    { x: number; y: number; detail: FlintInteractionEventDetail } | null
+  >(null);
+  const [comment, setComment] = useState<string | null>(null);
   statusRef.current = onStatus;
   semanticEventRef.current = onSemanticEvent;
 
@@ -315,49 +475,129 @@ function InteractiveChart({
     if (!container) return;
     statusRef.current('loading');
     const handleInteraction = (event: Event) => {
-      semanticEventRef.current((event as CustomEvent<FlintInteractionEventDetail>).detail);
+      const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
+      semanticEventRef.current(detail);
+      const { action, phase, target } = detail.event;
+      if ((action === 'select-region' || action === 'select-lasso') && phase === 'commit') {
+        selectionRef.current = target;
+      }
+      if (action !== 'context-element') return;
+      if (!target?.elements.length) {
+        setContextMenu(null);
+        return;
+      }
+      setContextMenu({ x: pointerRef.current.x, y: pointerRef.current.y, detail });
     };
+    // Capture runs before the chart's own handler, so the menu opens at the pointer.
+    const captureContextPoint = (event: MouseEvent) => {
+      pointerRef.current = { x: event.clientX, y: event.clientY };
+    };
+    container.addEventListener('contextmenu', captureContextPoint, true);
     container.addEventListener('flint-interaction', handleInteraction);
-    const interaction = mode === 'element'
-      ? clickHighlight()
-      : mode === 'group'
-        ? clickGroupHighlight()
-        : mode === 'annotate'
-          ? clickAnnotate()
-        : mode === 'select'
-          ? rectangleSelect()
-          : mode === 'brush-x'
-            ? brushX()
-            : mode === 'brush-y'
-              ? brushY()
-              : mode === 'brush-angle'
-                ? brushAngle()
-                : mode === 'brush-x-stateful'
-                  ? brushX({ mode: 'stateful' })
-                  : mode === 'brush-y-stateful'
-                    ? brushY({ mode: 'stateful' })
-                    : mode === 'drag-reorder'
-                      ? dragReorder()
-                      : navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard });
+    const interactions = modeInteractions(mode, navigationAxes, navigationGuard);
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
     const surface = buildInteractiveChart(container, themedInput, {
       backend: 'vegalite',
       renderer: 'svg',
-      interactions: [interaction],
+      interactions,
       expressionInterpreter,
       ariaLabel: input.chart_spec.title,
+      assistedTargeting: mode === 'assisted',
+      keyboardTargeting: mode === 'keyboard',
+      dismiss: mode === 'long-press' || mode === 'double-activate'
+        ? { click: 'any', escape: true }
+        : undefined,
     });
+    surfaceRef.current = surface;
     void surface.ready.then(() => statusRef.current('ready')).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
       statusRef.current(message.includes('requires') || message.includes('support') ? 'unsupported' : 'error', message);
     });
     return () => {
+      container.removeEventListener('contextmenu', captureContextPoint, true);
       container.removeEventListener('flint-interaction', handleInteraction);
+      surfaceRef.current = null;
+      selectionRef.current = null;
+      setContextMenu(null);
+      setComment(null);
       surface.destroy();
     };
   }, [input, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
 
-  return <div className="cf-mount" ref={containerRef} />;
+  const menuTarget = contextMenu?.detail.event.target ?? null;
+  const menuElement = menuTarget?.elements[0];
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const dismiss = (event: Event) => {
+      if ((event.target as Element | null)?.closest?.('.cf-context-menu')) return;
+      setContextMenu(null);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setContextMenu(null);
+    };
+    document.addEventListener('pointerdown', dismiss, true);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss, true);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [contextMenu]);
+
+  const addComment = () => {
+    const surface = surfaceRef.current;
+    if (!surface || !menuTarget || !menuElement) return;
+    const text = summarizeElement(menuElement) ?? 'Comment';
+    setComment(text);
+    void surface.applyUpdate({
+      id: 'select-comment',
+      ops: [{
+        op: 'set-annotation',
+        target: { visual: menuTarget.visual, elements: [menuElement] },
+        value: { text },
+      }],
+    });
+    setContextMenu(null);
+  };
+  const clearComment = () => {
+    setComment(null);
+    void surfaceRef.current?.clearUpdate('select-comment');
+    setContextMenu(null);
+  };
+
+  return (
+    <>
+      <div className="cf-mount" ref={containerRef} />
+      {contextMenu && createPortal(
+        <div
+          className="cf-context-menu"
+          style={{ left: `${contextMenu.x}px`, top: `${contextMenu.y}px` }}
+          role="menu"
+        >
+          <button type="button" role="menuitem" onClick={addComment} disabled={!menuElement}>
+            Add comment
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              const selected = selectionRef.current?.elements.length ?? 0;
+              setComment(selected > 0
+                ? `Sent ${selected} selected item(s) to chat`
+                : `Sent ${summarizeElement(menuElement!) ?? 'item'} to chat`);
+              setContextMenu(null);
+            }}
+            disabled={!menuElement}
+          >
+            Send to chat
+          </button>
+          <button type="button" role="menuitem" onClick={clearComment}>Clear</button>
+        </div>,
+        document.body,
+      )}
+      {comment && <p className="cf-context-note">{comment}</p>}
+    </>
+  );
 }
 
 export function CaseCard({
@@ -376,7 +616,6 @@ export function CaseCard({
   const [status, setStatus] = useState<ProbeStatus>('loading');
   const [statusMessage, setStatusMessage] = useState('Compiling');
   const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
-  const [itemsExpanded, setItemsExpanded] = useState(false);
   const title = item.input.chart_spec.title || item.input.chart_spec.chartType;
   const availableNavigationAxes = navigationAxesByCase.get(item.id);
   const navigationAxes = item.navigationAxes === 'xy'
@@ -389,6 +628,7 @@ export function CaseCard({
     : item.expectation;
   const semanticTarget = lastInteraction?.event.target;
   const semanticItems = semanticTarget?.elements ?? [];
+  const semanticRecords = semanticItems.reduce((count, element) => count + (element.records?.length ?? 0), 0);
   const resolved = semanticItems.length > 0;
   const geometry = lastInteraction ? summarizeGeometry(lastInteraction.event) : undefined;
   const responded = resolved || lastInteraction?.event.action.endsWith('-viewport');
@@ -418,10 +658,7 @@ export function CaseCard({
               setStatus(nextStatus);
               setStatusMessage(message ?? (nextStatus === 'ready' ? 'Interactive surface ready' : 'Compiling'));
             }}
-            onSemanticEvent={(detail) => {
-              setLastInteraction(detail);
-              setItemsExpanded(false);
-            }}
+            onSemanticEvent={setLastInteraction}
           />
         </ScaleToFit>
       </div>
@@ -435,6 +672,9 @@ export function CaseCard({
               {!lastInteraction.event.action.endsWith('-viewport') && (
                 <span className="cf-probe-event-count">
                   {semanticItems.length} item{semanticItems.length === 1 ? '' : 's'}
+                  {semanticTarget?.visual.kind === 'legend'
+                    ? ` · ${semanticRecords} record${semanticRecords === 1 ? '' : 's'}`
+                    : ''}
                 </span>
               )}
               {lastInteraction.event.dropTarget?.elements[0] && (
@@ -444,21 +684,12 @@ export function CaseCard({
             {semanticItems.length > 0 && (
               <div className="cf-probe-event-data">
                 <ul className="cf-probe-event-items">
-                  {semanticItems.slice(0, itemsExpanded ? undefined : ITEM_PREVIEW_LIMIT).map((element, index) => (
-                    <li key={`${index}-${JSON.stringify(element.key)}`}>{summarizeElement(element)}</li>
+                  {semanticItems.map((element, index) => (
+                    <li key={`${index}-${JSON.stringify(element.value)}`}>
+                      <SemanticElementRows element={element} />
+                    </li>
                   ))}
                 </ul>
-                  {semanticItems.length > ITEM_PREVIEW_LIMIT && (
-                  <button
-                    type="button"
-                    className="cf-items-toggle"
-                    aria-expanded={itemsExpanded}
-                    onClick={() => setItemsExpanded((expanded) => !expanded)}
-                  >
-                    {itemsExpanded ? 'Show less' : `Show ${semanticItems.length - ITEM_PREVIEW_LIMIT} more`}
-                    <ChevronDown size={12} aria-hidden="true" />
-                  </button>
-                )}
               </div>
             )}
           </>
@@ -479,12 +710,14 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const visibleCases = mode === 'brush-angle'
-    ? interactionCases.filter((item) => ['Donut Chart', 'Pie Chart', 'Rose Chart'].includes(item.chartType))
-    : mode === 'navigate'
+  const visibleCases = mode === 'navigate' || mode === 'brush-zoom'
       ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
       : mode === 'drag-reorder'
         ? interactionCases.filter((item) => reorderAxesByCase.has(item.id))
+        : mode === 'inspect-quadrant'
+          ? interactionCases.filter((item) => inspectQuadrantCases.has(item.id))
+        : mode === 'legend-toggle'
+          ? interactionCases.filter((item) => discreteLegendCases.has(item.id))
       : interactionCases;
 
   return (
@@ -513,9 +746,8 @@ export function ClickFocusLab() {
           <li><strong>Group:</strong> Click a mark to focus related marks in the same category or series.</li>
           <li><strong>Annotate:</strong> Click a mark to search nearby free space and connect its represented value.</li>
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
-          <li><strong>X brush:</strong> Drag horizontally to focus marks across an X interval.</li>
+          <li><strong>X brush:</strong> Drag across an X interval; polar charts automatically use an angular sector.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
-          <li><strong>Angular brush:</strong> Drag around the center of a pie, donut, or rose chart.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel or trackpad to zoom.</li>
         </ul>

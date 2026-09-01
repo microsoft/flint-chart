@@ -1,4 +1,4 @@
-import type { SemanticTarget } from '../../../core/interaction-semantics';
+import type { RenderHit, SemanticTarget } from '../../../core/interaction-semantics';
 import type { PlotPoint } from '../../../interactive/interactions';
 import type { VegaReorderAxis } from '../contracts';
 import {
@@ -32,8 +32,34 @@ export interface DragReorderOverlayOptions {
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+function hasOneValue(values: readonly unknown[]): boolean {
+    return values.length > 0 && values.every((value) => Object.is(value, values[0]));
+}
+
+export function eligibleReorderAxes<T extends Pick<VegaReorderAxis, 'axis' | 'field'>>(
+    axes: readonly T[],
+    target: SemanticTarget,
+): T[] {
+    return axes.filter(({ field }) => hasOneValue(target.elements.flatMap((element) => {
+        const records = element.records?.length ? element.records : [element.value];
+        return records.flatMap((record) => record[field] === undefined ? [] : [record[field]]);
+    })));
+}
+
+export function eligibleReorderAxesForHit<T extends Pick<VegaReorderAxis, 'axis' | 'field'>>(
+    axes: readonly T[],
+    hit: RenderHit,
+): T[] {
+    const records = hit.pathData?.length ? hit.pathData : [hit.datum];
+    return axes.filter(({ field }) => hasOneValue(
+        records.flatMap((record) => record[field] === undefined ? [] : [record[field]]),
+    ));
+}
+
 function targetValue(target: SemanticTarget, field: string): unknown {
-    return target.elements[0]?.records?.find((record) => record[field] !== undefined)?.[field];
+    const element = target.elements[0];
+    return element?.records?.find((record) => record[field] !== undefined)?.[field]
+        ?? element?.value[field];
 }
 
 export function activeReorderAxis<T extends Pick<VegaReorderAxis, 'axis' | 'field'>>(
@@ -63,6 +89,20 @@ export function reorderOwnedItems(
         && (!axis.markTypes || axis.markTypes.includes(item.mark?.marktype)));
 }
 
+export function reorderPreviewItems(
+    items: readonly any[],
+    axis: Pick<VegaReorderAxis, 'field' | 'markTypes' | 'includeConnectiveMarks'>,
+    value: unknown,
+): any[] {
+    const candidates = reorderOwnedItems(items, axis, value)
+        .filter((item) => item.interactionGeometry?.points?.length >= 2 || item.bounds);
+    const discrete = candidates.filter((item) => {
+        const markType = item.mark?.marktype;
+        return markType !== 'line' && markType !== 'area';
+    });
+    return axis.includeConnectiveMarks || discrete.length === 0 ? candidates : discrete;
+}
+
 export function createDragReorderOverlay({
     view,
     container,
@@ -82,15 +122,7 @@ export function createDragReorderOverlay({
         const sourceValue = targetValue(preview.source, active.field);
         const destinationValue = targetValue(preview.destination, active.field);
         const scene = sceneItems(view);
-        const sourceCandidates = reorderOwnedItems(scene, active, sourceValue)
-            .filter((item) => item.interactionGeometry?.points?.length >= 2 || item.bounds);
-        const discreteSourceItems = sourceCandidates.filter((item) => {
-            const markType = item.mark?.marktype;
-            return markType !== 'line' && markType !== 'area';
-        });
-        const sourceItems = active.includeConnectiveMarks || discreteSourceItems.length === 0
-            ? sourceCandidates
-            : discreteSourceItems;
+        const sourceItems = reorderPreviewItems(scene, active, sourceValue);
         const destinationItems = reorderOwnedItems(scene, active, destinationValue)
             .filter((item) => item.bounds);
         if (sourceItems.length === 0 || destinationItems.length === 0) return clear();

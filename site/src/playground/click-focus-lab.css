@@ -208,6 +208,47 @@
   overflow-y: hidden;
 }
 
+.cf-context-menu {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: 3px;
+  border: 1px solid #cfd5da;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+}
+
+.cf-context-menu button {
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 9px;
+  color: #1f2328;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.cf-context-menu button:hover:not(:disabled) {
+  background: #eef1f3;
+}
+
+.cf-context-menu button:disabled {
+  color: #a6aeb5;
+  cursor: default;
+}
+
+.cf-context-note {
+  margin: 6px 12px 0;
+  color: #3f6b57;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .cf-mount {
   display: grid;
   align-items: center;
@@ -263,42 +304,13 @@
   white-space: nowrap;
 }
 
-.cf-items-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  min-height: 0;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #7a838b;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 500;
-}
-
 .cf-probe-event-data {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 8px;
+  max-height: 156px;
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px solid #e7eaed;
-}
-
-.cf-items-toggle:hover {
-  color: #46515a;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.cf-items-toggle svg {
-  transition: transform 120ms ease;
-}
-
-.cf-items-toggle[aria-expanded='true'] svg {
-  transform: rotate(180deg);
+  overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 .cf-probe-event-resolved {
@@ -322,14 +334,57 @@
 
 .cf-probe-event-items {
   display: grid;
-  gap: 3px;
-  max-height: 128px;
+  gap: 5px;
   margin: 0;
-  padding: 0 0 0 17px;
-  overflow: auto;
-  color: #68737c;
+  padding: 0;
+  list-style: none;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 9px;
+}
+
+.cf-probe-event-items li {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.cf-probe-event-items li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.cf-semantic-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cf-semantic-label {
+  font-weight: 600;
+}
+
+.cf-probe-event .cf-semantic-content {
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cf-semantic-value-row {
+  color: #315f75;
+}
+
+.cf-semantic-records-row {
+  color: #765638;
+}
+
+.cf-semantic-record {
+  display: block;
 }
 
 @media (max-width: 820px) {

@@ -282,7 +282,7 @@ The interaction key and role answer different questions:
 
 | Metadata | Question | Used for |
 | --- | --- | --- |
-| `__flint_interaction_key` | Which semantic data identity does this item represent? | Constructing and matching `SemanticElement.key` |
+| `__flint_interaction_key` | Which rendered primitive is this? | Private stable lookup for backend presentation updates |
 | `__flint_interaction_role` | Which representation of that identity was hit? | Choosing representation-aware resolution behavior |
 
 ### ChartDef Resolution
@@ -291,28 +291,30 @@ The normalized role and `RenderHit[]` are passed to the owning ChartDef resolver
 
 For a direct mark, resolution commonly maps each hit key to one `SemanticElement`. A representation can require different resolution even when it refers to related data. For example, clicking one rose arc resolves that arc, while clicking a `text-label` for January can resolve the January label identity to every arc represented by that aggregate label.
 
-The role is not part of semantic identity and is not used to match forward updates. It is resolution context. The key establishes identity; the role lets the ChartDef interpret the physical representation that exposed it. Normal marks can use the default `mark` role, while representations such as `text-label` require an explicit role when their backward mapping differs.
+The role is resolution context rather than semantic identity. Private render keys remain in a backend sidecar so the ChartDef and applications do not need to carry renderer identity. Normal marks can use the default `mark` role, while representations such as `text-label` require an explicit role when their backward mapping differs.
 
 The result contains no SVG node or Vega scenegraph item:
 
 ```ts
 interface SemanticTarget {
     visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle';
+        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend';
         role: string;
     };
     elements: readonly SemanticElement[];
 }
 
 interface SemanticElement {
-    key: Record<string, unknown>;
-    value?: Record<string, unknown>;
+    value: Record<string, unknown>;
     records?: readonly Record<string, unknown>[];
 }
 ```
 
-`key` is stable semantic identity, `value` is the represented transformed or aggregated
-chart value, and `records` are contributing source rows when available and bounded.
+`value` is the represented transformed or aggregated chart value. It may contain derived
+semantics such as stack or path endpoints. `records` are authored source rows only when
+the runtime can prove their lineage; they are omitted rather than replaced with renderer
+tuples when provenance is unavailable. Exact render identity is backend-private and can
+map one semantic element to one or many rendered primitives.
 After this boundary, presets and applications operate on semantic elements. They do not
 inspect renderer geometry to rediscover meaning.
 
@@ -400,7 +402,7 @@ interface CanvasInteractionEvent {
 ```
 
 `action` reports the normalized semantic action, such as `click-element`,
-`click-legend`, `brush-x`, `pan-viewport`, or `inspect-nearest`. `geometry.plot` reports
+`click-legend`, `brush-x`, `pan-viewport`, or `inspect-xy`. `geometry.plot` reports
 renderer-neutral canvas geometry; optional `geometry.domain` reports scale-inverted
 values. `target` reports the semantic object and data provenance. Drag-and-drop also
 uses `dropTarget` for its destination.
@@ -449,6 +451,27 @@ Canvas definitions have two declarative halves:
     `set-viewport`, or `set-order` operations.
 
 The backend mount reads `eventSource`; it does not infer a gesture from pointer motion. It installs the required native listeners, supplies renderer coordinates and hit testing, and runs the recognizer requested by the interaction. This keeps an identical drag stream deterministic and author-controlled.
+
+Transient gesture guides belong to that mount lifecycle, not to `ChartUpdate`. They visualize
+the gesture's current geometry and clear on cancel, leave, or destroy. Disabling or styling a
+guide never changes acquisition or the emitted semantic event:
+
+```ts
+inspect({
+    mode: 'xy',
+    guide: { style: { color: '#47525c', opacity: 0.5, width: 1 } },
+});
+
+brushX({
+    guide: { style: { fill: '#2563eb', fillOpacity: 0.1 } },
+});
+
+lassoSelect({ guide: false });
+```
+
+Inspect lines, Cartesian regions, angular sectors, and lasso paths use the shared
+renderer-neutral gesture-guide styles. Retained guides such as reference lines instead belong
+to chart presentation state and may be created by effects through chart updates.
 
 Chart-specific action processing belongs in the handler. For example, ranged-dot region targets
 are expanded to complete category units before producing a `set-presentation` update. Direct ranged-dot

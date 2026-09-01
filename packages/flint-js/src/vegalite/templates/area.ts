@@ -7,7 +7,6 @@ import { defaultBuildEncodings, setMarkProp, alignStackOrderToColorOrder } from 
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
-    legendMatchedHits,
     resolveSeriesTarget,
     targetFromHits,
 } from '../../core/interaction-semantics';
@@ -30,6 +29,16 @@ const interpolateConfigProperty: ChartPropertyDef = {
 function applyInterpolate(vgSpec: any, config?: Record<string, any>): void {
     if (!config?.interpolate) return;
     vgSpec.mark = setMarkProp(vgSpec.mark, 'interpolate', config.interpolate);
+}
+
+function resolveAreaTarget(event: any, context: any, seriesField: string | undefined) {
+    if (event.role === 'text-label' && seriesField) {
+        const value = event.hits[0]?.datum?.[seriesField];
+        const hits = context.allHits.filter((hit: any) =>
+            hit.markType === 'area' && hit.datum?.[seriesField] === value);
+        return targetFromHits(hits, context.keyField, { kind: 'path', role: 'text-label' });
+    }
+    return resolveSeriesTarget(event, context, seriesField);
 }
 
 /**
@@ -138,13 +147,7 @@ export const areaChartDef: ChartTemplateDef = {
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },
-            resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
-                const hits = event.role === 'legend-item' && legendField
-                    ? legendMatchedHits(event, context, legendField)
-                    : event.hits;
-                return targetFromHits(hits, context.keyField, { kind: 'path', role: event.role });
-            },
+            resolve: (event, context) => resolveAreaTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
                 () => annotationCandidates('segment-midpoint'),
                 transitionAnnotationText(resolvedEncodings.y?.field),
@@ -225,7 +228,7 @@ export const streamgraphDef: ChartTemplateDef = {
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },
-            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            resolve: (event, context) => resolveAreaTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(
                 () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
                 transitionAnnotationText(resolvedEncodings.y?.field),

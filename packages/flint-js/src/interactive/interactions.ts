@@ -3,17 +3,27 @@ import type {
     InteractionContext,
     NavigationDomainGuard,
     SemanticElement,
+    SemanticTargetSelector,
 } from '../core/interaction-contracts';
 import type { InteractionEventSource } from './triggers';
+import type { InspectMode } from './triggers';
+import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import type {
     NavigationAxes,
 } from './language/events';
 import {
     createBrushInteraction,
+    createBrushZoomInteraction,
     createAngularBrushInteraction,
     createClickAnnotateInteraction,
     createClickGroupHighlightInteraction,
     createClickHighlightInteraction,
+    createContextActivateInteraction,
+    createDoubleActivateInteraction,
+    createInspectInteraction,
+    createLongPressInteraction,
+    createLassoSelectInteraction,
+    createLegendToggleInteraction,
     createSelectInteraction,
     createNavigateInteraction,
     createDragReorderInteraction,
@@ -81,6 +91,8 @@ export interface CanvasInteractionDef {
     readonly id: string;
     readonly eventSource: InteractionEventSource;
     readonly navigationDomainGuard?: NavigationDomainGuard;
+    /** Claims legend activations exclusively, so a legend click never also reads as an element click. */
+    readonly claimsLegendActivation?: boolean;
     handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdate | null;
 }
 
@@ -110,13 +122,17 @@ export function isExternalInteraction(interaction: InteractionDef): interaction 
 export interface ClickHighlightOptions {
     id?: string;
     dimOpacity?: number;
+    /** Whether legend activation focuses the represented series. Defaults to true. */
+    legend?: boolean;
 }
 
 export interface ClickGroupHighlightOptions extends ClickHighlightOptions {
     groupBy?: string | ((element: SemanticElement, context: InteractionContext) => unknown);
 }
 
-export interface ClickAnnotateOptions extends ClickHighlightOptions {
+export interface ClickAnnotateOptions {
+    id?: string;
+    dimOpacity?: number;
     format?: (element: SemanticElement, context: InteractionContext) => string;
 }
 
@@ -124,13 +140,56 @@ export interface SelectOptions {
     id?: string;
     match?: 'intersect' | 'contain';
     dimOpacity?: number;
+    /** Transient region shown during the gesture; false disables visual feedback. */
+    guide?: RegionGuideOptions | false;
 }
 
 export interface BrushOptions extends SelectOptions {
     mode?: 'ephemeral' | 'stateful';
 }
 
-export type AngularBrushOptions = SelectOptions;
+export type AngularBrushOptions = SelectOptions & { mode?: 'ephemeral' | 'stateful' };
+
+export type LassoSelectOptions = SelectOptions;
+
+export interface LegendToggleOptions {
+    id?: string;
+    mutedOpacity?: number;
+}
+
+export interface ContextActivateOptions {
+    id?: string;
+}
+
+export interface InspectOptions {
+    id?: string;
+    mode?: InspectMode;
+    /** Ordered modes cycled by wheel or context-menu gestures; mode is included automatically. */
+    cycle?: readonly InspectMode[];
+    /** Hit tolerance as a plot-size fraction. Defaults to 0.02 for XY and 0.01 otherwise. */
+    tolerance?: number;
+    /** Transient guide shown while inspecting; false disables visual feedback. */
+    guide?: InspectGuideOptions | false;
+    selector?: SemanticTargetSelector;
+    dimOpacity?: number;
+}
+
+export interface BrushZoomOptions {
+    id?: string;
+    axes?: 'x' | 'y' | 'xy';
+    guide?: RegionGuideOptions | false;
+}
+
+export interface LongPressOptions {
+    id?: string;
+    holdMs?: number;
+    dimOpacity?: number;
+}
+
+export interface DoubleActivateOptions {
+    id?: string;
+    dimOpacity?: number;
+}
 
 export interface NavigateOptions {
     id?: string;
@@ -159,6 +218,34 @@ export function clickAnnotate(options: ClickAnnotateOptions = {}): CanvasInterac
 
 export function select(options: SelectOptions = {}): CanvasInteractionDef {
     return createSelectInteraction(options);
+}
+
+export function lassoSelect(options: LassoSelectOptions = {}): CanvasInteractionDef {
+    return createLassoSelectInteraction(options);
+}
+
+export function legendToggle(options: LegendToggleOptions = {}): CanvasInteractionDef {
+    return createLegendToggleInteraction(options);
+}
+
+export function contextActivate(options: ContextActivateOptions = {}): CanvasInteractionDef {
+    return createContextActivateInteraction(options);
+}
+
+export function inspect(options: InspectOptions = {}): CanvasInteractionDef {
+    return createInspectInteraction(options);
+}
+
+export function brushZoom(options: BrushZoomOptions = {}): CanvasInteractionDef {
+    return createBrushZoomInteraction(options);
+}
+
+export function longPress(options: LongPressOptions = {}): CanvasInteractionDef {
+    return createLongPressInteraction(options);
+}
+
+export function doubleActivate(options: DoubleActivateOptions = {}): CanvasInteractionDef {
+    return createDoubleActivateInteraction(options);
 }
 
 export function brushX(options: BrushOptions = {}): CanvasInteractionDef {

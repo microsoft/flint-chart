@@ -173,16 +173,19 @@ export const mapDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['longitude', 'latitude', 'color', 'size', 'opacity']),
             seriesField,
-            legendFields: colorField ? { color: colorField } : undefined,
+            legendFields: colorField || sizeField
+                ? { ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}) }
+                : undefined,
             selectableMarks: ['circle'],
             renderHoverStyles: {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
@@ -319,10 +322,15 @@ export const choroplethDef: ChartTemplateDef = {
             categoryField: idField,
             selectableMarks: ['geoshape'],
             renderHoverStyles: { shape: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
-            resolve: (event, context) => targetFromHits(event.hits, context.keyField, {
-                kind: 'region',
-                role: 'geographic-region',
-            }),
+            resolve: (event, context) => {
+                const hits = event.role === 'legend-item' && colorField
+                    ? legendMatchedHits(event, context, colorField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'region',
+                    role: event.role === 'legend-item' ? 'legend-item' : 'geographic-region',
+                });
+            },
             presentUpdate: presentAnnotationUpdate(
                 () => annotationCandidates('center'),
                 categoryValueAnnotationText(idField, colorField),

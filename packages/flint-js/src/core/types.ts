@@ -930,6 +930,9 @@ export interface ChartTemplateDef {
         resolvedEncodings: Readonly<Record<string, any>>;
     }) => {
         fields: string[];
+        provenanceFields?: readonly string[];
+        temporalProvenanceFields?: readonly string[];
+        rangeProvenance?: readonly { field: string; startField: string; endField: string }[];
         categoryField?: string;
         seriesField?: string;
         resolveGroupValue?: (element: import('./interaction-contracts').SemanticElement) => unknown;

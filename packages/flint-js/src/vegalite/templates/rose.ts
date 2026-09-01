@@ -59,7 +59,7 @@ export const roseChartDef: ChartTemplateDef = {
             supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField ?? categoryField;
+                const legendField = event.legend?.field ?? seriesField ?? categoryField;
                 let hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;

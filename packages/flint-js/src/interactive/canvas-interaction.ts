@@ -13,11 +13,22 @@ function elementAction(
     source: InteractionEventSource,
     target: SemanticTarget | null,
 ): CanvasInteractionAction {
+    if (source.gesture === 'keyboard') return 'focus-element';
+    const family = semanticVisualFamily(target?.visual.role);
+    if (source.gesture === 'context') return `context-${family}` as CanvasInteractionAction;
+    if (source.gesture === 'long-press') return `long-press-${family}` as CanvasInteractionAction;
+    if (source.gesture === 'double') return `double-activate-${family}` as CanvasInteractionAction;
+    if (source.gesture === 'inspect') {
+        return source.inspect === 'x' ? 'inspect-x'
+            : source.inspect === 'y' ? 'inspect-y'
+            : 'inspect-xy';
+    }
     const gesture = source.gesture === 'hover' ? 'hover' : 'click';
-    return `${gesture}-${semanticVisualFamily(target?.visual.role)}` as CanvasInteractionAction;
+    return `${gesture}-${family}` as CanvasInteractionAction;
 }
 
 function regionAction(event: SemanticInteractionEvent): CanvasInteractionAction {
+    if (event.region && 'points' in event.region) return 'select-lasso';
     if (event.axis === 'x') return 'brush-x';
     if (event.axis === 'y') return 'brush-y';
     if (event.axis === 'angle') return 'brush-angle';

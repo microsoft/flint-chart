@@ -4,18 +4,28 @@ import { mountInteractiveChartSurface } from './surface';
 import type { BuildInteractiveChartOptions, InteractiveChartSurface } from './types';
 
 export type {
+    AssistedTargetingOptions,
     BuildInteractiveChartOptions,
     ChartUpdateApplyOptions,
     ChartUpdateComposition,
     InteractiveBackend,
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
+    InteractionDismissPolicy,
     InteractiveRenderer,
     InteractiveRendererAdapter,
     ViewportChannel,
     ViewportGeometry,
     ViewportState,
 } from './types';
+export type {
+    GestureGuideController,
+    GestureGuideOptions,
+    AreaGestureGuideStyle,
+    InspectGuideOptions,
+    LineGestureGuideStyle,
+    RegionGuideOptions,
+} from './guides';
 export type {
     AnnotationCandidate,
     AnnotationConnection,
@@ -24,6 +34,7 @@ export type {
     ChartUpdateOp,
     ChartUpdatePresenter,
     BrushOptions,
+    BrushZoomOptions,
     AngularBrushOptions,
     ClickAnnotateOptions,
     ClickGroupHighlightOptions,
@@ -36,6 +47,8 @@ export type {
     CanvasInteractionDef,
     ExternalInteractionDef,
     InteractionModifiers,
+    InspectOptions,
+    LassoSelectOptions,
     NavigateOptions,
     NavigationAxes,
     NavigationDomainGuard,
@@ -70,19 +83,29 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, externalInteraction, isCanvasInteraction, isExternalInteraction, navigate, select } from './interactions';
+export { brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
 export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
     angularBrushTrigger,
+    brushZoomTrigger,
     clickTrigger,
+    contextTrigger,
+    doubleActivateTrigger,
     hoverTrigger,
+    inspectTrigger,
+    keyboardTrigger,
+    lassoTrigger,
+    longPressTrigger,
     navigationTrigger,
     rectangleTrigger,
     xBrushTrigger,
     yBrushTrigger,
 } from './triggers';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
+
+/** Snap radius in renderer units when assisted targeting is enabled without a distance. */
+const DEFAULT_ASSIST_DISTANCE = 12;
 
 export function buildInteractiveChart(
     container: HTMLElement,
@@ -91,7 +114,7 @@ export function buildInteractiveChart(
 ): InteractiveChartSurface {
     const {
         backend, renderer, expressionInterpreter, background,
-        className, ariaLabel, chartId, updates,
+        className, ariaLabel, chartId, updates, assistedTargeting, keyboardTargeting, dismiss,
     } = options;
     const interactions = normalizeInteractions(options.interactions);
     const canvasInteractions = interactions.filter(isCanvasInteraction);
@@ -122,6 +145,12 @@ export function buildInteractiveChart(
                                 || (updates?.length ?? 0) > 0,
                             expressionInterpreter,
                             background,
+                            assistDistance: assistedTargeting
+                                ? (typeof assistedTargeting === 'object' ? assistedTargeting.maxDistance : undefined)
+                                    ?? DEFAULT_ASSIST_DISTANCE
+                                : 0,
+                            keyboardTargeting,
+                            dismiss,
                         }).mount(chartContainer, chartInput);
                     },
                 },

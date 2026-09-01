@@ -1,5 +1,12 @@
 import { changeset } from 'vega';
-import type { ChartInteractionResolver } from '../../core/interaction-semantics';
+import {
+    associateSemanticElementRenderKeys,
+    semanticElementRenderKeys,
+    sourceRecordsForRenderedRecords,
+    type ChartInteractionResolver,
+    type LegendTargetValue,
+    type SemanticResolveContext,
+} from '../../core/interaction-semantics';
 import type {
     CanvasInteractionDef,
     ChartUpdate,
@@ -21,35 +28,127 @@ import type {
 import { matchesSemanticTargetSelector } from '../../interactive/language/updates';
 import type { VegaInteractionPlan } from './contracts';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
-import type { CanvasInteractionEvent } from '../../interactive/language/events';
+import { keyboardTrigger } from '../../interactive/triggers';
+import { normalizeInspectGuideOptions } from '../../interactive/guides';
+import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
+    axisIntersectingHits,
     clientToPlotPoint,
+    clientToRendererPoint,
     interactionModifiers,
     normalizeVegaElementEvent,
+    nearestItemByBounds,
+    nearestInteractiveSceneItem,
+    nearestSceneItem,
+    nextItemInDirection,
     pathHoverPresentationKey,
+    polarFrameFromItems,
+    polarGuideSegment,
+    polarInspectHits,
+    tolerantInspectHits,
+    legendSemanticTarget,
     renderHit,
     rendererPlotOrigin,
     sceneItems,
     type RendererCoordinateSpace,
+    type LegendHitIdentity,
+    type SpatialDirection,
 } from './hit-adapter';
-import { mountVegaRegionGesture } from './gestures/region';
+import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/region';
 import { mountVegaNavigationGesture } from './gestures/navigation';
 import { createVegaNavigationController } from './navigation-scale';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
-import { createDragReorderOverlay } from './presentation/drag-reorder-overlay';
-import { createFocusOverlay } from './presentation/focus-overlay';
-import { createReorderResetControls } from './presentation/reorder-reset-controls';
 import {
+    createDragReorderOverlay,
+    eligibleReorderAxesForHit,
+} from './presentation/drag-reorder-overlay';
+import { createFocusOverlay } from './presentation/focus-overlay';
+import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
+import { createReorderResetControls } from './presentation/reorder-reset-controls';
+import { createViewportResetControl } from './presentation/viewport-reset-control';
+import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
+import {
+    HIDDEN_STORE,
+    LEGEND_HIDDEN_STORE,
     HOVER_STORE,
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
 } from './stores';
 
+const EMPTY_SEMANTIC_SELECTION_KEY = '__flint_empty_semantic_selection';
+
 export { mergeContiguousSelectionBounds } from './presentation/focus-overlay';
+
+export function resolveLegendPresentationTarget(
+    legend: LegendTargetValue,
+    resolve: ChartInteractionResolver,
+    context: SemanticResolveContext,
+): SemanticTarget {
+    const resolved = resolve({
+        gesture: 'click', role: 'legend-item', hits: [], legend,
+    }, context);
+    if (resolved) return resolved;
+    return {
+        visual: { kind: 'legend', role: 'legend-item' },
+        elements: [associateSemanticElementRenderKeys(
+            { value: legend },
+            [EMPTY_SEMANTIC_SELECTION_KEY],
+        )],
+    };
+}
+
+function legendDomainIdentity(legend: LegendTargetValue): string {
+    return JSON.stringify([legend.channel, legend.field, legend.domain]);
+}
+
+export function resolveRetainedLegendPresentationTarget(
+    legend: LegendTargetValue,
+    resolve: ChartInteractionResolver,
+    context: SemanticResolveContext,
+    retained: Map<string, SemanticTarget>,
+): SemanticTarget {
+    const identity = legendDomainIdentity(legend);
+    const resolved = resolveLegendPresentationTarget(legend, resolve, context);
+    const hasConcreteKeys = resolved.elements.some((element) =>
+        semanticElementRenderKeys(element).some((key) => key !== EMPTY_SEMANTIC_SELECTION_KEY));
+    if (hasConcreteKeys) {
+        retained.set(identity, resolved);
+        return resolved;
+    }
+    return retained.get(identity) ?? resolved;
+}
+
+export function resolveRetainedLegendPresentationTargets(
+    legends: readonly LegendTargetValue[],
+    resolve: ChartInteractionResolver,
+    context: SemanticResolveContext,
+    retained: Map<string, SemanticTarget>,
+): SemanticTarget {
+    return {
+        visual: { kind: 'legend', role: 'legend-item' },
+        elements: legends.flatMap((legend) =>
+            resolveRetainedLegendPresentationTarget(legend, resolve, context, retained).elements),
+    };
+}
+
+export function resolvedLegendInteractionTarget(
+    legend: LegendTargetValue,
+    resolved: SemanticTarget | null,
+): SemanticTarget {
+    const records = [...new Set(resolved?.elements.flatMap((element) => element.records ?? []) ?? [])];
+    const renderKeys = resolved?.elements.flatMap(semanticElementRenderKeys) ?? [];
+    return {
+        visual: { kind: 'legend', role: 'legend-item' },
+        elements: [associateSemanticElementRenderKeys({
+            value: legend,
+            ...(records.length > 0 ? { records } : {}),
+        }, renderKeys.length > 0 ? renderKeys : [EMPTY_SEMANTIC_SELECTION_KEY])],
+    };
+}
 
 export function resolveSupportedOperation(
     op: ChartUpdateOp,
@@ -78,6 +177,32 @@ export function resolveSupportedOperation(
         return { op: supported ? op : null, unsupported: !supported };
     }
     return { op, unsupported: false };
+}
+
+export function domainForPlotGeometry(
+    plot: CanvasInteractionEvent['geometry']['plot'],
+    axes: VegaInteractionPlan['navigationAxes'],
+    scaleFor: (name: string) => {
+        invert?(value: number): unknown;
+    } | undefined,
+): DomainGeometry | undefined {
+    if (!plot || plot.kind !== 'rect') return undefined;
+    const domain: DomainGeometry = {};
+    for (const axis of ['x', 'y'] as const) {
+        const config = axes?.[axis];
+        if (!config) continue;
+        const scale = scaleFor(config.scale);
+        if (typeof scale?.invert !== 'function') continue;
+        const lower = axis === 'x' ? plot.rect.x : plot.rect.y;
+        const upper = lower + (axis === 'x' ? plot.rect.width : plot.rect.height);
+        const lowerValue = scale.invert(lower);
+        const upperValue = scale.invert(upper);
+        const start = axis === 'y' ? upperValue : lowerValue;
+        const end = axis === 'y' ? lowerValue : upperValue;
+        if (start === undefined || end === undefined) continue;
+        domain[axis] = { kind: 'interval', start, end };
+    }
+    return domain.x || domain.y ? domain : undefined;
 }
 
 export function nearestReorderHit(
@@ -124,6 +249,33 @@ export function interactionsForHoverPresentation(
     );
 }
 
+export function enrichTargetWithSourceProvenance(
+    target: SemanticTarget | null,
+    plan: Pick<VegaInteractionPlan,
+        'sourceRecords' | 'provenanceFields' | 'temporalProvenanceFields' | 'rangeProvenance'>,
+): SemanticTarget | null {
+    if (!target) return null;
+    const elements = target.elements.map((element) => {
+        const renderedRecords = element.records?.length ? element.records : [element.value];
+        const records = sourceRecordsForRenderedRecords(
+            renderedRecords,
+            plan.sourceRecords,
+            plan.provenanceFields,
+            plan.temporalProvenanceFields,
+            plan.rangeProvenance,
+        );
+        const value = plan.rangeProvenance.length > 0
+            ? { ...element.value, count: records.length }
+            : element.value;
+        const publicElement = {
+            value,
+            ...(records.length > 0 ? { records } : {}),
+        };
+        return associateSemanticElementRenderKeys(publicElement, semanticElementRenderKeys(element));
+    });
+    return { ...target, elements };
+}
+
 export function mountVegaInteractions(
     view: any,
     container: HTMLElement,
@@ -132,6 +284,9 @@ export function mountVegaInteractions(
     interactions: readonly InteractionDef[],
     resolve: ChartInteractionResolver | undefined,
     presentUpdate: ChartUpdatePresenter,
+    assistDistance = 0,
+    keyboardTargeting = false,
+    dismiss: import('../../interactive/types').InteractionDismissPolicy | false | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const clickInteractions = resolve
@@ -139,6 +294,18 @@ export function mountVegaInteractions(
         : [];
     const hoverInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'hover')
+        : [];
+    const contextInteractions = resolve
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'context')
+        : [];
+    const inspectInteractions = resolve
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'inspect')
+        : [];
+    const longPressInteractions = resolve
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'long-press')
+        : [];
+    const doubleInteractions = resolve
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'double')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
         clickInteractions,
@@ -156,7 +323,10 @@ export function mountVegaInteractions(
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
     const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
-    let selectedLegend: { channel: string; value: unknown } | null = null;
+    const hiddenKeys = new Set<string>();
+    const retainedLegendTargets = new Map<string, SemanticTarget>();
+    let selectedLegend: LegendHitIdentity | null = null;
+    let hoveredLegend: LegendHitIdentity | null = null;
     let hoveredPathKeys = new Set<string>();
     let suppressClick = false;
     let regionDragging = false;
@@ -197,12 +367,18 @@ export function mountVegaInteractions(
     };
 
     const focusOverlay = createFocusOverlay({ view, container, plan, coordinateSpace, containerLayoutSize });
+    const legendRangeOverlay = createLegendRangeOverlay({ container, coordinateSpace, containerLayoutSize });
     const annotationOverlay = createAnnotationOverlay({
         view,
         container,
         coordinateSpace,
         containerLayoutSize,
         annotationMarkType: plan.annotationMarkType,
+    });
+    const inspectGuideOverlay = createInspectGuideOverlay({
+        container,
+        coordinateSpace,
+        containerLayoutSize,
     });
     const dragReorderOverlay = createDragReorderOverlay({
         view, container,
@@ -226,9 +402,25 @@ export function mountVegaInteractions(
             void renderUpdates();
         },
     });
+    const resetViewportRegion = (): void => {
+        if (!regionInteraction?.eventSource.viewport) return;
+        retainedUpdates.delete(regionInteraction.id);
+        previewUpdates.delete(regionInteraction.id);
+        void renderUpdates();
+    };
+    const viewportResetControl = createViewportResetControl({
+        container,
+        coordinateSpace,
+        containerLayoutSize,
+        isActive: () => Boolean(regionInteraction?.eventSource.viewport
+            && [retainedUpdates, previewUpdates].some((layer) =>
+                layer.get(regionInteraction.id)?.ops.some((op) => op.op === 'set-viewport'))),
+        reset: resetViewportRegion,
+    });
     const navigationController = createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
+    const renderLegendRange = (): void => legendRangeOverlay.render(selectedLegend, hoveredLegend);
     const clearAnnotation = (): void => annotationOverlay.clear();
     renderPathFocus();
 
@@ -241,15 +433,17 @@ export function mountVegaInteractions(
         categoryField: plan.categoryField,
         seriesField: plan.seriesField,
     });
+    const withSourceProvenance = (target: SemanticTarget | null): SemanticTarget | null =>
+        enrichTargetWithSourceProvenance(target, plan);
     const context = (includeAvailable = true) => {
         // Navigation resolves per gesture frame, so the scenegraph scan stays behind this flag.
         const available = includeAvailable
             ? (() => {
                 const hits = allHits();
-                return resolve?.(
+                return withSourceProvenance(resolve?.(
                     { gesture: 'rectangle', role: 'region', hits },
                     resolveContext(hits),
-                )?.elements;
+                ) ?? null)?.elements;
             })()
             : undefined;
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
@@ -265,6 +459,12 @@ export function mountVegaInteractions(
         const categoryOrder = reorderAxis
             ? reorderAxis.order
             : undefined;
+        const legendDomains = Object.fromEntries(Object.entries(plan.legendFields ?? {}).map(([channel, field]) => [
+            channel,
+            [...new Set(plan.sourceRecords
+                .map((record) => record[field])
+                .filter((value) => value !== undefined))],
+        ]));
         return {
             chartType,
             selected: [...selectedElements.values()],
@@ -273,6 +473,7 @@ export function mountVegaInteractions(
             resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
             seriesField: plan.seriesField,
+            legendDomains,
             categoryAxis: reorderAxis?.axis,
             categoryOrder,
             reorderAxes: currentReorderAxes,
@@ -280,12 +481,33 @@ export function mountVegaInteractions(
     };
     const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
         if (!('select' in target)) {
+            if (target.visual.kind === 'legend') {
+                if (!resolve) return null;
+                const hits = allHits();
+                const legends = target.elements
+                    .map((element) => element.value as LegendTargetValue)
+                    .filter((legend) => Boolean(legend.domain));
+                const resolved = withSourceProvenance(resolveRetainedLegendPresentationTargets(
+                    legends, resolve, resolveContext(hits), retainedLegendTargets,
+                ));
+                return resolved && resolved.elements.length > 0 ? {
+                    visual: target.visual,
+                    elements: [...resolved.elements, ...target.elements],
+                } : null;
+            }
             const renderedKeys = new Set(allHits()
                 .map((hit) => hit.datum[INTERACTION_KEY])
                 .filter((key): key is string => typeof key === 'string'));
-            const elements = target.elements.filter((element) => {
-                const key = element.key[INTERACTION_KEY];
-                return typeof key === 'string' && renderedKeys.has(key);
+            const hits = allHits();
+            const elements = target.elements.flatMap((element) => {
+                const associated = semanticElementRenderKeys(element).filter((key) => renderedKeys.has(key));
+                if (associated.length > 0) return [element];
+                const semanticRecords = element.records?.length ? element.records : [element.value];
+                const matched = hits.flatMap((hit) => semanticRecords.some((record) =>
+                    Object.entries(record).every(([field, value]) => Object.is(hit.datum[field], value)))
+                    ? [hit.datum[INTERACTION_KEY]] : []);
+                const keys = matched.filter((key): key is string => typeof key === 'string');
+                return keys.length > 0 ? [associateSemanticElementRenderKeys(element, keys)] : [];
             });
             return elements.length > 0 ? { ...target, elements } : null;
         }
@@ -294,11 +516,11 @@ export function mountVegaInteractions(
         if (entries.length === 0) return null;
         const hits = allHits().filter((hit) => matchesSemanticTargetSelector(target, plan.fields, hit.datum));
         if (hits.length === 0 || !resolve) return null;
-        const resolved = resolve({
+        const resolved = withSourceProvenance(resolve({
             gesture: 'rectangle',
             role: target.select.visual?.role ?? 'external-selection',
             hits,
-        }, resolveContext(hits));
+        }, resolveContext(hits)));
         if (!resolved) return null;
         if (target.select.visual?.kind && target.select.visual.kind !== resolved.visual.kind) return null;
         if (target.select.visual?.role && target.select.visual.role !== resolved.visual.role) return null;
@@ -358,8 +580,18 @@ export function mountVegaInteractions(
     };
 
     const renderUpdates = async (): Promise<void> => {
-        const displayUpdates = [...retainedUpdates.values(), ...previewUpdates.values()];
+        // A live preview supersedes the same interaction's retained state; other
+        // interactions keep showing theirs.
+        const displayUpdates = [
+            ...[...retainedUpdates]
+                .filter(([id]) => !previewUpdates.has(id))
+                .map(([, update]) => update),
+            ...previewUpdates.values(),
+        ];
+        const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
+        const activeHiddenLegendDomains = new Set<string>();
         selectedElements.clear();
+        hiddenKeys.clear();
         let annotation: Extract<ChartUpdateOp, { op: 'set-annotation' }> | undefined;
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         for (const axis of reorderAxes) view.signal(axis.signal, null);
@@ -368,13 +600,36 @@ export function mountVegaInteractions(
         }
         for (const update of displayUpdates) {
             for (const op of update.ops) {
-                if (op.op === 'set-presentation'
+                if (op.op === 'set-presentation' && op.value.visible === false) {
+                    for (const target of op.targets) {
+                        if ('select' in target) continue;
+                        for (const element of target.elements) {
+                            for (const key of semanticElementRenderKeys(element)) {
+                                hiddenKeys.add(key.endsWith(PATH_KEY_SUFFIX)
+                                    ? key.slice(0, -PATH_KEY_SUFFIX.length)
+                                    : key);
+                            }
+                            const legend = element.value as LegendTargetValue;
+                            if (target.visual.kind === 'legend'
+                                && legend.domain?.kind === 'value'
+                                && legend.channel) {
+                                activeHiddenLegendDomains.add(legendDomainIdentity(legend));
+                            }
+                            if (target.visual.kind === 'legend'
+                                && legend.domain?.kind === 'value'
+                                && legend.channel
+                                && op.value.mutedOpacity !== undefined) {
+                                const identity = `${legend.channel}:${String(legend.domain.value)}`;
+                                hiddenLegendDomains.set(identity, { legend, opacity: op.value.mutedOpacity });
+                            }
+                        }
+                    }
+                } else if (op.op === 'set-presentation'
                     && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
                     for (const target of op.targets) {
                         if ('select' in target) continue;
                         for (const element of target.elements) {
-                            const key = element.key[INTERACTION_KEY];
-                            if (typeof key === 'string') selectedElements.set(key, element);
+                            for (const key of semanticElementRenderKeys(element)) selectedElements.set(key, element);
                         }
                     }
                 } else if (op.op === 'set-annotation') {
@@ -388,12 +643,24 @@ export function mountVegaInteractions(
             }
         }
         const keys = [...selectedKeys()];
+        for (const identity of retainedLegendTargets.keys()) {
+            if (!activeHiddenLegendDomains.has(identity)) retainedLegendTargets.delete(identity);
+        }
         if (keys.length === 0) selectedLegend = null;
         // A navigation-only chart compiles without the selection stores.
         if (plan.semanticStores !== false) {
             view.change(
                 INTERACTION_STORE,
                 changeset().remove(() => true).insert(keys.map((key) => ({ key }))),
+            );
+            view.change(
+                HIDDEN_STORE,
+                changeset().remove(() => true).insert([...hiddenKeys].map((key) => ({ key }))),
+            );
+            view.change(
+                LEGEND_HIDDEN_STORE,
+                changeset().remove(() => true).insert([...hiddenLegendDomains]
+                    .map(([identity, { opacity }]) => ({ identity, opacity }))),
             );
             view.change(
                 LEGEND_SELECTION_STORE,
@@ -403,7 +670,9 @@ export function mountVegaInteractions(
         await view.runAsync();
         observeRenderer();
         renderPathFocus();
+        renderLegendRange();
         reorderResetControls.layout();
+        viewportResetControl.layout();
         clearAnnotation();
         if (annotation?.value && !('select' in annotation.target)) {
             const element = annotation.target.elements[0];
@@ -420,7 +689,7 @@ export function mountVegaInteractions(
     const storeUpdate = async (
         update: ChartUpdate,
         destination: Map<string, ChartUpdate>,
-        legendSelection: { channel: string; value: unknown } | null = null,
+        legendSelection: LegendHitIdentity | null = null,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
         const presented = presentUpdate(resolved.update, context());
@@ -434,7 +703,7 @@ export function mountVegaInteractions(
         interaction: InteractionDef,
         phase: import('../../interactive/interactions').InteractionPhase,
         update: ChartUpdate | null,
-        legendSelection: { channel: string; value: unknown } | null = null,
+        legendSelection: LegendHitIdentity | null = null,
     ): Promise<void> => {
         if (phase === 'cancel') {
             if (previewUpdates.delete(interaction.id)) await renderUpdates();
@@ -483,14 +752,23 @@ export function mountVegaInteractions(
         toCanvasInteractionEvent(event, interaction.eventSource),
         transactionId,
     );
+    // A region can be read as data domains, which is what viewport updates need.
+    const domainForGeometry = (plot: CanvasInteractionEvent['geometry']['plot']) =>
+        domainForPlotGeometry(plot, plan.navigationAxes, (name) => view.scale(name));
     const dispatch = async (
         interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
-        legendSelection: { channel: string; value: unknown } | null = null,
+        legendSelection: LegendHitIdentity | null = null,
+        actionOverride?: CanvasInteractionEvent['action'],
     ): Promise<void> => {
-        const interactionContext = context();
-        const canvasEvent = toCanvasInteractionEvent(event, interaction.eventSource);
-        emitInteractionEvent(interaction, event);
+        const interactionContext = context(!interaction.eventSource.viewport);
+        const base = toCanvasInteractionEvent(event, interaction.eventSource);
+        const domain = domainForGeometry(base.geometry.plot);
+        const withDomain = domain
+            ? { ...base, geometry: { ...base.geometry, domain } }
+            : base;
+        const canvasEvent = actionOverride ? { ...withDomain, action: actionOverride } : withDomain;
+        emitCanvasInteractionEvent(interaction, canvasEvent);
         const request = interaction.handle?.(canvasEvent, interactionContext) ?? null;
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
     };
@@ -512,28 +790,27 @@ export function mountVegaInteractions(
         gesture: 'click' | 'hover' | 'rectangle' | 'angular',
         role: string,
         hits: readonly RenderHit[],
-        legendValue?: unknown,
-        legendField?: string,
+        legend?: LegendTargetValue,
     ): SemanticTarget | null => {
         if (!resolve) return null;
         const availableHits = allHits();
-        return resolve(
-            { gesture, role, hits, legendValue, legendField },
+        return withSourceProvenance(resolve(
+            { gesture, role, hits, legend },
             resolveContext(availableHits),
-        );
+        ));
     };
-
-    let hoveredKeys = '';
+    let hoveredKeys = '\u0001\u0000';
     let hoverActive = false;
     const setHover = async (
         keys: readonly string[],
-        legend: { channel: string; value: unknown } | null = null,
+        legend: LegendHitIdentity | null = null,
     ): Promise<void> => {
         const next = [...new Set(keys)].sort();
         const signature = `${next.join('\u0000')}\u0001${legend?.channel ?? ''}\u0000${String(legend?.value ?? '')}`;
         if (signature === hoveredKeys) return;
         hoveredKeys = signature;
         hoveredPathKeys = new Set(next.filter((key) => key.endsWith(PATH_KEY_SUFFIX)));
+        hoveredLegend = legend;
         const renderedItems = hoveredPathKeys.size > 0 ? sceneItems(view) : [];
         const presentationKeys = [...new Set(next.map(
             (key) => pathHoverPresentationKey(renderedItems, key),
@@ -548,6 +825,7 @@ export function mountVegaInteractions(
         );
         await view.runAsync();
         renderPathFocus();
+        renderLegendRange();
     };
     const clearHover = (): void => {
         void setHover([]);
@@ -561,18 +839,40 @@ export function mountVegaInteractions(
         }
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
+    // A pointer that misses every mark still acquires the nearest one, so small
+    // marks stay reachable without changing which action the preset receives.
+    const acquire = (
+        item: any,
+        point: import('../../interactive/interactions').PlotPoint,
+        rootPoint: import('../../interactive/interactions').PlotPoint,
+        phase: 'preview' | 'commit',
+        modifiers: ReturnType<typeof interactionModifiers>,
+    ) => {
+        const space = coordinateSpace();
+        const direct = normalizeVegaElementEvent(
+            view, item, point, phase, modifiers, plan.legendFields, plan.rangeLegendChannels, rootPoint,
+        );
+        if (assistDistance <= 0 || direct.legend || direct.event.hits.length > 0) return direct;
+        const rawPlotPoint = { x: rootPoint.x - space.originX, y: rootPoint.y - space.originY };
+        const overPlot = rawPlotPoint.x >= 0 && rawPlotPoint.x <= space.plotWidth
+            && rawPlotPoint.y >= 0 && rawPlotPoint.y <= space.plotHeight;
+        const snapped = nearestInteractiveSceneItem(
+            view, rawPlotPoint, assistDistance, rootPoint, overPlot,
+        );
+        return snapped
+            ? normalizeVegaElementEvent(
+                view, snapped, point, phase, modifiers, plan.legendFields, plan.rangeLegendChannels, rootPoint,
+            )
+            : direct;
+    };
     const hoverHandler = (event: MouseEvent, item: any): void => {
         if (hoverPresentationInteractions.length === 0 || regionDragging) return;
-        const point = localPoint(event as unknown as PointerEvent);
-        const normalized = normalizeVegaElementEvent(
-            view, item, point, 'preview', interactionModifiers(event), plan.legendFields,
-        );
+        const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event));
         const legend = normalized.legend;
         if (legend) {
             if (!regionInteraction && !navigationInteraction) container.style.cursor = 'pointer';
-            const resolved = resolveTarget(
-                'hover', normalized.role, normalized.event.hits, legend.value, legend.field,
-            );
+            const resolved = legendSemanticTarget(legend);
             hoverActive = true;
             for (const interaction of hoverInteractions) {
                 void dispatch(interaction, {
@@ -580,8 +880,7 @@ export function mountVegaInteractions(
                     modifiers: normalized.event.modifiers,
                 });
             }
-            void setHover([],
-                legend.channel ? { channel: legend.channel, value: legend.value } : null);
+            void setHover([], legend);
             return;
         }
         const hovered = normalized.event.hits[0];
@@ -611,27 +910,251 @@ export function mountVegaInteractions(
             });
         }
         void setHover(presentationElements
-            .map((element) => element.key[INTERACTION_KEY])
-            .filter((key): key is string => typeof key === 'string') ?? []);
+            .flatMap(semanticElementRenderKeys));
     };
 
     const clickHandler = (event: MouseEvent, item: any): void => {
         if (clickInteractions.length === 0 || suppressClick) return;
-        const point = localPoint(event as unknown as PointerEvent);
-        const normalized = normalizeVegaElementEvent(
-            view, item, point, 'commit', interactionModifiers(event), plan.legendFields,
-        );
+        const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const normalized = acquire(item, point, rootPoint, 'commit', interactionModifiers(event));
         const { legend } = normalized;
-        const target = resolveTarget(
-            'click', normalized.role, normalized.event.hits, legend?.value, legend?.field,
-        );
+        const target = legend ? resolvedLegendInteractionTarget(
+            { channel: legend.channel, field: legend.field, domain: legend.domain },
+            resolveTarget('click', 'legend-item', [], legend),
+        )
+            : resolveTarget('click', normalized.role, normalized.event.hits);
         for (const interaction of clickInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
-            }, legend?.channel ? { channel: legend.channel, value: legend.value } : null);
+            }, legend);
         }
     };
+    const contextHandler = (event: MouseEvent): void => {
+        if (contextInteractions.length === 0) return;
+        event.preventDefault();
+        const point = localPoint(event as unknown as PointerEvent);
+        // A zero radius resolves the mark under the pointer; assist widens it.
+        const item = nearestSceneItem(view, point, Math.max(assistDistance, 0));
+        const normalized = normalizeVegaElementEvent(
+            view, item, point, 'commit', interactionModifiers(event), plan.legendFields, plan.rangeLegendChannels,
+            { x: point.x + coordinateSpace().originX, y: point.y + coordinateSpace().originY },
+        );
+        const { legend } = normalized;
+        const target = legend ? legendSemanticTarget(legend)
+            : resolveTarget('click', normalized.role, normalized.event.hits);
+        for (const interaction of contextInteractions) {
+            void dispatch(interaction, {
+                type: 'semantic', source: 'element', phase: 'commit', target, point,
+                modifiers: normalized.event.modifiers,
+            });
+        }
+    };
+    const inspectModeIndices = new Map(inspectInteractions.map((interaction) => [interaction.id, 0]));
+    const inspectModes = (interaction: CanvasInteractionDef) => interaction.eventSource.inspectCycle ?? [{
+        inspect: interaction.eventSource.inspect ?? 'xy',
+        predicate: interaction.eventSource.inspectPredicate ?? {},
+    }];
+    const activeInspectMode = (interaction: CanvasInteractionDef) => {
+        const modes = inspectModes(interaction);
+        return modes[inspectModeIndices.get(interaction.id) ?? 0] ?? modes[0];
+    };
+    const inspectHandler = (event: MouseEvent): void => {
+        if (inspectInteractions.length === 0) return;
+        const point = localPoint(event as unknown as PointerEvent);
+        const space = coordinateSpace();
+        const items = sceneItems(view);
+        const polarFrame = polarFrameFromItems(items, point);
+        let guideRendered = false;
+        for (const interaction of inspectInteractions) {
+            const activeMode = activeInspectMode(interaction);
+            const mode = activeMode.inspect;
+            const eligibleItems = interaction.eventSource.selector
+                ? items.filter((item) => matchesSemanticTargetSelector(
+                    interaction.eventSource.selector!, plan.fields, item.datum ?? {},
+                ))
+                : items;
+            const tolerance = interaction.eventSource.inspectTolerance ?? 0.01;
+            const guide = interaction.eventSource.inspectGuide ?? normalizeInspectGuideOptions(undefined);
+            const hits = polarFrame
+                ? polarInspectHits(eligibleItems, point, polarFrame)
+                : tolerantInspectHits(
+                    eligibleItems,
+                    point,
+                    mode,
+                    activeMode.predicate,
+                    { x: space.plotWidth * tolerance, y: space.plotHeight * tolerance },
+                );
+            if (guide.visible && polarFrame) {
+                const segment = polarGuideSegment(polarFrame, point);
+                inspectGuideOverlay.renderSegment(segment.start, segment.end, guide.style);
+                guideRendered = true;
+            } else if (guide.visible) {
+                inspectGuideOverlay.renderAxes(point, mode, guide.style);
+                guideRendered = true;
+            }
+            void dispatch(interaction, {
+                type: 'semantic', source: 'element', phase: 'preview',
+                target: hits.length > 0 ? resolveTarget('hover', 'mark', hits) : null,
+                point,
+                modifiers: interactionModifiers(event),
+            });
+        }
+        if (!guideRendered) inspectGuideOverlay.clear();
+    };
+    let lastInspectWheelAt = 0;
+    const cycleInspect = (event: MouseEvent, direction: 1 | -1): void => {
+        const cycling = inspectInteractions.filter((interaction) => inspectModes(interaction).length > 1);
+        if (cycling.length === 0) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        for (const interaction of cycling) {
+            const modes = inspectModes(interaction);
+            const current = inspectModeIndices.get(interaction.id) ?? 0;
+            inspectModeIndices.set(interaction.id, (current + direction + modes.length) % modes.length);
+        }
+        inspectHandler(event);
+    };
+    const inspectWheel = (event: WheelEvent): void => {
+        const now = performance.now();
+        event.preventDefault();
+        if (now - lastInspectWheelAt < 160 || event.deltaY === 0) return;
+        lastInspectWheelAt = now;
+        cycleInspect(event, event.deltaY > 0 ? 1 : -1);
+    };
+    const inspectContext = (event: MouseEvent): void => cycleInspect(event, 1);
+    const inspectLeave = (): void => {
+        inspectGuideOverlay.clear();
+        for (const interaction of inspectInteractions) {
+            void dispatch(interaction, {
+                type: 'semantic', source: 'element', phase: 'cancel', target: null,
+            });
+        }
+    };
+    if (inspectInteractions.length > 0) {
+        container.addEventListener('pointermove', inspectHandler);
+        container.addEventListener('pointerleave', inspectLeave);
+        if (inspectInteractions.some((interaction) => inspectModes(interaction).length > 1)) {
+            container.addEventListener('wheel', inspectWheel, { passive: false });
+            container.addEventListener('contextmenu', inspectContext);
+        }
+    }
+    const pointerTarget = (event: MouseEvent) => {
+        const point = localPoint(event as unknown as PointerEvent);
+        const item = nearestSceneItem(view, point, Math.max(assistDistance, 0));
+        const normalized = normalizeVegaElementEvent(
+            view, item, point, 'commit', interactionModifiers(event), plan.legendFields, plan.rangeLegendChannels,
+            { x: point.x + coordinateSpace().originX, y: point.y + coordinateSpace().originY },
+        );
+        return {
+            point,
+            modifiers: normalized.event.modifiers,
+            legend: normalized.legend,
+            target: normalized.legend ? legendSemanticTarget(normalized.legend)
+                : resolveTarget('click', normalized.role, normalized.event.hits),
+        };
+    };
+    let longPressTimer: number | undefined;
+    const dismissPolicy = dismiss === false ? { click: false as const, escape: false } : {
+        click: dismiss?.click ?? 'non-element' as const,
+        escape: dismiss?.escape ?? true,
+    };
+    let dismissTimer: number | undefined;
+    let consumeDismissClick = false;
+    const cancelPendingDismiss = (): void => {
+        if (dismissTimer === undefined) return;
+        window.clearTimeout(dismissTimer);
+        dismissTimer = undefined;
+    };
+    const clearDismissibleState = (): void => {
+        cancelPendingDismiss();
+        let changed = false;
+        for (const layer of [retainedUpdates, previewUpdates]) {
+            for (const [id, update] of layer) {
+                const ops = update.ops.filter((op) =>
+                    op.op !== 'set-presentation' && op.op !== 'set-annotation');
+                if (ops.length > 0) layer.set(id, { id, ops });
+                else layer.delete(id);
+                changed = changed || ops.length !== update.ops.length;
+            }
+        }
+        if (changed) void renderUpdates();
+    };
+    const dismissOnClick = (event: MouseEvent, item: any): void => {
+        if (!dismissPolicy.click || isInteractiveControlTarget(event.target)) return;
+        if (consumeDismissClick) {
+            consumeDismissClick = false;
+            return;
+        }
+        const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const normalized = acquire(item, point, rootPoint, 'commit', interactionModifiers(event));
+        const target = normalized.legend
+            ? resolvedLegendInteractionTarget(
+                { channel: normalized.legend.channel, field: normalized.legend.field, domain: normalized.legend.domain },
+                resolveTarget('click', 'legend-item', [], normalized.legend),
+            )
+            : resolveTarget('click', normalized.role, normalized.event.hits);
+        const space = coordinateSpace();
+        const inPlot = point.x >= 0 && point.x <= space.plotWidth
+            && point.y >= 0 && point.y <= space.plotHeight;
+        if (dismissPolicy.click === 'non-element' && target) return;
+        if (dismissPolicy.click === 'plot-background' && (!inPlot || target)) return;
+        cancelPendingDismiss();
+        if (doubleInteractions.length > 0) {
+            dismissTimer = window.setTimeout(() => {
+                dismissTimer = undefined;
+                clearDismissibleState();
+            }, 250);
+        } else {
+            clearDismissibleState();
+        }
+    };
+    const cancelLongPress = (): void => {
+        if (longPressTimer === undefined) return;
+        window.clearTimeout(longPressTimer);
+        longPressTimer = undefined;
+    };
+    const longPressStart = (event: PointerEvent): void => {
+        if (longPressInteractions.length === 0 || event.button !== 0) return;
+        cancelLongPress();
+        const holdMs = longPressInteractions[0].eventSource.holdMs ?? 500;
+        longPressTimer = window.setTimeout(() => {
+            longPressTimer = undefined;
+            const acquired = pointerTarget(event);
+            if (!acquired.target) return;
+            consumeDismissClick = true;
+            suppressClick = true;
+            window.setTimeout(() => { suppressClick = false; }, 0);
+            for (const interaction of longPressInteractions) {
+                void dispatch(interaction, {
+                    type: 'semantic', source: 'element', phase: 'commit',
+                    target: acquired.target, point: acquired.point, modifiers: acquired.modifiers,
+                });
+            }
+        }, holdMs);
+    };
+    const doubleHandler = (event: MouseEvent): void => {
+        if (doubleInteractions.length === 0) return;
+        cancelPendingDismiss();
+        const acquired = pointerTarget(event);
+        for (const interaction of doubleInteractions) {
+            void dispatch(interaction, {
+                type: 'semantic', source: 'element', phase: 'commit',
+                target: acquired.target, point: acquired.point, modifiers: acquired.modifiers,
+            });
+        }
+    };
+    if (longPressInteractions.length > 0) {
+        container.addEventListener('pointerdown', longPressStart, true);
+        container.addEventListener('pointerup', cancelLongPress, true);
+        container.addEventListener('pointermove', cancelLongPress, true);
+        container.addEventListener('pointercancel', cancelLongPress, true);
+    }
+    if (doubleInteractions.length > 0) container.addEventListener('dblclick', doubleHandler);
+    if (dismissPolicy.click) view.addEventListener('click', dismissOnClick);
+    if (contextInteractions.length > 0) {
+        container.addEventListener('contextmenu', contextHandler);
+    }
     if (clickInteractions.length > 0) {
         view.addEventListener('click', clickHandler);
     }
@@ -642,8 +1165,18 @@ export function mountVegaInteractions(
 
     const previousCursor = container.style.cursor;
     const previousUserSelect = container.style.userSelect;
+    const suppressLegendTextSelection = canvasInteractions.some((interaction) => interaction.claimsLegendActivation);
+    if (suppressLegendTextSelection) container.style.userSelect = 'none';
     const localPoint = (event: PointerEvent): { x: number; y: number } => {
         return clientToPlotPoint({ x: event.clientX, y: event.clientY }, coordinateSpace());
+    };
+    const pointerPoints = (event: PointerEvent) => {
+        const space = coordinateSpace();
+        const client = { x: event.clientX, y: event.clientY };
+        return {
+            point: clientToPlotPoint(client, space),
+            rootPoint: clientToRendererPoint(client, space),
+        };
     };
     let elementDrag: {
         start: { x: number; y: number };
@@ -651,6 +1184,7 @@ export function mountVegaInteractions(
         destination: SemanticTarget;
         moved: boolean;
         axis?: 'x' | 'y';
+        eligibleAxes: readonly ('x' | 'y')[];
     } | undefined;
     const reorderItemAt = (event: PointerEvent): any => {
         const eventItem = (event.target as any)?.__data__;
@@ -663,9 +1197,11 @@ export function mountVegaInteractions(
                 && point.y >= bounds.y1 && point.y <= bounds.y2;
         });
     };
-    const resolveDraggedTarget = (event: PointerEvent): SemanticTarget | null => {
+    const resolveDraggedTarget = (event: PointerEvent): { hit: RenderHit; target: SemanticTarget } | null => {
         const hit = renderHit(reorderItemAt(event));
-        return hit ? resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]) : null;
+        if (!hit) return null;
+        const target = resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]);
+        return target ? { hit, target } : null;
     };
     const resolveReorderDestination = (
         current: { x: number; y: number },
@@ -707,8 +1243,11 @@ export function mountVegaInteractions(
         if (!elementDragInteraction || (event.button !== undefined && event.button !== 0)) return;
         const source = resolveDraggedTarget(event);
         if (!source) return;
+        const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+        const eligibleAxes = eligibleReorderAxesForHit(axes, source.hit).map(({ axis }) => axis);
+        if (eligibleAxes.length === 0) return;
         const start = localPoint(event);
-        elementDrag = { start, source, destination: source, moved: false };
+        elementDrag = { start, source: source.target, destination: source.target, moved: false, eligibleAxes };
         try {
             container.setPointerCapture?.(event.pointerId);
         } catch {
@@ -720,7 +1259,14 @@ export function mountVegaInteractions(
         void dispatchElementDrag('start', event, start);
     };
     const elementDragMove = (event: PointerEvent): void => {
-        if (!elementDrag) return;
+        if (!elementDrag) {
+            const source = resolveDraggedTarget(event);
+            const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+            container.style.cursor = source && eligibleReorderAxesForHit(axes, source.hit).length > 0
+                ? 'grab'
+                : previousCursor;
+            return;
+        }
         const current = localPoint(event);
         if (!elementDrag.moved && Math.hypot(
             current.x - elementDrag.start.x,
@@ -730,7 +1276,8 @@ export function mountVegaInteractions(
             const deltaX = Math.abs(current.x - elementDrag.start.x);
             const deltaY = Math.abs(current.y - elementDrag.start.y);
             const preferred = deltaY > deltaX ? 'y' : 'x';
-            const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+            const axes = (plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []))
+                .filter(({ axis }) => elementDrag?.eligibleAxes.includes(axis));
             elementDrag.axis = axes.find((axis) => axis.axis === preferred)?.axis ?? axes[0]?.axis;
         }
         if (!elementDrag.axis) return;
@@ -769,26 +1316,36 @@ export function mountVegaInteractions(
         container.style.cursor = previousCursor;
     };
     if (elementDragInteraction) {
-        container.style.cursor = 'grab';
         container.style.userSelect = 'none';
         container.addEventListener('pointerdown', elementDragStart, true);
         container.addEventListener('pointermove', elementDragMove, true);
         container.addEventListener('pointerup', elementDragEnd, true);
         container.addEventListener('pointercancel', elementDragCancel, true);
     }
-    const regionGesture = regionInteraction ? mountVegaRegionGesture({
+    const mountedRegionInteraction = regionInteraction
+        && plan.angularXBrush
+        && regionInteraction.eventSource.type === 'region'
+        && regionInteraction.eventSource.axis === 'x'
+        && regionInteraction.eventSource.regionGeometry === undefined
+        ? {
+            ...regionInteraction,
+            eventSource: { ...regionInteraction.eventSource, regionGeometry: 'angular' as const },
+        }
+        : regionInteraction;
+    const regionGesture = mountedRegionInteraction ? mountVegaRegionGesture({
         view,
         container,
-        interaction: regionInteraction,
+        interaction: mountedRegionInteraction,
         getSelected: selectedKeys,
         setSelected: (next) => {
-            previewUpdates.set(regionInteraction.id, {
-                id: regionInteraction.id,
+            if (mountedRegionInteraction.eventSource.viewport) return;
+            previewUpdates.set(mountedRegionInteraction.id, {
+                id: mountedRegionInteraction.id,
                 ops: [{
                     op: 'set-presentation',
                     targets: next.size > 0 ? [{
                         visual: { kind: 'region', role: 'selection' },
-                        elements: [...next].map((key) => ({ key: { [INTERACTION_KEY]: key } })),
+                        elements: [...next].map((key) => associateSemanticElementRenderKeys({ value: {} }, [key])),
                     }] : [],
                     value: { state: next.size > 0 ? 'emphasized' : 'normal' },
                 }],
@@ -797,12 +1354,13 @@ export function mountVegaInteractions(
         coordinateSpace,
         containerLayoutSize,
         resolveTarget: (gesture, role, hits) => resolveTarget(gesture, role, hits),
-        dispatch: (event) => dispatch(regionInteraction, event),
+        dispatch: (event) => dispatch(mountedRegionInteraction, event),
         clearHover,
         clearAnnotation,
         sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
+        resetViewport: resetViewportRegion,
     }) : undefined;
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,
@@ -813,25 +1371,120 @@ export function mountVegaInteractions(
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
     }) : undefined;
-    const clickOnlyKeyDown = (event: KeyboardEvent): void => {
-        if (regionInteraction || event.key !== 'Escape') return;
-        for (const layer of [retainedUpdates, previewUpdates]) {
-            for (const [id, update] of layer) {
-                const ops = update.ops.filter((op) =>
-                    op.op !== 'set-presentation' && op.op !== 'set-annotation');
-                if (ops.length > 0) layer.set(id, { id, ops });
-                else layer.delete(id);
-            }
-        }
+    const dismissKeyDown = (event: KeyboardEvent): void => {
+        if (regionInteraction || event.key !== 'Escape' || !dismissPolicy.escape) return;
         selectedLegend = null;
-        void renderUpdates();
+        clearDismissibleState();
     };
-    if (clickInteractions.length > 0 && !regionInteraction) container.addEventListener('keydown', clickOnlyKeyDown);
+    if (dismissPolicy.escape && !regionInteraction) {
+        container.addEventListener('keydown', dismissKeyDown);
+    }
+
+    // One tab stop enters the chart; arrows move to the nearest target in that direction.
+    let activeKeyboardKey: string | undefined;
+    const keyboardTargets = (): any[] => {
+        const seen = new Set<string>();
+        const items: any[] = [];
+        for (const item of sceneItems(view)) {
+            const key = renderHit(item)?.datum[INTERACTION_KEY];
+            if (typeof key !== 'string' || seen.has(key) || !item.bounds) continue;
+            seen.add(key);
+            items.push(item);
+        }
+        return items.sort((left, right) =>
+            (left.bounds.x1 - right.bounds.x1) || (left.bounds.y1 - right.bounds.y1));
+    };
+    const keyboardFocus = (item: any) => {
+        const hit = renderHit(item);
+        if (!hit) return undefined;
+        return {
+            point: {
+                x: (item.bounds.x1 + item.bounds.x2) / 2,
+                y: (item.bounds.y1 + item.bounds.y2) / 2,
+            },
+            target: resolveTarget('click', 'mark', [hit]),
+            key: hit.datum[INTERACTION_KEY],
+        };
+    };
+    const moveKeyboardTarget = (direction: SpatialDirection): void => {
+        const items = keyboardTargets();
+        if (items.length === 0) return;
+        const current = activeKeyboardKey === undefined
+            ? undefined
+            : items.find((item) => renderHit(item)?.datum[INTERACTION_KEY] === activeKeyboardKey);
+        const next = current
+            ? nextItemInDirection(items, {
+                x: (current.bounds.x1 + current.bounds.x2) / 2,
+                y: (current.bounds.y1 + current.bounds.y2) / 2,
+            }, direction)
+            : direction === 'right' || direction === 'down' ? items[0] : items[items.length - 1];
+        if (!next) return;
+        const active = keyboardFocus(next);
+        if (!active) return;
+        activeKeyboardKey = typeof active.key === 'string' ? active.key : undefined;
+        const interaction = clickInteractions[0];
+        if (interaction) {
+            emitCanvasInteractionEvent(interaction, toCanvasInteractionEvent({
+                type: 'semantic', source: 'element', phase: 'preview',
+                target: active.target, point: active.point,
+            }, keyboardTrigger));
+        }
+        void setHover(activeKeyboardKey ? [activeKeyboardKey] : []);
+    };
+    const activateKeyboardTarget = (): void => {
+        if (activeKeyboardKey === undefined) return;
+        const item = keyboardTargets()
+            .find((candidate) => renderHit(candidate)?.datum[INTERACTION_KEY] === activeKeyboardKey);
+        const active = item ? keyboardFocus(item) : undefined;
+        if (!active) return;
+        for (const interaction of clickInteractions) {
+            void dispatch(interaction, {
+                type: 'semantic', source: 'element', phase: 'commit',
+                target: active.target, point: active.point,
+            }, null, 'activate-element');
+        }
+    };
+    const keyboardKeyDown = (event: KeyboardEvent): void => {
+        switch (event.key) {
+            case 'ArrowRight':
+                event.preventDefault();
+                moveKeyboardTarget('right');
+                return;
+            case 'ArrowLeft':
+                event.preventDefault();
+                moveKeyboardTarget('left');
+                return;
+            case 'ArrowDown':
+                event.preventDefault();
+                moveKeyboardTarget('down');
+                return;
+            case 'ArrowUp':
+                event.preventDefault();
+                moveKeyboardTarget('up');
+                return;
+            case 'Enter':
+            case ' ':
+                event.preventDefault();
+                activateKeyboardTarget();
+                return;
+            case 'Escape':
+                activeKeyboardKey = undefined;
+                void setHover([]);
+                return;
+            default:
+        }
+    };
+    const keyboardEnabled = keyboardTargeting && clickInteractions.length > 0;
+    if (keyboardEnabled) {
+        container.tabIndex = container.tabIndex >= 0 ? container.tabIndex : 0;
+        container.addEventListener('keydown', keyboardKeyDown);
+    }
 
     // Overlays project scenegraph geometry into screen pixels, so every one of
     // them is re-projected whenever the rendered size changes.
     const syncOverlays = (): void => {
         renderPathFocus();
+        renderLegendRange();
         annotationOverlay.sync();
         regionGesture?.sync();
         reorderResetControls.layout();
@@ -873,8 +1526,28 @@ export function mountVegaInteractions(
             view.removeEventListener('mousemove', hoverHandler);
             view.removeEventListener('mouseout', clearHover);
         }
-        if (clickInteractions.length > 0 && !regionInteraction) {
-            container.removeEventListener('keydown', clickOnlyKeyDown);
+        if (dismissPolicy.escape && !regionInteraction) {
+            container.removeEventListener('keydown', dismissKeyDown);
+        }
+        if (keyboardEnabled) container.removeEventListener('keydown', keyboardKeyDown);
+        if (contextInteractions.length > 0) container.removeEventListener('contextmenu', contextHandler);
+        if (longPressInteractions.length > 0) {
+            cancelLongPress();
+            container.removeEventListener('pointerdown', longPressStart, true);
+            container.removeEventListener('pointerup', cancelLongPress, true);
+            container.removeEventListener('pointermove', cancelLongPress, true);
+            container.removeEventListener('pointercancel', cancelLongPress, true);
+        }
+        if (doubleInteractions.length > 0) container.removeEventListener('dblclick', doubleHandler);
+        if (dismissPolicy.click) {
+            cancelPendingDismiss();
+            view.removeEventListener('click', dismissOnClick);
+        }
+        if (inspectInteractions.length > 0) {
+            container.removeEventListener('pointermove', inspectHandler);
+            container.removeEventListener('pointerleave', inspectLeave);
+            container.removeEventListener('wheel', inspectWheel);
+            container.removeEventListener('contextmenu', inspectContext);
         }
         regionGesture?.destroy();
         navigationGesture?.destroy();
@@ -885,16 +1558,19 @@ export function mountVegaInteractions(
             container.removeEventListener('pointercancel', elementDragCancel, true);
         }
         focusOverlay.destroy();
+        legendRangeOverlay.destroy();
         annotationOverlay.destroy();
+        inspectGuideOverlay.destroy();
         dragReorderOverlay.destroy();
         reorderResetControls.destroy();
+        viewportResetControl.destroy();
         resizeObserver?.disconnect();
         observedRenderer = undefined;
         if (syncFrame !== undefined && typeof cancelAnimationFrame !== 'undefined') {
             cancelAnimationFrame(syncFrame);
             syncFrame = undefined;
         }
-        if (elementDragInteraction) container.style.userSelect = previousUserSelect;
+        if (elementDragInteraction || suppressLegendTextSelection) container.style.userSelect = previousUserSelect;
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
     const clearUpdate = async (id: string): Promise<void> => {

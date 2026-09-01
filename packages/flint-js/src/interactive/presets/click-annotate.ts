@@ -2,7 +2,7 @@ import type {
     ClickAnnotateOptions,
     CanvasInteractionDef,
 } from '../interactions';
-import { emphasisUpdate, normalizedOpacity } from './utils';
+import { emphasisUpdate, isActivationAction, normalizedOpacity } from './utils';
 import { clickTrigger } from '../triggers';
 
 export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
@@ -12,7 +12,8 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
         id,
         eventSource: clickTrigger,
         handle(event, context) {
-            if (!event.action.startsWith('click-') || event.phase !== 'commit') return null;
+            if (!isActivationAction(event.action) || event.phase !== 'commit') return null;
+            if (event.target?.visual.role === 'legend-item') return null;
             if (!event.target) {
                 return {
                     id,

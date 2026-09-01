@@ -20,12 +20,13 @@ function clamp(value: number, min: number, max: number): number {
  * would otherwise report an origin that disagrees with `logicalWidth`.
  */
 export function rendererPlotOrigin(
-    matrix: { a: number; e: number; f: number } | null | undefined,
+    matrix: { a: number; d?: number; e: number; f: number } | null | undefined,
     viewOrigin: PlotPoint,
 ): PlotPoint {
     if (!matrix) return viewOrigin;
-    const scale = matrix.a || 1;
-    return { x: matrix.e / scale, y: matrix.f / scale };
+    const scaleX = matrix.a || 1;
+    const scaleY = matrix.d || scaleX;
+    return { x: matrix.e / scaleX, y: matrix.f / scaleY };
 }
 
 export function interactionModifiers(event: MouseEvent | PointerEvent): InteractionModifiers {
@@ -33,11 +34,18 @@ export function interactionModifiers(event: MouseEvent | PointerEvent): Interact
 }
 
 export function clientToPlotPoint(client: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
-    const rendererX = (client.x - space.rect.left) * space.logicalWidth / space.rect.width;
-    const rendererY = (client.y - space.rect.top) * space.logicalHeight / space.rect.height;
+    const renderer = clientToRendererPoint(client, space);
     return {
-        x: clamp(rendererX - space.originX, 0, space.plotWidth),
-        y: clamp(rendererY - space.originY, 0, space.plotHeight),
+        x: clamp(renderer.x - space.originX, 0, space.plotWidth),
+        y: clamp(renderer.y - space.originY, 0, space.plotHeight),
+    };
+}
+
+/** Client position in the full renderer, including plot margins and legends. */
+export function clientToRendererPoint(client: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
+    return {
+        x: (client.x - space.rect.left) * space.logicalWidth / space.rect.width,
+        y: (client.y - space.rect.top) * space.logicalHeight / space.rect.height,
     };
 }
 

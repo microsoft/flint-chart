@@ -4,9 +4,26 @@
 export const INTERACTION_PROVENANCE = '__flintInteractionProvenance';
 
 export interface InteractionProvenance {
-    role: 'text-label' | 'decorative';
+    role: 'text-label' | 'legend-label' | 'decorative';
     identity: 'inherit' | { fields: readonly string[] };
     presentation: 'on-mark' | 'independent';
+    legend?: { channel: string; field: string };
+}
+
+/** Declare a generated series label that acts as a direct legend entry. */
+export function withInteractionLegendLabel<T extends Record<string, any>>(
+    node: T,
+    legend: { channel: string; field: string },
+): T {
+    return {
+        ...node,
+        [INTERACTION_PROVENANCE]: {
+            role: 'legend-label',
+            identity: 'inherit',
+            presentation: 'independent',
+            legend,
+        } satisfies InteractionProvenance,
+    };
 }
 
 /** Exclude a structural or ornamental mark from semantic hit instrumentation. */

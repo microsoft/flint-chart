@@ -18,7 +18,7 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
-import { MUTED_HOVER_STROKE, targetFromHits } from '../../core/interaction-semantics';
+import { legendMatchedHits, MUTED_HOVER_STROKE, targetFromHits } from '../../core/interaction-semantics';
 import {
     annotationCandidates,
     categoryValueAnnotationText,
@@ -92,12 +92,20 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         return {
         fields: [WEEK_FIELD, WEEKDAY_FIELD, DATE_FIELD],
         categoryField: WEEK_FIELD,
+        legendFields: { color: valueField },
         selectableMarks: ['rect'],
         renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
-        resolve: (event, context) => targetFromHits(event.hits, context.keyField, {
+        renderSelectionStyles: { rect: { boundary: 'contiguous-region' } },
+        resolve: (event, context) => targetFromHits(
+            event.role === 'legend-item'
+                ? legendMatchedHits(event, context, `sum_${valueField}`)
+                : event.hits,
+            context.keyField,
+            {
             kind: 'mark',
             role: 'calendar-day',
-        }),
+            },
+        ),
         presentUpdate: presentAnnotationUpdate(
             () => annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
             categoryValueAnnotationText(DATE_FIELD, valueField),

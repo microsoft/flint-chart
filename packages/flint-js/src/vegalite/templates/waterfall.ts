@@ -44,19 +44,20 @@ export const waterfallChartDef: ChartTemplateDef = {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const legendField = colorField ?? '__wf_color';
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
             categoryField,
             seriesField,
             resolveGroupValue: (element) => element.records?.[0]?.__wf_color,
-            legendFields: colorField ? { color: colorField } : undefined,
+            legendFields: { color: legendField },
             selectableMarks: ['bar'],
             annotationMarkType: 'rect',
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
-                const hits = event.role === 'legend-item' && legendField
-                    ? legendMatchedHits(event, context, legendField)
+                const resolvedLegendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && resolvedLegendField
+                    ? legendMatchedHits(event, context, resolvedLegendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, {
                     kind: 'mark',

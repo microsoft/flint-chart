@@ -2,14 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { brushAngle, clickAnnotate, clickHighlight, dragReorder, externalInteraction, navigate, select } from '../src/interactive/interactions';
-import type { SemanticElement, SemanticTarget } from '../src/interactive/interactions';
-import { MUTED_HOVER_FILL, MUTED_HOVER_STROKE } from '../src/core/interaction-semantics';
+import { brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
+import type { RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
+import {
+    associateSemanticElementRenderKeys,
+    MUTED_HOVER_FILL,
+    MUTED_HOVER_STROKE,
+    legendMatchedHits,
+    semanticElementRenderKeys,
+    sourceRecordsForRenderedRecords,
+} from '../src/core/interaction-semantics';
 import { areaChartDef, streamgraphDef } from '../src/vegalite/templates/area';
 import {
     barChartDef,
     groupedBarChartDef,
     heatmapDef,
+    histogramDef,
     pyramidChartDef,
     stackedBarChartDef,
 } from '../src/vegalite/templates/bar';
@@ -30,22 +38,38 @@ import {
     boundsIntersectRect,
     clientRectToLayoutRect,
     clientToPlotPoint,
+    clientToRendererPoint,
     clientToLayoutPoint,
     INTERACTION_KEY,
+    INTERACTION_LEGEND_CHANNEL,
+    INTERACTION_LEGEND_FIELD,
     INTERACTION_ROLE,
     PATH_KEY_SUFFIX,
     plotToClientPoint,
+    legendEntryItemAtPoint,
+    legendSemanticTarget,
+    legendTarget,
+    normalizeVegaElementEvent,
+    nearestItemByBounds,
+    nearestInteractiveSceneItem,
     rendererPlotOrigin,
     renderHit,
     sceneItems,
+    tolerantInspectHits,
+    continuousLegendSegmentCount,
 } from '../src/vegalite/interactions/hit-adapter';
 import {
+    HIDDEN_STORE,
     HOVER_STORE,
     INTERACTION_STORE,
+    LEGEND_HIDDEN_STORE,
     LEGEND_HOVER_STORE,
     LEGEND_SELECTION_STORE,
 } from '../src/vegalite/interactions/stores';
-import { mergeContiguousSelectionBounds } from '../src/vegalite/interactions/presentation/focus-overlay';
+import {
+    mergeContiguousSelectionBounds,
+    selectionBoundarySegments,
+} from '../src/vegalite/interactions/presentation/focus-overlay';
 import {
     annotationBounds,
     annotationConnectionPoint,
@@ -56,6 +80,7 @@ import { THEME_PRESETS } from '../src/core/theme/presets';
 import { lineChartDef } from '../src/vegalite/templates/line';
 import { bumpChartDef } from '../src/vegalite/templates/bump';
 import { slopeChartDef } from '../src/vegalite/templates/slope';
+import { enrichTargetWithSourceProvenance } from '../src/vegalite/interactions/runtime';
 import { regressionDef } from '../src/vegalite/templates/scatter';
 import { mapDef, choroplethDef } from '../src/vegalite/templates/map';
 import { densityPlotDef } from '../src/vegalite/templates/density';
@@ -63,9 +88,17 @@ import { ecdfPlotDef } from '../src/vegalite/templates/ecdf';
 import { vlCalendarHeatmapDef } from '../src/vegalite/templates/calendar';
 import { sparklineDef } from '../src/vegalite/templates/sparkline';
 import { violinPlotDef } from '../src/vegalite/templates/violin';
+import { waterfallChartDef } from '../src/vegalite/templates/waterfall';
 import { bulletChartDef } from '../src/vegalite/templates/bullet';
 import { kpiCardDef } from '../src/vegalite/templates/kpi-card';
 import { radarChartDef } from '../src/vegalite/templates/radar';
+import { createLegendToggleInteraction } from '../src/interactive/presets/legend-toggle';
+import {
+    resolveLegendPresentationTarget,
+    resolveRetainedLegendPresentationTarget,
+    resolveRetainedLegendPresentationTargets,
+    resolvedLegendInteractionTarget,
+} from '../src/vegalite/interactions/runtime';
 
 function annotationUpdate(
     element: SemanticElement,
@@ -99,7 +132,164 @@ function allSceneItems(view: View): any[] {
     return items;
 }
 
+function rootSceneBounds(view: View, target: any) {
+    let result: { x1: number; y1: number; x2: number; y2: number } | undefined;
+    const visit = (item: any, offsetX = 0, offsetY = 0): void => {
+        if (!item || result) return;
+        if (item === target && item.bounds) {
+            result = {
+                x1: item.bounds.x1 + offsetX, y1: item.bounds.y1 + offsetY,
+                x2: item.bounds.x2 + offsetX, y2: item.bounds.y2 + offsetY,
+            };
+            return;
+        }
+        const isGroup = item.mark?.marktype === 'group';
+        const nextX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
+        const nextY = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        item.items?.forEach((child: any) => visit(child, nextX, nextY));
+    };
+    visit((view.scenegraph() as any).root);
+    return result;
+}
+
 describe('Vega-Lite semantic interactions', () => {
+    it('keeps transformed values separate from source-record provenance', () => {
+        const sourceRecords = [
+            { OS: 'Android', Share: 71 },
+            { OS: 'iOS', Share: 29 },
+        ];
+        const rendered = [{ OS: 'Android', Share: 71, Share_start: 0, Share_end: 71 }];
+
+        expect(sourceRecordsForRenderedRecords(rendered, sourceRecords, ['OS', 'Share']))
+            .toEqual([{ OS: 'Android', Share: 71 }]);
+        expect(sourceRecordsForRenderedRecords(
+            [{ Region: 'West', Sales: 300 }],
+            [
+                { Region: 'West', Sales: 100 },
+                { Region: 'West', Sales: 200 },
+                { Region: 'East', Sales: 50 },
+            ],
+            ['Region'],
+        )).toEqual([
+            { Region: 'West', Sales: 100 },
+            { Region: 'West', Sales: 200 },
+        ]);
+        expect(sourceRecordsForRenderedRecords(
+            [{ Games: Date.UTC(2012, 0, 1), Country: 'China', Rank: 2 }],
+            [
+                { Games: 2012, Country: 'China', Rank: 2 },
+                { Games: 2016, Country: 'China', Rank: 3 },
+            ],
+            ['Games', 'Country', 'Rank'],
+            ['Games'],
+        )).toEqual([{ Games: 2012, Country: 'China', Rank: 2 }]);
+    });
+
+    it('resolves a histogram bin to its range, count, and contributing records', () => {
+        const semantics = histogramDef.semanticInteractions!({
+            resolvedEncodings: { x: { field: 'Duration', type: 'quantitative' } },
+        });
+        const hit = {
+            datum: {
+                [INTERACTION_KEY]: '3|3.5',
+                __bin_start: 3,
+                __bin_end: 3.5,
+            },
+            source: 'mark' as const,
+        };
+        const target = semantics.resolve(
+            { gesture: 'hover', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY },
+        );
+        const enriched = enrichTargetWithSourceProvenance(target, {
+            sourceRecords: [{ Duration: 2.9 }, { Duration: 3.1 }, { Duration: 3.4 }, { Duration: 3.5 }],
+            provenanceFields: [],
+            temporalProvenanceFields: [],
+            rangeProvenance: [{ field: 'Duration', startField: '__bin_start', endField: '__bin_end' }],
+        });
+
+        expect(enriched?.elements[0]).toEqual({
+            value: { field: 'Duration', range: { start: 3, end: 3.5 }, count: 2 },
+            records: [{ Duration: 3.1 }, { Duration: 3.4 }],
+        });
+        expect(semanticElementRenderKeys(target!.elements[0])).toEqual(['3|3.5']);
+        expect(semanticElementRenderKeys(enriched!.elements[0])).toEqual(['3|3.5']);
+    });
+
+    it('preserves source provenance through an assembled histogram plan', async () => {
+        const sourceRecords = [1.7, 1.9, 2.1, 2.4, 3.1, 3.4].map((duration) => ({
+            'Duration (min)': duration,
+        }));
+        const spec = assembleVegaLite({
+            data: { values: sourceRecords },
+            semantic_types: { 'Duration (min)': 'Quantity' },
+            chart_spec: { chartType: 'Histogram', encodings: { x: 'Duration (min)' } },
+        } as never) as any;
+        const { plan, compiled } = instrument(spec, [inspect({ mode: 'x' })]);
+        if (!plan?.resolve) throw new Error('Expected an instrumented histogram plan');
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const bar = sceneItems(view).find((item) => item.mark.marktype === 'rect' && item.datum[INTERACTION_KEY]);
+        const hit = renderHit(bar);
+        if (!hit) throw new Error('Expected an interactive histogram bar');
+        expect(plan.sourceRecords).toHaveLength(sourceRecords.length);
+        expect(hit.datum).toMatchObject({
+            __bin_start: expect.any(Number),
+            __bin_end: expect.any(Number),
+        });
+        const target = plan.resolve(
+            { gesture: 'hover', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY },
+        );
+        expect(target?.elements[0].records?.[0]).toMatchObject({
+            __bin_start: bar.datum.__bin_start,
+            __bin_end: bar.datum.__bin_end,
+        });
+        const enriched = enrichTargetWithSourceProvenance(target, plan);
+        const start = bar.datum.__bin_start as number;
+        const end = bar.datum.__bin_end as number;
+        const expectedRecords = sourceRecords
+            .filter((record) => record['Duration (min)'] >= start && record['Duration (min)'] < end)
+            .map((record) => ({ 'Duration (min)': record['Duration (min)'] }));
+
+        expect(enriched?.elements[0].value).toEqual({
+            field: 'Duration (min)', range: { start, end }, count: expectedRecords.length,
+        });
+        expect(enriched?.elements[0].records).toEqual(expectedRecords);
+        view.finalize();
+    });
+
+    it('inspect-x chooses one stacked category and returns all of its segments', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Region: 'West', Segment: 'Consumer', Value: 10 },
+                { Region: 'West', Segment: 'Corporate', Value: 12 },
+                { Region: 'East', Segment: 'Consumer', Value: 8 },
+                { Region: 'East', Segment: 'Corporate', Value: 9 },
+            ] },
+            semantic_types: { Region: 'Category', Segment: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Stacked Bar Chart',
+                encodings: { x: 'Region', y: 'Value', color: 'Segment' },
+            },
+        } as never) as any;
+        const { compiled } = instrument(spec, [inspect({ mode: 'x' })]);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const bars = sceneItems(view).filter((item) => item.mark.marktype === 'rect' && item.datum[INTERACTION_KEY]);
+        const west = bars.filter((item) => item.datum.Region === 'West');
+        const east = bars.filter((item) => item.datum.Region === 'East');
+        const westEdge = Math.max(...west.map((item) => item.bounds.x2));
+        const eastEdge = Math.min(...east.map((item) => item.bounds.x1));
+        const gapPoint = { x: westEdge + (eastEdge - westEdge) / 3, y: 0 };
+        const hits = tolerantInspectHits(
+            bars, gapPoint, 'x', { x: '=' }, { x: Math.abs(eastEdge - westEdge), y: 0 },
+        );
+
+        expect(new Set(hits.map((hit) => hit.datum.Region))).toEqual(new Set(['West']));
+        expect(new Set(hits.map((hit) => hit.datum.Segment))).toEqual(new Set(['Consumer', 'Corporate']));
+        view.finalize();
+    });
     it('keeps path fallback connections anchored to the selected segment midpoint', () => {
         const item = {
             bounds: { x1: 56, y1: 52, x2: 196, y2: 220 },
@@ -382,6 +572,48 @@ describe('Vega-Lite semantic interactions', () => {
         ]));
     });
 
+    it('treats a Bump legend series as one target owning its line and points', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Games: 2012, Country: 'China', Rank: 2 },
+                { Games: 2016, Country: 'China', Rank: 3 },
+                { Games: 2020, Country: 'China', Rank: 2 },
+                { Games: 2024, Country: 'China', Rank: 2 },
+                { Games: 2012, Country: 'Japan', Rank: 6 },
+                { Games: 2024, Country: 'Japan', Rank: 3 },
+            ] },
+            semantic_types: { Games: 'Year', Country: 'Country', Rank: 'Rank' },
+            chart_spec: {
+                chartType: 'Bump Chart',
+                encodings: { x: 'Games', y: 'Rank', color: 'Country' },
+            },
+            theme_spec: 'nyt',
+        } as never) as any;
+        const { plan, compiled } = instrument(spec, [clickHighlight()]);
+        if (!plan?.resolve) throw new Error('Expected an instrumented Bump plan');
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const hits = sceneItems(view).map(renderHit).filter((hit): hit is RenderHit => hit !== null);
+        const legend = {
+            channel: 'color', field: 'Country',
+            domain: { kind: 'value' as const, value: 'China' },
+        };
+        const resolved = enrichTargetWithSourceProvenance(plan.resolve({
+            gesture: 'click', role: 'legend-item', hits: [], legend,
+        }, { allHits: hits, keyField: INTERACTION_KEY, seriesField: 'Country' }), plan);
+        const target = resolvedLegendInteractionTarget(legend, resolved);
+        const keys = semanticElementRenderKeys(target.elements[0]);
+
+        expect(target.elements).toHaveLength(1);
+        expect(target.elements[0].records).toHaveLength(4);
+        const renderedLineKeys = hits
+            .filter((hit) => hit.markType === 'line' && hit.datum.Country === 'China')
+            .map((hit) => hit.datum[INTERACTION_KEY]);
+        expect(keys.filter((key) => key.endsWith(PATH_KEY_SUFFIX))).toEqual(renderedLineKeys);
+        expect(keys.filter((key) => !key.endsWith(PATH_KEY_SUFFIX))).toHaveLength(4);
+        view.finalize();
+    });
+
     it('instruments semantic updates without passing external definitions to the renderer', () => {
         const spec = assembleVegaLite({
             chart_spec: {
@@ -486,11 +718,11 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(makeSpec('economist')._interactionSemantics.selectionBoundary).toEqual({
             color: '#e3120b',
-            width: 1.5,
-            opacity: 1,
+            width: 1.25,
+            opacity: 0.68,
             haloColor: '#ffffff',
-            haloWidth: 3,
-            haloOpacity: 0.8,
+            haloWidth: 2.5,
+            haloOpacity: 0.35,
         });
         expect(makeSpec({
             extends: 'economist',
@@ -500,7 +732,7 @@ describe('Vega-Lite semantic interactions', () => {
                     width: 2,
                     opacity: 0.9,
                     haloColor: '#fffaf2',
-                    haloWidth: 4,
+                    haloWidth: 0,
                     haloOpacity: 0.7,
                 },
             },
@@ -509,7 +741,7 @@ describe('Vega-Lite semantic interactions', () => {
             width: 2,
             opacity: 0.9,
             haloColor: '#fffaf2',
-            haloWidth: 4,
+            haloWidth: 0,
             haloOpacity: 0.7,
         });
     });
@@ -524,6 +756,19 @@ describe('Vega-Lite semantic interactions', () => {
             { x1: 0, y1: 0, x2: 21, y2: 21 },
             { x1: 0, y1: 30, x2: 10, y2: 40 },
         ]);
+    });
+
+    it('traces an irregular heatmap selection without boxing in unselected cells', () => {
+        const segments = selectionBoundarySegments([
+            { x1: 0, y1: 0, x2: 10, y2: 10 },
+            { x1: 10, y1: 0, x2: 20, y2: 10 },
+            { x1: 0, y1: 10, x2: 10, y2: 20 },
+        ]);
+
+        expect(segments).toHaveLength(8);
+        expect(segments).not.toContainEqual({ x1: 20, y1: 10, x2: 20, y2: 20 });
+        expect(segments).toContainEqual({ x1: 10, y1: 10, x2: 10, y2: 20 });
+        expect(segments).toContainEqual({ x1: 10, y1: 10, x2: 20, y2: 10 });
     });
 
     it('keeps themed line vertices filled when expanding them for interaction', () => {
@@ -670,11 +915,63 @@ describe('Vega-Lite semantic interactions', () => {
         );
 
         expect(target?.visual).toEqual({ kind: 'mark', role: 'text-label' });
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual([
             'Jan|A',
             'Jan|B',
             'Jan',
         ]);
+    });
+
+    it('resolves a stacked-area series-end label to the whole band', async () => {
+        const rows = [1950, 1970, 1990, 2010, 2020].flatMap((Year, yearIndex) =>
+            Object.entries({ Asia: 4641, Africa: 1361, Europe: 748, Americas: 1023, Oceania: 45 })
+                .map(([Region, finalValue]) => ({
+                    Year,
+                    Region,
+                    Population: Math.round(finalValue * (0.6 + yearIndex * 0.1)),
+                })));
+        const spec = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { Year: 'Year', Region: 'Category', Population: 'Quantity' },
+            chart_spec: {
+                chartType: 'Area Chart',
+                encodings: { x: 'Year', y: 'Population', color: 'Region' },
+                chartProperties: { stackMode: 'stack' },
+            },
+            theme_spec: {
+                id: 'series-end-test',
+                label: 'Series end test',
+                ink: {
+                    surface: { canvas: '#fff', plot: '#fff' },
+                    text: { primary: '#111' },
+                    series: { single: '#111', categorical: ['#011827', '#2251ff', '#00a9f4', '#00c7b1', '#9ca8b3'] },
+                },
+                legend: { show: 'always', placement: ['seriesEnd', 'right'] },
+            },
+        } as any) as any;
+        const resolve = spec._interactionSemantics.resolve;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const scene = allSceneItems(view);
+        const labelItem = scene.find((item) =>
+            item.mark?.marktype === 'text' && item.datum?.Region === 'Africa'
+            && item.datum?.[INTERACTION_ROLE] === 'text-label');
+        const labelHit = renderHit(labelItem)!;
+        const allHits = sceneItems(view).map(renderHit).filter(Boolean);
+        const target = resolve({
+            gesture: 'click', role: 'text-label', hits: [labelHit],
+        }, {
+            allHits,
+            keyField: INTERACTION_KEY,
+            categoryField: 'Year',
+            seriesField: 'Region',
+        });
+
+        expect(labelHit.datum[INTERACTION_KEY]).toBe('Africa');
+        expect(target?.visual).toEqual({ kind: 'path', role: 'text-label' });
+        expect(target?.elements).toHaveLength(4);
+        expect(target?.elements.every((element: SemanticElement) => element.value.Region === 'Africa')).toBe(true);
     });
 
     it('formats a Rose sector from its encoded category and value fields', () => {
@@ -685,7 +982,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         const element = {
-            key: { [INTERACTION_KEY]: 'Jan' },
+            value: { [INTERACTION_KEY]: 'Jan' },
             records: [{
                 Month: 'Jan',
                 'Rainfall (mm)': 140,
@@ -719,11 +1016,11 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         const barTableElement = {
-            key: { [INTERACTION_KEY]: 'China' },
+            value: { [INTERACTION_KEY]: 'China' },
             records: [{ Country: 'China', 'GDP ($T)': 17.8, period_end: 0 }],
         };
         const bulletElement = {
-            key: { [INTERACTION_KEY]: 'Germany' },
+            value: { [INTERACTION_KEY]: 'Germany' },
             records: [{ Country: 'Germany', Share: 51.6, Target: 80 }],
         };
 
@@ -765,6 +1062,73 @@ describe('Vega-Lite semantic interactions', () => {
         expect(new Set(roles)).toEqual(new Set(['bullet-actual', 'bullet-expected']));
     });
 
+    it('resolves Bullet Chart goal-attainment legend keys to their bars', () => {
+        const semantics = bulletChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                y: { field: 'Country', type: 'nominal' },
+                x: { field: 'Share', type: 'quantitative' },
+                goal: { field: 'Target', type: 'quantitative' },
+            },
+        } as any);
+        const below = {
+            datum: { Country: 'Norway', Share: 98, Target: 100, __status: 'Below target' },
+            markType: 'bar',
+            source: 'mark' as const,
+        };
+        const met = {
+            datum: { Country: 'Brazil', Share: 90, Target: 80, __status: 'Meets target' },
+            markType: 'bar',
+            source: 'mark' as const,
+        };
+
+        expect(semantics.legendFields).toEqual({ color: '__status' });
+        expect(semantics.resolve({
+            gesture: 'click',
+            role: 'legend-item',
+            hits: [{ datum: { value: 'Below target' }, source: 'legend-item' }],
+            legend: { field: '__status', domain: { kind: 'value', value: 'Below target' } },
+        }, {
+            keyField: 'Country',
+            allHits: [below, met],
+        } as any)?.elements).toHaveLength(1);
+
+        const unmatched = semantics.resolve({
+            gesture: 'click',
+            role: 'legend-item',
+            hits: [{ datum: { value: 'Meets target' }, source: 'legend-item' }],
+            legend: { field: '__status', domain: { kind: 'value', value: 'Meets target' } },
+        }, {
+            keyField: 'Country',
+            allHits: [below],
+        } as any);
+        expect(unmatched).toBeNull();
+        expect(legendSemanticTarget({
+            channel: 'color', field: '__status', value: 'Meets target',
+            domain: { kind: 'value', value: 'Meets target' },
+        })).toEqual({
+            visual: { kind: 'legend', role: 'legend-item' },
+            elements: [{
+                value: {
+                    channel: 'color',
+                    field: '__status',
+                    domain: { kind: 'value', value: 'Meets target' },
+                },
+            }],
+        });
+        expect(legendSemanticTarget({
+            channel: 'color', field: '__status', value: 'Below target',
+            domain: { kind: 'value', value: 'Below target' },
+        })).toEqual({
+            visual: { kind: 'legend', role: 'legend-item' },
+            elements: [{
+                value: {
+                    channel: 'color', field: '__status',
+                    domain: { kind: 'value', value: 'Below target' },
+                },
+            }],
+        });
+    });
+
     it('presents Choropleth regions and Density segments with semantic values', () => {
         const choropleth = choroplethDef.semanticInteractions!({
             resolvedEncodings: {
@@ -778,14 +1142,14 @@ describe('Vega-Lite semantic interactions', () => {
 
         const regionUpdate = choropleth.presentUpdate!(
             annotationUpdate(
-                { key: { [INTERACTION_KEY]: '35' }, records: [{ State: 'New Mexico', Value: 35 }] },
+                { value: { [INTERACTION_KEY]: '35' }, records: [{ State: 'New Mexico', Value: 35 }] },
                 { kind: 'region', role: 'geographic-region' },
             ),
             { chartType: 'Choropleth', selected: [], categoryField: 'State' },
         );
         const densityUpdate = density.presentUpdate!(
             annotationUpdate({
-                    key: { [INTERACTION_KEY]: 'segment' },
+                    value: { [INTERACTION_KEY]: 'segment' },
                     records: [{ value: 72.5, density: 0.33 }, { value: 75, density: 0.32 }],
                 }, { kind: 'path', role: 'area' }),
             { chartType: 'Density Plot', selected: [] },
@@ -817,19 +1181,19 @@ describe('Vega-Lite semantic interactions', () => {
         });
 
         const ecdfUpdate = ecdf.presentUpdate!(
-            annotationUpdate({ key: { [INTERACTION_KEY]: 'step' }, records: [{ Score: 42 }, { Score: 44 }] }),
+            annotationUpdate({ value: { [INTERACTION_KEY]: 'step' }, records: [{ Score: 42 }, { Score: 44 }] }),
             { chartType: 'ECDF Plot', selected: [] },
         );
         const calendarUpdate = calendar.presentUpdate!(
             annotationUpdate({
-                    key: { [INTERACTION_KEY]: 'day' },
+                    value: { [INTERACTION_KEY]: 'day' },
                     records: [{ __calendar_date: Date.UTC(2026, 7, 27), Commits: 12 }],
                 }),
             { chartType: 'Calendar Heatmap', selected: [] },
         );
         const violinUpdate = violin.presentUpdate!(
             annotationUpdate({
-                    key: { [INTERACTION_KEY]: 'curve' },
+                    value: { [INTERACTION_KEY]: 'curve' },
                     records: [{ Species: 'Setosa', Length: 5.1, density: 0.4 }],
                 }),
             { chartType: 'Violin Plot', selected: [] },
@@ -879,7 +1243,7 @@ describe('Vega-Lite semantic interactions', () => {
         });
     });
 
-    it('makes generated legend symbols and labels physical click targets', () => {
+    it('makes generated legend marks physical click targets', () => {
         const spec = {
             data: { values: [{ X: 1, Y: 2, Color: 'Blue' }] },
             mark: 'point',
@@ -898,6 +1262,8 @@ describe('Vega-Lite semantic interactions', () => {
         const { compiled } = instrument(spec);
         expect(compiled.legends.length).toBeGreaterThan(0);
         for (const legend of compiled.legends) {
+            expect(legend.encode.gradient.interactive).toBe(true);
+            expect(legend.encode.gradient.update.cursor.value).toBe('pointer');
             expect(legend.encode.symbols.interactive).toBe(true);
             expect(legend.encode.symbols.update.cursor.value).toBe('pointer');
             expect(legend.encode.labels.interactive).toBe(true);
@@ -1214,6 +1580,29 @@ describe('Vega-Lite semantic interactions', () => {
         expect(arcIntersectsRect(quarter, { x1: 90, y1: 90, x2: 180, y2: 180 }, true)).toBe(false);
     });
 
+    it('assists to the nearest donut slice geometry, not the largest arc bounds', () => {
+        const center = { x: 100, y: 100 };
+        const large = {
+            mark: { marktype: 'arc' }, ...center,
+            innerRadius: 35, outerRadius: 80,
+            startAngle: 0, endAngle: 3 * Math.PI / 2,
+            bounds: { x1: 20, y1: 20, x2: 180, y2: 180 },
+        };
+        const small = {
+            mark: { marktype: 'arc' }, ...center,
+            innerRadius: 35, outerRadius: 80,
+            startAngle: 3 * Math.PI / 2, endAngle: 17 * Math.PI / 10,
+            bounds: { x1: 20, y1: 75, x2: 36, y2: 125 },
+        };
+        const angle = 8 * Math.PI / 5;
+        const point = {
+            x: center.x + 60 * Math.sin(angle),
+            y: center.y - 60 * Math.cos(angle),
+        };
+
+        expect(nearestItemByBounds([large, small], point, 10)).toBe(small);
+    });
+
     it('tests angular selection across the zero-angle seam and within one polar center', () => {
         const arc = {
             mark: { marktype: 'arc' }, x: 100, y: 100,
@@ -1268,7 +1657,8 @@ describe('Vega-Lite semantic interactions', () => {
                 resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
             }),
         };
-        expect(addVegaLiteInteractions(polar, [brushAngle()])).not.toBeNull();
+        const polarPlan = addVegaLiteInteractions(polar, [brushX()]);
+        expect(polarPlan?.angularXBrush).toBe(true);
     });
 
     it('does not select adjacent cells that only touch the selection boundary', () => {
@@ -1307,6 +1697,25 @@ describe('Vega-Lite semantic interactions', () => {
         expect(roundTrip.y).toBeCloseTo(0, 6);
     });
 
+    it('reports the correct plot origin under nonuniform SVG scaling', () => {
+        const matrix = { a: 0.8, d: 0.5, e: 32, f: 15 };
+
+        expect(rendererPlotOrigin(matrix, { x: 0, y: 0 })).toEqual({ x: 40, y: 30 });
+
+        const space = {
+            rect: { left: 10, top: 20, width: 320, height: 150 } as DOMRect,
+            logicalWidth: 400,
+            logicalHeight: 300,
+            originX: 40,
+            originY: 30,
+            plotWidth: 320,
+            plotHeight: 240,
+        };
+        const plotOrigin = plotToClientPoint({ x: 0, y: 0 }, space);
+        expect(plotOrigin).toEqual({ x: 42, y: 35 });
+        expect(clientToPlotPoint(plotOrigin, space)).toEqual({ x: 0, y: 0 });
+    });
+
     it('round-trips coordinates through SVG scaling and Vega plot padding', () => {
         const space = {
             rect: { left: 100, top: 50, width: 250, height: 150 } as DOMRect,
@@ -1322,6 +1731,8 @@ describe('Vega-Lite semantic interactions', () => {
         expect(plot).toEqual({ x: 100, y: 70 });
         expect(plotToClientPoint(plot, space)).toEqual({ x: 180, y: 100 });
         expect(clientToPlotPoint({ x: 0, y: 0 }, space)).toEqual({ x: 0, y: 0 });
+        expect(clientToPlotPoint({ x: 350, y: 100 }, space)).toEqual({ x: 400, y: 70 });
+        expect(clientToRendererPoint({ x: 350, y: 100 }, space)).toEqual({ x: 500, y: 100 });
         expect(clientToLayoutPoint(
             { x: 180, y: 100 },
             { left: 20, top: 20, width: 320, height: 160 },
@@ -1470,7 +1881,7 @@ describe('Vega-Lite semantic interactions', () => {
 
     it('formats bar-family annotations from the primary metric', () => {
         const element = {
-            key: { [INTERACTION_KEY]: 'India' },
+            value: { [INTERACTION_KEY]: 'India' },
             records: [{ Country: 'India', Population: 1428.6, Population_end: 1428.6 }],
         };
         const makeUpdate = (definition: typeof barChartDef, resolvedEncodings: Record<string, any>) => {
@@ -1672,13 +2083,16 @@ describe('Vega-Lite semantic interactions', () => {
             },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual([
             `Japan|connector${PATH_KEY_SUFFIX}`,
             'Japan|81.5|Male',
             'Japan|87.6|Female',
         ]);
         expect(target?.visual).toEqual({ kind: 'path', role: 'line' });
-        expect(target?.elements[0].records).toEqual([connector.datum, connector.endDatum]);
+        expect(target?.elements[0].records).toEqual([
+            { Country: 'Japan', Sex: 'Male', 'Life expectancy': 81.5 },
+            connector.endDatum,
+        ]);
         expect(semantics.presentUpdate!(
             annotationUpdate(target!.elements[0], target!.visual),
             { chartType: 'Ranged Dot Plot', selected: [], categoryField: 'Country', seriesField: 'Sex' },
@@ -1698,7 +2112,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         const element = {
-            key: { [INTERACTION_KEY]: 'Chrome' },
+            value: { [INTERACTION_KEY]: 'Chrome' },
             records: [{ Browser: 'Chrome', Share: 65, Share_start: 0, Share_end: 65 }],
         };
 
@@ -1733,7 +2147,7 @@ describe('Vega-Lite semantic interactions', () => {
             { allHits: [male], keyField: INTERACTION_KEY, categoryField: 'Country', seriesField: 'Sex' },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['Japan|81.5|Male']);
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['Japan|81.5|Male']);
         expect(target?.visual).toEqual({ kind: 'mark', role: 'point' });
     });
 
@@ -1761,12 +2175,19 @@ describe('Vega-Lite semantic interactions', () => {
         expect(bars.every((item) => item.opacity === 1)).toBe(true);
         let legendItems = allSceneItems(view).filter((item) =>
             item.mark.role === 'legend-label' || item.mark.role === 'legend-symbol');
-        expect(legendItems.filter((item) => item.datum.value === 'Consumer').every((item) => item.opacity === 1)).toBe(true);
         expect(legendItems.filter((item) => item.datum.value === 'Corporate').every((item) => item.opacity === 1)).toBe(true);
         const legendLabels = legendItems.filter((item) => item.mark.role === 'legend-label');
         const consumerLabel = legendLabels.find((item) => item.datum.value === 'Consumer');
         const corporateLabel = legendLabels.find((item) => item.datum.value === 'Corporate');
-        expect(consumerLabel?.fill).toBe(corporateLabel?.fill);
+        expect(consumerLabel?.opacity).toBe(1);
+        expect(consumerLabel?.fontWeight).toBe(600);
+        expect(corporateLabel?.fontWeight).not.toBe(600);
+        const consumerSymbol = legendItems.find((item) =>
+            item.mark.role === 'legend-symbol' && item.datum.value === 'Consumer');
+        const corporateSymbol = legendItems.find((item) =>
+            item.mark.role === 'legend-symbol' && item.datum.value === 'Corporate');
+        expect(consumerSymbol?.opacity).toBe(0.72);
+        expect(corporateSymbol?.opacity).toBe(1);
 
         view.change(LEGEND_HOVER_STORE, changeset().remove(() => true));
         view.change(LEGEND_SELECTION_STORE, changeset().insert([{ channel: 'color', value: 'Consumer' }]));
@@ -1783,6 +2204,56 @@ describe('Vega-Lite semantic interactions', () => {
             item.mark.role === 'legend-label' || item.mark.role === 'legend-symbol');
         expect(legendItems.filter((item) => item.datum.value === 'Consumer').every((item) => item.opacity === 1)).toBe(true);
         expect(legendItems.filter((item) => item.datum.value === 'Corporate').every((item) => item.opacity === 0.25)).toBe(true);
+
+        view.change(LEGEND_SELECTION_STORE, changeset().remove(() => true));
+        view.change(LEGEND_HIDDEN_STORE, changeset().insert([{ identity: 'color:Consumer', opacity: 0.25 }]));
+        await view.runAsync();
+
+        legendItems = allSceneItems(view).filter((item) =>
+            item.mark.role === 'legend-label' || item.mark.role === 'legend-symbol');
+        expect(legendItems.filter((item) => item.datum.value === 'Consumer').every((item) => item.opacity === 0.25)).toBe(true);
+        expect(legendItems.filter((item) => item.datum.value === 'Corporate').every((item) => item.opacity === 1)).toBe(true);
+    });
+
+    it('acquires the whitespace between a legend symbol and its label as one entry', () => {
+        const owner: any = {
+            datum: { scales: { fill: 'color' } },
+            mark: { marktype: 'group' },
+            x: 100,
+            y: 20,
+            items: [],
+        };
+        const symbol = {
+            datum: { value: 'Android' },
+            mark: { marktype: 'symbol', role: 'legend-symbol', group: owner },
+            bounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        };
+        const label = {
+            datum: { value: 'Android' },
+            mark: { marktype: 'text', role: 'legend-label', group: owner },
+            bounds: { x1: 20, y1: 0, x2: 70, y2: 10 },
+        };
+        owner.items = [symbol, label];
+        const chartPoint = {
+            datum: { [INTERACTION_KEY]: 'chart-point' },
+            mark: { marktype: 'symbol' },
+            bounds: { x1: 90, y1: 30, x2: 100, y2: 40 },
+        };
+        const view = { scenegraph: () => ({ root: { items: [owner] } }) };
+        const viewWithChartPoint = {
+            scenegraph: () => ({ root: { items: [owner, chartPoint] } }),
+        };
+
+        expect(legendEntryItemAtPoint(view, { x: 115, y: 25 })).toBe(symbol);
+        expect(legendEntryItemAtPoint(view, { x: 90, y: 25 })).toBeNull();
+        expect(nearestInteractiveSceneItem(view, { x: 90, y: 25 }, 12)).toBe(symbol);
+        expect(nearestInteractiveSceneItem(
+            view, { x: 0, y: 0 }, 12, { x: 90, y: 25 },
+        )).toBe(symbol);
+        expect(nearestInteractiveSceneItem(
+            viewWithChartPoint, { x: 95, y: 35 }, 12, { x: 115, y: 35 }, false,
+        )).toBe(symbol);
+        expect(nearestInteractiveSceneItem(view, { x: 80, y: 25 }, 12)).toBeUndefined();
     });
 
     it('calculates keys inside a Bar Table panel with its own named data', () => {
@@ -1987,6 +2458,66 @@ describe('Vega-Lite semantic interactions', () => {
         });
     });
 
+    it('acquires a generated series-end label as an exact legend domain', () => {
+        const item = {
+            mark: { marktype: 'text', name: 'series-end-label' },
+            datum: {
+                [INTERACTION_KEY]: '2024|China|2',
+                [INTERACTION_ROLE]: 'legend-label',
+                [INTERACTION_LEGEND_CHANNEL]: 'color',
+                [INTERACTION_LEGEND_FIELD]: 'Country',
+                Country: 'China',
+            },
+        };
+        const normalized = normalizeVegaElementEvent(
+            {}, item, { x: 10, y: 10 }, 'commit',
+            { shift: false, ctrl: false, meta: false }, { color: 'Country' },
+        );
+
+        expect(normalized.role).toBe('legend-item');
+        expect(normalized.legend).toEqual({
+            channel: 'color', field: 'Country', value: 'China',
+            domain: { kind: 'value', value: 'China' },
+        });
+        expect(legendSemanticTarget(normalized.legend)?.elements[0]).toEqual({
+            value: {
+                channel: 'color', field: 'Country',
+                domain: { kind: 'value', value: 'China' },
+            },
+        });
+    });
+
+    it('compiles Bump series-end labels as semantic legend labels', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Games: 2012, Country: 'United States', Rank: 1 },
+                { Games: 2024, Country: 'United States', Rank: 1 },
+                { Games: 2012, Country: 'China', Rank: 2 },
+                { Games: 2024, Country: 'China', Rank: 2 },
+            ] },
+            semantic_types: { Games: 'Year', Country: 'Country', Rank: 'Rank' },
+            chart_spec: {
+                chartType: 'Bump Chart',
+                encodings: { x: 'Games', y: 'Rank', color: 'Country' },
+            },
+            theme_spec: 'nyt',
+        } as never) as Record<string, any>;
+        const label = spec.layer.find((layer: Record<string, any>) =>
+            layer[INTERACTION_PROVENANCE]?.role === 'legend-label');
+
+        expect(label?.[INTERACTION_PROVENANCE]).toMatchObject({
+            role: 'legend-label',
+            legend: { channel: 'color', field: 'Country' },
+        });
+        instrument(spec, [clickHighlight()]);
+        expect(label.transform).toEqual(expect.arrayContaining([
+            { calculate: "'legend-label'", as: INTERACTION_ROLE },
+            { calculate: '"color"', as: INTERACTION_LEGEND_CHANNEL },
+            { calculate: '"Country"', as: INTERACTION_LEGEND_FIELD },
+        ]));
+        expect(label.mark.cursor).toBe('pointer');
+    });
+
     it('preserves the second datum of a clicked line segment', () => {
         const mark = { marktype: 'line', name: 'trend' };
         const start = { [INTERACTION_KEY]: 'A', Month: 'Jan', Sales: 10 };
@@ -2010,8 +2541,8 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(target?.visual).toEqual({ kind: 'path', role: 'line' });
         expect(target?.elements[0].records).toEqual([
-            { ...start, [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
-            end,
+            { Month: 'Jan', Sales: 10 },
+            { Month: 'Feb', Sales: 14 },
         ]);
     });
 
@@ -2035,7 +2566,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['West|Consumer']);
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['West|Consumer']);
     });
 
     it('keeps a mark click local when a series field is declared', () => {
@@ -2059,7 +2590,7 @@ describe('Vega-Lite semantic interactions', () => {
             },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['West|Consumer']);
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['West|Consumer']);
     });
 
     it.each(['click', 'hover'] as const)('lets the template resolver expand a legend %s to its series cohort', (gesture) => {
@@ -2075,7 +2606,7 @@ describe('Vega-Lite semantic interactions', () => {
         const eastConsumer = { datum: { [INTERACTION_KEY]: 'East|Consumer', Segment: 'Consumer' }, source: 'mark' as const };
 
         const target = resolve(
-            { gesture, role: 'legend-item', hits: [], legendValue: 'Consumer' },
+            { gesture, role: 'legend-item', hits: [], legend: { domain: { kind: 'value', value: 'Consumer' } } },
             {
                 allHits: [westConsumer, westCorporate, eastConsumer],
                 keyField: INTERACTION_KEY,
@@ -2083,10 +2614,171 @@ describe('Vega-Lite semantic interactions', () => {
             },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual([
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual([
             'West|Consumer',
             'East|Consumer',
         ]);
+    });
+
+    it('retains domain-only legend identity for toggle processing', () => {
+        const interaction = createLegendToggleInteraction();
+        const target = legendSemanticTarget({
+            channel: 'color', field: 'Segment', value: 'Consumer',
+            domain: { kind: 'value', value: 'Consumer' },
+        });
+        const update = interaction.handle!({
+            action: 'click-primary', phase: 'commit', target,
+        } as any, { available: [], selected: [] } as any);
+
+        expect(update?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{
+                visual: { kind: 'legend', role: 'legend-item' },
+                elements: target?.elements,
+            }],
+            value: { visible: false },
+        });
+
+        const restored = interaction.handle!({
+            action: 'click-primary', phase: 'commit',
+            target: {
+                ...target!,
+                elements: target!.elements.map((element) => ({
+                    ...element,
+                    records: [{ Segment: 'Consumer' }],
+                })),
+            },
+        } as any, { available: [], selected: [] } as any);
+        expect(restored?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [],
+            value: { visible: false },
+        });
+    });
+
+    it('resolves an unmatched legend domain to an explicit empty presentation', () => {
+        const legend = {
+            channel: 'color', field: '__status',
+            domain: { kind: 'value' as const, value: 'Meets target' },
+        };
+        const target = resolveLegendPresentationTarget(
+            legend,
+            () => null,
+            { allHits: [], keyField: INTERACTION_KEY },
+        );
+
+        expect(target).toMatchObject({
+            visual: { kind: 'legend', role: 'legend-item' },
+            elements: [{ value: legend }],
+        });
+        expect(target.elements[0].records).toBeUndefined();
+        expect(semanticElementRenderKeys(target.elements[0])).toHaveLength(1);
+    });
+
+    it('retains concrete keys for legend domains already hidden from the scene', () => {
+        const resolve = barChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Region', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Segment', type: 'nominal' },
+            },
+        }).resolve;
+        const consumer = {
+            datum: { [INTERACTION_KEY]: 'West|Consumer', Segment: 'Consumer' },
+            source: 'mark' as const,
+        };
+        const corporate = {
+            datum: { [INTERACTION_KEY]: 'West|Corporate', Segment: 'Corporate' },
+            source: 'mark' as const,
+        };
+        const legend = {
+            channel: 'color', field: 'Segment',
+            domain: { kind: 'value' as const, value: 'Consumer' },
+        };
+        const retained = new Map<string, SemanticTarget>();
+
+        resolveRetainedLegendPresentationTarget(
+            legend, resolve,
+            { allHits: [consumer, corporate], keyField: INTERACTION_KEY, seriesField: 'Segment' },
+            retained,
+        );
+        const afterConsumerIsHidden = resolveRetainedLegendPresentationTarget(
+            legend, resolve,
+            { allHits: [corporate], keyField: INTERACTION_KEY, seriesField: 'Segment' },
+            retained,
+        );
+
+        expect(afterConsumerIsHidden.elements.flatMap(semanticElementRenderKeys)).toEqual(['West|Consumer']);
+    });
+
+    it('resolves every domain in a combined hidden legend target', () => {
+        const resolve = barChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Region', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Segment', type: 'nominal' },
+            },
+        }).resolve;
+        const hits = ['Consumer', 'Corporate'].map((Segment) => ({
+            datum: { [INTERACTION_KEY]: `West|${Segment}`, Segment },
+            source: 'mark' as const,
+        }));
+        const legends = ['Consumer', 'Corporate'].map((value) => ({
+            channel: 'color', field: 'Segment',
+            domain: { kind: 'value' as const, value },
+        }));
+
+        const target = resolveRetainedLegendPresentationTargets(
+            legends, resolve,
+            { allHits: hits, keyField: INTERACTION_KEY, seriesField: 'Segment' },
+            new Map(),
+        );
+
+        expect(target.elements.flatMap(semanticElementRenderKeys)).toEqual([
+            'West|Consumer',
+            'West|Corporate',
+        ]);
+    });
+
+    it('removes a Streamgraph ribbon with the keys resolved from its legend domain', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Year: 2000, Region: 'Asia', Population: 10 },
+                { Year: 2010, Region: 'Asia', Population: 12 },
+                { Year: 2020, Region: 'Asia', Population: 14 },
+                { Year: 2000, Region: 'Africa', Population: 4 },
+                { Year: 2010, Region: 'Africa', Population: 6 },
+                { Year: 2020, Region: 'Africa', Population: 8 },
+            ] },
+            semantic_types: { Year: 'Year', Region: 'Category', Population: 'Quantity' },
+            chart_spec: {
+                chartType: 'Streamgraph',
+                encodings: { x: 'Year', y: 'Population', color: 'Region' },
+            },
+        } as never) as any;
+        const { plan, compiled } = instrument(spec, [legendToggle()]);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const hits = sceneItems(view).map(renderHit).filter((hit): hit is RenderHit => hit !== null);
+        const target = plan!.resolve!({
+            gesture: 'click', role: 'legend-item', hits: [],
+            legend: { channel: 'color', field: 'Region', domain: { kind: 'value', value: 'Asia' } },
+        }, {
+            allHits: hits,
+            keyField: INTERACTION_KEY,
+            seriesField: 'Region',
+        });
+        const keys = target!.elements.flatMap(semanticElementRenderKeys);
+
+        view.change(HIDDEN_STORE, changeset().insert(keys.map((key) => ({ key }))));
+        await view.runAsync();
+
+        const remainingRegions = sceneItems(view)
+            .filter((item) => item.mark.marktype === 'area')
+            .map((item) => item.datum.Region);
+        expect(keys).toHaveLength(3);
+        expect(remainingRegions).not.toContain('Asia');
+        expect(remainingRegions).toContain('Africa');
     });
 
     it('resolves color and shape legends by their own fields', () => {
@@ -2106,16 +2798,16 @@ describe('Vega-Lite semantic interactions', () => {
         const context = { allHits: hits, keyField: INTERACTION_KEY, seriesField: 'Color' };
 
         const color = resolve(
-            { gesture: 'click', role: 'legend-item', hits: [], legendValue: 'Blue', legendField: 'Color' },
+            { gesture: 'click', role: 'legend-item', hits: [], legend: { field: 'Color', domain: { kind: 'value', value: 'Blue' } } },
             context,
         );
         const shape = resolve(
-            { gesture: 'click', role: 'legend-item', hits: [], legendValue: 'Circle', legendField: 'Shape' },
+            { gesture: 'click', role: 'legend-item', hits: [], legend: { field: 'Shape', domain: { kind: 'value', value: 'Circle' } } },
             context,
         );
 
-        expect(color?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['a', 'c']);
-        expect(shape?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['a', 'b']);
+        expect(color?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['a', 'c']);
+        expect(shape?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['a', 'b']);
     });
 
     it('resolves a size legend independently from color', () => {
@@ -2133,11 +2825,392 @@ describe('Vega-Lite semantic interactions', () => {
             { datum: { [INTERACTION_KEY]: 'c', Color: 'Blue', Size: 'Small' }, source: 'mark' as const },
         ];
         const target = resolve(
-            { gesture: 'click', role: 'legend-item', hits: [], legendValue: 'Large', legendField: 'Size' },
+            { gesture: 'click', role: 'legend-item', hits: [], legend: { field: 'Size', domain: { kind: 'value', value: 'Large' } } },
             { allHits: hits, keyField: INTERACTION_KEY, seriesField: 'Color' },
         );
 
-        expect(target?.elements.map((element) => element.key[INTERACTION_KEY])).toEqual(['a', 'b']);
+        expect(target?.elements.map((element) => semanticElementRenderKeys(element)[0])).toEqual(['a', 'b']);
+    });
+
+    it('keeps color exact while treating size as a range when both legends exist', () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [
+                    { gdp: 1000, life: 66, continent: 'Africa', population: 40 },
+                    { gdp: 30000, life: 84, continent: 'Asia', population: 1200 },
+                ],
+            },
+            semantic_types: {
+                gdp: 'Quantity', life: 'Quantity', continent: 'Category', population: 'Quantity',
+            },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'gdp', y: 'life', color: 'continent', size: 'population' },
+            },
+        } as any) as any;
+
+        expect(spec._interactionSemantics.legendFields).toEqual({
+            color: 'continent',
+            size: 'population',
+        });
+        expect(spec._interactionSemantics.rangeLegendChannels).toEqual(['size']);
+    });
+
+    it('resolves a sampled quantitative legend anchor to its midpoint range', () => {
+        const hits = [1, 3, 5, 7, 9].map((Size) => ({
+            datum: { [INTERACTION_KEY]: String(Size), Size },
+            source: 'mark' as const,
+        }));
+        const matched = legendMatchedHits(
+            {
+                gesture: 'click',
+                role: 'legend-item',
+                hits: [],
+                legend: { field: 'Size', domain: { kind: 'interval', start: 2.5, end: 7.5 } },
+            },
+            { allHits: hits, keyField: INTERACTION_KEY },
+            'Size',
+        );
+
+        expect(matched.map((hit) => hit.datum.Size)).toEqual([3, 5, 7]);
+    });
+
+    it('resolves a smooth legend ramp position to a sampled interval', () => {
+        const legendEntry: any = {
+            datum: { scales: { fill: 'color' }, type: 'gradient', vgrad: false },
+            mark: { marktype: 'group' },
+            x: 100,
+            y: 20,
+            items: [],
+        };
+        const gradient = {
+            datum: legendEntry.datum,
+            mark: { marktype: 'rect', role: 'legend-gradient', group: legendEntry },
+            bounds: { x1: 0, y1: 0, x2: 100, y2: 12 },
+        };
+        legendEntry.items = [
+            gradient,
+            ...[0, 5, 10].map((value, index) => ({
+                datum: { value, index, perc: index / 2 },
+                mark: { marktype: 'text', role: 'legend-label', group: legendEntry },
+            })),
+        ];
+        const root = { mark: { marktype: 'group' }, items: [legendEntry] };
+        const scale = Object.assign((value: number) => value, {
+            type: 'sequential-linear',
+            domain: () => [0, 10],
+        });
+        const view = { scenegraph: () => ({ root }), scale: () => scale };
+
+        const target = legendTarget(gradient, { color: 'Temperature' }, ['color'], view, { x: 190, y: 26 });
+        expect(target).toMatchObject({
+            channel: 'color', field: 'Temperature',
+            domain: { kind: 'interval' },
+            visualBounds: { x2: 200, y1: 20, y2: 32 },
+        });
+        expect(target?.value).toBeCloseTo(25 / 3);
+        expect(target?.domain.kind === 'interval' ? target.domain.start : undefined).toBeCloseTo(20 / 3);
+        expect(target?.visualBounds?.x1).toBeCloseTo(500 / 3);
+    });
+
+    it('adapts smooth legend segments to physical length and value cardinality', () => {
+        expect(continuousLegendSegmentCount(80)).toBe(3);
+        expect(continuousLegendSegmentCount(176)).toBe(4);
+        expect(continuousLegendSegmentCount(220)).toBe(5);
+        expect(continuousLegendSegmentCount(400)).toBe(7);
+        expect(continuousLegendSegmentCount(220, 2)).toBe(2);
+    });
+
+    it('resolves each discrete legend band to its exact interval', () => {
+        const legendEntry: any = {
+            datum: { scales: { fill: 'color' }, type: 'discrete', vgrad: false },
+            mark: { marktype: 'group' },
+            items: [],
+        };
+        const bands = [-Infinity, 3, 6, 9].map((value, index) => ({
+            datum: { value, index, perc: index / 4, perc2: (index + 1) / 4 },
+            mark: { marktype: 'rect', role: 'legend-band', group: legendEntry },
+        }));
+        legendEntry.items = bands;
+
+        expect(legendTarget(bands[2], { color: 'Temperature' }, ['color']))
+            .toEqual({
+                channel: 'color', field: 'Temperature', value: 6,
+                domain: { kind: 'interval', start: 6, end: 9 },
+            });
+        expect(legendTarget(bands[0], { color: 'Temperature' }, ['color']))
+            .toEqual({
+                channel: 'color', field: 'Temperature', value: -Infinity,
+                domain: { kind: 'interval', end: 3 },
+            });
+    });
+
+    it.each([
+        ['default', undefined, 'legend-gradient'],
+        ['quantized theme', THEME_PRESETS.datawrapper.spec, 'legend-band'],
+    ] as const)('targets the painted Heatmap legend under the %s', async (_name, theme, role) => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Month: 'Jan', City: 'A', Temperature: -10 },
+                { Month: 'Feb', City: 'A', Temperature: 0 },
+                { Month: 'Mar', City: 'A', Temperature: 10 },
+            ] },
+            semantic_types: { Month: 'Category', City: 'Category', Temperature: 'Quantity' },
+            chart_spec: {
+                chartType: 'Heatmap',
+                encodings: { x: 'Month', y: 'City', color: 'Temperature' },
+            },
+            ...(theme ? { theme_spec: theme } : {}),
+        } as any) as any;
+        const { compiled, plan } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const item = allSceneItems(view).find((candidate) => candidate.mark?.role === role);
+        const bounds = rootSceneBounds(view, item);
+        const point = bounds ? {
+            x: bounds.x1 + (bounds.x2 - bounds.x1) * 0.75,
+            y: bounds.y1 + (bounds.y2 - bounds.y1) * 0.5,
+        } : undefined;
+        const target = legendTarget(item, { color: 'Temperature' }, ['color'], view, point);
+
+        expect(item).toBeDefined();
+        expect(item.mark.interactive).toBe(true);
+        expect(target).toMatchObject({ channel: 'color', field: 'Temperature' });
+        expect(target?.domain.kind).toBe('interval');
+        if (role === 'legend-band') {
+            view.change(LEGEND_SELECTION_STORE, changeset().insert([{
+                channel: 'color',
+                value: item.datum.value,
+            }]));
+            await view.runAsync();
+            const bands = allSceneItems(view).filter((candidate) => candidate.mark?.role === role);
+            const selectedBand = bands.find((candidate) => candidate.datum.value === item.datum.value);
+            expect(selectedBand?.stroke).toBe(plan?.selectionBoundary?.color);
+            expect(selectedBand?.strokeWidth).toBe(plan?.selectionBoundary?.width);
+            expect(selectedBand?.strokeOpacity).toBe(plan?.selectionBoundary?.opacity);
+            expect(bands.filter((candidate) => candidate.datum.value !== item.datum.value)
+                .every((candidate) => !candidate.strokeWidth)).toBe(true);
+        }
+    });
+
+    it('matches temporal values against numeric legend intervals', () => {
+        const hits = ['2024-01-01', '2024-02-01', '2024-03-01'].map((date) => ({
+            datum: { [INTERACTION_KEY]: date, Date: new Date(`${date}T00:00:00Z`) },
+            source: 'mark' as const,
+        }));
+        const matched = legendMatchedHits({
+            gesture: 'click', role: 'legend-item', hits: [],
+            legend: {
+                field: 'Date',
+                domain: { kind: 'interval', start: Date.UTC(2024, 0, 15), end: Date.UTC(2024, 2, 1) },
+            },
+        }, { allHits: hits, keyField: INTERACTION_KEY }, 'Date');
+
+        expect(matched.map((hit) => hit.datum.Date)).toEqual([new Date('2024-02-01T00:00:00Z')]);
+    });
+
+    it.each([
+        ['Heatmap', heatmapDef, {
+            x: { field: 'Month', type: 'nominal' },
+            y: { field: 'City', type: 'nominal' },
+            color: { field: 'Temperature', type: 'quantitative' },
+        }],
+        ['Calendar Heatmap', vlCalendarHeatmapDef, {
+            x: { field: 'Date', type: 'temporal' },
+            color: { field: 'Temperature', type: 'quantitative' },
+        }],
+        ['Choropleth', choroplethDef, {
+            id: { field: 'State', type: 'nominal' },
+            color: { field: 'Temperature', type: 'quantitative' },
+        }],
+    ] as const)('resolves a continuous %s legend interval to matching marks', (_name, chartDef, encodings) => {
+        const semantics = chartDef.semanticInteractions!({ resolvedEncodings: encodings });
+        const hits = [-17, -6, 6, 17].map((Temperature, index) => ({
+            datum: {
+                [INTERACTION_KEY]: String(index), Temperature,
+                sum_Temperature: Temperature,
+                Month: `M${index}`, City: 'A', State: `S${index}`,
+            },
+            source: 'mark' as const,
+        }));
+        const target = semantics.resolve({
+            gesture: 'click', role: 'legend-item', hits: [],
+            legend: { field: 'Temperature', domain: { kind: 'interval', start: 0, end: 12 } },
+        }, { allHits: hits, keyField: INTERACTION_KEY });
+
+        expect(semantics.legendFields).toEqual({ color: 'Temperature' });
+        expect(target?.elements.map((element) => element.value.Temperature)).toEqual([6]);
+    });
+
+    it('applies a Calendar legend range to the matching rendered cells', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Date: '2024-01-01', Temperature: 10 },
+                { Date: '2024-01-02', Temperature: 50 },
+                { Date: '2024-01-03', Temperature: 90 },
+            ] },
+            semantic_types: { Date: 'Date', Temperature: 'Quantity' },
+            chart_spec: {
+                chartType: 'Calendar Heatmap',
+                encodings: { x: 'Date', color: 'Temperature' },
+            },
+        } as any) as any;
+        expect(spec._interactionSemantics.neutralizeContinuousColor).toBe(false);
+        expect(spec._interactionSemantics.continuousColorFocus.boundaryWidth).toBeLessThan(
+            spec._interactionSemantics.selectionBoundary.width,
+        );
+        const { compiled, plan } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const hits = sceneItems(view).map(renderHit).filter((hit): hit is NonNullable<typeof hit> => !!hit);
+        const semantics = vlCalendarHeatmapDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Date', type: 'temporal' },
+                color: { field: 'Temperature', type: 'quantitative' },
+            },
+        });
+        const target = semantics.resolve({
+            gesture: 'hover', role: 'legend-item', hits: [],
+            legend: { field: 'Temperature', domain: { kind: 'interval', start: 70, end: 100 } },
+        }, { allHits: hits, keyField: INTERACTION_KEY });
+        const keys = target?.elements.flatMap(semanticElementRenderKeys) ?? [];
+        const legendPayload = legendSemanticTarget({
+            channel: 'color', field: 'Temperature', value: 90,
+            domain: { kind: 'interval', start: 70, end: 100 },
+        });
+
+        expect(keys).toHaveLength(1);
+        expect(legendPayload).toEqual({
+            visual: { kind: 'legend', role: 'legend-item' },
+            elements: [{ value: {
+                channel: 'color', field: 'Temperature',
+                domain: { kind: 'interval', start: 70, end: 100 },
+            } }],
+        });
+        expect(semanticElementRenderKeys(legendPayload!.elements[0])).toEqual([]);
+        view.change(INTERACTION_STORE, changeset().insert(keys.map((key) => ({ key }))));
+        await view.runAsync();
+        const cells = allSceneItems(view).filter((item) => item.mark?.marktype === 'rect'
+            && item.datum?.sum_Temperature !== undefined);
+        expect(cells.find((item) => item.datum.sum_Temperature === 90)?.opacity).toBe(1);
+        expect(cells.filter((item) => item.datum.sum_Temperature !== 90)
+            .every((item) => item.opacity === plan?.dimOpacity)).toBe(true);
+    });
+
+    it('neutralizes muted continuous color only for geographic maps', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { lon: -74, lat: 40.7, temperature: 20 },
+                { lon: -118, lat: 34, temperature: 35 },
+            ] },
+            semantic_types: {
+                lon: 'Longitude', lat: 'Latitude', temperature: 'Quantity',
+            },
+            chart_spec: {
+                chartType: 'Map',
+                encodings: { longitude: 'lon', latitude: 'lat', color: 'temperature' },
+            },
+        } as any) as any;
+        const style = spec._interactionSemantics.continuousColorFocus;
+
+        expect(spec._interactionSemantics.neutralizeContinuousColor).toBe(true);
+        instrument(spec);
+        const points = spec.layer.find((layer: Record<string, any>) =>
+            layer.mark?.type === 'circle' || layer.mark === 'circle');
+        expect(points.encoding.color).toMatchObject({
+            condition: { field: 'temperature', type: 'quantitative' },
+            value: style.mutedFill,
+        });
+        expect(points.encoding.opacity).toEqual({ value: 1 });
+    });
+
+    it('treats a Map quantitative size key as sampled ranges', () => {
+        const assembled = assembleVegaLite({
+            data: { values: [{ lon: -74, lat: 40.7, pop: 5 }] },
+            semantic_types: { lon: 'Longitude', lat: 'Latitude', pop: 'Quantity' },
+            chart_spec: {
+                chartType: 'Map',
+                encodings: { longitude: 'lon', latitude: 'lat', size: 'pop' },
+            },
+        } as any) as any;
+        const semantics = mapDef.semanticInteractions!({
+            resolvedEncodings: {
+                longitude: { field: 'lon', type: 'quantitative' },
+                latitude: { field: 'lat', type: 'quantitative' },
+                size: { field: 'pop', type: 'quantitative' },
+            },
+        });
+        const legendEntry = {
+            datum: { scales: { size: 'size' } },
+            items: [0, 5, 10, 15].map((value) => ({ datum: { value } })),
+        };
+        const item = {
+            datum: { value: 5 },
+            mark: {
+                role: 'legend-label',
+                group: { mark: { group: legendEntry } },
+            },
+        };
+        const rangeLegendChannels = assembled._interactionSemantics.rangeLegendChannels;
+        const legend = legendTarget(item, semantics.legendFields, rangeLegendChannels);
+
+        expect(semantics.legendFields).toEqual({ size: 'pop' });
+        expect(rangeLegendChannels).toEqual(['size']);
+        expect(legend).toEqual({
+            channel: 'size',
+            field: 'pop',
+            value: 5,
+            domain: { kind: 'interval', start: 2.5, end: 7.5 },
+        });
+        const hits = [2.9, 4.9, 6.3, 7.6, 12.4].map((pop) => ({
+            datum: { [INTERACTION_KEY]: String(pop), pop },
+            source: 'mark' as const,
+        }));
+        const target = semantics.resolve({
+            gesture: 'click',
+            role: 'legend-item',
+            hits: [],
+            legend: legend ?? undefined,
+        }, {
+            allHits: hits,
+            keyField: INTERACTION_KEY,
+        });
+        const semanticLegend = legendSemanticTarget(legend);
+
+        expect(semanticLegend?.elements[0].value).toEqual({
+            channel: 'size',
+            field: 'pop',
+            domain: { kind: 'interval', start: 2.5, end: 7.5 },
+        });
+        expect(target?.elements.flatMap((element) => element.records ?? []).map((record) => record.pop))
+            .toEqual([2.9, 4.9, 6.3]);
+    });
+
+    it('resolves Waterfall synthesized legend entries to rendered bar cohorts', () => {
+        const semantics = waterfallChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Step', type: 'ordinal' },
+                y: { field: 'Population', type: 'quantitative' },
+            },
+        });
+        const hits = [
+            { datum: { [INTERACTION_KEY]: '1950', Step: '1950', __wf_color: 'total' }, source: 'mark' as const },
+            { datum: { [INTERACTION_KEY]: 'Asia', Step: 'Asia', __wf_color: 'increase' }, source: 'mark' as const },
+            { datum: { [INTERACTION_KEY]: 'Africa', Step: 'Africa', __wf_color: 'increase' }, source: 'mark' as const },
+            { datum: { [INTERACTION_KEY]: 'Oceania', Step: 'Oceania', __wf_color: 'total' }, source: 'mark' as const },
+        ];
+
+        expect(semantics.legendFields).toEqual({ color: '__wf_color' });
+        const target = semantics.resolve({
+            gesture: 'click',
+            role: 'legend-item',
+            hits: [],
+            legend: { field: '__wf_color', domain: { kind: 'value', value: 'increase' } },
+        }, {
+            allHits: hits,
+            keyField: INTERACTION_KEY,
+        });
+        expect(target?.elements.flatMap(semanticElementRenderKeys)).toEqual(['Asia', 'Africa']);
     });
 
     it('compiles grouped-bar semantic fields from its template', () => {
@@ -2201,7 +3274,7 @@ describe('Vega-Lite semantic interactions', () => {
         ['Violin Plot', violinPlotDef, ['area'], 'X'],
         ['Bullet Chart', bulletChartDef, ['bar', 'tick'], 'Value'],
         ['KPI Card', kpiCardDef, ['rect'], 'Metric'],
-        ['Radar Chart', radarChartDef, ['line', 'point'], '__axis'],
+        ['Radar Chart', radarChartDef, ['line', 'point'], 'X'],
         ['Choropleth', choroplethDef, ['geoshape'], 'Region'],
     ] as const)('declares semantic marks and identity for %s', (_name, definition, marks, identityField) => {
         const semantics = definition.semanticInteractions!({
@@ -2225,6 +3298,75 @@ describe('Vega-Lite semantic interactions', () => {
         expect(semantics.selectableMarks).toEqual(marks);
         expect(semantics.fields).toContain(identityField);
         expect(semantics.resolve).toBeTypeOf('function');
+    });
+
+    it('keeps Radar legend semantics and tuples in authored field names', () => {
+        const rows = [
+            { Food: 'Oats', Nutrient: 'Protein', Amount: 17 },
+            { Food: 'Oats', Nutrient: 'Fiber', Amount: 11 },
+            { Food: 'Almonds', Nutrient: 'Protein', Amount: 21 },
+            { Food: 'Almonds', Nutrient: 'Fiber', Amount: 12 },
+        ];
+        const spec = assembleVegaLite({
+            data: { values: rows },
+            semantic_types: { Food: 'Category', Nutrient: 'Category', Amount: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                encodings: { x: 'Nutrient', y: 'Amount', color: 'Food' },
+            },
+        } as any) as any;
+        const lineValues = spec.layer.find((layer: any) => layer.mark?.type === 'line')?.data?.values;
+
+        expect(spec._interactionSemantics).toMatchObject({
+            fields: ['Nutrient', 'Amount', 'Food'],
+            categoryField: 'Nutrient',
+            seriesField: 'Food',
+            legendFields: { color: 'Food' },
+        });
+        expect(lineValues[0]).toMatchObject({ Food: 'Oats', Nutrient: 'Protein', Amount: 17 });
+        const oats = spec._interactionSemantics.resolve({
+            gesture: 'click', role: 'legend-item', hits: [],
+            legend: { field: 'Food', domain: { kind: 'value', value: 'Oats' } },
+        }, {
+            allHits: lineValues.map((datum: Record<string, unknown>, index: number) => ({
+                datum: { ...datum, [INTERACTION_KEY]: String(index) },
+                source: 'mark' as const,
+            })),
+            keyField: INTERACTION_KEY,
+        });
+        expect(oats?.elements.every((element: SemanticElement) => element.value.Food === 'Oats')).toBe(true);
+        expect(sourceRecordsForRenderedRecords(
+            lineValues.filter((datum: Record<string, unknown>) => datum.Food === 'Oats'),
+            rows,
+            ['Nutrient', 'Amount', 'Food'],
+        )).toEqual(rows.slice(0, 2));
+    });
+
+    it('includes the closing edge in Radar path interaction geometry', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Food: 'Oats', Nutrient: 'Protein', Amount: 17 },
+                { Food: 'Oats', Nutrient: 'Fat', Amount: 7 },
+                { Food: 'Oats', Nutrient: 'Carbs', Amount: 66 },
+                { Food: 'Oats', Nutrient: 'Fiber', Amount: 11 },
+                { Food: 'Oats', Nutrient: 'Sugar', Amount: 1 },
+            ] },
+            semantic_types: { Food: 'Category', Nutrient: 'Category', Amount: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                encodings: { x: 'Nutrient', y: 'Amount', color: 'Food' },
+            },
+        } as any) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const segments = sceneItems(view).filter((item) =>
+            item.mark?.marktype === 'line' && item.datum.Food === 'Oats');
+
+        expect(segments).toHaveLength(5);
+        expect(segments.every((segment) => segment.interactionGeometry.closed)).toBe(true);
+        expect(segments.at(-1)?.datum.Nutrient).toBe('Sugar');
+        expect(segments.at(-1)?.interactionGeometry.endDatum.Nutrient).toBe('Protein');
     });
 
     it('instruments marks inside a nested facet unit spec', () => {
@@ -2314,6 +3456,153 @@ describe('Vega-Lite semantic interactions', () => {
             datum: { [INTERACTION_KEY]: expect.any(String) },
             markType: 'shape',
         });
+        view.finalize();
+    });
+});
+describe('set-presentation visibility', () => {
+    it('pins the legend domain so a hidden series keeps a key to click', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['Category', 'Series'],
+                categoryField: 'Category',
+                legendFields: { color: 'Series' },
+                selectableMarks: ['bar'],
+            },
+            data: {
+                values: [
+                    { Category: 'A', Series: 'Female', Value: 12 },
+                    { Category: 'A', Series: 'Male', Value: 8 },
+                ],
+            },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Category', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Series', type: 'nominal', scale: { scheme: 'tableau10' } },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [legendToggle()]);
+
+        expect(spec.encoding.color.scale.domain).toEqual(['Female', 'Male']);
+    });
+
+    it('pins an aggregate-sorted donut legend so hidden slices keep their keys', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['OS', 'Users'],
+                legendFields: { color: 'OS' },
+                selectableMarks: ['arc'],
+            },
+            data: {
+                values: [
+                    { OS: 'Android', Users: 70 },
+                    { OS: 'iOS', Users: 28 },
+                    { OS: 'Other', Users: 2 },
+                ],
+            },
+            mark: { type: 'arc', innerRadius: 50 },
+            encoding: {
+                theta: { field: 'Users', type: 'quantitative', aggregate: 'sum' },
+                color: {
+                    field: 'OS', type: 'nominal',
+                    sort: { field: 'Users', op: 'sum', order: 'descending' },
+                },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [legendToggle()]);
+
+        expect(spec.encoding.color.scale.domain).toEqual(['Android', 'iOS', 'Other']);
+    });
+
+    it('clips marks when a region interaction drives the viewport', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['Year', 'Value'],
+                selectableMarks: ['line'],
+                navigationAxes: ['x', 'y'],
+            },
+            data: { values: [{ Year: 2020, Value: 1 }, { Year: 2021, Value: 2 }] },
+            mark: { type: 'line', point: true },
+            encoding: {
+                x: { field: 'Year', type: 'quantitative' },
+                y: { field: 'Value', type: 'quantitative' },
+            },
+        };
+
+        const plan = addVegaLiteInteractions(spec, [brushZoom()]);
+
+        expect(spec.mark).toMatchObject({ type: 'line', clip: true });
+        expect(spec.mark.point).toBe(true);
+        expect(spec.layer).toBeUndefined();
+        expect(plan?.semanticStores).toBe(false);
+        expect(plan?.navigationChannels).toEqual(['x', 'y']);
+    });
+
+    it('leaves the legend domain alone when nothing can hide a series', () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['Category', 'Series'],
+                categoryField: 'Category',
+                legendFields: { color: 'Series' },
+                selectableMarks: ['bar'],
+            },
+            data: { values: [{ Category: 'A', Series: 'Female', Value: 12 }] },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Category', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+                color: { field: 'Series', type: 'nominal' },
+            },
+        };
+
+        addVegaLiteInteractions(spec, [clickHighlight()]);
+
+        expect(spec.encoding.color.scale?.domain).toBeUndefined();
+    });
+
+    it('filters a hidden key out of the data and rescales the remaining rows', async () => {
+        const spec: Record<string, any> = {
+            _interactionSemantics: {
+                fields: ['Category'],
+                categoryField: 'Category',
+                selectableMarks: ['bar'],
+            },
+            data: { values: [{ Category: 'A', Value: 12 }, { Category: 'B', Value: 8 }] },
+            mark: 'bar',
+            encoding: {
+                x: { field: 'Category', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+            },
+        };
+
+        const { compiled } = instrument(spec, [clickHighlight()]);
+        expect(compiled.data).toContainEqual({ name: HIDDEN_STORE, values: [] });
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+
+        // The transparent click-to-clear rect carries no key and is not a data mark.
+        const bars = () => allSceneItems(view)
+            .filter((item) => item.mark?.marktype === 'rect' && item.datum?.[INTERACTION_KEY])
+            .map((item) => item.datum[INTERACTION_KEY]);
+        const yDomain = () => view.scale('y').domain();
+
+        expect(bars()).toHaveLength(2);
+        const tallestKey = bars()[0];
+        const fullMax = yDomain()[1];
+
+        view.change(HIDDEN_STORE, changeset().insert([{ key: tallestKey }]));
+        await view.runAsync();
+
+        expect(bars()).toHaveLength(1);
+        expect(bars()).not.toContain(tallestKey);
+        expect(yDomain()[1]).toBeLessThan(fullMax);
+
+        view.change(HIDDEN_STORE, changeset().remove(() => true));
+        await view.runAsync();
+        expect(bars()).toHaveLength(2);
+        expect(yDomain()[1]).toBe(fullMax);
         view.finalize();
     });
 });

@@ -1699,7 +1699,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         ? Math.max(densityPadding, Math.round((axisLabelText.fontSize ?? 10) * 1.5))
         : densityPadding;
     const selectionBoundary = theme.interaction?.selectionBoundary;
-    const selectionBoundaryWidth = Math.max(0, selectionBoundary?.width ?? 1.5);
+    const selectionBoundaryWidth = Math.max(0, selectionBoundary?.width ?? 1.25);
 
     return {
         themeId: theme.id ?? 'flint',
@@ -1753,13 +1753,20 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             : undefined,
         marks,
         interaction: {
+            continuousColorFocus: {
+                mutedFill: mixHex(plot ?? canvas, text.primary, 0.08, '#eeeeee'),
+                boundaryWidth: Math.min(selectionBoundaryWidth, 0.8),
+                boundaryOpacity: 0.42,
+                haloWidth: Math.min(Math.max(0, selectionBoundary?.haloWidth ?? 2.5), 1.25),
+                haloOpacity: 0.18,
+            },
             selectionBoundary: {
                 color: selectionBoundary?.color ?? theme.ink?.accent ?? text.primary,
                 width: selectionBoundaryWidth,
-                opacity: clamp(selectionBoundary?.opacity ?? 1, 0, 1),
+                opacity: clamp(selectionBoundary?.opacity ?? 0.68, 0, 1),
                 haloColor: selectionBoundary?.haloColor ?? plot ?? canvas,
-                haloWidth: Math.max(selectionBoundaryWidth, selectionBoundary?.haloWidth ?? 3),
-                haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.8, 0, 1),
+                haloWidth: Math.max(0, selectionBoundary?.haloWidth ?? 2.5),
+                haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.35, 0, 1),
             },
         },
         facets,

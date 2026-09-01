@@ -7,8 +7,11 @@ import { makeCartesianPivot } from '../../core/pivot';
 import { planBandDodge, resolveDodge } from '../../core/band-dodge';
 import { snapToBoundHeuristic } from '../../core/field-semantics';
 import {
+    associateSemanticElementRenderKeys,
     elementsFromHits,
+    legendMatchedHits,
     MUTED_HOVER_STROKE,
+    semanticElementRenderKeys,
     type SemanticResolveContext,
     type SemanticResolveEvent,
     type SemanticTarget,
@@ -94,14 +97,40 @@ function resolveBarTarget(
     context: SemanticResolveContext,
     seriesField: string | undefined,
 ): SemanticTarget | null {
-    const legendField = event.legendField ?? seriesField;
-    const hits = event.role === 'legend-item' && legendField && event.legendValue !== undefined
-        ? context.allHits.filter((hit) => hit.datum[legendField] === event.legendValue)
+    const legendField = event.legend?.field ?? seriesField;
+    const hits = event.role === 'legend-item' && legendField && event.legend
+        ? legendMatchedHits(event, context, legendField)
         : event.hits;
     const elements = elementsFromHits(hits, context.keyField);
     return elements.length > 0
         ? { visual: { kind: 'mark', role: event.role }, elements }
         : null;
+}
+
+function resolveHistogramTarget(
+    event: SemanticResolveEvent,
+    context: SemanticResolveContext,
+    sourceField: string | undefined,
+    seriesField: string | undefined,
+): SemanticTarget | null {
+    const target = resolveBarTarget(event, context, seriesField);
+    if (!target || !sourceField) return target;
+    return {
+        ...target,
+        elements: target.elements.map((element) => associateSemanticElementRenderKeys({
+            ...element,
+            value: {
+                field: sourceField,
+                range: {
+                    start: element.value.__bin_start,
+                    end: element.value.__bin_end,
+                },
+                ...(seriesField && element.value[seriesField] !== undefined
+                    ? { [seriesField]: element.value[seriesField] }
+                    : {}),
+            },
+        }, semanticElementRenderKeys(element))),
+    };
 }
 
 function isDivergingHeatmapScheme(scheme: string | undefined): boolean {
@@ -583,15 +612,20 @@ export const histogramDef: ChartTemplateDef = {
     navigation: {},
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
+        const sourceField = resolvedEncodings.x?.field;
         const colorField = resolvedEncodings.color?.field;
         const seriesField = discreteField(resolvedEncodings, ['color']);
         return {
             fields: [...new Set([colorField, '__bin_start', '__bin_end'].filter((field): field is string => !!field))],
+            provenanceFields: colorField ? [colorField] : [],
+            rangeProvenance: sourceField
+                ? [{ field: sourceField, startField: '__bin_start', endField: '__bin_end' }]
+                : [],
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['bar'],
             renderHoverStyles: rectHoverStyle(resolvedEncodings),
-            resolve: (event, context) => resolveBarTarget(event, context, seriesField),
+            resolve: (event, context) => resolveHistogramTarget(event, context, sourceField, seriesField),
             presentUpdate: presentAnnotationUpdate(
                 () => barAnnotationCandidates('y'),
                 countAnnotationText,
@@ -653,9 +687,10 @@ export const heatmapDef: ChartTemplateDef = {
     navigation: {},
     markCognitiveChannel: 'color',
     semanticInteractions: ({ resolvedEncodings }) => {
-        const fields = ['x', 'y']
+        const fields = ['x', 'y', 'color']
             .map((channel) => resolvedEncodings[channel]?.field)
             .filter((field): field is string => !!field);
+        const colorField = resolvedEncodings.color?.field;
         const categoryField = discreteField(resolvedEncodings, ['x', 'y']);
         const reorderAxes = (['x', 'y'] as const).flatMap((axis) => {
             const encoding = resolvedEncodings[axis];
@@ -666,6 +701,7 @@ export const heatmapDef: ChartTemplateDef = {
         return {
             fields: [...new Set(fields)],
             categoryField,
+            legendFields: colorField ? { color: colorField } : undefined,
             reorderAxis: reorderAxes[0],
             reorderAxes,
             selectableMarks: ['rect'],

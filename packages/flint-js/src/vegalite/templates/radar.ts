@@ -98,6 +98,9 @@ function buildRadarLayers(
         const rawVal = Math.round((v.rawSum / v.count) * 100) / 100;
         const rad = (angle * Math.PI) / 180;
         finalData.push({
+            [axisField]: axis,
+            [valueField]: rawVal,
+            ...(groupField ? { [groupField]: grp } : {}),
             __group: grp,
             __axis: axis,
             __value: normVal,
@@ -285,10 +288,12 @@ export const radarChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
-        const groupField = resolvedEncodings.color?.field ? '__group' : undefined;
+        const axisField = resolvedEncodings.x?.field;
+        const valueField = resolvedEncodings.y?.field;
+        const groupField = resolvedEncodings.color?.field;
         return {
-            fields: ['__axis', '__raw', ...(groupField ? [groupField] : [])],
-            categoryField: '__axis',
+            fields: [axisField, valueField, groupField].filter((field): field is string => !!field),
+            categoryField: axisField,
             seriesField: groupField,
             legendFields: groupField ? { color: groupField } : undefined,
             selectableMarks: ['line', 'point'],

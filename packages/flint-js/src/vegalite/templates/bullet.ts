@@ -59,11 +59,12 @@ export const bulletChartDef: ChartTemplateDef = {
         const colorField = resolvedEncodings.color?.field;
         const actualField = resolvedEncodings.x?.field;
         const expectedField = resolvedEncodings.goal?.field;
+        const statusField = !colorField && actualField && expectedField ? '__status' : undefined;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'goal', 'color', 'column', 'row']),
             categoryField,
             seriesField,
-            legendFields: colorField ? { color: colorField } : undefined,
+            legendFields: colorField || statusField ? { color: colorField ?? statusField! } : undefined,
             selectableMarks: ['bar', 'tick'],
             renderHoverStyles: {
                 bar: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },

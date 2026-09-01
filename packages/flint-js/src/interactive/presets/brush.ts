@@ -9,9 +9,12 @@ export function createBrushInteraction(axis: 'x' | 'y', options: BrushOptions = 
     return {
         id,
         axis,
-        eventSource: axisBrushTrigger(axis, options.match ?? 'intersect', options.mode ?? 'ephemeral'),
+        eventSource: axisBrushTrigger(axis, options.match ?? 'intersect', options.mode ?? 'ephemeral', options.guide),
         handle(event, context) {
-            if (event.action !== `brush-${axis}` || event.phase === 'start' || event.phase === 'cancel') return null;
+            const acceptsAngular = axis === 'x' && event.action === 'brush-angle';
+            if ((event.action !== `brush-${axis}` && !acceptsAngular)
+                || event.phase === 'start'
+                || event.phase === 'cancel') return null;
             const target = expandRangedDotTarget(event.target, context);
             return emphasisUpdate(id, event, target, dimOpacity, context);
         },

@@ -66,7 +66,7 @@ export const rangeAreaChartDef: ChartTemplateDef = {
             selectableMarks: ['area'],
             renderHoverStyles: { area: { opacity: 'spotlight' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;

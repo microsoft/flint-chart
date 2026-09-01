@@ -71,7 +71,7 @@ export const scatterPlotDef: ChartTemplateDef = {
                 symbol: { ...shapeOnlyHover, stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
@@ -135,16 +135,19 @@ export const regressionDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size']),
             seriesField,
-            legendFields: colorField ? { color: colorField } : undefined,
+            legendFields: colorField || sizeField
+                ? { ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}) }
+                : undefined,
             selectableMarks: ['circle'],
             renderHoverStyles: {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
@@ -257,7 +260,7 @@ export const rangedDotPlotDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
@@ -328,7 +331,7 @@ export const boxplotDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;

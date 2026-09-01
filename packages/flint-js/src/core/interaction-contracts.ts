@@ -1,21 +1,41 @@
 export interface RenderHit {
+    /** Backend render datum used while resolving physical hits; not semantic identity. */
     datum: Record<string, unknown>;
     endDatum?: Record<string, unknown>;
+    /** All renderer datums in the same line/area path, when available. */
+    pathData?: readonly Record<string, unknown>[];
     source: 'mark' | 'legend-item';
     markType?: string;
     markName?: string;
     layerRole?: string;
 }
 
+/**
+ * Backend-independent meaning and provenance of one resolved chart element.
+ * Consumers should reason from `value` and `records`, never from renderer metadata.
+ * Exact render lookup belongs to the backend and may map one element to many primitives.
+ */
 export interface SemanticElement {
-    key: Record<string, unknown>;
-    value?: Record<string, unknown>;
+    /** Values represented by the mark's channels, or by a semantic control such as a legend item. */
+    value: Record<string, unknown>;
+    /** Contributing input records when provenance is available; zero or many may support one value. */
     records?: readonly Record<string, unknown>[];
 }
 
+export type LegendDomain =
+    | { kind: 'value'; value: unknown }
+    | { kind: 'interval'; start?: number; end?: number };
+
+export interface LegendTargetValue extends Record<string, unknown> {
+    channel?: string;
+    field?: string;
+    domain: LegendDomain;
+}
+
+/** A semantic subject: its visual role plus represented values and provenance. */
 export interface SemanticTarget {
     visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle';
+        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend';
         role: string;
     };
     elements: readonly SemanticElement[];
@@ -25,8 +45,7 @@ export interface SemanticResolveEvent {
     gesture: 'click' | 'hover' | 'rectangle' | 'angular';
     role: string;
     hits: readonly RenderHit[];
-    legendValue?: unknown;
-    legendField?: string;
+    legend?: LegendTargetValue;
 }
 
 export interface SemanticResolveContext {
@@ -161,6 +180,7 @@ export interface InteractionContext {
     ) => NavigationUpdate | null;
     readonly categoryField?: string;
     readonly seriesField?: string;
+    readonly legendDomains?: Readonly<Record<string, readonly unknown[]>>;
     readonly categoryAxis?: 'x' | 'y';
     readonly categoryOrder?: readonly unknown[];
     readonly reorderAxes?: readonly {

@@ -7,7 +7,7 @@ export function createAngularBrushInteraction(options: AngularBrushOptions = {})
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
-        eventSource: angularBrushTrigger(options.match ?? 'intersect'),
+        eventSource: angularBrushTrigger(options.match ?? 'intersect', options.mode ?? 'ephemeral', options.guide),
         handle(event, context) {
             if (event.action !== 'brush-angle' || event.phase === 'start' || event.phase === 'cancel') return null;
             return emphasisUpdate(id, event, event.target, dimOpacity, context);

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import {
+  assembleVegaLite,
+} from 'flint-chart';
+import {
   buildInteractiveChart,
   externalInteraction,
   type ChartUpdate,
@@ -19,6 +22,25 @@ type AnnotationFixture = {
   visual: { kind: 'mark' | 'path' | 'region'; role: string };
   text: string;
 };
+
+function fixtureSelector(
+  input: InteractionCase['input'],
+  fixture: AnnotationFixture,
+): Record<string, unknown> {
+  const spec = assembleVegaLite(input) as any;
+  const fields = spec._interactionSemantics?.fields as string[] | undefined;
+  const parts = fixture.key.replace(/\|__flint_path$/, '').split('|');
+  const sourceRows = input.data.values as readonly Record<string, unknown>[];
+  return Object.fromEntries((fields ?? []).slice(0, parts.length).map((field, index) => {
+    const part = parts[index];
+    const sourceValue = sourceRows.map((record) => record[field]).find((value) =>
+      String(value) === part
+      || value instanceof Date && String(value.getTime()) === part
+      || typeof value === 'string' && String(Date.parse(value)) === part);
+    const numeric = Number(part);
+    return [field, sourceValue ?? (Number.isFinite(numeric) ? numeric : part)];
+  }));
+}
 
 const ANNOTATION_FIXTURES: Record<string, readonly AnnotationFixture[]> = {
   'Area Chart': [
@@ -161,8 +183,10 @@ async function waitForStableChartLayout(container: HTMLElement): Promise<void> {
           await waitForStableChartLayout(container);
           if (!active) return;
           const target = {
-            visual: fixture.visual,
-            elements: [{ key: { __flint_interaction_key: fixture.key } }],
+            select: {
+              key: fixtureSelector(themedInput, fixture),
+              visual: fixture.visual,
+            },
           };
           const result = await surface.dispatch('static-annotation-policy', {
             id: `annotation-lab-${item.id}-${fixture.label}`,

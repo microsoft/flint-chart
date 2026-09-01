@@ -86,7 +86,7 @@ export const connectedScatterDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;

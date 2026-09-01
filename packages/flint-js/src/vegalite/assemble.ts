@@ -886,10 +886,22 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
         const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
             fields: [],
+            provenanceFields: undefined,
+            temporalProvenanceFields: undefined,
+            rangeProvenance: undefined,
             selectableMarks: [],
             reorderAxis: undefined,
             reorderAxes: undefined,
         };
+        const semanticEncodings = Object.values(resolvedEncodings)
+            .filter((encoding: any) => typeof encoding?.field === 'string') as any[];
+        const hasAggregate = semanticEncodings.some((encoding) => encoding.aggregate);
+        const provenanceFields = [...new Set(semanticEncodings
+            .filter((encoding) => !hasAggregate || !encoding.aggregate)
+            .map((encoding) => encoding.field as string))];
+        const temporalProvenanceFields = [...new Set(semanticEncodings
+            .filter((encoding) => encoding.type === 'temporal')
+            .map((encoding) => encoding.field as string))];
         const allowedReorderAxes: readonly ('x' | 'y')[] = chartTemplate.reorder === false
             ? []
             : chartTemplate.reorder?.axes ?? ['x', 'y'];
@@ -914,16 +926,28 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             : [];
         const explicitReorderAxes = templateSemantics.reorderAxes
             ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
+        const legendFields = 'legendFields' in templateSemantics ? templateSemantics.legendFields : undefined;
+        const rangeLegendChannels = Object.keys(legendFields ?? {})
+            .filter((channel) => {
+                const type = resolvedEncodings[channel]?.type;
+                return type === 'quantitative' || type === 'temporal';
+            });
         const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
             .filter((candidate, index, candidates) => candidates.findIndex(
                 (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
             ) === index);
         result._interactionSemantics = {
             ...templateSemantics,
+            sourceRecords: values.map((record) => ({ ...record })),
+            provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
+            temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
+            rangeLegendChannels,
             navigationAxes,
             reorderAxis: reorderAxes[0],
             reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,
+            continuousColorFocus: design.interaction.continuousColorFocus,
+            neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
         };
     }
     result._width = layoutResult.subplotWidth;

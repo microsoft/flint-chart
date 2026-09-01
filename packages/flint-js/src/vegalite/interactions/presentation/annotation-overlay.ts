@@ -1,4 +1,4 @@
-import type { SemanticElement, SemanticTarget } from '../../../core/interaction-semantics';
+import { semanticElementRenderKeys, type SemanticElement, type SemanticTarget } from '../../../core/interaction-semantics';
 import type {
     AnnotationCandidate,
     AnnotationConnection,
@@ -481,7 +481,7 @@ export function createAnnotationOverlay({
     };
     const render = (element: SemanticElement, annotation: RenderableAnnotation): void => {
         current = { element, annotation };
-        const key = element.key[INTERACTION_KEY];
+        const key = semanticElementRenderKeys(element)[0];
         const items = sceneItems(view);
         const item = typeof key === 'string'
             ? annotationItem(

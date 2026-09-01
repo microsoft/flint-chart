@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, dragReorder, externalInteraction, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { describe, expect, it, vi } from 'vitest';
+import { brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, doubleActivate, dragReorder, externalInteraction, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
 import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
 import { semanticVisualFamily } from '../src/core/interaction-semantics';
+import { normalizeInspectGuideOptions, normalizeRegionGuideOptions } from '../src/interactive/guides';
 import {
     matchesSemanticTargetSelector,
 } from '../src/interactive/language/updates';
@@ -11,13 +12,21 @@ import {
     axisBrushTrigger,
     angularBrushTrigger,
     clickTrigger,
+    contextTrigger,
+    doubleActivateTrigger,
     hoverTrigger,
+    inspectTrigger,
+    parseInspectMode,
+    keyboardTrigger,
+    lassoTrigger,
+    longPressTrigger,
     navigationTrigger,
     rectangleTrigger,
     xBrushTrigger,
     yBrushTrigger,
 } from '../src/interactive/triggers';
 import { AngularRegionSession } from '../src/interactive/gestures/angular-region';
+import { angularEditAction, isInteractiveControlTarget, pointInAngularSector } from '../src/vegalite/interactions/gestures/region';
 import {
     cartesianDragDistance,
     constrainCartesianRegion,
@@ -28,20 +37,35 @@ import { PanSession, wheelZoomFactor } from '../src/interactive/gestures/navigat
 import { guardNavigationDomain } from '../src/vegalite/interactions/navigation-scale';
 import {
     geometryIntersectsRect,
+    axisIntersectingHits,
     INTERACTION_KEY,
+    nearestItemByBounds,
+    nearestItemOnInspectAxis,
+    nextItemInDirection,
     PATH_KEY_SUFFIX,
     pathHoverPresentationKey,
+    polarGuideSegment,
+    polarInspectHits,
+    tolerantInspectHits,
     normalizeVegaRegionEvent,
+    polygonHits,
     renderHit,
     sceneItems,
 } from '../src/vegalite/interactions/hit-adapter';
 import {
     interactionsForHoverPresentation,
+    domainForPlotGeometry,
     nearestReorderHit,
     resolveSupportedOperation,
 } from '../src/vegalite/interactions/runtime';
-import { reorderOwnedItems } from '../src/vegalite/interactions/presentation/drag-reorder-overlay';
+import {
+    activeReorderAxis,
+    eligibleReorderAxes,
+    eligibleReorderAxesForHit,
+    reorderOwnedItems,
+} from '../src/vegalite/interactions/presentation/drag-reorder-overlay';
 import { hoverContrastOpacity } from '../src/vegalite/interactions/presentation/focus-overlay';
+import { inspectGuideLine } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
 import {
     annotationFacingEdges,
     annotationLeaderPorts,
@@ -125,6 +149,14 @@ function semanticUpdate(
 }
 
 describe('physical region gestures', () => {
+    it('does not start a region gesture from an interactive control', () => {
+        const icon = { closest: () => ({ tagName: 'BUTTON' }) } as unknown as EventTarget;
+        const plot = { closest: () => null } as unknown as EventTarget;
+
+        expect(isInteractiveControlTarget(icon)).toBe(true);
+        expect(isInteractiveControlTarget(plot)).toBe(false);
+    });
+
     it('projects Cartesian regions and measures only the configured axis', () => {
         const start = { x: 20, y: 30 };
         const end = { x: 80, y: 90 };
@@ -166,6 +198,36 @@ describe('physical region gestures', () => {
         expect(session.sector().endAngle - session.sector().startAngle).toBeCloseTo(Math.PI * 0.2);
         expect(session.dragDistance()).toBeCloseTo(Math.PI * 20);
     });
+
+    it('classifies both handles and the interior of a wrapped angular edit', () => {
+        const sector = {
+            center: { x: 0, y: 0 }, innerRadius: 20, outerRadius: 100,
+            startAngle: Math.PI * 1.75, endAngle: Math.PI * 2.25,
+        };
+
+        expect(angularEditAction(sector.startAngle + 0.02, sector)).toBe('resize-leading');
+        expect(angularEditAction(sector.endAngle - 0.02, sector)).toBe('resize-trailing');
+        expect(angularEditAction(0, sector)).toBe('move');
+        expect(angularEditAction(Math.PI, sector)).toBeUndefined();
+    });
+
+    it('requires a stateful angular edit pointer to remain inside the annulus', () => {
+        const sector = {
+            center: { x: 100, y: 100 }, innerRadius: 30, outerRadius: 80,
+            startAngle: 0, endAngle: Math.PI / 2,
+        };
+        const pointAt = (radius: number, angle: number) => ({
+            x: sector.center.x + radius * Math.sin(angle),
+            y: sector.center.y - radius * Math.cos(angle),
+        });
+
+        expect(pointInAngularSector(pointAt(60, Math.PI / 4), sector)).toBe(true);
+        expect(pointInAngularSector(pointAt(60, sector.startAngle), sector)).toBe(true);
+        expect(pointInAngularSector(pointAt(60, sector.endAngle), sector)).toBe(true);
+        expect(pointInAngularSector(pointAt(10, Math.PI / 4), sector)).toBe(false);
+        expect(pointInAngularSector(pointAt(90, Math.PI / 4), sector)).toBe(false);
+        expect(pointInAngularSector(pointAt(60, Math.PI), sector)).toBe(false);
+    });
 });
 
 describe('public canvas interaction events', () => {
@@ -185,7 +247,7 @@ describe('public canvas interaction events', () => {
             point: { x: 20, y: 30 },
             target: {
                 visual: { kind: 'mark', role: 'bar' },
-                elements: [{ key: { Country: 'Japan' } }],
+                elements: [{ value: { Country: 'Japan' } }],
             },
         }, clickTrigger);
         const legend = toCanvasInteractionEvent({
@@ -195,7 +257,7 @@ describe('public canvas interaction events', () => {
             point: { x: 200, y: 30 },
             target: {
                 visual: { kind: 'widget', role: 'legend-symbol' },
-                elements: [{ key: { Country: 'Japan' } }],
+                elements: [{ value: { Country: 'Japan' } }],
             },
         }, hoverTrigger);
 
@@ -282,7 +344,7 @@ describe('hover presentation policy', () => {
         const interaction = clickGroupHighlight();
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
+            elements: [{ value: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
         };
         const context = {
             chartType: 'Grouped Bar Chart',
@@ -290,15 +352,15 @@ describe('hover presentation policy', () => {
             seriesField: 'Segment',
             available: [
                 ...target.elements,
-                { key: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
-                { key: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
+                { value: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
+                { value: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
             ],
         };
 
         expect(semanticUpdate(interaction, target, context, { phase: 'preview' })?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'west-a' } },
-                    { key: { key: 'east-a' } },
+                    { value: { key: 'west-a' } },
+                    { value: { key: 'east-a' } },
                 ] }],
         });
     });
@@ -307,7 +369,7 @@ describe('hover presentation policy', () => {
 describe('public chart updates', () => {
     const target = {
         visual: { kind: 'mark' as const, role: 'bar' },
-        elements: [{ key: { __flint_interaction_key: 'japan' } }],
+        elements: [{ value: { __flint_interaction_key: 'japan' } }],
     };
 
     it('uses direct declarative operation JSON', () => {
@@ -443,6 +505,54 @@ describe('viewport navigation', () => {
 });
 
 describe('interaction definitions', () => {
+    it('resolves a reorder guide from an aggregate target without source records', () => {
+        const axis = { axis: 'x' as const, field: 'Species' };
+        const preview = {
+            start: { x: 10, y: 20 }, current: { x: 40, y: 20 }, axis: 'x' as const,
+            source: {
+                visual: { kind: 'mark' as const, role: 'distribution' },
+                elements: [{ value: { Species: 'Adelie' }, records: [] }],
+            },
+            destination: {
+                visual: { kind: 'mark' as const, role: 'distribution' },
+                elements: [{ value: { Species: 'Chinstrap' }, records: [{ Species: 'Chinstrap' }] }],
+            },
+        };
+
+        expect(activeReorderAxis([axis], preview)).toEqual(axis);
+    });
+
+    it('does not start category reorder from a line spanning multiple axis values', () => {
+        const axes = [{ axis: 'x' as const, field: 'Period' }];
+        const line = {
+            visual: { kind: 'path' as const, role: 'line' },
+            elements: [{
+                value: { Product: 'Laptop' },
+                records: [
+                    { Period: 2019, Product: 'Laptop', Revenue: 20 },
+                    { Period: 2024, Product: 'Laptop', Revenue: 62 },
+                ],
+            }],
+        };
+        const point = {
+            visual: { kind: 'mark' as const, role: 'symbol' },
+            elements: [{
+                value: { Period: 2019, Product: 'Laptop', Revenue: 20 },
+                records: [{ Period: 2019, Product: 'Laptop', Revenue: 20 }],
+            }],
+        };
+
+        expect(eligibleReorderAxes(axes, line)).toEqual([]);
+        expect(eligibleReorderAxes(axes, point)).toEqual(axes);
+        expect(eligibleReorderAxesForHit(axes, {
+            datum: { Period: 2019 }, source: 'mark', markType: 'symbol',
+        })).toEqual(axes);
+        expect(eligibleReorderAxesForHit(axes, {
+            datum: { Period: 2019 }, source: 'mark', markType: 'line',
+            pathData: line.elements[0].records,
+        })).toEqual([]);
+    });
+
     it('resolves reorder destinations by nearest axis slot, including gaps and plot edges', () => {
         const items = ['A', 'B', 'C'].map((Category, index) => ({
             datum: { [INTERACTION_KEY]: Category, Category },
@@ -464,7 +574,7 @@ describe('interaction definitions', () => {
     it('lowers a committed bar drag to a category-order update', () => {
         const interaction = dragReorder();
         const elements = ['A', 'B', 'C'].map((Category) => ({
-            key: { key: Category }, records: [{ Category }],
+            value: { key: Category }, records: [{ Category }],
         }));
         const update = interaction.handle!({
             action: 'drag-element',
@@ -486,7 +596,7 @@ describe('interaction definitions', () => {
     it('composes sequential category reorders against the current order', () => {
         const interaction = dragReorder();
         const elements = ['1', '2', '3', '4', '5'].map((Category) => ({
-            key: { key: Category }, records: [{ Category }],
+            value: { key: Category }, records: [{ Category }],
         }));
         const drag = (source: number, destination: number, categoryOrder: readonly string[]) =>
             interaction.handle!({
@@ -510,8 +620,8 @@ describe('interaction definitions', () => {
         [{ x: 10, y: 70 }, 'y', 'row', ['R2', 'R1']],
     ] as const)('selects a Heatmap reorder axis from drag direction', (delta, axis, field, orderedValues) => {
         const interaction = dragReorder();
-        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
-        const destination = { key: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
+        const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { value: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
         const update = interaction.handle!({
             action: 'drag-element', phase: 'commit',
             geometry: { plot: { kind: 'drag', start: { x: 0, y: 0 }, current: delta, delta } },
@@ -530,8 +640,8 @@ describe('interaction definitions', () => {
 
     it('keeps a Heatmap drag on its locked axis after the pointer changes direction', () => {
         const interaction = dragReorder();
-        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
-        const destination = { key: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
+        const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { value: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
         const update = interaction.handle!({
             action: 'drag-element', phase: 'commit',
             geometry: {
@@ -557,8 +667,8 @@ describe('interaction definitions', () => {
 
     it('keeps a locked Heatmap drag active but commits no reorder over its source slot', () => {
         const interaction = dragReorder();
-        const source = { key: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
-        const destination = { key: { key: 'A/R2' }, records: [{ column: 'A', row: 'R2' }] };
+        const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
+        const destination = { value: { key: 'A/R2' }, records: [{ column: 'A', row: 'R2' }] };
         const update = interaction.handle!({
             action: 'drag-element', phase: 'commit',
             geometry: {
@@ -593,18 +703,27 @@ describe('interaction definitions', () => {
     it('provides reusable trigger descriptors', () => {
         expect(clickTrigger).toEqual({ type: 'element', gesture: 'click' });
         expect(hoverTrigger).toEqual({ type: 'element', gesture: 'hover' });
-        expect(rectangleTrigger('contain')).toEqual({ type: 'region', gesture: 'drag', match: 'contain' });
+        expect(rectangleTrigger('contain')).toEqual({
+            type: 'region',
+            gesture: 'drag',
+            match: 'contain',
+            regionGuide: normalizeRegionGuideOptions(undefined),
+        });
         expect(axisBrushTrigger('x', 'contain')).toEqual({
             type: 'region', gesture: 'drag', axis: 'x', match: 'contain', mode: 'ephemeral',
+            regionGuide: normalizeRegionGuideOptions(undefined),
         });
         expect(xBrushTrigger()).toEqual({
             type: 'region', gesture: 'drag', axis: 'x', match: 'intersect', mode: 'ephemeral',
+            regionGuide: normalizeRegionGuideOptions(undefined),
         });
         expect(yBrushTrigger('intersect', 'stateful')).toEqual({
             type: 'region', gesture: 'drag', axis: 'y', match: 'intersect', mode: 'stateful',
+            regionGuide: normalizeRegionGuideOptions(undefined),
         });
         expect(angularBrushTrigger('contain')).toEqual({
             type: 'region', gesture: 'drag', regionGeometry: 'angular', match: 'contain', mode: 'ephemeral',
+            regionGuide: normalizeRegionGuideOptions(undefined),
         });
         const external = externalInteraction<{ selected: boolean }>({
             id: 'story-scroll',
@@ -619,7 +738,7 @@ describe('interaction definitions', () => {
         const context = { chartType: 'Bar Chart', selected: [] };
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { category: 'A' }, records: [{ category: 'A', value: 4 }] }],
+            elements: [{ value: { category: 'A' }, records: [{ category: 'A', value: 4 }] }],
         };
 
         expect(handleSemanticEvent(clickHighlight(), {
@@ -659,7 +778,7 @@ describe('interaction definitions', () => {
     it('applies brush updates only for its configured axis', () => {
         const target = {
             visual: { kind: 'region' as const, role: 'region' },
-            elements: [{ key: { category: 'A' } }],
+            elements: [{ value: { category: 'A' } }],
         };
         const context = { chartType: 'Scatter Plot', selected: [] };
         const event = {
@@ -676,8 +795,15 @@ describe('interaction definitions', () => {
             }],
         });
         expect(handleSemanticEvent(brushX(), { ...event, axis: 'y' }, context)).toBeNull();
+        expect(handleSemanticEvent(brushX(), { ...event, axis: 'angle' }, context)).toEqual({
+            id: 'brush-x',
+            ops: [{
+                op: 'set-presentation', targets: [target],
+                value: { state: 'emphasized', mutedOpacity: 0.25 },
+            }],
+        });
         expect(handleSemanticEvent(brushX({ mode: 'stateful' }), {
-            ...event, axis: 'x', phase: 'commit', operation: 'clear', target: null,
+            ...event, axis: 'angle', phase: 'commit', operation: 'clear', target: null,
         }, context)).toEqual({
             id: 'brush-x',
             ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }],
@@ -736,7 +862,7 @@ describe('interaction definitions', () => {
 
     it('clears selection for an empty rectangle commit', () => {
         const interaction = select();
-        const context = { chartType: 'Waterfall Chart', selected: [{ key: { Step: 'Revenue' } }] };
+        const context = { chartType: 'Waterfall Chart', selected: [{ value: { Step: 'Revenue' } }] };
         expect(semanticUpdate(interaction, null, context, { source: 'region' }))
             .toEqual({
                 id: 'select',
@@ -759,7 +885,7 @@ describe('interaction definitions', () => {
         const interaction = clickHighlight({ dimOpacity: 0.2 });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { Region: 'West' } }],
+            elements: [{ value: { Region: 'West' } }],
         };
         const context = { chartType: 'Bar Chart', selected: [] };
         const replace = semanticUpdate(interaction, target, context, {
@@ -780,26 +906,26 @@ describe('interaction definitions', () => {
     it('keeps basic clicks local and lets group clicks propagate to the series', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { key: 'west-consumer' }, records: [{ Segment: 'Consumer' }] }],
+            elements: [{ value: { key: 'west-consumer' }, records: [{ Segment: 'Consumer' }] }],
         };
         const context = {
             chartType: 'Grouped Bar Chart',
             selected: [],
             seriesField: 'Segment',
             available: [
-                { key: { key: 'west-consumer' }, records: [{ Segment: 'Consumer' }] },
-                { key: { key: 'east-consumer' }, records: [{ Segment: 'Consumer' }] },
-                { key: { key: 'west-corporate' }, records: [{ Segment: 'Corporate' }] },
+                { value: { key: 'west-consumer' }, records: [{ Segment: 'Consumer' }] },
+                { value: { key: 'east-consumer' }, records: [{ Segment: 'Consumer' }] },
+                { value: { key: 'west-corporate' }, records: [{ Segment: 'Corporate' }] },
             ],
         };
 
         expect(semanticUpdate(clickHighlight(), target, context)?.ops[0]).toMatchObject({
-            targets: [{ elements: [{ key: { key: 'west-consumer' } }] }],
+            targets: [{ elements: [{ value: { key: 'west-consumer' } }] }],
         });
         expect(semanticUpdate(clickGroupHighlight(), target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'west-consumer' } },
-                    { key: { key: 'east-consumer' } },
+                    { value: { key: 'west-consumer' } },
+                    { value: { key: 'east-consumer' } },
                 ] }],
         });
     });
@@ -808,7 +934,7 @@ describe('interaction definitions', () => {
         const interaction = clickHighlight();
         const target = {
             visual: { kind: 'mark' as const, role: 'mark' },
-            elements: [{ key: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] }],
+            elements: [{ value: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] }],
         };
         const context = {
             chartType: 'Ranged Dot Plot',
@@ -817,9 +943,9 @@ describe('interaction definitions', () => {
             seriesField: 'Sex',
             available: [
                 ...target.elements,
-                { key: { key: 'us-female' }, records: [{ Country: 'United States', Sex: 'Female' }] },
-                { key: { key: 'us-connector' }, records: [{ Country: 'United States' }] },
-                { key: { key: 'japan-male' }, records: [{ Country: 'Japan', Sex: 'Male' }] },
+                { value: { key: 'us-female' }, records: [{ Country: 'United States', Sex: 'Female' }] },
+                { value: { key: 'us-connector' }, records: [{ Country: 'United States' }] },
+                { value: { key: 'japan-male' }, records: [{ Country: 'Japan', Sex: 'Male' }] },
             ],
         };
 
@@ -832,16 +958,16 @@ describe('interaction definitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'region' },
             elements: [
-                { key: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] },
-                { key: { key: 'japan-connector' }, records: [{ Country: 'Japan' }] },
+                { value: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] },
+                { value: { key: 'japan-connector' }, records: [{ Country: 'Japan' }] },
             ],
         };
         const selected = [
             target.elements[0],
-            { key: { key: 'us-female' }, records: [{ Country: 'United States', Sex: 'Female' }] },
-            { key: { key: 'us-connector' }, records: [{ Country: 'United States' }] },
-            { key: { key: 'japan-male' }, records: [{ Country: 'Japan', Sex: 'Male' }] },
-            { key: { key: 'japan-female' }, records: [{ Country: 'Japan', Sex: 'Female' }] },
+            { value: { key: 'us-female' }, records: [{ Country: 'United States', Sex: 'Female' }] },
+            { value: { key: 'us-connector' }, records: [{ Country: 'United States' }] },
+            { value: { key: 'japan-male' }, records: [{ Country: 'Japan', Sex: 'Male' }] },
+            { value: { key: 'japan-female' }, records: [{ Country: 'Japan', Sex: 'Female' }] },
             target.elements[1],
         ];
         const context = {
@@ -851,7 +977,7 @@ describe('interaction definitions', () => {
             seriesField: 'Sex',
             available: [
                 ...selected,
-                { key: { key: 'brazil-male' }, records: [{ Country: 'Brazil', Sex: 'Male' }] },
+                { value: { key: 'brazil-male' }, records: [{ Country: 'Brazil', Sex: 'Male' }] },
             ],
         };
 
@@ -871,7 +997,7 @@ describe('interaction definitions', () => {
         });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { key: 'asia' }, records: [{ Type: 'delta', __wf_color: 'increase' }] }],
+            elements: [{ value: { key: 'asia' }, records: [{ Type: 'delta', __wf_color: 'increase' }] }],
         };
         const context = {
             chartType: 'Waterfall Chart',
@@ -880,15 +1006,15 @@ describe('interaction definitions', () => {
             resolveGroupValue: semantics.resolveGroupValue,
             available: [
                 ...target.elements,
-                { key: { key: 'africa' }, records: [{ Type: 'delta', __wf_color: 'increase' }] },
-                { key: { key: 'oceania' }, records: [{ Type: 'delta', __wf_color: 'decrease' }] },
+                { value: { key: 'africa' }, records: [{ Type: 'delta', __wf_color: 'increase' }] },
+                { value: { key: 'oceania' }, records: [{ Type: 'delta', __wf_color: 'decrease' }] },
             ],
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'asia' } },
-                    { key: { key: 'africa' } },
+                    { value: { key: 'asia' } },
+                    { value: { key: 'africa' } },
                 ] }],
         });
     });
@@ -898,7 +1024,7 @@ describe('interaction definitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{
-                key: { key: 'west-consumer' },
+                value: { key: 'west-consumer' },
                 records: [{ Segment: 'Consumer', __wf_color: 'increase' }],
             }],
         };
@@ -908,15 +1034,15 @@ describe('interaction definitions', () => {
             seriesField: 'Segment',
             available: [
                 ...target.elements,
-                { key: { key: 'east-consumer' }, records: [{ Segment: 'Consumer', __wf_color: 'decrease' }] },
-                { key: { key: 'west-corporate' }, records: [{ Segment: 'Corporate', __wf_color: 'increase' }] },
+                { value: { key: 'east-consumer' }, records: [{ Segment: 'Consumer', __wf_color: 'decrease' }] },
+                { value: { key: 'west-corporate' }, records: [{ Segment: 'Corporate', __wf_color: 'increase' }] },
             ],
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'west-consumer' } },
-                    { key: { key: 'east-consumer' } },
+                    { value: { key: 'west-consumer' } },
+                    { value: { key: 'east-consumer' } },
                 ] }],
         });
     });
@@ -926,8 +1052,8 @@ describe('interaction definitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'legend-item' },
             elements: [
-                { key: { key: 'blue-circle' }, records: [{ Color: 'Blue', Shape: 'Circle' }] },
-                { key: { key: 'orange-circle' }, records: [{ Color: 'Orange', Shape: 'Circle' }] },
+                { value: { key: 'blue-circle' }, records: [{ Color: 'Blue', Shape: 'Circle' }] },
+                { value: { key: 'orange-circle' }, records: [{ Color: 'Orange', Shape: 'Circle' }] },
             ],
         };
         const context = {
@@ -936,7 +1062,7 @@ describe('interaction definitions', () => {
             seriesField: 'Color',
             available: [
                 ...target.elements,
-                { key: { key: 'blue-square' }, records: [{ Color: 'Blue', Shape: 'Square' }] },
+                { value: { key: 'blue-square' }, records: [{ Color: 'Blue', Shape: 'Square' }] },
             ],
         };
 
@@ -949,7 +1075,7 @@ describe('interaction definitions', () => {
         const interaction = clickGroupHighlight();
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
-            elements: [{ key: { key: 'control-4.1' }, records: [{ Group: 'Control', Value: 4.1, Color: 'Low' }] }],
+            elements: [{ value: { key: 'control-4.1' }, records: [{ Group: 'Control', Value: 4.1, Color: 'Low' }] }],
         };
         const context = {
             chartType: 'Strip Plot',
@@ -958,15 +1084,15 @@ describe('interaction definitions', () => {
             seriesField: 'Color',
             available: [
                 ...target.elements,
-                { key: { key: 'control-5.2' }, records: [{ Group: 'Control', Value: 5.2, Color: 'High' }] },
-                { key: { key: 'treatment-4.1' }, records: [{ Group: 'Treatment', Value: 4.1, Color: 'Low' }] },
+                { value: { key: 'control-5.2' }, records: [{ Group: 'Control', Value: 5.2, Color: 'High' }] },
+                { value: { key: 'treatment-4.1' }, records: [{ Group: 'Treatment', Value: 4.1, Color: 'Low' }] },
             ],
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'control-4.1' } },
-                    { key: { key: 'control-5.2' } },
+                    { value: { key: 'control-4.1' } },
+                    { value: { key: 'control-5.2' } },
                 ] }],
         });
     });
@@ -977,7 +1103,7 @@ describe('interaction definitions', () => {
         });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ key: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
+            elements: [{ value: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
         };
         const context = {
             chartType: 'Grouped Bar Chart',
@@ -985,15 +1111,15 @@ describe('interaction definitions', () => {
             seriesField: 'Segment',
             available: [
                 ...target.elements,
-                { key: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
-                { key: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
+                { value: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
+                { value: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
             ],
         };
 
         expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
-                    { key: { key: 'west-a' } },
-                    { key: { key: 'west-b' } },
+                    { value: { key: 'west-a' } },
+                    { value: { key: 'west-b' } },
                 ] }],
         });
     });
@@ -1003,7 +1129,7 @@ describe('interaction definitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
             elements: [{
-                key: { key: 'setosa-1.4' },
+                value: { key: 'setosa-1.4' },
                 records: [{ Species: 'Setosa', Length: 1.4, __jitter: -2.1 }],
             }],
         };
@@ -1038,7 +1164,7 @@ describe('interaction definitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'task' },
             elements: [{
-                key: { key: 'launch' },
+                value: { key: 'launch' },
                 records: [{ task: 'Launch', start: Date.UTC(2024, 3, 1), end, phase: 'Release' }],
             }],
         };
@@ -1058,7 +1184,7 @@ describe('interaction definitions', () => {
 
     it('lets the chart turn annotation intent into a render plan', () => {
         const element = {
-            key: { key: 'setosa-1.4' },
+            value: { key: 'setosa-1.4' },
             records: [{ Species: 'Setosa', Length: 1.4, __jitter: -2.1 }],
         };
         const presentUpdate = presentAnnotationUpdate(() => ({
@@ -1086,7 +1212,7 @@ describe('interaction definitions', () => {
 
     it('lets the chart supply default annotation text', () => {
         const element = {
-            key: { key: 'setosa-1.4' },
+            value: { key: 'setosa-1.4' },
             records: [{ Species: 'Setosa', Length: 1.4, __jitter: -2.1 }],
         };
         const presentUpdate = presentAnnotationUpdate(() => ({ connection: 'center' }));
@@ -1102,7 +1228,7 @@ describe('interaction definitions', () => {
 
     it('uses a rendered histogram count instead of an empty raw-field fallback', () => {
         const element = {
-            key: { key: '4|4.5' },
+            value: { key: '4|4.5' },
             records: [{ __bin_start: 4, __bin_end: 4.5, __count: 8 }],
         };
         const presentUpdate = presentAnnotationUpdate(
@@ -1124,7 +1250,7 @@ describe('interaction definitions', () => {
             resolvedEncodings: { x: { field: 'Duration', type: 'quantitative' } },
         } as any);
         const element = {
-            key: { key: '1.5|2' },
+            value: { key: '1.5|2' },
             records: [{ __bin_start: 1.5, __bin_end: 2, __count: 9 }],
         };
 
@@ -1198,7 +1324,7 @@ describe('interaction definitions', () => {
             },
         } as any);
         const element = {
-            key: { key: '37' },
+            value: { key: '37' },
             records: [{ Country: 'A', Tonnes: 37 }],
         };
 
@@ -1225,7 +1351,7 @@ describe('interaction definitions', () => {
             },
         } as any);
         const element = {
-            key: { key: 'Asia' },
+            value: { key: 'Asia' },
             records: [{ Step: 'Asia', __wf_prev_sum: 2536, __wf_sum: 5773 }],
         };
 
@@ -1361,7 +1487,7 @@ describe('interaction definitions', () => {
     ] as const)('formats a clicked %s segment as an endpoint transition', (chartType, chartDef, resolvedEncodings) => {
         const semantics = chartDef.semanticInteractions!({ resolvedEncodings } as any);
         const element = {
-            key: { key: 'Jan' },
+            value: { key: 'Jan' },
             records: [{ Month: 'Jan', Sales: 10 }, { Month: 'Feb', Sales: 14 }],
         };
 
@@ -1379,11 +1505,11 @@ describe('interaction definitions', () => {
             },
         } as any);
         const pathElement = {
-            key: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
+            value: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
             records: [{ Miles: 7200, Price: 2.36 }, { Miles: 7600, Price: 1.78 }],
         };
         const pointElement = {
-            key: { [INTERACTION_KEY]: 'A' },
+            value: { [INTERACTION_KEY]: 'A' },
             records: [{ Miles: 7200, Price: 2.36 }],
         };
 
@@ -1414,11 +1540,11 @@ describe('interaction definitions', () => {
             },
         } as any);
         const segment = {
-            key: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
+            value: { [INTERACTION_KEY]: `A${PATH_KEY_SUFFIX}` },
             records: [{ Miles: 9800, Price: 2.14 }, { Miles: 10000, Price: 2.53 }],
         };
         const vertex = {
-            key: { [INTERACTION_KEY]: 'A' },
+            value: { [INTERACTION_KEY]: 'A' },
             records: [{ Miles: 9800, Price: 2.14 }],
         };
         const pathUpdate = semantics.presentUpdate!(
@@ -1603,7 +1729,7 @@ describe('interaction definitions', () => {
         ],
     ] as const)('formats a clicked %s interval from its semantic endpoints', (chartType, chartDef, resolvedEncodings, record, text) => {
         const semantics = chartDef.semanticInteractions!({ resolvedEncodings } as any);
-        const element = { key: { key: chartType }, records: [record] };
+        const element = { value: { key: chartType }, records: [record] };
 
         expect(semantics.presentUpdate!(
             annotationUpdate(element),
@@ -1619,7 +1745,7 @@ describe('interaction definitions', () => {
             },
         } as any);
         const element = {
-            key: { key: 'Gentoo' },
+            value: { key: 'Gentoo' },
             records: [{ Species: 'Gentoo', 'Body mass (g)': 5950 }],
         };
 
@@ -1634,7 +1760,7 @@ describe('interaction definitions', () => {
         'outer-radial',
         'center',
     ] as const)('preserves the ChartDef %s annotation candidate', (connection) => {
-        const element = { key: { key: 'datum' } };
+        const element = { value: { key: 'datum' } };
         const presentUpdate = presentAnnotationUpdate(() => ({ connection }));
         const update = presentUpdate(
             annotationUpdate(element, undefined, 'Value'),
@@ -1653,5 +1779,695 @@ describe('interaction definitions', () => {
             { connection: 'center', priority: 1 },
             { connection: 'top', priority: 2 },
         ]);
+    });
+});
+describe('assisted, keyboard, and lasso acquisition', () => {
+    const boundedItem = (key: string, x1: number, y1: number, x2: number, y2: number) => ({
+        mark: { marktype: 'rect' },
+        datum: { [INTERACTION_KEY]: key },
+        bounds: { x1, y1, x2, y2 },
+    });
+    const fakeView = (items: readonly any[]) => ({
+        scenegraph: () => ({ root: { mark: { marktype: 'group' }, items } }),
+    });
+
+    it('acquires the nearest mark within the assist radius', () => {
+        const near = boundedItem('near', 100, 100, 104, 104);
+        const far = boundedItem('far', 200, 200, 204, 204);
+
+        expect(nearestItemByBounds([near, far], { x: 110, y: 102 }, 12)).toBe(near);
+        expect(nearestItemByBounds([near, far], { x: 150, y: 150 }, 12)).toBeUndefined();
+    });
+
+    it('prefers a mark the pointer is already inside over a nearer edge', () => {
+        const inside = boundedItem('inside', 0, 0, 50, 50);
+        const edge = boundedItem('edge', 52, 20, 56, 24);
+
+        expect(nearestItemByBounds([inside, edge], { x: 49, y: 22 }, 12)).toBe(inside);
+    });
+
+    it('keeps axis inspection on the nearest axis coordinate', () => {
+        const sameX = boundedItem('same-x', 18, 0, 22, 4);
+        const nearbyIn2d = boundedItem('nearby-2d', 38, 88, 42, 92);
+
+        expect(nearestItemOnInspectAxis(
+            [sameX, nearbyIn2d],
+            { x: 21, y: 90 },
+            'x',
+        )).toBe(sameX);
+    });
+
+    it('inspects every bar crossed by the axis guide', () => {
+        const short = boundedItem('short', 0, 0, 20, 10);
+        const long = boundedItem('long', 0, 20, 80, 30);
+        const later = boundedItem('later', 60, 40, 100, 50);
+
+        expect(axisIntersectingHits([short, long, later], 40, 'x')
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['long']);
+        expect(axisIntersectingHits([short, long, later], 70, 'x')
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['long', 'later']);
+    });
+
+    it('uses tolerance to choose one nearest axis value when exact acquisition is empty', () => {
+        const left = boundedItem('left', 0, 0, 20, 20);
+        const right = boundedItem('right', 22, 0, 42, 20);
+
+        expect(tolerantInspectHits([left, right], { x: 21, y: 10 }, 'x', { x: '=' }, { x: 3, y: 0 })
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right']);
+        expect(tolerantInspectHits([left, right], { x: 21, y: 10 }, 'x', { x: '=' }, { x: 0, y: 0 }))
+            .toEqual([]);
+        expect(tolerantInspectHits([left, right], { x: 50, y: 10 }, 'x', { x: '=' }, { x: 3, y: 0 }))
+            .toEqual([]);
+    });
+
+    it('returns every series mark sharing the chosen axis value', () => {
+        const left = boundedItem('left', 0, 0, 20, 10);
+        const rightA = boundedItem('right-a', 22, 0, 42, 10);
+        const rightB = boundedItem('right-b', 22, 20, 42, 30);
+
+        expect(tolerantInspectHits(
+            [left, rightA, rightB], { x: 21, y: 5 }, 'x', { x: '=' }, { x: 3, y: 0 },
+        ).map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right-a', 'right-b']);
+    });
+
+    it('returns every mark intersected by the chosen axis slice', () => {
+        const long = boundedItem('long', 0, 0, 80, 10);
+        const short = boundedItem('short', 0, 20, 60, 30);
+        const missed = boundedItem('missed', 0, 40, 40, 50);
+
+        expect(tolerantInspectHits(
+            [long, short, missed], { x: 50, y: 45 }, 'x', { x: '=' }, { x: 3, y: 0 },
+        ).map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['long', 'short']);
+    });
+
+    it('intersects every continuous path at the selected axis slice', () => {
+        const segment = (key: string, y: number) => ({
+            bounds: { x1: 20, y1: y, x2: 40, y2: y + 10 },
+            interactionGeometry: {
+                kind: 'segment',
+                points: [{ x: 20, y }, { x: 40, y: y + 10 }],
+            },
+            datum: { [INTERACTION_KEY]: key },
+            mark: { marktype: 'line', name: key },
+        });
+
+        expect(tolerantInspectHits(
+            [segment('a', 10), segment('b', 30)], { x: 30, y: 0 }, 'x', { x: '=' }, { x: 3, y: 0 },
+        ).map((hit) => hit.datum[INTERACTION_KEY])).toEqual([
+            `a${PATH_KEY_SUFFIX}`,
+            `b${PATH_KEY_SUFFIX}`,
+        ]);
+    });
+
+    it('chooses one axis value when adjacent bins share an exact boundary', () => {
+        const left = boundedItem('left', 0, 0, 20, 20);
+        const right = boundedItem('right', 20, 0, 40, 20);
+
+        expect(tolerantInspectHits([left, right], { x: 20, y: 10 }, 'x', { x: '=' }, { x: 3, y: 0 })
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right']);
+    });
+
+    it('chooses one nearest xy mark but preserves exact overlaps', () => {
+        const left = boundedItem('left', 0, 0, 20, 20);
+        const right = boundedItem('right', 22, 0, 42, 20);
+        const overlap = boundedItem('overlap', 22, 0, 42, 20);
+
+        expect(tolerantInspectHits([left, right], { x: 21, y: 10 }, 'xy', { x: '=', y: '=' }, { x: 3, y: 3 })
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right']);
+        expect(tolerantInspectHits([right, overlap], { x: 30, y: 10 }, 'xy', { x: '=', y: '=' }, { x: 3, y: 3 })
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right', 'overlap']);
+    });
+
+    it('acquires one quarter of the plot with mixed xy inspect predicates', () => {
+        const items = [
+            boundedItem('upper-left', 10, 10, 20, 20),
+            boundedItem('upper-right', 70, 10, 80, 20),
+            boundedItem('crosses-right-edge', 45, 10, 55, 20),
+            boundedItem('lower-left', 10, 70, 20, 80),
+            boundedItem('lower-right', 70, 70, 80, 80),
+            boundedItem('nearest-outside', 48, 48, 49, 49),
+        ];
+
+        expect(tolerantInspectHits(
+            items, { x: 50, y: 50 }, 'xy', { x: '>=', y: '<=' }, { x: 0, y: 0 },
+        ).map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['upper-right', 'crosses-right-edge']);
+
+        expect(tolerantInspectHits(
+            [boundedItem('nearest', 51, 51, 52, 52)],
+            { x: 50, y: 50 }, 'xy', { x: '>=', y: '<=' }, { x: 10, y: 10 },
+        )).toEqual([]);
+    });
+
+    it('bounds an x inspection guide to the plot height', () => {
+        expect(inspectGuideLine('x', 40, { width: 300, height: 180 })).toEqual({
+            x1: 40, y1: 0, x2: 40, y2: 180,
+        });
+    });
+
+    it('draws a polar inspection guide from center to outer radius', () => {
+        const frame = { center: { x: 100, y: 80 }, outerRadius: 60 };
+
+        expect(polarGuideSegment(frame, { x: 130, y: 120 })).toEqual({
+            start: { x: 100, y: 80 },
+            end: { x: 136, y: 128 },
+        });
+        expect(polarGuideSegment(frame, frame.center)).toEqual({
+            start: frame.center,
+            end: { x: 100, y: 20 },
+        });
+    });
+
+    it('normalizes compositional inspect modes', () => {
+        expect(parseInspectMode('x')).toEqual({ inspect: 'x', predicate: { x: '=' } });
+        expect(parseInspectMode('xy<=')).toEqual({ inspect: 'xy', predicate: { x: '<=', y: '<=' } });
+        expect(parseInspectMode('x<=;y>=')).toEqual({ inspect: 'xy', predicate: { x: '<=', y: '>=' } });
+        expect(() => parseInspectMode('y>=;x<=' as any)).toThrow('Invalid inspect mode');
+    });
+
+    it('acquires the arc crossed by a polar inspection guide', () => {
+        const arc = (key: string, startAngle: number, endAngle: number) => ({
+            x: 100, y: 80, innerRadius: 20, outerRadius: 60, startAngle, endAngle,
+            datum: { [INTERACTION_KEY]: key },
+            mark: { marktype: 'arc', name: key },
+        });
+        const frame = { center: { x: 100, y: 80 } };
+        const items = [arc('right', 0, Math.PI), arc('left', Math.PI, 2 * Math.PI)];
+
+        expect(polarInspectHits(items, { x: 140, y: 80 }, frame)
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['right']);
+        expect(polarInspectHits(items, { x: 60, y: 80 }, frame)
+            .map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['left']);
+    });
+
+    it('captures marks inside a freeform lasso path', () => {
+        const view = fakeView([
+            boundedItem('in', 20, 20, 30, 30),
+            boundedItem('out', 200, 200, 210, 210),
+        ]);
+        const square = [
+            { x: 0, y: 0 }, { x: 60, y: 0 }, { x: 60, y: 60 }, { x: 0, y: 60 },
+        ];
+
+        const hits = polygonHits(view, square);
+        expect(hits.map((hit) => hit.datum[INTERACTION_KEY])).toEqual(['in']);
+        expect(polygonHits(view, square.slice(0, 2))).toEqual([]);
+    });
+
+    it('reports a polygon region as a lasso selection', () => {
+        const event = toCanvasInteractionEvent({
+            type: 'semantic',
+            source: 'region',
+            phase: 'commit',
+            target: null,
+            region: { points: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 4 }] },
+        }, lassoTrigger());
+
+        expect(event.action).toBe('select-lasso');
+        expect(event.geometry.plot).toMatchObject({ kind: 'polygon' });
+    });
+
+    it('reports keyboard target movement as focus without activating', () => {
+        const event = toCanvasInteractionEvent({
+            type: 'semantic',
+            source: 'element',
+            phase: 'preview',
+            target: { visual: { kind: 'mark', role: 'bar' }, elements: [{ value: { key: 'a' } }] },
+        }, keyboardTrigger);
+
+        expect(event.action).toBe('focus-element');
+    });
+
+    it('turns a lasso selection into an emphasis update', () => {
+        const interaction = lassoSelect();
+        const target = {
+            visual: { kind: 'mark' as const, role: 'symbol' },
+            elements: [{ value: { key: 'a' } }, { value: { key: 'b' } }],
+        };
+        const context = { chartType: 'Scatter Plot', selected: [] };
+
+        const update = interaction.handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'region', phase: 'commit', target,
+            region: { points: [{ x: 0, y: 0 }, { x: 9, y: 0 }, { x: 9, y: 9 }] },
+        }, interaction.eventSource), context);
+
+        expect(update?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ elements: target.elements }],
+        });
+        expect(interaction.handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'region', phase: 'commit', target, axis: 'x',
+        }, interaction.eventSource), context)).toBeNull();
+    });
+
+    it('lets keyboard activation reach the same click presets', () => {
+        const target = {
+            visual: { kind: 'mark' as const, role: 'bar' },
+            elements: [{ value: { key: 'a' } }],
+        };
+        const context = { chartType: 'Bar Chart', selected: [] };
+        const activation = {
+            ...toCanvasInteractionEvent({
+                type: 'semantic', source: 'element', phase: 'commit', target,
+            }, clickTrigger),
+            action: 'activate-element' as const,
+        };
+
+        expect(clickHighlight().handle!(activation, context)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+        });
+        expect(clickAnnotate().handle!(activation, context)?.ops[0]).toMatchObject({
+            op: 'set-annotation',
+        });
+    });
+});
+
+describe('keyboard spatial navigation', () => {
+    const at = (key: string, x: number, y: number) => ({
+        mark: { marktype: 'symbol' },
+        datum: { [INTERACTION_KEY]: key },
+        bounds: { x1: x - 3, y1: y - 3, x2: x + 3, y2: y + 3 },
+    });
+    const grid = [
+        at('left', 10, 50),
+        at('centre', 50, 50),
+        at('right', 90, 50),
+        at('above', 50, 10),
+        at('below', 50, 90),
+    ];
+    const from = { x: 50, y: 50 };
+    const keyOf = (item: any) => item?.datum[INTERACTION_KEY];
+
+    it('moves to the neighbour on the axis the arrow names', () => {
+        expect(keyOf(nextItemInDirection(grid, from, 'right'))).toBe('right');
+        expect(keyOf(nextItemInDirection(grid, from, 'left'))).toBe('left');
+        expect(keyOf(nextItemInDirection(grid, from, 'up'))).toBe('above');
+        expect(keyOf(nextItemInDirection(grid, from, 'down'))).toBe('below');
+    });
+
+    it('prefers an aligned neighbour over a closer diagonal one', () => {
+        const items = [at('diagonal', 62, 26), at('aligned', 90, 50)];
+
+        expect(keyOf(nextItemInDirection(items, from, 'right'))).toBe('aligned');
+    });
+
+    it('stops at the edge instead of wrapping around', () => {
+        expect(nextItemInDirection(grid, { x: 90, y: 50 }, 'right')).toBeUndefined();
+        expect(nextItemInDirection(grid, { x: 10, y: 50 }, 'left')).toBeUndefined();
+    });
+});
+
+describe('lasso capture semantics', () => {
+    const mark = (key: string, x1: number, y1: number, x2: number, y2: number) => ({
+        mark: { marktype: 'rect' },
+        datum: { [INTERACTION_KEY]: key },
+        bounds: { x1, y1, x2, y2 },
+    });
+    const view = (items: readonly any[]) => ({
+        scenegraph: () => ({ root: { mark: { marktype: 'group' }, items } }),
+    });
+    const square = [
+        { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }, { x: 100, y: 200 },
+    ];
+    const keys = (hits: readonly any[]) => hits.map((hit) => hit.datum[INTERACTION_KEY]).sort();
+
+    it('captures a mark whose area overlaps the lasso', () => {
+        const scene = view([
+            mark('inside', 120, 120, 140, 140),
+            mark('straddling', 190, 140, 260, 160),
+            mark('outside', 300, 300, 320, 320),
+        ]);
+
+        expect(keys(polygonHits(scene, square))).toEqual(['inside', 'straddling']);
+    });
+
+    it('captures a mark the lasso is drawn entirely inside', () => {
+        // A small loop within one long bar: no corner or centre of the bar is inside.
+        const scene = view([mark('long-bar', 0, 130, 600, 170)]);
+
+        expect(keys(polygonHits(scene, square))).toEqual(['long-bar']);
+    });
+
+    it('requires the whole mark for contain', () => {
+        const scene = view([
+            mark('inside', 120, 120, 140, 140),
+            mark('straddling', 190, 140, 260, 160),
+        ]);
+
+        expect(keys(polygonHits(scene, square, true))).toEqual(['inside']);
+    });
+});
+
+describe('legend, inspect, zoom, and touch presets', () => {
+    const context = { chartType: 'Line Chart', selected: [] };
+    const seriesTarget = (name: string) => ({
+        visual: { kind: 'legend' as const, role: 'legend-item' },
+        elements: [{
+            value: { channel: 'color', field: 'Series', value: name },
+            records: [{ Series: name }],
+        }],
+    });
+    const activate = (interaction: CanvasInteractionDef, target: SemanticTarget | null, ctx: InteractionContext = context) =>
+        interaction.handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target,
+        }, interaction.eventSource), ctx);
+
+    it('hides an activated series and restores it when activated again', () => {
+        const interaction = legendToggle();
+
+        expect(activate(interaction, seriesTarget('A'))?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ elements: [{ value: { channel: 'color', field: 'Series', value: 'A' } }] }],
+            value: { visible: false, mutedOpacity: 0.25 },
+        });
+        expect(activate(interaction, seriesTarget('A'))?.ops[0]).toMatchObject({
+            targets: [],
+            value: { visible: false, mutedOpacity: 0.25 },
+        });
+    });
+
+    it('owns the hidden legend affordance opacity', () => {
+        const interaction = legendToggle({ mutedOpacity: 0.4 });
+
+        expect(activate(interaction, seriesTarget('A'))?.ops[0]).toMatchObject({
+            value: { visible: false, mutedOpacity: 0.4 },
+        });
+    });
+
+    it('accumulates several hidden series', () => {
+        const interaction = legendToggle();
+        activate(interaction, seriesTarget('A'));
+
+        expect(activate(interaction, seriesTarget('B'))?.ops[0]).toMatchObject({
+            targets: [{ elements: [
+                { value: { channel: 'color', field: 'Series', value: 'A' } },
+                { value: { channel: 'color', field: 'Series', value: 'B' } },
+            ] }],
+        });
+    });
+
+    it('restores all series when the last visible series is disabled', () => {
+        const interaction = legendToggle();
+        const initialContext = {
+            chartType: 'Line Chart', selected: [],
+            legendDomains: { color: ['A', 'B'] },
+            available: [
+                { value: { Series: 'A' }, records: [{ Series: 'A' }] },
+                { value: { Series: 'B' }, records: [{ Series: 'B' }] },
+            ],
+        };
+        const domainTarget = (name: string) => ({
+            visual: { kind: 'legend' as const, role: 'legend-item' },
+            elements: [{
+                value: {
+                    channel: 'color', field: 'Series',
+                    domain: { kind: 'value' as const, value: name },
+                },
+            }],
+        });
+        activate(interaction, domainTarget('A'), initialContext);
+
+        expect(activate(interaction, domainTarget('B'), {
+            chartType: 'Line Chart', selected: [],
+            legendDomains: { color: ['A', 'B'] },
+            available: [{ value: { Series: 'B' }, records: [{ Series: 'B' }] }],
+        })?.ops[0]).toMatchObject({
+            targets: [],
+            value: { visible: false, mutedOpacity: 0.25 },
+        });
+
+        expect(activate(interaction, domainTarget('A'), initialContext)?.ops[0]).toMatchObject({
+            targets: [{ elements: domainTarget('A').elements }],
+        });
+    });
+
+    it('does not reset early when a Streamgraph exposes collapsed availability', () => {
+        const interaction = legendToggle();
+        const domainTarget = (name: string) => ({
+            visual: { kind: 'legend' as const, role: 'legend-item' },
+            elements: [{
+                value: {
+                    channel: 'color', field: 'Region',
+                    domain: { kind: 'value' as const, value: name },
+                },
+            }],
+        });
+        const collapsedContext: InteractionContext = {
+            chartType: 'Streamgraph', selected: [],
+            legendDomains: { color: ['Asia', 'Africa'] },
+            available: [{ value: { Region: 'Asia' }, records: [{ Region: 'Asia' }] }],
+        };
+
+        expect(activate(interaction, domainTarget('Asia'), collapsedContext)?.ops[0]).toMatchObject({
+            targets: [{ elements: domainTarget('Asia').elements }],
+        });
+        expect(activate(interaction, domainTarget('Africa'), collapsedContext)?.ops[0]).toMatchObject({
+            targets: [],
+        });
+    });
+
+    it('ignores mark activations so it composes with element click presets', () => {
+        const interaction = legendToggle();
+        const markTarget = { visual: { kind: 'mark' as const, role: 'mark' }, elements: [{ value: { key: 'A' } }] };
+
+        expect(activate(interaction, markTarget)).toBeNull();
+    });
+
+    it('lets highlight presets opt out of handling observable legend events', () => {
+        expect(activate(clickHighlight(), seriesTarget('A'))).not.toBeNull();
+        expect(activate(clickHighlight({ legend: false }), seriesTarget('A'))).toBeNull();
+        expect(activate(clickGroupHighlight(), seriesTarget('A'))).not.toBeNull();
+        expect(activate(clickGroupHighlight({ legend: false }), seriesTarget('A'))).toBeNull();
+        expect(activate(clickAnnotate(), seriesTarget('A'))).toBeNull();
+    });
+
+    it('reports the resolved role for context, long-press, and double activation', () => {
+        const target = seriesTarget('A');
+        const semantic = { type: 'semantic' as const, source: 'element' as const, phase: 'commit' as const, target };
+
+        expect(toCanvasInteractionEvent(semantic, contextTrigger).action).toBe('context-legend');
+        expect(toCanvasInteractionEvent(semantic, longPressTrigger()).action).toBe('long-press-legend');
+        expect(toCanvasInteractionEvent(semantic, doubleActivateTrigger).action).toBe('double-activate-legend');
+    });
+
+    it('preserves an unresolved legend domain for processor expansion', () => {
+        const target = {
+            visual: { kind: 'legend' as const, role: 'legend-item' },
+            elements: [{
+                value: {
+                    channel: 'color', field: '__status',
+                    domain: { kind: 'value' as const, value: 'Meets target' },
+                },
+            }],
+        };
+        const event = toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target,
+        }, clickTrigger);
+
+        expect(event).toMatchObject({ action: 'click-legend', target });
+        expect(activate(clickHighlight(), target)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ visual: target.visual, elements: target.elements }],
+            value: { state: 'emphasized' },
+        });
+        expect(activate(clickGroupHighlight(), target)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ visual: target.visual, elements: target.elements }],
+            value: { state: 'emphasized' },
+        });
+        expect(activate(legendToggle(), target)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ visual: target.visual, elements: target.elements }],
+            value: { visible: false },
+        });
+    });
+
+    it('reports inspection modes as their own actions', () => {
+        expect(inspect().eventSource).toEqual(inspectTrigger('xy'));
+        expect(inspectTrigger('xy').inspectTolerance).toBe(0.02);
+        expect(inspectTrigger('x').inspectTolerance).toBe(0.01);
+        expect(inspectTrigger('xy<=').inspectTolerance).toBe(0.01);
+        expect(inspectTrigger('xy', undefined, 0.03).inspectTolerance).toBe(0.03);
+        expect(inspect({
+            mode: 'x>=;y<=', cycle: ['x>=;y<=', 'x>=;y>=', 'x<=;y>=', 'x<=;y<='],
+        }).eventSource.inspectCycle).toEqual([
+            { inspect: 'xy', predicate: { x: '>=', y: '<=' } },
+            { inspect: 'xy', predicate: { x: '>=', y: '>=' } },
+            { inspect: 'xy', predicate: { x: '<=', y: '>=' } },
+            { inspect: 'xy', predicate: { x: '<=', y: '<=' } },
+        ]);
+        expect(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'preview', target: null,
+        }, inspectTrigger('x')).action).toBe('inspect-x');
+        expect(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'preview', target: null,
+        }, inspectTrigger('y')).action).toBe('inspect-y');
+    });
+
+    it('normalizes gesture guide visibility and renderer-neutral styles', () => {
+        expect(normalizeInspectGuideOptions(false)).toMatchObject({ visible: false });
+        expect(normalizeInspectGuideOptions({
+            style: { color: '#123456', opacity: 2, width: 2, fillOpacity: -1 },
+        })).toEqual({
+            visible: true,
+            style: { color: '#123456', opacity: 1, width: 2, fillOpacity: 0 },
+        });
+        expect(normalizeRegionGuideOptions({
+            style: { fillOpacity: -1, strokeOpacity: 2, strokeWidth: 3 },
+        })).toMatchObject({
+            visible: true,
+            style: { fillOpacity: 0, strokeOpacity: 1, strokeWidth: 3 },
+        });
+    });
+
+    it('configures guides without changing gesture semantics', () => {
+        const hiddenInspect = inspect({ mode: 'x', guide: false }).eventSource;
+        expect(hiddenInspect).toMatchObject({
+            gesture: 'inspect', inspect: 'x', inspectGuide: { visible: false },
+        });
+        const hiddenRegion = select({ match: 'contain', guide: false }).eventSource;
+        expect(hiddenRegion).toMatchObject({
+            gesture: 'drag', match: 'contain', regionGuide: { visible: false },
+        });
+        expect(brushAngle({ guide: false }).eventSource.regionGuide?.visible).toBe(false);
+        expect(lassoSelect({ guide: false }).eventSource.regionGuide?.visible).toBe(false);
+        expect(brushZoom({ guide: false }).eventSource.regionGuide?.visible).toBe(false);
+    });
+
+    it('turns a brushed region into an absolute viewport', () => {
+        const interaction = brushZoom();
+        const event = {
+            ...toCanvasInteractionEvent({
+                type: 'semantic', source: 'region', phase: 'commit', target: null,
+                region: { x: 0, y: 0, width: 10, height: 10 }, axis: 'xy' as const,
+            }, interaction.eventSource),
+            geometry: {
+                domain: {
+                    x: { kind: 'interval' as const, start: 2, end: 8 },
+                    y: { kind: 'interval' as const, start: 1, end: 5 },
+                },
+            },
+        };
+
+        expect(interaction.handle!(event, context)).toEqual({
+            id: 'brush-zoom',
+            ops: [{ op: 'set-viewport', axes: 'xy', value: { x: [2, 8], y: [1, 5] } }],
+        });
+        expect(interaction.handle!({
+            ...event,
+            operation: 'clear',
+            geometry: {
+                domain: {
+                    x: { kind: 'interval', start: 5, end: 5 },
+                    y: { kind: 'interval', start: 3, end: 3 },
+                },
+            },
+        }, context)).toBeNull();
+    });
+
+    it('inverts a log-scale brush in plot-local coordinates', () => {
+        const inverted: number[] = [];
+        const domain = domainForPlotGeometry({
+            kind: 'rect', axis: 'xy', rect: { x: 100, y: 0, width: 200, height: 80 },
+        }, {
+            x: { scale: 'x', signal: 'xDomain', type: 'log' },
+        }, () => ({
+            invert: (pixel: number) => {
+                inverted.push(pixel);
+                return 10 ** (pixel / 100);
+            },
+        }));
+
+        expect(inverted).toEqual([100, 300]);
+        expect(domain).toEqual({ x: { kind: 'interval', start: 10, end: 1000 } });
+    });
+
+    it('preserves the scale domain direction for a vertically inverted brush range', () => {
+        const domain = domainForPlotGeometry({
+            kind: 'rect', axis: 'y', rect: { x: 0, y: 20, width: 100, height: 40 },
+        }, {
+            y: { scale: 'y', signal: 'yDomain', type: 'linear' },
+        }, () => ({
+            domain: () => [20, 40],
+            invert: (pixel: number) => 40 - pixel / 4,
+        }));
+
+        expect(domain).toEqual({ y: { kind: 'interval', start: 25, end: 35 } });
+    });
+
+    it('preserves a reversed y axis when the scale increases down the screen', () => {
+        const domain = domainForPlotGeometry({
+            kind: 'rect', axis: 'y', rect: { x: 0, y: 20, width: 100, height: 40 },
+        }, {
+            y: { scale: 'y', signal: 'yDomain', type: 'linear' },
+        }, () => ({
+            invert: (pixel: number) => 20 + pixel / 4,
+        }));
+
+        expect(domain).toEqual({ y: { kind: 'interval', start: 35, end: 25 } });
+    });
+
+    it('normalizes viewport brush geometry without scanning marks', () => {
+        const view = {
+            width: () => 100,
+            height: () => 80,
+            scenegraph: () => { throw new Error('scenegraph should not be read'); },
+        };
+
+        const event = normalizeVegaRegionEvent(
+            view, { x: 10, y: 20 }, { x: 60, y: 70 }, 'preview', 'intersect',
+            { shift: false, ctrl: false, meta: false },
+            'xy', { width: 100, height: 80 }, 'create', false,
+        );
+
+        expect(event.region).toEqual({ x: 10, y: 20, width: 50, height: 50 });
+        expect(event.hits).toEqual([]);
+    });
+
+    it('ignores a brush that collapsed to a single value', () => {
+        const interaction = brushZoom({ axes: 'x' });
+        const event = {
+            ...toCanvasInteractionEvent({
+                type: 'semantic', source: 'region', phase: 'commit', target: null,
+                region: { x: 0, y: 0, width: 0, height: 10 }, axis: 'x' as const,
+            }, interaction.eventSource),
+            geometry: { domain: { x: { kind: 'interval' as const, start: 4, end: 4 } } },
+        };
+
+        expect(interaction.handle!(event, context)).toBeNull();
+    });
+
+    it('reports long press and highlights on double activation', () => {
+        const target = {
+            visual: { kind: 'mark' as const, role: 'point' },
+            elements: [{ value: { category: 'A' } }],
+        };
+        expect(longPress({ holdMs: 250 }).eventSource).toMatchObject({ gesture: 'long-press', holdMs: 250 });
+        expect(longPress().handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target,
+        }, longPressTrigger()), context)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ visual: target.visual, elements: target.elements }],
+            value: { state: 'emphasized' },
+        });
+        expect(doubleActivate().handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target,
+        }, doubleActivateTrigger), context)?.ops[0]).toMatchObject({
+            op: 'set-presentation',
+            targets: [{ visual: target.visual, elements: target.elements }],
+            value: { state: 'emphasized' },
+        });
+        expect(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target: null,
+        }, longPressTrigger()).action).toBe('long-press-element');
+        expect(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'commit', target: null,
+        }, doubleActivateTrigger).action).toBe('double-activate-element');
+    });
+
+    it('lets the angular brush be edited once committed', () => {
+        expect(brushAngle({ mode: 'stateful' }).eventSource).toMatchObject({
+            regionGeometry: 'angular', mode: 'stateful',
+        });
+        expect(brushAngle().eventSource).toMatchObject({ mode: 'ephemeral' });
     });
 });

@@ -13,6 +13,15 @@ export function normalizedOpacity(value: number | undefined): number {
     return Math.min(1, Math.max(0, value));
 }
 
+/** Keyboard activation reaches the same presets as a click on the target. */
+export function isActivationAction(action: string): boolean {
+    return action.startsWith('click-') || action === 'activate-element';
+}
+
+export function semanticElementIdentity(element: SemanticTarget['elements'][number]): string {
+    return JSON.stringify([element.value, element.records ?? []]);
+}
+
 function selectionMode(modifiers: InteractionModifiers | undefined): 'replace' | 'toggle' {
     return modifiers?.shift || modifiers?.ctrl || modifiers?.meta ? 'toggle' : 'replace';
 }
@@ -27,15 +36,15 @@ export function emphasisUpdate(
     if (!target) return { id, ops: [{ op: 'set-presentation', targets: [], value: { state: 'normal' } }] };
     if (target.elements.length === 0) return null;
     const toggle = selectionMode(event.modifiers) === 'toggle';
-    const targetKeys = new Set(target.elements.map((element) => JSON.stringify(element.key)));
+    const targetKeys = new Set(target.elements.map(semanticElementIdentity));
     const allSelected = target.elements.every((element) =>
-        context.selected.some((selected) => JSON.stringify(selected.key) === JSON.stringify(element.key)));
+        context.selected.some((selected) => semanticElementIdentity(selected) === semanticElementIdentity(element)));
     const elements = !toggle
         ? target.elements
         : allSelected
-            ? context.selected.filter((element) => !targetKeys.has(JSON.stringify(element.key)))
+            ? context.selected.filter((element) => !targetKeys.has(semanticElementIdentity(element)))
             : [...context.selected, ...target.elements.filter((element) =>
-                !context.selected.some((selected) => JSON.stringify(selected.key) === JSON.stringify(element.key)))];
+                !context.selected.some((selected) => semanticElementIdentity(selected) === semanticElementIdentity(element)))];
     return {
         id,
         ops: [{

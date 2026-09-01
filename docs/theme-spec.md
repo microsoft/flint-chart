@@ -83,17 +83,17 @@ Selection boundaries are inferred from the theme unless explicitly stated. Their
   "interaction": {
     "selectionBoundary": {
       "color": "#b54a20",
-      "width": 1.5,
-      "opacity": 1,
+      "width": 1.25,
+      "opacity": 0.68,
       "haloColor": "#ffffff",
-      "haloWidth": 3,
-      "haloOpacity": 0.8
+      "haloWidth": 2.5,
+      "haloOpacity": 0.35
     }
   }
 }
 ```
 
-This block controls paint only. The ChartDef still decides whether a representation needs a boundary and the renderer still computes its contiguous geometry.
+This block controls paint only. Set `haloWidth` to `0` to disable the contrast halo. The ChartDef still decides whether a representation needs a boundary and the renderer still computes its contiguous geometry.
 
 ### 3. Inherit and override
 

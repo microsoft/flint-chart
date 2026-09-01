@@ -60,7 +60,7 @@ export const barTableDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
