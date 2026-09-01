@@ -2,11 +2,17 @@ import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { siteTheme } from '../shared/theme';
 import './playground.css';
 
-type NavLeaf = { to: string; label: string };
+type NavLeaf = { to: string; label: string; end?: boolean };
 type NavEntry = NavLeaf | { group: string; children: NavLeaf[] };
 
 const pages: NavEntry[] = [
-  { to: 'illustrations', label: 'Illustrations' },
+  {
+    group: 'Illustrations',
+    children: [
+      { to: 'illustrations', label: 'Gallery', end: true },
+      { to: 'illustrations/architecture', label: 'Architecture' },
+    ],
+  },
   { to: 'mcp-ui', label: 'MCP UI test' },
   {
     group: 'Labs',
@@ -20,6 +26,7 @@ const pages: NavEntry[] = [
     group: 'Interactions',
     children: [
       { to: 'click-focus', label: 'Test cases' },
+      { to: 'annotation-lab', label: 'Annotation lab' },
       { to: 'interaction-candidates', label: 'References' },
       { to: 'interaction-dashboard', label: 'Demo: dashboard' },
       { to: 'external-to-chart', label: 'Demo: external to chart' },
@@ -60,6 +67,7 @@ function NavGroupMenu({ group, children }: { group: string; children: NavLeaf[] 
           <NavLink
             key={page.to}
             to={page.to}
+            end={page.end}
             role="menuitem"
             className={({ isActive }) => isActive ? 'dev-nav-link dev-nav-link-active' : 'dev-nav-link'}
           >
@@ -86,6 +94,7 @@ export function PlaygroundShell() {
               <NavLink
                 key={page.to}
                 to={page.to}
+                end={page.end}
                 className={({ isActive }) => isActive ? 'dev-nav-link dev-nav-link-active' : 'dev-nav-link'}
               >
                 {page.label}

@@ -5,13 +5,10 @@ import { ChartTemplateDef, ChartPropertyDef, type InstantiateContext } from '../
 import { defaultBuildEncodings, setMarkProp } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
 import {
-    elementsFromHits,
     MUTED_HOVER_STROKE,
-    type SemanticResolveContext,
-    type SemanticResolveEvent,
-    type SemanticTarget,
+    resolveSeriesTarget,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 export const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -85,26 +82,6 @@ function discreteField(
         ?.field;
 }
 
-function resolveLineTarget(
-    event: SemanticResolveEvent,
-    context: SemanticResolveContext,
-    seriesField: string | undefined,
-): SemanticTarget | null {
-    const legendField = event.legendField ?? seriesField;
-    const hits = event.role === 'legend-item' && legendField && event.legendValue !== undefined
-        ? context.allHits.filter((hit) => hit.datum[legendField] === event.legendValue)
-        : event.hits;
-    const elements = elementsFromHits(hits, context.keyField);
-    if (elements.length === 0) return null;
-    return {
-        visual: {
-            kind: event.role === 'line' ? 'path' : 'mark',
-            role: event.role,
-        },
-        elements,
-    };
-}
-
 /**
  * Vega-Lite splits a line into one segment per datum when color is quantitative,
  * so nothing visible connects. Mirror ECharts: a neutral line + colored points.
@@ -176,11 +153,13 @@ export const lineChartDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
-            resolve: (event, context) => resolveLineTarget(event, context, seriesField),
-            presentUpdate: presentInteractionUpdate(() => ({
-                anchor: 'center',
-                placement: 'auto',
-            })),
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                (_element, _context, visual) => visual?.kind === 'path'
+                    ? annotationCandidates('segment-midpoint', 'center', 'top', 'bottom', 'right', 'left')
+                    : annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
         };
     },
     declareLayoutMode: () => ({

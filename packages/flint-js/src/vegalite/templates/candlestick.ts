@@ -3,8 +3,8 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import { adjustBarMarks } from './utils';
-import { elementsFromHits } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { elementsFromHits, fieldsFromEncodingChannels } from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/presentation/annotation';
 
 export const candlestickChartDef: ChartTemplateDef = {
     chart: "Candlestick Chart",
@@ -21,7 +21,7 @@ export const candlestickChartDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = resolvedEncodings.x?.field;
         return {
-            fields: categoryField ? [categoryField] : [],
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'open', 'high', 'low', 'close']),
             categoryField,
             selectableMarks: ['rule', 'bar', 'tick'],
             renderHoverStyles: {
@@ -34,10 +34,10 @@ export const candlestickChartDef: ChartTemplateDef = {
                     ? { visual: { kind: 'mark', role: 'candlestick' }, elements }
                     : null;
             },
-            presentUpdate: presentInteractionUpdate(() => ({
-                anchor: 'top',
-                placement: 'above',
-            })),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('top', 'center', 'right', 'left', 'bottom'),
+                rangeAnnotationText(resolvedEncodings.open?.field, resolvedEncodings.close?.field),
+            ),
         };
     },
     declareLayoutMode: () => ({

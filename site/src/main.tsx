@@ -15,6 +15,7 @@ import { AutoLayoutPlayground } from './routes/AutoLayoutPlayground';
 import { DocSectionPage } from './routes/DocSectionPage';
 import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
+import { ArchitectureIllustrations } from './playground/ArchitectureIllustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
@@ -25,6 +26,7 @@ import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ClickFocusLab } from './playground/ClickFocusLab';
+import { AnnotationLab } from './playground/AnnotationLab';
 import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { InteractionCandidates } from './playground/InteractionCandidates';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
@@ -69,6 +71,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="playground" element={<PlaygroundShell />}>
           <Route index element={<Navigate to="illustrations" replace />} />
           <Route path="illustrations" element={<Illustrations />} />
+          <Route path="illustrations/architecture" element={<ArchitectureIllustrations />} />
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
@@ -81,6 +84,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
+          <Route path="annotation-lab" element={<AnnotationLab />} />
+          <Route path="interaction-coverage" element={<Navigate to="../click-focus" replace />} />
           <Route path="pan-zoom" element={<Navigate to="../click-focus" replace />} />
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />

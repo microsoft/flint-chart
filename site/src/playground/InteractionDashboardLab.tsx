@@ -5,11 +5,13 @@ import type {
   InteractionDef,
   InteractiveChartSurface,
   SemanticElement,
+  UpdateTarget,
 } from 'flint-chart/interactive';
 import {
   brushY,
+  clickGroupHighlight,
   clickHighlight,
-  externalTrigger,
+  externalInteraction,
   select,
 } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
@@ -18,10 +20,6 @@ import { gapminderRows, type GapminderRow } from './gapminder-dashboard-data';
 import './interaction-dashboard-lab.css';
 
 type Row = Record<string, unknown>;
-
-interface LinkPayload {
-  observationIds: string[];
-}
 
 interface DashboardChart {
   id: string;
@@ -42,6 +40,8 @@ const focusCountries = new Set([
 ]);
 
 type DashboardMetric = 'Life expectancy' | 'GDP per capita';
+const DASHBOARD_SELECTION_ID = 'dashboard-selection';
+const DASHBOARD_LINKED_SELECTION_ID = 'dashboard-linked-selection';
 
 const semanticTypes = {
   Observation: 'Category',
@@ -109,22 +109,6 @@ function dashboardFixture(
   } as InteractionDemoFixture;
 }
 
-const linkedFocus: InteractionDef<LinkPayload> = {
-  id: 'dashboard-linked-focus',
-  eventSource: externalTrigger('dashboard-link'),
-  update(event, context) {
-    if (event.type !== 'external' || event.source !== 'dashboard-link') return null;
-    const selected = new Set(event.payload.observationIds);
-    if (selected.size === 0) return { ops: [{ op: 'reset' }] };
-    const elements = context.available?.filter((element) =>
-      element.records?.some((record) => recordObservationIds(record)
-        .some((id) => selected.has(id)))) ?? [];
-    return elements.length > 0
-      ? { ops: [{ op: 'emphasize', elements, mode: 'replace', dimOpacity: 0.22 }] }
-      : { ops: [{ op: 'reset' }] };
-  },
-};
-
 function buildDashboardCharts(
   snapshotYear: number,
   metric: DashboardMetric,
@@ -159,7 +143,7 @@ function buildDashboardCharts(
         { logScale_x: true },
         { width: 400, height: 230 },
       ),
-      interaction: select({ id: 'dashboard-country-select' }),
+      interaction: select({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
     },
     {
       id: 'continents',
@@ -172,7 +156,7 @@ function buildDashboardCharts(
         undefined,
         { width: 400, height: 230 },
       ),
-      interaction: clickHighlight({ id: 'dashboard-continent-click' }),
+      interaction: clickHighlight({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
     },
     {
       id: 'trends',
@@ -185,7 +169,11 @@ function buildDashboardCharts(
         { showPoints: true, logScale_y: metric === 'GDP per capita' },
         { width: 400, height: 260 },
       ),
-      interaction: clickHighlight({ id: 'dashboard-trend-click' }),
+      interaction: clickGroupHighlight({
+        id: DASHBOARD_SELECTION_ID,
+        groupBy: 'Country',
+        dimOpacity: 0.22,
+      }),
     },
     {
       id: 'history',
@@ -198,7 +186,7 @@ function buildDashboardCharts(
         undefined,
         { width: 400, height: 260 },
       ),
-      interaction: brushY({ id: 'dashboard-brush-y' }),
+      interaction: brushY({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
     },
   ];
 }
@@ -207,6 +195,14 @@ function observationIds(elements: readonly SemanticElement[]): string[] {
   return [...new Set(elements.flatMap((element) =>
     element.records?.flatMap(recordObservationIds) ?? []))]
     .filter((id) => id !== 'undefined');
+}
+
+function linkedTargets(chartId: string, observationIds: readonly string[]): UpdateTarget[] {
+  const selected = new Set(observationIds);
+  const selectedRows = gapminderRows.filter((row) => selected.has(row.Observation));
+  const field = chartId === 'continents' ? 'Continent' : 'Country';
+  const values = new Set(selectedRows.map((row) => row[field]));
+  return [...values].map((value) => ({ select: { key: { [field]: value } } }));
 }
 
 function DashboardPanel({
@@ -218,7 +214,25 @@ function DashboardPanel({
   registerSurface: (id: string, surface: InteractiveChartSurface | null) => void;
   routeEvent: (detail: FlintInteractionEventDetail) => void;
 }) {
-  const interactions = useMemo(() => [chart.interaction, linkedFocus], [chart.interaction]);
+  const interactions = useMemo(() => [
+    chart.interaction,
+    externalInteraction<{ observationIds: string[] }>({
+      id: DASHBOARD_LINKED_SELECTION_ID,
+      handle: ({ observationIds: ids }) => {
+        const targets = linkedTargets(chart.id, ids);
+        return {
+          id: DASHBOARD_SELECTION_ID,
+          ops: targets.length > 0
+            ? [{
+                op: 'set-style',
+                targets,
+                value: { state: 'emphasized', mutedOpacity: 0.22 },
+              }]
+            : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
+        };
+      },
+    }),
+  ], [chart.id, chart.interaction]);
   const handleSurface = useCallback(
     (surface: InteractiveChartSurface | null) => registerSurface(chart.id, surface),
     [chart.id, registerSurface],
@@ -257,22 +271,17 @@ export function InteractionDashboardLab() {
   const dispatchSelection = useCallback((ids: string[], excludeId?: string) => {
     for (const [id, surface] of surfaces.current) {
       if (id === excludeId) continue;
-      surface.dispatch({
-        type: 'external',
-        source: 'dashboard-link',
-        phase: 'commit',
-        payload: { observationIds: ids },
-      });
+      void surface.dispatch(DASHBOARD_LINKED_SELECTION_ID, { observationIds: ids });
     }
   }, []);
 
   const routeEvent = useCallback((detail: FlintInteractionEventDetail) => {
-    if (detail.event.type !== 'semantic' || detail.event.phase !== 'commit') return;
+    if (detail.event.phase !== 'commit') return;
     const ids = observationIds(detail.event.target?.elements ?? []);
     const source = dashboardCharts.find((chart) => `dashboard-${chart.id}` === detail.chartId);
     dispatchSelection(ids, source?.id);
     setSelection(ids.length > 0 ? { ids } : null);
-  }, [dispatchSelection]);
+  }, [dashboardCharts, dispatchSelection]);
 
   const clearSelection = useCallback(() => {
     dispatchSelection([]);

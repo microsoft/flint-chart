@@ -11,7 +11,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const stripPlotDef: ChartTemplateDef = {
     chart: "Strip Plot",
@@ -38,13 +38,15 @@ export const stripPlotDef: ChartTemplateDef = {
             selectableMarks: ['circle'],
             renderHoverStyles: { symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
         };
     },
     declareLayoutMode: () => ({

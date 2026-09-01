@@ -18,6 +18,12 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
+import { legendMatchedHits, MUTED_HOVER_STROKE, targetFromHits } from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 /** Weekday row order, Monday-first — mirrors the ECharts template's dayLabel.firstDay = 1. */
 const WEEKDAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -81,6 +87,31 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
     template: { mark: { type: 'rect', cornerRadius: 2 }, encoding: {} },
     channels: ['x', 'color'],
     markCognitiveChannel: 'color',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const valueField = resolvedEncodings.color?.field ?? COUNT_FIELD;
+        return {
+        fields: [WEEK_FIELD, WEEKDAY_FIELD, DATE_FIELD],
+        categoryField: WEEK_FIELD,
+        legendFields: { color: valueField },
+        selectableMarks: ['rect'],
+        renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+        renderSelectionStyles: { rect: { boundary: 'contiguous-region' } },
+        resolve: (event, context) => targetFromHits(
+            event.role === 'legend-item'
+                ? legendMatchedHits(event, context, `sum_${valueField}`)
+                : event.hits,
+            context.keyField,
+            {
+            kind: 'mark',
+            role: 'calendar-day',
+            },
+        ),
+        presentUpdate: presentAnnotationUpdate(
+            () => annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
+            categoryValueAnnotationText(DATE_FIELD, valueField),
+        ),
+    };
+    },
     declareLayoutMode: () => ({
         // Both axes are ordinal bands (week columns × weekday rows); square-ish
         // cells read as a calendar rather than a stretched grid.
@@ -163,6 +194,12 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
                 legend: { title: null },
                 scale: colorScale,
             },
+            tooltip: [
+                { field: DATE_FIELD, type: 'temporal', title: 'Date' },
+                valueField
+                    ? { field: valueField, aggregate: 'sum', type: 'quantitative' }
+                    : { field: COUNT_FIELD, aggregate: 'sum', type: 'quantitative' },
+            ],
         };
     },
     encodingActions: [

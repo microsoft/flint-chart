@@ -13,7 +13,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { lollipopAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const lollipopChartDef: ChartTemplateDef = {
     chart: "Lollipop Chart",
@@ -40,13 +40,15 @@ export const lollipopChartDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'lollipop' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(() => lollipopAnnotationCandidates(
+                resolvedEncodings.x?.type === 'quantitative' ? 'x' : 'y',
+            )),
         };
     },
     declareLayoutMode: (cs, table) => {

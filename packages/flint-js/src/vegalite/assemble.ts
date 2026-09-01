@@ -884,13 +884,76 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         })
         : [];
     if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
+        const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
+            fields: [],
+            provenanceFields: undefined,
+            temporalProvenanceFields: undefined,
+            rangeProvenance: undefined,
+            selectableMarks: [],
+            reorderAxis: undefined,
+            reorderAxes: undefined,
+        };
+        const semanticEncodings = Object.values(resolvedEncodings)
+            .filter((encoding: any) => typeof encoding?.field === 'string') as any[];
+        const hasAggregate = semanticEncodings.some((encoding) => encoding.aggregate);
+        const provenanceFields = [...new Set(semanticEncodings
+            .filter((encoding) => !hasAggregate || !encoding.aggregate)
+            .map((encoding) => encoding.field as string))];
+        const temporalProvenanceFields = [...new Set(semanticEncodings
+            .filter((encoding) => encoding.type === 'temporal')
+            .map((encoding) => encoding.field as string))];
+        const allowedReorderAxes: readonly ('x' | 'y')[] = chartTemplate.reorder === false
+            ? []
+            : chartTemplate.reorder?.axes ?? ['x', 'y'];
+        const defaultReorderAxes = allowedReorderAxes.length > 0
+            && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
+            ? (['x', 'y'] as const).flatMap((axis) => {
+                const encoding = resolvedEncodings[axis];
+                return allowedReorderAxes.includes(axis)
+                    && encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal')
+                    ? [{
+                        axis,
+                        field: encoding.field,
+                        ...(chartTemplate.reorder && chartTemplate.reorder.includeConnectiveMarks
+                            ? { includeConnectiveMarks: true }
+                            : {}),
+                        ...(chartTemplate.reorder && chartTemplate.reorder.markTypes
+                            ? { markTypes: chartTemplate.reorder.markTypes }
+                            : {}),
+                    }]
+                    : [];
+            })
+            : [];
+        const explicitReorderAxes = templateSemantics.reorderAxes
+            ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
+        const legendFields = 'legendFields' in templateSemantics ? templateSemantics.legendFields : undefined;
+        const rangeLegendChannels = Object.keys(legendFields ?? {})
+            .filter((channel) => {
+                const type = resolvedEncodings[channel]?.type;
+                return type === 'quantitative' || type === 'temporal';
+            });
+        const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
+            .filter((candidate, index, candidates) => candidates.findIndex(
+                (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
+            ) === index);
         result._interactionSemantics = {
-            ...(chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
-                fields: [],
-                selectableMarks: [],
-            }),
+            ...templateSemantics,
+            axisFields: Object.fromEntries((['x', 'y'] as const).flatMap((axis) => {
+                const encoding = resolvedEncodings[axis];
+                return encoding?.field
+                    ? [[axis, { field: encoding.field, type: encoding.type ?? 'nominal' }]]
+                    : [];
+            })),
+            sourceRecords: values.map((record) => ({ ...record })),
+            provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
+            temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
+            rangeLegendChannels,
             navigationAxes,
+            reorderAxis: reorderAxes[0],
+            reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,
+            continuousColorFocus: design.interaction.continuousColorFocus,
+            neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
         };
     }
     result._width = layoutResult.subplotWidth;

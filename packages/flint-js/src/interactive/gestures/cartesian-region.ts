@@ -1,4 +1,4 @@
-import type { PlotPoint, RegionAxis, RegionOperation } from '../triggers/events';
+import type { PlotPoint, RegionAxis, RegionOperation } from '../language/events';
 
 export type CartesianRegionAxis = Extract<RegionAxis, 'x' | 'y' | 'xy'>;
 export type IntervalOperation = Exclude<RegionOperation, 'clear'>;

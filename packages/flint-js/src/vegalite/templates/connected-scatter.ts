@@ -36,7 +36,7 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 /**
  * Pick a *sortable* Vega-Lite type for the order encoding. The order channel
@@ -86,14 +86,21 @@ export const connectedScatterDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
-                const kind = event.role === 'line' ? 'path' : 'mark';
-                return targetFromHits(hits, context.keyField, { kind, role: event.role });
+                const markType = event.hits[0]?.markType;
+                const kind = markType === 'line' ? 'path' : 'mark';
+                const role = event.role === 'legend-item' ? 'legend-item' : markType ?? event.role;
+                return targetFromHits(hits, context.keyField, { kind, role });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                (_element, _context, visual) => visual?.kind === 'path'
+                    ? annotationCandidates('segment-midpoint', 'center', 'top', 'bottom', 'right', 'left')
+                    : annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
         };
     },
     instantiate: (spec, ctx) => {

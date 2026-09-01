@@ -2,9 +2,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   InteractionDef,
   InteractiveChartSurface,
-  SemanticElement,
 } from 'flint-chart/interactive';
-import { externalTrigger } from 'flint-chart/interactive';
+import { externalInteraction } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
   countriesFixture,
@@ -23,7 +22,7 @@ interface MatchPayload {
   match?: Record<string, unknown>;
 }
 
-interface ControlOption extends MatchPayload {}
+type ControlOption = MatchPayload;
 
 interface ExternalDemo {
   id: string;
@@ -34,37 +33,11 @@ interface ExternalDemo {
   options: ControlOption[];
 }
 
-function matchValue(actual: unknown, expected: unknown): boolean {
-  if (actual === expected) return true;
-  if (typeof actual === 'number' && typeof expected === 'string') {
-    const date = new Date(actual);
-    if (!Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === expected) return true;
-  }
-  return false;
-}
-
-function matchingElements(
-  elements: readonly SemanticElement[] | undefined,
-  match: Record<string, unknown>,
-): SemanticElement[] {
-  return elements?.filter((element) => element.records?.some((record) =>
-    Object.entries(match).every(([field, value]) => matchValue(record[field], value)))) ?? [];
-}
-
-function externalMatchInteraction(id: string): InteractionDef {
-  return {
-    id,
-    eventSource: externalTrigger('demo-control'),
-    update(event, context) {
-      if (event.type !== 'external' || event.source !== 'demo-control') return null;
-      const payload = event.payload as MatchPayload;
-      if (!payload.match) return { ops: [{ op: 'reset' }] };
-      const elements = matchingElements(context.available, payload.match);
-      return elements.length > 0
-        ? { ops: [{ op: 'emphasize', elements, mode: 'replace', dimOpacity: 0.25 }] }
-        : { ops: [{ op: 'reset' }] };
-    },
-  };
+function selectorKey(match: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(match).map(([field, value]) => [
+    field,
+    field === 'Date' && typeof value === 'string' ? new Date(value).valueOf() : value,
+  ]));
 }
 
 function ExternalControlContent({
@@ -246,16 +219,28 @@ const demos: ExternalDemo[] = [
 function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const [lastPayload, setLastPayload] = useState<MatchPayload | null>(null);
-  const interaction = useMemo(() => externalMatchInteraction(`${demo.id}-external`), [demo.id]);
-  const interactions = useMemo(() => [interaction], [interaction]);
+  const interactionId = `${demo.id}-control`;
+  const interactions = useMemo<InteractionDef[]>(() => [externalInteraction<MatchPayload>({
+    id: interactionId,
+    handle: (payload) => ({
+      id: interactionId,
+      ops: payload.match
+        ? [{
+            op: 'set-style',
+            targets: [{ select: { key: selectorKey(payload.match) } }],
+            value: { state: 'emphasized', mutedOpacity: 0.25 },
+          }]
+        : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
+    }),
+  })], [interactionId]);
   const handleSurface = useCallback((surface: InteractiveChartSurface | null) => {
     surfaceRef.current = surface;
   }, []);
   const dispatch = (payload: MatchPayload) => {
     setLastPayload(payload);
-    surfaceRef.current?.dispatch({
-      type: 'external', source: 'demo-control', phase: 'commit', payload,
-    });
+    const surface = surfaceRef.current;
+    if (!surface) return;
+    void surface.dispatch(interactionId, payload);
   };
 
   return (
@@ -298,7 +283,7 @@ export function ExternalToChartLab() {
     <div className="dev-page it-page">
       <header className="dev-page-heading it-heading">
         <h1>Application controls that speak chart semantics</h1>
-        <p>Each control dispatches an external event. Its preset interprets the payload, produces a ChartUpdate, and lets the chart definition present it.</p>
+        <p>Each control identifies semantic chart keys and applies a renderer-neutral update request.</p>
       </header>
       <div className="it-examples">
         {demos.map((demo) => <ExternalDemoRow key={demo.id} demo={demo} />)}

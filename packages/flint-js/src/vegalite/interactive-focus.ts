@@ -1,4 +1,4 @@
-import { DEFAULT_DIM_OPACITY } from '../interactive/emphasis-update';
+import { DEFAULT_DIM_OPACITY } from '../interactive/presets/utils';
 
 const FOCUS_PARAM = '__flint_focus';
 const FOCUS_KEY = '__flint_focus_key';

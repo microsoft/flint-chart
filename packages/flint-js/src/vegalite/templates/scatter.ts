@@ -16,7 +16,12 @@ import {
     MUTED_HOVER_STROKE,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+    seriesValuesAnnotationText,
+    suppressAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
 
@@ -44,7 +49,7 @@ const USABLE_BAND_FRACTION = 0.8;
 export const scatterPlotDef: ChartTemplateDef = {
     chart: "Scatter Plot",
     template: { mark: "circle", encoding: {} },
-    channels: ["x", "y", "color", "size", "shape", "opacity", "column", "row"],
+    channels: ["x", "y", "color", "size", "shape", "detail", "opacity", "column", "row"],
     navigation: {},
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
@@ -58,7 +63,7 @@ export const scatterPlotDef: ChartTemplateDef = {
                 .filter((entry): entry is [string, string] => !!entry[1]),
         );
         return {
-            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size', 'shape']),
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size', 'shape', 'detail']),
             seriesField,
             legendFields,
             selectableMarks: ['circle', 'point'],
@@ -66,13 +71,15 @@ export const scatterPlotDef: ChartTemplateDef = {
                 symbol: { ...shapeOnlyHover, stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'above' })),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
         };
     },
     instantiate: (spec, ctx) => {
@@ -125,6 +132,32 @@ export const regressionDef: ChartTemplateDef = {
     channels: ["x", "y", "size", "color", "column", "row"],
     navigation: {},
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size']),
+            seriesField,
+            legendFields: colorField || sizeField
+                ? { ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}) }
+                : undefined,
+            selectableMarks: ['circle'],
+            renderHoverStyles: {
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+            },
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
+        };
+    },
     instantiate: (spec, ctx) => {
         const { x, y, color, size, column, row } = ctx.resolvedEncodings;
         const config = ctx.chartProperties;
@@ -198,6 +231,7 @@ export const regressionDef: ChartTemplateDef = {
 
 export const rangedDotPlotDef: ChartTemplateDef = {
     chart: "Ranged Dot Plot",
+    reorder: { includeConnectiveMarks: true },
     template: {
         encoding: {},
         layer: [
@@ -211,6 +245,9 @@ export const rangedDotPlotDef: ChartTemplateDef = {
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const valueField = ['x', 'y']
+            .map((channel) => resolvedEncodings[channel]?.field)
+            .find((field) => field && field !== categoryField);
         const colorField = resolvedEncodings.color?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
@@ -223,10 +260,18 @@ export const rangedDotPlotDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
+                if (event.gesture === 'click' && event.role !== 'legend-item' && categoryField) {
+                    const category = hits[0]?.datum[categoryField];
+                    const unitHits = context.allHits
+                        .filter((hit) => hit.datum[categoryField] === category)
+                        .sort((a, b) => Number(b.markType === 'line') - Number(a.markType === 'line'));
+                    const unit = targetFromHits(unitHits, context.keyField, { kind: 'path', role: 'line' });
+                    if (unit) return unit;
+                }
                 const markType = event.hits[0]?.markType;
                 const kind = markType === 'line' ? 'path' : 'mark';
                 const role = event.role === 'legend-item'
@@ -236,7 +281,10 @@ export const rangedDotPlotDef: ChartTemplateDef = {
                     : markType ?? event.role;
                 return targetFromHits(hits, context.keyField, { kind, role });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint'),
+                seriesValuesAnnotationText(seriesField, valueField),
+            ),
         };
     },
     instantiate: (spec, ctx) => {
@@ -283,13 +331,13 @@ export const boxplotDef: ChartTemplateDef = {
                 symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
             },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'distribution' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'center', placement: 'auto' })),
+            presentUpdate: suppressAnnotationUpdate,
         };
     },
     declareLayoutMode: (cs, table, chartProperties) => {

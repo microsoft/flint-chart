@@ -1,38 +1,155 @@
-# Interaction Event Architecture
+# Interaction Event And Update Architecture
 
 ## Status
 
-Implemented by the interactive surface, trigger modules, ChartDef semantics, presets, and Vega runtime.
+The canvas-acquisition, semantic-resolution, external-dispatch, preset, and unified
+`ChartUpdate` paths are implemented. Vega-Lite emits public `CanvasInteractionEvent`
+payloads and renders declarative updates. Canvas gesture state owns preview, commit,
+and cancel behavior; external payloads invoke their bound handlers directly. Complete
+presentation-property coverage and semantic interaction runtimes for other backends
+remain planned.
 
 ## Goal
 
-Separate interaction input, semantic resolution, policy, chart updates, and renderer presentation so that:
+Separate interaction input, semantic resolution, handling, chart updates, and renderer presentation so that:
 
-- canvas gestures and external application events can drive the same update language;
+- canvas gestures and external application payloads invoke different handler contracts
+    that produce the same update language;
+- resolved canvas interactions are useful whether or not a built-in update runs;
 - chart resolution reports only the physical semantic unit that produced an internal event;
-- interaction policy decides what semantic cohort to act on, including chart-specific behavior;
+- an interaction handler decides what semantic cohort to act on, including chart-specific behavior;
 - chart definitions decide how semantic updates should be presented;
 - runtimes apply presented updates mechanically;
-- resolved semantic events can be emitted to the host application with stable chart identity.
+- resolved semantic events are emitted to the host application with stable chart identity;
+- applications can bind transport-neutral payload handlers without understanding
+    renderer structure;
+- precomputed renderer-neutral updates remain directly applicable as chart state.
+
+## Developer Quick Start
+
+Configure a canvas interaction with a reusable handler:
+
+```ts
+import {
+    buildInteractiveChart,
+    clickTrigger,
+    externalInteraction,
+    type CanvasInteractionDef,
+} from 'flint-chart/interactive';
+
+const selectCountry: CanvasInteractionDef = {
+    id: 'select-country',
+    eventSource: clickTrigger,
+    handle: (event) => event.target ? {
+        id: 'country-selection',
+        ops: [{
+            op: 'set-style',
+            targets: [event.target],
+            value: { state: 'emphasized', mutedOpacity: 0.25 },
+        }],
+    } : null,
+};
+
+const surface = buildInteractiveChart(container, input, {
+    backend: 'vegalite',
+    interactions: [selectCountry],
+});
+
+await surface.ready;
+```
+
+Bind application input independently of its transport:
+
+```ts
+const countryPicker = externalInteraction<{ country: string; selected: boolean }>({
+    id: 'country-picker',
+    handle: ({ country, selected }) => ({
+        id: 'country-selection',
+        ops: [{
+            op: 'set-style',
+            targets: selected ? [{ select: { key: { Country: country } } }] : [],
+            value: { state: selected ? 'emphasized' : 'normal' },
+        }],
+    }),
+});
+
+const surface = buildInteractiveChart(container, input, {
+    backend: 'vegalite',
+    interactions: [countryPicker],
+});
+
+const result = await surface.dispatch('country-picker', {
+    country: 'Japan',
+    selected: true,
+});
+
+if (result && result.status !== 'applied') {
+    console.warn(result.unresolvedTargets, result.unsupportedOps);
+}
+```
+
+The selector is equality-only and each field must be declared by the compiled ChartDef.
+Use an event-derived target when exact visual identity matters. Always inspect
+`ChartUpdateResult` for externally supplied selectors because current data may no longer
+contain the requested key.
+
+The surface API is intentionally small:
+
+| API | Purpose |
+|---|---|
+| `flint-interaction` event | Receive resolved canvas actions |
+| `applyUpdate(update)` | Apply precomputed retained chart state by ID |
+| `setUpdates(updates)` | Replace the retained update collection |
+| `clearUpdate(id)` | Remove one retained update |
+| `dispatch(interactionId, payload)` | Invoke an external handler and report its update result |
+| `destroy()` | Remove listeners, renderer state, and DOM |
+
+## Cross-chart routing
+
+Emission is universal and distributed: `flint-interaction` bubbles from every configured
+canvas interaction. Acceptance is explicit: each destination registers an external
+interaction, and the application chooses destinations by dispatching its semantic payload.
+
+```ts
+dashboard.addEventListener('flint-interaction', (nativeEvent) => {
+    const detail = (nativeEvent as CustomEvent<FlintInteractionEventDetail>).detail;
+    const selection = deriveSelection(detail.event);
+
+    for (const [chartId, surface] of dashboardSurfaces) {
+        if (chartId === detail.chartId) continue;
+        void surface.dispatch('linked-selection', { selection });
+    }
+});
+```
+
+Charts do not automatically consume events from neighboring charts. The dashboard,
+story, or editor owns its cross-chart topology and semantic mapping. This coordinator is
+scoped to that composition, not a global singleton. Each destination's
+`externalInteraction({ id: 'linked-selection', handle })` maps the shared payload to
+targets meaningful for that chart.
 
 ## Pipeline
 
 ```mermaid
 flowchart LR
-    S[Interaction eventSource] --> B[Backend mount]
+    S[Canvas eventSource] --> B[Backend mount]
     A[Raw browser or renderer event] --> B
     B --> C[Gesture recognizer]
     C --> N[Navigation event]
-    N --> H[Preset update policy]
+    N --> F[Interaction coordinator]
     C --> R[Backend hit adapter]
     R --> D[ChartDef resolve]
     D --> E[Semantic event]
     E --> F[Interaction coordinator]
     F --> G[flint-interaction transport]
-    F --> H[Preset update policy]
-    X[External event] --> H
+    F -. optional .-> H[Canvas handler]
+    X[External payload] --> D2[Surface dispatch by interaction ID]
+    D2 --> EH[External handler]
+    A2[Precomputed ChartUpdate] --> U[Update target resolution]
     H --> I[ChartUpdate]
-    I --> J[ChartDef presentUpdate]
+    EH --> I
+    I --> U
+    U --> J[ChartDef presentUpdate]
     J --> K[Renderer runtime]
 ```
 
@@ -40,16 +157,20 @@ The normative ownership boundary is:
 
 | Stage | Owner | Input | Output | Must not own |
 | --- | --- | --- | --- | --- |
-| 1. Declare interpretation | Interaction `eventSource` | Author configuration | Element, region, navigation, or external source descriptor | Renderer geometry or semantic meaning |
+| 1. Declare interpretation | Interaction `eventSource` | Author configuration | Element, region, or navigation source descriptor | Renderer geometry or semantic meaning |
 | 2. Capture gesture | Backend mount + shared recognizer | Source descriptor and native events | Renderer-neutral point or region geometry | Gesture inference, semantic meaning, or chart updates |
-| 3. Resolve physical hits | Backend hit adapter | Normalized geometry and renderer state | `RenderHit[]` | Chart-type meaning or interaction policy |
-| 4. Resolve semantics | ChartDef resolver | Gesture context and `RenderHit[]` | Physical `SemanticTarget` | Interaction policy or cohort expansion |
-| 5. Coordinate | Interaction coordinator | Resolved semantic event | Outbound event and policy invocation | Chart-specific semantic meaning |
-| 6. Decide update | Preset policy | Semantic or External event | `ChartUpdate` | Renderer-specific presentation |
-| 7. Present update | ChartDef `presentUpdate` | `ChartUpdate` | Chart-specific presented update | Renderer mutation |
-| 8. Apply update | Renderer runtime | Presented update | Renderer state | Semantic inference or policy |
+| 3. Resolve physical hits | Backend hit adapter | Normalized geometry and renderer state | `RenderHit[]` | Chart-type meaning or handler decisions |
+| 4. Resolve semantics | ChartDef resolver | Gesture context and `RenderHit[]` | Physical `SemanticTarget` | Handler decisions or cohort expansion |
+| 5. Coordinate | Interaction coordinator | Resolved semantic or navigation event | Canonical outbound event and optional handler invocation | Chart-specific semantic meaning |
+| 6. Decide update | Bound canvas or external handler | Resolved canvas event or opaque external payload | `ChartUpdate` | Renderer-specific presentation |
+| 7. Resolve update | Coordinator + compiled semantic index | Public refs/selectors | Current semantic elements | Product relationships or approximate matching |
+| 8. Present update | ChartDef `presentUpdate` | `ChartUpdate` | Chart-specific presented update | Renderer mutation |
+| 9. Apply update | Renderer runtime | Presented update | Renderer state | Semantic inference or handler decisions |
 
-Navigation deliberately takes a shorter path. It controls a continuous viewport rather than a semantic chart element, so its normalized event proceeds from the gesture recognizer to preset policy without fabricating `RenderHit[]` or a `SemanticTarget`.
+Navigation deliberately takes a shorter resolution path. It controls a continuous
+viewport rather than a semantic chart element, so it does not fabricate `RenderHit[]`
+or a `SemanticTarget`; the coordinator still emits its normalized public event before
+invoking an optional handler.
 
 ChartDef resolves and presents chart semantics. It does **not** own DOM transport. The coordinator emits resolved semantic events externally because transport identity (`chartId`, `interactionId`, and transaction metadata) is surface-level state, not chart semantics.
 
@@ -63,8 +184,8 @@ sequenceDiagram
     participant Hits as Backend hit adapter
     participant ChartDef as ChartDef.resolve
     participant Coordinator
-    participant Host as External host
-    participant Preset as Preset.update
+    participant Host as Host observer
+    participant Handler as Interaction handle
     participant Present as ChartDef.presentUpdate
     participant Runtime as Renderer runtime
 
@@ -76,32 +197,37 @@ sequenceDiagram
     Coordinator->>ChartDef: normalized internal event
     ChartDef-->>Coordinator: physical SemanticTarget
     Coordinator-->>Host: flint-interaction semantic event
-    Coordinator->>Preset: SemanticInteractionEvent
-    Preset-->>Coordinator: ChartUpdate
-    Coordinator->>Present: ChartUpdate
-    Present-->>Coordinator: presented update
-    Coordinator->>Runtime: apply presented update
+    opt configured handler
+        Coordinator->>Handler: resolved event
+        Handler-->>Coordinator: ChartUpdate
+        Coordinator->>Coordinator: resolve update targets
+        Coordinator->>Present: ChartUpdate
+        Present-->>Coordinator: presented update
+        Coordinator->>Runtime: apply presented update
+    end
 ```
 
-An external event bypasses trigger geometry and semantic resolution:
+An external payload follows a shorter input path while sharing update processing:
 
 ```mermaid
 sequenceDiagram
-    participant Host as External host
-    participant Coordinator
-    participant Preset as Preset.update
+    participant Host as Application
+    participant Surface
+    participant Handler as Bound external handler
+    participant Index as Compiled semantic index
     participant Present as ChartDef.presentUpdate
     participant Runtime as Renderer runtime
 
-    Host->>Coordinator: ExternalInteractionEvent
-    Coordinator->>Preset: ExternalInteractionEvent
-    Preset-->>Coordinator: ChartUpdate
-    Coordinator->>Present: ChartUpdate
-    Present-->>Coordinator: presented update
-    Coordinator->>Runtime: apply presented update
+    Host->>Surface: dispatch(interactionId, payload)
+    Surface->>Handler: payload + InteractionContext
+    Handler-->>Surface: ChartUpdate or null
+    Surface->>Index: resolve refs and key selectors
+    Index-->>Surface: current semantic elements
+    Surface->>Present: ChartUpdate
+    Present-->>Surface: presented update
+    Surface->>Runtime: apply presented update
+    Surface-->>Host: ChartUpdateResult or null
 ```
-
-External events bypass chart resolution because their payload already uses the vocabulary agreed between the source and interaction definition.
 
 ## Backward Semantic Resolution
 
@@ -156,7 +282,7 @@ The interaction key and role answer different questions:
 
 | Metadata | Question | Used for |
 | --- | --- | --- |
-| `__flint_interaction_key` | Which semantic data identity does this item represent? | Constructing and matching `SemanticElement.key` |
+| `__flint_interaction_key` | Which rendered primitive is this? | Private stable lookup for backend presentation updates |
 | `__flint_interaction_role` | Which representation of that identity was hit? | Choosing representation-aware resolution behavior |
 
 ### ChartDef Resolution
@@ -165,37 +291,41 @@ The normalized role and `RenderHit[]` are passed to the owning ChartDef resolver
 
 For a direct mark, resolution commonly maps each hit key to one `SemanticElement`. A representation can require different resolution even when it refers to related data. For example, clicking one rose arc resolves that arc, while clicking a `text-label` for January can resolve the January label identity to every arc represented by that aggregate label.
 
-The role is not part of semantic identity and is not used to match forward updates. It is resolution context. The key establishes identity; the role lets the ChartDef interpret the physical representation that exposed it. Normal marks can use the default `mark` role, while representations such as `text-label` require an explicit role when their backward mapping differs.
+The role is resolution context rather than semantic identity. Private render keys remain in a backend sidecar so the ChartDef and applications do not need to carry renderer identity. Normal marks can use the default `mark` role, while representations such as `text-label` require an explicit role when their backward mapping differs.
 
 The result contains no SVG node or Vega scenegraph item:
 
 ```ts
 interface SemanticTarget {
     visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle';
+        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend';
         role: string;
     };
     elements: readonly SemanticElement[];
 }
 
 interface SemanticElement {
-    key: Record<string, unknown>;
+    value: Record<string, unknown>;
     records?: readonly Record<string, unknown>[];
 }
 ```
 
-After this boundary, presets and external hosts operate on semantic elements. They do not inspect renderer geometry to rediscover meaning.
+`value` is the represented transformed or aggregated chart value. It may contain derived
+semantics such as stack or path endpoints. `records` are authored source rows only when
+the runtime can prove their lineage; they are omitted rather than replaced with renderer
+tuples when provenance is unavailable. Exact render identity is backend-private and can
+map one semantic element to one or many rendered primitives.
+After this boundary, presets and applications operate on semantic elements. They do not
+inspect renderer geometry to rediscover meaning.
 
-## Normalized Events
+## Acquisition Events
+
+Backends normalize physical input into these internal acquisition events. External
+payloads do not enter this acquisition language because callers have already identified
+the interaction and its semantic payload.
 
 ```ts
 type InteractionPhase = 'start' | 'preview' | 'commit' | 'cancel';
-
-type NormalizedInteractionEvent<TExternal = unknown> =
-    | ElementInteractionEvent
-    | RegionInteractionEvent
-    | NavigationInteractionEvent
-    | ExternalInteractionEvent<TExternal>;
 
 interface ElementInteractionEvent {
     type: 'element';
@@ -224,15 +354,9 @@ interface NavigationInteractionEvent {
     anchor?: PlotPoint; // plot fractions
 }
 
-interface ExternalInteractionEvent<TPayload = unknown> {
-    type: 'external';
-    source: string;
-    phase: InteractionPhase;
-    payload: TPayload;
-}
 ```
 
-`Element` and `Region` describe physical chart input at the geometry level. They may contain coordinates, region geometry, rendered mark metadata, and data records in `RenderHit[]`, but they do not claim semantic meaning. `Navigation` describes a viewport transform in plot fractions and likewise carries no semantic target. `External` is deliberately generic and typed by the interaction that consumes it.
+`Element` and `Region` describe physical chart input at the geometry level. They may contain coordinates, region geometry, rendered mark metadata, and data records in `RenderHit[]`, but they do not claim semantic meaning. `Navigation` describes a viewport transform in plot fractions and likewise carries no semantic target. External payloads bypass acquisition events and enter through their bound external handler.
 
 ## Semantic Resolution
 
@@ -250,48 +374,139 @@ interface SemanticInteractionEvent {
 }
 ```
 
-For a dumbbell endpoint, resolution returns a single unit such as `point[Country=US, Sex=Male]`. It does not add the female endpoint or connector.
+For a dumbbell, hover resolves the physical endpoint under the pointer. A direct click resolves
+the complete category unit with its connector first and both endpoints following, so emphasis and
+annotation share one semantic subject.
 
-After resolution, the coordinator constructs the semantic event, emits it through `flint-interaction`, and passes it to the matching preset. External emission is therefore downstream of ChartDef resolution but is not performed by ChartDef.
+After resolution, the coordinator constructs the semantic event, emits it through
+`flint-interaction`, and invokes the matching interaction handler when configured. External
+emission is therefore downstream of ChartDef resolution but is not performed by
+ChartDef and does not depend on a chart update.
 
-## Interaction Policy
-
-An interaction consumes either a resolved semantic event or an external event and returns a chart update.
+The current `SemanticInteractionEvent` and `NavigationInteractionEvent` are internal
+ingredients. Outbound transport uses one public resolved event shape:
 
 ```ts
-type InteractionInput<TExternal = unknown> =
-    | SemanticInteractionEvent
-    | NavigationInteractionEvent
-    | ExternalInteractionEvent<TExternal>;
-
-interface InteractionDef<TExternal = unknown> {
-    readonly id: string;
-    readonly eventSource: InteractionEventSource;
-    update(
-        event: InteractionInput<TExternal>,
-        context: InteractionContext,
-    ): ChartUpdate | null;
+interface CanvasInteractionEvent {
+    action: CanvasInteractionAction;
+    phase: InteractionPhase;
+    operation?: InteractionOperation;
+    geometry: {
+        plot?: PlotGeometry;
+        domain?: DomainGeometry;
+    };
+    target: SemanticTarget | null;
+    dropTarget?: SemanticTarget | null;
+    modifiers?: InteractionModifiers;
 }
 ```
 
-An interaction definition has two declarative halves:
+`action` reports the normalized semantic action, such as `click-element`,
+`click-legend`, `brush-x`, `pan-viewport`, or `inspect-xy`. `geometry.plot` reports
+renderer-neutral canvas geometry; optional `geometry.domain` reports scale-inverted
+values. `target` reports the semantic object and data provenance. Drag-and-drop also
+uses `dropTarget` for its destination.
+
+Current Vega-Lite acquisition emits element, legend, region/brush, and navigation
+actions. The broader action union reserves the reviewed shape for inspection,
+drag-and-drop, keyboard, axis, facet, and annotation recognizers as they are implemented.
+`geometry.domain` is currently omitted; applications must treat it as optional.
+
+The coordinator emits meaningful lifecycle points: `start`, repeated `preview`, final
+`commit`, and `cancel`. High-frequency pointer previews may be coalesced to animation
+frames, but they are not reduced to commit-only output.
+
+## Interaction Handlers
+
+Canvas and external definitions bind different inputs to the same output language.
+A canvas handler consumes a resolved canvas event; an external handler consumes its
+application-defined payload. Both may return one `ChartUpdate`.
+
+```ts
+interface CanvasInteractionDef {
+    readonly id: string;
+    readonly eventSource: InteractionEventSource;
+    handle?(
+        event: CanvasInteractionEvent,
+        context: InteractionContext,
+    ): ChartUpdate | null;
+}
+
+interface ExternalInteractionDef<TPayload> {
+    readonly id: string;
+    readonly external: true;
+    handle(payload: TPayload, context: InteractionContext): ChartUpdate | null;
+}
+
+type InteractionDef = CanvasInteractionDef | ExternalInteractionDef;
+```
+
+Canvas definitions have two declarative halves:
 
 1. `eventSource` declares **what input to capture and how to interpret it physically**. The same native `pointerdown -> pointermove -> pointerup` stream becomes a free rectangle for `select()`, an axis-constrained interval for `brushX()` or `brushY()`, and an angular sector for `brushAngle()`.
-2. `update()` declares **what update policy to apply** after normalization. Target-bearing events first pass through ChartDef semantic resolution; navigation and external events do not. It returns renderer-neutral operations such as `emphasize`, `annotate`, `navigate-viewport`, or `reset`.
+2. Optional `handle()` declares **what update JSON to produce** after normalization.
+    Target-bearing events first pass through ChartDef semantic resolution. The handler
+    consumes the same `CanvasInteractionEvent` emitted to applications and returns a
+    `ChartUpdate` containing renderer-neutral `set-style`, `set-annotation`,
+    `set-viewport`, or `set-order` operations.
 
 The backend mount reads `eventSource`; it does not infer a gesture from pointer motion. It installs the required native listeners, supplies renderer coordinates and hit testing, and runs the recognizer requested by the interaction. This keeps an identical drag stream deterministic and author-controlled.
 
-Chart-specific action policy belongs in the interaction policy half. For example, element highlighting for `Ranged Dot Plot` expands the resolved endpoint to both endpoints and the connector before producing an `emphasize` update.
+Transient gesture guides belong to that mount lifecycle, not to `ChartUpdate`. They visualize
+the gesture's current geometry and clear on cancel, leave, or destroy. Disabling or styling a
+guide never changes acquisition or the emitted semantic event:
 
-Presets are compositions of predefined triggers from `interactive/triggers/` and policies. They refer to reusable descriptors such as `clickTrigger` and `rectangleTrigger()` rather than defining event acquisition inline. They are convenience APIs, not architectural primitives.
+```ts
+inspect({
+    mode: 'xy',
+    guide: { style: { color: '#47525c', opacity: 0.5, width: 1 } },
+});
+
+brushX({
+    guide: { style: { fill: '#2563eb', fillOpacity: 0.1 } },
+});
+
+lassoSelect({ guide: false });
+```
+
+Inspect lines, Cartesian regions, angular sectors, and lasso paths use the shared
+renderer-neutral gesture-guide styles. Retained guides such as reference lines instead belong
+to chart presentation state and may be created by effects through chart updates.
+
+Chart-specific action processing belongs in the handler. For example, ranged-dot region targets
+are expanded to complete category units before producing a `set-style` update. Direct ranged-dot
+clicks already resolve to the complete dumbbell in the owning ChartDef.
+
+The coordinator always emits a resolved canvas event and invokes `handle()` only when
+present. External dispatch does not emit or synthesize a canvas event. Updates returned
+by either handler enter the same target-resolution, presentation, and renderer pipeline.
+This creates four public layers:
+
+1. predefined observers that acquire and resolve common canvas actions;
+2. external definitions binding application payloads to update policies;
+3. direct renderer-neutral `ChartUpdateOp` JSON for precomputed state;
+4. presets joining common canvas actions to updates.
+
+Presets compose predefined triggers from `interactive/triggers.ts` with an optional handler.
+They refer to reusable descriptors such as `clickTrigger` and `rectangleTrigger()`
+rather than defining event acquisition inline. They are convenience APIs, not
+architectural primitives or the primary extensibility model.
 
 ## Triggers
 
-`interactive/triggers/` owns event-source contracts, built-in trigger descriptors, and the shared interaction-event vocabulary. A backend owns renderer-specific event normalization and realizes these descriptors against its native event and coordinate systems.
+`interactive/triggers.ts` owns event-source contracts and built-in trigger descriptors.
+`interactive/language/events.ts` owns the shared interaction-event vocabulary. A backend
+owns renderer-specific event normalization and realizes trigger descriptors against its
+native event and coordinate systems.
 
-Type colocation does not change production ownership: triggers produce only Element, Region, and External normalized events. The coordinator produces `SemanticInteractionEvent` only after ChartDef resolution. Its type lives in `events.ts` so the full event vocabulary has one definition site.
+Type colocation does not change production ownership: chart triggers produce Element,
+Region, and Navigation normalized events. The coordinator produces
+`SemanticInteractionEvent` only after ChartDef resolution. Its type lives in `events.ts`
+so the full canvas event vocabulary has one definition site. External payloads bypass
+this acquisition vocabulary and enter through their bound external interaction handler.
 
-Flint provides common triggers for element activation, hover preview, rectangle drag, and external dispatch:
+Flint provides common triggers for element activation, hover preview, rectangle drag,
+and navigation:
 
 ```ts
 clickTrigger
@@ -301,14 +516,14 @@ xBrushTrigger('intersect' | 'contain')
 yBrushTrigger('intersect' | 'contain')
 angularBrushTrigger('intersect' | 'contain')
 navigationTrigger()
-externalTrigger(source?)
 ```
 
 ### Cartesian navigation
 
-`navigate()` combines drag pan, wheel zoom, and reset as one viewport policy. ChartDefs opt in explicitly with `navigation.axes`; assembly then intersects that capability with resolved quantitative or temporal x/y encodings. An explicitly requested unsupported axis is an error. With `axes: 'available'`, categorical axes are omitted automatically.
+`navigate()` combines drag pan, wheel zoom, and reset as one viewport handler. ChartDefs opt in explicitly with `navigation.axes`; assembly then intersects that capability with resolved quantitative or temporal x/y encodings. An explicitly requested unsupported axis is an error. With `axes: 'available'`, categorical axes are omitted automatically.
 
-The gesture reports incremental pan deltas and zoom anchors as plot fractions. The preset adds percentage-based domain guards to `navigate-viewport`:
+The gesture reports incremental pan deltas and zoom anchors as plot fractions. The
+renderer reduces them to absolute `set-viewport` domains using percentage-based guards:
 
 ```ts
 navigate({
@@ -341,7 +556,7 @@ brushY({ mode: 'stateful' })  // committed overlay remains editable
 brushAngle()                   // ephemeral polar sector
 ```
 
-Select and Cartesian brushes share the rectangular region gesture engine. `select()` configures a free two-dimensional ephemeral rectangle. A stateful axis brush retains its committed interval, allows dragging the body to move it, allows dragging either edge to resize it, and clears on an outside click or Escape. Angular brushing is currently ephemeral; editable wrapped-angle handles require a separate circular interaction model. Region events identify transitions with `create`, `move`, `resize-leading`, `resize-trailing`, and `clear` operations. This state and its interaction chrome are owned per chart surface by the trigger runtime; presets remain stateless semantic policies.
+Select and Cartesian brushes share the rectangular region gesture engine. `select()` configures a free two-dimensional ephemeral rectangle. A stateful axis brush retains its committed interval, allows dragging the body to move it, allows dragging either edge to resize it, and clears on an outside click or Escape. Angular brushing is currently ephemeral; editable wrapped-angle handles require a separate circular interaction model. Region events identify transitions with `create`, `move`, `resize-leading`, `resize-trailing`, and `clear` operations. This state and its interaction chrome are owned per chart surface by the trigger runtime; preset handlers remain stateless.
 
 The folder is organized as:
 
@@ -380,7 +595,7 @@ It must not reinterpret an `x` brush as a free selection, choose angular behavio
 - renderer-neutral pointer-session state such as angular sweep accumulation and interval transitions;
 - Cartesian and angular gesture math;
 - renderer-neutral regions such as `PlotRect`, `PlotPolygon`, and `PlotAngularSector`;
-- presets that translate resolved semantic targets into `ChartUpdate` operations.
+- presets that translate resolved semantic targets into `ChartUpdate` JSON.
 
 A backend owns:
 
@@ -392,7 +607,7 @@ A backend owns:
 - owning pointer capture and drawing backend-aligned gesture chrome;
 - applying updates to renderer stores and drawing representation-specific presentation.
 
-For Vega-Lite, `vegalite/interactions/` is the composition boundary. It wires shared gesture recognizers to Vega coordinate discovery, scenegraph hit testing, ChartDef semantic resolution, preset policy, and Vega presentation. Shared gesture modules must not import Vega or inspect scenegraph items.
+For Vega-Lite, `vegalite/interactions/` is the composition boundary. It wires shared gesture recognizers to Vega coordinate discovery, scenegraph hit testing, ChartDef semantic resolution, interaction handlers, and Vega presentation. Shared gesture modules must not import Vega or inspect scenegraph items.
 
 The stages are therefore distinct:
 
@@ -405,9 +620,10 @@ flowchart TD
     Convert["Client -> renderer -> plot coordinates<br/>Owner: shared coordinate geometry"] --> Gesture
     Gesture["Rectangle, interval, or angular sector<br/>Owner: shared gesture recognizer"] --> Hits
     Hits["Renderer geometry -> RenderHit[]<br/>Owner: backend hit adapter"] --> Resolve
-    Resolve["RenderHit[] -> SemanticTarget<br/>Owner: ChartDef resolver"] --> Policy
-    Policy["SemanticTarget -> ChartUpdate<br/>Owner: interaction preset"] --> Present
-    Present["Representation-aware update<br/>Owner: ChartDef presentUpdate"] --> Apply
+    Resolve["RenderHit[] -> SemanticTarget<br/>Owner: ChartDef resolver"] --> Handler
+    Handler["CanvasInteractionEvent -> ChartUpdate<br/>Owner: interaction handler"] --> ResolveUpdate
+    ResolveUpdate["Selectors -> resolved targets<br/>Owner: coordinator"] --> Present
+    Present["Representation-aware update<br/>Owner: ChartDef presenter"] --> Apply
     Apply["Stores and visual overlays<br/>Owner: backend runtime"]
 ```
 
@@ -424,55 +640,218 @@ interactive/
         angular-region.ts      # angular pointer-session state
         cartesian-region.ts    # Cartesian projection and interval transitions
         navigation.ts          # pan sessions and wheel normalization
-    presets/                 # semantic update policies
-    triggers/                # renderer-neutral source descriptors and events
+    presets/                 # source and handler combinations
+    triggers.ts              # renderer-neutral source descriptors
+    language/                # interaction event and chart update contracts
 
 vegalite/interactions/
     contracts.ts             # Vega interaction plan contracts
     stores.ts                # Vega selection and hover stores
     compile.ts               # Vega-Lite instrumentation and Vega store injection
     hit-adapter.ts           # Vega coordinates, scenegraph traversal, and physical hits
-    runtime.ts               # resolve -> policy -> present -> apply coordinator
+    runtime.ts               # resolve -> handle -> present -> apply coordinator
     gestures/
         region.ts              # Vega mounting for rectangle, axis, and angular drags
         navigation.ts          # Vega mounting for pan, wheel zoom, and reset
     navigation-scale.ts        # Vega domain guards and signal updates
     presentation/
         focus-overlay.ts       # path focus and selection boundaries
-        annotation-overlay.ts  # annotation anchors, placement, and drawing
+        annotation-overlay.ts  # annotation candidate search, wrapping, and drawing
 ```
 
 Vega interaction code imports its concrete owner directly. Compile instrumentation comes from `vegalite/interactions/compile.ts`, runtime coordination from `runtime.ts`, and physical adaptation from `hit-adapter.ts`. There is intentionally no cross-layer interaction barrel: narrow imports make ownership violations visible during review.
 
-A custom source may register listeners and emit normalized events. Renderer-specific mounting code may additionally compute renderer geometry and inspect rendered marks. Neither source descriptors nor mounts may resolve semantic targets, contain chart-type policy, or construct chart updates.
+A custom source may register listeners and emit normalized events. Renderer-specific mounting code may additionally compute renderer geometry and inspect rendered marks. Neither source descriptors nor mounts may resolve semantic targets, contain chart-type behavior, or construct chart updates.
 
-## Update Language
+### Target feedback
 
-`ChartUpdate` is the only interaction-to-chart command language. Updates have a phase and renderer-neutral operations such as emphasize, annotate, and reset.
+Assisted pointer and keyboard targeting share a transient target indicator and a floating semantic tooltip. Keyboard arrows move the indicator and apply the active hover styling; Enter or Space invokes the configured click preset. The tooltip uses the compiled pointer-hover fields, stays clear of the active mark, may extend beyond the chart canvas, and scrolls with the chart.
 
-```ts
-interface ChartUpdate {
-    phase?: InteractionPhase;
-    ops: readonly UpdateOp[];
-}
-```
-
-`preview` is transient, `commit` changes persistent state, and `cancel` restores the last committed state. Chart definitions lower semantic operations through `presentUpdate`; runtimes apply the lowered result mechanically.
-
-## External Dispatch
-
-An interactive surface exposes a chart-scoped dispatch API:
+Assisted pointer targeting can customize the compact semantic details:
 
 ```ts
-surface.dispatch({
-    type: 'external',
-    source: 'story-scroll',
-    phase: 'preview',
-    payload: { countries: ['Japan'] },
+buildInteractiveChart(container, input, {
+    backend: 'vegalite',
+    interactions: [clickHighlight(), axisHighlight()],
+    assistedTargeting: {
+        maxDistance: 16,
+        indicator: true,
+        details: { fields: ['country', 'value'], maxRows: 4 },
+    },
+    keyboardTargeting: true,
 });
 ```
 
-The event is offered to matching interaction definitions without semantic resolution.
+`axisHighlight()` treats native categorical axis ticks as semantic controls. The compiler maps each Vega scale back to its authored field, and the runtime associates a tick with represented mark keys. Quantitative and temporal ticks remain inert until a nearest-value or interval policy is specified.
+
+## Update Language
+
+Presets and applications produce one renderer-neutral `ChartUpdate` format. There is no
+separate request operator, resolved operator, or renderer-only operator language:
+
+```ts
+interface ChartUpdate {
+    id: string;
+    ops: readonly ChartUpdateOp[];
+}
+
+type ChartUpdateOp =
+    | { op: 'set-style'; targets: readonly UpdateTarget[]; value: StyleSpec }
+    | { op: 'set-annotation'; target: UpdateTarget; value: AnnotationSpec | null }
+    | { op: 'set-viewport'; axes: 'x' | 'y' | 'xy'; value: { x?: Domain; y?: Domain } }
+    | {
+        op: 'set-order';
+        scope: 'category' | 'series' | 'facet';
+        field: string;
+        values: readonly unknown[];
+    };
+
+interface StyleSpec {
+    visible?: boolean;
+    opacity?: number;
+    fill?: string;
+    stroke?: string;
+    strokeWidth?: number;
+    state?: 'normal' | 'focused' | 'emphasized' | 'muted';
+    mutedOpacity?: number;
+}
+```
+
+Operators are plain JSON. Presets and applications construct object literals directly;
+there are no trivial operator factory functions.
+
+The renderer has two inputs:
+
+```text
+chart + updates -> rendered chart
+```
+
+`chart` is the immutable base specification. `updates` describes what the chart should
+display and is suitable for serialization and static composition. The renderer does
+not know whether an interaction is previewing, committing, or reverting an update.
+
+Interaction state owns that lifecycle. During a gesture, the interaction controller may
+compose its private preview over retained updates before rendering. Commit retains the
+result; cancel drops the preview and renders the retained collection again. Preview
+state is not part of the chart API or update language.
+
+The surface can replace the retained collection atomically:
+
+```ts
+await surface.setUpdates(updates);
+```
+
+`applyUpdate(update, { composition: 'auto' })` replaces one retained update by ID, while
+`clearUpdate(id)` removes that retained update. The default `auto` policy composes all
+retained updates in insertion order: presentation selections accumulate, while later
+annotation, viewport, and order operations take precedence. The policy is explicit so
+future composition modes can extend the API without changing this default behavior.
+
+Relative gesture data is not update state. Pan deltas, zoom factors, toggle modifiers,
+and drag positions are reduced by interaction state into absolute `set-viewport`,
+`set-style`, or `set-order` values. Cancelling a gesture requires no inverse
+chart command: the interaction drops its preview and sends the prior effective updates.
+
+Targets may be exact event-derived refs or unresolved equality selectors:
+
+```ts
+type UpdateTarget =
+    | SemanticTargetRef
+    | {
+        select: {
+            key: Record<string, unknown>;
+            visual?: Partial<SemanticTarget['visual']>;
+        };
+    };
+```
+
+Selectors accept only ChartDef-declared semantic fields. At runtime they are resolved to
+the same `SemanticTargetRef` shape; the surrounding `ChartUpdateOp` does not change.
+
+ChartDefs may enrich an operator without changing its kind. For example,
+`set-annotation` can begin with text only and gain meaningful connection candidates in
+its `value`:
+
+```ts
+interface AnnotationCandidate {
+    connection: 'center' | 'top' | 'right' | 'bottom' | 'left'
+        | 'value-end' | 'value-side' | 'segment-midpoint' | 'outer-radial';
+    valueAxis?: 'x' | 'y';
+    crossSide?: 'start' | 'end';
+    valueInset?: number;
+    anglePreference?: 'normal' | 'oblique';
+    textAlign?: 'left' | 'center' | 'right';
+    connector?: 'line' | 'none';
+    maxWidth?: number;
+    maxDistance?: number;
+    priority?: number;
+}
+```
+
+The renderer reconstructs effective state from the two arrays and updates Vega stores,
+signals, and overlays in one dataflow run. It does not transform or recompile the base
+chart for each preview. Current Vega-Lite coverage includes emphasized/focused target
+state, one effective annotation, exact continuous viewport domains, and category order.
+Visibility and direct ink properties, multiple simultaneous annotations, and series or
+facet order remain implementation work within the existing four-operator grammar.
+
+When a caller already has a complete `ChartUpdate`, it may bypass interaction handling
+and apply that precomputed state directly:
+
+```ts
+const result = await surface.applyUpdate({
+    id: 'external-country-selection',
+    ops: [{
+        op: 'set-style',
+        targets: [{
+            select: {
+                key: { Country: 'Japan' },
+                visual: { kind: 'mark' },
+            },
+        }],
+        value: { state: 'emphasized' },
+    }],
+});
+```
+
+`ChartUpdateResult` reports applied, partially applied, or unsupported status plus
+unresolved targets and unsupported ops. Missing keys are never silently rebound to
+similar records.
+
+Vega-Lite currently implements update application when the chart has a compiled
+interaction plan. Other backends, or a Vega-Lite chart without interaction
+instrumentation, return `status: 'unsupported'` rather than silently ignoring an update.
+
+## External Interactions
+
+External definitions bind an arbitrary application payload to the same renderer-neutral
+update language used by canvas interactions:
+
+```ts
+const countryPicker = externalInteraction<{ country: string; selected: boolean }>({
+    id: 'country-picker',
+    handle: ({ country, selected }) => ({
+        id: 'country-picker',
+        ops: [{
+            op: 'set-style',
+            targets: selected ? [{ select: { key: { Country: country } } }] : [],
+            value: { state: selected ? 'emphasized' : 'normal' },
+        }],
+    }),
+});
+
+await surface.dispatch('country-picker', { country: 'Japan', selected: true });
+```
+
+The transport may be React state, a DOM listener, a WebSocket, or another chart. Flint
+looks up the definition by ID, passes the opaque payload and current interaction context
+to its handler, then resolves and presents the returned `ChartUpdate`. Internal canvas
+interactions additionally use backend gesture state machines to acquire start, preview,
+commit, and cancel phases; external handlers do not synthesize those phases.
+
+Payload typing is enforced at the `externalInteraction()` definition, while the
+heterogeneous surface boundary accepts `unknown`. Canvas hit testing and navigation
+domain calculation remain backend-assisted, and interaction definitions are mount-scoped.
 
 ## Outbound Events
 
@@ -484,11 +863,14 @@ interface FlintInteractionEventDetail {
     interactionId: string;
     timestamp: number;
     transactionId?: string;
-    event: SemanticInteractionEvent;
+    event: CanvasInteractionEvent;
 }
 ```
 
-`chartId` identifies the source chart and remains stable for the surface lifetime. It is available on `surface.chartId` and as `data-flint-chart-id` on the surface element. `interactionId` identifies the policy receiving the event.
+`chartId` identifies the source chart and remains stable for the surface lifetime. It is available on `surface.chartId` and as `data-flint-chart-id` on the surface element. `interactionId` identifies the configured interaction receiving the event.
+
+`interactionId` identifies the configured observer that requested acquisition. It does
+not imply that the observer has a handler.
 
 The interaction coordinator, not ChartDef, owns this emission. Outbound emission does not depend on whether the preset returns a canvas update. External applications may coordinate text, tables, or other charts from semantic events while leaving the source chart unchanged.
 
@@ -505,6 +887,14 @@ Existing helpers remain presets:
 - `clickHighlight()`
 - `clickGroupHighlight()`
 - `clickAnnotate()`
-- `select()`
+- `select()`, `brushX()`, `brushY()`, and `brushAngle()`
+- `navigate()`
 
-They are implemented on the normalized event pipeline. Existing chart resolution and `presentUpdate` hooks remain valid; chart-specific action expansion moves into interaction policy.
+They are implemented on the normalized event pipeline. Existing chart resolution and `presentUpdate` hooks remain valid; chart-specific action expansion lives in interaction handlers.
+
+The long-term built-in preset set should stay small: hover highlight, click
+highlight/select, region or brush highlight, and guarded navigation. Specialized
+annotation formatting, legend toggle/isolate, group expansion, linked views, tooltips,
+and product relationships are primarily recipes composed from outbound events and
+update factories. Compatibility helpers may remain without establishing a pattern of
+adding every action-to-update combination as a preset.

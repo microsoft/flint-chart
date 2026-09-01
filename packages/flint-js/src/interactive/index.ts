@@ -1,13 +1,19 @@
 import type { ChartAssemblyInput } from '../core/types';
-import { normalizeInteractions } from './interactions';
+import { isCanvasInteraction, normalizeInteractions } from './interactions';
 import { mountInteractiveChartSurface } from './surface';
 import type { BuildInteractiveChartOptions, InteractiveChartSurface } from './types';
 
 export type {
+    AssistedTargetingOptions,
+    TargetDetailsOptions,
+    TargetFeedbackOptions,
     BuildInteractiveChartOptions,
+    ChartUpdateApplyOptions,
+    ChartUpdateComposition,
     InteractiveBackend,
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
+    InteractionDismissPolicy,
     InteractiveRenderer,
     InteractiveRendererAdapter,
     ViewportChannel,
@@ -15,22 +21,37 @@ export type {
     ViewportState,
 } from './types';
 export type {
-    AnnotationRenderPlan,
+    GestureGuideController,
+    GestureGuideOptions,
+    AreaGestureGuideStyle,
+    InspectGuideOptions,
+    LineGestureGuideStyle,
+    RegionGuideOptions,
+} from './guides';
+export type {
+    AnnotationCandidate,
+    AnnotationConnection,
+    AnnotationSpec,
     ChartUpdate,
-    ChartUpdateProcessor,
+    ChartUpdateOp,
+    ChartUpdatePresenter,
     BrushOptions,
+    BrushZoomOptions,
     AngularBrushOptions,
+    AxisHighlightOptions,
     ClickAnnotateOptions,
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
     ElementInteractionEvent,
-    ExternalInteractionEvent,
     FlintInteractionEventDetail,
-    InteractionInput,
     InteractionPhase,
     InteractionContext,
     InteractionDef,
+    CanvasInteractionDef,
+    ExternalInteractionDef,
     InteractionModifiers,
+    InspectOptions,
+    LassoSelectOptions,
     NavigateOptions,
     NavigationAxes,
     NavigationDomainGuard,
@@ -44,44 +65,62 @@ export type {
     RegionOperation,
     RenderHit,
     SelectOptions,
-    SelectionMode,
     SemanticElement,
     SemanticInteractionEvent,
     SemanticTarget,
-    NormalizedInteractionEvent,
-    UpdateOp,
+    StyleSpec,
+    UpdateDomain,
+    UpdateTarget,
 } from './interactions';
-export { brushAngle, brushX, brushY, clickAnnotate, clickGroupHighlight, clickHighlight, navigate, select } from './interactions';
-export type { InteractionEventSource, InteractionEventSourceContext } from './triggers';
+export type {
+    CanvasInteractionAction,
+    CanvasInteractionEvent,
+    DomainCoordinate,
+    DomainGeometry,
+    PlotGeometry,
+} from './language/events';
+export { toCanvasInteractionEvent } from './canvas-interaction';
+export type {
+    ChartUpdateResult,
+    SemanticTargetRef,
+    SemanticTargetSelector,
+} from './language/updates';
+export { matchesSemanticTargetSelector } from './language/updates';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
+export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
     angularBrushTrigger,
+    brushZoomTrigger,
     clickTrigger,
-    externalTrigger,
+    contextTrigger,
+    doubleActivateTrigger,
     hoverTrigger,
+    inspectTrigger,
+    keyboardTrigger,
+    lassoTrigger,
+    longPressTrigger,
     navigationTrigger,
     rectangleTrigger,
     xBrushTrigger,
     yBrushTrigger,
 } from './triggers';
-export {
-    AngularBrushInteraction,
-    BrushInteraction,
-    ClickAnnotateInteraction,
-    ClickGroupHighlightInteraction,
-    ClickHighlightInteraction,
-    NavigateInteraction,
-    SelectInteraction,
-} from './presets';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
+
+/** Snap radius in renderer units when assisted targeting is enabled without a distance. */
+const DEFAULT_ASSIST_DISTANCE = 12;
 
 export function buildInteractiveChart(
     container: HTMLElement,
     input: ChartAssemblyInput,
     options: BuildInteractiveChartOptions,
 ): InteractiveChartSurface {
-    const { backend, renderer, focusOnClick, expressionInterpreter, background, className, ariaLabel, chartId } = options;
-    const interactions = normalizeInteractions(options.interactions, focusOnClick);
+    const {
+        backend, renderer, expressionInterpreter, background,
+        className, ariaLabel, chartId, updates, assistedTargeting, keyboardTargeting, dismiss,
+    } = options;
+    const interactions = normalizeInteractions(options.interactions);
+    const canvasInteractions = interactions.filter(isCanvasInteraction);
     if (backend !== 'vegalite' && interactions.length > 0) {
         return mountInteractiveChartSurface(
             container,
@@ -91,7 +130,7 @@ export function buildInteractiveChart(
                     throw new Error(`Semantic interactions are not supported by backend "${backend}".`);
                 },
             },
-            { className, ariaLabel, chartId },
+            { className, ariaLabel, chartId, updates },
         );
     }
     switch (backend) {
@@ -104,13 +143,25 @@ export function buildInteractiveChart(
                         const { createVegaInteractiveRenderer } = await import('../vegalite/interactive');
                         return createVegaInteractiveRenderer({
                             renderer,
-                            interactions,
+                            interactions: canvasInteractions,
+                            enableSemanticUpdates: canvasInteractions.length < interactions.length
+                                || (updates?.length ?? 0) > 0,
                             expressionInterpreter,
                             background,
+                            assistDistance: assistedTargeting
+                                ? (typeof assistedTargeting === 'object' ? assistedTargeting.maxDistance : undefined)
+                                    ?? DEFAULT_ASSIST_DISTANCE
+                                : 0,
+                            targetFeedback: {
+                                assisted: typeof assistedTargeting === 'object' ? assistedTargeting : assistedTargeting ? {} : false,
+                                keyboard: keyboardTargeting ? {} : false,
+                            },
+                            keyboardTargeting,
+                            dismiss,
                         }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'echarts':
             return mountInteractiveChartSurface(
@@ -122,7 +173,7 @@ export function buildInteractiveChart(
                         return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'chartjs':
             return mountInteractiveChartSurface(
@@ -134,7 +185,7 @@ export function buildInteractiveChart(
                         return createChartjsInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
         case 'plotly':
             return mountInteractiveChartSurface(
@@ -146,7 +197,7 @@ export function buildInteractiveChart(
                         return createPlotlyInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId },
+                { className, ariaLabel, chartId, updates, interactions },
             );
     }
 }

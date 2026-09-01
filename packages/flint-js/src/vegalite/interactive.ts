@@ -1,15 +1,18 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
-import type { InteractionDef } from '../interactive/interactions';
-import type { InteractiveRendererAdapter, ViewportState } from '../interactive/types';
+import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
+import type { InteractionDismissPolicy, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import {
     addVegaLiteInteractions,
+    collectVegaAxisTargets,
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
+    injectVegaReorderSignal,
     withoutSemanticInteractionField,
 } from './interactions/compile';
 import { mountVegaInteractions } from './interactions/runtime';
+import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
 import { Error as VegaError, parse, View } from 'vega';
 import { Handler } from 'vega-tooltip';
@@ -17,8 +20,13 @@ import { Handler } from 'vega-tooltip';
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
     interactions?: readonly InteractionDef[];
+    enableSemanticUpdates?: boolean;
     expressionInterpreter?: unknown;
     background?: string;
+    assistDistance?: number;
+    keyboardTargeting?: boolean;
+    targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
+    dismiss?: InteractionDismissPolicy | false;
 }
 
 function windowedInput(
@@ -62,18 +70,30 @@ export function createVegaInteractiveRenderer(
             const vlSpec = assembleVegaLite(firstInput) as any;
             applyViewportSorts(vlSpec, viewports);
             const interactions = options.interactions ?? [];
-            const interactionPlan = addVegaLiteInteractions(vlSpec, interactions);
+            const canvasInteractions = interactions.filter(isCanvasInteraction);
+            const interactionPlan = addVegaLiteInteractions(
+                vlSpec,
+                interactions,
+                options.enableSemanticUpdates,
+            );
             const vegaSpec = compile(vlSpec).spec as any;
             if (interactionPlan) {
-                if (interactions.some((interaction) => interaction.eventSource.type !== 'navigation')) {
+                interactionPlan.axisTargets = collectVegaAxisTargets(vegaSpec, interactionPlan.axisFields);
+                if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
                 }
                 interactionPlan.navigationAxes = injectVegaNavigationSignals(
                     vegaSpec,
                     interactionPlan.navigationChannels,
                 );
+                interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
+                    .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
+                    .filter((axis): axis is NonNullable<typeof axis> => !!axis);
+                interactionPlan.reorderAxis = interactionPlan.reorderAxes[0];
             }
-            const source = vegaSpec.data?.find((entry: any) => Array.isArray(entry.values))?.name as string | undefined;
+            const source = vegaSpec.data
+                ?.find((entry: any) => Array.isArray(entry.values) && !INTERACTION_STORES.includes(entry.name))
+                ?.name as string | undefined;
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
             }
@@ -100,6 +120,10 @@ export function createVegaInteractiveRenderer(
                     interactions,
                     interactionPlan.resolve,
                     interactionPlan.presentUpdate ?? ((update) => update),
+                    options.assistDistance ?? 0,
+                    options.keyboardTargeting ?? false,
+                    options.targetFeedback,
+                    options.dismiss,
                 )
                 : undefined;
 
@@ -132,8 +156,35 @@ export function createVegaInteractiveRenderer(
 
             return {
                 viewports,
-                dispatchInteraction(event) {
-                    return interactionController?.dispatch(event);
+                getInteractionContext() {
+                    return interactionController?.getInteractionContext() ?? {
+                        chartType: input.chart_spec.chartType,
+                        selected: [],
+                    };
+                },
+                async applyUpdate(update, options) {
+                    if (interactionController) return interactionController.applyUpdate(update, options);
+                    return {
+                        status: 'unsupported',
+                        resolvedTargets: 0,
+                        unresolvedTargets: [],
+                        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+                    };
+                },
+                async setUpdates(updates) {
+                    if (interactionController) return interactionController.setUpdates(updates);
+                    return updates.map((update) => ({
+                        status: 'unsupported' as const,
+                        resolvedTargets: 0,
+                        unresolvedTargets: [],
+                        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+                    }));
+                },
+                async clearUpdate(id) {
+                    await interactionController?.clearUpdate(id);
+                },
+                refresh() {
+                    interactionController?.refresh();
                 },
                 getViewportGeometry(channel) {
                     const [left, top] = view.origin();

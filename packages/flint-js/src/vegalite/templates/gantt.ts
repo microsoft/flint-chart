@@ -8,7 +8,7 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import { presentAnnotationUpdate, rangeAnnotationText, valueEndAnnotationCandidates } from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import {
     coerceGanttEndpoint,
@@ -46,14 +46,14 @@ export const ganttChartDef: ChartTemplateDef = {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
         return {
-            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color', 'detail']),
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'x2', 'color', 'detail']),
             categoryField,
             seriesField,
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['bar'],
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
@@ -62,7 +62,10 @@ export const ganttChartDef: ChartTemplateDef = {
                     role: event.role === 'text-label' ? 'text-label' : 'task',
                 });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => valueEndAnnotationCandidates('x', 'top', 'bottom'),
+                rangeAnnotationText(resolvedEncodings.x?.field, resolvedEncodings.x2?.field),
+            ),
         };
     },
     declareLayoutMode: () => ({

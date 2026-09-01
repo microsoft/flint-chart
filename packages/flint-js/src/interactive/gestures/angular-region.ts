@@ -1,4 +1,4 @@
-import type { PlotAngularSector, PlotPoint } from '../triggers/events';
+import type { PlotAngularSector, PlotPoint } from '../language/events';
 import { TAU } from '../geometry/angular';
 
 export interface PolarFrame {

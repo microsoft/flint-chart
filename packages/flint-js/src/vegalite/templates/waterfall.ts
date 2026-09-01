@@ -9,9 +9,18 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import type { AnnotationCandidate } from '../../interactive/interactions';
+import { presentAnnotationUpdate, rangeAnnotationText } from '../../interactive/presentation/annotation';
 import { withInteractionTextLabel } from '../interaction-provenance';
 import { resolveTotalsMode } from '../../chart-types/waterfall';
+
+function waterfallAnnotationCandidates(): readonly AnnotationCandidate[] {
+    return [
+        { connection: 'value-end', valueAxis: 'y', priority: 0 },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'start', valueInset: 1 / 2, priority: 1 },
+        { connection: 'value-side', valueAxis: 'y', crossSide: 'end', valueInset: 1 / 2, priority: 1 },
+    ];
+}
 
 /**
  * Waterfall Chart template.
@@ -29,31 +38,36 @@ export const waterfallChartDef: ChartTemplateDef = {
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
     navigation: {},
+    reorder: { markTypes: ['rect'] },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const legendField = colorField ?? '__wf_color';
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
             categoryField,
             seriesField,
-            legendFields: colorField ? { color: colorField } : undefined,
+            resolveGroupValue: (element) => element.records?.[0]?.__wf_color,
+            legendFields: { color: legendField },
             selectableMarks: ['bar'],
+            annotationMarkType: 'rect',
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
-                const hits = event.role === 'legend-item' && legendField
-                    ? legendMatchedHits(event, context, legendField)
+                const resolvedLegendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && resolvedLegendField
+                    ? legendMatchedHits(event, context, resolvedLegendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, {
                     kind: 'mark',
                     role: event.role === 'text-label' ? 'text-label' : 'waterfall-step',
                 });
             },
-            presentUpdate: presentInteractionUpdate((element) => element.records?.[0]?.__wf_color === 'decrease'
-                ? { anchor: 'bottom', placement: 'below' }
-                : { anchor: 'top', placement: 'above' }),
+            presentUpdate: presentAnnotationUpdate(
+                waterfallAnnotationCandidates,
+                rangeAnnotationText('__wf_prev_sum', '__wf_sum'),
+            ),
         };
     },
     ownsValueLabels: true,

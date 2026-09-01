@@ -10,7 +10,11 @@ import {
     legendMatchedHits,
     targetFromHits,
 } from '../../core/interaction-semantics';
-import { presentInteractionUpdate } from '../../interactive/chart-update';
+import {
+    barAnnotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/presentation/annotation';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -47,6 +51,7 @@ export const barTableDef: ChartTemplateDef = {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
         const colorField = resolvedEncodings.color?.field;
+        const valueField = resolvedEncodings.x?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color']),
             categoryField,
@@ -55,13 +60,16 @@ export const barTableDef: ChartTemplateDef = {
             selectableMarks: ['bar'],
             renderHoverStyles: { rect: { opacity: 'contrast' } },
             resolve: (event, context) => {
-                const legendField = event.legendField ?? seriesField;
+                const legendField = event.legend?.field ?? seriesField;
                 const hits = event.role === 'legend-item' && legendField
                     ? legendMatchedHits(event, context, legendField)
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'bar-table-row' });
             },
-            presentUpdate: presentInteractionUpdate(() => ({ anchor: 'mark-end', placement: 'auto' })),
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates('x'),
+                valueAnnotationText(valueField),
+            ),
         };
     },
     suppressValueLabels: true,

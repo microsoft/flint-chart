@@ -28,6 +28,13 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { resolveDiscreteType } from '../../core/axis-detection';
 import { defaultBuildEncodings } from './utils';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 const isDiscrete = (type: string | undefined) =>
     type === 'nominal' || type === 'ordinal';
@@ -69,6 +76,27 @@ export const slopeChartDef: ChartTemplateDef = {
     channels: ["x", "y", "color", "detail", "column", "row"],
     navigation: {},
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'detail']),
+            categoryField: firstDiscreteEncodingField(resolvedEncodings, ['x']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     declareLayoutMode: (cs, table) => {
         // Force the period axis to a discrete band so the two periods sit at two
         // equally-spaced positions regardless of the field's native type.

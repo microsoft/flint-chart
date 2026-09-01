@@ -1,4 +1,4 @@
-import type { InteractionModifiers, PlotPoint } from '../triggers/events';
+import type { InteractionModifiers, PlotPoint } from '../language/events';
 
 export interface RendererCoordinateSpace {
     rect: DOMRect;
@@ -14,16 +14,38 @@ function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
 }
 
+/**
+ * Converts a rendered root-frame matrix into a plot origin expressed in the
+ * renderer's own units. `getCTM()` reports CSS pixels, so a CSS-scaled SVG
+ * would otherwise report an origin that disagrees with `logicalWidth`.
+ */
+export function rendererPlotOrigin(
+    matrix: { a: number; d?: number; e: number; f: number } | null | undefined,
+    viewOrigin: PlotPoint,
+): PlotPoint {
+    if (!matrix) return viewOrigin;
+    const scaleX = matrix.a || 1;
+    const scaleY = matrix.d || scaleX;
+    return { x: matrix.e / scaleX, y: matrix.f / scaleY };
+}
+
 export function interactionModifiers(event: MouseEvent | PointerEvent): InteractionModifiers {
     return { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey };
 }
 
 export function clientToPlotPoint(client: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
-    const rendererX = (client.x - space.rect.left) * space.logicalWidth / space.rect.width;
-    const rendererY = (client.y - space.rect.top) * space.logicalHeight / space.rect.height;
+    const renderer = clientToRendererPoint(client, space);
     return {
-        x: clamp(rendererX - space.originX, 0, space.plotWidth),
-        y: clamp(rendererY - space.originY, 0, space.plotHeight),
+        x: clamp(renderer.x - space.originX, 0, space.plotWidth),
+        y: clamp(renderer.y - space.originY, 0, space.plotHeight),
+    };
+}
+
+/** Client position in the full renderer, including plot margins and legends. */
+export function clientToRendererPoint(client: PlotPoint, space: RendererCoordinateSpace): PlotPoint {
+    return {
+        x: (client.x - space.rect.left) * space.logicalWidth / space.rect.width,
+        y: (client.y - space.rect.top) * space.logicalHeight / space.rect.height,
     };
 }
 

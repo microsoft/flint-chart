@@ -7,6 +7,8 @@ import type {
     ViewportChannel,
     ViewportState,
 } from './types';
+import { isExternalInteraction } from './interactions';
+import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
 let generatedChartId = 0;
 
@@ -179,10 +181,13 @@ export function mountInteractiveChartSurface(
     const chart = document.createElement('div');
     const state: ViewportState = {};
     const rails = new Map<ViewportChannel, ReturnType<typeof createViewportRail>>();
+    const interactions = options.interactions ?? [];
+    const externalInteractions = new Map(
+        interactions.filter(isExternalInteraction).map((interaction) => [interaction.id, interaction]),
+    );
     let renderer: InteractiveRenderer | undefined;
     let updateTimer: number | undefined;
     let destroyed = false;
-    const pendingEvents: import('./interactions').ExternalInteractionEvent[] = [];
 
     root.className = options.className ?? 'flint-interactive-surface';
     root.setAttribute('role', 'figure');
@@ -190,10 +195,11 @@ export function mountInteractiveChartSurface(
     root.dataset.flintChartId = chartId;
     applyStyles(root, {
         display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'minmax(0, auto) auto',
-        alignItems: 'stretch', rowGap: '6px', minWidth: '0', maxWidth: '100%', marginInline: 'auto',
+        alignItems: 'stretch', rowGap: '6px', minWidth: '0',
     });
     chart.dataset.flintChart = '';
-    applyStyles(chart, { gridColumn: '1', gridRow: '1', minWidth: '0', overflow: 'hidden' });
+    // The chart keeps its compiled width; handling any overflow is the host's decision.
+    applyStyles(chart, { gridColumn: '1', gridRow: '1', minWidth: '0' });
     root.append(chart);
     container.replaceChildren(root);
 
@@ -211,14 +217,23 @@ export function mountInteractiveChartSurface(
         rails.get(channel)?.update(state[channel] ?? 0);
         scheduleRender();
     };
+    const unsupportedUpdate = (update: ChartUpdate): ChartUpdateResult => ({
+        status: 'unsupported',
+        resolvedTargets: 0,
+        unresolvedTargets: [],
+        unsupportedOps: [...new Set(update.ops.map((op) => op.op))],
+    });
 
-    const ready = adapter.mount(chart, input).then((mounted) => {
+    const ready = adapter.mount(chart, input).then(async (mounted) => {
         if (destroyed) {
             mounted.destroy();
             return;
         }
         renderer = mounted;
-        for (const event of pendingEvents.splice(0)) void mounted.dispatchInteraction?.(event);
+        if ((options.updates?.length ?? 0) > 0) {
+            if (!mounted.setUpdates) throw new Error('This interactive backend does not support chart updates.');
+            await mounted.setUpdates(options.updates ?? []);
+        }
         for (const viewport of mounted.viewports) {
             state[viewport.channel] = 0;
             const rail = createViewportRail(viewport, 0, (start) => setViewport(viewport.channel, start));
@@ -240,8 +255,8 @@ export function mountInteractiveChartSurface(
             const yGeometry = renderer?.getViewportGeometry?.('y');
             rails.get('x')?.setGeometry(xGeometry?.offset ?? 0, xGeometry?.extent ?? extent.width);
             rails.get('y')?.setGeometry(yGeometry?.offset ?? 0, yGeometry?.extent ?? extent.height);
-            const verticalRailGutter = rails.has('y') ? RAIL_THICKNESS + RAIL_GAP : 0;
-            root.style.width = `${Math.ceil(extent.width + verticalRailGutter)}px`;
+            // Sizing to content keeps the surface honest when the chart is wider than its host.
+            root.style.width = 'max-content';
         };
         syncRailExtents();
         window.setTimeout(syncRailExtents, 0);
@@ -253,10 +268,42 @@ export function mountInteractiveChartSurface(
         ready,
         getViewportState: () => ({ ...state }),
         setViewport,
-        dispatch: (event) => {
-            if (destroyed) return;
-            if (renderer) void renderer.dispatchInteraction?.(event);
-            else pendingEvents.push(event);
+        dispatch: async (interactionId, payload) => {
+            await ready;
+            if (destroyed) return null;
+            const interaction = externalInteractions.get(interactionId);
+            if (!interaction) {
+                const definition = interactions.find((candidate) => candidate.id === interactionId);
+                throw new Error(definition
+                    ? `Interaction "${interactionId}" is a canvas interaction and cannot receive external payloads.`
+                    : `External interaction "${interactionId}" is not defined.`);
+            }
+            if (!renderer?.getInteractionContext) {
+                throw new Error('This interactive backend does not provide interaction context.');
+            }
+            const update = interaction.handle(payload, renderer.getInteractionContext());
+            if (!update) return null;
+            if (!renderer.applyUpdate) return unsupportedUpdate(update);
+            return renderer.applyUpdate(update);
+        },
+        applyUpdate: async (update, applyOptions) => {
+            await ready;
+            if (destroyed || !renderer?.applyUpdate) return unsupportedUpdate(update);
+            return renderer.applyUpdate(update, applyOptions);
+        },
+        setUpdates: async (updates) => {
+            await ready;
+            if (destroyed || !renderer?.setUpdates) {
+                return updates.map(unsupportedUpdate);
+            }
+            return renderer.setUpdates(updates);
+        },
+        clearUpdate: async (id) => {
+            await ready;
+            if (!destroyed) await renderer?.clearUpdate?.(id);
+        },
+        refresh: () => {
+            if (!destroyed) renderer?.refresh?.();
         },
         destroy: () => {
             if (destroyed) return;

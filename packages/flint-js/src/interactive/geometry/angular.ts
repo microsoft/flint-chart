@@ -1,4 +1,4 @@
-import type { PlotAngularSector, PlotPoint } from '../triggers/events';
+import type { PlotAngularSector, PlotPoint } from '../language/events';
 
 export const TAU = 2 * Math.PI;
 

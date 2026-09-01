@@ -603,11 +603,13 @@ export interface ThemeCompileDefaults extends Partial<AssembleOptions> {
 
 export interface ThemeInteraction {
     tooltipFormat?: string;
+    /** Paint for the exterior of a contiguous semantic selection. */
     selectionBoundary?: {
         color?: string;
         width?: number;
         opacity?: number;
         haloColor?: string;
+        /** Set to zero to disable the contrast halo. */
         haloWidth?: number;
         haloOpacity?: number;
     };
@@ -929,6 +931,13 @@ export interface DesignDecisions {
     };
     marks: ResolvedMarks;
     interaction: {
+        continuousColorFocus: {
+            mutedFill: string;
+            boundaryWidth: number;
+            boundaryOpacity: number;
+            haloWidth: number;
+            haloOpacity: number;
+        };
         selectionBoundary: {
             color: string;
             width: number;

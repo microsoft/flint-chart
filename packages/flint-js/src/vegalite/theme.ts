@@ -19,7 +19,7 @@ import { contrastingInk, parseColor, luminance, mixHex, toHex } from '../core/th
 import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
 import { CANVAS_FURNITURE_KEY, readCanvasFurniture, type CanvasFurnitureItem } from './canvas-furniture.js';
-import { withInteractionTextLabel } from './interaction-provenance.js';
+import { withInteractionLegendLabel, withInteractionTextLabel } from './interaction-provenance.js';
 
 /** Mark families that carry data values (as opposed to chrome). */
 const DATA_MARKS = new Set([
@@ -5143,7 +5143,7 @@ function applySeriesEndLabels(
         say('legend.placement', `series-end labels dodged by at most ${Math.round(layout.maxDisplacement)}px to avoid overlap`);
     }
 
-    const labelLayer: any = {
+    const labelLayer: any = withInteractionLegendLabel({
         __themeSynthetic: true,
         transform,
         mark: {
@@ -5163,7 +5163,7 @@ function applySeriesEndLabels(
             text: { field: textField, type: 'nominal' },
             ...(colourEnc?.field ? { color: { ...colourEnc, legend: null } } : {}),
         },
-    };
+    }, { channel: 'color', field: seriesField });
     appendLayer(body, labelLayer);
 
     // The names sit outside the plot rectangle, and no room is reserved for
@@ -5352,7 +5352,7 @@ function bandEndLabels(
                 { window: [{ op: 'row_number', as: '__bandDataOrder' }] },
                 { window: [{ op: 'row_number', as: '__bandEndRank' }], sort: [{ field: '__bandDataOrder', order: 'descending' }], groupby: [seriesField] },
             ];
-    const endLayer = (inside: boolean): any => ({
+    const endLayer = (inside: boolean): any => withInteractionTextLabel({
         __themeSynthetic: true,
         transform: [
             ...rankTf,
@@ -5378,7 +5378,7 @@ function bandEndLabels(
             text: { field: '__bandEndLabel', type: 'nominal' },
             ...(inside ? knockedOut : inSeriesInk),
         },
-    });
+    }, { fields: [seriesField], presentation: 'independent' });
     // Exactly one of the two layers is drawn: `outside` is now all of the
     // series or none of them, never a subset.
     if (!outside.length) appendLayer(body, endLayer(true));

@@ -91,13 +91,20 @@
 .cf-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  align-items: start;
   gap: 18px;
   width: min(100%, 960px);
 }
 
+/* Navigation demos are compiled wider than a half-width card. */
+.cf-grid-wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .cf-probe {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto max-content auto;
+  align-self: start;
   min-width: 0;
   overflow: hidden;
   border: 1px solid #d8dde2;
@@ -138,16 +145,17 @@
   white-space: nowrap;
 }
 
-.cf-status-works {
+.cf-status-ready {
   color: #3f6b57;
 }
 
-.cf-status-partial {
+.cf-status-loading,
+.cf-status-unsupported {
   color: #806327;
 }
 
-.cf-status-none {
-  color: #737d86;
+.cf-status-error {
+  color: #a33b36;
 }
 
 .cf-action-rail {
@@ -195,19 +203,188 @@
 
 .cf-stage {
   min-width: 0;
-  overflow: hidden;
+  /* Charts compile to their own width; reach the overflow instead of hiding it. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.cf-context-menu {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: 3px;
+  border: 1px solid #cfd5da;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+}
+
+.cf-context-menu button {
+  border: 0;
+  border-radius: 4px;
+  padding: 6px 9px;
+  color: #1f2328;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.cf-context-menu button:hover:not(:disabled) {
+  background: #eef1f3;
+}
+
+.cf-context-menu button:disabled {
+  color: #a6aeb5;
+  cursor: default;
+}
+
+.cf-context-note {
+  margin: 6px 12px 0;
+  color: #3f6b57;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .cf-mount {
   display: grid;
-  place-items: center;
-  width: 100%;
+  align-items: center;
+  /* Centring an oversized chart would push its left edge out of scroll reach. */
+  justify-items: safe center;
+  /* Grow to the chart so the stage can scroll to its far edge. */
+  width: max-content;
+  min-width: 100%;
   min-height: 280px;
 }
 
 .cf-mount [data-flint-chart] {
   display: grid;
-  place-items: center;
+  align-items: center;
+  justify-items: safe center;
+}
+
+.cf-probe-event {
+  min-width: 0;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-top: 1px solid #edf0f2;
+  background: #fafbfc;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.cf-probe-event-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px 0;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.cf-probe-event-summary > * + *::before {
+  content: '·';
+  margin: 0 8px;
+  color: #b0b7bd;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.cf-probe-event strong {
+  flex: none;
+  font-weight: 600;
+}
+
+.cf-probe-event span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf-probe-event-data {
+  max-height: 156px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #e7eaed;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.cf-probe-event-resolved {
+  color: #46756a;
+}
+
+.cf-probe-event-warning {
+  color: #8a6a2f;
+}
+
+.cf-probe-event-value {
+  color: #68737c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+}
+
+.cf-probe-event-geometry {
+  color: #68737c;
+  font-variant-numeric: tabular-nums;
+}
+
+.cf-probe-event-items {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+}
+
+.cf-probe-event-items li {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.cf-probe-event-items li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.cf-semantic-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cf-semantic-label {
+  font-weight: 600;
+}
+
+.cf-probe-event .cf-semantic-content {
+  min-width: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cf-semantic-value-row {
+  color: #315f75;
+}
+
+.cf-semantic-records-row {
+  color: #765638;
+}
+
+.cf-semantic-record {
+  display: block;
 }
 
 @media (max-width: 820px) {
