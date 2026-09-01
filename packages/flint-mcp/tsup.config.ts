@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     cli: 'src/cli.ts',
-    flint: 'src/flint.ts',
+    'flint-chart': 'src/flint-chart.ts',
     server: 'src/server.ts',
     'render/index': 'src/render/index.ts',
   },

@@ -72,7 +72,7 @@ describe('compile: argument parsing', () => {
     for (const flag of ['--help', '-h']) {
       const harness = makeIo();
       expect(await runCompile([flag], harness.io)).toBe(0);
-      expect(harness.stdoutText()).toContain('flint compile');
+      expect(harness.stdoutText()).toContain('flint-chart compile');
     }
   });
 

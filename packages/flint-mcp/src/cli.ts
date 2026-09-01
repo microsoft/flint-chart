@@ -57,8 +57,8 @@ Example MCP client config:
   { "command": "npx", "args": ["-y", "flint-chart-mcp"] }
 
 Local file compile (no agent needed):
-  flint compile chart.json --format svg   (via the separate "flint" binary)
-  See "flint --help" for compile options.
+  flint-chart compile chart.json --format svg   (via the separate "flint-chart" binary)
+  See "flint-chart --help" for compile options.
 `;
 
 // keep runCompile re-export for existing tests importing from cli.js

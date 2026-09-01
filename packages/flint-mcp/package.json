@@ -29,7 +29,7 @@
   "type": "module",
   "bin": {
     "flint-chart-mcp": "dist/cli.js",
-    "flint": "dist/flint.js"
+    "flint-chart": "dist/flint-chart.js"
   },
   "main": "./dist/server.js",
   "types": "./dist/server.d.ts",

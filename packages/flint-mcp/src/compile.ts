@@ -8,13 +8,13 @@ import { SUPPORTED_BACKENDS, type SupportedBackend } from './tools/schemas.js';
 import { renderChart } from './render/index.js';
 import type { RenderBackend, RenderFormat } from './render/types.js';
 
-const COMPILE_HELP = `flint ${VERSION}
+const COMPILE_HELP = `flint-chart ${VERSION}
 
 Compile a saved Flint ChartAssemblyInput JSON to SVG or PNG, entirely in-process.
 
 Usage:
-  flint compile <input> [options]
-  flint <input> [options]              (shorthand, same as compile)
+  flint-chart compile <input> [options]
+  flint-chart <input> [options]              (shorthand, same as compile)
 
 Arguments:
   <input>                 Path to JSON file containing ChartAssemblyInput, or "-" for stdin.
@@ -35,10 +35,10 @@ Note:
   directory, or against the current working directory when reading from stdin.
 
 Examples:
-  flint compile chart.json --format svg
-  flint compile chart.json --backend echarts --format png --output chart.png
-  cat chart.json | flint compile - --format svg > chart.svg
-  flint chart.json --format svg --output chart.svg
+  flint-chart compile chart.json --format svg
+  flint-chart compile chart.json --backend echarts --format png --output chart.png
+  cat chart.json | flint-chart compile - --format svg > chart.svg
+  flint-chart chart.json --format svg --output chart.svg
 `;
 
 interface CompileOptions {
@@ -108,14 +108,14 @@ function parseCompileArgs(argv: string[]): CompileParseResult {
       if (input) throw new CompileError(`Unexpected argument: ${arg} (input already set to "${input}")`);
       input = arg;
     } else if (arg.startsWith('-')) {
-      throw new CompileError(`Unknown compile option: ${arg}\nRun "flint --help" for usage.`);
+      throw new CompileError(`Unknown compile option: ${arg}\nRun "flint-chart --help" for usage.`);
     } else {
       if (input) throw new CompileError(`Unexpected argument: ${arg} (input already set to "${input}")`);
       input = arg;
     }
   }
 
-  if (!input) throw new CompileError('Missing <input> argument.\nRun "flint --help" for usage.');
+  if (!input) throw new CompileError('Missing <input> argument.\nRun "flint-chart --help" for usage.');
 
   const resolvedBackend = (backend ?? 'vegalite') as RenderBackend;
   if (!SUPPORTED_BACKENDS.includes(resolvedBackend as SupportedBackend)) {

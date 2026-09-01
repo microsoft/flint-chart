@@ -26,7 +26,7 @@ const isEntry = process.argv[1] !== undefined && (() => {
 
 if (isEntry) {
   main().catch((err) => {
-    process.stderr.write(`flint failed: ${err?.stack ?? err}\n`);
+    process.stderr.write(`flint-chart failed: ${err?.stack ?? err}\n`);
     process.exit(1);
   });
 }
