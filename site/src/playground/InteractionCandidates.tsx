@@ -5,6 +5,8 @@ import { FlaskConical } from 'lucide-react';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
+import { FlintDimpVisStage } from './FlintDimpVisStage';
+import { PureD3DimpVisStage } from './PureD3DimpVisStage';
 import './interaction-candidates.css';
 
 type InteractionKind =
@@ -26,6 +28,18 @@ type Example =
   }
   | {
     kind: 'overview-detail';
+    id: string;
+    label: string;
+    note: string;
+  }
+  | {
+    kind: 'flint-dimpvis';
+    id: string;
+    label: string;
+    note: string;
+  }
+  | {
+    kind: 'dimpvis';
     id: string;
     label: string;
     note: string;
@@ -112,6 +126,18 @@ const EXAMPLES: Example[] = [
     label: 'Point lasso + selection hull',
     note: 'Reference treatment for freeform cluster picking that stays entirely in a D3 overlay above the Flint scatterplot.',
     interaction: 'lasso-points',
+  },
+  {
+    kind: 'flint-dimpvis',
+    id: 'flint-discrete-dimpvis',
+    label: 'Flint discrete DimpVis',
+    note: 'A first Flint-native approximation: use the country legend to switch the expanded trajectory, then click points on that trajectory to move the shared background year.',
+  },
+  {
+    kind: 'dimpvis',
+    id: 'pure-d3-dimpvis',
+    label: 'Pure D3 DimpVis',
+    note: 'Reference treatment for trajectory-constrained dragging: one country drives continuous interpolation of the full scatterplot state between yearly snapshots.',
   },
   {
     kind: 'overview-detail',
@@ -760,10 +786,20 @@ function attachInteraction(kind: InteractionKind, svg: SVGSVGElement, card: HTML
   }
 }
 
-function CandidateHeader({ title, label, note }: { title: string; label: string; note: string }) {
+function CandidateHeader({
+  title,
+  label,
+  note,
+  kicker = 'Hand-authored D3',
+}: {
+  title: string;
+  label: string;
+  note: string;
+  kicker?: string;
+}) {
   return (
     <header className="ic-card-header">
-      <div className="ic-kicker"><FlaskConical size={13} aria-hidden="true" /> Hand-authored D3</div>
+      <div className="ic-kicker"><FlaskConical size={13} aria-hidden="true" /> {kicker}</div>
       <h2>{title}</h2>
       <strong>{label}</strong>
       <p>{note}</p>
@@ -787,6 +823,37 @@ function SingleCandidateCard({ example }: { example: Extract<Example, { kind: 's
         <ScaleToFit height={390} minHeight={285} adaptiveHeight padding={8}>
           <VegaLiteView spec={spec} renderer="svg" onReady={onReady} />
         </ScaleToFit>
+      </div>
+    </article>
+  );
+}
+
+function FlintDimpVisCandidateCard({ example }: { example: Extract<Example, { kind: 'flint-dimpvis' }> }) {
+  return (
+    <article className="ic-card">
+      <CandidateHeader
+        title="Global health trajectories with discrete Flint state"
+        label={example.label}
+        note={example.note}
+        kicker="Flint interaction surface"
+      />
+      <div className="ic-stage">
+        <FlintDimpVisStage />
+      </div>
+    </article>
+  );
+}
+
+function DimpVisCandidateCard({ example }: { example: Extract<Example, { kind: 'dimpvis' }> }) {
+  return (
+    <article className="ic-card">
+      <CandidateHeader
+        title="Global health trajectories with direct manipulation"
+        label={example.label}
+        note={example.note}
+      />
+      <div className="ic-stage">
+        <PureD3DimpVisStage />
       </div>
     </article>
   );
@@ -1020,6 +1087,8 @@ function DrilldownCandidateCard({ example }: { example: Extract<Example, { kind:
 }
 
 function CandidateCard({ example }: { example: Example }) {
+  if (example.kind === 'flint-dimpvis') return <FlintDimpVisCandidateCard example={example} />;
+  if (example.kind === 'dimpvis') return <DimpVisCandidateCard example={example} />;
   if (example.kind === 'overview-detail') return <OverviewDetailCandidateCard example={example} />;
   if (example.kind === 'drilldown') return <DrilldownCandidateCard example={example} />;
   return <SingleCandidateCard example={example} />;
@@ -1032,8 +1101,10 @@ export function InteractionCandidates() {
         <div className="ic-eyebrow">Future interaction references</div>
         <h1>Hand-authored interaction candidates</h1>
         <p>
-          Flint compiles each static chart. D3 is attached afterwards on this page only, preserving concrete
-          interaction treatments we may later move into compiler-owned semantics and rendering.
+          Most cards on this page compile a static Flint chart and then attach D3 afterwards, preserving
+          concrete interaction treatments we may later move into compiler-owned semantics and rendering.
+          The discrete Flint DimpVis card is the current exception: it stays inside Flint&apos;s interaction
+          surface and intentionally tests how far the existing semantic update model can go on its own.
         </p>
       </header>
       <div className="ic-grid">

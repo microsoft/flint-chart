@@ -189,6 +189,121 @@
   stroke-width: 1.6px;
 }
 
+.ic-dimpvis-shell {
+  padding: 0 4px 4px;
+}
+
+.ic-dimpvis-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ic-dimpvis-plot-bg {
+  fill: #fcfcfd;
+  stroke: #e7ebef;
+}
+
+.ic-dimpvis-axis-label,
+.ic-dimpvis-legend-title,
+.ic-dimpvis-status,
+.ic-dimpvis-focus-label {
+  fill: #2d3439;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ic-dimpvis-legend-label,
+.ic-dimpvis-slider-label,
+.ic-dimpvis-path-label,
+.ic-dimpvis-instruction {
+  fill: #66707a;
+  font-size: 10px;
+}
+
+.ic-dimpvis-year {
+  fill: rgba(56, 79, 68, 0.12);
+  font-size: 92px;
+  font-weight: 700;
+  text-anchor: middle;
+  letter-spacing: -0.03em;
+  pointer-events: none;
+}
+
+.ic-dimpvis-path {
+  fill: none;
+  stroke: #436856;
+  stroke-width: 2.25px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 4 4;
+}
+
+.ic-dimpvis-point {
+  opacity: 0.92;
+  transition: opacity 140ms ease;
+}
+
+.ic-dimpvis-point.is-muted {
+  opacity: 0.28;
+}
+
+.ic-dimpvis-slider-track,
+.ic-dimpvis-slider-tick {
+  stroke: #c7d0d7;
+  stroke-width: 1.2px;
+}
+
+.ic-dimpvis-slider-handle {
+  fill: #436856;
+  stroke: #ffffff;
+  stroke-width: 2px;
+}
+
+.ic-flint-dimpvis-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 12px 14px;
+}
+
+.ic-flint-dimpvis-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ic-flint-dimpvis-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.ic-flint-dimpvis-panel-header strong {
+  color: #2d3439;
+  font-size: 12px;
+}
+
+.ic-flint-dimpvis-panel-header span {
+  color: #6c7780;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.ic-flint-dimpvis-mount {
+  min-height: 152px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #edf0f2;
+  border-radius: 6px;
+  background: #fcfcfd;
+}
+
+.ic-flint-dimpvis-mount > * {
+  min-width: 100%;
+}
+
 @media (max-width: 520px) {
   .ic-card-header {
     min-height: 0;
