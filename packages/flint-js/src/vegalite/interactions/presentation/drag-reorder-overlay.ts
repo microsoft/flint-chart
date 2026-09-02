@@ -13,6 +13,7 @@ export interface DragReorderPreview {
     current: PlotPoint;
     axis?: 'x' | 'y';
     source: SemanticTarget;
+    sourceItem?: any;
     destination: SemanticTarget;
 }
 
@@ -56,10 +57,18 @@ export function eligibleReorderAxesForHit<T extends Pick<VegaReorderAxis, 'axis'
     ));
 }
 
+export function eligibleReorderAxesForAxis<T extends Pick<VegaReorderAxis, 'axis' | 'field'>>(
+    axes: readonly T[],
+    identity: Pick<VegaReorderAxis, 'axis' | 'field'>,
+): T[] {
+    return axes.filter(({ axis, field }) => axis === identity.axis && field === identity.field);
+}
+
 function targetValue(target: SemanticTarget, field: string): unknown {
     const element = target.elements[0];
     return element?.records?.find((record) => record[field] !== undefined)?.[field]
-        ?? element?.value[field];
+        ?? element?.value[field]
+        ?? (element?.value.field === field ? element.value.value : undefined);
 }
 
 export function activeReorderAxis<T extends Pick<VegaReorderAxis, 'axis' | 'field'>>(
@@ -142,7 +151,7 @@ export function createDragReorderOverlay({
         layer.setAttribute('viewBox', `0 0 ${space.logicalWidth} ${space.logicalHeight}`);
 
         const renderedElement = (item: any): SVGGraphicsElement | undefined => renderer
-            ? [...renderer.querySelectorAll<SVGGraphicsElement>('[role="graphics-symbol"]')]
+            ? [...renderer.querySelectorAll<SVGGraphicsElement>('[role="graphics-symbol"], text')]
                 .find((candidate) => {
                     const datum = (candidate as any).__data__;
                     return datum?.mark === item.mark && datum?.datum === item.datum;
@@ -216,6 +225,14 @@ export function createDragReorderOverlay({
             shape.setAttribute('stroke', item.stroke ?? '#ffffff');
             shape.setAttribute('stroke-width', String(Math.max(1, item.strokeWidth ?? 0)));
             layer.append(shape);
+        }
+
+        if (preview.source.visual.kind === 'axis' && preview.sourceItem) {
+            const labelGhost = cloneRenderedElement(preview.sourceItem, delta);
+            if (labelGhost) {
+                labelGhost.setAttribute('opacity', '0.72');
+                layer.append(labelGhost);
+            }
         }
 
         if (!Object.is(sourceValue, destinationValue)) {

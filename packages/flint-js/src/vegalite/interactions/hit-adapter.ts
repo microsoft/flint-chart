@@ -10,11 +10,16 @@ import type {
     InteractionPhase,
     PlotPoint,
     PlotAngularSector,
-    RegionAxis,
     RegionInteractionEvent,
     RegionOperation,
 } from '../../interactive/language/events';
 import { angularSegments } from '../../interactive/geometry/angular';
+import {
+    constrainCartesianRegion,
+    type CartesianRegionAxis,
+    type PlotFrame,
+    type PlotSize,
+} from '../../interactive/gestures/cartesian-region';
 export {
     clientRectToLayoutRect,
     clientToLayoutPoint,
@@ -211,6 +216,25 @@ export function sceneItems(view: any): any[] {
     };
     visit(view.scenegraph()?.root, 0, 0);
     return result;
+}
+
+export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame {
+    const frames: PlotFrame[] = [];
+    const visit = (item: any, offsetX: number, offsetY: number): void => {
+        if (!item) return;
+        const isGroup = item.mark?.marktype === 'group';
+        const x = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
+        const y = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        if (isGroup && (item.mark?.role === 'cell' || item.mark?.name === 'cell')
+            && typeof item.width === 'number' && typeof item.height === 'number'
+            && point.x >= x && point.x <= x + item.width
+            && point.y >= y && point.y <= y + item.height) {
+            frames.push({ x, y, width: item.width, height: item.height });
+        }
+        if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
+    };
+    visit(view.scenegraph()?.root, 0, 0);
+    return frames.sort((left, right) => left.width * left.height - right.width * right.height)[0] ?? fallback;
 }
 
 export function boundsIntersectRect(
@@ -751,6 +775,31 @@ export function axisTargetIdentity(
     return { ...target, value: item.datum.value, role };
 }
 
+export function axisItemAt(
+    view: any,
+    point: PlotPoint,
+    targets: Readonly<Record<string, import('./contracts').VegaAxisTarget>> | undefined,
+): any | undefined {
+    let found: any | undefined;
+    const visit = (item: any, offsetX: number, offsetY: number): void => {
+        if (!item) return;
+        const bounds = item.bounds;
+        if (axisTargetIdentity(item, targets) && bounds
+            && point.x >= bounds.x1 + offsetX && point.x <= bounds.x2 + offsetX
+            && point.y >= bounds.y1 + offsetY && point.y <= bounds.y2 + offsetY) {
+            found = item;
+        }
+        const isGroup = item.mark?.marktype === 'group';
+        const childOffsetX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
+        const childOffsetY = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        if (Array.isArray(item.items)) {
+            for (const child of item.items) visit(child, childOffsetX, childOffsetY);
+        }
+    };
+    visit(view.scenegraph()?.root, 0, 0);
+    return found;
+}
+
 export interface NormalizedVegaElement {
     event: ElementInteractionEvent;
     role: 'mark' | 'legend-item' | 'text-label';
@@ -1159,19 +1208,13 @@ export function normalizeVegaRegionEvent(
     phase: InteractionPhase,
     match: 'intersect' | 'contain',
     modifiers: InteractionModifiers,
-    axis: RegionAxis = 'xy',
-    plotSize: { width: number; height: number } = { width: view.width(), height: view.height() },
+    axis: CartesianRegionAxis = 'xy',
+    plotSize: PlotSize | PlotFrame = { width: view.width(), height: view.height() },
     operation: RegionOperation = 'create',
     collectHits = true,
 ): RegionInteractionEvent {
-    const constrainedStart = {
-        x: axis === 'y' ? 0 : start.x,
-        y: axis === 'x' ? 0 : start.y,
-    };
-    const constrainedEnd = {
-        x: axis === 'y' ? plotSize.width : end.x,
-        y: axis === 'x' ? plotSize.height : end.y,
-    };
+    const { start: constrainedStart, end: constrainedEnd } =
+        constrainCartesianRegion(start, end, axis, plotSize);
     return {
         type: 'region',
         phase,

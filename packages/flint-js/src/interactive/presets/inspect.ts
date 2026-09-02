@@ -16,6 +16,7 @@ export function createInspectInteraction(options: InspectOptions = {}): CanvasIn
         eventSource: inspectTrigger(
             options.mode ?? 'xy', options.selector, options.tolerance, options.guide, options.cycle,
         ),
+        affordances: [{ target: 'plot', cursor: 'inspect' }],
         handle(event, context) {
             if (!INSPECT_ACTIONS.has(event.action) || event.phase === 'cancel') return null;
             if (!event.target) return { id, ops: [] };

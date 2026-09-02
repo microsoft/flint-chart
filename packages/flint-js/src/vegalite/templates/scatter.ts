@@ -18,9 +18,9 @@ import {
 } from '../../core/interaction-semantics';
 import {
     annotationCandidates,
+    boxplotAnnotationText,
     presentAnnotationUpdate,
     seriesValuesAnnotationText,
-    suppressAnnotationUpdate,
 } from '../../interactive/presentation/annotation';
 
 const isDiscreteType = (t: string | undefined) => t === 'nominal' || t === 'ordinal';
@@ -326,9 +326,9 @@ export const boxplotDef: ChartTemplateDef = {
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['boxplot'],
             renderHoverStyles: {
-                rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
-                rule: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
-                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                rect: { opacity: 'contrast' },
+                rule: { opacity: 'contrast' },
+                symbol: { opacity: 'contrast' },
             },
             resolve: (event, context) => {
                 const legendField = event.legend?.field ?? seriesField;
@@ -337,7 +337,10 @@ export const boxplotDef: ChartTemplateDef = {
                     : event.hits;
                 return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'distribution' });
             },
-            presentUpdate: suppressAnnotationUpdate,
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('center', 'top', 'right', 'left'),
+                boxplotAnnotationText,
+            ),
         };
     },
     declareLayoutMode: (cs, table, chartProperties) => {

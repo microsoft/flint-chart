@@ -1,24 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, MessageSquarePlus, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
   genBarTests,
+  genGroupedBarTests,
+  genStackedBarTests,
   TEST_GENERATORS,
   type TestCase,
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
-  axisHighlight,
   brushX,
   brushY,
   brushZoom,
   clickAnnotate,
-  clickGroupHighlight,
-  clickHighlight,
+  clickAxisIsolate,
+  clickGroupFocus,
+  clickLegendIsolate,
+  clickMark,
   contextActivate,
   doubleActivate,
   dragReorder,
+  facetBrushLink,
+  hoverGroupFocus,
   inspect,
   lassoSelect,
   legendToggle,
@@ -33,13 +38,15 @@ import { BACKENDS } from '../shared/supported-backends';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
 import { navigationDemoCases } from './navigation-demo-data';
+import { gapminderRows } from './gapminder-dashboard-data';
 import './click-focus-lab.css';
 
-export type InteractionMode = 'element' | 'group' | 'annotate' | 'select'
+export type InteractionMode = 'click-mark' | 'click-group-focus' | 'annotate' | 'select'
+  | 'facet-link' | 'hover-group-focus'
   | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder'
-  | 'lasso' | 'assisted' | 'keyboard' | 'select-comment'
-  | 'legend-toggle' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
-  | 'brush-zoom' | 'long-press' | 'double-activate' | 'axis-highlight';
+  | 'lasso' | 'click-legend-isolate' | 'click-axis-isolate' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
+  | 'long-press' | 'double-activate'
+  | 'click-highlight' | 'assisted-focus' | 'keyboard-focus' | 'select-context' | 'focus-legend-toggle' | 'focus-brush-zoom';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 export interface NavigationGuard {
@@ -48,11 +55,13 @@ export interface NavigationGuard {
   overscrollFraction: number;
 }
 
-const interactionModes = [
-  { value: 'element', label: 'Element', icon: MousePointer2 },
-  { value: 'group', label: 'Group', icon: Layers3 },
+const unitInteractionModes = [
+  { value: 'click-mark', label: 'Click mark', icon: MousePointer2 },
+  { value: 'click-group-focus', label: 'Click group focus', icon: Layers3 },
+  { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
   { value: 'annotate', label: 'Annotate', icon: MessageSquareText },
   { value: 'select', label: 'Select', icon: Scan },
+  { value: 'facet-link', label: 'Facet link', icon: Link2 },
   { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
   { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
@@ -60,36 +69,45 @@ const interactionModes = [
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
   { value: 'lasso', label: 'Lasso', icon: Lasso },
-  { value: 'select-comment', label: 'Select & comment', icon: MessageSquarePlus },
-  { value: 'assisted', label: 'Assisted click', icon: Crosshair },
-  { value: 'keyboard', label: 'Keyboard', icon: Keyboard },
-  { value: 'axis-highlight', label: 'Axis highlight', icon: Ruler },
-  { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
+  { value: 'click-legend-isolate', label: 'Click legend isolate', icon: Layers3 },
+  { value: 'click-axis-isolate', label: 'Click axis isolate', icon: Ruler },
   { value: 'inspect', label: 'Inspect xy', icon: Target },
   { value: 'inspect-quadrant', label: 'Inspect quadrant', icon: Crosshair },
   { value: 'inspect-x', label: 'Inspect x', icon: Ruler },
-  { value: 'brush-zoom', label: 'Brush to zoom', icon: ZoomIn },
   { value: 'long-press', label: 'Long press', icon: Timer },
   { value: 'double-activate', label: 'Double click', icon: MousePointerClick },
 ] as const;
 
-type MountedInteraction = ReturnType<typeof clickHighlight>;
+const compositionInteractionModes = [
+  { value: 'click-highlight', label: 'Click highlight', icon: MousePointerClick },
+  { value: 'assisted-focus', label: 'Focus + assist', icon: Crosshair },
+  { value: 'keyboard-focus', label: 'Focus + keyboard', icon: Keyboard },
+  { value: 'select-context', label: 'Select + context', icon: Menu },
+  { value: 'focus-legend-toggle', label: 'Focus + legend toggle', icon: EyeOff },
+  { value: 'focus-brush-zoom', label: 'Focus + brush zoom', icon: ZoomIn },
+] as const;
+
+type MountedInteraction = ReturnType<typeof clickMark>;
 
 /**
- * Modes mount the set of presets a real chart would ship together, not one preset each.
- * Legend, press and inspect gestures are only meaningful alongside ordinary element clicks.
+ * Each named unit mode mounts its corresponding preset; explicitly named compositions are separate.
  */
 function modeInteractions(
   mode: InteractionMode,
   navigationAxes: 'x' | 'y' | 'xy' | undefined,
   navigationGuard: NavigationGuard | undefined,
+  linkBy: string | readonly string[] | undefined,
 ): MountedInteraction[] {
   switch (mode) {
-    case 'element': return [clickHighlight()];
-    case 'axis-highlight': return [axisHighlight()];
-    case 'group': return [clickGroupHighlight()];
+    case 'click-mark': return [clickMark()];
+    case 'click-legend-isolate': return [clickLegendIsolate()];
+    case 'click-axis-isolate': return [clickAxisIsolate()];
+    case 'click-highlight': return [clickMark(), clickLegendIsolate(), clickAxisIsolate()];
+    case 'click-group-focus': return [clickGroupFocus({ groupBy: typeof linkBy === 'string' ? linkBy : undefined })];
+    case 'hover-group-focus': return linkBy ? [hoverGroupFocus({ groupBy: linkBy })] : [];
     case 'annotate': return [clickAnnotate()];
     case 'select': return [rectangleSelect()];
+    case 'facet-link': return linkBy ? [facetBrushLink({ by: linkBy })] : [];
     case 'brush-x': return [brushX()];
     case 'brush-y': return [brushY()];
     case 'brush-x-stateful': return [brushX({ mode: 'stateful' })];
@@ -103,19 +121,21 @@ function modeInteractions(
       dimOpacity: 0.14,
     })];
     case 'inspect-x': return [inspect({ mode: 'x' })];
-    case 'assisted': case 'keyboard': return [clickHighlight()];
-    case 'select-comment': return [rectangleSelect(), contextActivate()];
-    case 'legend-toggle': return [clickHighlight({ legend: false }), legendToggle()];
+    case 'assisted-focus': case 'keyboard-focus': return [clickMark()];
+    case 'select-context': return [rectangleSelect(), contextActivate()];
+    case 'focus-legend-toggle': return [clickMark(), legendToggle()];
     case 'long-press': return [longPress()];
     case 'double-activate': return [doubleActivate()];
-    case 'brush-zoom': return [clickHighlight(), brushZoom()];
+    case 'focus-brush-zoom': return [clickMark(), brushZoom()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
   }
 }
 
 export interface InteractionCase {
   id: string;
+  title?: string;
   input: ChartAssemblyInput;
+  linkBy?: string | readonly string[];
   navigationAxes?: 'x' | 'y' | 'xy';
   chartType: string;
   expectation: string;
@@ -239,10 +259,128 @@ function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
   };
 }
 
+function realFacetedCases(): InteractionCase[] {
+  const electricityMix = genStackedBarTests().find((test) =>
+    test.tags?.includes('real') && test.title.includes('Electricity generation mix'));
+  const titanic = genGroupedBarTests().find((test) =>
+    test.tags?.includes('real') && test.title.includes('Titanic survival'));
+  if (!electricityMix?.encodingMap.color) throw new Error('Missing real electricity generation fixture');
+  if (!titanic?.encodingMap.group) throw new Error('Missing real Titanic survival fixture');
+
+  const { color: sourceFacet, ...barEncodings } = electricityMix.encodingMap;
+  const { group: sexFacet, ...titanicEncodings } = titanic.encodingMap;
+  const barCase = interactionCase({
+    ...electricityMix,
+    chartType: 'Bar Chart',
+    title: 'Electricity generation mix — faceted by source',
+    description: `${electricityMix.description} Each source is shown in its own panel.`,
+    encodingMap: { ...barEncodings, column: sourceFacet },
+    chartProperties: { ...electricityMix.chartProperties, facetColumns: 3 },
+  }, '-faceted');
+  return [
+    {
+      ...barCase,
+      title: 'Electricity generation mix — faceted by source',
+      linkBy: 'Country',
+    },
+    {
+      id: 'Scatter Plot-Gapminder-faceted-years',
+      chartType: 'Scatter Plot',
+      title: 'Gapminder — linked countries across 1952 and 2007',
+      linkBy: 'Country',
+      expectation: 'Brush countries in either year to highlight the same countries in both panels (Gapminder).',
+      input: {
+        semantic_types: {
+          Country: 'Country',
+          Continent: 'Category',
+          Year: 'Year',
+          Population: 'Quantity',
+          'GDP per capita': 'Quantity',
+          'Life expectancy': 'Quantity',
+        },
+        chart_spec: {
+          chartType: 'Scatter Plot',
+          encodings: {
+            x: { field: 'GDP per capita' },
+            y: { field: 'Life expectancy' },
+            color: { field: 'Continent' },
+            detail: { field: 'Country' },
+            column: { field: 'Year' },
+          },
+          chartProperties: { facetColumns: 2, logScale_x: true },
+          baseSize: SIZE,
+        },
+        data: { values: gapminderRows.filter(({ Year }) => Year === 1952 || Year === 2007) },
+      },
+    },
+    {
+      ...interactionCase({
+        ...titanic,
+        chartType: 'Bar Chart',
+        title: 'Titanic survival — row facets by sex',
+        description: `${titanic.description} Sex is shown in separate rows.`,
+        encodingMap: { ...titanicEncodings, row: sexFacet },
+      }, '-faceted'),
+      title: 'Titanic survival — row facets by sex',
+      linkBy: 'Class',
+    },
+    {
+      id: 'Scatter Plot-Gapminder-faceted-four-years',
+      chartType: 'Scatter Plot',
+      title: 'Gapminder — continents across four years',
+      linkBy: 'Continent',
+      expectation: 'Brush a point to link every country in its continent across all four year panels.',
+      input: {
+        semantic_types: {
+          Country: 'Country', Continent: 'Category', Year: 'Year',
+          Population: 'Quantity', 'GDP per capita': 'Quantity',
+        },
+        chart_spec: {
+          chartType: 'Scatter Plot',
+          encodings: {
+            x: { field: 'GDP per capita' }, y: { field: 'Population' },
+            color: { field: 'Continent' }, detail: { field: 'Country' }, column: { field: 'Year' },
+          },
+          chartProperties: { facetColumns: 4, logScale_x: true, logScale_y: true },
+          baseSize: SIZE,
+        },
+        data: { values: gapminderRows.filter(({ Year }) => [1952, 1972, 1992, 2007].includes(Year)) },
+      },
+    },
+    {
+      id: 'Scatter Plot-Gapminder-faceted-correlation-grid',
+      chartType: 'Scatter Plot',
+      title: 'Gapminder — 4×4 country correlation grid',
+      linkBy: 'Country',
+      expectation: 'Brush a country to link it through four years within its continent row.',
+      input: {
+        semantic_types: {
+          Country: 'Country', Continent: 'Category', Year: 'Year',
+          'GDP per capita': 'Quantity', 'Life expectancy': 'Quantity',
+        },
+        chart_spec: {
+          chartType: 'Scatter Plot',
+          encodings: {
+            x: { field: 'GDP per capita' }, y: { field: 'Life expectancy' },
+            detail: { field: 'Country' }, column: { field: 'Year' }, row: { field: 'Continent' },
+          },
+          chartProperties: { facetColumns: 4, logScale_x: true },
+          baseSize: { width: 600, height: 480 },
+        },
+        data: {
+          values: gapminderRows.filter(({ Continent, Year }) =>
+            Continent !== 'Oceania' && [1952, 1972, 1992, 2007].includes(Year)),
+        },
+      },
+    },
+  ];
+}
+
 const interactionCases: InteractionCase[] = [
   ...representativeCases(),
   multiLegendCase('shape'),
   multiLegendCase('size'),
+  ...realFacetedCases(),
 ];
 
 const ANNOTATION_CHART_TYPES = [
@@ -447,6 +585,7 @@ function InteractiveChart({
   themeId,
   navigationGuard,
   navigationAxes,
+  linkBy,
   resetVersion,
   onStatus,
   onSemanticEvent,
@@ -456,6 +595,7 @@ function InteractiveChart({
   themeId: string | undefined;
   navigationGuard: NavigationGuard;
   navigationAxes?: 'x' | 'y' | 'xy';
+  linkBy?: string | readonly string[];
   resetVersion: number;
   onStatus: (status: ProbeStatus, message?: string) => void;
   onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
@@ -497,7 +637,7 @@ function InteractiveChart({
     };
     container.addEventListener('contextmenu', captureContextPoint, true);
     container.addEventListener('flint-interaction', handleInteraction);
-    const interactions = modeInteractions(mode, navigationAxes, navigationGuard);
+    const interactions = modeInteractions(mode, navigationAxes, navigationGuard, linkBy);
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
     const surface = buildInteractiveChart(container, themedInput, {
       backend: 'vegalite',
@@ -505,8 +645,8 @@ function InteractiveChart({
       interactions,
       expressionInterpreter,
       ariaLabel: input.chart_spec.title,
-      assistedTargeting: mode === 'assisted',
-      keyboardTargeting: mode === 'keyboard',
+      assistedTargeting: mode === 'assisted-focus',
+      keyboardTargeting: mode === 'keyboard-focus',
       dismiss: mode === 'long-press' || mode === 'double-activate'
         ? { click: 'any', escape: true }
         : undefined,
@@ -525,7 +665,7 @@ function InteractiveChart({
       setComment(null);
       surface.destroy();
     };
-  }, [input, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
+  }, [input, linkBy, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
 
   const menuTarget = contextMenu?.detail.event.target ?? null;
   const menuElement = menuTarget?.elements[0];
@@ -553,7 +693,7 @@ function InteractiveChart({
     const text = summarizeElement(menuElement) ?? 'Comment';
     setComment(text);
     void surface.applyUpdate({
-      id: 'select-comment',
+      id: 'select-context',
       ops: [{
         op: 'set-annotation',
         target: { visual: menuTarget.visual, elements: [menuElement] },
@@ -564,7 +704,7 @@ function InteractiveChart({
   };
   const clearComment = () => {
     setComment(null);
-    void surfaceRef.current?.clearUpdate('select-comment');
+    void surfaceRef.current?.clearUpdate('select-context');
     setContextMenu(null);
   };
 
@@ -619,7 +759,7 @@ export function CaseCard({
   const [status, setStatus] = useState<ProbeStatus>('loading');
   const [statusMessage, setStatusMessage] = useState('Compiling');
   const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
-  const title = item.input.chart_spec.title || item.input.chart_spec.chartType;
+  const title = item.title || item.input.chart_spec.title || item.input.chart_spec.chartType;
   const availableNavigationAxes = navigationAxesByCase.get(item.id);
   const navigationAxes = item.navigationAxes === 'xy'
     ? ['x', 'y']
@@ -656,6 +796,7 @@ export function CaseCard({
             themeId={themeId}
             navigationGuard={navigationGuard}
             navigationAxes={item.navigationAxes}
+            linkBy={item.linkBy}
             resetVersion={resetVersion}
             onStatus={(nextStatus, message) => {
               setStatus(nextStatus);
@@ -705,7 +846,7 @@ export function CaseCard({
 }
 
 export function ClickFocusLab() {
-  const [mode, setMode] = useState<InteractionMode>('element');
+  const [mode, setMode] = useState<InteractionMode>('click-mark');
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
   const [navigationGuard, setNavigationGuard] = useState<NavigationGuard>({
     minVisibleFraction: 0.02,
@@ -713,48 +854,60 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const visibleCases = mode === 'navigate' || mode === 'brush-zoom'
+  const visibleCases = mode === 'navigate' || mode === 'focus-brush-zoom'
       ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
       : mode === 'drag-reorder'
         ? interactionCases.filter((item) => reorderAxesByCase.has(item.id))
         : mode === 'inspect-quadrant'
           ? interactionCases.filter((item) => inspectQuadrantCases.has(item.id))
-        : mode === 'legend-toggle'
+        : mode === 'facet-link' || mode === 'hover-group-focus'
+          ? interactionCases.filter((item) => item.linkBy)
+        : mode === 'focus-legend-toggle'
           ? interactionCases.filter((item) => discreteLegendCases.has(item.id))
       : interactionCases;
 
   return (
     <div className="dev-page cf-page">
       <div className="cf-action-rail" role="toolbar" aria-label="Interaction mode">
-        {interactionModes.map(({ value, label, icon: Icon }) => (
-          <button
-            key={value}
-            type="button"
-            className={mode === value ? 'active' : ''}
-            aria-label={label}
-            aria-pressed={mode === value}
-            title={label}
-            onClick={() => setMode(value)}
-          >
-            <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-            <span>{label}</span>
-          </button>
+        {[unitInteractionModes, compositionInteractionModes].map((modes, sectionIndex) => (
+          <Fragment key={sectionIndex === 0 ? 'unit' : 'composition'}>
+            {sectionIndex > 0 && <div className="cf-action-divider" role="separator" />}
+            {modes.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                type="button"
+                className={mode === value ? 'active' : ''}
+                aria-label={label}
+                aria-pressed={mode === value}
+                title={label}
+                onClick={() => setMode(value)}
+              >
+                <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </Fragment>
         ))}
       </div>
       <header className="dev-page-heading cf-heading">
         <h1>Interaction gallery</h1>
         <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
         <ul className="cf-interaction-list">
-          <li><strong>Element:</strong> Click a mark to focus it and dim the other marks.</li>
-          <li><strong>Group:</strong> Click a mark to focus related marks in the same category or series.</li>
+          <li><strong>Click mark:</strong> Click a mark to focus it and dim the other marks.</li>
+          <li><strong>Click group focus:</strong> Click a mark to focus related marks in the same category or series.</li>
+          <li><strong>Hover group focus:</strong> Hover a mark to preview matching semantic keys without changing retained state.</li>
           <li><strong>Annotate:</strong> Click a mark to search nearby free space and connect its represented value.</li>
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
+          <li><strong>Facet link:</strong> Brush marks in one panel to highlight matching semantic keys across panels.</li>
           <li><strong>X brush:</strong> Drag across an X interval; polar charts automatically use an angular sector.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
-          <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel or trackpad to zoom.</li>
+          <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel, trackpad, or a two-finger pinch to zoom.</li>
+          <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>
           <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
-          <li><strong>Axis highlight:</strong> Click a categorical tick or label to focus the marks it represents.</li>
+          <li><strong>Click legend isolate:</strong> Click a discrete entry or continuous legend interval to isolate its cohort.</li>
+          <li><strong>Click axis isolate:</strong> Click a categorical X/Y label to isolate its cohort.</li>
+          <li><strong>Click highlight:</strong> Compose mark, legend, and axis click presets.</li>
         </ul>
         <div className="cf-summary"><span><strong>{visibleCases.length}</strong> test cases</span></div>
         <div className="cf-theme-picker">

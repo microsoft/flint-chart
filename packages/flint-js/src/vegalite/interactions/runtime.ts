@@ -20,6 +20,11 @@ import type {
     SemanticInteractionEvent,
 } from '../../interactive/interactions';
 import { isCanvasInteraction } from '../../interactive/interactions';
+import {
+    affordanceCursor,
+    resolveInteractionAffordance,
+    type InteractionAffordanceTarget,
+} from '../../interactive/affordances';
 import type {
     ChartUpdateResult,
     SemanticTargetRef,
@@ -35,6 +40,7 @@ import type { ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
+    axisItemAt,
     axisTargetIdentity,
     clientToPlotPoint,
     clientToRendererPoint,
@@ -62,6 +68,7 @@ import { createVegaNavigationController } from './navigation-scale';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
 import {
     createDragReorderOverlay,
+    eligibleReorderAxesForAxis,
     eligibleReorderAxesForHit,
 } from './presentation/drag-reorder-overlay';
 import { createFocusOverlay } from './presentation/focus-overlay';
@@ -241,13 +248,41 @@ export interface VegaInteractionController {
 export function interactionsForHoverPresentation(
     clickInteractions: readonly CanvasInteractionDef[],
     hoverInteractions: readonly CanvasInteractionDef[],
+    elementDragInteractions: readonly CanvasInteractionDef[] = [],
 ): CanvasInteractionDef[] {
     return [
         ...hoverInteractions,
-        ...clickInteractions.filter((interaction) => interaction.handle),
-    ].filter((interaction, index, candidates) =>
-        candidates.findIndex((candidate) => candidate.id === interaction.id) === index,
-    );
+        ...clickInteractions,
+        ...elementDragInteractions,
+    ].filter((interaction, index, candidates) => interaction.affordances?.some((affordance) => affordance.hover)
+        && candidates.findIndex((candidate) => candidate.id === interaction.id) === index);
+}
+
+type AnnotationUpdate = Extract<ChartUpdateOp, { op: 'set-annotation' }>;
+
+export interface EffectiveAnnotationEntry {
+    key: string;
+    element: SemanticTarget['elements'][number];
+    value: NonNullable<AnnotationUpdate['value']>;
+}
+
+export function effectiveAnnotationEntries(updates: readonly ChartUpdate[]): EffectiveAnnotationEntry[] {
+    const entries = new Map<string, EffectiveAnnotationEntry>();
+    for (const update of updates) {
+        for (const op of update.ops) {
+            if (op.op !== 'set-annotation' || 'select' in op.target) continue;
+            const element = op.target.elements[0];
+            if (!element) continue;
+            const renderKeys = semanticElementRenderKeys(element);
+            const targetIdentity = renderKeys.length > 0
+                ? renderKeys.join('\u001f')
+                : JSON.stringify([element.value, element.records ?? []]);
+            const key = `${update.id}\u001e${targetIdentity}`;
+            if (op.value === null) entries.delete(key);
+            else entries.set(key, { key, element, value: op.value });
+        }
+    }
+    return [...entries.values()];
 }
 
 function keyboardRepresentativeRank(item: any): [number, number] {
@@ -314,6 +349,7 @@ export function mountVegaInteractions(
     resolve: ChartInteractionResolver | undefined,
     presentUpdate: ChartUpdatePresenter,
     assistDistance = 0,
+    hoverTolerance = 0,
     keyboardTargeting = false,
     targetFeedback: {
         assisted: import('../../interactive/types').TargetFeedbackOptions | false;
@@ -329,9 +365,13 @@ export function mountVegaInteractions(
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'hover')
         : [];
     const axisClickInteractions = clickInteractions.filter((interaction) => interaction.claimsAxisActivation);
-    const markClickInteractions = clickInteractions.filter((interaction) => !interaction.claimsAxisActivation);
+    const markClickInteractions = clickInteractions.filter((interaction) =>
+        !interaction.claimsAxisActivation || interaction.claimsLegendActivation);
     const axisHoverInteractions = hoverInteractions.filter((interaction) => interaction.claimsAxisActivation);
     const markHoverInteractions = hoverInteractions.filter((interaction) => !interaction.claimsAxisActivation);
+    const axisHoverPresentationInteractions = [...axisClickInteractions, ...axisHoverInteractions]
+        .filter((interaction) => interaction.affordances?.some((affordance) =>
+            affordance.target === 'axis-label' && affordance.hover));
     const contextInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'context')
         : [];
@@ -344,19 +384,24 @@ export function mountVegaInteractions(
     const doubleInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'double')
         : [];
+    const elementDragInteractions = resolve
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'drag-element')
+        : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
         markClickInteractions,
         markHoverInteractions,
+        elementDragInteractions,
     );
+    const hoverPresentationForTarget = (target: InteractionAffordanceTarget): CanvasInteractionDef[] =>
+        hoverPresentationInteractions.filter((interaction) =>
+            resolveInteractionAffordance([interaction], target)?.hover);
     const regionInteraction = resolve
         ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag')
         : undefined;
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
-    const elementDragInteraction = resolve
-        ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag-element')
-        : undefined;
+    const elementDragInteraction = elementDragInteractions[0];
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
     const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
@@ -411,13 +456,17 @@ export function mountVegaInteractions(
         containerLayoutSize,
     });
     const legendRangeOverlay = createLegendRangeOverlay({ container, coordinateSpace, containerLayoutSize });
-    const annotationOverlay = createAnnotationOverlay({
+    const annotationOverlayOptions = {
         view,
         container,
         coordinateSpace,
         containerLayoutSize,
         annotationMarkType: plan.annotationMarkType,
-    });
+    };
+    const annotationOverlays = new Map<string, ReturnType<typeof createAnnotationOverlay>>();
+    const clearAnnotations = (): void => {
+        for (const overlay of annotationOverlays.values()) overlay.clear();
+    };
     const inspectGuideOverlay = createInspectGuideOverlay({
         container,
         coordinateSpace,
@@ -464,7 +513,6 @@ export function mountVegaInteractions(
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
     const renderLegendRange = (): void => legendRangeOverlay.render(selectedLegend, hoveredLegend);
-    const clearAnnotation = (): void => annotationOverlay.clear();
     renderPathFocus();
 
     const allHits = (): RenderHit[] => sceneItems(view)
@@ -637,7 +685,6 @@ export function mountVegaInteractions(
             'opacity' | 'fill' | 'stroke' | 'strokeWidth'>> = {};
         selectedElements.clear();
         hiddenKeys.clear();
-        let annotation: Extract<ChartUpdateOp, { op: 'set-annotation' }> | undefined;
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         for (const axis of reorderAxes) view.signal(axis.signal, null);
         for (const axis of Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[]) {
@@ -689,8 +736,6 @@ export function mountVegaInteractions(
                             }
                         }
                     }
-                } else if (op.op === 'set-annotation') {
-                    annotation = op;
                 } else if (op.op === 'set-viewport') {
                     navigationController.apply(op);
                 } else if (op.op === 'set-order' && op.scope === 'category') {
@@ -731,16 +776,25 @@ export function mountVegaInteractions(
         renderLegendRange();
         reorderResetControls.layout();
         viewportResetControl.layout();
-        clearAnnotation();
-        if (annotation?.value && !('select' in annotation.target)) {
-            const element = annotation.target.elements[0];
-            if (element && annotation.value.text && annotation.value.candidates) {
-                annotationOverlay.render(element, {
-                    ...annotation.value,
-                    text: annotation.value.text,
-                    candidates: annotation.value.candidates,
-                });
+        const annotations = effectiveAnnotationEntries(displayUpdates)
+            .filter((entry) => entry.value.text && entry.value.candidates);
+        const annotationKeys = new Set(annotations.map((entry) => entry.key));
+        for (const [key, overlay] of annotationOverlays) {
+            if (annotationKeys.has(key)) continue;
+            overlay.destroy();
+            annotationOverlays.delete(key);
+        }
+        for (const annotation of annotations) {
+            let overlay = annotationOverlays.get(annotation.key);
+            if (!overlay) {
+                overlay = createAnnotationOverlay(annotationOverlayOptions);
+                annotationOverlays.set(annotation.key, overlay);
             }
+            overlay.render(annotation.element, {
+                ...annotation.value,
+                text: annotation.value.text!,
+                candidates: annotation.value.candidates!,
+            });
         }
     };
 
@@ -875,6 +929,9 @@ export function mountVegaInteractions(
     };
     let hoveredKeys = '\u0001\u0000';
     let hoverActive = false;
+    let lastHoverTarget: SemanticTarget | null = null;
+    let lastHoverPoint: import('../../interactive/interactions').PlotPoint | null = null;
+    let hoverClearTimer: ReturnType<typeof setTimeout> | undefined;
     const setHover = async (
         keys: readonly string[],
         legend: LegendHitIdentity | null = null,
@@ -902,7 +959,13 @@ export function mountVegaInteractions(
         renderLegendRange();
     };
     const clearHover = (): void => {
+        if (hoverClearTimer !== undefined) {
+            clearTimeout(hoverClearTimer);
+            hoverClearTimer = undefined;
+        }
         targetFeedbackOverlay.clear();
+        lastHoverTarget = null;
+        lastHoverPoint = null;
         void setHover([]);
         if (hoverInteractions.length > 0 && hoverActive) {
             hoverActive = false;
@@ -914,6 +977,13 @@ export function mountVegaInteractions(
         }
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
+    const scheduleHoverClear = (): void => {
+        if (hoverClearTimer !== undefined) clearTimeout(hoverClearTimer);
+        hoverClearTimer = setTimeout(() => {
+            hoverClearTimer = undefined;
+            clearHover();
+        }, 16);
+    };
     // A pointer that misses every mark still acquires the nearest one, so small
     // marks stay reachable without changing which action the preset receives.
     const acquire = (
@@ -922,17 +992,18 @@ export function mountVegaInteractions(
         rootPoint: import('../../interactive/interactions').PlotPoint,
         phase: 'preview' | 'commit',
         modifiers: ReturnType<typeof interactionModifiers>,
+        tolerance = assistDistance,
     ) => {
         const space = coordinateSpace();
         const direct = normalizeVegaElementEvent(
             view, item, point, phase, modifiers, plan.legendFields, plan.rangeLegendChannels, rootPoint,
         );
-        if (assistDistance <= 0 || direct.legend || direct.event.hits.length > 0) return { ...direct, feedbackItem: null };
+        if (tolerance <= 0 || direct.legend || direct.event.hits.length > 0) return { ...direct, feedbackItem: null };
         const rawPlotPoint = { x: rootPoint.x - space.originX, y: rootPoint.y - space.originY };
         const overPlot = rawPlotPoint.x >= 0 && rawPlotPoint.x <= space.plotWidth
             && rawPlotPoint.y >= 0 && rawPlotPoint.y <= space.plotHeight;
         const snapped = nearestInteractiveSceneItem(
-            view, rawPlotPoint, assistDistance, rootPoint, overPlot,
+            view, rawPlotPoint, tolerance, rootPoint, overPlot,
         );
         return snapped
             ? { ...normalizeVegaElementEvent(
@@ -941,12 +1012,23 @@ export function mountVegaInteractions(
             : { ...direct, feedbackItem: null };
     };
     const hoverHandler = (event: MouseEvent, item: any): void => {
-        if ((hoverPresentationInteractions.length === 0 && axisHoverInteractions.length === 0) || regionDragging) return;
+        if ((hoverPresentationInteractions.length === 0 && axisHoverPresentationInteractions.length === 0)
+            || regionDragging) return;
+        if (hoverClearTimer !== undefined) {
+            clearTimeout(hoverClearTimer);
+            hoverClearTimer = undefined;
+        }
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
+            const identity = axisTargetIdentity(item, plan.axisTargets);
+            const reorderEligible = !!elementDragInteraction && !!identity
+                && eligibleReorderAxesForAxis(
+                    plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
+                    identity,
+                ).length > 0;
+            if (axisHoverPresentationInteractions.length === 0 && !reorderEligible) return clearHover();
             hoverActive = true;
-            container.style.cursor = 'pointer';
             for (const interaction of axisHoverInteractions) {
                 void dispatch(interaction, {
                     type: 'semantic', source: 'element', phase: 'preview', target: axisTarget, point,
@@ -959,10 +1041,12 @@ export function mountVegaInteractions(
         const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event));
         const legend = normalized.legend;
         if (legend) {
-            if (!regionInteraction && !navigationInteraction) container.style.cursor = 'pointer';
+            const legendHoverInteractions = hoverPresentationForTarget('legend-item');
+            if (legendHoverInteractions.length === 0) return clearHover();
             const resolved = legendSemanticTarget(legend);
             hoverActive = true;
-            for (const interaction of markHoverInteractions) {
+            for (const interaction of markHoverInteractions.filter((candidate) =>
+                legendHoverInteractions.includes(candidate))) {
                 void dispatch(interaction, {
                     type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                     modifiers: normalized.event.modifiers,
@@ -972,12 +1056,23 @@ export function mountVegaInteractions(
             return;
         }
         const hovered = normalized.event.hits[0];
-        if (!hovered) {
+        const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+        const reorderEligible = !!hovered && !!elementDragInteraction
+            && eligibleReorderAxesForHit(reorderAxes, hovered).length > 0;
+        const directResolved = resolveTarget('hover', normalized.role, normalized.event.hits);
+        let resolved = directResolved;
+        if (!resolved && hoverTolerance > 0 && lastHoverTarget && lastHoverPoint
+            && Math.hypot(rootPoint.x - lastHoverPoint.x, rootPoint.y - lastHoverPoint.y) <= hoverTolerance) {
+            resolved = lastHoverTarget;
+        }
+        if (!resolved) {
             clearHover();
             return;
         }
-        if (!regionInteraction && !navigationInteraction) container.style.cursor = 'pointer';
-        const resolved = resolveTarget('hover', normalized.role, normalized.event.hits);
+        if (directResolved) {
+            lastHoverTarget = directResolved;
+            lastHoverPoint = rootPoint;
+        }
         if (normalized.feedbackItem && targetFeedback?.assisted) {
             targetFeedbackOverlay.render(normalized.feedbackItem, resolved, 'assisted');
         } else {
@@ -985,7 +1080,11 @@ export function mountVegaInteractions(
         }
         hoverActive = true;
         const interactionContext = context();
-        const presentationElements = hoverPresentationInteractions.flatMap((interaction) => {
+        const markHoverPresentationInteractions = hoverPresentationForTarget('mark');
+        const presentationElements = markHoverPresentationInteractions.flatMap((interaction) => {
+            if (interaction.eventSource.gesture === 'drag-element') {
+                return reorderEligible ? resolved?.elements ?? [] : [];
+            }
             if (!interaction.handle) return resolved?.elements ?? [];
             const preview = interaction.handle(toCanvasInteractionEvent({
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
@@ -996,7 +1095,8 @@ export function mountVegaInteractions(
                 ? op.targets.flatMap((target) => 'select' in target ? [] : target.elements)
                 : []) ?? [];
         });
-        for (const interaction of markHoverInteractions) {
+        for (const interaction of markHoverInteractions.filter((candidate) =>
+            markHoverPresentationInteractions.includes(candidate))) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                 modifiers: normalized.event.modifiers,
@@ -1027,6 +1127,7 @@ export function mountVegaInteractions(
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
         for (const interaction of markClickInteractions) {
+            if (!legend && interaction.claimsLegendActivation) continue;
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
@@ -1184,7 +1285,7 @@ export function mountVegaInteractions(
         if (changed) void renderUpdates();
     };
     const dismissOnClick = (event: MouseEvent, item: any): void => {
-        if (!dismissPolicy.click || isInteractiveControlTarget(event.target)) return;
+        if (!dismissPolicy.click || suppressClick || isInteractiveControlTarget(event.target)) return;
         if (consumeDismissClick) {
             consumeDismissClick = false;
             return;
@@ -1238,6 +1339,7 @@ export function mountVegaInteractions(
     };
     const doubleHandler = (event: MouseEvent): void => {
         if (doubleInteractions.length === 0) return;
+        event.preventDefault();
         cancelPendingDismiss();
         const acquired = pointerTarget(event);
         for (const interaction of doubleInteractions) {
@@ -1263,13 +1365,14 @@ export function mountVegaInteractions(
     }
     if (hoverPresentationInteractions.length > 0) {
         view.addEventListener('mousemove', hoverHandler);
-        view.addEventListener('mouseout', clearHover);
+        view.addEventListener('mouseout', scheduleHoverClear);
     }
 
     const previousCursor = container.style.cursor;
     const previousUserSelect = container.style.userSelect;
-    const suppressLegendTextSelection = canvasInteractions.some((interaction) => interaction.claimsLegendActivation);
-    if (suppressLegendTextSelection) container.style.userSelect = 'none';
+    const suppressTextSelection = doubleInteractions.length > 0
+        || canvasInteractions.some((interaction) => interaction.claimsLegendActivation);
+    if (suppressTextSelection) container.style.userSelect = 'none';
     const localPoint = (event: PointerEvent): { x: number; y: number } => {
         return clientToPlotPoint({ x: event.clientX, y: event.clientY }, coordinateSpace());
     };
@@ -1281,9 +1384,50 @@ export function mountVegaInteractions(
             rootPoint: clientToRendererPoint(client, space),
         };
     };
+    const cursorInteractions = canvasInteractions.filter((interaction) =>
+        interaction.affordances?.some((affordance) => affordance.cursor));
+    const setAffordanceCursor = (
+        target: InteractionAffordanceTarget,
+        reorderEligible: boolean,
+    ): void => {
+        const eligibleIds = new Set(cursorInteractions
+            .filter((interaction) => reorderEligible || interaction !== elementDragInteraction)
+            .map((interaction) => interaction.id));
+        container.style.cursor = affordanceCursor(
+            resolveInteractionAffordance(cursorInteractions, target, eligibleIds),
+        ) ?? previousCursor;
+    };
+    const affordanceHandler = (event: MouseEvent, item: any): void => {
+        if (regionDragging) return;
+        const axisTarget = resolveAxisTarget(item);
+        if (axisTarget) {
+            const identity = axisTargetIdentity(item, plan.axisTargets);
+            const reorderEligible = !!elementDragInteraction && !!identity
+                && eligibleReorderAxesForAxis(
+                    plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
+                    identity,
+                ).length > 0;
+            setAffordanceCursor('axis-label', reorderEligible);
+            return;
+        }
+        const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
+        const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event), 0);
+        if (normalized.legend) {
+            setAffordanceCursor('legend-item', false);
+            return;
+        }
+        const hit = normalized.event.hits[0];
+        const reorderEligible = !!hit && !!elementDragInteraction
+            && eligibleReorderAxesForHit(
+                plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []), hit,
+            ).length > 0;
+        setAffordanceCursor(hit ? 'mark' : 'plot', reorderEligible);
+    };
+    if (cursorInteractions.length > 0) view.addEventListener('mousemove', affordanceHandler);
     let elementDrag: {
         start: { x: number; y: number };
         source: SemanticTarget;
+        sourceItem?: any;
         destination: SemanticTarget;
         moved: boolean;
         axis?: 'x' | 'y';
@@ -1300,11 +1444,27 @@ export function mountVegaInteractions(
                 && point.y >= bounds.y1 && point.y <= bounds.y2;
         });
     };
-    const resolveDraggedTarget = (event: PointerEvent): { hit: RenderHit; target: SemanticTarget } | null => {
+    const resolveDraggedTarget = (
+        event: PointerEvent,
+    ): { target: SemanticTarget; item: any; eligibleAxes: readonly ('x' | 'y')[] } | null => {
+        const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
+        const eventItem = (event.target as any)?.__data__;
+        const axisItem = axisTargetIdentity(eventItem, plan.axisTargets)
+            ? eventItem
+            : axisItemAt(view, pointerPoints(event).rootPoint, plan.axisTargets);
+        const axisIdentity = axisTargetIdentity(axisItem, plan.axisTargets);
+        if (axisIdentity) {
+            const eligibleAxes = eligibleReorderAxesForAxis(axes, axisIdentity).map(({ axis }) => axis);
+            const target = eligibleAxes.length > 0 ? resolveAxisTarget(axisItem) : null;
+            if (target) return { target, item: axisItem, eligibleAxes };
+        }
         const hit = renderHit(reorderItemAt(event));
         if (!hit) return null;
         const target = resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]);
-        return target ? { hit, target } : null;
+        const eligibleAxes = eligibleReorderAxesForHit(axes, hit).map(({ axis }) => axis);
+        return target && eligibleAxes.length > 0
+            ? { target, item: reorderItemAt(event), eligibleAxes }
+            : null;
     };
     const resolveReorderDestination = (
         current: { x: number; y: number },
@@ -1346,28 +1506,28 @@ export function mountVegaInteractions(
         if (!elementDragInteraction || (event.button !== undefined && event.button !== 0)) return;
         const source = resolveDraggedTarget(event);
         if (!source) return;
-        const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
-        const eligibleAxes = eligibleReorderAxesForHit(axes, source.hit).map(({ axis }) => axis);
-        if (eligibleAxes.length === 0) return;
         const start = localPoint(event);
-        elementDrag = { start, source: source.target, destination: source.target, moved: false, eligibleAxes };
+        elementDrag = {
+            start, source: source.target, destination: source.target,
+            sourceItem: source.item, moved: false, eligibleAxes: source.eligibleAxes,
+        };
         try {
             container.setPointerCapture?.(event.pointerId);
         } catch {
             // Synthetic pointer events have no active pointer to capture.
         }
         clearHover();
-        clearAnnotation();
+        clearAnnotations();
         container.style.cursor = 'grab';
         void dispatchElementDrag('start', event, start);
     };
     const elementDragMove = (event: PointerEvent): void => {
         if (!elementDrag) {
             const source = resolveDraggedTarget(event);
-            const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
-            container.style.cursor = source && eligibleReorderAxesForHit(axes, source.hit).length > 0
-                ? 'grab'
-                : previousCursor;
+            setAffordanceCursor(
+                source?.target.visual.kind === 'axis' ? 'axis-label' : source ? 'mark' : 'plot',
+                Boolean(source),
+            );
             return;
         }
         const current = localPoint(event);
@@ -1392,7 +1552,8 @@ export function mountVegaInteractions(
         container.style.cursor = 'grabbing';
         dragReorderOverlay.render({
             start: elementDrag.start, current, axis: elementDrag.axis,
-            source: elementDrag.source, destination: elementDrag.destination,
+            source: elementDrag.source, sourceItem: elementDrag.sourceItem,
+            destination: elementDrag.destination,
         });
         void dispatchElementDrag('preview', event, current);
     };
@@ -1459,7 +1620,7 @@ export function mountVegaInteractions(
         resolveTarget: (gesture, role, hits) => resolveTarget(gesture, role, hits),
         dispatch: (event) => dispatch(mountedRegionInteraction, event),
         clearHover,
-        clearAnnotation,
+        clearAnnotation: clearAnnotations,
         sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
@@ -1474,6 +1635,7 @@ export function mountVegaInteractions(
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
     }) : undefined;
+    setAffordanceCursor('plot', false);
     const dismissKeyDown = (event: KeyboardEvent): void => {
         if (regionInteraction || event.key !== 'Escape' || !dismissPolicy.escape) return;
         selectedLegend = null;
@@ -1498,6 +1660,10 @@ export function mountVegaInteractions(
             key: hit.datum[INTERACTION_KEY],
         };
     };
+    const keyboardInteraction: CanvasInteractionDef = {
+        id: 'keyboard-targeting',
+        eventSource: keyboardTrigger,
+    };
     const moveKeyboardTarget = (direction: SpatialDirection): void => {
         const items = keyboardTargets();
         if (items.length === 0) return;
@@ -1520,13 +1686,10 @@ export function mountVegaInteractions(
         if (!active) return;
         activeKeyboardKey = typeof active.key === 'string' ? active.key : undefined;
         if (targetFeedback?.keyboard) targetFeedbackOverlay.render(next, active.target, 'keyboard');
-        const interaction = clickInteractions[0];
-        if (interaction) {
-            emitCanvasInteractionEvent(interaction, toCanvasInteractionEvent({
-                type: 'semantic', source: 'element', phase: 'preview',
-                target: active.target, point: active.point,
-            }, keyboardTrigger));
-        }
+        emitCanvasInteractionEvent(keyboardInteraction, toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'preview',
+            target: active.target, point: active.point,
+        }, keyboardTrigger));
         void setHover(activeKeyboardKey ? [activeKeyboardKey] : []);
     };
     const activateKeyboardTarget = (): void => {
@@ -1573,7 +1736,7 @@ export function mountVegaInteractions(
             default:
         }
     };
-    const keyboardEnabled = keyboardTargeting && clickInteractions.length > 0;
+    const keyboardEnabled = keyboardTargeting && !!resolve;
     const keyboardFocusOut = (event: FocusEvent): void => {
         if (event.relatedTarget instanceof Node && container.contains(event.relatedTarget)) return;
         activeKeyboardKey = undefined;
@@ -1591,7 +1754,7 @@ export function mountVegaInteractions(
     const syncOverlays = (): void => {
         renderPathFocus();
         renderLegendRange();
-        annotationOverlay.sync();
+        for (const overlay of annotationOverlays.values()) overlay.sync();
         regionGesture?.sync();
         reorderResetControls.layout();
     };
@@ -1630,8 +1793,10 @@ export function mountVegaInteractions(
         }
         if (hoverPresentationInteractions.length > 0) {
             view.removeEventListener('mousemove', hoverHandler);
-            view.removeEventListener('mouseout', clearHover);
+            view.removeEventListener('mouseout', scheduleHoverClear);
         }
+        if (cursorInteractions.length > 0) view.removeEventListener('mousemove', affordanceHandler);
+        if (hoverClearTimer !== undefined) clearTimeout(hoverClearTimer);
         if (dismissPolicy.escape && !regionInteraction) {
             container.removeEventListener('keydown', dismissKeyDown);
         }
@@ -1669,7 +1834,8 @@ export function mountVegaInteractions(
         focusOverlay.destroy();
         targetFeedbackOverlay.destroy();
         legendRangeOverlay.destroy();
-        annotationOverlay.destroy();
+        for (const overlay of annotationOverlays.values()) overlay.destroy();
+        annotationOverlays.clear();
         inspectGuideOverlay.destroy();
         dragReorderOverlay.destroy();
         reorderResetControls.destroy();
@@ -1680,7 +1846,7 @@ export function mountVegaInteractions(
             cancelAnimationFrame(syncFrame);
             syncFrame = undefined;
         }
-        if (elementDragInteraction || suppressLegendTextSelection) container.style.userSelect = previousUserSelect;
+        if (elementDragInteraction || suppressTextSelection) container.style.userSelect = previousUserSelect;
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
     const clearUpdate = async (id: string): Promise<void> => {

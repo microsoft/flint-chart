@@ -9,6 +9,11 @@ export function createAxisHighlightInteraction(options: AxisHighlightOptions = {
         id,
         eventSource: options.event === 'hover' ? hoverTrigger : clickTrigger,
         claimsAxisActivation: true,
+        affordances: [{
+            target: 'axis-label',
+            ...(options.event === 'hover' ? {} : { cursor: 'activate' as const }),
+            hover: 'cohort',
+        }],
         handle(event, context) {
             if (event.action !== 'hover-axis' && event.action !== 'click-axis') return null;
             if (event.phase === 'start') return null;

@@ -25,6 +25,8 @@ export interface InteractionEventSource {
     readonly inspectPredicate?: InspectPredicate;
     readonly inspectCycle?: readonly ReturnType<typeof parseInspectMode>[];
     readonly inspectTolerance?: number;
+    /** Nearest-mark acquisition radius for hover gestures, in renderer pixels. */
+    readonly targetTolerance?: number;
     readonly inspectGuide?: ReturnType<typeof normalizeInspectGuideOptions>;
     readonly regionGuide?: ReturnType<typeof normalizeRegionGuideOptions>;
     readonly selector?: SemanticTargetSelector;

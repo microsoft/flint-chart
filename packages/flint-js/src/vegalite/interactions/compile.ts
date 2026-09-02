@@ -108,7 +108,6 @@ function instrumentNode(
     dimOpacity: number,
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
-    clickCursor: boolean,
 ): boolean {
     const type = markType(node.mark);
     const selectable = !!type && SUPPORTED_SPEC_MARKS.has(type) && selectableMarks.has(type);
@@ -150,11 +149,6 @@ function instrumentNode(
     if (typeof node.mark === 'object' && typeof node.mark.opacity === 'number') {
         node.mark = { ...node.mark };
         delete node.mark.opacity;
-    }
-    if (clickCursor && (selectable || legendLabel)) {
-        node.mark = typeof node.mark === 'string'
-            ? { type: node.mark, cursor: 'pointer' }
-            : { ...node.mark, cursor: node.mark.cursor ?? 'pointer' };
     }
     const isPath = type === 'line' || type === 'area';
     const hoverTest = `indata('${HOVER_STORE}', 'key', datum.${INTERACTION_KEY})`;
@@ -200,7 +194,6 @@ function instrumentMarks(
     dimOpacity: number,
     continuousColorFocus: ContinuousColorFocusStyle | undefined,
     selectableMarks: ReadonlySet<string>,
-    clickCursor: boolean,
 ): boolean {
     const encoding = { ...inherited, ...(spec.encoding ?? {}) };
     let instrumented = instrumentNode(
@@ -210,7 +203,6 @@ function instrumentMarks(
         dimOpacity,
         continuousColorFocus,
         selectableMarks,
-        clickCursor,
     );
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
@@ -222,7 +214,6 @@ function instrumentMarks(
                 dimOpacity,
                 continuousColorFocus,
                 selectableMarks,
-                clickCursor,
             ) || instrumented;
         }
     }
@@ -234,7 +225,6 @@ function instrumentMarks(
             dimOpacity,
             continuousColorFocus,
             selectableMarks,
-            clickCursor,
         ) || instrumented;
     }
     return instrumented;
@@ -480,13 +470,11 @@ export function addVegaLiteInteractions(
             : value;
     }, DEFAULT_DIM_OPACITY);
 
-    const clickCursor = semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'click')
-        && !semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'drag');
     const instrumented = needsSemanticPresentation
         ? instrumentMarks(
             spec, {}, fields, dimOpacity,
             templateSemantics.neutralizeContinuousColor ? templateSemantics.continuousColorFocus : undefined,
-            selectableMarks, clickCursor,
+            selectableMarks,
         )
         : false;
     if (needsSemanticPresentation && !instrumented) return null;
@@ -585,6 +573,7 @@ export function injectVegaNavigationSignals(
 export function collectVegaAxisTargets(
     vegaSpec: Record<string, any>,
     axisFields: VegaInteractionPlan['axisFields'],
+    reorderAxes: readonly Pick<import('./contracts').VegaReorderAxis, 'axis' | 'field'>[] = [],
 ): Record<string, import('./contracts').VegaAxisTarget> {
     const targets: Record<string, import('./contracts').VegaAxisTarget> = {};
     const visit = (scope: Record<string, any>): void => {
@@ -599,12 +588,12 @@ export function collectVegaAxisTargets(
                 labels: {
                     ...(axis.encode?.labels ?? {}),
                     interactive: true,
-                    update: { ...(axis.encode?.labels?.update ?? {}), cursor: { value: 'pointer' } },
+                    update: { ...(axis.encode?.labels?.update ?? {}) },
                 },
                 ticks: {
                     ...(axis.encode?.ticks ?? {}),
                     interactive: true,
-                    update: { ...(axis.encode?.ticks?.update ?? {}), cursor: { value: 'pointer' } },
+                    update: { ...(axis.encode?.ticks?.update ?? {}) },
                 },
             };
         }
@@ -640,7 +629,9 @@ function applyCompiledHoverStyles(
                 const authoredOpacity = numericValues.length > 0 ? Math.max(...numericValues) : 1;
                 update.opacity = [
                     {
-                        test: `!length(data('${INTERACTION_STORE}')) && ${hoverTest}`,
+                        test: value === 'spotlight' && mark.type === 'area'
+                            ? `!length(data('${INTERACTION_STORE}')) && ${hoverTest}`
+                            : hoverTest,
                         value: value === 'spotlight'
                             ? Math.min(authoredOpacity, 0.9)
                             : authoredOpacity < 1 ? 1 : 0.9,
@@ -742,7 +733,6 @@ export function injectVegaInteractionStore(
                     interactive: true,
                     update: {
                         ...(encode?.update ?? {}),
-                        cursor: { value: 'pointer' },
                         opacity: hiddenLegendItem ? [
                             { test: hiddenLegendItem, signal: `data('${LEGEND_HIDDEN_STORE}')[0].opacity` },
                             ...(peerOfSelectedLegend ? [
@@ -793,7 +783,6 @@ export function injectVegaInteractionStore(
                     interactive: true,
                     update: {
                         ...(legend.encode?.entries?.update ?? {}),
-                        cursor: { value: 'pointer' },
                     },
                 },
                 gradient: interactiveItem(legend.encode?.gradient, 'gradient'),

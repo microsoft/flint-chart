@@ -9,8 +9,8 @@ import type {
 } from 'flint-chart/interactive';
 import {
   brushY,
-  clickGroupHighlight,
-  clickHighlight,
+  clickGroupFocus,
+  clickMark,
   externalInteraction,
   select,
 } from 'flint-chart/interactive';
@@ -156,7 +156,7 @@ function buildDashboardCharts(
         undefined,
         { width: 400, height: 230 },
       ),
-      interaction: clickHighlight({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
+      interaction: clickMark({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
     },
     {
       id: 'trends',
@@ -169,7 +169,7 @@ function buildDashboardCharts(
         { showPoints: true, logScale_y: metric === 'GDP per capita' },
         { width: 400, height: 260 },
       ),
-      interaction: clickGroupHighlight({
+      interaction: clickGroupFocus({
         id: DASHBOARD_SELECTION_ID,
         groupBy: 'Country',
         dimOpacity: 0.22,

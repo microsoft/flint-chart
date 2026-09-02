@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keyboard targeting now navigates and emits `focus-element` through the
+  `keyboard-targeting` interaction ID without requiring a click preset. Enter
+  and Space still invoke configured click presets when present.
+- Independently retained `set-annotation` updates now render together by update
+  and semantic target identity; clearing one update leaves the others visible.
 - ECharts categorical legends (and their title graphics) are pinned with
   `legend.right` instead of a design-canvas `left` pixel. Hosts that size the
   container independently of `_width` and call `chart.resize()` keep the

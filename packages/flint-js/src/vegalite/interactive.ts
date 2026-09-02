@@ -24,6 +24,7 @@ export interface VegaInteractiveRendererOptions {
     expressionInterpreter?: unknown;
     background?: string;
     assistDistance?: number;
+    hoverTolerance?: number;
     keyboardTargeting?: boolean;
     targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
     dismiss?: InteractionDismissPolicy | false;
@@ -78,7 +79,11 @@ export function createVegaInteractiveRenderer(
             );
             const vegaSpec = compile(vlSpec).spec as any;
             if (interactionPlan) {
-                interactionPlan.axisTargets = collectVegaAxisTargets(vegaSpec, interactionPlan.axisFields);
+                interactionPlan.axisTargets = collectVegaAxisTargets(
+                    vegaSpec,
+                    interactionPlan.axisFields,
+                    interactionPlan.reorderAxes,
+                );
                 if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
                 }
@@ -121,6 +126,7 @@ export function createVegaInteractiveRenderer(
                     interactionPlan.resolve,
                     interactionPlan.presentUpdate ?? ((update) => update),
                     options.assistDistance ?? 0,
+                    options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
                     options.dismiss,

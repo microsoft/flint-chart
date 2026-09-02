@@ -162,7 +162,7 @@ export function legendMatchedHits(
                 : [];
             return pathData.length > 0
                 ? [
-                    ...(hit.markType === 'line' ? [{ ...hit, source: 'legend-item' as const }] : []),
+                    { ...hit, source: 'legend-item' as const },
                     ...pathData.map((datum) => ({ ...hit, datum, source: 'legend-item' as const })),
                 ]
                 : [{ ...hit, source: 'legend-item' as const }];

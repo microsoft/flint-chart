@@ -211,6 +211,20 @@ export function sourceEdgeAttachment(
     return fallback;
 }
 
+export function annotationPrimaryAnchor(
+    item: any,
+    source: LayoutRect,
+    card: LayoutRect,
+    connection: AnnotationConnection,
+    fallback: PlotPoint,
+): PlotPoint {
+    if (item?.interactionGeometry
+        && ['top', 'right', 'bottom', 'left', 'segment-midpoint'].includes(connection)) {
+        return fallback;
+    }
+    return sourceEdgeAttachment(source, card, connection, fallback);
+}
+
 function routeIntersectsRect(route: AnnotationLeaderRoute, rect: LayoutRect, ignoreStartTouch = false): boolean {
     return route.points.slice(1).some((point, index) =>
         segmentIntersectsRect(route.points[index], point, rect, ignoreStartTouch && index === 0));
@@ -451,6 +465,7 @@ export function createAnnotationOverlay({
     annotationMarkType,
 }: AnnotationOverlayOptions): AnnotationOverlayController {
     const annotationLayer = document.createElement('div');
+    annotationLayer.dataset.flintAnnotation = '';
     Object.assign(annotationLayer.style, {
         position: 'absolute', inset: '0', zIndex: '4', pointerEvents: 'none', overflow: 'hidden',
     });
@@ -458,16 +473,21 @@ export function createAnnotationOverlay({
     Object.assign(annotationSvg.style, { position: 'absolute', inset: '0', width: '100%', height: '100%' });
     const annotationPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     annotationPath.setAttribute('fill', 'none');
-    annotationPath.setAttribute('stroke', 'var(--flint-annotation-color, #6b7280)');
+    annotationPath.setAttribute('stroke', 'var(--flint-annotation-line-color, #808080)');
     annotationPath.setAttribute('stroke-width', '1.25');
     annotationPath.setAttribute('stroke-linecap', 'round');
     annotationSvg.append(annotationPath);
     const annotationCard = document.createElement('div');
     Object.assign(annotationCard.style, {
-        position: 'absolute', color: 'var(--flint-annotation-color, #4b5563)', fontFamily: 'ui-sans-serif, sans-serif',
-        fontSize: '11px', fontWeight: '600', lineHeight: '1.35', whiteSpace: 'normal', width: 'max-content',
-        overflowWrap: 'break-word', padding: '2px 3px', borderRadius: '2px',
-        background: 'var(--flint-annotation-surface, rgba(255, 255, 255, 0.88))',
+        position: 'absolute', color: 'var(--flint-annotation-color, #000)',
+        fontFamily: 'var(--flint-annotation-font-family, sans-serif)',
+        fontSize: 'var(--flint-annotation-font-size, 11px)',
+        fontWeight: 'var(--flint-annotation-font-weight, 400)', lineHeight: 'normal', letterSpacing: '0',
+        whiteSpace: 'normal', width: 'max-content', overflowWrap: 'break-word', boxSizing: 'border-box',
+        padding: '8px', border: '1px solid var(--flint-annotation-border-color, #d9d9d9)',
+        borderRadius: 'var(--flint-annotation-border-radius, 3px)',
+        background: 'var(--flint-annotation-surface, rgba(255, 255, 255, 0.95))',
+        boxShadow: 'var(--flint-annotation-shadow, 2px 2px 4px rgba(0, 0, 0, 0.1))',
     });
     annotationLayer.append(annotationSvg, annotationCard);
 
@@ -503,7 +523,6 @@ export function createAnnotationOverlay({
         annotationCard.textContent = annotation.text;
         annotationCard.style.whiteSpace = annotation.text.includes('\n') ? 'pre-line' : 'normal';
         const directValue = annotation.text.length <= 18 && !annotation.text.includes('\n');
-        annotationCard.style.padding = directValue ? '1px 3px' : '2px 3px';
 
         const containerRect = container.getBoundingClientRect();
         const space = coordinateSpace();
@@ -698,7 +717,8 @@ export function createAnnotationOverlay({
             return [toLayout(connection.point)];
         });
         const fallbackAnchor = toLayout(best.connection.point);
-        const primaryAnchor = sourceEdgeAttachment(
+        const primaryAnchor = annotationPrimaryAnchor(
+            item,
             markSourceRect,
             best.card,
             best.candidate.connection,

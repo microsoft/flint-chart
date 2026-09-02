@@ -23,10 +23,8 @@ import {
   type AssemblyInputArgs,
 } from './tools/schemas.js';
 
-/** Package version, kept in lockstep with the npm release. */
-export const VERSION = JSON.parse(
-  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
-).version as string;
+import { VERSION } from './version.js';
+export { VERSION };
 
 export const AGENT_SKILL_RESOURCE_URI = 'flint://agent-skill';
 export const THEME_SKILL_RESOURCE_URI = 'flint://theme-skill';

@@ -8,6 +8,7 @@ import type {
 import type { InteractionEventSource } from './triggers';
 import type { InspectMode } from './triggers';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
+import type { InteractionAffordance } from './affordances';
 import type {
     NavigationAxes,
 } from './language/events';
@@ -28,6 +29,9 @@ import {
     createSelectInteraction,
     createNavigateInteraction,
     createDragReorderInteraction,
+    createFacetBrushLinkInteraction,
+    createHoverGroupHighlightInteraction,
+    createLabelIsolateInteraction,
 } from './presets';
 import type { CanvasInteractionEvent } from './language/events';
 export type {
@@ -91,11 +95,12 @@ export type {
 export interface CanvasInteractionDef {
     readonly id: string;
     readonly eventSource: InteractionEventSource;
+    readonly affordances?: readonly InteractionAffordance[];
     readonly navigationDomainGuard?: NavigationDomainGuard;
     /** Claims legend activations exclusively, so a legend click never also reads as an element click. */
     readonly claimsLegendActivation?: boolean;
-        /** Claims native axis tick activations instead of treating them as mark activations. */
-        readonly claimsAxisActivation?: boolean;
+    /** Claims native axis tick activations instead of treating them as mark activations. */
+    readonly claimsAxisActivation?: boolean;
     handle?(event: CanvasInteractionEvent, context: InteractionContext): ChartUpdate | null;
 }
 
@@ -129,6 +134,14 @@ export interface ClickHighlightOptions {
     legend?: boolean;
 }
 
+export type RecordGroupBy =
+    | string
+    | readonly string[];
+
+export type GroupByFunction = (element: SemanticElement, context: InteractionContext) => unknown;
+
+export type GroupBy = RecordGroupBy | GroupByFunction;
+
 export interface AxisHighlightOptions {
     id?: string;
     axis?: 'x' | 'y';
@@ -136,14 +149,55 @@ export interface AxisHighlightOptions {
     dimOpacity?: number;
 }
 
-export interface ClickGroupHighlightOptions extends ClickHighlightOptions {
-    groupBy?: string | ((element: SemanticElement, context: InteractionContext) => unknown);
+export type ClickGroupHighlightOptions = ClickHighlightOptions & { groupBy?: GroupBy };
+
+export interface ClickMarkOptions {
+    id?: string;
+    dimOpacity?: number;
+    groupBy?: GroupBy;
 }
+
+export type ClickGroupFocusOptions = ClickMarkOptions;
 
 export interface ClickAnnotateOptions {
     id?: string;
     dimOpacity?: number;
     format?: (element: SemanticElement, context: InteractionContext) => string;
+}
+
+export interface FacetBrushLinkOptions extends SelectOptions {
+    by: string | readonly string[];
+    brush?: 'rectangle' | 'lasso';
+}
+
+export interface HoverGroupHighlightOptions {
+    id?: string;
+    groupBy: string | readonly string[];
+    dimOpacity?: number;
+    /** Nearest-mark hover radius in renderer pixels. Defaults to 8. */
+    tolerance?: number;
+    /** Whether legend hover focuses the represented series. Defaults to true. */
+    legend?: boolean;
+}
+
+export interface HoverGroupFocusOptions {
+    id?: string;
+    groupBy: string | readonly string[];
+    dimOpacity?: number;
+    /** Nearest-mark hover radius in renderer pixels. Defaults to 8. */
+    tolerance?: number;
+}
+
+export interface ClickLegendIsolateOptions {
+    id?: string;
+    dimOpacity?: number;
+}
+
+export interface ClickAxisIsolateOptions {
+    id?: string;
+    dimOpacity?: number;
+    /** Discrete positional axes to activate. Defaults to both axes. */
+    axes?: readonly ('x' | 'y')[];
 }
 
 export interface SelectOptions {
@@ -214,20 +268,67 @@ export interface DragReorderOptions {
     id?: string;
 }
 
-export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
-    return createClickHighlightInteraction(options);
+export function clickMark(options: ClickMarkOptions = {}): CanvasInteractionDef {
+    const configured = { ...options, id: options.id ?? 'click-mark', legend: false };
+    return options.groupBy === undefined
+        ? createClickHighlightInteraction(configured)
+        : createClickGroupHighlightInteraction(configured);
 }
 
 export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInteractionDef {
     return createAxisHighlightInteraction(options);
 }
 
-export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
-    return createClickGroupHighlightInteraction(options);
+export function clickGroupFocus(options: ClickGroupFocusOptions = {}): CanvasInteractionDef {
+    return createClickGroupHighlightInteraction({
+        id: options.id ?? 'click-group-focus',
+        dimOpacity: options.dimOpacity,
+        groupBy: options.groupBy,
+        legend: false,
+    });
 }
 
 export function clickAnnotate(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
     return createClickAnnotateInteraction(options);
+}
+
+export function facetBrushLink(options: FacetBrushLinkOptions): CanvasInteractionDef {
+    return createFacetBrushLinkInteraction(options);
+}
+
+export function hoverGroupFocus(options: HoverGroupFocusOptions): CanvasInteractionDef {
+    return createHoverGroupHighlightInteraction({ ...options, id: options.id ?? 'hover-group-focus', legend: false });
+}
+
+/** @deprecated Use clickMark(). */
+export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
+    return createClickHighlightInteraction(options);
+}
+
+/** @deprecated Use clickGroupFocus(). */
+export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
+    return createClickGroupHighlightInteraction(options);
+}
+
+/** @deprecated Use hoverGroupFocus(). */
+export function hoverGroupHighlight(options: HoverGroupHighlightOptions): CanvasInteractionDef {
+    return createHoverGroupHighlightInteraction(options);
+}
+
+export function clickLegendIsolate(options: ClickLegendIsolateOptions = {}): CanvasInteractionDef {
+    return createLabelIsolateInteraction({
+        ...options,
+        id: options.id ?? 'click-legend-isolate',
+        targets: ['legend'],
+    });
+}
+
+export function clickAxisIsolate(options: ClickAxisIsolateOptions = {}): CanvasInteractionDef {
+    return createLabelIsolateInteraction({
+        ...options,
+        id: options.id ?? 'click-axis-isolate',
+        targets: options.axes ?? ['x', 'y'],
+    });
 }
 
 export function select(options: SelectOptions = {}): CanvasInteractionDef {

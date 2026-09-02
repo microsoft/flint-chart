@@ -10,6 +10,7 @@ export function createBrushZoomInteraction(options: BrushZoomOptions = {}): Canv
     return {
         id,
         eventSource: brushZoomTrigger(axes, options.guide),
+        affordances: [{ target: 'plot', cursor: 'region' }],
         handle(event) {
             if (!REGION_ACTIONS.has(event.action) || event.phase !== 'commit' || event.operation === 'clear') return null;
             const domain = event.geometry.domain;

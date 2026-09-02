@@ -18,12 +18,14 @@ import {
     type CartesianRegionAxis,
     type Interval,
     type IntervalOperation,
+    type PlotFrame,
 } from '../../../interactive/gestures/cartesian-region';
 import {
     clientRectToLayoutRect,
     clientToLayoutPoint,
     clientToPlotPoint,
     interactionModifiers,
+    facetPlotFrameAt,
     normalizeVegaAngularRegionEvent,
     normalizeVegaLassoEvent,
     normalizeVegaRegionEvent,
@@ -130,6 +132,8 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     let initialInterval: Interval | undefined;
     let angularSession: AngularRegionSession | undefined;
     let lassoPoints: PlotPoint[] = [];
+    let activePlotFrame: PlotFrame | undefined;
+    let dragPlotFrame: PlotFrame | undefined;
 
     const overlay = document.createElement('div');
     Object.assign(overlay.style, {
@@ -178,25 +182,35 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     const previousCursor = container.style.cursor;
     if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     container.style.userSelect = 'none';
-    container.style.cursor = 'crosshair';
     container.append(angularBrush ? angularOverlay : lassoBrush ? lassoOverlay : overlay);
     container.tabIndex = container.tabIndex >= 0 ? container.tabIndex : 0;
 
     const localPoint = (event: PointerEvent): PlotPoint => {
         return clientToPlotPoint({ x: event.clientX, y: event.clientY }, coordinateSpace());
     };
-    const brushPlotSize = (): { width: number; height: number } => {
+    const rootPlotFrame = (): PlotFrame => {
         const space = coordinateSpace();
-        return { width: space.plotWidth, height: space.plotHeight };
+        return { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight };
     };
+    const brushPlotFrame = (): PlotFrame => dragPlotFrame ?? activePlotFrame ?? rootPlotFrame();
     const intervalAxis = (): 'x' | 'y' => regionAxis === 'y' ? 'y' : 'x';
-    const axisLimit = (): number => intervalAxis() === 'y' ? brushPlotSize().height : brushPlotSize().width;
     const intervalForDrag = (point: PlotPoint): Interval => {
-        return updateInterval(point, dragStart!, intervalAxis(), axisLimit(), dragAction, initialInterval);
+        const frame = brushPlotFrame();
+        const axis = intervalAxis();
+        const origin = axis === 'y' ? frame.y : frame.x;
+        const limit = axis === 'y' ? frame.height : frame.width;
+        const localPoint = { ...point, [axis]: axisValue(point, axis) - origin };
+        const localStart = { ...dragStart!, [axis]: axisValue(dragStart!, axis) - origin };
+        const localInitial = initialInterval && {
+            leading: initialInterval.leading - origin,
+            trailing: initialInterval.trailing - origin,
+        };
+        const interval = updateInterval(localPoint, localStart, axis, limit, dragAction, localInitial);
+        return { leading: interval.leading + origin, trailing: interval.trailing + origin };
     };
     const showRegion = (a: PlotPoint, b: PlotPoint): void => {
         if (!guide.visible) return;
-        const constrained = constrainCartesianRegion(a, b, regionAxis, brushPlotSize());
+        const constrained = constrainCartesianRegion(a, b, regionAxis, brushPlotFrame());
         const space = coordinateSpace();
         const leading = plotToClientPoint({
             x: Math.min(constrained.start.x, constrained.end.x),
@@ -349,7 +363,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     ): void => {
         const normalized = normalizeVegaRegionEvent(
             view, start, end, phase, interaction.eventSource.match ?? 'intersect',
-            interactionModifiers(event), regionAxis, brushPlotSize(), operation,
+            interactionModifiers(event), regionAxis, brushPlotFrame(), operation,
             !interaction.eventSource.viewport,
         );
         setSelected(new Set(committed));
@@ -366,6 +380,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         if (event.button !== 0 || isInteractiveControlTarget(event.target)) return;
         clearHover();
         const point = localPoint(event);
+        const candidateFrame = facetPlotFrameAt(view, point, rootPlotFrame());
         if (angularBrush) {
             const frame = frameAt(point);
             if (!frame) return;
@@ -385,13 +400,18 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         }
         dragAction = 'create';
         initialInterval = activeInterval ? { ...activeInterval } : undefined;
+        const insideActiveFrame = !activePlotFrame
+            || point.x >= activePlotFrame.x && point.x <= activePlotFrame.x + activePlotFrame.width
+                && point.y >= activePlotFrame.y && point.y <= activePlotFrame.y + activePlotFrame.height;
+        dragPlotFrame = candidateFrame;
         if (lassoBrush) lassoPoints = [point];
-        if (statefulBrush && activeInterval) {
+        if (statefulBrush && activeInterval && insideActiveFrame) {
             const value = axisValue(point, intervalAxis());
             const edgeTolerance = 8;
             if (Math.abs(value - activeInterval.leading) <= edgeTolerance) dragAction = 'resize-leading';
             else if (Math.abs(value - activeInterval.trailing) <= edgeTolerance) dragAction = 'resize-trailing';
             else if (value > activeInterval.leading && value < activeInterval.trailing) dragAction = 'move';
+            if (dragAction !== 'create') dragPlotFrame = activePlotFrame;
         }
         dragStart = point;
         pointerId = event.pointerId;
@@ -411,12 +431,16 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                 return;
             }
             if (statefulBrush && activeInterval) {
-                const value = axisValue(localPoint(event), intervalAxis());
+                const point = localPoint(event);
+                const insideFrame = !activePlotFrame
+                    || point.x >= activePlotFrame.x && point.x <= activePlotFrame.x + activePlotFrame.width
+                        && point.y >= activePlotFrame.y && point.y <= activePlotFrame.y + activePlotFrame.height;
+                const value = axisValue(point, intervalAxis());
                 const nearEdge = Math.abs(value - activeInterval.leading) <= 8
                     || Math.abs(value - activeInterval.trailing) <= 8;
-                container.style.cursor = nearEdge
+                container.style.cursor = insideFrame && nearEdge
                     ? regionAxis === 'x' ? 'ew-resize' : 'ns-resize'
-                    : value > activeInterval.leading && value < activeInterval.trailing ? 'grab' : 'crosshair';
+                    : insideFrame && value > activeInterval.leading && value < activeInterval.trailing ? 'grab' : 'crosshair';
             }
             return;
         }
@@ -497,6 +521,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                 dispatchRegion('commit', points.start, points.end, event, dragAction);
                 if (statefulBrush && interval) {
                     activeInterval = interval;
+                    activePlotFrame = dragPlotFrame;
                     showInterval(interval);
                 }
             }
@@ -514,6 +539,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                     || axisValue(point, intervalAxis()) > activeInterval.trailing;
                 if (!statefulBrush || clickedOutside) {
                     activeInterval = undefined;
+                    activePlotFrame = undefined;
                     committed.clear();
                     dispatchRegion('commit', dragStart, point, event, 'clear', null);
                 }
@@ -525,6 +551,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         initialSector = undefined;
         angularAction = 'create';
         angularSession = undefined;
+        dragPlotFrame = undefined;
         setDragging(false);
         if (!statefulBrush || !activeInterval) overlay.style.display = 'none';
         if (!statefulAngular || !activeSector) angularOverlay.style.display = 'none';
@@ -539,6 +566,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         initialInterval = undefined;
         angularSession = undefined;
         lassoPoints = [];
+        dragPlotFrame = undefined;
         lassoOverlay.style.display = 'none';
         setDragging(false);
         if (statefulBrush && activeInterval) showInterval(activeInterval);
@@ -563,12 +591,14 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         } else {
             setSelected(new Set());
             activeInterval = undefined;
+            activePlotFrame = undefined;
             activeSector = undefined;
             clearAnnotation();
         }
         dragStart = undefined;
         pointerId = undefined;
         initialInterval = undefined;
+        dragPlotFrame = undefined;
         setDragging(false);
         overlay.style.display = 'none';
         angularOverlay.style.display = 'none';

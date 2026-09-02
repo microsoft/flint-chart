@@ -13,6 +13,7 @@ export function createLongPressInteraction(options: LongPressOptions = {}): Canv
     return {
         id,
         eventSource: longPressTrigger(options.holdMs ?? 500),
+        affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!event.action.startsWith('long-press-') || event.phase !== 'commit') return null;
             return emphasisUpdate(id, event, event.target, dimOpacity, context);
@@ -29,6 +30,7 @@ export function createDoubleActivateInteraction(
     return {
         id,
         eventSource: doubleActivateTrigger,
+        affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!event.action.startsWith('double-activate-') || event.phase !== 'commit') return null;
             return emphasisUpdate(id, event, event.target, dimOpacity, context);

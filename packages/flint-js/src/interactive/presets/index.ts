@@ -13,3 +13,6 @@ export { createLegendToggleInteraction } from './legend-toggle';
 export { createSelectInteraction } from './select';
 export { createNavigateInteraction } from './navigate';
 export { createDragReorderInteraction } from './drag-reorder';
+export { createFacetBrushLinkInteraction } from './facet-brush-link';
+export { createHoverGroupHighlightInteraction } from './hover-group-highlight';
+export { createLabelIsolateInteraction } from './label-isolate';

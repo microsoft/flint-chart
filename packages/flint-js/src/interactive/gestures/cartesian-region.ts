@@ -8,6 +8,11 @@ export interface PlotSize {
     height: number;
 }
 
+export interface PlotFrame extends PlotSize {
+    x: number;
+    y: number;
+}
+
 export interface Interval {
     leading: number;
     trailing: number;
@@ -17,11 +22,23 @@ export function constrainCartesianRegion(
     start: PlotPoint,
     end: PlotPoint,
     axis: CartesianRegionAxis,
-    plotSize: PlotSize,
+    plotSize: PlotSize | PlotFrame,
 ): { start: PlotPoint; end: PlotPoint } {
+    const left = 'x' in plotSize ? plotSize.x : 0;
+    const top = 'y' in plotSize ? plotSize.y : 0;
+    const right = left + plotSize.width;
+    const bottom = top + plotSize.height;
+    const clamp = (value: number, minimum: number, maximum: number): number =>
+        Math.max(minimum, Math.min(maximum, value));
     return {
-        start: { x: axis === 'y' ? 0 : start.x, y: axis === 'x' ? 0 : start.y },
-        end: { x: axis === 'y' ? plotSize.width : end.x, y: axis === 'x' ? plotSize.height : end.y },
+        start: {
+            x: axis === 'y' ? left : clamp(start.x, left, right),
+            y: axis === 'x' ? top : clamp(start.y, top, bottom),
+        },
+        end: {
+            x: axis === 'y' ? right : clamp(end.x, left, right),
+            y: axis === 'x' ? bottom : clamp(end.y, top, bottom),
+        },
     };
 }
 

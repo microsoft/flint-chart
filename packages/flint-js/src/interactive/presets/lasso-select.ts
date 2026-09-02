@@ -8,6 +8,7 @@ export function createLassoSelectInteraction(options: LassoSelectOptions = {}): 
     return {
         id,
         eventSource: lassoTrigger(options.match ?? 'intersect', options.guide),
+        affordances: [{ target: 'plot', cursor: 'region' }],
         handle(event, context) {
             if (event.action !== 'select-lasso' || event.phase === 'start' || event.phase === 'cancel') return null;
             return emphasisUpdate(id, event, event.target, dimOpacity, context);
