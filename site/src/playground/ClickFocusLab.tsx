@@ -58,6 +58,8 @@ export interface NavigationGuard {
 const unitInteractionModes = [
   { value: 'click-mark', label: 'Click mark', icon: MousePointer2 },
   { value: 'click-group-focus', label: 'Click group focus', icon: Layers3 },
+  { value: 'click-legend-isolate', label: 'Click legend isolate', icon: Layers3 },
+  { value: 'click-axis-isolate', label: 'Click axis isolate', icon: Ruler },
   { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
   { value: 'annotate', label: 'Annotate', icon: MessageSquareText },
   { value: 'select', label: 'Select', icon: Scan },
@@ -69,8 +71,6 @@ const unitInteractionModes = [
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
   { value: 'lasso', label: 'Lasso', icon: Lasso },
-  { value: 'click-legend-isolate', label: 'Click legend isolate', icon: Layers3 },
-  { value: 'click-axis-isolate', label: 'Click axis isolate', icon: Ruler },
   { value: 'inspect', label: 'Inspect xy', icon: Target },
   { value: 'inspect-quadrant', label: 'Inspect quadrant', icon: Crosshair },
   { value: 'inspect-x', label: 'Inspect x', icon: Ruler },

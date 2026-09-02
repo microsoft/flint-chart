@@ -18,8 +18,8 @@ import {
     createAngularBrushInteraction,
     createAxisHighlightInteraction,
     createClickAnnotateInteraction,
-    createClickGroupHighlightInteraction,
-    createClickHighlightInteraction,
+    createClickGroupFocusInteraction,
+    createClickMarkInteraction,
     createContextActivateInteraction,
     createDoubleActivateInteraction,
     createInspectInteraction,
@@ -30,7 +30,7 @@ import {
     createNavigateInteraction,
     createDragReorderInteraction,
     createFacetBrushLinkInteraction,
-    createHoverGroupHighlightInteraction,
+    createHoverGroupFocusInteraction,
     createLabelIsolateInteraction,
 } from './presets';
 import type { CanvasInteractionEvent } from './language/events';
@@ -127,20 +127,9 @@ export function isExternalInteraction(interaction: InteractionDef): interaction 
     return 'external' in interaction;
 }
 
-export interface ClickHighlightOptions {
-    id?: string;
-    dimOpacity?: number;
-    /** Whether legend activation focuses the represented series. Defaults to true. */
-    legend?: boolean;
-}
-
-export type RecordGroupBy =
+export type GroupBy =
     | string
     | readonly string[];
-
-export type GroupByFunction = (element: SemanticElement, context: InteractionContext) => unknown;
-
-export type GroupBy = RecordGroupBy | GroupByFunction;
 
 export interface AxisHighlightOptions {
     id?: string;
@@ -148,8 +137,6 @@ export interface AxisHighlightOptions {
     event?: 'hover' | 'click';
     dimOpacity?: number;
 }
-
-export type ClickGroupHighlightOptions = ClickHighlightOptions & { groupBy?: GroupBy };
 
 export interface ClickMarkOptions {
     id?: string;
@@ -168,16 +155,6 @@ export interface ClickAnnotateOptions {
 export interface FacetBrushLinkOptions extends SelectOptions {
     by: string | readonly string[];
     brush?: 'rectangle' | 'lasso';
-}
-
-export interface HoverGroupHighlightOptions {
-    id?: string;
-    groupBy: string | readonly string[];
-    dimOpacity?: number;
-    /** Nearest-mark hover radius in renderer pixels. Defaults to 8. */
-    tolerance?: number;
-    /** Whether legend hover focuses the represented series. Defaults to true. */
-    legend?: boolean;
 }
 
 export interface HoverGroupFocusOptions {
@@ -269,10 +246,10 @@ export interface DragReorderOptions {
 }
 
 export function clickMark(options: ClickMarkOptions = {}): CanvasInteractionDef {
-    const configured = { ...options, id: options.id ?? 'click-mark', legend: false };
+    const configured = { ...options, id: options.id ?? 'click-mark' };
     return options.groupBy === undefined
-        ? createClickHighlightInteraction(configured)
-        : createClickGroupHighlightInteraction(configured);
+        ? createClickMarkInteraction(configured)
+        : createClickGroupFocusInteraction(configured);
 }
 
 export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInteractionDef {
@@ -280,11 +257,10 @@ export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInterac
 }
 
 export function clickGroupFocus(options: ClickGroupFocusOptions = {}): CanvasInteractionDef {
-    return createClickGroupHighlightInteraction({
+    return createClickGroupFocusInteraction({
         id: options.id ?? 'click-group-focus',
         dimOpacity: options.dimOpacity,
         groupBy: options.groupBy,
-        legend: false,
     });
 }
 
@@ -297,22 +273,7 @@ export function facetBrushLink(options: FacetBrushLinkOptions): CanvasInteractio
 }
 
 export function hoverGroupFocus(options: HoverGroupFocusOptions): CanvasInteractionDef {
-    return createHoverGroupHighlightInteraction({ ...options, id: options.id ?? 'hover-group-focus', legend: false });
-}
-
-/** @deprecated Use clickMark(). */
-export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
-    return createClickHighlightInteraction(options);
-}
-
-/** @deprecated Use clickGroupFocus(). */
-export function clickGroupHighlight(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
-    return createClickGroupHighlightInteraction(options);
-}
-
-/** @deprecated Use hoverGroupFocus(). */
-export function hoverGroupHighlight(options: HoverGroupHighlightOptions): CanvasInteractionDef {
-    return createHoverGroupHighlightInteraction(options);
+    return createHoverGroupFocusInteraction({ ...options, id: options.id ?? 'hover-group-focus' });
 }
 
 export function clickLegendIsolate(options: ClickLegendIsolateOptions = {}): CanvasInteractionDef {

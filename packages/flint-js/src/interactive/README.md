@@ -672,7 +672,7 @@ Assisted pointer targeting can customize the compact semantic details:
 ```ts
 buildInteractiveChart(container, input, {
     backend: 'vegalite',
-    interactions: [clickHighlight(), axisHighlight()],
+    interactions: [clickMark(), axisHighlight()],
     assistedTargeting: {
         maxDistance: 16,
         indicator: true,
@@ -901,13 +901,14 @@ always name fields, so `groupBy: 'auto'` selects a field literally named `auto`.
 accepts the same explicit partition with `clickMark({ groupBy: ['Country', 'Series'] })`.
 `clickAnnotate()` remains local to the acquired mark.
 
-For programmatic partitions, a `groupBy` function computes a key from the full semantic element
-and interaction context. Functions are the TypeScript-only extension to the JSON-safe field and
-field-list forms. The preset still owns acquisition, retained state, and presentation.
+For a custom stable partition, derive a field in the input data and name it with `groupBy`:
 
 ```ts
-clickMark({ groupBy: (element) => element.records?.[0]?.Region });
+clickMark({ groupBy: 'Quadrant' });
 ```
+
+This keeps grouping serializable and reusable by other chart semantics. Event-relative or otherwise
+custom interaction logic belongs in a custom `handle`, which can emit the existing style updates.
 
 `hoverGroupFocus({ groupBy: 'Country' })` provides the transient counterpart. Its preview
 clears on pointer exit and does not replace retained click or brush state. A default 8-pixel
@@ -948,10 +949,8 @@ Canonical helpers include:
 - `select()`, `brushX()`, `brushY()`, and `brushAngle()`
 - `navigate()`
 
-The older `clickHighlight()`, `clickGroupHighlight()`, and `hoverGroupHighlight()` names remain as
-deprecated aliases. All presets are implemented on the normalized event pipeline. Existing chart
-resolution and `presentUpdate` hooks remain valid; chart-specific action expansion lives in
-interaction handlers.
+All presets are implemented on the normalized event pipeline. Existing chart resolution and
+`presentUpdate` hooks remain valid; chart-specific action expansion lives in interaction handlers.
 
 The long-term built-in preset set should stay small: hover highlight, click
 highlight/select, region or brush highlight, and guarded navigation. Specialized

@@ -168,7 +168,7 @@ Each backend has its own assembly function. All accept the same
 Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns interaction coordination, viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
 
 ```ts
-import { buildInteractiveChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
+import { buildInteractiveChart, clickMark, externalInteraction } from 'flint-chart/interactive';
 
 const surface = buildInteractiveChart(
   container,
@@ -176,7 +176,7 @@ const surface = buildInteractiveChart(
   {
     backend: 'vegalite',
     renderer: 'canvas',
-    interactions: [clickHighlight()],
+    interactions: [clickMark()],
   },
 );
 
@@ -204,7 +204,7 @@ const countryPicker = externalInteraction<{ country: string }>({
 await surface.dispatch('country-picker', { country: 'Japan' });
 ```
 
-The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` selects marks, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickMark()` selects marks, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
 
 ### Input types
 

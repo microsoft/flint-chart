@@ -49,16 +49,11 @@ export type {
     ClickAnnotateOptions,
     ClickAxisIsolateOptions,
     ClickGroupFocusOptions,
-    ClickGroupHighlightOptions,
-    ClickHighlightOptions,
     ClickLegendIsolateOptions,
     ClickMarkOptions,
     FacetBrushLinkOptions,
-    HoverGroupHighlightOptions,
     HoverGroupFocusOptions,
     GroupBy,
-    GroupByFunction,
-    RecordGroupBy,
     ElementInteractionEvent,
     FlintInteractionEventDetail,
     InteractionPhase,
@@ -103,7 +98,7 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickAxisIsolate, clickGroupFocus, clickGroupHighlight, clickHighlight, clickLegendIsolate, clickMark, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, hoverGroupHighlight, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickAxisIsolate, clickGroupFocus, clickLegendIsolate, clickMark, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
 export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
