@@ -3,14 +3,14 @@ import type {
     CanvasInteractionDef,
 } from '../interactions';
 import { emphasisUpdate, isActivationAction, normalizedOpacity } from './utils';
-import { clickTrigger } from '../triggers';
+import { assistedElementTrigger, clickTrigger } from '../triggers';
 
 export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'click-annotate';
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
-        eventSource: clickTrigger,
+        eventSource: assistedElementTrigger(clickTrigger, 8),
         affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!isActivationAction(event.action) || event.phase !== 'commit') return null;

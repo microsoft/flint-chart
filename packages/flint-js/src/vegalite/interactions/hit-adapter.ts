@@ -762,7 +762,7 @@ export function legendSemanticTarget(
 export function axisTargetIdentity(
     item: any,
     targets: Readonly<Record<string, import('./contracts').VegaAxisTarget>> | undefined,
-): (import('./contracts').VegaAxisTarget & { value: unknown; role: string }) | null {
+): (import('./contracts').VegaAxisTarget & { scale: string; value: unknown; role: string }) | null {
     const role = item?.mark?.role;
     if (role !== 'axis-label' && role !== 'axis-tick') return null;
     let group = item?.mark?.group;
@@ -772,7 +772,7 @@ export function axisTargetIdentity(
     if (!target || (target.type !== 'nominal' && target.type !== 'ordinal') || item?.datum?.value === undefined) {
         return null;
     }
-    return { ...target, value: item.datum.value, role };
+    return { ...target, scale, value: item.datum.value, role };
 }
 
 export function axisItemAt(

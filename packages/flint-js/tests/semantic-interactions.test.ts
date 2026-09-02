@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
-import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickMark, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
-import type { RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
+import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
+import type { ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
 import {
     associateSemanticElementRenderKeys,
     MUTED_HOVER_FILL,
@@ -63,6 +63,7 @@ import {
     continuousLegendSegmentCount,
 } from '../src/vegalite/interactions/hit-adapter';
 import {
+    AXIS_HOVER_STORE,
     HIDDEN_STORE,
     HOVER_STORE,
     INTERACTION_STORE,
@@ -105,6 +106,9 @@ import {
     resolveRetainedLegendPresentationTargets,
     resolvedLegendInteractionTarget,
 } from '../src/vegalite/interactions/runtime';
+
+const clickMark = (options: Omit<ClickHighlightOptions, 'targets'> = {}) =>
+    clickHighlight({ ...options, targets: ['mark'] });
 
 function annotationUpdate(
     element: SemanticElement,
@@ -232,7 +236,7 @@ describe('Vega-Lite semantic interactions', () => {
         });
     });
 
-    it('uses contrast rather than outlines for Boxplot hover', () => {
+    it('combines color contrast and outlines for Boxplot hover', () => {
         const semantics = boxplotDef.semanticInteractions!({
             resolvedEncodings: {
                 x: { field: 'Species', type: 'nominal' },
@@ -241,9 +245,9 @@ describe('Vega-Lite semantic interactions', () => {
         });
 
         expect(semantics.renderHoverStyles).toEqual({
-            rect: { opacity: 'contrast' },
-            rule: { opacity: 'contrast' },
-            symbol: { opacity: 'contrast' },
+            rect: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            rule: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            symbol: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
         });
     });
 
@@ -1592,9 +1596,9 @@ describe('Vega-Lite semantic interactions', () => {
                 _interactionSemantics: {
                     fields: ['Group'], selectableMarks: ['boxplot'],
                     renderHoverStyles: {
-                        rect: { stroke: '#59636d', strokeWidth: 2 },
-                        rule: { stroke: '#59636d', strokeWidth: 2 },
-                        symbol: { stroke: '#59636d', strokeWidth: 2 },
+                        rect: { opacity: 'contrast', stroke: '#59636d', strokeWidth: 2 },
+                        rule: { opacity: 'contrast', stroke: '#59636d', strokeWidth: 2 },
+                        symbol: { opacity: 'contrast', stroke: '#59636d', strokeWidth: 2 },
                     },
                 },
             },
@@ -1612,6 +1616,50 @@ describe('Vega-Lite semantic interactions', () => {
 
             expect(strokes.length).toBeGreaterThan(0);
             expect(strokes.every((item) => item.stroke !== 'transparent' && item.strokeWidth > 0)).toBe(true);
+        }
+    });
+
+    it('compiles Boxplot color contrast and outlines for every composite submark', () => {
+        const spec: Record<string, any> = {
+            data: { values: [
+                { Group: 'A', Value: 1 }, { Group: 'A', Value: 2 },
+                { Group: 'A', Value: 3 }, { Group: 'A', Value: 20 },
+            ] },
+            mark: 'boxplot',
+            encoding: {
+                x: { field: 'Group', type: 'nominal' },
+                y: { field: 'Value', type: 'quantitative' },
+            },
+            _interactionSemantics: {
+                fields: ['Group'], selectableMarks: ['boxplot'],
+                renderHoverStyles: {
+                    rect: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                    rule: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                    symbol: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+                },
+            },
+        };
+        const plan = addVegaLiteInteractions(spec, [clickMark()]);
+        const compiled = compile(spec as any).spec as Record<string, any>;
+        injectVegaInteractionStore(compiled, plan ?? undefined);
+        const marks: Record<string, any>[] = [];
+        const collect = (items: Record<string, any>[] = []) => {
+            for (const item of items) {
+                marks.push(item);
+                collect(item.marks);
+            }
+        };
+        collect(compiled.marks);
+
+        for (const markType of ['rect', 'rule', 'symbol']) {
+            const styled = marks.filter((mark) => mark.type === markType
+                && JSON.stringify(mark.encode).includes(INTERACTION_KEY));
+            expect(styled.length).toBeGreaterThan(0);
+            for (const mark of styled) {
+                expect(JSON.stringify(mark.encode.update.opacity)).toContain(HOVER_STORE);
+                expect(JSON.stringify(mark.encode.update.stroke)).toContain(MUTED_HOVER_STROKE);
+                expect(JSON.stringify(mark.encode.update.strokeWidth)).toContain(HOVER_STORE);
+            }
         }
     });
 
@@ -3700,6 +3748,45 @@ describe('set-style visibility', () => {
             ?.encode?.labels?.update?.cursor).toBeUndefined();
         expect(compiled.axes.find((axis: any) => axis.orient === 'left')
             ?.encode?.labels?.update?.cursor).toBeUndefined();
+        view.finalize();
+    });
+
+    it('highlights hovered discrete x and y axis labels', async () => {
+        const compiled = compile({
+            data: { values: [{ Column: 'A', Row: 'R', Value: 1 }] },
+            mark: 'rect',
+            encoding: {
+                x: { field: 'Column', type: 'nominal' },
+                y: { field: 'Row', type: 'nominal' },
+                color: { field: 'Value', type: 'quantitative' },
+            },
+        }).spec as Record<string, any>;
+        const targets = collectVegaAxisTargets(compiled, {
+            x: { field: 'Column', type: 'nominal' },
+            y: { field: 'Row', type: 'nominal' },
+        }, [], '#123456');
+        injectVegaInteractionStore(compiled);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const labels = () => allSceneItems(view).filter((item) => item.mark?.role === 'axis-label');
+        const xLabel = () => labels().find((item) => item.datum?.value === 'A');
+        const yLabel = () => labels().find((item) => item.datum?.value === 'R');
+        const xIdentity = axisTargetIdentity(xLabel(), targets)!;
+        const yIdentity = axisTargetIdentity(yLabel(), targets)!;
+
+        view.change(AXIS_HOVER_STORE, changeset().remove(() => true).insert([{
+            scale: xIdentity.scale, value: xIdentity.value,
+        }]));
+        await view.runAsync();
+        expect(xLabel()).toMatchObject({ fill: '#123456', fontWeight: 600 });
+        expect(yLabel()?.fontWeight).not.toBe(600);
+
+        view.change(AXIS_HOVER_STORE, changeset().remove(() => true).insert([{
+            scale: yIdentity.scale, value: yIdentity.value,
+        }]));
+        await view.runAsync();
+        expect(yLabel()).toMatchObject({ fill: '#123456', fontWeight: 600 });
+        expect(xLabel()?.fontWeight).not.toBe(600);
         view.finalize();
     });
 

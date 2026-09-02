@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
   genBarTests,
@@ -15,10 +15,8 @@ import {
   brushY,
   brushZoom,
   clickAnnotate,
-  clickAxisIsolate,
   clickGroupFocus,
-  clickLegendIsolate,
-  clickMark,
+  clickHighlight,
   contextActivate,
   doubleActivate,
   dragReorder,
@@ -41,12 +39,12 @@ import { navigationDemoCases } from './navigation-demo-data';
 import { gapminderRows } from './gapminder-dashboard-data';
 import './click-focus-lab.css';
 
-export type InteractionMode = 'click-mark' | 'click-group-focus' | 'annotate' | 'select'
+export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotate' | 'select'
   | 'facet-link' | 'hover-group-focus'
   | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder'
-  | 'lasso' | 'click-legend-isolate' | 'click-axis-isolate' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
+  | 'lasso' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
   | 'long-press' | 'double-activate'
-  | 'click-highlight' | 'assisted-focus' | 'keyboard-focus' | 'select-context' | 'focus-legend-toggle' | 'focus-brush-zoom';
+  | 'keyboard-focus' | 'select-context' | 'focus-legend-toggle' | 'focus-brush-zoom';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 export interface NavigationGuard {
@@ -56,10 +54,8 @@ export interface NavigationGuard {
 }
 
 const unitInteractionModes = [
-  { value: 'click-mark', label: 'Click mark', icon: MousePointer2 },
+  { value: 'click-highlight', label: 'Click highlight', icon: MousePointerClick },
   { value: 'click-group-focus', label: 'Click group focus', icon: Layers3 },
-  { value: 'click-legend-isolate', label: 'Click legend isolate', icon: Layers3 },
-  { value: 'click-axis-isolate', label: 'Click axis isolate', icon: Ruler },
   { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
   { value: 'annotate', label: 'Annotate', icon: MessageSquareText },
   { value: 'select', label: 'Select', icon: Scan },
@@ -79,15 +75,13 @@ const unitInteractionModes = [
 ] as const;
 
 const compositionInteractionModes = [
-  { value: 'click-highlight', label: 'Click highlight', icon: MousePointerClick },
-  { value: 'assisted-focus', label: 'Focus + assist', icon: Crosshair },
   { value: 'keyboard-focus', label: 'Focus + keyboard', icon: Keyboard },
   { value: 'select-context', label: 'Select + context', icon: Menu },
   { value: 'focus-legend-toggle', label: 'Focus + legend toggle', icon: EyeOff },
   { value: 'focus-brush-zoom', label: 'Focus + brush zoom', icon: ZoomIn },
 ] as const;
 
-type MountedInteraction = ReturnType<typeof clickMark>;
+type MountedInteraction = ReturnType<typeof clickHighlight>;
 
 /**
  * Each named unit mode mounts its corresponding preset; explicitly named compositions are separate.
@@ -99,10 +93,7 @@ function modeInteractions(
   linkBy: string | readonly string[] | undefined,
 ): MountedInteraction[] {
   switch (mode) {
-    case 'click-mark': return [clickMark()];
-    case 'click-legend-isolate': return [clickLegendIsolate()];
-    case 'click-axis-isolate': return [clickAxisIsolate()];
-    case 'click-highlight': return [clickMark(), clickLegendIsolate(), clickAxisIsolate()];
+    case 'click-highlight': return [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] })];
     case 'click-group-focus': return [clickGroupFocus({ groupBy: typeof linkBy === 'string' ? linkBy : undefined })];
     case 'hover-group-focus': return linkBy ? [hoverGroupFocus({ groupBy: linkBy })] : [];
     case 'annotate': return [clickAnnotate()];
@@ -121,12 +112,12 @@ function modeInteractions(
       dimOpacity: 0.14,
     })];
     case 'inspect-x': return [inspect({ mode: 'x' })];
-    case 'assisted-focus': case 'keyboard-focus': return [clickMark()];
+    case 'keyboard-focus': return [clickHighlight({ targets: ['mark'] })];
     case 'select-context': return [rectangleSelect(), contextActivate()];
-    case 'focus-legend-toggle': return [clickMark(), legendToggle()];
+    case 'focus-legend-toggle': return [clickHighlight({ targets: ['mark'] }), legendToggle()];
     case 'long-press': return [longPress()];
     case 'double-activate': return [doubleActivate()];
-    case 'focus-brush-zoom': return [clickMark(), brushZoom()];
+    case 'focus-brush-zoom': return [clickHighlight({ targets: ['mark'] }), brushZoom()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
   }
 }
@@ -645,7 +636,6 @@ function InteractiveChart({
       interactions,
       expressionInterpreter,
       ariaLabel: input.chart_spec.title,
-      assistedTargeting: mode === 'assisted-focus',
       keyboardTargeting: mode === 'keyboard-focus',
       dismiss: mode === 'long-press' || mode === 'double-activate'
         ? { click: 'any', escape: true }
@@ -846,7 +836,7 @@ export function CaseCard({
 }
 
 export function ClickFocusLab() {
-  const [mode, setMode] = useState<InteractionMode>('click-mark');
+  const [mode, setMode] = useState<InteractionMode>('click-highlight');
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
   const [navigationGuard, setNavigationGuard] = useState<NavigationGuard>({
     minVisibleFraction: 0.02,
@@ -893,7 +883,7 @@ export function ClickFocusLab() {
         <h1>Interaction gallery</h1>
         <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
         <ul className="cf-interaction-list">
-          <li><strong>Click mark:</strong> Click a mark to focus it and dim the other marks.</li>
+          <li><strong>Click highlight:</strong> Click a mark, legend entry, or categorical axis label to focus its cohort.</li>
           <li><strong>Click group focus:</strong> Click a mark to focus related marks in the same category or series.</li>
           <li><strong>Hover group focus:</strong> Hover a mark to preview matching semantic keys without changing retained state.</li>
           <li><strong>Annotate:</strong> Click a mark to search nearby free space and connect its represented value.</li>
@@ -905,9 +895,6 @@ export function ClickFocusLab() {
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel, trackpad, or a two-finger pinch to zoom.</li>
           <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>
           <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
-          <li><strong>Click legend isolate:</strong> Click a discrete entry or continuous legend interval to isolate its cohort.</li>
-          <li><strong>Click axis isolate:</strong> Click a categorical X/Y label to isolate its cohort.</li>
-          <li><strong>Click highlight:</strong> Compose mark, legend, and axis click presets.</li>
         </ul>
         <div className="cf-summary"><span><strong>{visibleCases.length}</strong> test cases</span></div>
         <div className="cf-theme-picker">

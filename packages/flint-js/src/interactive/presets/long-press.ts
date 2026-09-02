@@ -3,7 +3,7 @@ import type {
     DoubleActivateOptions,
     LongPressOptions,
 } from '../interactions';
-import { doubleActivateTrigger, longPressTrigger } from '../triggers';
+import { assistedElementTrigger, doubleActivateTrigger, longPressTrigger } from '../triggers';
 import { emphasisUpdate, normalizedOpacity } from './utils';
 
 /** Highlights and reports a sustained press on a chart target. */
@@ -12,7 +12,7 @@ export function createLongPressInteraction(options: LongPressOptions = {}): Canv
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
-        eventSource: longPressTrigger(options.holdMs ?? 500),
+        eventSource: assistedElementTrigger(longPressTrigger(options.holdMs ?? 500), 12),
         affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!event.action.startsWith('long-press-') || event.phase !== 'commit') return null;
@@ -29,7 +29,7 @@ export function createDoubleActivateInteraction(
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     return {
         id,
-        eventSource: doubleActivateTrigger,
+        eventSource: assistedElementTrigger(doubleActivateTrigger, 8),
         affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!event.action.startsWith('double-activate-') || event.phase !== 'commit') return null;

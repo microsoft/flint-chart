@@ -24,6 +24,7 @@ export interface TargetFeedbackOptions {
 }
 
 export interface AssistedTargetingOptions extends TargetFeedbackOptions {
+    /** Hard override for eligible preset distances, in renderer pixels. */
     maxDistance?: number;
 }
 
@@ -60,6 +61,7 @@ export interface InteractiveChartSurfaceOptions {
     chartId?: string;
     updates?: readonly ChartUpdate[];
     interactions?: readonly InteractionDef[];
+    /** Presets assist by default; false disables it and maxDistance overrides eligible presets. */
     assistedTargeting?: boolean | AssistedTargetingOptions;
     keyboardTargeting?: boolean;
     /** How committed presentation and annotation state is cleared. */

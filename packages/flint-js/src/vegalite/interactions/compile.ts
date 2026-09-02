@@ -28,6 +28,7 @@ import {
     HOVER_STORE,
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
+    AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
@@ -574,6 +575,7 @@ export function collectVegaAxisTargets(
     vegaSpec: Record<string, any>,
     axisFields: VegaInteractionPlan['axisFields'],
     reorderAxes: readonly Pick<import('./contracts').VegaReorderAxis, 'axis' | 'field'>[] = [],
+    hoverColor?: string,
 ): Record<string, import('./contracts').VegaAxisTarget> {
     const targets: Record<string, import('./contracts').VegaAxisTarget> = {};
     const visit = (scope: Record<string, any>): void => {
@@ -583,12 +585,35 @@ export function collectVegaAxisTargets(
             const field = channel ? axisFields?.[channel] : undefined;
             if (!channel || !field || typeof axis.scale !== 'string') continue;
             targets[axis.scale] = { axis: channel, ...field };
+            const hoveredAxisLabel = hoverColor
+                ? `length(data('${AXIS_HOVER_STORE}')) && `
+                    + `data('${AXIS_HOVER_STORE}')[0].scale === ${JSON.stringify(axis.scale)} && `
+                    + `data('${AXIS_HOVER_STORE}')[0].value === datum.value`
+                : undefined;
+            const existingLabelFill = hoverColor
+                ? axis.encode?.labels?.update?.fill ?? axis.encode?.labels?.enter?.fill ?? { value: '#4a4a4a' }
+                : undefined;
+            const existingFontWeight = hoverColor
+                ? axis.encode?.labels?.update?.fontWeight ?? axis.encode?.labels?.enter?.fontWeight ?? { value: 'normal' }
+                : undefined;
             axis.encode = {
                 ...(axis.encode ?? {}),
                 labels: {
                     ...(axis.encode?.labels ?? {}),
                     interactive: true,
-                    update: { ...(axis.encode?.labels?.update ?? {}) },
+                    update: {
+                        ...(axis.encode?.labels?.update ?? {}),
+                        ...(hoveredAxisLabel && existingLabelFill && existingFontWeight ? {
+                            fill: [
+                            { test: hoveredAxisLabel, value: hoverColor },
+                            ...(Array.isArray(existingLabelFill) ? existingLabelFill : [existingLabelFill]),
+                            ],
+                            fontWeight: [
+                            { test: hoveredAxisLabel, value: 600 },
+                            ...(Array.isArray(existingFontWeight) ? existingFontWeight : [existingFontWeight]),
+                            ],
+                        } : {}),
+                    },
                 },
                 ticks: {
                     ...(axis.encode?.ticks ?? {}),
@@ -686,6 +711,7 @@ export function injectVegaInteractionStore(
         { name: HIDDEN_STORE, values: [] },
         { name: LEGEND_HIDDEN_STORE, values: [] },
         { name: LEGEND_HOVER_STORE, values: [] },
+        { name: AXIS_HOVER_STORE, values: [] },
         { name: LEGEND_SELECTION_STORE, values: [] },
         ...(Array.isArray(vegaSpec.data) ? vegaSpec.data : []),
     ];

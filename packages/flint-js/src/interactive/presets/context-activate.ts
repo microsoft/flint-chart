@@ -1,5 +1,5 @@
 import type { CanvasInteractionDef, ContextActivateOptions } from '../interactions';
-import { contextTrigger } from '../triggers';
+import { assistedElementTrigger, contextTrigger } from '../triggers';
 
 /**
  * Reports a context request on the chart target and leaves the chart unchanged;
@@ -10,7 +10,7 @@ export function createContextActivateInteraction(
 ): CanvasInteractionDef {
     return {
         id: options.id ?? 'context-activate',
-        eventSource: contextTrigger,
+        eventSource: assistedElementTrigger(contextTrigger, 8),
         affordances: [{ target: 'mark', cursor: 'activate' }],
     };
 }

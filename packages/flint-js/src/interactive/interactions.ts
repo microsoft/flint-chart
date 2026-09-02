@@ -19,7 +19,7 @@ import {
     createAxisHighlightInteraction,
     createClickAnnotateInteraction,
     createClickGroupFocusInteraction,
-    createClickMarkInteraction,
+    createClickHighlightInteraction,
     createContextActivateInteraction,
     createDoubleActivateInteraction,
     createInspectInteraction,
@@ -31,7 +31,6 @@ import {
     createDragReorderInteraction,
     createFacetBrushLinkInteraction,
     createHoverGroupFocusInteraction,
-    createLabelIsolateInteraction,
 } from './presets';
 import type { CanvasInteractionEvent } from './language/events';
 export type {
@@ -96,6 +95,8 @@ export interface CanvasInteractionDef {
     readonly id: string;
     readonly eventSource: InteractionEventSource;
     readonly affordances?: readonly InteractionAffordance[];
+    /** Retained updates from interactions in the same group replace one another. */
+    readonly retainedStateGroup?: string;
     readonly navigationDomainGuard?: NavigationDomainGuard;
     /** Claims legend activations exclusively, so a legend click never also reads as an element click. */
     readonly claimsLegendActivation?: boolean;
@@ -138,13 +139,20 @@ export interface AxisHighlightOptions {
     dimOpacity?: number;
 }
 
-export interface ClickMarkOptions {
+export type ClickHighlightTarget = 'mark' | 'legend' | 'discreteAxis';
+
+export interface ClickHighlightOptions {
+    id?: string;
+    dimOpacity?: number;
+    /** Semantic surfaces activated by this preset. Defaults to all three targets. */
+    targets?: readonly ClickHighlightTarget[];
+}
+
+export interface ClickGroupFocusOptions {
     id?: string;
     dimOpacity?: number;
     groupBy?: GroupBy;
 }
-
-export type ClickGroupFocusOptions = ClickMarkOptions;
 
 export interface ClickAnnotateOptions {
     id?: string;
@@ -163,18 +171,6 @@ export interface HoverGroupFocusOptions {
     dimOpacity?: number;
     /** Nearest-mark hover radius in renderer pixels. Defaults to 8. */
     tolerance?: number;
-}
-
-export interface ClickLegendIsolateOptions {
-    id?: string;
-    dimOpacity?: number;
-}
-
-export interface ClickAxisIsolateOptions {
-    id?: string;
-    dimOpacity?: number;
-    /** Discrete positional axes to activate. Defaults to both axes. */
-    axes?: readonly ('x' | 'y')[];
 }
 
 export interface SelectOptions {
@@ -245,11 +241,8 @@ export interface DragReorderOptions {
     id?: string;
 }
 
-export function clickMark(options: ClickMarkOptions = {}): CanvasInteractionDef {
-    const configured = { ...options, id: options.id ?? 'click-mark' };
-    return options.groupBy === undefined
-        ? createClickMarkInteraction(configured)
-        : createClickGroupFocusInteraction(configured);
+export function clickHighlight(options: ClickHighlightOptions = {}): CanvasInteractionDef {
+    return createClickHighlightInteraction(options);
 }
 
 export function axisHighlight(options: AxisHighlightOptions = {}): CanvasInteractionDef {
@@ -274,22 +267,6 @@ export function facetBrushLink(options: FacetBrushLinkOptions): CanvasInteractio
 
 export function hoverGroupFocus(options: HoverGroupFocusOptions): CanvasInteractionDef {
     return createHoverGroupFocusInteraction({ ...options, id: options.id ?? 'hover-group-focus' });
-}
-
-export function clickLegendIsolate(options: ClickLegendIsolateOptions = {}): CanvasInteractionDef {
-    return createLabelIsolateInteraction({
-        ...options,
-        id: options.id ?? 'click-legend-isolate',
-        targets: ['legend'],
-    });
-}
-
-export function clickAxisIsolate(options: ClickAxisIsolateOptions = {}): CanvasInteractionDef {
-    return createLabelIsolateInteraction({
-        ...options,
-        id: options.id ?? 'click-axis-isolate',
-        targets: options.axes ?? ['x', 'y'],
-    });
 }
 
 export function select(options: SelectOptions = {}): CanvasInteractionDef {

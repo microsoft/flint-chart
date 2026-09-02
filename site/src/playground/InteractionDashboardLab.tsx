@@ -10,7 +10,7 @@ import type {
 import {
   brushY,
   clickGroupFocus,
-  clickMark,
+  clickHighlight,
   externalInteraction,
   select,
 } from 'flint-chart/interactive';
@@ -156,7 +156,11 @@ function buildDashboardCharts(
         undefined,
         { width: 400, height: 230 },
       ),
-      interaction: clickMark({ id: DASHBOARD_SELECTION_ID, dimOpacity: 0.22 }),
+      interaction: clickHighlight({
+        id: DASHBOARD_SELECTION_ID,
+        dimOpacity: 0.22,
+        targets: ['mark'],
+      }),
     },
     {
       id: 'trends',

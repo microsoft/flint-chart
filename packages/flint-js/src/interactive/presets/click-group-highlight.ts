@@ -1,5 +1,5 @@
 import type {
-	ClickMarkOptions,
+	ClickGroupFocusOptions,
 	InteractionContext,
 	CanvasInteractionDef,
 	SemanticElement,
@@ -8,10 +8,10 @@ import type {
 } from '../interactions';
 import type { InteractionAffordance } from '../affordances';
 import { emphasisUpdate, isActivationAction, normalizedOpacity } from './utils';
-import { clickTrigger } from '../triggers';
+import { assistedElementTrigger, clickTrigger } from '../triggers';
 import { expandElementsByFields } from './semantic-cohort';
 
-type GroupFocusEngineOptions = ClickMarkOptions;
+type GroupFocusEngineOptions = ClickGroupFocusOptions;
 
 function groupValue(
 	element: SemanticElement,
@@ -58,7 +58,8 @@ export function createClickGroupFocusInteraction(options: GroupFocusEngineOption
 	];
 	return {
 		id,
-		eventSource: clickTrigger,
+		eventSource: assistedElementTrigger(clickTrigger, 8),
+		retainedStateGroup: 'focus',
 		affordances,
 		handle(event, context) {
 			if (!isActivationAction(event.action) || event.phase === 'start' || event.phase === 'cancel') return null;

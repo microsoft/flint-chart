@@ -47,10 +47,9 @@ export type {
     AngularBrushOptions,
     AxisHighlightOptions,
     ClickAnnotateOptions,
-    ClickAxisIsolateOptions,
+    ClickHighlightOptions,
+    ClickHighlightTarget,
     ClickGroupFocusOptions,
-    ClickLegendIsolateOptions,
-    ClickMarkOptions,
     FacetBrushLinkOptions,
     HoverGroupFocusOptions,
     GroupBy,
@@ -98,7 +97,7 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickAxisIsolate, clickGroupFocus, clickLegendIsolate, clickMark, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
 export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
@@ -118,9 +117,6 @@ export {
     yBrushTrigger,
 } from './triggers';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
-
-/** Snap radius in renderer units when assisted targeting is enabled without a distance. */
-const DEFAULT_ASSIST_DISTANCE = 12;
 
 export function buildInteractiveChart(
     container: HTMLElement,
@@ -164,10 +160,12 @@ export function buildInteractiveChart(
                                 || keyboardTargeting === true,
                             expressionInterpreter,
                             background,
-                            assistDistance: assistedTargeting
-                                ? (typeof assistedTargeting === 'object' ? assistedTargeting.maxDistance : undefined)
-                                    ?? DEFAULT_ASSIST_DISTANCE
-                                : 0,
+                            assistDistance: assistedTargeting === false
+                                ? 0
+                                : typeof assistedTargeting === 'object'
+                                    && assistedTargeting.maxDistance !== undefined
+                                    ? Math.max(0, assistedTargeting.maxDistance)
+                                    : undefined,
                             hoverTolerance,
                             targetFeedback: {
                                 assisted: typeof assistedTargeting === 'object' ? assistedTargeting : assistedTargeting ? {} : false,

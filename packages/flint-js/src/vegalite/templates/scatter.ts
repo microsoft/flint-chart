@@ -326,9 +326,21 @@ export const boxplotDef: ChartTemplateDef = {
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['boxplot'],
             renderHoverStyles: {
-                rect: { opacity: 'contrast' },
-                rule: { opacity: 'contrast' },
-                symbol: { opacity: 'contrast' },
+                rect: {
+                    opacity: 'contrast',
+                    stroke: MUTED_HOVER_STROKE,
+                    strokeWidth: 2,
+                },
+                rule: {
+                    opacity: 'contrast',
+                    stroke: MUTED_HOVER_STROKE,
+                    strokeWidth: 2,
+                },
+                symbol: {
+                    opacity: 'contrast',
+                    stroke: MUTED_HOVER_STROKE,
+                    strokeWidth: 2,
+                },
             },
             resolve: (event, context) => {
                 const legendField = event.legend?.field ?? seriesField;

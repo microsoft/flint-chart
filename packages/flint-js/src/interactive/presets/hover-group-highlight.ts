@@ -1,6 +1,6 @@
 import type { CanvasInteractionDef, HoverGroupFocusOptions } from '../interactions';
 import type { InteractionAffordance } from '../affordances';
-import { hoverTrigger } from '../triggers';
+import { assistedElementTrigger, hoverTrigger } from '../triggers';
 import { expandElementsByFields } from './semantic-cohort';
 import { emphasisUpdate, normalizedOpacity } from './utils';
 
@@ -15,7 +15,10 @@ export function createHoverGroupFocusInteraction(options: HoverGroupFocusEngineO
     const affordances: InteractionAffordance[] = [{ target: 'mark', hover: 'cohort' }];
     return {
         id,
-        eventSource: { ...hoverTrigger, targetTolerance: tolerance },
+        eventSource: {
+            ...assistedElementTrigger(hoverTrigger, 6),
+            targetTolerance: tolerance,
+        },
         affordances,
         handle(event, context) {
             if (!event.action.startsWith('hover-') || event.phase !== 'preview' || !event.target) return null;

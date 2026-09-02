@@ -16,6 +16,7 @@ import type {
     InteractionDef,
     NavigationInteractionEvent,
     RenderHit,
+    SemanticElement,
     SemanticTarget,
     SemanticInteractionEvent,
 } from '../../interactive/interactions';
@@ -83,6 +84,7 @@ import {
     HOVER_STORE,
     INTERACTION_STORE,
     LEGEND_HOVER_STORE,
+    AXIS_HOVER_STORE,
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
@@ -340,6 +342,36 @@ export function enrichTargetWithSourceProvenance(
     return { ...target, elements };
 }
 
+const ASSISTED_GESTURES = new Set(['click', 'hover', 'context', 'long-press', 'double']);
+
+export function resolveAssistDistance(
+    interactions: readonly CanvasInteractionDef[],
+    override?: number,
+): number {
+    const eligible = interactions.filter((interaction) =>
+        interaction.eventSource.type === 'element'
+        && ASSISTED_GESTURES.has(interaction.eventSource.gesture ?? ''));
+    if (eligible.length === 0) return 0;
+    return override ?? Math.max(0, ...eligible.map((interaction) =>
+        interaction.eventSource.defaultAssistDistance ?? 0));
+}
+
+export function evictRetainedStateSiblings(
+    interaction: CanvasInteractionDef,
+    interactions: readonly CanvasInteractionDef[],
+    retained: Map<string, ChartUpdate>,
+    preview: Map<string, ChartUpdate>,
+): CanvasInteractionDef[] {
+    if (!interaction.retainedStateGroup) return [];
+    const siblings = interactions.filter((candidate) => candidate.id !== interaction.id
+        && candidate.retainedStateGroup === interaction.retainedStateGroup);
+    for (const sibling of siblings) {
+        retained.delete(sibling.id);
+        preview.delete(sibling.id);
+    }
+    return siblings;
+}
+
 export function mountVegaInteractions(
     view: any,
     container: HTMLElement,
@@ -348,7 +380,7 @@ export function mountVegaInteractions(
     interactions: readonly InteractionDef[],
     resolve: ChartInteractionResolver | undefined,
     presentUpdate: ChartUpdatePresenter,
-    assistDistance = 0,
+    assistDistance: number | undefined = undefined,
     hoverTolerance = 0,
     keyboardTargeting = false,
     targetFeedback: {
@@ -366,7 +398,8 @@ export function mountVegaInteractions(
         : [];
     const axisClickInteractions = clickInteractions.filter((interaction) => interaction.claimsAxisActivation);
     const markClickInteractions = clickInteractions.filter((interaction) =>
-        !interaction.claimsAxisActivation || interaction.claimsLegendActivation);
+        resolveInteractionAffordance([interaction], 'mark')
+        || resolveInteractionAffordance([interaction], 'legend-item'));
     const axisHoverInteractions = hoverInteractions.filter((interaction) => interaction.claimsAxisActivation);
     const markHoverInteractions = hoverInteractions.filter((interaction) => !interaction.claimsAxisActivation);
     const axisHoverPresentationInteractions = [...axisClickInteractions, ...axisHoverInteractions]
@@ -402,6 +435,8 @@ export function mountVegaInteractions(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
     const elementDragInteraction = elementDragInteractions[0];
+    const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
+        resolveAssistDistance(eligible, assistDistance);
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
     const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
@@ -526,7 +561,25 @@ export function mountVegaInteractions(
     });
     const withSourceProvenance = (target: SemanticTarget | null): SemanticTarget | null =>
         enrichTargetWithSourceProvenance(target, plan);
-    const context = (includeAvailable = true) => {
+    const selectedForInteraction = (interaction: CanvasInteractionDef): SemanticElement[] => {
+        if (!interaction.retainedStateGroup) return [...selectedElements.values()];
+        const keys = new Set<string>();
+        for (const update of [retainedUpdates.get(interaction.id), previewUpdates.get(interaction.id)]) {
+            if (!update) continue;
+            for (const op of update.ops) {
+                if (op.op !== 'set-style'
+                    || (op.value.state !== 'emphasized' && op.value.state !== 'focused')) continue;
+                for (const target of op.targets) {
+                    if ('select' in target) continue;
+                    for (const element of target.elements) {
+                        for (const key of semanticElementRenderKeys(element)) keys.add(key);
+                    }
+                }
+            }
+        }
+        return [...selectedElements].flatMap(([key, element]) => keys.has(key) ? [element] : []);
+    };
+    const context = (includeAvailable = true, interaction?: CanvasInteractionDef) => {
         // Navigation resolves per gesture frame, so the scenegraph scan stays behind this flag.
         const available = includeAvailable
             ? (() => {
@@ -558,7 +611,7 @@ export function mountVegaInteractions(
         ]));
         return {
             chartType,
-            selected: [...selectedElements.values()],
+            selected: interaction ? selectedForInteraction(interaction) : [...selectedElements.values()],
             available,
             resolveGroupValue: plan.resolveGroupValue,
             resolveNavigation: navigationController.resolve,
@@ -812,7 +865,7 @@ export function mountVegaInteractions(
     };
 
     const applyInteractionUpdate = async (
-        interaction: InteractionDef,
+        interaction: CanvasInteractionDef,
         phase: import('../../interactive/interactions').InteractionPhase,
         update: ChartUpdate | null,
         legendSelection: LegendHitIdentity | null = null,
@@ -824,6 +877,13 @@ export function mountVegaInteractions(
         if (update) {
             const preview = phase === 'start' || phase === 'preview';
             if (!preview) previewUpdates.delete(interaction.id);
+            if (!preview && interaction.retainedStateGroup) {
+                for (const sibling of evictRetainedStateSiblings(
+                    interaction, canvasInteractions, retainedUpdates, previewUpdates,
+                )) {
+                    if (sibling.claimsLegendActivation) selectedLegend = null;
+                }
+            }
             await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection);
             return;
         }
@@ -873,7 +933,7 @@ export function mountVegaInteractions(
         legendSelection: LegendHitIdentity | null = null,
         actionOverride?: CanvasInteractionEvent['action'],
     ): Promise<void> => {
-        const interactionContext = context(!interaction.eventSource.viewport);
+        const interactionContext = context(!interaction.eventSource.viewport, interaction);
         const base = toCanvasInteractionEvent(event, interaction.eventSource);
         const domain = domainForGeometry(base.geometry.plot);
         const withDomain = domain
@@ -935,9 +995,11 @@ export function mountVegaInteractions(
     const setHover = async (
         keys: readonly string[],
         legend: LegendHitIdentity | null = null,
+        axis: { scale: string; value: unknown } | null = null,
     ): Promise<void> => {
         const next = [...new Set(keys)].sort();
-        const signature = `${next.join('\u0000')}\u0001${legend?.channel ?? ''}\u0000${String(legend?.value ?? '')}`;
+        const signature = `${next.join('\u0000')}\u0001${legend?.channel ?? ''}\u0000${String(legend?.value ?? '')}`
+            + `\u0001${axis?.scale ?? ''}\u0000${String(axis?.value ?? '')}`;
         if (signature === hoveredKeys) return;
         hoveredKeys = signature;
         hoveredPathKeys = new Set(next.filter((key) => key.endsWith(PATH_KEY_SUFFIX)));
@@ -953,6 +1015,10 @@ export function mountVegaInteractions(
         view.change(
             LEGEND_HOVER_STORE,
             changeset().remove(() => true).insert(legend ? [legend] : []),
+        );
+        view.change(
+            AXIS_HOVER_STORE,
+            changeset().remove(() => true).insert(axis ? [axis] : []),
         );
         await view.runAsync();
         renderPathFocus();
@@ -992,7 +1058,7 @@ export function mountVegaInteractions(
         rootPoint: import('../../interactive/interactions').PlotPoint,
         phase: 'preview' | 'commit',
         modifiers: ReturnType<typeof interactionModifiers>,
-        tolerance = assistDistance,
+        tolerance = 0,
     ) => {
         const space = coordinateSpace();
         const direct = normalizeVegaElementEvent(
@@ -1022,6 +1088,7 @@ export function mountVegaInteractions(
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
             const identity = axisTargetIdentity(item, plan.axisTargets);
+            if (!identity) return clearHover();
             const reorderEligible = !!elementDragInteraction && !!identity
                 && eligibleReorderAxesForAxis(
                     plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
@@ -1035,10 +1102,18 @@ export function mountVegaInteractions(
                     modifiers: interactionModifiers(event),
                 });
             }
-            void setHover(axisTarget.elements.flatMap(semanticElementRenderKeys));
+            void setHover(
+                axisTarget.elements.flatMap(semanticElementRenderKeys),
+                null,
+                { scale: identity.scale, value: identity.value },
+            );
             return;
         }
-        const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event));
+        const markHoverPresentationInteractions = hoverPresentationForTarget('mark');
+        const normalized = acquire(
+            item, point, rootPoint, 'preview', interactionModifiers(event),
+            assistDistanceFor(markHoverPresentationInteractions),
+        );
         const legend = normalized.legend;
         if (legend) {
             const legendHoverInteractions = hoverPresentationForTarget('legend-item');
@@ -1080,7 +1155,6 @@ export function mountVegaInteractions(
         }
         hoverActive = true;
         const interactionContext = context();
-        const markHoverPresentationInteractions = hoverPresentationForTarget('mark');
         const presentationElements = markHoverPresentationInteractions.flatMap((interaction) => {
             if (interaction.eventSource.gesture === 'drag-element') {
                 return reorderEligible ? resolved?.elements ?? [] : [];
@@ -1119,7 +1193,10 @@ export function mountVegaInteractions(
             }
             return;
         }
-        const normalized = acquire(item, point, rootPoint, 'commit', interactionModifiers(event));
+        const normalized = acquire(
+            item, point, rootPoint, 'commit', interactionModifiers(event),
+            assistDistanceFor(markClickInteractions),
+        );
         const { legend } = normalized;
         const target = legend ? resolvedLegendInteractionTarget(
             { channel: legend.channel, field: legend.field, domain: legend.domain },
@@ -1127,7 +1204,8 @@ export function mountVegaInteractions(
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
         for (const interaction of markClickInteractions) {
-            if (!legend && interaction.claimsLegendActivation) continue;
+            const affordanceTarget = legend ? 'legend-item' : 'mark';
+            if (!resolveInteractionAffordance([interaction], affordanceTarget)) continue;
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
@@ -1139,7 +1217,7 @@ export function mountVegaInteractions(
         event.preventDefault();
         const point = localPoint(event as unknown as PointerEvent);
         // A zero radius resolves the mark under the pointer; assist widens it.
-        const item = nearestSceneItem(view, point, Math.max(assistDistance, 0));
+        const item = nearestSceneItem(view, point, assistDistanceFor(contextInteractions));
         const normalized = normalizeVegaElementEvent(
             view, item, point, 'commit', interactionModifiers(event), plan.legendFields, plan.rangeLegendChannels,
             { x: point.x + coordinateSpace().originX, y: point.y + coordinateSpace().originY },
@@ -1243,9 +1321,9 @@ export function mountVegaInteractions(
             container.addEventListener('contextmenu', inspectContext);
         }
     }
-    const pointerTarget = (event: MouseEvent) => {
+    const pointerTarget = (event: MouseEvent, eligible: readonly CanvasInteractionDef[]) => {
         const point = localPoint(event as unknown as PointerEvent);
-        const item = nearestSceneItem(view, point, Math.max(assistDistance, 0));
+        const item = nearestSceneItem(view, point, assistDistanceFor(eligible));
         const normalized = normalizeVegaElementEvent(
             view, item, point, 'commit', interactionModifiers(event), plan.legendFields, plan.rangeLegendChannels,
             { x: point.x + coordinateSpace().originX, y: point.y + coordinateSpace().originY },
@@ -1291,7 +1369,10 @@ export function mountVegaInteractions(
             return;
         }
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
-        const normalized = acquire(item, point, rootPoint, 'commit', interactionModifiers(event));
+        const normalized = acquire(
+            item, point, rootPoint, 'commit', interactionModifiers(event),
+            assistDistanceFor(clickInteractions),
+        );
         const target = normalized.legend
             ? resolvedLegendInteractionTarget(
                 { channel: normalized.legend.channel, field: normalized.legend.field, domain: normalized.legend.domain },
@@ -1324,7 +1405,7 @@ export function mountVegaInteractions(
         const holdMs = longPressInteractions[0].eventSource.holdMs ?? 500;
         longPressTimer = window.setTimeout(() => {
             longPressTimer = undefined;
-            const acquired = pointerTarget(event);
+            const acquired = pointerTarget(event, longPressInteractions);
             if (!acquired.target) return;
             consumeDismissClick = true;
             suppressClick = true;
@@ -1341,7 +1422,7 @@ export function mountVegaInteractions(
         if (doubleInteractions.length === 0) return;
         event.preventDefault();
         cancelPendingDismiss();
-        const acquired = pointerTarget(event);
+        const acquired = pointerTarget(event, doubleInteractions);
         for (const interaction of doubleInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit',
@@ -1411,7 +1492,10 @@ export function mountVegaInteractions(
             return;
         }
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
-        const normalized = acquire(item, point, rootPoint, 'preview', interactionModifiers(event), 0);
+        const normalized = acquire(
+            item, point, rootPoint, 'preview', interactionModifiers(event),
+            assistDistanceFor(cursorInteractions),
+        );
         if (normalized.legend) {
             setAffordanceCursor('legend-item', false);
             return;
