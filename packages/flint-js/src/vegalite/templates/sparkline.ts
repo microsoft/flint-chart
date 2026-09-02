@@ -10,7 +10,11 @@ import {
 } from '../../core/interaction-semantics';
 import { formatSpecToVegaExpr } from '../format';
 import { interpolateConfigProperty, applyInterpolate } from './line';
-import { suppressAnnotationUpdate } from '../../interactive/presentation/annotation';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+    transitionAnnotationText,
+} from '../../interactive/presentation/annotation';
 
 /**
  * Sparkline — a "sparkline table" / small-multiples strip layout.
@@ -116,6 +120,7 @@ export const sparklineDef: ChartTemplateDef = {
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['row', 'color', 'detail']);
+        const valueField = resolvedEncodings.y?.field;
         return {
             fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'row', 'color', 'detail']),
             categoryField: seriesField,
@@ -124,7 +129,10 @@ export const sparklineDef: ChartTemplateDef = {
             renderHoverStyles: { line: { strokeWidth: 3 } },
             renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
-            presentUpdate: suppressAnnotationUpdate,
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'right', 'left', 'top', 'bottom'),
+                transitionAnnotationText(valueField),
+            ),
         };
     },
 

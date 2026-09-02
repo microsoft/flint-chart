@@ -4,7 +4,7 @@ import type {
   InteractionDef,
   SemanticTarget,
 } from 'flint-chart/interactive';
-import { clickHighlight, select as rectangleSelect } from 'flint-chart/interactive';
+import { clickMark, select as rectangleSelect } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
   countriesFixture,
@@ -198,7 +198,7 @@ function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
   const interaction: InteractionDef = useMemo(
     () => demo.gesture === 'select'
       ? rectangleSelect({ id: `${demo.id}-selection` })
-      : clickHighlight({ id: `${demo.id}-element` }),
+      : clickMark({ id: `${demo.id}-element` }),
     [demo.gesture, demo.id],
   );
   const interactions = useMemo(() => [interaction], [interaction]);

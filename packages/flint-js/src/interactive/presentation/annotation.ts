@@ -115,7 +115,10 @@ export function rangeAnnotationText(
 ): (element: SemanticElement) => string | undefined {
     return (element) => {
         if (!startField || !endField) return undefined;
-        const record = element.records?.[0] ?? element.value ?? {};
+        const value = element.value ?? {};
+        const record = startField in value || endField in value
+            ? value
+            : element.records?.[0] ?? value;
         const start = displayValue(startField, record[startField]);
         const end = displayValue(endField, record[endField]);
         return start && end ? `${start} → ${end}` : start ?? end;
@@ -197,8 +200,24 @@ function defaultAnnotationText(element: SemanticElement, context: InteractionCon
 }
 
 export function countAnnotationText(element: SemanticElement): string | undefined {
-    const record = element.records?.[0] ?? element.value ?? {};
-    const count = Object.entries(record).find(([field, value]) => /count/i.test(field)
-        && typeof value === 'number' && Number.isFinite(value));
+    const count = [element.value, ...(element.records ?? [])]
+        .flatMap((record) => Object.entries(record ?? {}))
+        .find(([field, value]) => /count/i.test(field)
+            && typeof value === 'number' && Number.isFinite(value));
     return displayValue(count?.[0], count?.[1]);
+}
+
+export function boxplotAnnotationText(element: SemanticElement): string | undefined {
+    const record = element.value ?? element.records?.[0] ?? {};
+    const summaryValue = (prefix: string): [string, unknown] | undefined =>
+        Object.entries(record).find(([field, value]) => field.startsWith(prefix)
+            && typeof value === 'number' && Number.isFinite(value));
+    const median = summaryValue('mid_box_');
+    const lower = summaryValue('lower_box_');
+    const upper = summaryValue('upper_box_');
+    const medianText = displayValue(median?.[0], median?.[1]);
+    const lowerText = displayValue(lower?.[0], lower?.[1]);
+    const upperText = displayValue(upper?.[0], upper?.[1]);
+    const iqrText = lowerText && upperText ? `IQR: ${lowerText} → ${upperText}` : undefined;
+    return [medianText ? `Median: ${medianText}` : undefined, iqrText].filter(Boolean).join('\n') || undefined;
 }

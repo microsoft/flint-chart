@@ -24,7 +24,7 @@ import {
 import { barTableDef } from '../src/vegalite/templates/bar-table';
 import { pieChartDef } from '../src/vegalite/templates/pie';
 import { roseChartDef } from '../src/vegalite/templates/rose';
-import { rangedDotPlotDef, scatterPlotDef } from '../src/vegalite/templates/scatter';
+import { boxplotDef, rangedDotPlotDef, scatterPlotDef } from '../src/vegalite/templates/scatter';
 import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
@@ -42,11 +42,13 @@ import {
     clientToPlotPoint,
     clientToRendererPoint,
     clientToLayoutPoint,
+    facetPlotFrameAt,
     INTERACTION_KEY,
     INTERACTION_LEGEND_CHANNEL,
     INTERACTION_LEGEND_FIELD,
     INTERACTION_ROLE,
     PATH_KEY_SUFFIX,
+    physicalItemAt,
     plotToClientPoint,
     legendEntryItemAtPoint,
     legendSemanticTarget,
@@ -76,6 +78,7 @@ import {
 import {
     annotationBounds,
     annotationConnectionPoint,
+    annotationPrimaryAnchor,
 } from '../src/vegalite/interactions/presentation/annotation-overlay';
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
@@ -217,6 +220,59 @@ describe('Vega-Lite semantic interactions', () => {
         });
         expect(semanticElementRenderKeys(target!.elements[0])).toEqual(['3|3.5']);
         expect(semanticElementRenderKeys(enriched!.elements[0])).toEqual(['3|3.5']);
+        const update = semantics.presentUpdate!(
+            annotationUpdate(enriched!.elements[0], { kind: 'mark', role: 'mark' }),
+            { chartType: 'Histogram', selected: [] },
+        );
+        expect(update.ops[0]).toMatchObject({
+            value: { text: '2' },
+        });
+        expect((update.ops[0] as any).value.candidates[0]).toEqual({
+            connection: 'value-end', valueAxis: 'y', priority: 0,
+        });
+    });
+
+    it('uses contrast rather than outlines for Boxplot hover', () => {
+        const semantics = boxplotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Species', type: 'nominal' },
+                y: { field: 'Body mass', type: 'quantitative' },
+            },
+        });
+
+        expect(semantics.renderHoverStyles).toEqual({
+            rect: { opacity: 'contrast' },
+            rule: { opacity: 'contrast' },
+            symbol: { opacity: 'contrast' },
+        });
+    });
+
+    it('presents a Boxplot annotation from its computed summary', () => {
+        const semantics = boxplotDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Species', type: 'nominal' },
+                y: { field: 'Body mass', type: 'quantitative' },
+            },
+        });
+        const element = {
+            value: {
+                Species: 'Gentoo',
+                lower_box_Body_mass: 4700,
+                mid_box_Body_mass: 5000,
+                upper_box_Body_mass: 5400,
+            },
+        };
+
+        const update = semantics.presentUpdate!(
+            annotationUpdate(element, { kind: 'mark', role: 'distribution' }),
+            { chartType: 'Boxplot', selected: [] },
+        );
+        expect(update.ops[0]).toMatchObject({
+            value: {
+                text: 'Median: 5,000\nIQR: 4,700 → 5,400',
+            },
+        });
+        expect((update.ops[0] as any).value.candidates[0]).toEqual({ connection: 'center', priority: 0 });
     });
 
     it('preserves source provenance through an assembled histogram plan', async () => {
@@ -310,6 +366,13 @@ describe('Vega-Lite semantic interactions', () => {
         expect(midpoint.point).toEqual({ x: 126, y: 136 });
         expect(rightFallback.point).toEqual(midpoint.point);
         expect(rightFallback.preferredAngle).toBe(0);
+        expect(annotationPrimaryAnchor(
+            item,
+            { left: 56, top: 52, width: 140, height: 168 },
+            { left: 220, top: 120, width: 30, height: 20 },
+            'right',
+            rightFallback.point,
+        )).toEqual(midpoint.point);
     });
 
     it('uses a borderless spotlight for area hover', () => {
@@ -627,7 +690,10 @@ describe('Vega-Lite semantic interactions', () => {
             data: { values: [{ category: 'A', value: 2 }] },
         }) as any;
 
-        expect(addVegaLiteInteractions(spec, [], true)).not.toBeNull();
+        const plan = addVegaLiteInteractions(spec, [], true);
+        expect(plan).not.toBeNull();
+        expect(plan?.resolve).toBeTypeOf('function');
+        expect(plan?.semanticStores).toBe(true);
         expect(spec.transform).toEqual(expect.arrayContaining([
             expect.objectContaining({ as: INTERACTION_KEY }),
         ]));
@@ -1189,8 +1255,11 @@ describe('Vega-Lite semantic interactions', () => {
         );
         const calendarUpdate = calendar.presentUpdate!(
             annotationUpdate({
-                    value: { [INTERACTION_KEY]: 'day' },
-                    records: [{ __calendar_date: Date.UTC(2026, 7, 27), Commits: 12 }],
+                    value: {
+                        [INTERACTION_KEY]: 'day',
+                        __flintCalendarDate: Date.UTC(2026, 7, 27),
+                        sum_Commits: 12,
+                    },
                 }),
             { chartType: 'Calendar Heatmap', selected: [] },
         );
@@ -1203,7 +1272,9 @@ describe('Vega-Lite semantic interactions', () => {
         );
 
         expect(ecdfUpdate.ops[0]).toMatchObject({ value: { text: '42' } });
-        expect((calendarUpdate.ops[0] as any).value.text).toContain('12');
+        const calendarDate = new Intl.DateTimeFormat(undefined, { timeZone: 'UTC' })
+            .format(new Date(Date.UTC(2026, 7, 27)));
+        expect(calendarUpdate.ops[0]).toMatchObject({ value: { text: `${calendarDate}: 12` } });
         expect(violinUpdate.ops[0]).toMatchObject({ value: { text: 'Setosa: 5.1' } });
     });
 
@@ -1266,15 +1337,15 @@ describe('Vega-Lite semantic interactions', () => {
         expect(compiled.legends.length).toBeGreaterThan(0);
         for (const legend of compiled.legends) {
             expect(legend.encode.gradient.interactive).toBe(true);
-            expect(legend.encode.gradient.update.cursor.value).toBe('pointer');
+            expect(legend.encode.gradient.update.cursor).toBeUndefined();
             expect(legend.encode.symbols.interactive).toBe(true);
-            expect(legend.encode.symbols.update.cursor.value).toBe('pointer');
+            expect(legend.encode.symbols.update.cursor).toBeUndefined();
             expect(legend.encode.labels.interactive).toBe(true);
-            expect(legend.encode.labels.update.cursor.value).toBe('pointer');
+            expect(legend.encode.labels.update.cursor).toBeUndefined();
         }
     });
 
-    it('uses pointer cursors only for marks with click interactions', () => {
+    it('leaves mark cursors to runtime affordance resolution', () => {
         const spec = {
             data: { values: [{ X: 1, Y: 2 }] },
             mark: 'point',
@@ -1293,7 +1364,7 @@ describe('Vega-Lite semantic interactions', () => {
             .flatMap((mark: Record<string, any>) => mark.marks ?? [mark])
             .find((mark: Record<string, any>) => mark.type === 'symbol');
 
-        expect(symbolMark(clickable).encode.update.cursor.value).toBe('pointer');
+        expect(symbolMark(clickable).encode.update.cursor).toBeUndefined();
         expect(symbolMark(selectable).encode.update.cursor).toBeUndefined();
     });
 
@@ -1353,6 +1424,12 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(hovered?.opacity).toBe(0.9);
         expect(hovered?.stroke).toBeUndefined();
+
+        view.change(INTERACTION_STORE, changeset().insert([{ key }]));
+        await view.runAsync();
+        const hoveredWhileSelected = sceneItems(view).find((candidate) => candidate.mark?.marktype === 'area');
+
+        expect(hoveredWhileSelected?.opacity).toBe(0.25);
     });
 
     it('uses one area segment for its highlight, endpoint text, and annotation boundary', async () => {
@@ -2005,6 +2082,7 @@ describe('Vega-Lite semantic interactions', () => {
         view.change(INTERACTION_STORE, changeset().insert([{ key: targetKey }]));
         await view.runAsync();
         renderedBars = sceneItems(view).filter((item) => item.mark.marktype === 'rect' && item.datum[INTERACTION_KEY]);
+        expect(renderedBars.find((item) => item.datum[INTERACTION_KEY] === targetKey)?.opacity).toBe(hoveredOpacity);
         expect(renderedBars.find((item) => item.datum[INTERACTION_KEY] === peerKey)?.opacity).toBe(0.25);
     });
 
@@ -2404,7 +2482,7 @@ describe('Vega-Lite semantic interactions', () => {
         expect(plan).not.toBeNull();
         expect(spec.layer[0].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
         expect(spec.layer[1].encoding.opacity.condition.test).toContain(INTERACTION_STORE);
-        expect(spec.layer[0].mark.cursor).toBe('pointer');
+        expect(spec.layer[0].mark.cursor).toBeUndefined();
         expect(spec.layer[1].mark.cursor).toBeUndefined();
         expect(spec.layer[2].encoding.opacity).toBeUndefined();
         expect(() => parse(compiled, undefined, { ast: true } as any)).not.toThrow();
@@ -2518,7 +2596,7 @@ describe('Vega-Lite semantic interactions', () => {
             { calculate: '"color"', as: INTERACTION_LEGEND_CHANNEL },
             { calculate: '"Country"', as: INTERACTION_LEGEND_FIELD },
         ]));
-        expect(label.mark.cursor).toBe('pointer');
+        expect(label.mark.cursor).toBeUndefined();
     });
 
     it('preserves the second datum of a clicked line segment', () => {
@@ -2772,6 +2850,9 @@ describe('Vega-Lite semantic interactions', () => {
             seriesField: 'Region',
         });
         const keys = target!.elements.flatMap(semanticElementRenderKeys);
+        const renderedAreaKeys = hits
+            .filter((hit) => hit.markType === 'area' && hit.datum.Region === 'Asia')
+            .map((hit) => hit.datum[INTERACTION_KEY]);
 
         view.change(HIDDEN_STORE, changeset().insert(keys.map((key) => ({ key }))));
         await view.runAsync();
@@ -2779,7 +2860,8 @@ describe('Vega-Lite semantic interactions', () => {
         const remainingRegions = sceneItems(view)
             .filter((item) => item.mark.marktype === 'area')
             .map((item) => item.datum.Region);
-        expect(keys).toHaveLength(3);
+        expect(keys.filter((key) => key.endsWith(PATH_KEY_SUFFIX))).toEqual(renderedAreaKeys);
+        expect(keys.filter((key) => !key.endsWith(PATH_KEY_SUFFIX))).toHaveLength(3);
         expect(remainingRegions).not.toContain('Asia');
         expect(remainingRegions).toContain('Africa');
     });
@@ -3216,6 +3298,54 @@ describe('Vega-Lite semantic interactions', () => {
         expect(target?.elements.flatMap(semanticElementRenderKeys)).toEqual(['Asia', 'Africa']);
     });
 
+    it('presents derived Waterfall ranges after source provenance enrichment', () => {
+        const semantics = waterfallChartDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Step', type: 'ordinal' },
+                y: { field: 'Population', type: 'quantitative' },
+            },
+        });
+        const element = {
+            value: { Step: 'Asia', __wf_prev_sum: 2_537, __wf_sum: 5_779 },
+            records: [{ Step: 'Asia', Population: 3_242 }],
+        };
+
+        expect(semantics.presentUpdate!(
+            annotationUpdate(element, { kind: 'mark', role: 'waterfall-step' }),
+            { chartType: 'Waterfall Chart', selected: [] },
+        ).ops[0]).toMatchObject({ value: { text: '2,537 → 5,779' } });
+    });
+
+    it('presents a Sparkline segment transition', () => {
+        const semantics = sparklineDef.semanticInteractions!({
+            resolvedEncodings: {
+                x: { field: 'Month', type: 'temporal' },
+                y: { field: 'Value', type: 'quantitative' },
+                row: { field: 'Metric', type: 'nominal' },
+            },
+        });
+        const element = {
+            value: { Month: 'Mar', Metric: 'Active users', Value: 42 },
+            records: [
+                { Month: 'Mar', Metric: 'Active users', Value: 42 },
+                { Month: 'Apr', Metric: 'Active users', Value: 54 },
+            ],
+        };
+
+        const update = semantics.presentUpdate!(
+            annotationUpdate(element, { kind: 'path', role: 'line' }),
+            { chartType: 'Sparkline', selected: [] },
+        );
+        expect(update.ops[0]).toMatchObject({
+            value: {
+                text: '42 → 54',
+            },
+        });
+        expect((update.ops[0] as any).value.candidates[0]).toEqual({
+            connection: 'segment-midpoint', priority: 0,
+        });
+    });
+
     it('compiles grouped-bar semantic fields from its template', () => {
         const spec = assembleVegaLite({
             data: {
@@ -3372,6 +3502,35 @@ describe('Vega-Lite semantic interactions', () => {
         expect(segments.at(-1)?.interactionGeometry.endDatum.Nutrient).toBe('Protein');
     });
 
+    it('acquires the nearest Radar edge across overlapping filled series', async () => {
+        const values = [
+            ['Oats', 17, 7, 66, 11, 1],
+            ['Almonds', 21, 49, 22, 12, 4],
+        ].flatMap(([Food, ...amounts]) => ['Protein', 'Fat', 'Carbs', 'Fiber', 'Sugar']
+            .map((Nutrient, index) => ({ Food, Nutrient, Amount: amounts[index] })));
+        const spec = assembleVegaLite({
+            data: { values },
+            semantic_types: { Food: 'Category', Nutrient: 'Category', Amount: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                encodings: { x: 'Nutrient', y: 'Amount', color: 'Food' },
+            },
+        } as any) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const segments = sceneItems(view).filter((item) => item.mark?.marktype === 'line');
+        const oats = segments.find((item) => item.datum.Food === 'Oats');
+        const almond = segments.find((item) => item.datum.Food === 'Almonds');
+        const [start, end] = almond.interactionGeometry.points;
+        const point = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+
+        const acquired = physicalItemAt(view, oats, point);
+
+        expect(acquired.mark).toBe(almond.mark);
+        expect(acquired.datum.Food).toBe('Almonds');
+    });
+
     it('instruments marks inside a nested facet unit spec', () => {
         const spec: Record<string, any> = {
             data: { values: [{ Group: 'A', X: 1, Value: 2 }] },
@@ -3394,6 +3553,41 @@ describe('Vega-Lite semantic interactions', () => {
         expect(plan?.fields).toEqual(['Group', 'X', 'Value']);
         expect(spec.spec.encoding.opacity.condition.test).toContain(INTERACTION_STORE);
         expect(() => parse(compiled)).not.toThrow();
+    });
+
+    it('resolves distinct plot frames for rendered row facets', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Class: '1st', Survival: 90, Sex: 'Female' },
+                { Class: '2nd', Survival: 80, Sex: 'Female' },
+                { Class: '1st', Survival: 30, Sex: 'Male' },
+                { Class: '2nd', Survival: 20, Sex: 'Male' },
+            ] },
+            semantic_types: { Class: 'Category', Survival: 'Number', Sex: 'Category' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: 'Class', y: 'Survival', row: 'Sex' },
+                baseSize: { width: 350, height: 240 },
+            },
+        } as any) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const bars = sceneItems(view).filter((item) => item.mark?.marktype === 'rect');
+        const female = bars.find((item) => item.datum.Sex === 'Female');
+        const male = bars.find((item) => item.datum.Sex === 'Male');
+        const fallback = { x: -1, y: -1, width: 1, height: 1 };
+        const frameFor = (item: any) => facetPlotFrameAt(view, {
+            x: (item.bounds.x1 + item.bounds.x2) / 2,
+            y: (item.bounds.y1 + item.bounds.y2) / 2,
+        }, fallback);
+
+        const femaleFrame = frameFor(female);
+        const maleFrame = frameFor(male);
+        expect(femaleFrame).not.toEqual(fallback);
+        expect(maleFrame).not.toEqual(fallback);
+        expect(femaleFrame.y).not.toBe(maleFrame.y);
+        expect(femaleFrame.height).toBe(maleFrame.height);
     });
 
     it('does not instrument marks declared as decorative', () => {
@@ -3491,7 +3685,7 @@ describe('set-style visibility', () => {
         const targets = collectVegaAxisTargets(compiled, {
             x: { field: 'Category', type: 'nominal' },
             y: { field: 'Value', type: 'quantitative' },
-        });
+        }, [{ axis: 'x', field: 'Category' }]);
         const view = new View(parse(compiled), { renderer: 'none' });
         await view.runAsync();
         const labels = allSceneItems(view).filter((item) => item.mark?.role === 'axis-label');
@@ -3502,6 +3696,10 @@ describe('set-style visibility', () => {
         });
         expect(axisTargetIdentity(quantityLabel, targets)).toBeNull();
         expect(JSON.stringify(compiled.axes)).toContain('"interactive":true');
+        expect(compiled.axes.find((axis: any) => axis.orient === 'bottom')
+            ?.encode?.labels?.update?.cursor).toBeUndefined();
+        expect(compiled.axes.find((axis: any) => axis.orient === 'left')
+            ?.encode?.labels?.update?.cursor).toBeUndefined();
         view.finalize();
     });
 

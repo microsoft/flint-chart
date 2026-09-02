@@ -2,7 +2,9 @@ import type { CanvasInteractionDef, DragReorderOptions, SemanticElement } from '
 import { elementDragTrigger } from '../triggers';
 
 function categoryValue(element: SemanticElement | undefined, field: string): unknown {
-    return element?.records?.[0]?.[field] ?? element?.value?.[field];
+    return element?.records?.[0]?.[field]
+        ?? element?.value?.[field]
+        ?? (element?.value?.field === field ? element.value.value : undefined);
 }
 
 export function reorderValues(
@@ -24,6 +26,10 @@ export function createDragReorderInteraction(options: DragReorderOptions = {}): 
     return {
         id,
         eventSource: elementDragTrigger(),
+        affordances: [
+            { target: 'mark', cursor: 'drag', hover: 'target' },
+            { target: 'axis-label', cursor: 'drag', hover: 'target' },
+        ],
         handle(event, context) {
             if (event.action !== 'drag-element' || event.phase !== 'commit'
                 || !event.target || !event.dropTarget) return null;
@@ -54,7 +60,17 @@ export function createDragReorderInteraction(options: DragReorderOptions = {}): 
             if (orderedValues.every((value, index) => Object.is(value, values[index]))) return null;
             return {
                 id,
-                ops: [{ op: 'set-order', scope: 'category', field, values: orderedValues }],
+                ops: [
+                    { op: 'set-order', scope: 'category', field, values: orderedValues },
+                    ...axes
+                        .filter((candidate) => candidate !== selectedAxis && candidate.field !== field)
+                        .map((candidate) => ({
+                            op: 'set-order' as const,
+                            scope: 'category' as const,
+                            field: candidate.field,
+                            values: [...candidate.order],
+                        })),
+                ],
             };
         },
     };

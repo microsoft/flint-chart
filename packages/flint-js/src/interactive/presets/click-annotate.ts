@@ -11,6 +11,7 @@ export function createClickAnnotateInteraction(options: ClickAnnotateOptions = {
     return {
         id,
         eventSource: clickTrigger,
+        affordances: [{ target: 'mark', cursor: 'activate' }],
         handle(event, context) {
             if (!isActivationAction(event.action) || event.phase !== 'commit') return null;
             if (event.target?.visual.role === 'legend-item') return null;

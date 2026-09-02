@@ -11,5 +11,6 @@ export function createContextActivateInteraction(
     return {
         id: options.id ?? 'context-activate',
         eventSource: contextTrigger,
+        affordances: [{ target: 'mark', cursor: 'activate' }],
     };
 }

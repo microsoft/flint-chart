@@ -92,6 +92,16 @@ export function hoverContrastOpacity(authoredOpacity: number): number {
     return authoredOpacity < 1 ? 1 : 0.9;
 }
 
+export function areaSpotlightOpacity(
+    authoredOpacity: number,
+    currentOpacity: number,
+    selected: boolean,
+    hasSelection: boolean,
+): number {
+    if (!hasSelection) return 1;
+    return selected ? authoredOpacity * 0.9 : currentOpacity;
+}
+
 export function createFocusOverlay({
     view,
     container,
@@ -213,8 +223,15 @@ export function createFocusOverlay({
                 shape.setAttribute('points', points.map((plotPoint: PlotPoint) => `${plotPoint.x},${plotPoint.y}`).join(' '));
                 shape.setAttribute('fill', hoverStyle?.fill ?? visual?.fill ?? item.fill ?? '#4c78a8');
                 const authoredFillOpacity = visual?.fillOpacity ?? 1;
+                const currentFillOpacity = (typeof item.opacity === 'number' ? item.opacity : 1)
+                    * (typeof item.fillOpacity === 'number' ? item.fillOpacity : 1);
                 const fillOpacity = hoverStyle?.opacity === 'spotlight'
-                    ? 1
+                    ? areaSpotlightOpacity(
+                        authoredFillOpacity,
+                        currentFillOpacity,
+                        typeof key === 'string' && selected.has(key),
+                        selected.size > 0,
+                    )
                     : hoverStyle?.opacity === 'contrast'
                     ? hoverContrastOpacity(authoredFillOpacity)
                     : hoverStyle?.fillOpacity ?? authoredFillOpacity;

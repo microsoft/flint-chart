@@ -18,10 +18,14 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
-import { legendMatchedHits, MUTED_HOVER_STROKE, targetFromHits } from '../../core/interaction-semantics';
+import {
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+    type SemanticElement,
+} from '../../core/interaction-semantics';
 import {
     annotationCandidates,
-    categoryValueAnnotationText,
     presentAnnotationUpdate,
 } from '../../interactive/presentation/annotation';
 
@@ -39,6 +43,21 @@ const COUNT_FIELD = '__flintCalendarCount';
 const DATE_FIELD = '__flintCalendarDate';
 const WEEK_FIELD = '__flintCalendarWeek';
 const WEEKDAY_FIELD = '__flintCalendarWeekday';
+
+function calendarAnnotationText(valueField: string): (element: SemanticElement) => string | undefined {
+    return (element) => {
+        const record = element.value ?? element.records?.[0] ?? {};
+        const rawDate = record[DATE_FIELD];
+        const rawValue = record[`sum_${valueField}`];
+        const date = typeof rawDate === 'number' && Number.isFinite(rawDate)
+            ? new Intl.DateTimeFormat(undefined, { timeZone: 'UTC' }).format(new Date(rawDate))
+            : undefined;
+        const value = typeof rawValue === 'number' && Number.isFinite(rawValue)
+            ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(rawValue)
+            : rawValue === null || rawValue === undefined ? undefined : String(rawValue);
+        return date && value ? `${date}: ${value}` : date ?? value;
+    };
+}
 
 function calendarDate(raw: unknown): Date | undefined {
     if (raw instanceof Date) {
@@ -108,7 +127,7 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
         ),
         presentUpdate: presentAnnotationUpdate(
             () => annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
-            categoryValueAnnotationText(DATE_FIELD, valueField),
+            calendarAnnotationText(valueField),
         ),
     };
     },

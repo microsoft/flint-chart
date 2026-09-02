@@ -28,6 +28,36 @@ export class PanSession {
     }
 }
 
+export class PinchSession {
+    private previousDistance: number;
+
+    constructor(
+        first: PlotPoint,
+        second: PlotPoint,
+        private readonly plotSize: PlotSize,
+    ) {
+        this.previousDistance = Math.hypot(second.x - first.x, second.y - first.y);
+    }
+
+    move(first: PlotPoint, second: PlotPoint): { factor: number; anchor: PlotPoint } | null {
+        const distance = Math.hypot(second.x - first.x, second.y - first.y);
+        if (distance <= 0 || this.previousDistance <= 0) {
+            this.previousDistance = distance;
+            return null;
+        }
+        const factor = distance / this.previousDistance;
+        this.previousDistance = distance;
+        const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+        return {
+            factor,
+            anchor: {
+                x: this.plotSize.width > 0 ? midpoint.x / this.plotSize.width : 0.5,
+                y: this.plotSize.height > 0 ? midpoint.y / this.plotSize.height : 0.5,
+            },
+        };
+    }
+}
+
 export function wheelZoomFactor(
     deltaY: number,
     deltaMode: number,

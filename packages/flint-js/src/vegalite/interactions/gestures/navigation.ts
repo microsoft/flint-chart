@@ -4,7 +4,7 @@ import type {
     NavigationInteractionEvent,
     PlotPoint,
 } from '../../../interactive/interactions';
-import { PanSession, wheelZoomFactor } from '../../../interactive/gestures/navigation';
+import { PanSession, PinchSession, wheelZoomFactor } from '../../../interactive/gestures/navigation';
 import { clientToPlotPoint, interactionModifiers, type RendererCoordinateSpace } from '../hit-adapter';
 
 export interface VegaNavigationGestureOptions {
@@ -48,12 +48,13 @@ export function mountVegaNavigationGesture(
     let session: PanSession | undefined;
     let pendingDelta: PlotPoint = { x: 0, y: 0 };
     let dragged = false;
+    const touchPointers = new Map<number, PlotPoint>();
+    let pinchSession: PinchSession | undefined;
 
     const previousCursor = container.style.cursor;
     const previousTouchAction = container.style.touchAction;
     const previousUserSelect = container.style.userSelect;
-    if (source.pan) {
-        container.style.cursor = 'grab';
+    if (source.pan || source.zoom) {
         container.style.touchAction = 'none';
         container.style.userSelect = 'none';
     }
@@ -64,8 +65,41 @@ export function mountVegaNavigationGesture(
     );
     const emit = (event: NavigationInteractionEvent): void => { void dispatch(event); };
 
+    const beginPinch = (event: PointerEvent): void => {
+        const points = [...touchPointers.values()];
+        if (!source.zoom || points.length !== 2) return;
+        if (session) {
+            emit({
+                type: 'navigation', phase: 'cancel', operation: 'pan', axes,
+                modifiers: interactionModifiers(event),
+            });
+            session = undefined;
+            pointerId = undefined;
+            pendingDelta = { x: 0, y: 0 };
+        }
+        const space = coordinateSpace();
+        pinchSession = new PinchSession(points[0]!, points[1]!, {
+            width: space.plotWidth,
+            height: space.plotHeight,
+        });
+        dragged = true;
+        setDragging(true);
+        setSuppressClick(true);
+        emit({
+            type: 'navigation', phase: 'start', operation: 'zoom', axes,
+            modifiers: interactionModifiers(event),
+        });
+    };
+
     const pointerDown = (event: PointerEvent): void => {
-        if (!source.pan || event.button !== 0) return;
+        if (event.pointerType === 'touch' && source.zoom) {
+            if (pinchSession && touchPointers.size >= 2) return;
+            touchPointers.set(event.pointerId, localPoint(event));
+            container.setPointerCapture(event.pointerId);
+            if (touchPointers.size === 2) beginPinch(event);
+            if (pinchSession || !source.pan) return;
+        }
+        if (!source.pan || event.button !== 0 || session) return;
         const space = coordinateSpace();
         session = new PanSession(localPoint(event), { width: space.plotWidth, height: space.plotHeight });
         pointerId = event.pointerId;
@@ -80,6 +114,20 @@ export function mountVegaNavigationGesture(
         });
     };
     const pointerMove = (event: PointerEvent): void => {
+        if (event.pointerType === 'touch' && touchPointers.has(event.pointerId)) {
+            touchPointers.set(event.pointerId, localPoint(event));
+            if (pinchSession) {
+                const points = [...touchPointers.values()];
+                if (points.length !== 2) return;
+                const update = pinchSession.move(points[0]!, points[1]!);
+                if (update) emit({
+                    type: 'navigation', phase: 'preview', operation: 'zoom', axes,
+                    factor: update.factor, anchor: update.anchor,
+                    modifiers: interactionModifiers(event),
+                });
+                return;
+            }
+        }
         if (!session || pointerId !== event.pointerId) return;
         const delta = session.move(localPoint(event));
         pendingDelta = { x: pendingDelta.x + delta.x, y: pendingDelta.y + delta.y };
@@ -93,6 +141,24 @@ export function mountVegaNavigationGesture(
         pendingDelta = { x: 0, y: 0 };
     };
     const finish = (event: PointerEvent): void => {
+        if (event.pointerType === 'touch' && touchPointers.has(event.pointerId)) {
+            touchPointers.delete(event.pointerId);
+            if (pinchSession) {
+                emit({
+                    type: 'navigation', phase: 'commit', operation: 'zoom', axes,
+                    modifiers: interactionModifiers(event),
+                });
+                pinchSession = undefined;
+                touchPointers.clear();
+                session = undefined;
+                pointerId = undefined;
+                pendingDelta = { x: 0, y: 0 };
+                setDragging(false);
+                container.style.cursor = source.pan ? 'grab' : previousCursor;
+                if (dragged) window.setTimeout(() => { setSuppressClick(false); }, 0);
+                return;
+            }
+        }
         if (!session || pointerId !== event.pointerId) return;
         if (pendingDelta.x !== 0 || pendingDelta.y !== 0) {
             emit({
@@ -113,6 +179,24 @@ export function mountVegaNavigationGesture(
         if (dragged) window.setTimeout(() => { setSuppressClick(false); }, 0);
     };
     const cancel = (event: PointerEvent): void => {
+        if (event.pointerType === 'touch' && touchPointers.has(event.pointerId)) {
+            touchPointers.delete(event.pointerId);
+            if (pinchSession) {
+                emit({
+                    type: 'navigation', phase: 'cancel', operation: 'zoom', axes,
+                    modifiers: interactionModifiers(event),
+                });
+                pinchSession = undefined;
+                touchPointers.clear();
+                session = undefined;
+                pointerId = undefined;
+                pendingDelta = { x: 0, y: 0 };
+                setDragging(false);
+                container.style.cursor = source.pan ? 'grab' : previousCursor;
+                setSuppressClick(false);
+                return;
+            }
+        }
         if (!session || pointerId !== event.pointerId) return;
         emit({
             type: 'navigation', phase: 'cancel', operation: 'pan', axes,
@@ -171,6 +255,8 @@ export function mountVegaNavigationGesture(
             container.style.cursor = previousCursor;
             container.style.touchAction = previousTouchAction;
             container.style.userSelect = previousUserSelect;
+            touchPointers.clear();
+            pinchSession = undefined;
             setDragging(false);
         },
     };

@@ -29,6 +29,13 @@ export type {
     RegionGuideOptions,
 } from './guides';
 export type {
+    InteractionAffordance,
+    InteractionAffordanceTarget,
+    InteractionCursor,
+    InteractionHoverEffect,
+} from './affordances';
+export { affordanceCursor, resolveInteractionAffordance } from './affordances';
+export type {
     AnnotationCandidate,
     AnnotationConnection,
     AnnotationSpec,
@@ -40,8 +47,18 @@ export type {
     AngularBrushOptions,
     AxisHighlightOptions,
     ClickAnnotateOptions,
+    ClickAxisIsolateOptions,
+    ClickGroupFocusOptions,
     ClickGroupHighlightOptions,
     ClickHighlightOptions,
+    ClickLegendIsolateOptions,
+    ClickMarkOptions,
+    FacetBrushLinkOptions,
+    HoverGroupHighlightOptions,
+    HoverGroupFocusOptions,
+    GroupBy,
+    GroupByFunction,
+    RecordGroupBy,
     ElementInteractionEvent,
     FlintInteractionEventDetail,
     InteractionPhase,
@@ -86,7 +103,7 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupHighlight, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickAxisIsolate, clickGroupFocus, clickGroupHighlight, clickHighlight, clickLegendIsolate, clickMark, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, hoverGroupHighlight, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
 export type { InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
@@ -121,6 +138,9 @@ export function buildInteractiveChart(
     } = options;
     const interactions = normalizeInteractions(options.interactions);
     const canvasInteractions = interactions.filter(isCanvasInteraction);
+    const hoverTolerance = Math.max(0, ...canvasInteractions
+        .filter((interaction) => interaction.eventSource.gesture === 'hover')
+        .map((interaction) => interaction.eventSource.targetTolerance ?? 0));
     if (backend !== 'vegalite' && interactions.length > 0) {
         return mountInteractiveChartSurface(
             container,
@@ -145,13 +165,15 @@ export function buildInteractiveChart(
                             renderer,
                             interactions: canvasInteractions,
                             enableSemanticUpdates: canvasInteractions.length < interactions.length
-                                || (updates?.length ?? 0) > 0,
+                                || (updates?.length ?? 0) > 0
+                                || keyboardTargeting === true,
                             expressionInterpreter,
                             background,
                             assistDistance: assistedTargeting
                                 ? (typeof assistedTargeting === 'object' ? assistedTargeting.maxDistance : undefined)
                                     ?? DEFAULT_ASSIST_DISTANCE
                                 : 0,
+                            hoverTolerance,
                             targetFeedback: {
                                 assisted: typeof assistedTargeting === 'object' ? assistedTargeting : assistedTargeting ? {} : false,
                                 keyboard: keyboardTargeting ? {} : false,

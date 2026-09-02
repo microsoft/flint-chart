@@ -46,6 +46,7 @@ export function createNavigateInteraction(options: NavigateOptions = {}): Canvas
             zoom: options.zoom ?? true,
             wheelSensitivity: options.wheelSensitivity ?? 0.002,
         }),
+        affordances: options.pan === false ? [] : [{ target: 'plot', cursor: 'navigate' }],
         handle(event, context) {
             const viewport = event.geometry.plot;
             if (!context.resolveNavigation || viewport?.kind !== 'viewport' || !event.operation) return null;

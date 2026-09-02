@@ -520,7 +520,7 @@ navigationTrigger()
 
 ### Cartesian navigation
 
-`navigate()` combines drag pan, wheel zoom, and reset as one viewport handler. ChartDefs opt in explicitly with `navigation.axes`; assembly then intersects that capability with resolved quantitative or temporal x/y encodings. An explicitly requested unsupported axis is an error. With `axes: 'available'`, categorical axes are omitted automatically.
+`navigate()` combines drag pan, wheel or two-finger pinch zoom, and reset as one viewport handler. Pinch zoom is anchored at the moving midpoint between the two touches. ChartDefs opt in explicitly with `navigation.axes`; assembly then intersects that capability with resolved quantitative or temporal x/y encodings. An explicitly requested unsupported axis is an error. With `axes: 'available'`, categorical axes are omitted automatically.
 
 The gesture reports incremental pan deltas and zoom anchors as plot fractions. The
 renderer reduces them to absolute `set-viewport` domains using percentage-based guards:
@@ -665,7 +665,7 @@ A custom source may register listeners and emit normalized events. Renderer-spec
 
 ### Target feedback
 
-Assisted pointer and keyboard targeting share a transient target indicator and a floating semantic tooltip. Keyboard arrows move the indicator and apply the active hover styling; Enter or Space invokes the configured click preset. The tooltip uses the compiled pointer-hover fields, stays clear of the active mark, may extend beyond the chart canvas, and scrolls with the chart.
+Assisted pointer and keyboard targeting share a transient target indicator and a floating semantic tooltip. Keyboard arrows move the indicator, apply the active hover styling, and emit `focus-element` through the `keyboard-targeting` interaction ID even when no click preset is configured. Enter or Space invokes any configured click presets. The tooltip uses the compiled pointer-hover fields, stays clear of the active mark, may extend beyond the chart canvas, and scrolls with the chart.
 
 Assisted pointer targeting can customize the compact semantic details:
 
@@ -880,17 +880,78 @@ Callers should provide `chartId` when coordinating charts. Flint generates an ID
 
 Chart identity belongs to the transport envelope, not `SemanticTarget`: semantic targets describe visual/data identity, while `chartId` describes event origin or dispatch destination.
 
+## Facet linking
+
+`facetBrushLink()` expands marks acquired in one facet to every available mark with the same authored semantic key:
+
+```ts
+facetBrushLink({ by: 'Country' });
+facetBrushLink({ by: ['Country', 'Product'], brush: 'lasso' });
+```
+
+The key should be represented by a discrete positional channel, `detail`, or `color`. For a
+quantitative scatter plot, prefer `detail` when identity should not alter appearance. Continuous
+`x`, `y`, or `xy` values are not inferred as identities because measurements can change between
+facets or collide. The preset emits the existing `set-style` operation; it does not filter data or
+introduce facet-specific chart state.
+
+`clickGroupFocus()` infers a chart-semantic partition, while
+`clickGroupFocus({ groupBy: 'Country' })` uses explicit input-record field-key expansion. Plain strings
+always name fields, so `groupBy: 'auto'` selects a field literally named `auto`. `clickMark()` remains local to the acquired mark by default, and
+accepts the same explicit partition with `clickMark({ groupBy: ['Country', 'Series'] })`.
+`clickAnnotate()` remains local to the acquired mark.
+
+For programmatic partitions, a `groupBy` function computes a key from the full semantic element
+and interaction context. Functions are the TypeScript-only extension to the JSON-safe field and
+field-list forms. The preset still owns acquisition, retained state, and presentation.
+
+```ts
+clickMark({ groupBy: (element) => element.records?.[0]?.Region });
+```
+
+`hoverGroupFocus({ groupBy: 'Country' })` provides the transient counterpart. Its preview
+clears on pointer exit and does not replace retained click or brush state. A default 8-pixel
+nearest-mark tolerance keeps the cohort stable across narrow gaps between marks; adjust it with
+`tolerance` or set it to zero for direct hits only.
+
+## Legend and axis controls
+
+`clickMark()` only claims marks. `legendToggle()` changes visibility,
+`clickLegendIsolate()` emphasizes a legend cohort, and `clickAxisIsolate()` emphasizes a
+cohort selected from a discrete axis label with `set-style`.
+
+Only compiler-declared discrete axis ticks are semantic cohorts; continuous ticks do not
+implicitly become clickable selections. Continuous legend intervals remain resolvable labels.
+
+## Interaction affordances
+
+Canvas interactions declare cursor and hover affordances separately from their update handler.
+Renderers combine those declarations for the semantic target under the pointer, so composed
+presets share one discoverability policy instead of assigning cursors independently. Exact target
+claims (`mark`, `legend-item`, or `axis-label`) take precedence over a plot-wide fallback; priority
+resolves conflicts between equally specific claims. Active gesture states such as dragging and
+resizing temporarily override the passive result.
+
+Affordances do not perform chart updates. The interaction handler still owns semantic behavior,
+and the renderer still owns presentation.
+
 ## Compatibility
 
-Existing helpers remain presets:
+Canonical helpers include:
 
-- `clickHighlight()`
-- `clickGroupHighlight()`
+- `clickMark()`
+- `clickGroupFocus()`
 - `clickAnnotate()`
+- `facetBrushLink()`
+- `hoverGroupFocus()`
+- `clickLegendIsolate()`, `clickAxisIsolate()`, and `legendToggle()`
 - `select()`, `brushX()`, `brushY()`, and `brushAngle()`
 - `navigate()`
 
-They are implemented on the normalized event pipeline. Existing chart resolution and `presentUpdate` hooks remain valid; chart-specific action expansion lives in interaction handlers.
+The older `clickHighlight()`, `clickGroupHighlight()`, and `hoverGroupHighlight()` names remain as
+deprecated aliases. All presets are implemented on the normalized event pipeline. Existing chart
+resolution and `presentUpdate` hooks remain valid; chart-specific action expansion lives in
+interaction handlers.
 
 The long-term built-in preset set should stay small: hover highlight, click
 highlight/select, region or brush highlight, and guarded navigation. Specialized
