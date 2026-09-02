@@ -667,14 +667,19 @@ A custom source may register listeners and emit normalized events. Renderer-spec
 
 Assisted pointer and keyboard targeting share a transient target indicator and a floating semantic tooltip. Keyboard arrows move the indicator, apply the active hover styling, and emit `focus-element` through the `keyboard-targeting` interaction ID even when no click preset is configured. Enter or Space invokes any configured click presets. The tooltip uses the compiled pointer-hover fields, stays clear of the active mark, may extend beyond the chart canvas, and scrolls with the chart.
 
-Assisted pointer targeting can customize the compact semantic details:
+Eligible element presets use modest assisted pointer targeting by default: click, annotation,
+context, and double activation use an 8-pixel acquisition radius, hover uses 6 pixels, and long
+press uses 12 pixels. Region selection, brushing, navigation, and element dragging never use
+assisted acquisition. Set `assistedTargeting: false` to require direct hits globally, or provide
+`maxDistance` as a hard override for all eligible presets. Indicator and detail feedback remain
+opt-in:
 
 ```ts
 buildInteractiveChart(container, input, {
     backend: 'vegalite',
-    interactions: [clickHighlight(), axisHighlight()],
+    interactions: [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] }), axisHighlight()],
     assistedTargeting: {
-        maxDistance: 16,
+        maxDistance: 10,
         indicator: true,
         details: { fields: ['country', 'value'], maxRows: 4 },
     },
@@ -897,28 +902,30 @@ introduce facet-specific chart state.
 
 `clickGroupFocus()` infers a chart-semantic partition, while
 `clickGroupFocus({ groupBy: 'Country' })` uses explicit input-record field-key expansion. Plain strings
-always name fields, so `groupBy: 'auto'` selects a field literally named `auto`. `clickMark()` remains local to the acquired mark by default, and
-accepts the same explicit partition with `clickMark({ groupBy: ['Country', 'Series'] })`.
+always name fields, so `groupBy: 'auto'` selects a field literally named `auto`.
+`clickHighlight({ targets: ['mark'] })` remains local to the acquired mark.
 `clickAnnotate()` remains local to the acquired mark.
 
-For programmatic partitions, a `groupBy` function computes a key from the full semantic element
-and interaction context. Functions are the TypeScript-only extension to the JSON-safe field and
-field-list forms. The preset still owns acquisition, retained state, and presentation.
+For a custom stable partition, derive a field in the input data and name it with `groupBy`:
 
 ```ts
-clickMark({ groupBy: (element) => element.records?.[0]?.Region });
+clickGroupFocus({ groupBy: 'Quadrant' });
 ```
 
+This keeps grouping serializable and reusable by other chart semantics. Event-relative or otherwise
+custom interaction logic belongs in a custom `handle`, which can emit the existing style updates.
+
 `hoverGroupFocus({ groupBy: 'Country' })` provides the transient counterpart. Its preview
-clears on pointer exit and does not replace retained click or brush state. A default 8-pixel
-nearest-mark tolerance keeps the cohort stable across narrow gaps between marks; adjust it with
-`tolerance` or set it to zero for direct hits only.
+clears on pointer exit and does not replace retained click or brush state. Assisted acquisition
+finds a nearby mark within the preset's default 6-pixel radius. Separately, the default 8-pixel
+`tolerance` keeps the last resolved cohort stable across narrow gaps; set it to zero to disable
+that gap retention.
 
-## Legend and axis controls
+## Click highlight targets
 
-`clickMark()` only claims marks. `legendToggle()` changes visibility,
-`clickLegendIsolate()` emphasizes a legend cohort, and `clickAxisIsolate()` emphasizes a
-cohort selected from a discrete axis label with `set-style`.
+`clickHighlight()` emphasizes cohorts through one retained interaction. Its `targets`
+option accepts `mark`, `legend`, and `discreteAxis`; omitted targets enable all three.
+`legendToggle()` remains a separate visibility interaction.
 
 Only compiler-declared discrete axis ticks are semantic cohorts; continuous ticks do not
 implicitly become clickable selections. Continuous legend intervals remain resolvable labels.
@@ -939,19 +946,17 @@ and the renderer still owns presentation.
 
 Canonical helpers include:
 
-- `clickMark()`
+- `clickHighlight()`
 - `clickGroupFocus()`
 - `clickAnnotate()`
 - `facetBrushLink()`
 - `hoverGroupFocus()`
-- `clickLegendIsolate()`, `clickAxisIsolate()`, and `legendToggle()`
+- `legendToggle()`
 - `select()`, `brushX()`, `brushY()`, and `brushAngle()`
 - `navigate()`
 
-The older `clickHighlight()`, `clickGroupHighlight()`, and `hoverGroupHighlight()` names remain as
-deprecated aliases. All presets are implemented on the normalized event pipeline. Existing chart
-resolution and `presentUpdate` hooks remain valid; chart-specific action expansion lives in
-interaction handlers.
+All presets are implemented on the normalized event pipeline. Existing chart resolution and
+`presentUpdate` hooks remain valid; chart-specific action expansion lives in interaction handlers.
 
 The long-term built-in preset set should stay small: hover highlight, click
 highlight/select, region or brush highlight, and guarded navigation. Specialized

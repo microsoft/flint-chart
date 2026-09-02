@@ -176,7 +176,7 @@ const surface = buildInteractiveChart(
   {
     backend: 'vegalite',
     renderer: 'canvas',
-    interactions: [clickHighlight()],
+    interactions: [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] })],
   },
 );
 
@@ -204,7 +204,7 @@ const countryPicker = externalInteraction<{ country: string }>({
 await surface.dispatch('country-picker', { country: 'Japan' });
 ```
 
-The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` selects marks, Shift/Ctrl/Meta-click toggles marks, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` focuses configured mark, legend, and discrete-axis targets, Shift/Ctrl/Meta-click toggles targets, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
 
 ### Input types
 

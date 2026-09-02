@@ -1,5 +1,5 @@
 import type {
-	ClickGroupHighlightOptions,
+	ClickGroupFocusOptions,
 	InteractionContext,
 	CanvasInteractionDef,
 	SemanticElement,
@@ -8,15 +8,16 @@ import type {
 } from '../interactions';
 import type { InteractionAffordance } from '../affordances';
 import { emphasisUpdate, isActivationAction, normalizedOpacity } from './utils';
-import { clickTrigger } from '../triggers';
+import { assistedElementTrigger, clickTrigger } from '../triggers';
 import { expandElementsByFields } from './semantic-cohort';
+
+type GroupFocusEngineOptions = ClickGroupFocusOptions;
 
 function groupValue(
 	element: SemanticElement,
 	context: InteractionContext,
 	groupBy: GroupBy | undefined,
 ): unknown {
-		if (typeof groupBy === 'function') return groupBy(element, context);
 		const record = element.records?.[0];
 		if (!record) return undefined;
 		if (typeof groupBy === 'string') return record[groupBy];
@@ -31,8 +32,7 @@ function groupElements(
 	context: InteractionContext,
 	groupBy: GroupBy | undefined,
 ): readonly SemanticElement[] {
-		if (target.visual.role === 'legend-item') return target.elements;
-	if (typeof groupBy === 'string' || Array.isArray(groupBy)) {
+	if (groupBy !== undefined) {
 		return expandElementsByFields(target.elements, context.available, groupBy);
 	}
 		const source = target.elements[0];
@@ -50,22 +50,20 @@ function groupElements(
 		return cohort.length > 1 ? cohort : target.elements;
 }
 
-export function createClickGroupHighlightInteraction(options: ClickGroupHighlightOptions = {}): CanvasInteractionDef {
-	const id = options.id ?? 'click-group-highlight';
+export function createClickGroupFocusInteraction(options: GroupFocusEngineOptions = {}): CanvasInteractionDef {
+	const id = options.id ?? 'click-group-focus';
 	const dimOpacity = normalizedOpacity(options.dimOpacity);
 	const affordances: InteractionAffordance[] = [
 		{ target: 'mark', cursor: 'activate', hover: 'cohort' },
 	];
-	if (options.legend !== false) {
-		affordances.push({ target: 'legend-item', cursor: 'activate', hover: 'cohort' });
-	}
 	return {
 		id,
-		eventSource: clickTrigger,
+		eventSource: assistedElementTrigger(clickTrigger, 8),
+		retainedStateGroup: 'focus',
 		affordances,
 		handle(event, context) {
 			if (!isActivationAction(event.action) || event.phase === 'start' || event.phase === 'cancel') return null;
-			if (event.target?.visual.role === 'legend-item' && options.legend === false) return null;
+			if (event.target?.visual.role === 'legend-item') return null;
 			const target = event.target
 				? { ...event.target, elements: groupElements(
 					event.target, context, options.groupBy,

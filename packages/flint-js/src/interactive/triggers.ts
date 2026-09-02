@@ -27,6 +27,8 @@ export interface InteractionEventSource {
     readonly inspectTolerance?: number;
     /** Nearest-mark acquisition radius for hover gestures, in renderer pixels. */
     readonly targetTolerance?: number;
+    /** Preset-owned nearest-mark acquisition radius, in renderer pixels. */
+    readonly defaultAssistDistance?: number;
     readonly inspectGuide?: ReturnType<typeof normalizeInspectGuideOptions>;
     readonly regionGuide?: ReturnType<typeof normalizeRegionGuideOptions>;
     readonly selector?: SemanticTargetSelector;
@@ -51,6 +53,13 @@ export const hoverTrigger = Object.freeze({
     type: 'element',
     gesture: 'hover',
 } as const satisfies InteractionEventSource);
+
+export function assistedElementTrigger(
+    source: InteractionEventSource,
+    defaultAssistDistance: number,
+): InteractionEventSource {
+    return { ...source, defaultAssistDistance: Math.max(0, defaultAssistDistance) };
+}
 
 export function rectangleTrigger(
     match: 'intersect' | 'contain' = 'intersect',

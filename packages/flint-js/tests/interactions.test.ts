@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickAxisIsolate, clickGroupFocus, clickGroupHighlight, clickHighlight, clickLegendIsolate, clickMark, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, hoverGroupHighlight, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import type { ClickHighlightOptions } from '../src/interactive/interactions';
 import { affordanceCursor, resolveInteractionAffordance } from '../src/interactive/affordances';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
 import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
@@ -27,6 +28,9 @@ import {
     yBrushTrigger,
 } from '../src/interactive/triggers';
 import { AngularRegionSession } from '../src/interactive/gestures/angular-region';
+
+const clickMark = (options: Omit<ClickHighlightOptions, 'targets'> = {}) =>
+    clickHighlight({ ...options, id: options.id ?? 'click-mark', targets: ['mark'] });
 import { angularEditAction, isInteractiveControlTarget, pointInAngularSector } from '../src/vegalite/interactions/gestures/region';
 import {
     cartesianDragDistance,
@@ -57,10 +61,12 @@ import {
 } from '../src/vegalite/interactions/hit-adapter';
 import {
     effectiveAnnotationEntries,
+    evictRetainedStateSiblings,
     interactionsForHoverPresentation,
     domainForPlotGeometry,
     keyboardTargetItems,
     nearestReorderHit,
+    resolveAssistDistance,
     resolveSupportedOperation,
 } from '../src/vegalite/interactions/runtime';
 import {
@@ -112,6 +118,7 @@ import type {
     InteractionDef,
     InteractionModifiers,
     InteractionPhase,
+    ChartUpdate,
     ChartUpdateOp,
     SemanticInteractionEvent,
     SemanticElement,
@@ -372,17 +379,17 @@ describe('hover presentation policy', () => {
     });
 
     it('includes only interactions that register hover presentation', () => {
-        const preset = clickHighlight();
+        const preset = clickMark();
         const observer: InteractionDef = { id: 'click-observer', eventSource: clickTrigger };
         const hover: InteractionDef = { id: 'hover-observer', eventSource: hoverTrigger };
         const reorder = dragReorder();
 
         expect(interactionsForHoverPresentation([preset, observer], [hover], [reorder]).map(({ id }) => id))
-            .toEqual(['click-highlight', 'drag-reorder']);
+            .toEqual(['click-mark', 'drag-reorder']);
     });
 
     it('expands group hover presentation to the committed cohort', () => {
-        const interaction = clickGroupHighlight();
+        const interaction = clickGroupFocus();
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{ value: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
@@ -861,9 +868,9 @@ describe('interaction definitions', () => {
         expect(update).toBeNull();
     });
     it('declares normalized event sources for built-in presets', () => {
-        expect(clickHighlight().eventSource).toBe(clickTrigger);
-        expect(clickGroupHighlight().eventSource).toBe(clickTrigger);
-        expect(clickAnnotate().eventSource).toBe(clickTrigger);
+        expect(clickMark().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
+        expect(clickGroupFocus().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
+        expect(clickAnnotate().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
         expect(select().eventSource).toEqual(rectangleTrigger('intersect'));
         expect(brushX().eventSource).toEqual(xBrushTrigger('intersect', 'ephemeral'));
         expect(brushY().eventSource).toEqual(yBrushTrigger('intersect', 'ephemeral'));
@@ -872,53 +879,55 @@ describe('interaction definitions', () => {
     });
 
     it('resolves composed affordances by target and interaction priority', () => {
-        expect(affordanceCursor(resolveInteractionAffordance([clickHighlight()], 'mark'))).toBe('pointer');
+        expect(affordanceCursor(resolveInteractionAffordance([clickMark()], 'mark'))).toBe('pointer');
         expect(affordanceCursor(resolveInteractionAffordance(
-            [clickHighlight(), select()], 'mark',
+            [clickMark(), select()], 'mark',
         ))).toBe('pointer');
         expect(affordanceCursor(resolveInteractionAffordance(
-            [clickHighlight(), select()], 'plot',
+            [clickMark(), select()], 'plot',
         ))).toBe('crosshair');
         expect(resolveInteractionAffordance([select()], 'mark')).toMatchObject({
             target: 'mark', cursor: 'region',
         });
         expect(affordanceCursor(resolveInteractionAffordance(
-            [clickHighlight(), dragReorder()], 'mark', new Set(['click-highlight']),
+            [clickMark(), dragReorder()], 'mark', new Set(['click-mark']),
         ))).toBe('pointer');
-        expect(resolveInteractionAffordance([hoverGroupHighlight({ groupBy: 'Series' })], 'mark'))
+        expect(resolveInteractionAffordance([hoverGroupFocus({ groupBy: 'Series' })], 'mark'))
             .toMatchObject({ hover: 'cohort' });
     });
 
-    it('declares target-specific affordances for label and legend composition', () => {
+    it('declares affordances only for configured click highlight targets', () => {
         expect(resolveInteractionAffordance([axisHighlight()], 'axis-label'))
             .toMatchObject({ cursor: 'activate', hover: 'cohort' });
-        expect(resolveInteractionAffordance([clickAxisIsolate()], 'axis-label'))
+        expect(resolveInteractionAffordance([clickHighlight({ targets: ['discreteAxis'] })], 'axis-label'))
             .toMatchObject({ cursor: 'activate', hover: 'cohort' });
-        expect(resolveInteractionAffordance([clickLegendIsolate()], 'legend-item'))
+        expect(resolveInteractionAffordance([clickHighlight({ targets: ['legend'] })], 'legend-item'))
             .toMatchObject({ cursor: 'activate', hover: 'cohort' });
-        expect(resolveInteractionAffordance([clickLegendIsolate()], 'axis-label'))
+        expect(resolveInteractionAffordance([clickHighlight({ targets: ['legend'] })], 'axis-label'))
             .toBeUndefined();
-        expect(resolveInteractionAffordance([clickHighlight({ legend: false })], 'legend-item'))
+        expect(resolveInteractionAffordance([clickMark()], 'legend-item'))
             .toBeUndefined();
         expect(resolveInteractionAffordance([navigate({ pan: false })], 'plot'))
             .toBeUndefined();
     });
 
-    it('composes click highlight from independent mark, legend, and axis presets', () => {
-        const interactions = [
-            clickMark(),
-            clickLegendIsolate(),
-            clickAxisIsolate(),
-        ];
+    it('owns all configured focus targets in one click highlight preset', () => {
+        const interaction = clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] });
+        const markAndAxis = clickHighlight({ targets: ['mark', 'discreteAxis'] });
 
-        expect(normalizeInteractions(interactions).map((interaction) => interaction.id)).toEqual([
-            'click-mark',
-            'click-legend-isolate',
-            'click-axis-isolate',
-        ]);
-        expect(resolveInteractionAffordance(interactions, 'mark')).toBeDefined();
-        expect(resolveInteractionAffordance(interactions, 'legend-item')).toBeDefined();
-        expect(resolveInteractionAffordance(interactions, 'axis-label')).toBeDefined();
+        expect(normalizeInteractions([interaction]).map((candidate) => candidate.id))
+            .toEqual(['click-highlight']);
+        expect(resolveInteractionAffordance([interaction], 'mark')).toBeDefined();
+        expect(resolveInteractionAffordance([interaction], 'legend-item')).toBeDefined();
+        expect(resolveInteractionAffordance([interaction], 'axis-label')).toBeDefined();
+        expect(interaction).toMatchObject({
+            retainedStateGroup: 'focus',
+            claimsLegendActivation: true,
+            claimsAxisActivation: true,
+        });
+        expect(resolveInteractionAffordance([markAndAxis], 'mark')).toBeDefined();
+        expect(resolveInteractionAffordance([markAndAxis], 'axis-label')).toBeDefined();
+        expect(resolveInteractionAffordance([markAndAxis], 'legend-item')).toBeUndefined();
     });
 
     it('provides reusable trigger descriptors', () => {
@@ -962,10 +971,10 @@ describe('interaction definitions', () => {
             elements: [{ value: { category: 'A' }, records: [{ category: 'A', value: 4 }] }],
         };
 
-        expect(handleSemanticEvent(clickHighlight(), {
+        expect(handleSemanticEvent(clickMark(), {
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, context)).toEqual({
-            id: 'click-highlight',
+            id: 'click-mark',
             ops: [{
                 op: 'set-style', targets: [target],
                 value: { state: 'emphasized', mutedOpacity: 0.25 },
@@ -983,18 +992,28 @@ describe('interaction definitions', () => {
     });
 
     it('creates preset definitions with stable defaults', () => {
-        expect(clickMark()).toMatchObject({ id: 'click-mark', eventSource: clickTrigger });
-        expect(clickGroupFocus()).toMatchObject({ id: 'click-group-focus', eventSource: clickTrigger });
-        expect(hoverGroupFocus({ groupBy: 'Series' })).toMatchObject({
-            id: 'hover-group-focus', eventSource: hoverTrigger,
+        expect(clickHighlight()).toMatchObject({
+            id: 'click-highlight',
+            eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
+            claimsLegendActivation: true,
+            claimsAxisActivation: true,
         });
-        expect(clickHighlight()).toMatchObject({ id: 'click-highlight', eventSource: clickTrigger });
+        expect(clickMark()).toMatchObject({
+            id: 'click-mark', eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
+        });
+        expect(clickGroupFocus()).toMatchObject({
+            id: 'click-group-focus', eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
+        });
+        expect(hoverGroupFocus({ groupBy: 'Series' })).toMatchObject({
+            id: 'hover-group-focus', eventSource: { ...hoverTrigger, defaultAssistDistance: 6 },
+        });
         expect(axisHighlight()).toMatchObject({
             id: 'axis-highlight', eventSource: clickTrigger, claimsAxisActivation: true,
         });
         expect(axisHighlight({ event: 'hover' }).eventSource).toBe(hoverTrigger);
-        expect(clickGroupHighlight()).toMatchObject({ id: 'click-group-highlight', eventSource: clickTrigger });
-        expect(clickAnnotate()).toMatchObject({ id: 'click-annotate', eventSource: clickTrigger });
+        expect(clickAnnotate()).toMatchObject({
+            id: 'click-annotate', eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
+        });
         expect(select()).toMatchObject({
             id: 'select',
             eventSource: rectangleTrigger('intersect'),
@@ -1003,6 +1022,18 @@ describe('interaction definitions', () => {
         expect(brushY()).toMatchObject({ id: 'brush-y', axis: 'y', eventSource: yBrushTrigger() });
         expect(brushX({ mode: 'stateful' }).eventSource).toEqual(xBrushTrigger('intersect', 'stateful'));
         expect(brushAngle()).toMatchObject({ id: 'brush-angle', eventSource: angularBrushTrigger() });
+        expect(lassoSelect().eventSource.defaultAssistDistance).toBeUndefined();
+        expect(dragReorder().eventSource.defaultAssistDistance).toBeUndefined();
+        expect(longPress().eventSource.defaultAssistDistance).toBe(12);
+        expect(doubleActivate().eventSource.defaultAssistDistance).toBe(8);
+        expect(resolveAssistDistance([clickMark()])).toBe(8);
+        expect(resolveAssistDistance([clickMark()], 0)).toBe(0);
+        expect(resolveAssistDistance([clickMark()], 20)).toBe(20);
+        expect(resolveAssistDistance([select()], 20)).toBe(0);
+        expect(resolveAssistDistance([dragReorder()], 20)).toBe(0);
+        expect(resolveAssistDistance(
+            interactionsForHoverPresentation([clickMark()], [], []),
+        )).toBe(8);
     });
 
     it('applies brush updates only for its configured axis', () => {
@@ -1106,13 +1137,13 @@ describe('interaction definitions', () => {
 
     it('rejects duplicate interaction ids', () => {
         expect(() => normalizeInteractions([
-            clickHighlight({ id: 'selection' }),
+            clickMark({ id: 'selection' }),
             select({ id: 'selection' }),
         ])).toThrow('Duplicate interaction id: "selection".');
     });
 
     it('produces replace and toggle emphasis updates', () => {
-        const interaction = clickHighlight({ dimOpacity: 0.2 });
+        const interaction = clickMark({ dimOpacity: 0.2 });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{ value: { Region: 'West' } }],
@@ -1133,7 +1164,7 @@ describe('interaction definitions', () => {
         });
     });
 
-    it('keeps clickMark local while allowing explicit and automatic mark partitions', () => {
+    it('keeps mark highlight local while group focus supports explicit and automatic partitions', () => {
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{ value: { key: 'west-consumer' }, records: [{ auto: 'West', Region: 'West', Segment: 'Consumer' }] }],
@@ -1149,28 +1180,20 @@ describe('interaction definitions', () => {
             ],
         };
 
-        expect(semanticUpdate(clickHighlight(), target, context)?.ops[0]).toMatchObject({
+        expect(semanticUpdate(clickMark(), target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [{ value: { key: 'west-consumer' } }] }],
         });
         expect(semanticUpdate(clickMark(), target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [{ value: { key: 'west-consumer' } }] }],
         });
-        expect(semanticUpdate(clickMark({ groupBy: ['Segment'] }), target, context)?.ops[0]).toMatchObject({
+        expect(semanticUpdate(clickGroupFocus({ groupBy: ['Segment'] }), target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
                     { value: { key: 'west-consumer' } },
                     { value: { key: 'east-consumer' } },
                 ] }],
         });
-            expect(semanticUpdate(clickMark({ groupBy: ['Region', 'Segment'] }), target, context)?.ops[0]).toMatchObject({
+            expect(semanticUpdate(clickGroupFocus({ groupBy: ['Region', 'Segment'] }), target, context)?.ops[0]).toMatchObject({
                 targets: [{ elements: [{ value: { key: 'west-consumer' } }] }],
-            });
-            expect(semanticUpdate(clickMark({
-                groupBy: (element) => element.records?.[0]?.Region,
-            }), target, context)?.ops[0]).toMatchObject({
-                targets: [{ elements: [
-                        { value: { key: 'west-consumer' } },
-                        { value: { key: 'west-corporate' } },
-                    ] }],
             });
         expect(semanticUpdate(clickGroupFocus(), target, context)?.ops[0]).toMatchObject({
             targets: [{ elements: [
@@ -1193,7 +1216,7 @@ describe('interaction definitions', () => {
     });
 
     it('expands a Ranged Dot Plot unit to its complete interval in element mode', () => {
-        const interaction = clickHighlight();
+        const interaction = clickMark();
         const target = {
             visual: { kind: 'mark' as const, role: 'mark' },
             elements: [{ value: { key: 'us-male' }, records: [{ Country: 'United States', Sex: 'Male' }] }],
@@ -1249,7 +1272,7 @@ describe('interaction definitions', () => {
     });
 
     it('uses implicit rendered color for Waterfall grouping', () => {
-        const interaction = clickGroupHighlight();
+        const interaction = clickGroupFocus();
         const semantics = waterfallChartDef.semanticInteractions!({
             resolvedEncodings: {
                 x: { field: 'Region', type: 'ordinal' },
@@ -1282,7 +1305,7 @@ describe('interaction definitions', () => {
     });
 
     it('does not infer Waterfall grouping from a field name on another chart', () => {
-        const interaction = clickGroupHighlight();
+        const interaction = clickGroupFocus();
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{
@@ -1309,32 +1332,8 @@ describe('interaction definitions', () => {
         });
     });
 
-    it('keeps an already-resolved legend cohort in group mode', () => {
-        const interaction = clickGroupHighlight();
-        const target = {
-            visual: { kind: 'mark' as const, role: 'legend-item' },
-            elements: [
-                { value: { key: 'blue-circle' }, records: [{ Color: 'Blue', Shape: 'Circle' }] },
-                { value: { key: 'orange-circle' }, records: [{ Color: 'Orange', Shape: 'Circle' }] },
-            ],
-        };
-        const context = {
-            chartType: 'Scatter Plot',
-            selected: [],
-            seriesField: 'Color',
-            available: [
-                ...target.elements,
-                { value: { key: 'blue-square' }, records: [{ Color: 'Blue', Shape: 'Square' }] },
-            ],
-        };
-
-        expect(semanticUpdate(interaction, target, context)?.ops[0]).toMatchObject({
-            targets: [{ elements: target.elements }],
-        });
-    });
-
     it('groups Strip Plot points by their categorical jitter lane', () => {
-        const interaction = clickGroupHighlight();
+        const interaction = clickGroupFocus();
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
             elements: [{ value: { key: 'control-4.1' }, records: [{ Group: 'Control', Value: 4.1, Color: 'Low' }] }],
@@ -1359,13 +1358,13 @@ describe('interaction definitions', () => {
         });
     });
 
-    it('allows callers to override how a group is interpreted', () => {
-        const interaction = clickGroupHighlight({
-            groupBy: (element) => element.records?.[0]?.Region,
+    it('groups by a partition derived in the input records', () => {
+        const interaction = clickGroupFocus({
+            groupBy: 'Partition',
         });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
-            elements: [{ value: { key: 'west-a' }, records: [{ Region: 'West', Segment: 'A' }] }],
+            elements: [{ value: { key: 'west-a' }, records: [{ Partition: 'West', Segment: 'A' }] }],
         };
         const context = {
             chartType: 'Grouped Bar Chart',
@@ -1373,8 +1372,8 @@ describe('interaction definitions', () => {
             seriesField: 'Segment',
             available: [
                 ...target.elements,
-                { value: { key: 'west-b' }, records: [{ Region: 'West', Segment: 'B' }] },
-                { value: { key: 'east-a' }, records: [{ Region: 'East', Segment: 'A' }] },
+                { value: { key: 'west-b' }, records: [{ Partition: 'West', Segment: 'B' }] },
+                { value: { key: 'east-a' }, records: [{ Partition: 'East', Segment: 'A' }] },
             ],
         };
 
@@ -1454,7 +1453,7 @@ describe('interaction definitions', () => {
     });
 
     it('previews a semantic cohort on hover', () => {
-        const interaction = hoverGroupHighlight({ groupBy: 'Country' });
+        const interaction = hoverGroupFocus({ groupBy: 'Country' });
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
             elements: [{ value: {}, records: [{ Country: 'France', Year: 1952 }] }],
@@ -1471,8 +1470,8 @@ describe('interaction definitions', () => {
         });
         expect(semanticUpdate(interaction, target, context, { phase: 'commit' })).toBeNull();
         expect(interaction.eventSource.targetTolerance).toBe(8);
-        expect(hoverGroupHighlight({ groupBy: 'Country', tolerance: 14 }).eventSource.targetTolerance).toBe(14);
-        expect(hoverGroupHighlight({ groupBy: 'Country', tolerance: -1 }).eventSource.targetTolerance).toBe(0);
+        expect(hoverGroupFocus({ groupBy: 'Country', tolerance: 14 }).eventSource.targetTolerance).toBe(14);
+        expect(hoverGroupFocus({ groupBy: 'Country', tolerance: -1 }).eventSource.targetTolerance).toBe(0);
     });
 
     it('creates element-level annotation intent without selecting the mark', () => {
@@ -2383,7 +2382,7 @@ describe('assisted, keyboard, and lasso acquisition', () => {
             action: 'activate-element' as const,
         };
 
-        expect(clickHighlight().handle!(activation, context)?.ops[0]).toMatchObject({
+        expect(clickMark().handle!(activation, context)?.ops[0]).toMatchObject({
             op: 'set-style',
         });
         expect(clickAnnotate().handle!(activation, context)?.ops[0]).toMatchObject({
@@ -2695,9 +2694,9 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(activate(interaction, markTarget)).toBeNull();
     });
 
-    it('isolates discrete axis and legend labels through one preset', () => {
-        const axisInteraction = clickAxisIsolate({ dimOpacity: 0.2 });
-        const legendInteraction = clickLegendIsolate({ dimOpacity: 0.2 });
+    it('focuses configured discrete-axis and legend targets through one preset', () => {
+        const axisInteraction = clickHighlight({ targets: ['discreteAxis'], dimOpacity: 0.2 });
+        const legendInteraction = clickHighlight({ targets: ['legend'], dimOpacity: 0.2 });
         const axisTarget = {
             visual: { kind: 'axis' as const, role: 'axis-label' },
             elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
@@ -2721,8 +2720,33 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(activate(legendInteraction, markTarget)).toBeNull();
     });
 
-    it('isolates a continuous legend interval but not an unrequested axis', () => {
-        const interaction = clickLegendIsolate();
+    it('handles mark, legend, and axis activations through one click highlight instance', () => {
+        const interaction = clickHighlight({
+            targets: ['mark', 'legend', 'discreteAxis'],
+            dimOpacity: 0.2,
+        });
+        const markTarget = {
+            visual: { kind: 'mark' as const, role: 'mark' },
+            elements: [{ value: { Category: 'A' } }],
+        };
+        const axisTarget = {
+            visual: { kind: 'axis' as const, role: 'axis-label' },
+            elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
+        };
+
+        expect(activate(interaction, markTarget)).toMatchObject({ id: 'click-highlight' });
+        expect(activate(interaction, seriesTarget('A'))).toMatchObject({ id: 'click-highlight' });
+        expect(activate(interaction, axisTarget)).toMatchObject({ id: 'click-highlight' });
+        expect(interaction.handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'preview', target: markTarget,
+        }, interaction.eventSource), context)).toMatchObject({
+            id: 'click-highlight',
+            ops: [{ op: 'set-style', targets: [{ elements: markTarget.elements }] }],
+        });
+    });
+
+    it('focuses a continuous legend interval without claiming an axis', () => {
+        const interaction = clickHighlight({ targets: ['legend'] });
         const intervalTarget = {
             visual: { kind: 'legend' as const, role: 'legend-item' },
             elements: [{
@@ -2743,17 +2767,15 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(activate(interaction, axisTarget)).toBeNull();
     });
 
-    it('lets highlight presets opt out of handling observable legend events', () => {
-        expect(activate(clickHighlight(), seriesTarget('A'))).not.toBeNull();
-        expect(activate(clickHighlight({ legend: false }), seriesTarget('A'))).toBeNull();
-        expect(activate(clickGroupHighlight(), seriesTarget('A'))).not.toBeNull();
-        expect(activate(clickGroupHighlight({ legend: false }), seriesTarget('A'))).toBeNull();
+    it('assigns observable legend events only to legend interactions', () => {
+        expect(activate(clickMark(), seriesTarget('A'))).toBeNull();
+        expect(activate(clickGroupFocus(), seriesTarget('A'))).toBeNull();
+        expect(activate(clickHighlight({ targets: ['legend'] }), seriesTarget('A'))).not.toBeNull();
         expect(activate(clickAnnotate(), seriesTarget('A'))).toBeNull();
         const hover = (interaction: CanvasInteractionDef) => interaction.handle!(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'preview', target: seriesTarget('A'),
         }, interaction.eventSource), context);
-        expect(hover(hoverGroupHighlight({ groupBy: 'Series' }))).not.toBeNull();
-        expect(hover(hoverGroupHighlight({ groupBy: 'Series', legend: false }))).toBeNull();
+        expect(hover(hoverGroupFocus({ groupBy: 'Series' }))).toBeNull();
     });
 
     it('reports the resolved role for context, long-press, and double activation', () => {
@@ -2780,12 +2802,9 @@ describe('legend, inspect, zoom, and touch presets', () => {
         }, clickTrigger);
 
         expect(event).toMatchObject({ action: 'click-legend', target });
-        expect(activate(clickHighlight(), target)?.ops[0]).toMatchObject({
-            op: 'set-style',
-            targets: [{ visual: target.visual, elements: target.elements }],
-            value: { state: 'emphasized' },
-        });
-        expect(activate(clickGroupHighlight(), target)?.ops[0]).toMatchObject({
+        expect(activate(clickMark(), target)).toBeNull();
+        expect(activate(clickGroupFocus(), target)).toBeNull();
+        expect(activate(clickHighlight({ targets: ['legend'] }), target)?.ops[0]).toMatchObject({
             op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
             value: { state: 'emphasized' },

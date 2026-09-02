@@ -83,6 +83,10 @@ export function createVegaInteractiveRenderer(
                     vegaSpec,
                     interactionPlan.axisFields,
                     interactionPlan.reorderAxes,
+                    canvasInteractions.some((interaction) => interaction.affordances?.some((affordance) =>
+                        affordance.target === 'axis-label' && affordance.hover))
+                        ? interactionPlan.selectionBoundary?.color ?? '#20262c'
+                        : undefined,
                 );
                 if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
@@ -125,7 +129,7 @@ export function createVegaInteractiveRenderer(
                     interactions,
                     interactionPlan.resolve,
                     interactionPlan.presentUpdate ?? ((update) => update),
-                    options.assistDistance ?? 0,
+                    options.assistDistance,
                     options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
