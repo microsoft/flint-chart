@@ -168,9 +168,7 @@ export function buildInteractiveChart(
                         return createVegaInteractiveRenderer({
                             renderer,
                             interactions: canvasInteractions,
-                            enableSemanticUpdates: canvasInteractions.length < interactions.length
-                                || (updates?.length ?? 0) > 0
-                                || keyboardTargeting === true,
+                            enableSemanticUpdates: true,
                             expressionInterpreter,
                             background,
                             assistDistance: assistedTargeting === false

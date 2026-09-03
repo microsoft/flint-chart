@@ -1,7 +1,7 @@
 import { FlintDimpVisStage } from './FlintDimpVisStage';
 import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
-import { ExplodedDetailStage } from './ExplodedDetailStage';
+import { ExplodedDetailStage, FreeformExplodedDetailStage } from './ExplodedDetailStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -69,6 +69,9 @@ export function BespokeInteractionLab() {
             </section>
             <section className="bespoke-treatment">
               <ExplodedDetailStage />
+            </section>
+            <section className="bespoke-treatment">
+              <FreeformExplodedDetailStage />
             </section>
           </div>
         </article>

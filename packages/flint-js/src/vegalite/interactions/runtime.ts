@@ -38,6 +38,7 @@ import type { VegaInteractionPlan, VegaReorderAxis } from './contracts';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
 import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
+import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartUpdateApplyOptions } from '../../interactive/types';
 import {
@@ -1033,7 +1034,6 @@ export function mountVegaInteractions(
             });
         }
         else dragPreviewOverlay.clear();
-        freeformOverlay.render(freeformOverlays);
         const keys = [...selectedKeys()];
         if (plan.mutableDataSource && dataRows !== renderedDataRows) {
             view.change(
@@ -1107,6 +1107,7 @@ export function mountVegaInteractions(
             }
         }
         dataOverlay.render(overlays);
+        freeformOverlay.render(freeformOverlays);
         observeRenderer();
         renderPathFocus();
         renderLegendRange();
@@ -1569,7 +1570,6 @@ export function mountVegaInteractions(
         const modes = inspectModes(interaction);
         return modes[inspectModeIndices.get(interaction.id) ?? 0] ?? modes[0];
     };
-    const inspectEmphasisSignatures = new Map<string, string>();
     const inspectHandler = (event: MouseEvent): void => {
         if (inspectInteractions.length === 0) return;
         const point = localPoint(event as unknown as PointerEvent);
@@ -1655,16 +1655,12 @@ export function mountVegaInteractions(
             }
             const target = hits.length > 0 ? resolveTarget('hover', 'mark', hits) : null;
             const modifiers = interactionModifiers(event);
-            const signature = inspectEmphasisSignature(target, modifiers);
-            const applyEmphasis = !interaction.handle
-                || inspectEmphasisSignatures.get(interaction.id) !== signature;
-            inspectEmphasisSignatures.set(interaction.id, signature);
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'preview',
                 target,
                 point,
                 modifiers,
-            }, null, undefined, applyEmphasis);
+            });
         }
         if (!guideRendered) inspectGuideOverlay.clear();
     };
@@ -1682,6 +1678,29 @@ export function mountVegaInteractions(
         inspectHandler(event);
     };
     const inspectWheel = (event: WheelEvent): void => {
+        const zooming = inspectInteractions.filter((interaction) => interaction.eventSource.zoom);
+        if (zooming.length > 0) {
+            event.preventDefault();
+            const space = coordinateSpace();
+            const point = clientToPlotPoint({ x: event.clientX, y: event.clientY }, space);
+            for (const interaction of zooming) {
+                void dispatchNavigation(interaction, {
+                    type: 'navigation', phase: 'preview', operation: 'zoom', axes: 'xy',
+                    factor: wheelZoomFactor(
+                        event.deltaY,
+                        event.deltaMode,
+                        space.plotHeight,
+                        interaction.eventSource.wheelSensitivity ?? 0.002,
+                    ),
+                    anchor: {
+                        x: space.plotWidth > 0 ? point.x / space.plotWidth : 0.5,
+                        y: space.plotHeight > 0 ? point.y / space.plotHeight : 0.5,
+                    },
+                    modifiers: interactionModifiers(event),
+                });
+            }
+            return;
+        }
         const now = performance.now();
         event.preventDefault();
         if (now - lastInspectWheelAt < 160 || event.deltaY === 0) return;
@@ -1692,7 +1711,6 @@ export function mountVegaInteractions(
     const inspectLeave = (): void => {
         inspectGuideOverlay.clear();
         for (const interaction of inspectInteractions) {
-            inspectEmphasisSignatures.delete(interaction.id);
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'cancel', target: null,
             });
@@ -1701,7 +1719,8 @@ export function mountVegaInteractions(
     if (inspectInteractions.length > 0) {
         container.addEventListener('pointermove', inspectHandler);
         container.addEventListener('pointerleave', inspectLeave);
-        if (inspectInteractions.some((interaction) => inspectModes(interaction).length > 1)) {
+        if (inspectInteractions.some((interaction) =>
+            interaction.eventSource.zoom || inspectModes(interaction).length > 1)) {
             container.addEventListener('wheel', inspectWheel, { passive: false });
             container.addEventListener('contextmenu', inspectContext);
         }

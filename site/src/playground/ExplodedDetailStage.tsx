@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import {
+  buildInteractiveChart,
+  inspectTrigger,
+  type CanvasInteractionDef,
+  type ChartUpdate,
+} from 'flint-chart/interactive';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { CLIMATE_CITIES, CLIMATE_MONTHS } from './climate-phase-data';
 import './exploded-detail-stage.css';
@@ -9,6 +14,8 @@ const FOCUS_RADIUS = 48;
 const DETAIL_RADIUS = 108;
 const DETAIL_OFFSET = 220;
 const DETAIL_SCALE = 1.7;
+const DETAIL_MIN_SCALE = 1;
+const DETAIL_MAX_SCALE = 3.4;
 
 const ROWS = CLIMATE_CITIES.flatMap((city) => CLIMATE_MONTHS.map((month, monthIndex) => ({
   City: city.name,
@@ -52,6 +59,7 @@ type ScenePoint = PlotPoint & {
 type VectorScene = {
   content: string;
   viewBox: string;
+  origin: PlotPoint;
   x: number;
   y: number;
   width: number;
@@ -97,7 +105,7 @@ function toLocal(source: SVGSVGElement, clientX: number, clientY: number): PlotP
 }
 
 function captureScene(mount: HTMLDivElement): VectorScene | null {
-  const source = mount.querySelector<SVGSVGElement>('figure svg') ?? mount.querySelector<SVGSVGElement>('svg');
+  const source = mount.querySelector<SVGSVGElement>('svg.marks');
   if (!source) return null;
   const sourceRect = source.getBoundingClientRect();
   const mountRect = mount.getBoundingClientRect();
@@ -124,9 +132,12 @@ function captureScene(mount: HTMLDivElement): VectorScene | null {
   const ys = points.map((point) => point.y);
   const xStep = (Math.max(...xs) - Math.min(...xs)) / 11;
   const yPad = 28;
+  const rootFrame = source.querySelector<SVGGraphicsElement>('.mark-group.role-frame.root');
+  const rootMatrix = rootFrame?.getCTM();
   return {
     content: clone.innerHTML,
     viewBox: source.getAttribute('viewBox') ?? `0 0 ${sourceRect.width} ${sourceRect.height}`,
+    origin: { x: rootMatrix?.e ?? 0, y: rootMatrix?.f ?? 0 },
     x: (sourceRect.left - mountRect.left) * scaleX,
     y: (sourceRect.top - mountRect.top) * scaleY,
     width: sourceRect.width * scaleX,
@@ -155,6 +166,35 @@ function eccentricLabels(
   });
 }
 
+function explodedGeometry(scene: VectorScene, focus: PlotPoint, scale = DETAIL_SCALE) {
+  const focusRadius = FOCUS_RADIUS * DETAIL_SCALE / scale;
+  const placeRight = focus.x + DETAIL_OFFSET + DETAIL_RADIUS <= scene.plot.right;
+  const center = {
+    x: focus.x + (placeRight ? DETAIL_OFFSET : -DETAIL_OFFSET),
+    y: Math.min(scene.plot.bottom - DETAIL_RADIUS, Math.max(scene.plot.top + DETAIL_RADIUS, focus.y)),
+  };
+  const points = scene.points.flatMap((point) => {
+    const dx = point.x - focus.x;
+    const dy = point.y - focus.y;
+    return Math.hypot(dx, dy) <= focusRadius
+      ? [{ ...point, detailX: center.x + dx * scale, detailY: center.y + dy * scale }]
+      : [];
+  });
+  return { center, focusRadius, points, labels: eccentricLabels(points, center, focus) };
+}
+
+function recordLatency(
+  samples: { current: number[] },
+  elapsed: number,
+  setLatency: (latency: number) => void,
+) {
+  samples.current.push(elapsed);
+  if (samples.current.length > 20) samples.current.shift();
+  if (samples.current.length % 5 === 0) {
+    setLatency(samples.current.reduce((sum, value) => sum + value, 0) / samples.current.length);
+  }
+}
+
 export function ExplodedDetailStage() {
   const [active, setActive] = useState(false);
   const [focus, setFocus] = useState<PlotPoint>({ x: 450, y: 260 });
@@ -162,23 +202,20 @@ export function ExplodedDetailStage() {
   const mountRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<SVGSVGElement | null>(null);
   const sceneRef = useRef<VectorScene | null>(null);
+  const presentationStartedRef = useRef<number | null>(null);
+  const latencySamplesRef = useRef<number[]>([]);
+  const [latency, setLatency] = useState<number | null>(null);
 
   const explosion = useMemo(() => {
-    if (!scene) return null;
-    const placeRight = focus.x + DETAIL_OFFSET + DETAIL_RADIUS <= scene.plot.right;
-    const center = {
-      x: focus.x + (placeRight ? DETAIL_OFFSET : -DETAIL_OFFSET),
-      y: Math.min(scene.plot.bottom - DETAIL_RADIUS, Math.max(scene.plot.top + DETAIL_RADIUS, focus.y)),
-    };
-    const points = scene.points.flatMap((point) => {
-      const dx = point.x - focus.x;
-      const dy = point.y - focus.y;
-      return Math.hypot(dx, dy) <= FOCUS_RADIUS
-        ? [{ ...point, detailX: center.x + dx * DETAIL_SCALE, detailY: center.y + dy * DETAIL_SCALE }]
-        : [];
-    });
-    return { center, points, labels: eccentricLabels(points, center, focus) };
+    return scene ? explodedGeometry(scene, focus) : null;
   }, [focus, scene]);
+
+  useLayoutEffect(() => {
+    if (presentationStartedRef.current === null) return;
+    const elapsed = performance.now() - presentationStartedRef.current;
+    presentationStartedRef.current = null;
+    recordLatency(latencySamplesRef, elapsed, setLatency);
+  }, [focus]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -188,6 +225,7 @@ export function ExplodedDetailStage() {
       if (!source) return;
       const point = toLocal(source, event.clientX, event.clientY);
       if (!point) return;
+      presentationStartedRef.current = performance.now();
       setFocus(point);
       const plot = sceneRef.current?.plot;
       setActive(Boolean(plot && point.x >= plot.left && point.x <= plot.right
@@ -225,10 +263,11 @@ export function ExplodedDetailStage() {
         </span>
       </div>
       <div className="ic-toolbar">
-        <span className="ic-pill">No semantic event data</span>
+        <span className="ic-pill">DOM pointer event</span>
         <span className="ic-pill">Cloned + clipped SVG</span>
         <span className="ic-pill">Eccentric labels</span>
         <span className="ic-pill">0 Flint updates</span>
+        <span className="ic-pill">React commit {latency === null ? '—' : `${latency.toFixed(1)} ms`}</span>
       </div>
       <div className="ic-flint-dimpvis-panel exploded-detail-panel">
         <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
@@ -264,7 +303,12 @@ export function ExplodedDetailStage() {
                   )}
                 </defs>
                 <g clipPath="url(#exploded-detail-plot-clip)">
-                  <circle cx={focus.x} cy={focus.y} r={FOCUS_RADIUS} className="exploded-detail-focus" />
+                  <circle
+                    cx={focus.x}
+                    cy={focus.y}
+                    r={explosion?.focusRadius ?? FOCUS_RADIUS}
+                    className="exploded-detail-focus"
+                  />
                   {explosion && (
                     <>
                       <line
@@ -303,6 +347,133 @@ export function ExplodedDetailStage() {
                 ))}
               </svg>
             )}
+          </div>
+        </ScaleToFit>
+      </div>
+      <div className="exploded-detail-source">NASA POWER · MERRA-2 · 1991–2020 monthly climatology</div>
+    </div>
+  );
+}
+
+function escapeXml(value: string): string {
+  return value.split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;')
+    .split('"').join('&quot;').split("'").join('&apos;');
+}
+
+function freeformExplodedSvg(scene: VectorScene, focus: PlotPoint, scale: number): string {
+  const explosion = explodedGeometry(scene, focus, scale);
+  const plotWidth = scene.plot.right - scene.plot.left;
+  const plotHeight = scene.plot.bottom - scene.plot.top;
+  const labels = explosion.labels.map((label) => `
+    <g class="exploded-detail-label">
+      <path d="M${label.detailX},${label.detailY} L${label.elbowX},${label.labelY} L${label.labelX},${label.labelY}"/>
+      <text x="${label.labelX + label.side * 5}" y="${label.labelY + 4}" text-anchor="${label.side === 1 ? 'start' : 'end'}">${escapeXml(label.label)}</text>
+    </g>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${escapeXml(scene.viewBox)}" width="100%" height="100%">
+    <defs>
+      <g id="freeform-exploded-scene">${scene.content}</g>
+      <clipPath id="freeform-exploded-plot-clip"><rect x="${scene.plot.left}" y="${scene.plot.top}" width="${plotWidth}" height="${plotHeight}"/></clipPath>
+      <clipPath id="freeform-exploded-bubble-clip"><circle cx="${explosion.center.x}" cy="${explosion.center.y}" r="${DETAIL_RADIUS}"/></clipPath>
+    </defs>
+    <g clip-path="url(#freeform-exploded-plot-clip)">
+      <circle cx="${focus.x}" cy="${focus.y}" r="${explosion.focusRadius}" class="exploded-detail-focus"/>
+      <line x1="${focus.x}" y1="${focus.y}" x2="${explosion.center.x}" y2="${explosion.center.y}" class="exploded-detail-bridge"/>
+      <circle cx="${explosion.center.x}" cy="${explosion.center.y}" r="${DETAIL_RADIUS}" class="exploded-detail-background"/>
+      <g clip-path="url(#freeform-exploded-bubble-clip)">
+        <use href="#freeform-exploded-scene" transform="translate(${explosion.center.x} ${explosion.center.y}) scale(${scale}) translate(${-focus.x} ${-focus.y})"/>
+      </g>
+    </g>${labels}
+  </svg>`;
+}
+
+function freeformUpdate(scene: VectorScene, focus: PlotPoint, scale: number): ChartUpdate {
+  return {
+    id: 'freeform-exploded-detail',
+    ops: [{
+      op: 'set-freeform-overlay',
+      name: 'exploded-detail',
+      value: {
+        coordinateSpace: 'renderer',
+        body: [{ type: 'svg', content: freeformExplodedSvg(scene, focus, scale) }],
+      },
+    }],
+  };
+}
+
+export function FreeformExplodedDetailStage() {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return undefined;
+    let scene: VectorScene | null = null;
+    let focus: PlotPoint | null = null;
+    let detailScale = DETAIL_SCALE;
+    const interaction: CanvasInteractionDef = {
+      id: 'freeform-exploded-detail',
+      eventSource: {
+        ...inspectTrigger('xy', undefined, undefined, false),
+        zoom: true,
+        wheelSensitivity: 0.004,
+      },
+      affordances: [{ target: 'plot', cursor: 'inspect' }],
+      handle(event) {
+        if (event.phase === 'cancel') return null;
+        if (event.action === 'zoom-viewport') {
+          const viewport = event.geometry.plot;
+          if (viewport?.kind !== 'viewport' || viewport.factor === undefined || !scene || !focus) return null;
+          detailScale = Math.min(
+            DETAIL_MAX_SCALE,
+            Math.max(DETAIL_MIN_SCALE, detailScale * viewport.factor),
+          );
+          return freeformUpdate(scene, focus, detailScale);
+        }
+        if (event.action !== 'inspect-xy') return null;
+        const geometry = event.geometry.plot;
+        if (geometry?.kind !== 'point') return null;
+        scene ??= captureScene(mount);
+        if (!scene) return null;
+        focus = {
+          x: geometry.point.x + scene.origin.x,
+          y: geometry.point.y + scene.origin.y,
+        };
+        return freeformUpdate(scene, focus, detailScale);
+      },
+    };
+    const surface = buildInteractiveChart(mount, CHART_INPUT, {
+      backend: 'vegalite',
+      renderer: 'svg',
+      interactions: [interaction],
+      ariaLabel: 'Seasonal temperature profiles with freeform exploded neighborhood detail',
+      chartId: 'freeform-exploded-detail-lines',
+    });
+    void surface.ready.then(() => {
+      scene = captureScene(mount);
+    });
+    return () => {
+      surface.destroy();
+    };
+  }, []);
+
+  return (
+    <div className="ic-flint-dimpvis-shell exploded-detail-shell">
+      <div className="ic-stage-meta">
+        <strong>The same treatment through set-freeform-overlay</strong>
+        <span>
+          A standard Flint inspect event produces the identical focus, clone, bubble, bridge, and
+          eccentric labels as one renderer-space freeform SVG update. Scroll changes the local
+          magnification without zooming the chart.
+        </span>
+      </div>
+      <div className="ic-toolbar">
+        <span className="ic-pill">Flint inspect event</span>
+        <span className="ic-pill">InteractionDef → set-freeform-overlay</span>
+        <span className="ic-pill">Scroll to zoom detail</span>
+      </div>
+      <div className="ic-flint-dimpvis-panel exploded-detail-panel">
+        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+          <div className="exploded-detail-stack">
+            <div className="ic-flint-dimpvis-mount exploded-detail-mount" ref={mountRef} />
           </div>
         </ScaleToFit>
       </div>
