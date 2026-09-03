@@ -2,6 +2,8 @@ import type { RenderHit, SemanticTarget } from '../../../core/interaction-semant
 import type { PlotPoint } from '../../../interactive/interactions';
 import type { VegaReorderAxis } from '../contracts';
 import {
+    axisItems,
+    axisTargetIdentity,
     clientRectToLayoutRect,
     renderHit,
     sceneItems,
@@ -12,9 +14,13 @@ export interface DragReorderPreview {
     start: PlotPoint;
     current: PlotPoint;
     axis?: 'x' | 'y';
+    field?: string;
     source: SemanticTarget;
-    sourceItem?: any;
     destination: SemanticTarget;
+    includeControl?: boolean;
+    ghostOpacity?: number;
+    dimmerOpacity?: number;
+    sourceDimmerOpacity?: number;
 }
 
 export interface DragReorderOverlayController {
@@ -27,8 +33,18 @@ export interface DragReorderOverlayOptions {
     view: any;
     container: HTMLElement;
     reorderAxes: readonly VegaReorderAxis[];
+    axisTargets?: Readonly<Record<string, import('../contracts').VegaAxisTarget>>;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
+}
+
+export function dragGhostDelta(
+    preview: Pick<DragReorderPreview, 'start' | 'current'>,
+): PlotPoint {
+    return {
+        x: preview.current.x - preview.start.x,
+        y: preview.current.y - preview.start.y,
+    };
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -116,17 +132,40 @@ export function createDragReorderOverlay({
     view,
     container,
     reorderAxes,
+    axisTargets,
     coordinateSpace,
     containerLayoutSize,
 }: DragReorderOverlayOptions): DragReorderOverlayController {
     const layer = document.createElementNS(SVG_NS, 'svg');
+    type GhostItem = {
+        element?: SVGGraphicsElement;
+        matrix?: { a: number; b: number; c: number; d: number; e: number; f: number };
+        points: PlotPoint[];
+        fill: string;
+        fillOpacity: number;
+        stroke: string;
+        strokeWidth: number;
+    };
+    let ghostSnapshot: {
+        axis: 'x' | 'y';
+        field: string;
+        sourceValue: unknown;
+        start: PlotPoint;
+        items: GhostItem[];
+    } | undefined;
     Object.assign(layer.style, {
         position: 'absolute', zIndex: '4', pointerEvents: 'none', overflow: 'hidden',
     });
 
-    const clear = (): void => layer.remove();
+    const clear = (): void => {
+        layer.remove();
+        ghostSnapshot = undefined;
+    };
     const render = (preview: DragReorderPreview): void => {
-        const active = activeReorderAxis(reorderAxes, preview);
+        const candidateAxes = preview.field
+            ? reorderAxes.filter((axis) => axis.field === preview.field)
+            : reorderAxes;
+        const active = activeReorderAxis(candidateAxes, preview);
         if (!active) return clear();
         const sourceValue = targetValue(preview.source, active.field);
         const destinationValue = targetValue(preview.destination, active.field);
@@ -168,6 +207,63 @@ export function createDragReorderOverlay({
             clone.setAttribute('transform', `matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e + delta.x} ${matrix.f + delta.y})`);
             return clone;
         };
+        const sourceAxisValue = preview.source.visual.kind === 'axis'
+            ? preview.source.elements[0]?.value
+            : undefined;
+        const sourceAxisItem = sourceAxisValue
+            ? axisItems(view, axisTargets).find((item) => {
+                const identity = axisTargetIdentity(item, axisTargets);
+                return identity?.role === 'axis-label'
+                    && identity.axis === sourceAxisValue.axis
+                    && identity.field === sourceAxisValue.field
+                    && Object.is(identity.value, sourceAxisValue.value);
+            })
+            : undefined;
+
+        const sameGhost = ghostSnapshot
+            && ghostSnapshot.axis === active.axis
+            && ghostSnapshot.field === active.field
+            && Object.is(ghostSnapshot.sourceValue, sourceValue)
+            && ghostSnapshot.start.x === preview.start.x
+            && ghostSnapshot.start.y === preview.start.y;
+        if (!sameGhost) {
+            ghostSnapshot = {
+                axis: active.axis,
+                field: active.field,
+                sourceValue,
+                start: { ...preview.start },
+                items: sourceItems.map((item): GhostItem => {
+                    const rendered = renderedElement(item);
+                    const matrix = rendered?.getCTM();
+                    const element = rendered && matrix
+                        ? rendered.cloneNode(true) as SVGGraphicsElement
+                        : undefined;
+                    if (element) {
+                        element.removeAttribute('role');
+                        element.removeAttribute('aria-label');
+                        element.setAttribute('aria-hidden', 'true');
+                    }
+                    const points: PlotPoint[] = (item.interactionGeometry?.points ?? [
+                        { x: item.bounds.x1, y: item.bounds.y1 },
+                        { x: item.bounds.x2, y: item.bounds.y1 },
+                        { x: item.bounds.x2, y: item.bounds.y2 },
+                        { x: item.bounds.x1, y: item.bounds.y2 },
+                    ]).map((point: PlotPoint) => ({ ...point }));
+                    return {
+                        element,
+                        matrix: matrix ? {
+                            a: matrix.a, b: matrix.b, c: matrix.c,
+                            d: matrix.d, e: matrix.e, f: matrix.f,
+                        } : undefined,
+                        points,
+                        fill: item.fill ?? '#4c78a8',
+                        fillOpacity: (item.opacity ?? 1) * (item.fillOpacity ?? 1),
+                        stroke: item.stroke ?? '#ffffff',
+                        strokeWidth: Math.max(1, item.strokeWidth ?? 0),
+                    };
+                }),
+            };
+        }
 
         const dimmedItems = scene.filter((item) => {
             const value = renderHit(item)?.datum[active.field];
@@ -176,7 +272,9 @@ export function createDragReorderOverlay({
         const dimmedElements = new Set<SVGGraphicsElement>();
         for (const item of dimmedItems) {
             const sourceItem = Object.is(renderHit(item)?.datum[active.field], sourceValue);
-            const dimOpacity = sourceItem ? '0.5' : '0.68';
+            const dimOpacity = String(sourceItem
+                ? preview.sourceDimmerOpacity ?? 0.5
+                : preview.dimmerOpacity ?? 0.68);
             const rendered = renderedElement(item);
             if (rendered && !dimmedElements.has(rendered)) {
                 dimmedElements.add(rendered);
@@ -200,37 +298,35 @@ export function createDragReorderOverlay({
             layer.append(dimmer);
         }
 
-        const delta = active.axis === 'x'
-            ? { x: preview.current.x - preview.start.x, y: 0 }
-            : { x: 0, y: preview.current.y - preview.start.y };
-        for (const item of sourceItems) {
-            const renderedGhost = cloneRenderedElement(item, delta);
-            if (renderedGhost) {
-                renderedGhost.setAttribute('opacity', '0.62');
-                layer.append(renderedGhost);
+        // The category axis chooses the drop slot; it must not constrain the
+        // visual ghost. Preserve the grab offset and follow the pointer freely.
+        const delta = dragGhostDelta(preview);
+        // Render from the gesture-start snapshot, not from the live scene. The
+        // chart may have reflowed since pointer-down (for example after a prior
+        // order update), but the ghost must remain attached to this pointer.
+        for (const item of ghostSnapshot?.items ?? []) {
+            if (item.element && item.matrix) {
+                const { matrix } = item;
+                item.element.setAttribute('transform', `matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e + delta.x} ${matrix.f + delta.y})`);
+                item.element.setAttribute('opacity', String(preview.ghostOpacity ?? 0.62));
+                layer.append(item.element);
                 continue;
             }
             const shape = document.createElementNS(SVG_NS, 'polygon');
-            const points: PlotPoint[] = item.interactionGeometry?.points ?? [
-                { x: item.bounds.x1, y: item.bounds.y1 },
-                { x: item.bounds.x2, y: item.bounds.y1 },
-                { x: item.bounds.x2, y: item.bounds.y2 },
-                { x: item.bounds.x1, y: item.bounds.y2 },
-            ];
-            shape.setAttribute('points', points
+            shape.setAttribute('points', item.points
                 .map((point: PlotPoint) => `${point.x + space.originX + delta.x},${point.y + space.originY + delta.y}`)
                 .join(' '));
-            shape.setAttribute('fill', item.fill ?? '#4c78a8');
-            shape.setAttribute('fill-opacity', String((item.opacity ?? 1) * (item.fillOpacity ?? 1) * 0.62));
-            shape.setAttribute('stroke', item.stroke ?? '#ffffff');
-            shape.setAttribute('stroke-width', String(Math.max(1, item.strokeWidth ?? 0)));
+            shape.setAttribute('fill', item.fill);
+            shape.setAttribute('fill-opacity', String(item.fillOpacity * (preview.ghostOpacity ?? 0.62)));
+            shape.setAttribute('stroke', item.stroke);
+            shape.setAttribute('stroke-width', String(item.strokeWidth));
             layer.append(shape);
         }
 
-        if (preview.source.visual.kind === 'axis' && preview.sourceItem) {
-            const labelGhost = cloneRenderedElement(preview.sourceItem, delta);
+        if (preview.includeControl !== false && sourceAxisItem) {
+            const labelGhost = cloneRenderedElement(sourceAxisItem, delta);
             if (labelGhost) {
-                labelGhost.setAttribute('opacity', '0.72');
+                labelGhost.setAttribute('opacity', String(preview.ghostOpacity ?? 0.72));
                 layer.append(labelGhost);
             }
         }
@@ -242,13 +338,15 @@ export function createDragReorderOverlay({
             }), { x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity });
             const indicator = document.createElementNS(SVG_NS, 'line');
             if (active.axis === 'x') {
-                const x = (delta.x >= 0 ? bounds.x2 : bounds.x1) + space.originX;
+                const edge = delta.x >= 0 ? 'end' : 'start';
+                const x = (edge === 'end' ? bounds.x2 : bounds.x1) + space.originX;
                 indicator.setAttribute('x1', String(x));
                 indicator.setAttribute('x2', String(x));
                 indicator.setAttribute('y1', String(space.originY));
                 indicator.setAttribute('y2', String(space.originY + space.plotHeight));
             } else {
-                const y = (delta.y >= 0 ? bounds.y2 : bounds.y1) + space.originY;
+                const edge = delta.y >= 0 ? 'end' : 'start';
+                const y = (edge === 'end' ? bounds.y2 : bounds.y1) + space.originY;
                 indicator.setAttribute('x1', String(space.originX));
                 indicator.setAttribute('x2', String(space.originX + space.plotWidth));
                 indicator.setAttribute('y1', String(y));

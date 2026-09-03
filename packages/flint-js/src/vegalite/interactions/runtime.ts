@@ -1,6 +1,7 @@
 import { changeset } from 'vega';
 import {
     associateSemanticElementRenderKeys,
+    type AxisTargetValue,
     semanticElementRenderKeys,
     sourceRecordsForRenderedRecords,
     type ChartInteractionResolver,
@@ -33,7 +34,7 @@ import type {
     UpdateTarget,
 } from '../../interactive/language/updates';
 import { matchesSemanticTargetSelector } from '../../interactive/language/updates';
-import type { VegaInteractionPlan } from './contracts';
+import type { VegaInteractionPlan, VegaReorderAxis } from './contracts';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
 import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
@@ -43,6 +44,7 @@ import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
     axisItemAt,
+    axisItems,
     axisTargetIdentity,
     clientToPlotPoint,
     clientToRendererPoint,
@@ -75,6 +77,7 @@ import {
     eligibleReorderAxesForHit,
 } from './presentation/drag-reorder-overlay';
 import { createFocusOverlay } from './presentation/focus-overlay';
+import { createFreeformOverlay } from './presentation/freeform-overlay';
 import { createTargetFeedbackOverlay } from './presentation/target-feedback-overlay';
 import { createLegendRangeOverlay } from './presentation/legend-range-overlay';
 import { createReorderResetControls } from './presentation/reorder-reset-controls';
@@ -241,6 +244,57 @@ export function nearestReorderHit(
     return nearest?.hit ?? null;
 }
 
+/** Outer boundary of the visual primitives that represent one categorical slot. */
+export function reorderProjectionBounds(
+    items: readonly any[],
+    axis: Pick<VegaReorderAxis, 'field' | 'markTypes'>,
+    value: unknown,
+): { x1: number; y1: number; x2: number; y2: number } | undefined {
+    const candidates = items.filter((item) => {
+        const hit = renderHit(item);
+        return item.bounds && hit && Object.is(hit.datum[axis.field], value)
+            && (!axis.markTypes || axis.markTypes.includes(item.mark?.marktype));
+    });
+    // Bars define their slot more authoritatively than decorative dots or
+    // target symbols. For grouped bars, combine every bar in the category.
+    const bars = candidates.filter((item) => item.mark?.marktype === 'rect');
+    const owned = bars.length > 0 ? bars : candidates;
+    if (owned.length === 0) return undefined;
+    return owned.reduce((bounds, item) => ({
+        x1: Math.min(bounds.x1, item.bounds.x1),
+        y1: Math.min(bounds.y1, item.bounds.y1),
+        x2: Math.max(bounds.x2, item.bounds.x2),
+        y2: Math.max(bounds.y2, item.bounds.y2),
+    }), { x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity });
+}
+
+function previewOpIdentity(op: ChartUpdateOp): string {
+    if (op.op === 'set-order') return `${op.op}:${op.scope}:${op.field}`;
+    if (op.op === 'set-overlay') return `${op.op}:${op.name}`;
+    if (op.op === 'set-freeform-overlay') return `${op.op}:${op.name}`;
+    if (op.op === 'set-data') return `${op.op}:${op.source}`;
+    // Styles, annotations, and viewports are complete presentations for one
+    // interaction. A preview of the same kind replaces its retained version.
+    return op.op;
+}
+
+/** Overlay a live preview on retained state, replacing only operations it updates. */
+export function mergeRetainedPreview(
+    retained: ChartUpdate | undefined,
+    preview: ChartUpdate | undefined,
+): ChartUpdate | undefined {
+    if (!preview) return retained;
+    if (!retained) return preview;
+    const replaced = new Set(preview.ops.map(previewOpIdentity));
+    return {
+        id: preview.id,
+        ops: [
+            ...retained.ops.filter((op) => !replaced.has(previewOpIdentity(op))),
+            ...preview.ops,
+        ],
+    };
+}
+
 export interface VegaInteractionController {
     getInteractionContext(): import('../../interactive/interactions').InteractionContext;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
@@ -276,6 +330,20 @@ export function initialInspectSeries(
     return preferred !== undefined && values.some((value) => Object.is(value, preferred))
         ? preferred
         : values[0];
+}
+
+/** Visual identity used to avoid reapplying an unchanged inspect emphasis. */
+export function inspectEmphasisSignature(
+    target: SemanticTarget | null,
+    modifiers: SemanticInteractionEvent['modifiers'],
+): string {
+    const modifierKey = `${modifiers?.shift ? 1 : 0}${modifiers?.ctrl ? 1 : 0}${modifiers?.meta ? 1 : 0}`;
+    if (!target) return `none\u0000${modifierKey}`;
+    const keys = target.elements.flatMap((element) => {
+        const renderKeys = semanticElementRenderKeys(element);
+        return renderKeys.length > 0 ? renderKeys : [JSON.stringify(element.value)];
+    }).sort();
+    return `${target.visual.kind}\u0000${target.visual.role}\u0000${keys.join('\u0000')}\u0000${modifierKey}`;
 }
 
 export function inspectSeriesPresentationKeys(
@@ -457,7 +525,8 @@ export function mountVegaInteractions(
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'double')
         : [];
     const elementDragInteractions = resolve
-        ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'drag-element')
+        ? canvasInteractions.filter((interaction) => interaction.eventSource.type === 'element'
+            && interaction.eventSource.gesture === 'drag')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
         [...markClickInteractions, ...longPressInteractions, ...doubleInteractions],
@@ -469,13 +538,13 @@ export function mountVegaInteractions(
         hoverPresentationInteractions.filter((interaction) =>
             resolveInteractionAffordance([interaction], target)?.hover);
     const regionInteraction = resolve
-        ? canvasInteractions.find((interaction) => interaction.eventSource.gesture === 'drag')
+        ? canvasInteractions.find((interaction) => interaction.eventSource.type === 'region'
+            && interaction.eventSource.gesture === 'drag')
         : undefined;
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
     const elementDragInteraction = elementDragInteractions[0];
-    const reorderElementDrag = elementDragInteraction?.eventSource.type === 'reorder';
     const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
         resolveAssistDistance(eligible, assistDistance);
     const retainedUpdates = new Map<string, ChartUpdate>();
@@ -546,15 +615,30 @@ export function mountVegaInteractions(
         for (const overlay of annotationOverlays.values()) overlay.clear();
     };
     const inspectGuideOverlay = createInspectGuideOverlay({
+        view,
         container,
         coordinateSpace,
         containerLayoutSize,
     });
-    const dragReorderOverlay = createDragReorderOverlay({
+    const dragPreviewOverlay = createDragReorderOverlay({
         view, container,
         reorderAxes: plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
+        axisTargets: plan.axisTargets,
         coordinateSpace, containerLayoutSize,
     });
+    const freeformOverlay = createFreeformOverlay({
+        container, coordinateSpace, containerLayoutSize,
+    });
+    const styledAxisElements = new Map<SVGGraphicsElement, Map<string, string | null>>();
+    const restoreAxisStyles = (): void => {
+        for (const [element, attributes] of styledAxisElements) {
+            for (const [name, value] of attributes) {
+                if (value === null) element.removeAttribute(name);
+                else element.setAttribute(name, value);
+            }
+        }
+        styledAxisElements.clear();
+    };
     const dataOverlay = createDataOverlay({
         view, container, scales: plan.overlayScales ?? {}, coordinateSpace, containerLayoutSize,
     });
@@ -563,9 +647,13 @@ export function mountVegaInteractions(
     const reorderResetControls = createReorderResetControls({
         container,
         axes: plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []),
-        isActive: (axis) => Array.isArray(view.signal(axis.signal)),
+        containerLayoutSize,
+        isActive: (axis) => [retainedUpdates, previewUpdates].some((layer) =>
+            [...layer.values()].some((update) => update.ops.some((op) =>
+                op.op === 'set-order'
+                && op.scope === 'category'
+                && op.field === axis.field))),
         reset: (axis) => {
-            dragReorderOverlay.clear();
             for (const layer of [retainedUpdates, previewUpdates]) {
                 for (const [id, update] of layer) {
                     const ops = update.ops.filter((op) =>
@@ -612,8 +700,11 @@ export function mountVegaInteractions(
     const selectedForInteraction = (interaction: CanvasInteractionDef): SemanticElement[] => {
         if (!interaction.retainedStateGroup) return [...selectedElements.values()];
         const keys = new Set<string>();
-        for (const update of [retainedUpdates.get(interaction.id), previewUpdates.get(interaction.id)]) {
-            if (!update) continue;
+        const update = mergeRetainedPreview(
+            retainedUpdates.get(interaction.id),
+            previewUpdates.get(interaction.id),
+        );
+        if (update) {
             for (const op of update.ops) {
                 if (op.op !== 'set-style'
                     || (op.value.state !== 'emphasized' && op.value.state !== 'focused')) continue;
@@ -673,6 +764,14 @@ export function mountVegaInteractions(
     };
     const resolveUpdateTarget = (target: UpdateTarget): SemanticTargetRef | null => {
         if (!('select' in target)) {
+            if (target.visual.kind === 'axis') {
+                const elements = target.elements.filter((element) => {
+                    const value = element.value as AxisTargetValue;
+                    return Object.values(plan.axisTargets ?? {}).some((axisTarget) =>
+                        axisTarget.axis === value.axis && axisTarget.field === value.field);
+                });
+                return elements.length > 0 ? { ...target, elements } : null;
+            }
             if (target.visual.kind === 'legend') {
                 if (!resolve) return null;
                 const hits = allHits();
@@ -756,6 +855,31 @@ export function mountVegaInteractions(
             } else if (op.op === 'set-overlay') {
                 if (!plan.overlayScales?.x || !plan.overlayScales?.y) unsupportedOps.push(op.op);
                 else ops.push(op);
+            } else if (op.op === 'set-freeform-overlay' && op.value !== null) {
+                const body: (typeof op.value.body)[number][] = [];
+                for (const component of op.value.body) {
+                    if (component.type === 'svg') {
+                        body.push(component);
+                        continue;
+                    }
+                    const targets = component.targets.flatMap((unresolved) => {
+                        const target = resolveUpdateTarget(unresolved);
+                        if (!target) {
+                            unresolvedTargets.push(unresolved);
+                            return [];
+                        }
+                        resolvedTargets += target.elements.length;
+                        return [target];
+                    });
+                    if (targets.length > 0) {
+                        body.push({ ...component, targets });
+                    }
+                }
+                if (body.length > 0) {
+                    ops.push({ ...op, value: { ...op.value, body } });
+                }
+            } else if (op.op === 'set-freeform-overlay') {
+                ops.push(op);
             } else if (op.op === 'set-data') {
                 if (!plan.mutableDataSource || op.source !== 'main') unsupportedOps.push(op.op);
                 else ops.push(op);
@@ -778,21 +902,25 @@ export function mountVegaInteractions(
     };
 
     const renderUpdates = async (): Promise<void> => {
-        // A live preview supersedes the same interaction's retained state; other
-        // interactions keep showing theirs.
+        // A preview overlays the same interaction's retained state. It replaces
+        // only operation identities that it supplies, so a transient drag ghost
+        // does not discard the category order committed by an earlier drag.
         const displayUpdates = [
             ...[...retainedUpdates]
-                .filter(([id]) => !previewUpdates.has(id))
+                .map(([id, update]) => mergeRetainedPreview(update, previewUpdates.get(id))!),
+            ...[...previewUpdates]
+                .filter(([id]) => !retainedUpdates.has(id))
                 .map(([, update]) => update),
-            ...previewUpdates.values(),
         ];
         const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
         const activeHiddenLegendDomains = new Set<string>();
         const stylesByKey: Record<string, Pick<import('../../core/interaction-contracts').StyleSpec,
             'opacity' | 'fill' | 'stroke' | 'strokeWidth'>> = {};
         const overlays = new Map<string, ChartOverlaySpec>();
+        const axisStyles: { value: AxisTargetValue; style: import('../../core/interaction-contracts').StyleSpec }[] = [];
         let dataRows = initialDataRows;
         let emptyEmphasisActive = false;
+        const freeformOverlays = new Map<string, import('../../core/interaction-contracts').FreeformOverlaySpec>();
         selectedElements.clear();
         hiddenKeys.clear();
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
@@ -805,6 +933,11 @@ export function mountVegaInteractions(
                 if (op.op === 'set-overlay') {
                     if (op.value === null) overlays.delete(op.name);
                     else overlays.set(op.name, op.value);
+                    continue;
+                }
+                if (op.op === 'set-freeform-overlay') {
+                    if (op.value === null) freeformOverlays.delete(op.name);
+                    else freeformOverlays.set(op.name, op.value);
                     continue;
                 }
                 if (op.op === 'set-data') {
@@ -843,6 +976,15 @@ export function mountVegaInteractions(
                     }
                     for (const target of op.targets) {
                         if ('select' in target) continue;
+                        if (target.visual.kind === 'axis') {
+                            for (const element of target.elements) {
+                                axisStyles.push({
+                                    value: element.value as AxisTargetValue,
+                                    style: op.value,
+                                });
+                            }
+                            continue;
+                        }
                         for (const element of target.elements) {
                             for (const key of semanticElementRenderKeys(element)) {
                                 if (op.value.state === 'emphasized' || op.value.state === 'focused') {
@@ -867,6 +1009,31 @@ export function mountVegaInteractions(
                 }
             }
         }
+        const clone = [...freeformOverlays.values()]
+            .flatMap((overlay) => overlay.body)
+            .find((component) => component.type === 'clone');
+        const cloneTargets = clone?.targets.filter((target): target is SemanticTargetRef => !('select' in target)) ?? [];
+        const markTarget = cloneTargets.find((target) => target.visual.kind !== 'axis');
+        const axisTarget = cloneTargets.find((target) => target.visual.kind === 'axis');
+        const axisValue = axisTarget?.elements[0]?.value as AxisTargetValue | undefined;
+        const cloneTarget = markTarget ?? axisTarget;
+        if (clone?.type === 'clone' && cloneTarget) {
+            const translate = clone.transform?.translate ?? { x: 0, y: 0 };
+            dragPreviewOverlay.render({
+                source: cloneTarget,
+                destination: cloneTarget,
+                start: { x: 0, y: 0 },
+                current: translate,
+                axis: axisValue?.axis,
+                field: axisValue?.field,
+                includeControl: Boolean(axisTarget),
+                ghostOpacity: clone.opacity,
+                dimmerOpacity: 0,
+                sourceDimmerOpacity: 0,
+            });
+        }
+        else dragPreviewOverlay.clear();
+        freeformOverlay.render(freeformOverlays);
         const keys = [...selectedKeys()];
         if (plan.mutableDataSource && dataRows !== renderedDataRows) {
             view.change(
@@ -907,6 +1074,38 @@ export function mountVegaInteractions(
         // following pointer-down, even while unrelated Vega work is pending.
         dataOverlay.render(overlays);
         await view.runAsync();
+        restoreAxisStyles();
+        const rendererSvg = container.querySelector('svg') as SVGSVGElement | null;
+        if (rendererSvg) {
+            for (const item of axisItems(view, plan.axisTargets)) {
+                const identity = axisTargetIdentity(item, plan.axisTargets);
+                if (!identity || identity.role !== 'axis-label') continue;
+                const presentation = axisStyles.find(({ value }) =>
+                    value.axis === identity.axis
+                    && value.field === identity.field
+                    && Object.is(value.value, identity.value));
+                if (!presentation) continue;
+                const rendered = [...rendererSvg.querySelectorAll<SVGGraphicsElement>('text')]
+                    .find((candidate) => {
+                        const datum = (candidate as any).__data__;
+                        return datum?.mark === item.mark && datum?.datum === item.datum;
+                    });
+                if (!rendered) continue;
+                const values: [string, string | number | undefined][] = [
+                    ['opacity', presentation.style.opacity],
+                    ['fill', presentation.style.fill],
+                    ['stroke', presentation.style.stroke],
+                    ['stroke-width', presentation.style.strokeWidth],
+                ];
+                const originals = new Map<string, string | null>();
+                for (const [name, value] of values) {
+                    if (value === undefined) continue;
+                    originals.set(name, rendered.getAttribute(name));
+                    rendered.setAttribute(name, String(value));
+                }
+                styledAxisElements.set(rendered, originals);
+            }
+        }
         dataOverlay.render(overlays);
         observeRenderer();
         renderPathFocus();
@@ -1016,8 +1215,8 @@ export function mountVegaInteractions(
         event: SemanticInteractionEvent,
         legendSelection: LegendHitIdentity | null = null,
         actionOverride?: CanvasInteractionEvent['action'],
+        applyHandler = true,
     ): Promise<void> => {
-        const interactionContext = context(!interaction.eventSource.viewport, interaction);
         const base = toCanvasInteractionEvent(event, interaction.eventSource);
         const domain = domainForGeometry(base.geometry.plot);
         const withDomain = domain
@@ -1025,7 +1224,9 @@ export function mountVegaInteractions(
             : base;
         const canvasEvent = actionOverride ? { ...withDomain, action: actionOverride } : withDomain;
         emitCanvasInteractionEvent(interaction, canvasEvent);
-        const request = interaction.handle?.(canvasEvent, interactionContext) ?? null;
+        const request = applyHandler && interaction.handle
+            ? interaction.handle(canvasEvent, context(!interaction.eventSource.viewport, interaction))
+            : null;
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
     };
     let navigationDispatch = Promise.resolve();
@@ -1266,7 +1467,7 @@ export function mountVegaInteractions(
         hoverActive = true;
         const interactionContext = context();
         const presentationElements = markHoverPresentationInteractions.flatMap((interaction) => {
-            if (interaction.eventSource.gesture === 'drag-element') {
+            if (interaction.eventSource.type === 'element' && interaction.eventSource.gesture === 'drag') {
                 return reorderEligible ? resolved?.elements ?? [] : [];
             }
             if (!interaction.handle) return resolved?.elements ?? [];
@@ -1368,6 +1569,7 @@ export function mountVegaInteractions(
         const modes = inspectModes(interaction);
         return modes[inspectModeIndices.get(interaction.id) ?? 0] ?? modes[0];
     };
+    const inspectEmphasisSignatures = new Map<string, string>();
     const inspectHandler = (event: MouseEvent): void => {
         if (inspectInteractions.length === 0) return;
         const point = localPoint(event as unknown as PointerEvent);
@@ -1451,12 +1653,18 @@ export function mountVegaInteractions(
                 inspectGuideOverlay.renderAxes(point, mode, guide.style);
                 guideRendered = true;
             }
+            const target = hits.length > 0 ? resolveTarget('hover', 'mark', hits) : null;
+            const modifiers = interactionModifiers(event);
+            const signature = inspectEmphasisSignature(target, modifiers);
+            const applyEmphasis = !interaction.handle
+                || inspectEmphasisSignatures.get(interaction.id) !== signature;
+            inspectEmphasisSignatures.set(interaction.id, signature);
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'preview',
-                target: hits.length > 0 ? resolveTarget('hover', 'mark', hits) : null,
+                target,
                 point,
-                modifiers: interactionModifiers(event),
-            });
+                modifiers,
+            }, null, undefined, applyEmphasis);
         }
         if (!guideRendered) inspectGuideOverlay.clear();
     };
@@ -1484,6 +1692,7 @@ export function mountVegaInteractions(
     const inspectLeave = (): void => {
         inspectGuideOverlay.clear();
         for (const interaction of inspectInteractions) {
+            inspectEmphasisSignatures.delete(interaction.id);
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'cancel', target: null,
             });
@@ -1700,8 +1909,8 @@ export function mountVegaInteractions(
     let elementDrag: {
         start: { x: number; y: number };
         source: SemanticTarget;
-        sourceItem?: any;
         destination: SemanticTarget;
+        projection?: import('../../interactive/interactions').AxisProjection;
         moved: boolean;
         axis?: 'x' | 'y';
         eligibleAxes: readonly ('x' | 'y')[];
@@ -1721,33 +1930,6 @@ export function mountVegaInteractions(
     const resolveDraggedTarget = (
         event: PointerEvent,
     ): { target: SemanticTarget; item?: any; eligibleAxes: readonly ('x' | 'y')[]; overlayName?: string } | null => {
-        if (!reorderElementDrag) {
-            // A retained overlay is a visual enhancement, not a replacement
-            // for an underlying semantic mark. Prefer a real mark whenever
-            // pointer-down lands on or near one; fall back to the overlay for
-            // the rest of its path.
-            const point = localPoint(event);
-            const exactItem = reorderItemAt(event);
-            const item = renderHit(exactItem)
-                ? exactItem
-                : nearestSceneItem(
-                    view,
-                    point,
-                    elementDragInteraction?.eventSource.targetTolerance ?? 0,
-                );
-            const hit = renderHit(item);
-            if (hit) {
-                const target = resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]);
-                if (target) return { target, item, eligibleAxes: [] };
-            }
-            const overlay = dataOverlay.targetForElement(event.target)
-                ?? dataOverlay.targetAt(
-                    point,
-                    elementDragInteraction?.eventSource.targetTolerance ?? 0,
-                );
-            if (overlay) return { target: overlay.target, eligibleAxes: [], overlayName: overlay.name };
-            return null;
-        }
         const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         const eventItem = (event.target as any)?.__data__;
         const axisItem = axisTargetIdentity(eventItem, plan.axisTargets)
@@ -1759,23 +1941,69 @@ export function mountVegaInteractions(
             const target = eligibleAxes.length > 0 ? resolveAxisTarget(axisItem) : null;
             if (target) return { target, item: axisItem, eligibleAxes };
         }
-        const hit = renderHit(reorderItemAt(event));
-        if (!hit) return null;
-        const target = resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]);
-        const eligibleAxes = eligibleReorderAxesForHit(axes, hit).map(({ axis }) => axis);
-        return target && eligibleAxes.length > 0
-            ? { target, item: reorderItemAt(event), eligibleAxes }
+        // A retained overlay is a visual enhancement, not a replacement for an
+        // underlying semantic mark. Prefer a real mark whenever pointer-down
+        // lands on or near one; fall back to the overlay for its remaining path.
+        const point = localPoint(event);
+        const exactItem = reorderItemAt(event);
+        const item = renderHit(exactItem)
+            ? exactItem
+            : nearestSceneItem(
+                view,
+                point,
+                elementDragInteraction?.eventSource.targetTolerance ?? 0,
+            );
+        const hit = renderHit(item);
+        if (hit) {
+            const target = resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]);
+            if (target) {
+                return {
+                    target,
+                    item,
+                    eligibleAxes: eligibleReorderAxesForHit(axes, hit).map(({ axis }) => axis),
+                };
+            }
+        }
+        const overlay = dataOverlay.targetForElement(event.target)
+            ?? dataOverlay.targetAt(
+                point,
+                elementDragInteraction?.eventSource.targetTolerance ?? 0,
+            );
+        return overlay
+            ? { target: overlay.target, eligibleAxes: [], overlayName: overlay.name }
             : null;
     };
     const resolveReorderDestination = (
         current: { x: number; y: number },
         axis: 'x' | 'y',
-    ): SemanticTarget | null => {
+    ): { target: SemanticTarget; projection: import('../../interactive/interactions').AxisProjection } | null => {
         const axes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         const active = axes.find((candidate) => candidate.axis === axis) ?? axes[0];
         if (!active) return null;
-        const hit = nearestReorderHit(sceneItems(view), active.axis, active.field, current[active.axis]);
-        return hit ? resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]) : null;
+        const items = sceneItems(view);
+        const hit = nearestReorderHit(items, active.axis, active.field, current[active.axis]);
+        const target = hit ? resolveTarget('click', hit.layerRole ?? hit.markType ?? 'mark', [hit]) : null;
+        if (!hit || !target) return null;
+        const bounds = reorderProjectionBounds(items, active, hit.datum[active.field]);
+        if (!bounds) return null;
+        const space = coordinateSpace();
+        return {
+            target,
+            projection: {
+                kind: 'axis',
+                axis: active.axis,
+                point: active.axis === 'x'
+                    ? { x: current.x, y: elementDrag?.start.y ?? current.y }
+                    : { x: elementDrag?.start.x ?? current.x, y: current.y },
+                targetBounds: {
+                    x: bounds.x1,
+                    y: bounds.y1,
+                    width: bounds.x2 - bounds.x1,
+                    height: bounds.y2 - bounds.y1,
+                },
+                plotBounds: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
+            },
+        };
     };
     const dispatchElementDrag = async (
         phase: 'start' | 'preview' | 'commit' | 'cancel',
@@ -1784,14 +2012,14 @@ export function mountVegaInteractions(
         invokeHandler = true,
     ): Promise<void> => {
         if (!elementDragInteraction || !elementDrag) return;
-        if (!elementDrag.overlayName && !reorderElementDrag) {
+        if (!elementDrag.overlayName && elementDrag.eligibleAxes.length === 0) {
             elementDrag.overlayName = dataOverlay.targetAt(
                 current,
                 elementDragInteraction.eventSource.targetTolerance ?? 0,
             )?.name;
         }
         const canvasEvent: CanvasInteractionEvent = {
-            action: 'drag-element',
+            action: 'drag',
             phase,
             geometry: {
                 plot: {
@@ -1808,6 +2036,8 @@ export function mountVegaInteractions(
         };
         if (elementDrag.overlayName) {
             canvasEvent.geometry.projection = dataOverlay.project(elementDrag.overlayName, current);
+        } else if (elementDrag.projection) {
+            canvasEvent.geometry.projection = elementDrag.projection;
         }
         emitCanvasInteractionEvent(elementDragInteraction, canvasEvent);
         const request = invokeHandler
@@ -1816,13 +2046,15 @@ export function mountVegaInteractions(
         await applyInteractionUpdate(elementDragInteraction, phase, request);
     };
     const elementDragStart = (event: PointerEvent): void => {
-        if (!elementDragInteraction || (event.button !== undefined && event.button !== 0)) return;
+        if (!elementDragInteraction
+            || (event.button !== undefined && event.button !== 0)
+            || isInteractiveControlTarget(event.target)) return;
         const source = resolveDraggedTarget(event);
         if (!source) return;
         const start = localPoint(event);
         elementDrag = {
             start, source: source.target, destination: source.target,
-            sourceItem: source.item, moved: false, eligibleAxes: source.eligibleAxes,
+            moved: false, eligibleAxes: source.eligibleAxes,
             overlayName: source.overlayName,
         };
         try {
@@ -1849,15 +2081,7 @@ export function mountVegaInteractions(
             current.x - elementDrag.start.x,
             current.y - elementDrag.start.y,
         ) < 4) return;
-        if (!reorderElementDrag) {
-            elementDrag.moved = true;
-            suppressClick = true;
-            regionDragging = true;
-            container.style.cursor = 'grabbing';
-            void dispatchElementDrag('preview', event, current);
-            return;
-        }
-        if (!elementDrag.axis) {
+        if (!elementDrag.axis && elementDrag.eligibleAxes.length > 0) {
             const deltaX = Math.abs(current.x - elementDrag.start.x);
             const deltaY = Math.abs(current.y - elementDrag.start.y);
             const preferred = deltaY > deltaX ? 'y' : 'x';
@@ -1865,31 +2089,31 @@ export function mountVegaInteractions(
                 .filter(({ axis }) => elementDrag?.eligibleAxes.includes(axis));
             elementDrag.axis = axes.find((axis) => axis.axis === preferred)?.axis ?? axes[0]?.axis;
         }
-        if (!elementDrag.axis) return;
-        const destination = resolveReorderDestination(current, elementDrag.axis);
-        if (destination) elementDrag.destination = destination;
+        if (elementDrag.axis) {
+            const destination = resolveReorderDestination(current, elementDrag.axis);
+            if (destination) {
+                elementDrag.destination = destination.target;
+                elementDrag.projection = destination.projection;
+            }
+        }
         elementDrag.moved = true;
         suppressClick = true;
         regionDragging = true;
         container.style.cursor = 'grabbing';
-        dragReorderOverlay.render({
-            start: elementDrag.start, current, axis: elementDrag.axis,
-            source: elementDrag.source, sourceItem: elementDrag.sourceItem,
-            destination: elementDrag.destination,
-        });
         void dispatchElementDrag('preview', event, current);
     };
     const elementDragEnd = (event: PointerEvent): void => {
         if (!elementDrag) return;
         const drag = elementDrag;
         const current = localPoint(event);
-        const destination = reorderElementDrag && drag.axis
+        const destination = drag.axis
             ? resolveReorderDestination(current, drag.axis)
             : null;
-        if (destination) drag.destination = destination;
-        dragReorderOverlay.clear();
+        if (destination) {
+            drag.destination = destination.target;
+            drag.projection = destination.projection;
+        }
         if (drag.moved) void dispatchElementDrag('commit', event, current);
-        else if (reorderElementDrag) void dispatchElementDrag('cancel', event, current);
         else void dispatchElementDrag('commit', event, current, false);
         elementDrag = undefined;
         regionDragging = false;
@@ -1899,7 +2123,6 @@ export function mountVegaInteractions(
     const elementDragCancel = (event: PointerEvent): void => {
         if (!elementDrag) return;
         const current = localPoint(event);
-        dragReorderOverlay.clear();
         void dispatchElementDrag('cancel', event, current);
         elementDrag = undefined;
         regionDragging = false;
@@ -2164,7 +2387,9 @@ export function mountVegaInteractions(
         for (const overlay of annotationOverlays.values()) overlay.destroy();
         annotationOverlays.clear();
         inspectGuideOverlay.destroy();
-        dragReorderOverlay.destroy();
+        dragPreviewOverlay.destroy();
+        freeformOverlay.destroy();
+        restoreAxisStyles();
         dataOverlay.destroy();
         reorderResetControls.destroy();
         viewportResetControl.destroy();

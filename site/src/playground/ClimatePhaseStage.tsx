@@ -217,7 +217,7 @@ export function ClimatePhaseStage() {
     eventSource: dragTrigger(),
     affordances: [{ target: 'mark', cursor: 'drag', hover: 'target' }],
     handle(event) {
-      if (event.action !== 'drag-element') return null;
+      if (event.action !== 'drag') return null;
       if (event.phase === 'start') setIsPlaying(false);
       const record = event.target?.elements[0]?.records?.[0] ?? event.target?.elements[0]?.value;
       const targetCity = typeof record?.City === 'string' ? record.City : undefined;
@@ -229,8 +229,9 @@ export function ClimatePhaseStage() {
         return trajectoryOverlayUpdate(city, activePhaseRef.current);
       }
 
-      const segment = event.geometry.projection?.segment;
-      if (!segment) return null;
+      const projection = event.geometry.projection;
+      if (projection?.kind !== 'path') return null;
+      const { segment } = projection;
       const start = Number(segment.start.value.Phase);
       const end = Number(segment.end.value.Phase);
       if (!Number.isFinite(start) || !Number.isFinite(end)) return null;

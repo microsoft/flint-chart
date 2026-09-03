@@ -5,7 +5,7 @@ import { affordanceCursor, resolveInteractionAffordance } from '../src/interacti
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
 import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
-import { semanticVisualFamily } from '../src/core/interaction-semantics';
+import { associateSemanticElementRenderKeys, semanticVisualFamily } from '../src/core/interaction-semantics';
 import { normalizeInspectGuideOptions, normalizeRegionGuideOptions } from '../src/interactive/guides';
 import {
     matchesSemanticTargetSelector,
@@ -29,11 +29,16 @@ import {
     yBrushTrigger,
 } from '../src/interactive/triggers';
 
-describe('generic drag trigger', () => {
+describe('drag trigger', () => {
     it('uses a forgiving visual acquisition tolerance', () => {
         expect(dragTrigger().targetTolerance).toBe(12);
         expect(dragTrigger(20).targetTolerance).toBe(20);
         expect(dragTrigger(-1).targetTolerance).toBe(0);
+    });
+
+    it('gives the reorder preset the same drag source', () => {
+        const interaction = dragReorder();
+        expect(interaction.eventSource).toEqual(dragTrigger());
     });
 });
 import { AngularRegionSession } from '../src/interactive/gestures/angular-region';
@@ -53,6 +58,8 @@ import {
     geometryIntersectsRect,
     axisItemAt,
     axisIntersectingHits,
+    axisItems,
+    facetPlotBounds,
     facetPlotFrameAt,
     INTERACTION_KEY,
     nearestItemByBounds,
@@ -72,17 +79,21 @@ import {
     effectiveAnnotationEntries,
     evictRetainedStateSiblings,
     initialInspectSeries,
+    inspectEmphasisSignature,
     inspectSeriesPresentationKeys,
     interactionsForHoverPresentation,
     longPressMovedBeyond,
     domainForPlotGeometry,
     keyboardTargetItems,
+    mergeRetainedPreview,
     nearestReorderHit,
     resolveAssistDistance,
+    reorderProjectionBounds,
     resolveSupportedOperation,
 } from '../src/vegalite/interactions/runtime';
 import {
     activeReorderAxis,
+    dragGhostDelta,
     eligibleReorderAxes,
     eligibleReorderAxesForAxis,
     eligibleReorderAxesForHit,
@@ -679,6 +690,9 @@ describe('interaction definitions', () => {
         expect(axisItemAt(view, { x: 20, y: 52 }, {
             x: { axis: 'x', field: 'Category', type: 'nominal' },
         })).toBe(label);
+        expect(axisItems(view, {
+            x: { axis: 'x', field: 'Category', type: 'nominal' },
+        })).toEqual([label]);
         expect(axisItemAt(view, { x: 2, y: 2 }, {
             x: { axis: 'x', field: 'Category', type: 'nominal' },
         })).toBeUndefined();
@@ -696,10 +710,121 @@ describe('interaction definitions', () => {
         expect(nearestReorderHit(items, 'x', 'Category', 500)?.datum.Category).toBe('C');
     });
 
+    it('anchors a reorder projection to the bar rather than a colocated dot', () => {
+        const items = [
+            {
+                datum: { [INTERACTION_KEY]: 'dot-B', Category: 'B' },
+                mark: { marktype: 'symbol', name: 'dots' },
+                bounds: { x1: 198, x2: 202, y1: 48, y2: 52 },
+            },
+            {
+                datum: { [INTERACTION_KEY]: 'bar-B', Category: 'B' },
+                mark: { marktype: 'rect', name: 'bars' },
+                bounds: { x1: 0, x2: 160, y1: 40, y2: 60 },
+            },
+        ];
+
+        expect(reorderProjectionBounds(items, { field: 'Category' }, 'B')).toEqual({
+            x1: 0, x2: 160, y1: 40, y2: 60,
+        });
+    });
+
+    it('uses the outer boundary of grouped bars for a reorder projection', () => {
+        const items = [
+            {
+                datum: { [INTERACTION_KEY]: 'A/one', Category: 'A' },
+                mark: { marktype: 'rect', name: 'bars' },
+                bounds: { x1: 0, x2: 30, y1: 20, y2: 40 },
+            },
+            {
+                datum: { [INTERACTION_KEY]: 'A/two', Category: 'A' },
+                mark: { marktype: 'rect', name: 'bars' },
+                bounds: { x1: 0, x2: 55, y1: 42, y2: 62 },
+            },
+        ];
+
+        expect(reorderProjectionBounds(items, { field: 'Category' }, 'A')).toEqual({
+            x1: 0, x2: 55, y1: 20, y2: 62,
+        });
+    });
+
+    it('uses the outer boundary of a lollipop stem and dot', () => {
+        const items = [
+            {
+                datum: { [INTERACTION_KEY]: 'A/stem', Category: 'A' },
+                mark: { marktype: 'rule', name: 'stems' },
+                bounds: { x1: 10, x2: 90, y1: 29, y2: 31 },
+            },
+            {
+                datum: { [INTERACTION_KEY]: 'A/dot', Category: 'A' },
+                mark: { marktype: 'symbol', name: 'dots' },
+                bounds: { x1: 85, x2: 95, y1: 25, y2: 35 },
+            },
+        ];
+
+        expect(reorderProjectionBounds(items, { field: 'Category' }, 'A')).toEqual({
+            x1: 10, x2: 95, y1: 25, y2: 35,
+        });
+    });
+
     it('moves category values to the destination slot in either direction', () => {
         expect(reorderValues(['A', 'B', 'C', 'D'], 'A', 'C')).toEqual(['B', 'C', 'A', 'D']);
         expect(reorderValues(['A', 'B', 'C', 'D'], 'D', 'B')).toEqual(['A', 'D', 'B', 'C']);
         expect(reorderValues(['A', 'B'], 'A', 'A')).toEqual(['A', 'B']);
+    });
+
+    it('keeps a committed order underneath a drag-only preview', () => {
+        const retained = {
+            id: 'drag-reorder',
+            ops: [{
+                op: 'set-order' as const,
+                scope: 'category' as const,
+                field: 'Country',
+                values: ['China', 'United States'],
+            }],
+        };
+        const preview = {
+            id: 'drag-reorder',
+            ops: [{
+                op: 'set-freeform-overlay' as const,
+                name: 'drag-reorder-preview',
+                value: {
+                    coordinateSpace: 'plot' as const,
+                    body: [{ type: 'svg' as const, content: '<svg />' }],
+                },
+            }],
+        };
+
+        expect(mergeRetainedPreview(retained, preview)?.ops).toEqual([
+            retained.ops[0],
+            preview.ops[0],
+        ]);
+    });
+
+    it('lets a preview replace retained state with the same operation identity', () => {
+        const retained = {
+            id: 'drag-reorder',
+            ops: [{
+                op: 'set-order' as const, scope: 'category' as const,
+                field: 'Country', values: ['A', 'B'],
+            }],
+        };
+        const preview = {
+            id: 'drag-reorder',
+            ops: [{
+                op: 'set-order' as const, scope: 'category' as const,
+                field: 'Country', values: ['B', 'A'],
+            }],
+        };
+
+        expect(mergeRetainedPreview(retained, preview)?.ops).toEqual(preview.ops);
+    });
+
+    it('moves the drag ghost with the pointer on both axes', () => {
+        expect(dragGhostDelta({
+            start: { x: 20, y: 30 },
+            current: { x: 75, y: 110 },
+        })).toEqual({ x: 55, y: 80 });
     });
 
     it('lowers a committed bar drag to a category-order update', () => {
@@ -708,7 +833,7 @@ describe('interaction definitions', () => {
             value: { key: Category }, records: [{ Category }],
         }));
         const update = interaction.handle!({
-            action: 'drag-element',
+            action: 'drag',
             phase: 'commit',
             geometry: { plot: { kind: 'drag', start: { x: 10, y: 20 }, current: { x: 80, y: 20 }, delta: { x: 70, y: 0 } } },
             target: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[0]] },
@@ -724,13 +849,118 @@ describe('interaction definitions', () => {
         });
     });
 
+    it('requests reorder presentation during drag preview', () => {
+        const interaction = dragReorder();
+        const elements = ['A', 'B', 'C'].map((Category) => ({
+            value: { key: Category }, records: [{ Category }],
+        }));
+        const target = { visual: { kind: 'mark' as const, role: 'bar' }, elements: [elements[0]] };
+        const dropTarget = { visual: { kind: 'mark' as const, role: 'bar' }, elements: [elements[2]] };
+        const update = interaction.handle!({
+            action: 'drag', phase: 'preview',
+            geometry: {
+                plot: {
+                    kind: 'drag', start: { x: 10, y: 20 }, current: { x: 80, y: 20 },
+                    delta: { x: 70, y: 0 }, axis: 'x',
+                },
+                projection: {
+                    kind: 'axis', axis: 'x', point: { x: 80, y: 20 },
+                    targetBounds: { x: 60, y: 0, width: 20, height: 100 },
+                    plotBounds: { x: 0, y: 0, width: 100, height: 100 },
+                },
+            },
+            target,
+            dropTarget,
+        }, {
+            chartType: 'Bar Chart', selected: [], available: elements,
+            categoryField: 'Category', categoryAxis: 'x',
+        });
+
+        expect(update?.ops).toEqual([
+            {
+                op: 'set-style',
+                targets: [
+                    { visual: { kind: 'mark', role: 'mark' }, elements: [elements[1], elements[2]] },
+                    {
+                        visual: { kind: 'axis', role: 'axis-label' },
+                        elements: [
+                            { value: { axis: 'x', field: 'Category', value: 'B' } },
+                            { value: { axis: 'x', field: 'Category', value: 'C' } },
+                        ],
+                    },
+                ],
+                value: { state: 'muted', opacity: 0.35 },
+            },
+            {
+                op: 'set-style',
+                targets: [
+                    { visual: { kind: 'mark', role: 'bar' }, elements: [elements[0]] },
+                    {
+                        visual: { kind: 'axis', role: 'axis-label' },
+                        elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
+                    },
+                ],
+                value: { state: 'emphasized', opacity: 1 },
+            },
+            {
+                op: 'set-freeform-overlay',
+                name: 'drag-reorder-preview',
+                value: {
+                    coordinateSpace: 'plot',
+                    body: [
+                        {
+                            type: 'clone',
+                            targets: [
+                                { visual: { kind: 'mark', role: 'bar' }, elements: [elements[0]] },
+                                {
+                                    visual: { kind: 'axis', role: 'axis-label' },
+                                    elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
+                                },
+                            ],
+                            transform: { translate: { x: 70, y: 0 } },
+                            opacity: 0.62,
+                        },
+                        {
+                            type: 'svg',
+                            content: '<svg xmlns="http://www.w3.org/2000/svg"><line x1="80" y1="0" x2="80" y2="100" stroke="#b85c5c" stroke-opacity="0.88" stroke-width="1.5" stroke-linecap="round"/></svg>',
+                        },
+                    ],
+                },
+            },
+        ]);
+    });
+
+    it('clears the preview without reordering when released over the source slot', () => {
+        const interaction = dragReorder();
+        const elements = ['A', 'B', 'C'].map((Category) => ({
+            value: { key: Category }, records: [{ Category }],
+        }));
+        const target = { visual: { kind: 'mark' as const, role: 'bar' }, elements: [elements[0]] };
+        const update = interaction.handle!({
+            action: 'drag', phase: 'commit',
+            geometry: {
+                plot: {
+                    kind: 'drag', start: { x: 10, y: 20 }, current: { x: 12, y: 20 },
+                    delta: { x: 2, y: 0 }, axis: 'x',
+                },
+            },
+            target,
+            dropTarget: target,
+        }, {
+            chartType: 'Bar Chart', selected: [], available: elements,
+            categoryField: 'Category', categoryAxis: 'x',
+        });
+
+        expect(update).toEqual({ id: 'drag-reorder', ops: [] });
+    });
+
     it('lowers an axis-label drag to the same category-order update', () => {
         const interaction = dragReorder();
         const elements = ['A', 'B', 'C'].map((Category) => ({
             value: { key: Category }, records: [{ Category }],
         }));
         const update = interaction.handle!({
-            action: 'drag-element', phase: 'commit',
+            action: 'drag', phase: 'commit',
             geometry: {
                 plot: {
                     kind: 'drag', start: { x: 10, y: 20 }, current: { x: 80, y: 20 },
@@ -760,7 +990,7 @@ describe('interaction definitions', () => {
         }));
         const drag = (source: number, destination: number, categoryOrder: readonly string[]) =>
             interaction.handle!({
-                action: 'drag-element', phase: 'commit',
+                action: 'drag', phase: 'commit',
                 geometry: { plot: { kind: 'drag', start: { x: 0, y: 0 }, current: { x: 1, y: 0 }, delta: { x: 1, y: 0 } } },
                 target: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[source]] },
                 dropTarget: { visual: { kind: 'mark', role: 'bar' }, elements: [elements[destination]] },
@@ -783,7 +1013,7 @@ describe('interaction definitions', () => {
         const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
         const destination = { value: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
         const update = interaction.handle!({
-            action: 'drag-element', phase: 'commit',
+            action: 'drag', phase: 'commit',
             geometry: { plot: { kind: 'drag', start: { x: 0, y: 0 }, current: delta, delta } },
             target: { visual: { kind: 'mark', role: 'cell' }, elements: [source] },
             dropTarget: { visual: { kind: 'mark', role: 'cell' }, elements: [destination] },
@@ -804,7 +1034,7 @@ describe('interaction definitions', () => {
         const destination = { value: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
         const drag = (axis: 'x' | 'y', columnOrder: readonly string[], rowOrder: readonly string[]) =>
             interaction.handle!({
-                action: 'drag-element', phase: 'commit',
+                action: 'drag', phase: 'commit',
                 geometry: {
                     plot: {
                         kind: 'drag', start: { x: 0, y: 0 }, current: { x: 70, y: 70 },
@@ -839,7 +1069,7 @@ describe('interaction definitions', () => {
         const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
         const destination = { value: { key: 'B/R2' }, records: [{ column: 'B', row: 'R2' }] };
         const update = interaction.handle!({
-            action: 'drag-element', phase: 'commit',
+            action: 'drag', phase: 'commit',
             geometry: {
                 plot: {
                     kind: 'drag', start: { x: 0, y: 0 }, current: { x: 10, y: 100 },
@@ -866,7 +1096,7 @@ describe('interaction definitions', () => {
         const source = { value: { key: 'A/R1' }, records: [{ column: 'A', row: 'R1' }] };
         const destination = { value: { key: 'A/R2' }, records: [{ column: 'A', row: 'R2' }] };
         const update = interaction.handle!({
-            action: 'drag-element', phase: 'commit',
+            action: 'drag', phase: 'commit',
             geometry: {
                 plot: {
                     kind: 'drag', start: { x: 0, y: 0 }, current: { x: 0, y: 100 },
@@ -883,7 +1113,7 @@ describe('interaction definitions', () => {
             ],
         });
 
-        expect(update).toBeNull();
+        expect(update).toEqual({ id: 'drag-reorder', ops: [] });
     });
     it('declares normalized event sources for built-in presets', () => {
         expect(clickMark().eventSource).toEqual({ ...clickTrigger, defaultAssistDistance: 8 });
@@ -2292,6 +2522,23 @@ describe('assisted, keyboard, and lasso acquisition', () => {
         });
     });
 
+    it('clamps a y inspection guide to the plot baseline', () => {
+        expect(inspectGuideLine('y', 220, { width: 300, height: 180 })).toEqual({
+            x1: 0, y1: 180, x2: 300, y2: 180,
+        });
+    });
+
+    it('derives a shared faceted plot boundary from scenegraph cells', () => {
+        const cell = (x: number, width: number, height: number) => ({
+            mark: { marktype: 'group', role: 'cell' }, x, y: 0, width, height, items: [],
+        });
+        const view = { scenegraph: () => ({ root: { items: [cell(0, 80, 120), cell(90, 80, 120)] } }) };
+
+        expect(facetPlotBounds(view, { x: 0, y: 0, width: 200, height: 180 })).toEqual({
+            x: 0, y: 0, width: 170, height: 120,
+        });
+    });
+
     it('draws a polar inspection guide from center to outer radius', () => {
         const frame = { center: { x: 100, y: 80 }, outerRadius: 60 };
 
@@ -2905,6 +3152,24 @@ describe('legend, inspect, zoom, and touch presets', () => {
         ];
         expect(inspectSeriesPresentationKeys(items, 'Series', 'Bananas'))
             .toEqual(['banana-1', 'banana-2']);
+    });
+
+    it('deduplicates inspect emphasis across segments of the same rendered path', () => {
+        const target = (records: readonly Record<string, unknown>[]) => ({
+            visual: { kind: 'path' as const, role: 'line' },
+            elements: [associateSemanticElementRenderKeys({
+                value: { Series: 'Bananas' },
+                records,
+            }, [`Bananas${PATH_KEY_SUFFIX}`])],
+        });
+        const modifiers = { shift: false, ctrl: false, meta: false };
+
+        expect(inspectEmphasisSignature(target([{ Month: 1 }, { Month: 2 }]), modifiers))
+            .toBe(inspectEmphasisSignature(target([{ Month: 2 }, { Month: 3 }]), modifiers));
+        expect(inspectEmphasisSignature(target([{ Month: 1 }]), modifiers))
+            .not.toBe(inspectEmphasisSignature(null, modifiers));
+        expect(inspectEmphasisSignature(target([{ Month: 1 }]), modifiers))
+            .not.toBe(inspectEmphasisSignature(target([{ Month: 1 }]), { ...modifiers, shift: true }));
     });
 
     it('tolerates small pointer jitter during a long press', () => {

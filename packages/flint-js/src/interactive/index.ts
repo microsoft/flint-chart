@@ -99,6 +99,11 @@ export type {
 export { toCanvasInteractionEvent } from './canvas-interaction';
 export type {
     ChartUpdateResult,
+    FreeformOverlayBody,
+    FreeformCloneBody,
+    FreeformOverlaySpec,
+    FreeformOverlayTransform,
+    FreeformSvgBody,
     SemanticTargetRef,
     SemanticTargetSelector,
 } from './language/updates';

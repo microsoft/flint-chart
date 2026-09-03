@@ -75,7 +75,7 @@ const unitInteractionModes = [
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
   { value: 'lasso', label: 'Lasso', icon: Lasso },
-  { value: 'inspect', label: 'Inspect xy', icon: Target },
+  { value: 'inspect', label: 'Inspect y', icon: Target },
   { value: 'inspect-index', label: 'Inspect index', icon: Ruler },
   { value: 'long-press', label: 'Long press', icon: Timer },
   { value: 'double-activate', label: 'Double click', icon: MousePointerClick },
@@ -115,7 +115,7 @@ function modeInteractions(
     case 'brush-angle-stateful': return [brushAngle({ mode: 'stateful' })];
     case 'drag-reorder': return [dragReorder()];
     case 'lasso': return [lassoSelect()];
-    case 'inspect': return [inspect()];
+    case 'inspect': return [inspect({ mode: 'y' })];
     case 'inspect-index': return indexInspection ? [inspectIndex(indexInspection)] : [];
     case 'keyboard-focus': return [clickHighlight({ targets: ['mark'] })];
     case 'select-context': return [rectangleSelect(), contextActivate()];

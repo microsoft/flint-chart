@@ -18,7 +18,7 @@ export interface InspectPredicate {
 
 export interface InteractionEventSource {
     readonly type: 'element' | 'region' | (string & {});
-    readonly gesture?: 'click' | 'hover' | 'drag' | 'drag-element' | 'navigate' | 'keyboard' | 'context' | 'inspect' | 'long-press' | 'double';
+    readonly gesture?: 'click' | 'hover' | 'drag' | 'navigate' | 'keyboard' | 'context' | 'inspect' | 'long-press' | 'double';
     readonly match?: 'intersect' | 'contain';
     readonly axis?: 'x' | 'y' | 'xy';
     readonly mode?: 'ephemeral' | 'stateful';
@@ -47,15 +47,11 @@ export interface InteractionEventSource {
     readonly wheelSensitivity?: number;
 }
 
-export function elementDragTrigger(): InteractionEventSource {
-    return { type: 'reorder', gesture: 'drag-element' };
-}
-
-/** Freeform pointer drag locked to the semantic visual acquired at pointer-down. */
+/** Element drag locked to the semantic visual acquired at pointer-down. */
 export function dragTrigger(targetTolerance = 12): InteractionEventSource {
     return {
         type: 'element',
-        gesture: 'drag-element',
+        gesture: 'drag',
         targetTolerance: Math.max(0, targetTolerance),
     };
 }

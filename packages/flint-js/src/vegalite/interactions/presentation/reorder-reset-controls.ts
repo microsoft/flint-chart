@@ -1,4 +1,6 @@
 import type { VegaReorderAxis } from '../contracts';
+import { clientRectToLayoutRect } from '../hit-adapter';
+import { createOverlayIconButton, RESET_ICON } from './overlay-icon-button';
 
 export interface ReorderResetControls {
     layout(): void;
@@ -8,62 +10,62 @@ export interface ReorderResetControls {
 export interface ReorderResetControlsOptions {
     container: HTMLElement;
     axes: readonly VegaReorderAxis[];
+    containerLayoutSize(): { width: number; height: number };
     isActive(axis: VegaReorderAxis): boolean;
     reset(axis: VegaReorderAxis): void;
 }
 
-function axisTitle(renderer: SVGSVGElement, axis: 'x' | 'y'): SVGGElement | undefined {
-    return [...renderer.querySelectorAll<SVGGElement>('.mark-text.role-axis-title')]
+function axisTitle(renderer: SVGSVGElement, axis: 'x' | 'y'): SVGGraphicsElement | undefined {
+    const titleGroup = [...renderer.querySelectorAll<SVGGElement>('.mark-text.role-axis-title')]
         .find((title) => title.closest('.mark-group.role-axis')
             ?.getAttribute('aria-label')?.startsWith(`${axis.toUpperCase()}-axis`));
+    // Vega's title mark group can inherit scenegraph bounds spanning much of
+    // the plot. Position controls from the actual glyph, not that outer group.
+    return titleGroup?.querySelector<SVGGraphicsElement>('text') ?? titleGroup;
 }
 
 export function createReorderResetControls({
     container,
     axes,
+    containerLayoutSize,
     isActive,
     reset,
 }: ReorderResetControlsOptions): ReorderResetControls {
     const previousPosition = container.style.position;
     const controls = axes.map((axis) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = '↺';
-        button.title = `Reset ${axis.field} order`;
-        button.setAttribute('aria-label', `Reset ${axis.field} order`);
-        Object.assign(button.style, {
-            position: 'absolute', zIndex: '5', width: '20px', height: '20px', padding: '0',
-            border: '0', borderRadius: '3px', background: 'transparent',
-            color: '#737d86', cursor: 'pointer', font: '16px sans-serif',
-            lineHeight: '20px', letterSpacing: '0',
+        const control = createOverlayIconButton({
+            container,
+            label: `Reset ${axis.field} order`,
+            icon: RESET_ICON,
+            onActivate: () => reset(axis),
         });
-        button.addEventListener('click', () => reset(axis));
-        container.append(button);
-        return { axis, button };
+        return { axis, control };
     });
 
     const layout = (): void => {
         const renderer = container.querySelector('svg.marks') as SVGSVGElement | null;
         if (!renderer) {
-            for (const { button } of controls) button.hidden = true;
+            for (const { control } of controls) control.setVisible(false);
             return;
         }
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const containerRect = container.getBoundingClientRect();
-        for (const { axis, button } of controls) {
+        const layoutSize = containerLayoutSize();
+        for (const { axis, control } of controls) {
+            const button = control.element;
             const title = axisTitle(renderer, axis.axis);
             if (!title || !isActive(axis)) {
-                button.hidden = true;
+                control.setVisible(false);
                 continue;
             }
-            button.hidden = false;
-            const titleRect = title.getBoundingClientRect();
+            control.setVisible(true);
+            const titleRect = clientRectToLayoutRect(title.getBoundingClientRect(), containerRect, layoutSize);
             if (axis.axis === 'x') {
-                button.style.left = `${titleRect.right - containerRect.left + 6}px`;
-                button.style.top = `${titleRect.top - containerRect.top + (titleRect.height - 20) / 2}px`;
+                button.style.left = `${titleRect.left + titleRect.width + 4}px`;
+                button.style.top = `${titleRect.top + (titleRect.height - 24) / 2}px`;
             } else {
-                button.style.left = `${titleRect.left - containerRect.left + (titleRect.width - button.offsetWidth) / 2}px`;
-                button.style.top = `${titleRect.top - containerRect.top - 24}px`;
+                button.style.left = `${titleRect.left + (titleRect.width - 24) / 2}px`;
+                button.style.top = `${titleRect.top - 26}px`;
             }
         }
     };
@@ -72,7 +74,7 @@ export function createReorderResetControls({
     return {
         layout,
         destroy(): void {
-            for (const { button } of controls) button.remove();
+            for (const { control } of controls) control.destroy();
             container.style.position = previousPosition;
         },
     };

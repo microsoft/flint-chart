@@ -170,6 +170,36 @@ export interface ChartOverlaySpec {
     style?: OverlayStyleSpec;
 }
 
+export interface FreeformOverlayTransform {
+    translate?: { x: number; y: number };
+    scale?: number | { x: number; y: number };
+    rotate?: number;
+}
+
+/** SVG markup is serializable; SVGElement supports local application components. */
+export interface FreeformSvgBody {
+    type: 'svg';
+    content: string | SVGElement;
+    transform?: FreeformOverlayTransform;
+}
+
+export interface FreeformCloneBody {
+    type: 'clone';
+    targets: readonly UpdateTarget[];
+    transform?: FreeformOverlayTransform;
+    opacity?: number;
+}
+
+export type FreeformOverlayBody =
+    | FreeformSvgBody
+    | FreeformCloneBody;
+
+/** Named renderer-space presentation, separate from data/scale overlays. */
+export interface FreeformOverlaySpec {
+    coordinateSpace: 'plot' | 'renderer';
+    body: readonly FreeformOverlayBody[];
+}
+
 export type ChartUpdateOp =
     | {
         op: 'set-style';
@@ -196,6 +226,11 @@ export type ChartUpdateOp =
         op: 'set-overlay';
         name: string;
         value: ChartOverlaySpec | null;
+    }
+    | {
+        op: 'set-freeform-overlay';
+        name: string;
+        value: FreeformOverlaySpec | null;
     }
     | {
         op: 'set-data';

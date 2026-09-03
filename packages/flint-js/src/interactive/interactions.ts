@@ -54,6 +54,7 @@ export interface FlintInteractionEventDetail {
 }
 
 export type {
+    AxisProjection,
     CanvasInteractionAction,
     CanvasInteractionEvent,
     DomainCoordinate,

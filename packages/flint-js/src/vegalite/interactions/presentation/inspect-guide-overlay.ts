@@ -1,4 +1,4 @@
-import type { RendererCoordinateSpace } from '../hit-adapter';
+import { facetPlotBounds, type RendererCoordinateSpace } from '../hit-adapter';
 import { clientToLayoutPoint, plotToClientPoint } from '../../../interactive/geometry/coordinate-space';
 import type { GestureGuideController, InspectGestureGuideStyle } from '../../../interactive/guides';
 
@@ -21,6 +21,7 @@ export interface InspectGuideOverlay extends GestureGuideController {
 }
 
 export interface InspectGuideOverlayOptions {
+    view: any;
     container: HTMLElement;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
@@ -31,12 +32,14 @@ export function inspectGuideLine(
     coordinate: number,
     plotSize: { width: number; height: number },
 ): { x1: number; y1: number; x2: number; y2: number } {
+    const bounded = Math.min(mode === 'x' ? plotSize.width : plotSize.height, Math.max(0, coordinate));
     return mode === 'x'
-        ? { x1: coordinate, y1: 0, x2: coordinate, y2: plotSize.height }
-        : { x1: 0, y1: coordinate, x2: plotSize.width, y2: coordinate };
+        ? { x1: bounded, y1: 0, x2: bounded, y2: plotSize.height }
+        : { x1: 0, y1: bounded, x2: plotSize.width, y2: bounded };
 }
 
 export function createInspectGuideOverlay({
+    view,
     container,
     coordinateSpace,
     containerLayoutSize,
@@ -65,10 +68,15 @@ export function createInspectGuideOverlay({
         style: InspectGestureGuideStyle,
     ): void => {
         const space = coordinateSpace();
-        const guide = inspectGuideLine(mode, coordinate, {
-            width: space.plotWidth,
-            height: space.plotHeight,
-        });
+        const frame = facetPlotBounds(view, { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight });
+        const localCoordinate = coordinate - (mode === 'x' ? frame.x : frame.y);
+        const localGuide = inspectGuideLine(mode, localCoordinate, frame);
+        const guide = {
+            x1: localGuide.x1 + frame.x,
+            y1: localGuide.y1 + frame.y,
+            x2: localGuide.x2 + frame.x,
+            y2: localGuide.y2 + frame.y,
+        };
         const containerRect = container.getBoundingClientRect();
         const layoutSize = containerLayoutSize();
         const start = clientToLayoutPoint(plotToClientPoint({ x: guide.x1, y: guide.y1 }, space), containerRect, layoutSize);

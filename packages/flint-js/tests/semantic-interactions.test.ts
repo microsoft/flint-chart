@@ -545,9 +545,9 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual({ signal: `__flint_reorder_${axis}_domain` });
     });
 
-    it('rejects drag reorder for charts without one template-declared category scale', () => {
+    it('leaves drag reorder inert without a template-declared category scale', () => {
         expect(() => addVegaLiteInteractions({ mark: 'bar' }, [dragReorder()]))
-            .toThrow('requires a chart with a reorderable category axis');
+            .toThrow('requires chart interaction semantics');
         const scatter = assembleVegaLite({
             chart_spec: {
                 chartType: 'Scatter Plot',
@@ -556,8 +556,7 @@ describe('Vega-Lite semantic interactions', () => {
             semantic_types: { x: 'Number', y: 'Number' },
             data: { values: [{ x: 1, y: 2 }] },
         }) as any;
-        expect(() => addVegaLiteInteractions(scatter, [dragReorder()]))
-            .toThrow('requires a chart with a reorderable category axis');
+        expect(addVegaLiteInteractions(scatter, [dragReorder()])?.reorderAxis).toBeUndefined();
 
         const facetedSemantics = barChartDef.semanticInteractions!({
             resolvedEncodings: {
@@ -658,8 +657,7 @@ describe('Vega-Lite semantic interactions', () => {
             data: { values: [{ month: 'Jan', low: 1, high: 3 }, { month: 'Feb', low: 2, high: 4 }] },
         }) as any;
         expect(spec._interactionSemantics.reorderAxes).toEqual([]);
-        expect(() => addVegaLiteInteractions(spec, [dragReorder()]))
-            .toThrow('requires a chart with a reorderable category axis');
+        expect(addVegaLiteInteractions(spec, [dragReorder()])?.reorderAxis).toBeUndefined();
     });
 
     it('distinguishes dumbbell connectors from stationary Slope stems during reorder preview', () => {

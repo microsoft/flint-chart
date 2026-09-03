@@ -231,7 +231,7 @@ function trajectoryOverlayUpdate(series: CountrySeries, year: number): ChartUpda
             y: { field: 'Life' },
             text: { field: 'YearLabel' },
           },
-          style: { fill: '#69737d', fontSize: 104, fontWeight: 'bold', opacity: 0.11 },
+          style: { fill: '#69737d', fontSize: 144, fontWeight: 'bold', opacity: 0.11 },
         },
       },
       {
@@ -337,7 +337,7 @@ export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
     eventSource: dragTrigger(),
     affordances: [{ target: 'mark', cursor: 'drag', hover: 'target' }],
     handle(event) {
-      if (event.action !== 'drag-element') return null;
+      if (event.action !== 'drag') return null;
       if (event.phase === 'start') setIsPlaying(false);
       const targetRecord = event.target?.elements[0]?.records?.[0]
         ?? event.target?.elements[0]?.value;
@@ -353,7 +353,7 @@ export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
       }
 
       const projection = event.geometry.projection;
-      if (!projection?.segment) return null;
+      if (projection?.kind !== 'path') return null;
       const startYear = Number(projection.segment.start.value.Year);
       const endYear = Number(projection.segment.end.value.Year);
       if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) return null;

@@ -376,14 +376,7 @@ export function addVegaLiteInteractions(
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const templateSemantics = spec._interactionSemantics as TemplateInteractionSemantics | undefined;
     delete spec._interactionSemantics;
-    const reorderInteraction = canvasInteractions.find(
-        (interaction) => interaction.eventSource.gesture === 'drag-element'
-            && interaction.eventSource.type === 'reorder',
-    );
     if (!templateSemantics) {
-        if (reorderInteraction) {
-            throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
-        }
         const builtInInteraction = canvasInteractions[0];
         if (builtInInteraction) {
             throw new Error(`Interaction "${builtInInteraction.id}" requires chart interaction semantics.`);
@@ -395,9 +388,10 @@ export function addVegaLiteInteractions(
     );
     const declaredReorderAxes = templateSemantics.reorderAxes
         ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
-    if (reorderInteraction && declaredReorderAxes.length === 0) {
-        throw new Error(`Interaction "${reorderInteraction.id}" requires a chart with a reorderable category axis.`);
-    }
+    const hasElementDrag = canvasInteractions.some(
+        (interaction) => interaction.eventSource.type === 'element'
+            && interaction.eventSource.gesture === 'drag',
+    );
     const semanticGestureInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'element'
             || interaction.eventSource.type === 'region',
@@ -516,10 +510,10 @@ export function addVegaLiteInteractions(
         continuousColorFocus: templateSemantics.continuousColorFocus,
         navigationChannels: [...requestedNavigationAxes],
         angularXBrush: templateSemantics.supportedRegionGestures?.includes('angular') ?? false,
-        reorderAxis: reorderInteraction && declaredReorderAxes[0]
+        reorderAxis: hasElementDrag && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
             : undefined,
-        reorderAxes: reorderInteraction
+        reorderAxes: hasElementDrag
             ? declaredReorderAxes.map((axis) => ({ ...axis, scale: '', signal: '' }))
             : [],
         resolve: templateSemantics.resolve,

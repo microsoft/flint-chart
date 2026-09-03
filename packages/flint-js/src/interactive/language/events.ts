@@ -3,7 +3,7 @@ import type { PlotAngularSector, PlotPoint, PlotPolygon, PlotRect } from './geom
 import type { VisualProjection } from './projections';
 
 export type { PlotAngularSector, PlotPoint, PlotPolygon, PlotRect } from './geometry';
-export type { PathProjection, VisualProjection } from './projections';
+export type { AxisProjection, PathProjection, VisualProjection } from './projections';
 
 export interface InteractionModifiers {
     shift: boolean;
@@ -88,7 +88,7 @@ export type CanvasInteractionAction =
     | 'context-annotation'
     | 'long-press-annotation'
     | 'double-activate-annotation'
-    | 'drag-element'
+    | 'drag'
     | 'select-region'
     | 'brush-x'
     | 'brush-y'
