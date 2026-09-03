@@ -1,0 +1,103 @@
+.fisheye-excentric-shell {
+  padding: 12px 12px 14px;
+}
+
+.fisheye-excentric-panel {
+  overflow: hidden;
+}
+
+.fisheye-excentric-stack {
+  position: relative;
+  width: 900px;
+  min-height: 520px;
+}
+
+.fisheye-excentric-mount {
+  min-height: 520px;
+}
+
+.fisheye-excentric-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 80ms linear;
+}
+
+.fisheye-excentric-overlay[data-visible='true'] {
+  opacity: 1;
+}
+
+.fisheye-excentric-lens-backdrop {
+  fill: rgba(255, 255, 255, 0.84);
+  stroke: rgba(108, 118, 127, 0.16);
+  stroke-width: 8px;
+}
+
+.fisheye-excentric-lens-frame {
+  fill: rgba(255, 255, 255, 0.72);
+  stroke: #6b7881;
+  stroke-width: 1.1px;
+  filter: drop-shadow(0 6px 11px rgba(31, 35, 40, 0.14));
+}
+
+.fisheye-excentric-lens-core {
+  fill: rgba(246, 248, 250, 0.58);
+  stroke: rgba(134, 144, 153, 0.34);
+  stroke-dasharray: 3 3;
+  stroke-width: 1px;
+}
+
+.fisheye-excentric-point {
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-width: 1.5px;
+}
+
+.fisheye-excentric-point[data-primary='true'] {
+  stroke: #1f2328;
+  stroke-width: 2px;
+}
+
+.fisheye-excentric-label path {
+  fill: none;
+  stroke: #8a949b;
+  stroke-width: 0.9px;
+}
+
+.fisheye-excentric-label path[data-primary='true'] {
+  stroke: #2f475c;
+  stroke-width: 1.2px;
+}
+
+.fisheye-excentric-label text {
+  fill: #222a30;
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.97);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.fisheye-excentric-label text[data-primary='true'] {
+  fill: #13283a;
+}
+
+.fisheye-excentric-overflow {
+  fill: #6a767f;
+  font-size: 10px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.97);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.fisheye-excentric-source {
+  padding: 0 4px;
+  color: #7a858d;
+  font-size: 10px;
+  text-align: right;
+}

@@ -23,6 +23,24 @@ describe('retained data overlays', () => {
         expect(values.map((row) => row.Year)).toEqual([2000, 1980, 1990]);
     });
 
+    it('preserves an unordered timebox rectangle row verbatim', () => {
+        const values = [{ Time: 4, Value: 48, TimeEnd: 10, ValueEnd: 56 }];
+        const spec: ChartOverlaySpec = {
+            mark: 'rect',
+            data: { values },
+            encodings: {
+                x: { field: 'Time' },
+                y: { field: 'Value' },
+                x2: { field: 'TimeEnd' },
+                y2: { field: 'ValueEnd' },
+            },
+            role: 'timebox',
+        };
+
+        expect(orderedOverlayRows(spec)).toEqual(values);
+        expect(values).toEqual([{ Time: 4, Value: 48, TimeEnd: 10, ValueEnd: 56 }]);
+    });
+
     it('projects a free pointer onto the nearest semantic path segment', () => {
         const projection = projectPointToPath(
             { x: 7, y: 2 },

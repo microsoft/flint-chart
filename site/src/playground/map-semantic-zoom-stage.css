@@ -1,0 +1,124 @@
+.semantic-zoom-shell {
+  gap: 14px;
+}
+
+.semantic-zoom-viewport {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #edf0f2;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at top right, rgba(87, 130, 107, 0.08), transparent 34%),
+    #fcfcfd;
+}
+
+.semantic-zoom-canvas {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  transition: transform 180ms ease;
+}
+
+.semantic-zoom-canvas .semantic-zoom-mount {
+  min-height: 560px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.semantic-zoom-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.semantic-zoom-overlay-card,
+.semantic-zoom-breadcrumbs {
+  pointer-events: auto;
+}
+
+.semantic-zoom-overlay-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 280px;
+  padding: 9px 10px;
+  border: 1px solid rgba(216, 221, 226, 0.95);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 20px rgba(24, 35, 28, 0.08);
+}
+
+.semantic-zoom-overlay-card strong,
+.semantic-zoom-ownership strong {
+  color: #2d3439;
+  font-size: 11px;
+}
+
+.semantic-zoom-overlay-card span,
+.semantic-zoom-ownership span {
+  color: #67727c;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.semantic-zoom-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(216, 221, 226, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 20px rgba(24, 35, 28, 0.08);
+  color: #758089;
+  font-size: 10px;
+}
+
+.semantic-zoom-crumb {
+  border: 0;
+  background: transparent;
+  color: #65707a;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.semantic-zoom-crumb[data-active='true'] {
+  color: #2f5f47;
+}
+
+.semantic-zoom-ownership {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.semantic-zoom-ownership > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 11px;
+  border: 1px solid #e6eaed;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+@media (max-width: 700px) {
+  .semantic-zoom-overlay {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .semantic-zoom-ownership {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,12 @@
+.timebox-stage {
+  position: relative;
+}
+
+.timebox-stage .ic-flint-dimpvis-mount {
+  position: relative;
+}
+
+.timebox-stage__hint {
+  color: #66707a;
+  font-size: 10px;
+}

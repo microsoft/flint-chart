@@ -449,6 +449,22 @@ describe('public chart updates', () => {
             op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
         }, {
             op: 'set-order', scope: 'category', field: 'Country', values: ['Japan'],
+        }, {
+            op: 'set-overlay', name: 'timebox', value: {
+                mark: 'rect',
+                role: 'timebox',
+                data: { values: [{ Time: 4, Value: 48, TimeEnd: 10, ValueEnd: 56 }] },
+                encodings: {
+                    x: { field: 'Time' },
+                    y: { field: 'Value' },
+                    x2: { field: 'TimeEnd' },
+                    y2: { field: 'ValueEnd' },
+                },
+            },
+        }, {
+            op: 'set-data', source: 'main', value: {
+                rows: [{ Country: 'Japan', Year: 2024, Revenue: 42 }],
+            },
         }];
         expect(ops).toEqual([{
             op: 'set-style',
@@ -460,6 +476,22 @@ describe('public chart updates', () => {
             op: 'set-viewport', axes: 'x', value: { x: [0, 10] },
         }, {
             op: 'set-order', scope: 'category', field: 'Country', values: ['Japan'],
+        }, {
+            op: 'set-overlay', name: 'timebox', value: {
+                mark: 'rect',
+                role: 'timebox',
+                data: { values: [{ Time: 4, Value: 48, TimeEnd: 10, ValueEnd: 56 }] },
+                encodings: {
+                    x: { field: 'Time' },
+                    y: { field: 'Value' },
+                    x2: { field: 'TimeEnd' },
+                    y2: { field: 'ValueEnd' },
+                },
+            },
+        }, {
+            op: 'set-data', source: 'main', value: {
+                rows: [{ Country: 'Japan', Year: 2024, Revenue: 42 }],
+            },
         }]);
     });
 
