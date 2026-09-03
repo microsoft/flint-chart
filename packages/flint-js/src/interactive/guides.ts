@@ -13,6 +13,9 @@ export interface LineGestureGuideStyle {
 
 export interface InspectGestureGuideStyle extends LineGestureGuideStyle {
     fillOpacity: number;
+    haloColor: string;
+    haloOpacity: number;
+    haloWidth: number;
 }
 
 export interface AreaGestureGuideStyle {
@@ -33,9 +36,12 @@ export type RegionGuideOptions = GestureGuideOptions<AreaGestureGuideStyle>;
 
 export const DEFAULT_INSPECT_GUIDE_STYLE: Readonly<InspectGestureGuideStyle> = Object.freeze({
     color: '#47525c',
-    opacity: 0.46,
+    opacity: 0.58,
     width: 1,
     fillOpacity: 0.07,
+    haloColor: '#ffffff',
+    haloOpacity: 0.64,
+    haloWidth: 0.5,
 });
 
 export const DEFAULT_REGION_GUIDE_STYLE: Readonly<AreaGestureGuideStyle> = Object.freeze({
@@ -63,6 +69,13 @@ export function normalizeInspectGuideOptions(
             fillOpacity: Number.isFinite(style?.fillOpacity)
                 ? Math.min(1, Math.max(0, style!.fillOpacity!))
                 : DEFAULT_INSPECT_GUIDE_STYLE.fillOpacity,
+            haloColor: style?.haloColor ?? DEFAULT_INSPECT_GUIDE_STYLE.haloColor,
+            haloOpacity: Number.isFinite(style?.haloOpacity)
+                ? Math.min(1, Math.max(0, style!.haloOpacity!))
+                : DEFAULT_INSPECT_GUIDE_STYLE.haloOpacity,
+            haloWidth: Number.isFinite(style?.haloWidth) && style!.haloWidth! >= 0
+                ? style!.haloWidth!
+                : DEFAULT_INSPECT_GUIDE_STYLE.haloWidth,
         },
     };
 }

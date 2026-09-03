@@ -9,6 +9,8 @@ export type InspectMode =
     | `x${InspectOperator}` | `y${InspectOperator}` | `xy${InspectOperator}`
     | `x${InspectOperator};y${InspectOperator}`;
 
+export type InspectIndexShow = 'all' | 'single' | { series: unknown };
+
 export interface InspectPredicate {
     readonly x?: InspectOperator;
     readonly y?: InspectOperator;
@@ -25,6 +27,11 @@ export interface InteractionEventSource {
     readonly inspectPredicate?: InspectPredicate;
     readonly inspectCycle?: readonly ReturnType<typeof parseInspectMode>[];
     readonly inspectTolerance?: number;
+    readonly inspectIndex?: {
+        readonly axis: 'x' | 'y';
+        readonly show: InspectIndexShow;
+        readonly seriesBy?: string;
+    };
     /** Nearest-mark acquisition radius for hover gestures, in renderer pixels. */
     readonly targetTolerance?: number;
     /** Preset-owned nearest-mark acquisition radius, in renderer pixels. */
@@ -139,6 +146,20 @@ export function inspectTrigger(
         inspectGuide: normalizeInspectGuideOptions(guide),
         ...(cycle.length > 0 ? { inspectCycle: cycleModes } : {}),
         ...(selector ? { selector } : {}),
+    };
+}
+
+export function inspectIndexTrigger(
+    axis: 'x' | 'y' = 'x',
+    show: InspectIndexShow = 'all',
+    seriesBy?: string,
+    selector?: SemanticTargetSelector,
+    guide?: InspectGuideOptions | false,
+    tolerance?: number,
+): InteractionEventSource {
+    return {
+        ...inspectTrigger(axis, selector, tolerance, guide),
+        inspectIndex: { axis, show, ...(seriesBy ? { seriesBy } : {}) },
     };
 }
 

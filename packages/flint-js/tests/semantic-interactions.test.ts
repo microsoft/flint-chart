@@ -47,6 +47,8 @@ import {
     INTERACTION_LEGEND_CHANNEL,
     INTERACTION_LEGEND_FIELD,
     INTERACTION_ROLE,
+    indexInspectAcquisition,
+    indexInspectHits,
     PATH_KEY_SUFFIX,
     physicalItemAt,
     plotToClientPoint,
@@ -352,6 +354,78 @@ describe('Vega-Lite semantic interactions', () => {
         expect(new Set(hits.map((hit) => hit.datum.Region))).toEqual(new Set(['West']));
         expect(new Set(hits.map((hit) => hit.datum.Segment))).toEqual(new Set(['Consumer', 'Corporate']));
         view.finalize();
+    });
+
+    it('index inspection can keep all or one named series', () => {
+        const item = (key: string, series: string, y: number) => ({
+            bounds: { x1: 48, x2: 52, y1: y - 2, y2: y + 2 },
+            datum: { [INTERACTION_KEY]: key, Series: series },
+            mark: { marktype: 'symbol', role: 'mark' },
+        });
+        const items = [item('alpha', 'Alpha', 20), item('beta', 'Beta', 80)];
+        const point = { x: 50, y: 76 };
+        expect(indexInspectHits(items, point, 'x', { show: 'all', seriesBy: 'Series' }))
+            .toHaveLength(2);
+        expect(indexInspectHits(items, point, 'x', {
+            show: { series: 'Alpha' }, seriesBy: 'Series',
+        })[0].datum.Series).toBe('Alpha');
+    });
+
+    it('interpolates a smooth continuous value-axis rule between line observations', () => {
+        const segment = {
+            bounds: { x1: 10, x2: 90, y1: 20, y2: 80 },
+            datum: { [INTERACTION_KEY]: 'alpha', Index: 0, Series: 'Alpha' },
+            endDatum: { [INTERACTION_KEY]: 'alpha', Index: 10, Series: 'Alpha' },
+            interactionGeometry: {
+                kind: 'segment',
+                points: [{ x: 10, y: 80 }, { x: 90, y: 20 }],
+            },
+            mark: { marktype: 'line', role: 'mark', items: [] },
+        };
+        const acquisition = indexInspectAcquisition(
+            [segment], { x: 50, y: 40 }, 'x', { show: 'all', seriesBy: 'Series' }, true,
+        );
+
+        expect(acquisition.coordinate).toBe(50);
+        expect(acquisition.valueCoordinates).toEqual([50]);
+        expect(indexInspectAcquisition(
+            [segment], { x: 90, y: 20 }, 'x', { show: 'all', seriesBy: 'Series' }, true,
+        )).toMatchObject({ coordinate: 90, valueCoordinates: [20], hits: [expect.any(Object)] });
+    });
+
+    it('snaps a discrete index to supplied band-scale centers', () => {
+        const segment = {
+            bounds: { x1: 10, x2: 90, y1: 20, y2: 80 },
+            datum: { [INTERACTION_KEY]: 'alpha', Series: 'Alpha' },
+            endDatum: { [INTERACTION_KEY]: 'alpha', Series: 'Alpha' },
+            interactionGeometry: {
+                kind: 'segment',
+                points: [{ x: 10, y: 80 }, { x: 90, y: 20 }],
+            },
+            mark: { marktype: 'line', role: 'mark', items: [] },
+        };
+        const acquisition = indexInspectAcquisition(
+            [segment], { x: 38, y: 50 }, 'x', { show: 'all' }, false, [20, 60],
+        );
+
+        expect(acquisition.coordinate).toBe(20);
+    });
+
+    it('assists nearby continuous point indices without acquiring distant points', () => {
+        const pointMark = {
+            bounds: { x1: 48, x2: 52, y1: 28, y2: 32 },
+            datum: { [INTERACTION_KEY]: 'alpha', Index: 50, Value: 30 },
+            mark: { marktype: 'symbol', role: 'mark' },
+        };
+        const nearby = indexInspectAcquisition(
+            [pointMark], { x: 57, y: 80 }, 'x', { show: 'all' }, true, undefined, 5,
+        );
+        const distant = indexInspectAcquisition(
+            [pointMark], { x: 58, y: 80 }, 'x', { show: 'all' }, true, undefined, 5,
+        );
+
+        expect(nearby).toMatchObject({ coordinate: 50, valueCoordinates: [30], hits: [expect.any(Object)] });
+        expect(distant).toEqual({ coordinate: 58, valueCoordinates: [], hits: [] });
     });
     it('keeps path fallback connections anchored to the selected segment midpoint', () => {
         const item = {

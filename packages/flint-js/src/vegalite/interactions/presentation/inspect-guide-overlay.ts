@@ -13,6 +13,11 @@ export interface InspectGuideOverlay extends GestureGuideController {
         end: { x: number; y: number },
         style: InspectGestureGuideStyle,
     ): void;
+    renderValueRules(
+        coordinates: readonly number[],
+        indexAxis: 'x' | 'y',
+        style: InspectGestureGuideStyle,
+    ): void;
 }
 
 export interface InspectGuideOverlayOptions {
@@ -39,6 +44,7 @@ export function createInspectGuideOverlay({
     const previousPosition = container.style.position;
     const line = document.createElement('div');
     const crossLine = document.createElement('div');
+    const valueLines: HTMLDivElement[] = [];
     const baseStyle = {
         position: 'absolute', display: 'none', zIndex: '4', pointerEvents: 'none',
     } as const;
@@ -46,6 +52,11 @@ export function createInspectGuideOverlay({
     Object.assign(crossLine.style, baseStyle);
     if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     container.append(line, crossLine);
+
+    const haloShadow = (style: InspectGestureGuideStyle): string =>
+        style.haloWidth > 0 && style.haloOpacity > 0
+            ? `0 0 0 ${style.haloWidth}px color-mix(in srgb, ${style.haloColor} ${style.haloOpacity * 100}%, transparent)`
+            : 'none';
 
     const renderLine = (
         element: HTMLDivElement,
@@ -62,14 +73,15 @@ export function createInspectGuideOverlay({
         const layoutSize = containerLayoutSize();
         const start = clientToLayoutPoint(plotToClientPoint({ x: guide.x1, y: guide.y1 }, space), containerRect, layoutSize);
         const end = clientToLayoutPoint(plotToClientPoint({ x: guide.x2, y: guide.y2 }, space), containerRect, layoutSize);
+        const halo = haloShadow(style);
         Object.assign(element.style, mode === 'x' ? {
             display: 'block', left: `${start.x - style.width / 2}px`, top: `${start.y}px`,
             width: `${style.width}px`, height: `${end.y - start.y}px`, transform: 'none',
-            transformOrigin: '50% 50%', background: style.color, opacity: `${style.opacity}`,
+            transformOrigin: '50% 50%', background: style.color, opacity: `${style.opacity}`, boxShadow: halo,
         } : {
             display: 'block', left: `${start.x}px`, top: `${start.y - style.width / 2}px`,
             width: `${end.x - start.x}px`, height: `${style.width}px`, transform: 'none',
-            transformOrigin: '50% 50%', background: style.color, opacity: `${style.opacity}`,
+            transformOrigin: '50% 50%', background: style.color, opacity: `${style.opacity}`, boxShadow: halo,
         });
     };
 
@@ -100,19 +112,44 @@ export function createInspectGuideOverlay({
             display: 'block', left: `${start.x}px`, top: `${start.y - style.width / 2}px`,
             width: `${length}px`, height: `${style.width}px`, transformOrigin: '0 50%',
             transform: `rotate(${angle}rad)`, background: style.color, opacity: `${style.opacity}`,
+            boxShadow: haloShadow(style),
+        });
+    };
+
+    const renderValueRules = (
+        coordinates: readonly number[],
+        indexAxis: 'x' | 'y',
+        style: InspectGestureGuideStyle,
+    ): void => {
+        crossLine.style.display = 'none';
+        while (valueLines.length < coordinates.length) {
+            const valueLine = document.createElement('div');
+            Object.assign(valueLine.style, baseStyle);
+            valueLines.push(valueLine);
+            container.append(valueLine);
+        }
+        valueLines.forEach((valueLine, index) => {
+            if (index >= coordinates.length) {
+                valueLine.style.display = 'none';
+                return;
+            }
+            renderLine(valueLine, indexAxis === 'x' ? 'y' : 'x', coordinates[index], style);
         });
     };
 
     return {
         renderAxes,
         renderSegment,
+        renderValueRules,
         clear(): void {
             line.style.display = 'none';
             crossLine.style.display = 'none';
+            valueLines.forEach((valueLine) => { valueLine.style.display = 'none'; });
         },
         destroy(): void {
             line.remove();
             crossLine.remove();
+            valueLines.forEach((valueLine) => valueLine.remove());
             container.style.position = previousPosition;
         },
     };

@@ -459,7 +459,18 @@ guide never changes acquisition or the emitted semantic event:
 ```ts
 inspect({
     mode: 'xy',
-    guide: { style: { color: '#47525c', opacity: 0.5, width: 1 } },
+    guide: {
+        style: {
+            color: '#47525c', opacity: 0.58, width: 1,
+            haloColor: '#ffffff', haloOpacity: 0.64, haloWidth: 0.5,
+        },
+    },
+});
+
+inspectIndex({
+    axis: 'x',
+    seriesBy: 'Series',
+    show: 'all',
 });
 
 brushX({
@@ -472,6 +483,20 @@ lassoSelect({ guide: false });
 Inspect lines, Cartesian regions, angular sectors, and lasso paths use the shared
 renderer-neutral gesture-guide styles. Retained guides such as reference lines instead belong
 to chart presentation state and may be created by effects through chart updates.
+
+`inspectIndex()` is the general reading preset for line and point charts. A discrete index
+snaps to an observed slice; a temporal or quantitative index intersects a line continuously
+between observations. Point marks are acquired when the pointer intersects them on the index
+axis or comes within the axis-only `tolerance` (a plot-size fraction, default `0.01`). Outside
+that bounded assistance radius, the index guide remains but no point value rule is shown. The
+index guide and acquired value rules form a crosshair without dimming the chart. `show: 'all'`
+returns every series in that slice. `show: 'single'` starts with the first series, while
+`show: { series: value }` starts with a preferred series. In either single-series mode, clicking
+a legend item switches tracking to that series; marks remain inert and available to other interactions.
+The tracked series remains highlighted in its authored colour. Hovering another legend item previews it.
+Both single-series policies require the `seriesBy` field. Aggregates such as averages remain custom-handler logic;
+the preset does not transform records. Directional predicates on the lower-level
+`inspectTrigger()` can support bespoke interactions such as threshold quadrants.
 
 Chart-specific action processing belongs in the handler. For example, ranged-dot region targets
 are expanded to complete category units before producing a `set-style` update. Direct ranged-dot
@@ -885,14 +910,18 @@ Callers should provide `chartId` when coordinating charts. Flint generates an ID
 
 Chart identity belongs to the transport envelope, not `SemanticTarget`: semantic targets describe visual/data identity, while `chartId` describes event origin or dispatch destination.
 
-## Facet linking
+## Linked brushing
 
-`facetBrushLink()` expands marks acquired in one facet to every available mark with the same authored semantic key:
+`linkedBrush()` expands brushed marks to every available mark with the same authored semantic group:
 
 ```ts
-facetBrushLink({ by: 'Country' });
-facetBrushLink({ by: ['Country', 'Product'], brush: 'lasso' });
+linkedBrush({ groupBy: 'Country' });
+linkedBrush({ groupBy: ['Country', 'Product'], brush: 'lasso' });
 ```
+
+The available marks may belong to facets, repeated views, or another renderer-defined
+view composition. Group matching uses the same input-record field keys as
+`clickGroupFocus({ groupBy })`.
 
 The key should be represented by a discrete positional channel, `detail`, or `color`. For a
 quantitative scatter plot, prefer `detail` when identity should not alter appearance. Continuous
@@ -949,7 +978,7 @@ Canonical helpers include:
 - `clickHighlight()`
 - `clickGroupFocus()`
 - `clickAnnotate()`
-- `facetBrushLink()`
+- `linkedBrush()`
 - `hoverGroupFocus()`
 - `legendToggle()`
 - `select()`, `brushX()`, `brushY()`, and `brushAngle()`

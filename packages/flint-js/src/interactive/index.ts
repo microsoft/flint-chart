@@ -50,7 +50,7 @@ export type {
     ClickHighlightOptions,
     ClickHighlightTarget,
     ClickGroupFocusOptions,
-    FacetBrushLinkOptions,
+    LinkedBrushOptions,
     HoverGroupFocusOptions,
     GroupBy,
     ElementInteractionEvent,
@@ -62,6 +62,7 @@ export type {
     ExternalInteractionDef,
     InteractionModifiers,
     InspectOptions,
+    InspectIndexOptions,
     LassoSelectOptions,
     NavigateOptions,
     NavigationAxes,
@@ -97,8 +98,8 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, longPress, navigate, select } from './interactions';
-export type { InteractionEventSource } from './triggers';
+export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, linkedBrush, longPress, navigate, select } from './interactions';
+export type { InspectIndexShow, InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
     angularBrushTrigger,
@@ -108,6 +109,7 @@ export {
     doubleActivateTrigger,
     hoverTrigger,
     inspectTrigger,
+    inspectIndexTrigger,
     keyboardTrigger,
     lassoTrigger,
     longPressTrigger,

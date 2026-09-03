@@ -55,6 +55,7 @@ import {
     polarGuideSegment,
     polarInspectHits,
     tolerantInspectHits,
+    indexInspectAcquisition,
     legendSemanticTarget,
     renderHit,
     rendererPlotOrigin,
@@ -251,13 +252,49 @@ export function interactionsForHoverPresentation(
     clickInteractions: readonly CanvasInteractionDef[],
     hoverInteractions: readonly CanvasInteractionDef[],
     elementDragInteractions: readonly CanvasInteractionDef[] = [],
+    inspectInteractions: readonly CanvasInteractionDef[] = [],
 ): CanvasInteractionDef[] {
     return [
         ...hoverInteractions,
         ...clickInteractions,
         ...elementDragInteractions,
+        ...inspectInteractions,
     ].filter((interaction, index, candidates) => interaction.affordances?.some((affordance) => affordance.hover)
         && candidates.findIndex((candidate) => candidate.id === interaction.id) === index);
+}
+
+export function initialInspectSeries(
+    items: readonly any[],
+    seriesBy: string,
+    preferred?: unknown,
+): unknown {
+    const values = items.flatMap((item) => item?.datum?.[seriesBy] === undefined
+        ? []
+        : [item.datum[seriesBy]]);
+    return preferred !== undefined && values.some((value) => Object.is(value, preferred))
+        ? preferred
+        : values[0];
+}
+
+export function inspectSeriesPresentationKeys(
+    items: readonly any[],
+    seriesBy: string,
+    series: unknown,
+): string[] {
+    return [...new Set(items.flatMap((item) => {
+        if (!Object.is(item?.datum?.[seriesBy], series)) return [];
+        const hit = renderHit(item);
+        const key = hit?.datum?.[INTERACTION_KEY];
+        return typeof key === 'string' ? [key] : [];
+    }))];
+}
+
+export function longPressMovedBeyond(
+    start: { x: number; y: number },
+    current: { x: number; y: number },
+    tolerance = 6,
+): boolean {
+    return Math.hypot(current.x - start.x, current.y - start.y) > tolerance;
 }
 
 type AnnotationUpdate = Extract<ChartUpdateOp, { op: 'set-annotation' }>;
@@ -421,9 +458,10 @@ export function mountVegaInteractions(
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'drag-element')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
-        markClickInteractions,
+        [...markClickInteractions, ...longPressInteractions, ...doubleInteractions],
         markHoverInteractions,
         elementDragInteractions,
+        inspectInteractions,
     );
     const hoverPresentationForTarget = (target: InteractionAffordanceTarget): CanvasInteractionDef[] =>
         hoverPresentationInteractions.filter((interaction) =>
@@ -447,6 +485,8 @@ export function mountVegaInteractions(
     let hoveredPathKeys = new Set<string>();
     let suppressClick = false;
     let regionDragging = false;
+    const inspectSeriesLocks = new Map<string, unknown>();
+    const inspectSeriesPresentation = new Map<string, Set<string>>();
 
     const containerLayoutSize = (): { width: number; height: number } => {
         const rect = container.getBoundingClientRect();
@@ -689,7 +729,7 @@ export function mountVegaInteractions(
                     resolvedTargets += resolved.elements.length;
                     return [resolved];
                 });
-                if (targets.length > 0) ops.push({ ...op, targets });
+                if (targets.length > 0 || op.targets.length === 0) ops.push({ ...op, targets });
             } else if (op.op === 'set-annotation' && op.value !== null) {
                 const target = resolveUpdateTarget(op.target);
                 if (!target || target.elements.length !== 1) unresolvedTargets.push(op.target);
@@ -736,6 +776,7 @@ export function mountVegaInteractions(
         const activeHiddenLegendDomains = new Set<string>();
         const stylesByKey: Record<string, Pick<import('../../core/interaction-contracts').StyleSpec,
             'opacity' | 'fill' | 'stroke' | 'strokeWidth'>> = {};
+        let emptyEmphasisActive = false;
         selectedElements.clear();
         hiddenKeys.clear();
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
@@ -771,6 +812,10 @@ export function mountVegaInteractions(
                     }
                 }
                 if (op.op === 'set-style') {
+                    if (op.targets.length === 0
+                        && (op.value.state === 'emphasized' || op.value.state === 'focused')) {
+                        emptyEmphasisActive = true;
+                    }
                     for (const target of op.targets) {
                         if ('select' in target) continue;
                         for (const element of target.elements) {
@@ -807,7 +852,9 @@ export function mountVegaInteractions(
             view.signal(STYLE_SIGNAL, stylesByKey);
             view.change(
                 INTERACTION_STORE,
-                changeset().remove(() => true).insert(keys.map((key) => ({ key }))),
+                changeset().remove(() => true).insert(emptyEmphasisActive && keys.length === 0
+                    ? [{}]
+                    : keys.map((key) => ({ key }))),
             );
             view.change(
                 HIDDEN_STORE,
@@ -997,7 +1044,8 @@ export function mountVegaInteractions(
         legend: LegendHitIdentity | null = null,
         axis: { scale: string; value: unknown } | null = null,
     ): Promise<void> => {
-        const next = [...new Set(keys)].sort();
+        const tracked = [...inspectSeriesPresentation.values()].flatMap((seriesKeys) => [...seriesKeys]);
+        const next = [...new Set([...tracked, ...keys])].sort();
         const signature = `${next.join('\u0000')}\u0001${legend?.channel ?? ''}\u0000${String(legend?.value ?? '')}`
             + `\u0001${axis?.scale ?? ''}\u0000${String(axis?.value ?? '')}`;
         if (signature === hoveredKeys) return;
@@ -1024,6 +1072,31 @@ export function mountVegaInteractions(
         renderPathFocus();
         renderLegendRange();
     };
+    const setTrackedInspectSeries = (
+        interaction: CanvasInteractionDef,
+        series: unknown,
+        items = sceneItems(view),
+    ): void => {
+        const seriesBy = interaction.eventSource.inspectIndex?.seriesBy;
+        if (!seriesBy) return;
+        inspectSeriesLocks.set(interaction.id, series);
+        inspectSeriesPresentation.set(
+            interaction.id,
+            new Set(inspectSeriesPresentationKeys(items, seriesBy, series)),
+        );
+    };
+    for (const interaction of inspectInteractions) {
+        const policy = interaction.eventSource.inspectIndex;
+        if (!policy?.seriesBy || (policy.show !== 'single' && typeof policy.show !== 'object')) continue;
+        const items = sceneItems(view);
+        const preferred = typeof policy.show === 'object' ? policy.show.series : undefined;
+        setTrackedInspectSeries(
+            interaction,
+            initialInspectSeries(items, policy.seriesBy, preferred),
+            items,
+        );
+    }
+    if (inspectSeriesPresentation.size > 0) void setHover([]);
     const clearHover = (): void => {
         if (hoverClearTimer !== undefined) {
             clearTimeout(hoverClearTimer);
@@ -1180,8 +1253,12 @@ export function mountVegaInteractions(
             .flatMap(semanticElementRenderKeys));
     };
 
+    const singleSeriesInspectInteractions = inspectInteractions.filter((interaction) => {
+        const show = interaction.eventSource.inspectIndex?.show;
+        return show === 'single' || typeof show === 'object';
+    });
     const clickHandler = (event: MouseEvent, item: any): void => {
-        if (clickInteractions.length === 0 || suppressClick) return;
+        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0) || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
@@ -1210,6 +1287,19 @@ export function mountVegaInteractions(
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
             }, legend);
+        }
+        if (legend) {
+            for (const interaction of singleSeriesInspectInteractions) {
+                const policy = interaction.eventSource.inspectIndex!;
+                if (!policy.seriesBy || legend.field !== policy.seriesBy) continue;
+                setTrackedInspectSeries(interaction, legend.value);
+                void setHover([], legend);
+                void dispatch(interaction, {
+                    type: 'semantic', source: 'element', phase: 'commit', target, point,
+                    modifiers: normalized.event.modifiers,
+                }, legend);
+                inspectHandler(event);
+            }
         }
     };
     const contextHandler = (event: MouseEvent): void => {
@@ -1258,7 +1348,45 @@ export function mountVegaInteractions(
                 : items;
             const tolerance = interaction.eventSource.inspectTolerance ?? 0.01;
             const guide = interaction.eventSource.inspectGuide ?? normalizeInspectGuideOptions(undefined);
-            const hits = polarFrame
+            const indexPolicy = interaction.eventSource.inspectIndex;
+            const singleSeries = indexPolicy?.show === 'single' || typeof indexPolicy?.show === 'object';
+            if (singleSeries && indexPolicy?.seriesBy && !inspectSeriesLocks.has(interaction.id)) {
+                const preferred = typeof indexPolicy.show === 'object' ? indexPolicy.show.series : undefined;
+                setTrackedInspectSeries(
+                    interaction,
+                    initialInspectSeries(eligibleItems, indexPolicy.seriesBy, preferred),
+                    eligibleItems,
+                );
+                void setHover([]);
+            }
+            const effectiveShow = singleSeries
+                ? { series: inspectSeriesLocks.get(interaction.id) }
+                : indexPolicy?.show;
+            const indexField = indexPolicy ? plan.axisFields?.[indexPolicy.axis] : undefined;
+            const continuousIndex = indexField?.type === 'temporal' || indexField?.type === 'quantitative';
+            const indexScaleName = indexPolicy && indexField
+                ? Object.entries(plan.axisTargets ?? {}).find(([, target]) =>
+                    target.axis === indexPolicy.axis && target.field === indexField.field)?.[0]
+                : undefined;
+            const indexScale = indexScaleName ? view.scale(indexScaleName) : undefined;
+            const discreteCoordinates = !continuousIndex && indexScale?.domain
+                ? indexScale.domain().map((value: unknown) =>
+                    Number(indexScale(value)) + (Number(indexScale.bandwidth?.()) || 0) / 2)
+                : undefined;
+            const indexAcquisition = indexPolicy && !polarFrame
+                ? indexInspectAcquisition(
+                    eligibleItems,
+                    point,
+                    indexPolicy.axis,
+                    { show: effectiveShow as 'all' | { series: unknown }, seriesBy: indexPolicy.seriesBy },
+                    continuousIndex,
+                    discreteCoordinates,
+                    (indexPolicy.axis === 'x' ? space.plotWidth : space.plotHeight) * tolerance,
+                )
+                : undefined;
+            const hits = indexAcquisition
+                ? indexAcquisition.hits
+                : polarFrame
                 ? polarInspectHits(eligibleItems, point, polarFrame)
                 : tolerantInspectHits(
                     eligibleItems,
@@ -1267,7 +1395,18 @@ export function mountVegaInteractions(
                     activeMode.predicate,
                     { x: space.plotWidth * tolerance, y: space.plotHeight * tolerance },
                 );
-            if (guide.visible && polarFrame) {
+            if (guide.visible && indexAcquisition) {
+                const guidePoint = indexPolicy!.axis === 'x'
+                    ? { x: indexAcquisition.coordinate, y: point.y }
+                    : { x: point.x, y: indexAcquisition.coordinate };
+                inspectGuideOverlay.renderAxes(guidePoint, indexPolicy!.axis, guide.style);
+                inspectGuideOverlay.renderValueRules(
+                    indexAcquisition.valueCoordinates,
+                    indexPolicy!.axis,
+                    guide.style,
+                );
+                guideRendered = true;
+            } else if (guide.visible && polarFrame) {
                 const segment = polarGuideSegment(polarFrame, point);
                 inspectGuideOverlay.renderSegment(segment.start, segment.end, guide.style);
                 guideRendered = true;
@@ -1337,6 +1476,7 @@ export function mountVegaInteractions(
         };
     };
     let longPressTimer: number | undefined;
+    let longPressPointer: { id: number; x: number; y: number } | undefined;
     const dismissPolicy = dismiss === false ? { click: false as const, escape: false } : {
         click: dismiss?.click ?? 'non-element' as const,
         escape: dismiss?.escape ?? true,
@@ -1395,16 +1535,19 @@ export function mountVegaInteractions(
         }
     };
     const cancelLongPress = (): void => {
-        if (longPressTimer === undefined) return;
-        window.clearTimeout(longPressTimer);
+        if (longPressTimer !== undefined) window.clearTimeout(longPressTimer);
         longPressTimer = undefined;
+        longPressPointer = undefined;
     };
     const longPressStart = (event: PointerEvent): void => {
         if (longPressInteractions.length === 0 || event.button !== 0) return;
+        event.preventDefault();
         cancelLongPress();
+        longPressPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
         const holdMs = longPressInteractions[0].eventSource.holdMs ?? 500;
         longPressTimer = window.setTimeout(() => {
             longPressTimer = undefined;
+            longPressPointer = undefined;
             const acquired = pointerTarget(event, longPressInteractions);
             if (!acquired.target) return;
             consumeDismissClick = true;
@@ -1417,6 +1560,13 @@ export function mountVegaInteractions(
                 });
             }
         }, holdMs);
+    };
+    const longPressMove = (event: PointerEvent): void => {
+        if (!longPressPointer || event.pointerId !== longPressPointer.id) return;
+        if (longPressMovedBeyond(
+            longPressPointer,
+            { x: event.clientX, y: event.clientY },
+        )) cancelLongPress();
     };
     const doubleHandler = (event: MouseEvent): void => {
         if (doubleInteractions.length === 0) return;
@@ -1433,7 +1583,7 @@ export function mountVegaInteractions(
     if (longPressInteractions.length > 0) {
         container.addEventListener('pointerdown', longPressStart, true);
         container.addEventListener('pointerup', cancelLongPress, true);
-        container.addEventListener('pointermove', cancelLongPress, true);
+        container.addEventListener('pointermove', longPressMove, true);
         container.addEventListener('pointercancel', cancelLongPress, true);
     }
     if (doubleInteractions.length > 0) container.addEventListener('dblclick', doubleHandler);
@@ -1441,7 +1591,7 @@ export function mountVegaInteractions(
     if (contextInteractions.length > 0) {
         container.addEventListener('contextmenu', contextHandler);
     }
-    if (clickInteractions.length > 0) {
+    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
         view.addEventListener('click', clickHandler);
     }
     if (hoverPresentationInteractions.length > 0) {
@@ -1451,6 +1601,8 @@ export function mountVegaInteractions(
 
     const previousCursor = container.style.cursor;
     const previousUserSelect = container.style.userSelect;
+    const previousTouchAction = container.style.touchAction;
+    if (longPressInteractions.length > 0) container.style.touchAction = 'none';
     const suppressTextSelection = doubleInteractions.length > 0
         || canvasInteractions.some((interaction) => interaction.claimsLegendActivation);
     if (suppressTextSelection) container.style.userSelect = 'none';
@@ -1872,7 +2024,7 @@ export function mountVegaInteractions(
     observeRenderer();
 
     const destroy = (): void => {
-        if (clickInteractions.length > 0) {
+        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
             view.removeEventListener('click', clickHandler);
         }
         if (hoverPresentationInteractions.length > 0) {
@@ -1893,7 +2045,7 @@ export function mountVegaInteractions(
             cancelLongPress();
             container.removeEventListener('pointerdown', longPressStart, true);
             container.removeEventListener('pointerup', cancelLongPress, true);
-            container.removeEventListener('pointermove', cancelLongPress, true);
+            container.removeEventListener('pointermove', longPressMove, true);
             container.removeEventListener('pointercancel', cancelLongPress, true);
         }
         if (doubleInteractions.length > 0) container.removeEventListener('dblclick', doubleHandler);
@@ -1931,6 +2083,7 @@ export function mountVegaInteractions(
             syncFrame = undefined;
         }
         if (elementDragInteraction || suppressTextSelection) container.style.userSelect = previousUserSelect;
+        if (longPressInteractions.length > 0) container.style.touchAction = previousTouchAction;
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
     const clearUpdate = async (id: string): Promise<void> => {

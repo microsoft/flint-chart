@@ -112,6 +112,15 @@
   background: #fff;
 }
 
+.cf-probe-wide {
+  grid-column: 1 / -1;
+}
+
+.cf-probe-spacious {
+  justify-self: center;
+  width: min(1200px, calc(100vw - 48px));
+}
+
 .cf-probe-header {
   display: flex;
   align-items: flex-start;
@@ -406,6 +415,10 @@
 @media (max-width: 820px) {
   .cf-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cf-probe-spacious {
+    width: 100%;
   }
 }
 

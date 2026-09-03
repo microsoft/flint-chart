@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Crosshair, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import { EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import {
   genBarTests,
@@ -11,6 +11,7 @@ import {
 } from 'flint-chart/test-data';
 import {
   buildInteractiveChart,
+  brushAngle,
   brushX,
   brushY,
   brushZoom,
@@ -20,18 +21,21 @@ import {
   contextActivate,
   doubleActivate,
   dragReorder,
-  facetBrushLink,
   hoverGroupFocus,
   inspect,
+  inspectIndex,
   lassoSelect,
   legendToggle,
+  linkedBrush,
   longPress,
   navigate,
   select as rectangleSelect,
   type FlintInteractionEventDetail,
+  type InspectIndexShow,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
+import foodPrices from '../data/cpi-food-prices.json';
 import { BACKENDS } from '../shared/supported-backends';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
@@ -40,11 +44,12 @@ import { gapminderRows } from './gapminder-dashboard-data';
 import './click-focus-lab.css';
 
 export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotate' | 'select'
-  | 'facet-link' | 'hover-group-focus'
-  | 'brush-x' | 'brush-y' | 'brush-x-stateful' | 'brush-y-stateful' | 'navigate' | 'drag-reorder'
-  | 'lasso' | 'inspect' | 'inspect-quadrant' | 'inspect-x'
-  | 'long-press' | 'double-activate'
-  | 'keyboard-focus' | 'select-context' | 'focus-legend-toggle' | 'focus-brush-zoom';
+  | 'linked-brush' | 'hover-group-focus'
+  | 'brush-x' | 'brush-y' | 'brush-angle' | 'brush-x-stateful' | 'brush-y-stateful' | 'brush-angle-stateful'
+  | 'navigate' | 'drag-reorder'
+  | 'lasso' | 'inspect' | 'inspect-index'
+  | 'long-press' | 'double-activate' | 'legend-toggle' | 'brush-zoom'
+  | 'keyboard-focus' | 'select-context';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 
 export interface NavigationGuard {
@@ -59,26 +64,27 @@ const unitInteractionModes = [
   { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
   { value: 'annotate', label: 'Annotate', icon: MessageSquareText },
   { value: 'select', label: 'Select', icon: Scan },
-  { value: 'facet-link', label: 'Facet link', icon: Link2 },
+  { value: 'linked-brush', label: 'Linked brush', icon: Link2 },
   { value: 'brush-x', label: 'X brush', icon: MoveHorizontal },
   { value: 'brush-y', label: 'Y brush', icon: MoveVertical },
+  { value: 'brush-angle', label: 'Angle brush', icon: RotateCcw },
   { value: 'brush-x-stateful', label: 'X brush (edit)', icon: MoveHorizontal },
   { value: 'brush-y-stateful', label: 'Y brush (edit)', icon: MoveVertical },
+  { value: 'brush-angle-stateful', label: 'Angle brush (edit)', icon: RotateCcw },
   { value: 'navigate', label: 'Pan & zoom', icon: Move },
   { value: 'drag-reorder', label: 'Drag reorder', icon: GripVertical },
   { value: 'lasso', label: 'Lasso', icon: Lasso },
   { value: 'inspect', label: 'Inspect xy', icon: Target },
-  { value: 'inspect-quadrant', label: 'Inspect quadrant', icon: Crosshair },
-  { value: 'inspect-x', label: 'Inspect x', icon: Ruler },
+  { value: 'inspect-index', label: 'Inspect index', icon: Ruler },
   { value: 'long-press', label: 'Long press', icon: Timer },
   { value: 'double-activate', label: 'Double click', icon: MousePointerClick },
+  { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
+  { value: 'brush-zoom', label: 'Brush zoom', icon: ZoomIn },
 ] as const;
 
 const compositionInteractionModes = [
   { value: 'keyboard-focus', label: 'Focus + keyboard', icon: Keyboard },
   { value: 'select-context', label: 'Select + context', icon: Menu },
-  { value: 'focus-legend-toggle', label: 'Focus + legend toggle', icon: EyeOff },
-  { value: 'focus-brush-zoom', label: 'Focus + brush zoom', icon: ZoomIn },
 ] as const;
 
 type MountedInteraction = ReturnType<typeof clickHighlight>;
@@ -90,34 +96,32 @@ function modeInteractions(
   mode: InteractionMode,
   navigationAxes: 'x' | 'y' | 'xy' | undefined,
   navigationGuard: NavigationGuard | undefined,
-  linkBy: string | readonly string[] | undefined,
+  groupBy: string | readonly string[] | undefined,
+  indexInspection: InteractionCase['indexInspection'],
 ): MountedInteraction[] {
   switch (mode) {
     case 'click-highlight': return [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] })];
-    case 'click-group-focus': return [clickGroupFocus({ groupBy: typeof linkBy === 'string' ? linkBy : undefined })];
-    case 'hover-group-focus': return linkBy ? [hoverGroupFocus({ groupBy: linkBy })] : [];
+    case 'click-group-focus': return [clickGroupFocus({ groupBy })];
+    case 'hover-group-focus': return groupBy ? [hoverGroupFocus({ groupBy })] : [];
     case 'annotate': return [clickAnnotate()];
     case 'select': return [rectangleSelect()];
-    case 'facet-link': return linkBy ? [facetBrushLink({ by: linkBy })] : [];
+    case 'linked-brush': return groupBy ? [linkedBrush({ groupBy })] : [];
     case 'brush-x': return [brushX()];
     case 'brush-y': return [brushY()];
+    case 'brush-angle': return [brushAngle()];
     case 'brush-x-stateful': return [brushX({ mode: 'stateful' })];
     case 'brush-y-stateful': return [brushY({ mode: 'stateful' })];
+    case 'brush-angle-stateful': return [brushAngle({ mode: 'stateful' })];
     case 'drag-reorder': return [dragReorder()];
     case 'lasso': return [lassoSelect()];
     case 'inspect': return [inspect()];
-    case 'inspect-quadrant': return [inspect({
-      mode: 'x>=;y<=',
-      cycle: ['x>=;y<=', 'x>=;y>=', 'x<=;y>=', 'x<=;y<='],
-      dimOpacity: 0.14,
-    })];
-    case 'inspect-x': return [inspect({ mode: 'x' })];
+    case 'inspect-index': return indexInspection ? [inspectIndex(indexInspection)] : [];
     case 'keyboard-focus': return [clickHighlight({ targets: ['mark'] })];
     case 'select-context': return [rectangleSelect(), contextActivate()];
-    case 'focus-legend-toggle': return [clickHighlight({ targets: ['mark'] }), legendToggle()];
+    case 'legend-toggle': return [legendToggle()];
     case 'long-press': return [longPress()];
     case 'double-activate': return [doubleActivate()];
-    case 'focus-brush-zoom': return [clickHighlight({ targets: ['mark'] }), brushZoom()];
+    case 'brush-zoom': return [brushZoom()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
   }
 }
@@ -125,14 +129,31 @@ function modeInteractions(
 export interface InteractionCase {
   id: string;
   title?: string;
+  wide?: boolean;
+  spacious?: boolean;
+  stageHeight?: number;
+  stageScale?: number;
   input: ChartAssemblyInput;
-  linkBy?: string | readonly string[];
+  groupBy?: string | readonly string[];
+  indexInspection?: {
+    axis?: 'x' | 'y';
+    show?: InspectIndexShow;
+    seriesBy?: string;
+    tolerance?: number;
+  };
   navigationAxes?: 'x' | 'y' | 'xy';
   chartType: string;
   expectation: string;
 }
 
 const SIZE = { width: 350, height: 240 };
+
+function blsFoodPriceSeries(items: readonly string[]): Record<string, unknown>[] {
+  const selected = new Set(items);
+  return foodPrices.values
+    .filter(({ item }) => selected.has(item))
+    .map(({ month: Index, price: Value, item: Series }) => ({ Index, Value, Series }));
+}
 
 function representative(generator: () => TestCase[]): TestCase {
   const cases = generator();
@@ -246,8 +267,131 @@ function multiLegendCase(kind: 'shape' | 'size'): InteractionCase {
       },
     } as ChartAssemblyInput,
     chartType: 'Scatter Plot',
-    expectation: selected.expectation,
+    groupBy: selected.color,
+    expectation: `Interact with marks grouped by ${selected.color.toLowerCase()}.`,
   };
+}
+
+function indexInspectCases(): InteractionCase[] {
+  const makeCase = (
+    id: string,
+    title: string,
+    values: Record<string, unknown>[],
+    expectation: string,
+    show: InspectIndexShow,
+    indexType: 'Year' | 'Date' | 'Category',
+    seriesBy: string | undefined = 'Series',
+  ): InteractionCase => ({
+    id,
+    title,
+    chartType: 'Line Chart',
+    expectation,
+    ...(seriesBy ? { groupBy: seriesBy } : {}),
+    indexInspection: { axis: 'x', show, ...(seriesBy ? { seriesBy } : {}) },
+    input: {
+      data: { values },
+      semantic_types: { Index: indexType, Value: 'Currency', Series: 'Category' },
+      field_display_names: { Index: 'Month', Value: 'Average price (USD)', Series: 'Food' },
+      chart_spec: {
+        chartType: 'Line Chart',
+        encodings: {
+          x: { field: 'Index' }, y: { field: 'Value' },
+          ...(seriesBy ? { color: { field: seriesBy } } : {}),
+        },
+        baseSize: SIZE,
+      },
+    },
+  });
+
+  const makeScatterCase = (
+    id: string,
+    title: string,
+    values: Record<string, unknown>[],
+    expectation: string,
+    show: InspectIndexShow,
+    xField: string,
+    yField: string,
+    semanticTypes: Record<string, string>,
+    seriesBy?: string,
+  ): InteractionCase => ({
+    id,
+    title,
+    chartType: 'Scatter Plot',
+    expectation,
+    ...(seriesBy ? { groupBy: seriesBy } : {}),
+    indexInspection: { axis: 'x', show, ...(seriesBy ? { seriesBy } : {}), tolerance: 0.025 },
+    input: {
+      data: { values },
+      semantic_types: semanticTypes,
+      chart_spec: {
+        chartType: 'Scatter Plot',
+        encodings: {
+          x: { field: xField }, y: { field: yField },
+          ...(seriesBy ? { color: { field: seriesBy } } : {}),
+        },
+        baseSize: SIZE,
+      },
+    },
+  });
+
+  return [
+    makeCase(
+      'inspect-index-line-single',
+      'BLS food prices — single line',
+      blsFoodPriceSeries(['Bananas']),
+      'Move along time to inspect the nearest monthly U.S. average banana price from the Bureau of Labor Statistics.',
+      'all', 'Date', undefined,
+    ),
+    makeCase(
+      'inspect-index-line-two',
+      'BLS food prices — two lines',
+      blsFoodPriceSeries(['Eggs', 'White bread']),
+      'Tracking starts on White bread. Click Eggs or White bread in the legend to switch the tracked series.',
+      { series: 'White bread' }, 'Date',
+    ),
+    makeCase(
+      'inspect-index-line-two-all',
+      'BLS food prices — read both lines',
+      blsFoodPriceSeries(['Eggs', 'White bread']),
+      'Move along time to read both foods at once; each series keeps its own horizontal value guide.',
+      'all', 'Date',
+    ),
+    makeCase(
+      'inspect-index-line-multi',
+      'BLS food prices — track one series',
+      blsFoodPriceSeries(['Bananas', 'Eggs', 'Ground beef', 'White bread', 'Whole milk']),
+      'Tracking starts on the first food. Click a legend item to switch the tracked series.',
+      'single', 'Date',
+    ),
+    makeScatterCase(
+      'inspect-index-scatter-near-x',
+      'Gapminder 2007 — assisted income inspection',
+      gapminderRows.filter((row) => row.Year === 2007),
+      'Move onto or just beside GDP per capita on x to inspect the observed life-expectancy point.',
+      'all',
+      'GDP per capita',
+      'Life expectancy',
+      {
+        Country: 'Country', Continent: 'Category', Year: 'Year', Population: 'Quantity',
+        'GDP per capita': 'Quantity', 'Life expectancy': 'Quantity',
+      },
+      'Continent',
+    ),
+    makeScatterCase(
+      'inspect-index-scatter-shared-x',
+      'Gapminder — country life expectancy by year',
+      gapminderRows.filter((row) => ['Argentina', 'Egypt', 'Japan'].includes(row.Country)),
+      'Tracking starts on the first country. Click the legend to switch countries.',
+      'single',
+      'Year',
+      'Life expectancy',
+      {
+        Country: 'Country', Continent: 'Category', Year: 'Year', Population: 'Quantity',
+        'GDP per capita': 'Quantity', 'Life expectancy': 'Quantity',
+      },
+      'Country',
+    ),
+  ];
 }
 
 function realFacetedCases(): InteractionCase[] {
@@ -272,13 +416,14 @@ function realFacetedCases(): InteractionCase[] {
     {
       ...barCase,
       title: 'Electricity generation mix — faceted by source',
-      linkBy: 'Country',
+      groupBy: 'Country',
+      wide: true,
     },
     {
       id: 'Scatter Plot-Gapminder-faceted-years',
       chartType: 'Scatter Plot',
       title: 'Gapminder — linked countries across 1952 and 2007',
-      linkBy: 'Country',
+      groupBy: 'Country',
       expectation: 'Brush countries in either year to highlight the same countries in both panels (Gapminder).',
       input: {
         semantic_types: {
@@ -313,13 +458,17 @@ function realFacetedCases(): InteractionCase[] {
         encodingMap: { ...titanicEncodings, row: sexFacet },
       }, '-faceted'),
       title: 'Titanic survival — row facets by sex',
-      linkBy: 'Class',
+      groupBy: 'Class',
     },
     {
       id: 'Scatter Plot-Gapminder-faceted-four-years',
       chartType: 'Scatter Plot',
       title: 'Gapminder — continents across four years',
-      linkBy: 'Continent',
+      groupBy: 'Continent',
+      wide: true,
+      spacious: true,
+      stageHeight: 540,
+      stageScale: 1.25,
       expectation: 'Brush a point to link every country in its continent across all four year panels.',
       input: {
         semantic_types: {
@@ -342,7 +491,11 @@ function realFacetedCases(): InteractionCase[] {
       id: 'Scatter Plot-Gapminder-faceted-correlation-grid',
       chartType: 'Scatter Plot',
       title: 'Gapminder — 4×4 country correlation grid',
-      linkBy: 'Country',
+      groupBy: 'Country',
+      wide: true,
+      spacious: true,
+      stageHeight: 820,
+      stageScale: 1.15,
       expectation: 'Brush a country to link it through four years within its continent row.',
       input: {
         semantic_types: {
@@ -371,6 +524,7 @@ const interactionCases: InteractionCase[] = [
   ...representativeCases(),
   multiLegendCase('shape'),
   multiLegendCase('size'),
+  ...indexInspectCases(),
   ...realFacetedCases(),
 ];
 
@@ -403,6 +557,8 @@ const navigationCases: InteractionCase[] = navigationDemoCases.map((item) => ({
   chartType: item.input.chart_spec.chartType,
 }));
 
+const polarBrushCases = new Set(['Pie Chart', 'Donut Chart', 'Rose Chart']);
+
 const navigationAxesByCase = new Map([...interactionCases, ...navigationCases].flatMap((item) => {
   const spec = assembleVegaLite(item.input) as any;
   const axes = spec._interactionSemantics?.navigationAxes as readonly ('x' | 'y')[] | undefined;
@@ -413,21 +569,6 @@ const reorderAxesByCase = new Map(interactionCases.flatMap((item) => {
   const spec = assembleVegaLite(item.input) as any;
   const axes = spec._interactionSemantics?.reorderAxes as readonly { axis: 'x' | 'y'; field: string }[] | undefined;
   return axes?.length ? [[item.id, axes] as const] : [];
-}));
-
-function hasContinuousInspectAxes(spec: any): boolean {
-  if (!spec || typeof spec !== 'object') return false;
-  const xType = spec.encoding?.x?.type;
-  const yType = spec.encoding?.y?.type;
-  if ((xType === 'quantitative' || xType === 'temporal') && yType === 'quantitative') return true;
-  const children = ['layer', 'hconcat', 'vconcat', 'concat']
-    .flatMap((property) => Array.isArray(spec[property]) ? spec[property] : []);
-  return [...children, spec.spec].some((child) => hasContinuousInspectAxes(child));
-}
-
-const inspectQuadrantCases = new Set(interactionCases.flatMap((item) => {
-  const spec = assembleVegaLite(item.input) as any;
-  return hasContinuousInspectAxes(spec) ? [item.id] : [];
 }));
 
 function hasDiscreteLegendChannel(spec: any, channel: string, field: string): boolean {
@@ -576,7 +717,8 @@ function InteractiveChart({
   themeId,
   navigationGuard,
   navigationAxes,
-  linkBy,
+  groupBy,
+  indexInspection,
   resetVersion,
   onStatus,
   onSemanticEvent,
@@ -586,7 +728,8 @@ function InteractiveChart({
   themeId: string | undefined;
   navigationGuard: NavigationGuard;
   navigationAxes?: 'x' | 'y' | 'xy';
-  linkBy?: string | readonly string[];
+  groupBy?: string | readonly string[];
+  indexInspection?: InteractionCase['indexInspection'];
   resetVersion: number;
   onStatus: (status: ProbeStatus, message?: string) => void;
   onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
@@ -628,7 +771,7 @@ function InteractiveChart({
     };
     container.addEventListener('contextmenu', captureContextPoint, true);
     container.addEventListener('flint-interaction', handleInteraction);
-    const interactions = modeInteractions(mode, navigationAxes, navigationGuard, linkBy);
+    const interactions = modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection);
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
     const surface = buildInteractiveChart(container, themedInput, {
       backend: 'vegalite',
@@ -655,7 +798,7 @@ function InteractiveChart({
       setComment(null);
       surface.destroy();
     };
-  }, [input, linkBy, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
+  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
 
   const menuTarget = contextMenu?.detail.event.target ?? null;
   const menuElement = menuTarget?.elements[0];
@@ -766,7 +909,7 @@ export function CaseCard({
   const geometry = lastInteraction ? summarizeGeometry(lastInteraction.event) : undefined;
   const responded = resolved || lastInteraction?.event.action.endsWith('-viewport');
   return (
-    <article className="cf-probe">
+    <article className={`cf-probe${item.wide ? ' cf-probe-wide' : ''}${item.spacious ? ' cf-probe-spacious' : ''}`}>
       <header className="cf-probe-header">
         <div>
           <h2>{title}</h2>
@@ -779,14 +922,21 @@ export function CaseCard({
         </span>
       </header>
       <div className="cf-stage">
-        <ScaleToFit height={420} minHeight={300} adaptiveHeight padding={8}>
+        <ScaleToFit
+          height={item.stageHeight ?? 420}
+          minHeight={item.spacious ? 420 : 300}
+          adaptiveHeight
+          maxScale={item.stageScale ?? 1}
+          padding={8}
+        >
           <InteractiveChart
             input={item.input}
             mode={mode}
             themeId={themeId}
             navigationGuard={navigationGuard}
             navigationAxes={item.navigationAxes}
-            linkBy={item.linkBy}
+            groupBy={item.groupBy}
+            indexInspection={item.indexInspection}
             resetVersion={resetVersion}
             onStatus={(nextStatus, message) => {
               setStatus(nextStatus);
@@ -844,15 +994,17 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const visibleCases = mode === 'navigate' || mode === 'focus-brush-zoom'
+  const visibleCases = mode === 'navigate' || mode === 'brush-zoom'
       ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
       : mode === 'drag-reorder'
         ? interactionCases.filter((item) => reorderAxesByCase.has(item.id))
-        : mode === 'inspect-quadrant'
-          ? interactionCases.filter((item) => inspectQuadrantCases.has(item.id))
-        : mode === 'facet-link' || mode === 'hover-group-focus'
-          ? interactionCases.filter((item) => item.linkBy)
-        : mode === 'focus-legend-toggle'
+        : mode === 'inspect-index'
+          ? interactionCases.filter((item) => item.indexInspection)
+        : mode === 'brush-angle' || mode === 'brush-angle-stateful'
+          ? interactionCases.filter((item) => polarBrushCases.has(item.chartType))
+        : mode === 'linked-brush' || mode === 'hover-group-focus'
+          ? interactionCases.filter((item) => item.groupBy)
+        : mode === 'legend-toggle'
           ? interactionCases.filter((item) => discreteLegendCases.has(item.id))
       : interactionCases;
 
@@ -888,9 +1040,10 @@ export function ClickFocusLab() {
           <li><strong>Hover group focus:</strong> Hover a mark to preview matching semantic keys without changing retained state.</li>
           <li><strong>Annotate:</strong> Click a mark to search nearby free space and connect its represented value.</li>
           <li><strong>Select:</strong> Drag a rectangle to focus all marks within an area.</li>
-          <li><strong>Facet link:</strong> Brush marks in one panel to highlight matching semantic keys across panels.</li>
+          <li><strong>Linked brush:</strong> Brush marks to highlight matching semantic groups across available views.</li>
           <li><strong>X brush:</strong> Drag across an X interval; polar charts automatically use an angular sector.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
+          <li><strong>Angle brush:</strong> Drag an angular sector across a pie, donut, or rose chart.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel, trackpad, or a two-finger pinch to zoom.</li>
           <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>

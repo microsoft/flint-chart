@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, facetBrushLink, hoverGroupFocus, inspect, lassoSelect, legendToggle, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
+import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, lassoSelect, legendToggle, linkedBrush, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import type { ClickHighlightOptions } from '../src/interactive/interactions';
 import { affordanceCursor, resolveInteractionAffordance } from '../src/interactive/affordances';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
@@ -62,7 +62,10 @@ import {
 import {
     effectiveAnnotationEntries,
     evictRetainedStateSiblings,
+    initialInspectSeries,
+    inspectSeriesPresentationKeys,
     interactionsForHoverPresentation,
+    longPressMovedBeyond,
     domainForPlotGeometry,
     keyboardTargetItems,
     nearestReorderHit,
@@ -383,9 +386,15 @@ describe('hover presentation policy', () => {
         const observer: InteractionDef = { id: 'click-observer', eventSource: clickTrigger };
         const hover: InteractionDef = { id: 'hover-observer', eventSource: hoverTrigger };
         const reorder = dragReorder();
+        const indexReader = inspectIndex({ show: 'single', seriesBy: 'Series' });
+        const sustained = longPress();
+        const doubled = doubleActivate();
 
-        expect(interactionsForHoverPresentation([preset, observer], [hover], [reorder]).map(({ id }) => id))
-            .toEqual(['click-mark', 'drag-reorder']);
+        expect(interactionsForHoverPresentation(
+            [preset, observer, sustained, doubled], [hover], [reorder], [indexReader],
+        ).map(({ id }) => id)).toEqual([
+            'click-mark', 'long-press', 'double-activate', 'drag-reorder', 'inspect-index',
+        ]);
     });
 
     it('expands group hover presentation to the committed cohort', () => {
@@ -1385,8 +1394,8 @@ describe('interaction definitions', () => {
         });
     });
 
-    it('links a brushed semantic key across facet panels', () => {
-        const interaction = facetBrushLink({ by: 'Country' });
+    it('broadcasts a brushed semantic group across available views', () => {
+        const interaction = linkedBrush({ groupBy: 'Country' });
         const target = {
             visual: { kind: 'mark' as const, role: 'bar' },
             elements: [{ value: { Country: 'France', Source: 'Fossil' }, records: [{ Country: 'France', Source: 'Fossil', Share: 8 }] }],
@@ -1396,9 +1405,9 @@ describe('interaction definitions', () => {
             selected: [],
             available: [
                 ...target.elements,
-                { value: { Country: 'France', Source: 'Nuclear' }, records: [{ Country: 'France', Source: 'Nuclear', Share: 65 }] },
-                { value: { Country: 'France', Source: 'Renewables' }, records: [{ Country: 'France', Source: 'Renewables', Share: 27 }] },
-                { value: { Country: 'Germany', Source: 'Fossil' }, records: [{ Country: 'Germany', Source: 'Fossil', Share: 45 }] },
+                { value: { Country: 'France', View: 'detail' }, records: [{ Country: 'France', View: 'detail', Share: 65 }] },
+                { value: { Country: 'France', View: 'summary' }, records: [{ Country: 'France', View: 'summary', Share: 27 }] },
+                { value: { Country: 'Germany', View: 'detail' }, records: [{ Country: 'Germany', View: 'detail', Share: 45 }] },
             ],
         };
 
@@ -1408,7 +1417,7 @@ describe('interaction definitions', () => {
     });
 
     it('supports compound link keys and lasso acquisition', () => {
-        const interaction = facetBrushLink({ by: ['Country', 'Product'], brush: 'lasso' });
+        const interaction = linkedBrush({ groupBy: ['Country', 'Product'], brush: 'lasso' });
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
             elements: [{ value: {}, records: [{ Country: 'France', Product: 'A', Year: 2020 }] }],
@@ -1437,7 +1446,7 @@ describe('interaction definitions', () => {
     });
 
     it('keeps the local brush target when the link key is unavailable', () => {
-        const interaction = facetBrushLink({ by: 'Country' });
+        const interaction = linkedBrush({ groupBy: 'Country' });
         const target = {
             visual: { kind: 'mark' as const, role: 'circle' },
             elements: [{ value: { X: 10 }, records: [{ X: 10, Y: 8.04 }] }],
@@ -2836,15 +2845,84 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'preview', target: null,
         }, inspectTrigger('y')).action).toBe('inspect-y');
+        expect(inspect({ mode: 'x>=;y<=' }).handle!(toCanvasInteractionEvent({
+            type: 'semantic', source: 'element', phase: 'preview', target: null,
+        }, inspectTrigger('x>=;y<=')), { chartType: 'Scatter Plot', selected: [] }))
+            .toEqual({
+                id: 'inspect',
+                ops: [{
+                    op: 'set-style', targets: [],
+                    value: { state: 'emphasized', mutedOpacity: 0.25 },
+                }],
+            });
+    });
+
+    it('declares all and legend-switchable single-series index inspection policies', () => {
+        expect(inspectIndex()).toMatchObject({
+            id: 'inspect-index',
+            eventSource: { inspectIndex: { axis: 'x', show: 'all' } },
+        });
+        expect(inspectIndex().handle).toBeUndefined();
+        const single = inspectIndex({ axis: 'y', show: 'single', seriesBy: 'Series', tolerance: 0.03 });
+        expect(single.eventSource.inspectIndex).toEqual({ axis: 'y', show: 'single', seriesBy: 'Series' });
+        expect(single.eventSource.inspectTolerance).toBe(0.03);
+        expect(single.affordances).toEqual([
+            { target: 'legend-item', cursor: 'activate', hover: 'cohort' },
+        ]);
+        expect(inspectIndex({ show: { series: 'Forecast' }, seriesBy: 'Series' }).eventSource.inspectIndex)
+            .toEqual({ axis: 'x', show: { series: 'Forecast' }, seriesBy: 'Series' });
+        expect(() => inspectIndex({ show: 'single' })).toThrow('requires seriesBy');
+        expect(() => inspectIndex({ show: { series: 'Forecast' } }))
+            .toThrow('requires seriesBy');
+    });
+
+    it('starts single-series inspection from the first or preferred available series', () => {
+        const items = [
+            { datum: { Series: 'Bananas' } },
+            { datum: { Series: 'Eggs' } },
+            { datum: { Series: 'Bananas' } },
+        ];
+        expect(initialInspectSeries(items, 'Series')).toBe('Bananas');
+        expect(initialInspectSeries(items, 'Series', 'Eggs')).toBe('Eggs');
+        expect(initialInspectSeries(items, 'Series', 'Missing')).toBe('Bananas');
+    });
+
+    it('collects authored mark keys for the tracked series presentation', () => {
+        const mark = { marktype: 'symbol', role: 'mark' };
+        const items = [
+            { mark, datum: { [INTERACTION_KEY]: 'banana-1', Series: 'Bananas' } },
+            { mark, datum: { [INTERACTION_KEY]: 'eggs-1', Series: 'Eggs' } },
+            { mark, datum: { [INTERACTION_KEY]: 'banana-2', Series: 'Bananas' } },
+        ];
+        expect(inspectSeriesPresentationKeys(items, 'Series', 'Bananas'))
+            .toEqual(['banana-1', 'banana-2']);
+    });
+
+    it('tolerates small pointer jitter during a long press', () => {
+        expect(longPressMovedBeyond({ x: 10, y: 10 }, { x: 13, y: 14 })).toBe(false);
+        expect(longPressMovedBeyond({ x: 10, y: 10 }, { x: 17, y: 10 })).toBe(true);
     });
 
     it('normalizes gesture guide visibility and renderer-neutral styles', () => {
         expect(normalizeInspectGuideOptions(false)).toMatchObject({ visible: false });
+        expect(normalizeInspectGuideOptions(undefined)).toMatchObject({
+            visible: true,
+            style: {
+                color: '#47525c', opacity: 0.58, width: 1,
+                haloColor: '#ffffff', haloOpacity: 0.64, haloWidth: 0.5,
+            },
+        });
         expect(normalizeInspectGuideOptions({
-            style: { color: '#123456', opacity: 2, width: 2, fillOpacity: -1 },
+            style: {
+                color: '#123456', opacity: 2, width: 2, fillOpacity: -1,
+                haloColor: '#abcdef', haloOpacity: 2, haloWidth: 0,
+            },
         })).toEqual({
             visible: true,
-            style: { color: '#123456', opacity: 1, width: 2, fillOpacity: 0 },
+            style: {
+                color: '#123456', opacity: 1, width: 2, fillOpacity: 0,
+                haloColor: '#abcdef', haloOpacity: 1, haloWidth: 0,
+            },
         });
         expect(normalizeRegionGuideOptions({
             style: { fillOpacity: -1, strokeOpacity: 2, strokeWidth: 3 },
@@ -2977,6 +3055,12 @@ describe('legend, inspect, zoom, and touch presets', () => {
             elements: [{ value: { category: 'A' } }],
         };
         expect(longPress({ holdMs: 250 }).eventSource).toMatchObject({ gesture: 'long-press', holdMs: 250 });
+        expect(longPress().affordances).toEqual([
+            { target: 'mark', cursor: 'activate', hover: 'target' },
+        ]);
+        expect(doubleActivate().affordances).toEqual([
+            { target: 'mark', cursor: 'activate', hover: 'target' },
+        ]);
         expect(longPress().handle!(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, longPressTrigger()), context)?.ops[0]).toMatchObject({

@@ -6,7 +6,7 @@ import type {
     SemanticTargetSelector,
 } from '../core/interaction-contracts';
 import type { InteractionEventSource } from './triggers';
-import type { InspectMode } from './triggers';
+import type { InspectIndexShow, InspectMode } from './triggers';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import type { InteractionAffordance } from './affordances';
 import type {
@@ -23,13 +23,14 @@ import {
     createContextActivateInteraction,
     createDoubleActivateInteraction,
     createInspectInteraction,
+    createInspectIndexInteraction,
     createLongPressInteraction,
     createLassoSelectInteraction,
     createLegendToggleInteraction,
     createSelectInteraction,
     createNavigateInteraction,
     createDragReorderInteraction,
-    createFacetBrushLinkInteraction,
+    createLinkedBrushInteraction,
     createHoverGroupFocusInteraction,
 } from './presets';
 import type { CanvasInteractionEvent } from './language/events';
@@ -160,8 +161,8 @@ export interface ClickAnnotateOptions {
     format?: (element: SemanticElement, context: InteractionContext) => string;
 }
 
-export interface FacetBrushLinkOptions extends SelectOptions {
-    by: string | readonly string[];
+export interface LinkedBrushOptions extends SelectOptions {
+    groupBy: GroupBy;
     brush?: 'rectangle' | 'lasso';
 }
 
@@ -209,6 +210,20 @@ export interface InspectOptions {
     guide?: InspectGuideOptions | false;
     selector?: SemanticTargetSelector;
     dimOpacity?: number;
+}
+
+export interface InspectIndexOptions {
+    id?: string;
+    /** Independent chart axis used to acquire one index slice. */
+    axis?: 'x' | 'y';
+    /** Near-axis acquisition radius as a plot-size fraction. Defaults to 0.01. */
+    tolerance?: number;
+    /** Which series to present: all, the first series, or a preferred initial series. */
+    show?: InspectIndexShow;
+    /** Record field identifying a series; single-series policies switch through the legend. */
+    seriesBy?: string;
+    guide?: InspectGuideOptions | false;
+    selector?: SemanticTargetSelector;
 }
 
 export interface BrushZoomOptions {
@@ -261,8 +276,8 @@ export function clickAnnotate(options: ClickAnnotateOptions = {}): CanvasInterac
     return createClickAnnotateInteraction(options);
 }
 
-export function facetBrushLink(options: FacetBrushLinkOptions): CanvasInteractionDef {
-    return createFacetBrushLinkInteraction(options);
+export function linkedBrush(options: LinkedBrushOptions): CanvasInteractionDef {
+    return createLinkedBrushInteraction(options);
 }
 
 export function hoverGroupFocus(options: HoverGroupFocusOptions): CanvasInteractionDef {
@@ -289,6 +304,10 @@ export function inspect(options: InspectOptions = {}): CanvasInteractionDef {
     return createInspectInteraction(options);
 }
 
+export function inspectIndex(options: InspectIndexOptions = {}): CanvasInteractionDef {
+    return createInspectIndexInteraction(options);
+}
+
 export function brushZoom(options: BrushZoomOptions = {}): CanvasInteractionDef {
     return createBrushZoomInteraction(options);
 }
@@ -309,6 +328,7 @@ export function brushY(options: BrushOptions = {}): CanvasInteractionDef {
     return createBrushInteraction('y', options);
 }
 
+/** Select an angular interval on a polar chart. */
 export function brushAngle(options: AngularBrushOptions = {}): CanvasInteractionDef {
     return createAngularBrushInteraction(options);
 }

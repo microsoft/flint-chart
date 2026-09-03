@@ -19,7 +19,14 @@ export function createInspectInteraction(options: InspectOptions = {}): CanvasIn
         affordances: [{ target: 'plot', cursor: 'inspect' }],
         handle(event, context) {
             if (!INSPECT_ACTIONS.has(event.action) || event.phase === 'cancel') return null;
-            if (!event.target) return { id, ops: [] };
+            if (!event.target) return {
+                id,
+                ops: [{
+                    op: 'set-style',
+                    targets: [],
+                    value: { state: 'emphasized', mutedOpacity: dimOpacity },
+                }],
+            };
             return emphasisUpdate(id, event, event.target, dimOpacity, context);
         },
     };

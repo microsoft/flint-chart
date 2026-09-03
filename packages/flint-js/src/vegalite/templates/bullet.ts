@@ -5,7 +5,6 @@ import { ChartTemplateDef } from '../../core/types';
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
-    MUTED_HOVER_STROKE,
     resolveSeriesTarget,
 } from '../../core/interaction-semantics';
 import {
@@ -67,8 +66,10 @@ export const bulletChartDef: ChartTemplateDef = {
             legendFields: colorField || statusField ? { color: colorField ?? statusField! } : undefined,
             selectableMarks: ['bar', 'tick'],
             renderHoverStyles: {
-                bar: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
-                tick: { strokeWidth: 5 },
+                // Vega compiles a Vega-Lite bar to a rect. Treat that filled
+                // area like every other bar: preserve its colour, add no
+                // border, and distinguish it through opacity contrast.
+                rect: { opacity: 'contrast' },
             },
             resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
             presentUpdate: presentAnnotationUpdate(

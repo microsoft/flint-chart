@@ -1109,6 +1109,124 @@ export function tolerantInspectHits(
     return render(candidates);
 }
 
+export interface IndexInspectAcquisition {
+    hits: RenderHit[];
+    coordinate: number;
+    valueCoordinates: number[];
+}
+
+export function indexInspectAcquisition(
+    items: readonly any[],
+    point: PlotPoint,
+    axis: 'x' | 'y',
+    policy: { show: 'all' | { series: unknown }; seriesBy?: string },
+    continuousIndex = false,
+    discreteCoordinates?: readonly number[],
+    assistDistance = 0,
+): IndexInspectAcquisition {
+    const specificSeries = typeof policy.show === 'object' ? policy.show.series : undefined;
+    const eligibleItems = typeof policy.show === 'object'
+        ? items.filter((item) => policy.seriesBy
+            && Object.is(item?.datum?.[policy.seriesBy], specificSeries))
+        : items;
+
+    const itemAnchors = eligibleItems.flatMap((item) => {
+        const geometry = item?.interactionGeometry;
+        const points = geometry?.points as readonly PlotPoint[] | undefined;
+        if (geometry?.kind === 'segment' && points?.length && item.endDatum) {
+            return [
+                { coordinate: axis === 'x' ? points[0].x : points[0].y },
+                { coordinate: axis === 'x' ? points[points.length - 1].x : points[points.length - 1].y },
+            ];
+        }
+        if (!item?.bounds) return [];
+        return [{
+            item,
+            coordinate: axis === 'x'
+                ? (item.bounds.x1 + item.bounds.x2) / 2
+                : (item.bounds.y1 + item.bounds.y2) / 2,
+        }];
+    }).filter((anchor) => Number.isFinite(anchor.coordinate));
+    const anchors: { item?: any; coordinate: number }[] = !continuousIndex && discreteCoordinates?.length
+        ? discreteCoordinates.map((coordinate) => ({ coordinate }))
+        : itemAnchors;
+    const pointerCoordinate = axis === 'x' ? point.x : point.y;
+    if (anchors.length === 0) return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [] };
+
+    const hitsAtCoordinate = (coordinate: number): RenderHit[] => {
+        const intersecting = axisIntersectingHits(eligibleItems, coordinate, axis);
+        if (intersecting.length > 0) return intersecting;
+        return eligibleItems.flatMap((item) => {
+            const points = item?.interactionGeometry?.points as readonly PlotPoint[] | undefined;
+            if (!points?.length) return [];
+            const endpoint = points[points.length - 1];
+            const endpointCoordinate = axis === 'x' ? endpoint.x : endpoint.y;
+            const hit = Math.abs(endpointCoordinate - coordinate) <= 1e-6 ? renderHit(item) : null;
+            return hit ? [hit] : [];
+        });
+    };
+
+    const anchor = anchors.reduce((best, candidate) =>
+        Math.abs(candidate.coordinate - pointerCoordinate) < Math.abs(best.coordinate - pointerCoordinate)
+            ? candidate
+            : best);
+    const directHits = continuousIndex ? hitsAtCoordinate(pointerCoordinate) : [];
+    const anchorDistance = anchor.item?.bounds
+        ? (() => {
+            const start = axis === 'x' ? anchor.item.bounds.x1 : anchor.item.bounds.y1;
+            const end = axis === 'x' ? anchor.item.bounds.x2 : anchor.item.bounds.y2;
+            return pointerCoordinate < start ? start - pointerCoordinate
+                : pointerCoordinate > end ? pointerCoordinate - end : 0;
+        })()
+        : Math.abs(anchor.coordinate - pointerCoordinate);
+    if (continuousIndex && directHits.length === 0 && anchorDistance > assistDistance) {
+        return { hits: [], coordinate: pointerCoordinate, valueCoordinates: [] };
+    }
+    const coordinate = directHits.length > 0 ? pointerCoordinate : anchor.coordinate;
+    const hits = directHits.length > 0 ? directHits : hitsAtCoordinate(coordinate);
+
+    const hitKeys = new Set(hits.map((hit) => hit.datum[INTERACTION_KEY]));
+    let candidates = eligibleItems.filter((item) => {
+        const hit = renderHit(item);
+        return hit && hitKeys.has(hit.datum[INTERACTION_KEY]);
+    });
+    if (candidates.some((item) => item.interactionGeometry)) {
+        candidates = candidates.filter((item) => item.interactionGeometry);
+    }
+    const finalKeys = new Set(hits.map((hit) => hit.datum[INTERACTION_KEY]));
+    const valueCoordinates = candidates.flatMap((item) => {
+        const hit = renderHit(item);
+        if (!hit || !finalKeys.has(hit.datum[INTERACTION_KEY])) return [];
+        const points = item.interactionGeometry?.points as readonly PlotPoint[] | undefined;
+        if (item.interactionGeometry?.kind === 'segment' && points && points.length >= 2) {
+            const start = points[0];
+            const end = points[points.length - 1];
+            const alongStart = axis === 'x' ? start.x : start.y;
+            const alongEnd = axis === 'x' ? end.x : end.y;
+            if (coordinate < Math.min(alongStart, alongEnd) || coordinate > Math.max(alongStart, alongEnd)) return [];
+            const ratio = alongEnd === alongStart ? 0 : (coordinate - alongStart) / (alongEnd - alongStart);
+            return [axis === 'x'
+                ? start.y + ratio * (end.y - start.y)
+                : start.x + ratio * (end.x - start.x)];
+        }
+        if (!item.bounds) return [];
+        return [axis === 'x'
+            ? (item.bounds.y1 + item.bounds.y2) / 2
+            : (item.bounds.x1 + item.bounds.x2) / 2];
+    }).filter((value, index, values) => Number.isFinite(value)
+        && values.findIndex((candidate) => Math.abs(candidate - value) < 0.5) === index);
+    return { hits, coordinate, valueCoordinates };
+}
+
+export function indexInspectHits(
+    items: readonly any[],
+    point: PlotPoint,
+    axis: 'x' | 'y',
+    policy: { show: 'all' | { series: unknown }; seriesBy?: string },
+): RenderHit[] {
+    return indexInspectAcquisition(items, point, axis, policy).hits;
+}
+
 export function nearestItemOnInspectAxis(
     items: readonly any[],
     point: PlotPoint,

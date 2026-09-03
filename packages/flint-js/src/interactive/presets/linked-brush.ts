@@ -1,10 +1,10 @@
-import type { CanvasInteractionDef, FacetBrushLinkOptions } from '../interactions';
+import type { CanvasInteractionDef, LinkedBrushOptions } from '../interactions';
 import { lassoTrigger, rectangleTrigger } from '../triggers';
 import { expandElementsByFields } from './semantic-cohort';
 import { emphasisUpdate, normalizedOpacity } from './utils';
 
-export function createFacetBrushLinkInteraction(options: FacetBrushLinkOptions): CanvasInteractionDef {
-    const id = options.id ?? 'facet-brush-link';
+export function createLinkedBrushInteraction(options: LinkedBrushOptions): CanvasInteractionDef {
+    const id = options.id ?? 'linked-brush';
     const dimOpacity = normalizedOpacity(options.dimOpacity);
     const lasso = options.brush === 'lasso';
     return {
@@ -19,7 +19,7 @@ export function createFacetBrushLinkInteraction(options: FacetBrushLinkOptions):
             if (!event.target) return emphasisUpdate(id, event, null, dimOpacity, context);
             const target = {
                 ...event.target,
-                elements: expandElementsByFields(event.target.elements, context.available, options.by),
+                elements: expandElementsByFields(event.target.elements, context.available, options.groupBy),
             };
             return emphasisUpdate(id, event, target, dimOpacity, context);
         },
