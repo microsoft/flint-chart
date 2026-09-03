@@ -3,7 +3,8 @@ import { changeset, parse, View } from 'vega';
 import { compile } from 'vega-lite';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { axisHighlight, brushAngle, brushX, brushZoom, clickAnnotate, clickHighlight, dragReorder, externalInteraction, inspect, legendToggle, navigate, select } from '../src/interactive/interactions';
-import type { ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
+import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticElement, SemanticTarget } from '../src/interactive/interactions';
+import { dragTrigger } from '../src/interactive/triggers';
 import {
     associateSemanticElementRenderKeys,
     MUTED_HOVER_FILL,
@@ -50,7 +51,9 @@ import {
     indexInspectAcquisition,
     indexInspectHits,
     PATH_KEY_SUFFIX,
+    pathIntersectsAngularSector,
     physicalItemAt,
+    polarFrameFromRadarGrid,
     plotToClientPoint,
     legendEntryItemAtPoint,
     legendSemanticTarget,
@@ -564,6 +567,26 @@ describe('Vega-Lite semantic interactions', () => {
             },
         });
         expect(facetedSemantics.reorderAxis).toBeUndefined();
+    });
+
+    it('admits generic freeform drag without requiring a reorderable category scale', () => {
+        const scatter = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: { field: 'x' }, y: { field: 'y' } },
+            },
+            semantic_types: { x: 'Number', y: 'Number' },
+            data: { values: [{ x: 1, y: 2 }] },
+        }) as any;
+        const interaction: CanvasInteractionDef = {
+            id: 'freeform-drag',
+            eventSource: dragTrigger(),
+            handle: () => null,
+        };
+
+        const plan = addVegaLiteInteractions(scatter, [interaction]);
+        expect(plan).toBeTruthy();
+        expect(plan?.reorderAxis).toBeUndefined();
     });
 
     it.each(['quantitative', 'temporal'] as const)('rejects %s Bar category reorder semantics', (type) => {
@@ -1823,6 +1846,45 @@ describe('Vega-Lite semantic interactions', () => {
         expect(arcIntersectsAngularSector(arc, { ...sector, innerRadius: 85 })).toBe(false);
     });
 
+    it('tests Radar line content against angular sectors', () => {
+        const sector = {
+            center: { x: 100, y: 100 }, innerRadius: 0, outerRadius: 90,
+            startAngle: -0.2, endAngle: 0.2,
+        };
+        const contained = [{ x: 95, y: 40 }, { x: 105, y: 40 }];
+        const crossing = [{ x: 70, y: 40 }, { x: 130, y: 40 }];
+        const outside = [{ x: 140, y: 90 }, { x: 150, y: 110 }];
+
+        expect(pathIntersectsAngularSector(contained, sector)).toBe(true);
+        expect(pathIntersectsAngularSector(contained, sector, true)).toBe(true);
+        expect(pathIntersectsAngularSector(crossing, sector)).toBe(true);
+        expect(pathIntersectsAngularSector(crossing, sector, true)).toBe(false);
+        expect(pathIntersectsAngularSector(outside, sector)).toBe(false);
+    });
+
+    it('derives the Radar brush radius from grid spokes instead of legends', () => {
+        const spokeMark = { marktype: 'rule' };
+        const legendMark = { marktype: 'rule', name: 'legend-symbol' };
+        const view = {
+            scenegraph: () => ({
+                root: {
+                    items: [{
+                        mark: { marktype: 'group' }, x: 20, y: 30,
+                        items: [
+                            { mark: spokeMark, datum: { __type: 'spoke' }, x: 100, y: 100, x2: 100, y2: 40 },
+                            { mark: spokeMark, datum: { __type: 'spoke' }, x: 100, y: 100, x2: 160, y2: 100 },
+                            { mark: legendMark, x: 220, y: 20, x2: 320, y2: 20 },
+                        ],
+                    }],
+                },
+            }),
+        };
+
+        expect(polarFrameFromRadarGrid(view)).toEqual({
+            center: { x: 120, y: 130 }, innerRadius: 0, outerRadius: 60,
+        });
+    });
+
     it('draws annular angular-brush geometry and admits it only on polar ChartDefs', () => {
         expect(angularSectorPath({
             center: { x: 100, y: 100 }, innerRadius: 30, outerRadius: 80,
@@ -1861,6 +1923,24 @@ describe('Vega-Lite semantic interactions', () => {
         };
         const polarPlan = addVegaLiteInteractions(polar, [brushX()]);
         expect(polarPlan?.angularXBrush).toBe(true);
+
+        const radar = {
+            mark: 'point',
+            data: { values: [{ metric: 'Speed', value: 1, series: 'A' }] },
+            encoding: {
+                x: { field: 'metric', type: 'nominal' },
+                y: { field: 'value', type: 'quantitative' },
+                color: { field: 'series', type: 'nominal' },
+            },
+            _interactionSemantics: radarChartDef.semanticInteractions!({
+                resolvedEncodings: {
+                    x: { field: 'metric', type: 'nominal' },
+                    y: { field: 'value', type: 'quantitative' },
+                    color: { field: 'series', type: 'nominal' },
+                },
+            }),
+        };
+        expect(addVegaLiteInteractions(radar, [brushAngle()])?.angularXBrush).toBe(true);
     });
 
     it('does not select adjacent cells that only touch the selection boundary', () => {
@@ -3304,6 +3384,32 @@ describe('Vega-Lite semantic interactions', () => {
             .every((item) => item.opacity === plan?.dimOpacity)).toBe(true);
     });
 
+    it('pins a themed Calendar continuous legend to its full extent', async () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Date: '2024-01-01', Activity: 26 },
+                { Date: '2024-01-02', Activity: 27 },
+                { Date: '2024-01-03', Activity: 28 },
+                { Date: '2024-01-04', Activity: 100 },
+            ] },
+            semantic_types: { Date: 'Date', Activity: 'Quantity' },
+            chart_spec: {
+                chartType: 'Calendar Heatmap',
+                encodings: { x: 'Date', color: 'Activity' },
+            },
+            theme_spec: 'pop',
+        } as any) as any;
+        const { compiled } = instrument(spec, [legendToggle()]);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+
+        const colorScale = compiled.scales.find((scale: any) =>
+            scale.type === 'quantize' && Array.isArray(scale.domain));
+        expect(colorScale).toBeDefined();
+        expect(colorScale.domain).toEqual([26, 100]);
+        expect(view.scale(colorScale.name).domain()).toEqual([26, 100]);
+    });
+
     it('neutralizes muted continuous color only for geographic maps', () => {
         const spec = assembleVegaLite({
             data: { values: [
@@ -3622,6 +3728,37 @@ describe('Vega-Lite semantic interactions', () => {
         expect(segments.every((segment) => segment.interactionGeometry.closed)).toBe(true);
         expect(segments.at(-1)?.datum.Nutrient).toBe('Sugar');
         expect(segments.at(-1)?.interactionGeometry.endDatum.Nutrient).toBe('Protein');
+    });
+
+    it('derives the angular brush frame from a rendered Radar grid with a legend', async () => {
+        const values = [
+            ['Oats', 17, 7, 66, 11, 1],
+            ['Almonds', 21, 49, 22, 12, 4],
+        ].flatMap(([Food, ...amounts]) => ['Protein', 'Fat', 'Carbs', 'Fiber', 'Sugar']
+            .map((Nutrient, index) => ({ Food, Nutrient, Amount: amounts[index] })));
+        const spec = assembleVegaLite({
+            data: { values },
+            semantic_types: { Food: 'Category', Nutrient: 'Category', Amount: 'Quantity' },
+            chart_spec: {
+                chartType: 'Radar Chart',
+                encodings: { x: 'Nutrient', y: 'Amount', color: 'Food' },
+            },
+        } as any) as any;
+        const { compiled } = instrument(spec);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+
+        const frame = polarFrameFromRadarGrid(view);
+        const spokes = allSceneItems(view).filter((item) =>
+            item.mark?.marktype === 'rule' && item.datum?.__type === 'spoke');
+
+        expect(frame).toBeDefined();
+        expect(spokes).toHaveLength(5);
+        expect(frame!.outerRadius).toBeCloseTo(Math.hypot(
+            spokes[0].x2 - spokes[0].x,
+            spokes[0].y2 - spokes[0].y,
+        ));
+        expect(frame!.outerRadius).toBeLessThan(Math.min(view.width(), view.height()) / 2);
     });
 
     it('acquires the nearest Radar edge across overlapping filled series', async () => {

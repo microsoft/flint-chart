@@ -1,32 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { StyleSpec } from 'flint-chart/interactive';
+import type { ChartAssemblyInput } from 'flint-chart';
 import {
   buildInteractiveChart,
   clickTrigger,
+  dragTrigger,
+  externalInteraction,
   type CanvasInteractionDef,
+  type ChartUpdate,
   type FlintInteractionEventDetail,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { ScaleToFit } from '../components/ScaleToFit';
+import './interaction-candidates.css';
 
-interface Frame {
-  year: number;
-  fertility: number;
-  life: number;
-  population: number;
-}
-
-interface CountrySeries {
-  name: string;
-  region: string;
-  frames: Frame[];
-}
-
-const YEARS = [1955, 1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005] as const;
-
-const SERIES: CountrySeries[] = [
+const SERIES = [
   {
     name: 'Afghanistan',
-    region: 'South Asia',
     frames: [
       { year: 1955, fertility: 7.7, life: 30.332, population: 8891209 },
       { year: 1960, fertility: 7.7, life: 31.997, population: 9829450 },
@@ -43,7 +32,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'Brazil',
-    region: 'America',
     frames: [
       { year: 1955, fertility: 6.1501, life: 53.285, population: 61773546 },
       { year: 1960, fertility: 6.1501, life: 55.665, population: 71694810 },
@@ -60,7 +48,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'China',
-    region: 'East Asia & Pacific',
     frames: [
       { year: 1955, fertility: 5.59, life: 50.54896, population: 608655000 },
       { year: 1960, fertility: 5.72, life: 44.50136, population: 667070000 },
@@ -77,7 +64,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'France',
-    region: 'Europe & Central Asia',
     frames: [
       { year: 1955, fertility: 2.712, life: 68.93, population: 43427669 },
       { year: 1960, fertility: 2.85, life: 70.51, population: 45670000 },
@@ -94,7 +80,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'India',
-    region: 'South Asia',
     frames: [
       { year: 1955, fertility: 5.8961, life: 40.249, population: 393000000 },
       { year: 1960, fertility: 5.8216, life: 43.605, population: 434000000 },
@@ -111,7 +96,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'Japan',
-    region: 'East Asia & Pacific',
     frames: [
       { year: 1955, fertility: 2.08, life: 65.5, population: 89815060 },
       { year: 1960, fertility: 2.02, life: 68.73, population: 94091638 },
@@ -128,7 +112,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'Nigeria',
-    region: 'Sub-Saharan Africa',
     frames: [
       { year: 1955, fertility: 6.9, life: 37.802, population: 35458978 },
       { year: 1960, fertility: 6.9, life: 39.36, population: 39914593 },
@@ -145,7 +128,6 @@ const SERIES: CountrySeries[] = [
   },
   {
     name: 'United States',
-    region: 'America',
     frames: [
       { year: 1955, fertility: 3.706, life: 69.49, population: 165931000 },
       { year: 1960, fertility: 3.314, life: 70.21, population: 180671000 },
@@ -162,44 +144,24 @@ const SERIES: CountrySeries[] = [
   },
 ];
 
-const SEMANTIC_TYPES = {
+type CountrySeries = (typeof SERIES)[number];
+type Frame = CountrySeries['frames'][number];
+
+const SEMANTIC_TYPES: ChartAssemblyInput['semantic_types'] = {
   Country: 'Country',
-  Region: 'Category',
-  Year: 'Year',
-  YearLabel: 'Category',
-  Fertility: 'Quantity',
-  Life: 'Quantity',
-  Population: 'Quantity',
-  Value: 'Quantity',
+  Fertility: { semanticType: 'Quantity', intrinsicDomain: [1, 8] },
+  Life: { semanticType: 'Quantity', intrinsicDomain: [30, 85] },
+  Population: { semanticType: 'Quantity', intrinsicDomain: [0, 1_400_000_000] },
 };
 
-const ALL_ROWS = SERIES.flatMap((series) => series.frames.map((frame) => ({
-  Country: series.name,
-  Region: series.region,
-  Year: frame.year,
-  YearLabel: String(frame.year),
-  Fertility: frame.fertility,
-  Life: frame.life,
-  Population: frame.population,
-})));
-
-const GLOBAL_DOMAIN = {
-  minFertility: Math.min(...ALL_ROWS.map((row) => row.Fertility)),
-  maxFertility: Math.max(...ALL_ROWS.map((row) => row.Fertility)),
-  minLife: Math.min(...ALL_ROWS.map((row) => row.Life)),
-  maxLife: Math.max(...ALL_ROWS.map((row) => row.Life)),
-};
-
-const MAIN_INTERACTION_ID = 'flint-dimpvis-country';
 const MAIN_MARK_INTERACTION_ID = 'flint-dimpvis-country-mark';
 const MAIN_LEGEND_INTERACTION_ID = 'flint-dimpvis-country-legend';
-const COUNTRY_STYLE_ID = 'flint-dimpvis-country-style';
-const YEAR_STYLE_ID = 'flint-dimpvis-year-style';
-const ANCHOR_STYLE_ID = 'flint-dimpvis-domain-anchors';
+const TRAJECTORY_UPDATE_ID = 'flint-dimpvis-trajectory';
+const PLAYBACK_INTERACTION_ID = 'flint-dimpvis-playback';
 
 const MAIN_MARK_CLICK_INTERACTION: CanvasInteractionDef = {
   id: MAIN_MARK_INTERACTION_ID,
-  eventSource: clickTrigger,
+  eventSource: { ...clickTrigger, defaultAssistDistance: 12 },
   affordances: [
     { target: 'mark', cursor: 'activate', hover: 'target' },
   ],
@@ -220,89 +182,111 @@ const MAIN_LEGEND_CLICK_INTERACTION: CanvasInteractionDef = {
   },
 };
 
-function chartInput(
-  data: Record<string, unknown>[],
-  chartType: string,
-  title: string,
-  encodings: Record<string, unknown>,
-  chartProperties?: Record<string, unknown>,
-  baseSize?: { width: number; height: number },
-) {
+function interpolateFrame(frames: readonly Frame[], year: number): Frame {
+  if (year <= frames[0].year) return { ...frames[0], year };
+  if (year >= frames[frames.length - 1].year) return { ...frames[frames.length - 1], year };
+  const upperIndex = frames.findIndex((frame) => frame.year >= year);
+  const lower = frames[upperIndex - 1];
+  const upper = frames[upperIndex];
+  const t = (year - lower.year) / (upper.year - lower.year);
   return {
-    data: { values: data },
-    semantic_types: SEMANTIC_TYPES,
-    chart_spec: {
-      chartType,
-      title,
-      encodings,
-      baseSize: baseSize ?? { width: 396, height: 220 },
-      ...(chartProperties ? { chartProperties } : {}),
-    },
+    year,
+    fertility: lower.fertility + (upper.fertility - lower.fertility) * t,
+    life: lower.life + (upper.life - lower.life) * t,
+    population: lower.population + (upper.population - lower.population) * t,
   };
 }
 
-function focusedRows(selectedCountry: string, activeYear: number) {
-  return [
-    ...ALL_ROWS.filter((row) => row.Country === selectedCountry || row.Year === activeYear),
-    {
-      Country: '__domain-min__',
-      Region: 'Anchor',
-      Year: YEARS[0],
-      YearLabel: String(YEARS[0]),
-      Fertility: GLOBAL_DOMAIN.minFertility,
-      Life: GLOBAL_DOMAIN.minLife,
-      Population: 0,
-    },
-    {
-      Country: '__domain-max__',
-      Region: 'Anchor',
-      Year: YEARS[YEARS.length - 1],
-      YearLabel: String(YEARS[YEARS.length - 1]),
-      Fertility: GLOBAL_DOMAIN.maxFertility,
-      Life: GLOBAL_DOMAIN.maxLife,
-      Population: 0,
-    },
-  ];
+function chartRow(series: CountrySeries, frame: Frame) {
+  return {
+    Country: series.name,
+    Year: frame.year,
+    YearLabel: String(frame.year),
+    Fertility: frame.fertility,
+    Life: frame.life,
+    Population: frame.population,
+  };
 }
 
-function interactionTarget(detail: FlintInteractionEventDetail): {
-  country: string | null;
-  year?: number;
-} {
+function snapshotRows(year: number) {
+  return SERIES.map((series) => chartRow(series, interpolateFrame(series.frames, year)));
+}
+
+function trajectoryOverlayUpdate(series: CountrySeries, year: number): ChartUpdate {
+  const trajectoryRows = series.frames.map((frame) => chartRow(series, frame));
+  return {
+    id: TRAJECTORY_UPDATE_ID,
+    ops: [
+      {
+        op: 'set-overlay' as const,
+        name: 'active-year',
+        value: {
+          mark: 'text' as const,
+          role: 'year-watermark',
+          data: {
+            values: [{ Fertility: 4.5, Life: 57.5, YearLabel: String(Math.round(year)) }],
+          },
+          encodings: {
+            x: { field: 'Fertility' },
+            y: { field: 'Life' },
+            text: { field: 'YearLabel' },
+          },
+          style: { fill: '#69737d', fontSize: 104, fontWeight: 'bold', opacity: 0.11 },
+        },
+      },
+      {
+        op: 'set-overlay' as const,
+        name: 'trajectory',
+        value: {
+          mark: 'line' as const,
+          role: 'trajectory',
+          interactive: true,
+          projectable: true,
+          data: { values: trajectoryRows },
+          encodings: {
+            x: { field: 'Fertility' },
+            y: { field: 'Life' },
+            order: { field: 'Year' },
+            color: { field: 'Country' },
+          },
+          style: { strokeWidth: 2.25, strokeDash: [6, 4], opacity: 0.72 },
+        },
+      },
+      {
+        op: 'set-overlay' as const,
+        name: 'trajectory-years',
+        value: {
+          mark: 'text' as const,
+          role: 'trajectory-label',
+          data: { values: trajectoryRows },
+          encodings: {
+            x: { field: 'Fertility' },
+            y: { field: 'Life' },
+            color: { field: 'Country' },
+            text: { field: 'YearLabel' },
+          },
+          style: { dx: 7, dy: -5, textAlign: 'start', fontSize: 10, opacity: 0.68 },
+        },
+      },
+    ],
+  };
+}
+
+function trajectoryFrameUpdate(series: CountrySeries, year: number): ChartUpdate {
+  return {
+    id: TRAJECTORY_UPDATE_ID,
+    ops: [
+      ...trajectoryOverlayUpdate(series, year).ops,
+      { op: 'set-data', source: 'main', value: { rows: snapshotRows(year) } },
+    ],
+  };
+}
+
+function pointCountry(detail: FlintInteractionEventDetail): string | null {
+  if (detail.event.target?.visual.role !== 'symbol') return null;
   const element = detail.event.target?.elements[0];
-  if (!element) return { country: null };
-  const role = detail.event.target?.visual.role;
-  const pointValue = (element.records?.[0] ?? element.value) as Record<string, unknown> | undefined;
-  const coerceYear = (value: unknown): number | undefined => {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    if (typeof value === 'string' && value.trim() !== '') {
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : undefined;
-    }
-    return undefined;
-  };
-  if (role === 'symbol') {
-    const pointCountry = typeof pointValue?.Country === 'string' ? pointValue.Country : null;
-    const pointYear = coerceYear(pointValue?.Year);
-    return {
-      country: pointCountry,
-      year: pointYear,
-    };
-  }
-  const semanticRows = [
-    ...(element.records as Record<string, unknown>[] | undefined ?? []),
-    ...(element.value ? [element.value as Record<string, unknown>] : []),
-  ];
-  const countryValues = [...new Set(semanticRows
-    .map((row) => row?.Country)
-    .filter((value): value is string => typeof value === 'string'))];
-  const yearValues = [...new Set(semanticRows
-    .map((row) => coerceYear(row?.Year))
-    .filter((value): value is number => value !== undefined))];
-  return {
-    country: countryValues.length === 1 ? countryValues[0] : null,
-    year: yearValues.length === 1 ? yearValues[0] : undefined,
-  };
+  const row = (element?.records?.[0] ?? element?.value) as Record<string, unknown> | undefined;
+  return typeof row?.Country === 'string' ? row.Country : null;
 }
 
 function legendCountry(detail: FlintInteractionEventDetail): string | null {
@@ -318,74 +302,85 @@ function legendCountry(detail: FlintInteractionEventDetail): string | null {
   return null;
 }
 
-async function applySelectorStyle(
-  surface: InteractiveChartSurface | null,
-  id: string,
-  key: Record<string, unknown>,
-  value: StyleSpec,
-) {
-  if (!surface) return;
-  await surface.applyUpdate({
-    id,
-    ops: [{
-      op: 'set-style',
-      targets: [{ select: { key } }],
-      value,
-    }],
-  });
+function mainInput(large: boolean): ChartAssemblyInput {
+  const size = large ? { width: 900, height: 520 } : { width: 620, height: 380 };
+  return {
+    data: { values: snapshotRows(1980) },
+    semantic_types: SEMANTIC_TYPES,
+    theme_spec: 'swiss',
+    options: { addTooltips: false },
+    chart_spec: {
+      chartType: 'Scatter Plot',
+      title: 'Global health trajectories',
+      encodings: { x: 'Fertility', y: 'Life', color: 'Country', size: 'Population' },
+      baseSize: size,
+      canvasSize: size,
+      chartProperties: { includeZero_x: false, includeZero_y: false },
+    },
+  };
 }
 
-async function hideDomainAnchors(surface: InteractiveChartSurface | null) {
-  if (!surface) return;
-  await surface.applyUpdate({
-    id: ANCHOR_STYLE_ID,
-    ops: [{
-      op: 'set-style',
-      targets: [
-        { select: { key: { Country: '__domain-min__' } } },
-        { select: { key: { Country: '__domain-max__' } } },
-      ],
-      value: { visible: false },
-    }],
-  });
-}
-
-export function FlintDimpVisStage() {
+export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
+  const chartInput = useMemo(() => mainInput(large), [large]);
   const [selectedCountry, setSelectedCountry] = useState('India');
   const [activeYear, setActiveYear] = useState(1980);
-  const [debugInfo, setDebugInfo] = useState<{
-    action: string;
-    role: string;
-    elementCount: number;
-    recordCount: number;
-    country: string | null;
-    year?: number;
-    selectedCountry: string;
-    activeYear: number;
-    valueKeys: string[];
-    recordKeys: string[];
-    valuePreview: string;
-    recordPreview: string;
-  } | null>(null);
-
+  const [isPlaying, setIsPlaying] = useState(false);
+  const selectedCountryRef = useRef(selectedCountry);
+  const activeYearRef = useRef(activeYear);
+  selectedCountryRef.current = selectedCountry;
+  activeYearRef.current = activeYear;
   const mainMountRef = useRef<HTMLDivElement>(null);
-
   const mainSurfaceRef = useRef<InteractiveChartSurface | null>(null);
 
-  const mainInput = useMemo(() => chartInput(
-    focusedRows(selectedCountry, activeYear),
-    'Connected Scatter Plot',
-    `Global health trajectories — active frame ${activeYear}`,
-    {
-      x: 'Fertility',
-      y: 'Life',
-      order: 'Year',
-      color: 'Country',
-      detail: 'Country',
+  const dragInteraction = useMemo<CanvasInteractionDef>(() => ({
+    id: TRAJECTORY_UPDATE_ID,
+    eventSource: dragTrigger(),
+    affordances: [{ target: 'mark', cursor: 'drag', hover: 'target' }],
+    handle(event) {
+      if (event.action !== 'drag-element') return null;
+      if (event.phase === 'start') setIsPlaying(false);
+      const targetRecord = event.target?.elements[0]?.records?.[0]
+        ?? event.target?.elements[0]?.value;
+      const targetCountry = typeof targetRecord?.Country === 'string'
+        ? targetRecord.Country
+        : undefined;
+      if (event.phase === 'start' && targetCountry) {
+        const series = SERIES.find((candidate) => candidate.name === targetCountry);
+        if (!series) return null;
+        selectedCountryRef.current = series.name;
+        setSelectedCountry(series.name);
+        return trajectoryOverlayUpdate(series, activeYearRef.current);
+      }
+
+      const projection = event.geometry.projection;
+      if (!projection?.segment) return null;
+      const startYear = Number(projection.segment.start.value.Year);
+      const endYear = Number(projection.segment.end.value.Year);
+      if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) return null;
+      const year = startYear + (endYear - startYear) * projection.segment.t;
+      const series = SERIES.find((candidate) => candidate.name === selectedCountryRef.current);
+      if (!series) return null;
+      activeYearRef.current = year;
+      setActiveYear(year);
+      return trajectoryFrameUpdate(series, year);
     },
-    { includeZero_x: false, includeZero_y: false },
-    { width: 396, height: 260 },
-  ), [activeYear, selectedCountry]);
+  }), []);
+
+  const playbackInteraction = useMemo(() => externalInteraction<{
+    country: string;
+    year: number;
+  }>({
+    id: PLAYBACK_INTERACTION_ID,
+    handle({ country, year }) {
+      const series = SERIES.find((candidate) => candidate.name === country);
+      if (!series) return null;
+      selectedCountryRef.current = country;
+      activeYearRef.current = year;
+      setSelectedCountry(country);
+      setActiveYear(year);
+      return trajectoryFrameUpdate(series, year);
+    },
+  }), []);
 
   useEffect(() => {
     const mount = mainMountRef.current;
@@ -394,81 +389,44 @@ export function FlintDimpVisStage() {
     const handleInteraction = (event: Event) => {
       const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
       if (detail.event.phase !== 'commit') return;
-      const firstElement = detail.event.target?.elements[0];
-      const firstValue = firstElement?.value as Record<string, unknown> | undefined;
-      const firstRecord = firstElement?.records?.[0] as Record<string, unknown> | undefined;
-      const { country, year } = interactionTarget(detail);
-      const baseDebug = {
-        role: detail.event.target?.visual.role ?? 'none',
-        elementCount: detail.event.target?.elements.length ?? 0,
-        recordCount: firstElement?.records?.length ?? 0,
-        country,
-        year,
-        valueKeys: firstValue ? Object.keys(firstValue) : [],
-        recordKeys: firstRecord ? Object.keys(firstRecord) : [],
-        valuePreview: firstValue ? JSON.stringify(firstValue) : 'null',
-        recordPreview: firstRecord ? JSON.stringify(firstRecord) : 'null',
-      };
+      setIsPlaying(false);
       const legendSelection = legendCountry(detail);
       if (legendSelection) {
-        setDebugInfo({
-          action: 'legend-select',
-          ...baseDebug,
-          country: legendSelection,
-          selectedCountry: legendSelection,
-          activeYear,
-        });
+        selectedCountryRef.current = legendSelection;
+        const series = SERIES.find((candidate) => candidate.name === legendSelection);
+        if (series) {
+          void mainSurfaceRef.current?.applyUpdate(trajectoryOverlayUpdate(series, activeYearRef.current));
+        }
         setSelectedCountry(legendSelection);
         return;
       }
-      if (detail.event.target?.visual.role !== 'symbol') {
-        setDebugInfo({
-          action: 'ignored-non-symbol',
-          ...baseDebug,
-          selectedCountry,
-          activeYear,
-        });
-        return;
-      }
-      if (!country || country !== selectedCountry || year === undefined) {
-        setDebugInfo({
-          action: 'ignored-symbol-mismatch',
-          ...baseDebug,
-          selectedCountry,
-          activeYear,
-        });
-        return;
-      }
-      setDebugInfo({
-        action: 'symbol-year-select',
-        ...baseDebug,
-        selectedCountry,
-        activeYear: year,
-      });
-      setActiveYear(year);
+      const country = pointCountry(detail);
+      if (!country) return;
+      const series = SERIES.find((candidate) => candidate.name === country);
+      if (!series) return;
+      selectedCountryRef.current = country;
+      setSelectedCountry(country);
+      void mainSurfaceRef.current?.applyUpdate(trajectoryOverlayUpdate(series, activeYearRef.current));
     };
 
     mount.addEventListener('flint-interaction', handleInteraction);
-    const surface = buildInteractiveChart(mount, mainInput as any, {
+    const surface = buildInteractiveChart(mount, chartInput, {
       backend: 'vegalite',
       renderer: 'svg',
-      interactions: [MAIN_MARK_CLICK_INTERACTION, MAIN_LEGEND_CLICK_INTERACTION],
-      ariaLabel: `Discrete Flint DimpVis main chart for ${activeYear}`,
-      chartId: `flint-dimpvis-main-${activeYear}`,
+      interactions: [
+        MAIN_MARK_CLICK_INTERACTION,
+        MAIN_LEGEND_CLICK_INTERACTION,
+        dragInteraction,
+        playbackInteraction,
+      ],
+      ariaLabel: 'Flint DimVis trajectory chart',
+      chartId: 'flint-dimpvis-main',
     });
     mainSurfaceRef.current = surface;
 
     void surface.ready.then(async () => {
-      await hideDomainAnchors(surface);
-      await applySelectorStyle(surface, COUNTRY_STYLE_ID, { Country: selectedCountry }, {
-        state: 'emphasized',
-        mutedOpacity: 0.22,
-      });
-      await applySelectorStyle(surface, YEAR_STYLE_ID, { Year: activeYear }, {
-        opacity: 1,
-        stroke: '#7c2d12',
-        strokeWidth: 2,
-      });
+      const initialSeries = SERIES.find((series) => series.name === selectedCountryRef.current);
+      if (initialSeries) await surface.applyUpdate(trajectoryOverlayUpdate(initialSeries, activeYearRef.current));
     });
 
     return () => {
@@ -476,42 +434,81 @@ export function FlintDimpVisStage() {
       mainSurfaceRef.current = null;
       surface.destroy();
     };
-  }, [mainInput, activeYear, selectedCountry]);
+  }, [chartInput, dragInteraction, playbackInteraction]);
+
+  useEffect(() => {
+    if (!isPlaying) return undefined;
+    let cancelled = false;
+    let animationFrame: number | undefined;
+
+    const play = async () => {
+      const surface = mainSurfaceRef.current;
+      if (!surface) return;
+      await surface.ready;
+      if (cancelled) return;
+
+      const shouldRestart = selectedCountryRef.current !== 'China' || activeYearRef.current >= 2005;
+      const startYear = shouldRestart ? 1955 : activeYearRef.current;
+      let startTime: number | undefined;
+
+      const tick = async (time: number) => {
+        if (cancelled) return;
+        startTime ??= time;
+        // Ten data-years per second preserves the old five-second full run,
+        // while animation frames provide fractional years between observations.
+        const year = Math.min(2005, startYear + (time - startTime) / 100);
+        await surface.dispatch(PLAYBACK_INTERACTION_ID, { country: 'China', year });
+        if (cancelled) return;
+        if (year >= 2005) {
+          setIsPlaying(false);
+          return;
+        }
+        animationFrame = window.requestAnimationFrame((nextTime) => void tick(nextTime));
+      };
+
+      animationFrame = window.requestAnimationFrame((time) => void tick(time));
+    };
+
+    void play();
+    return () => {
+      cancelled = true;
+      if (animationFrame !== undefined) window.cancelAnimationFrame(animationFrame);
+    };
+  }, [isPlaying]);
 
   return (
     <div className="ic-flint-dimpvis-shell">
       <div className="ic-stage-meta">
         <strong>Discrete Flint approximation</strong>
         <span>
-          Use the country legend to switch the active trajectory. Once a trajectory is visible, clicking one
-          of its points updates the shared current year for every other country node.
+          Click any country point to reveal its trajectory, then drag the trajectory to interpolate the
+          shared year and update every country in place.
         </span>
       </div>
       <div className="ic-toolbar">
         <span className="ic-pill" data-active="true">Country: {selectedCountry}</span>
-        <span className="ic-pill" data-active="true">Year: {activeYear}</span>
-      </div>
-      <div className="ic-stage-meta">
-        <strong>Debug</strong>
-        <span style={{ whiteSpace: 'pre-wrap' }}>
-          {debugInfo
-            ? `action=${debugInfo.action} role=${debugInfo.role} elements=${debugInfo.elementCount} records=${debugInfo.recordCount} country=${debugInfo.country ?? 'null'} year=${debugInfo.year ?? 'null'} selected=${debugInfo.selectedCountry} active=${debugInfo.activeYear}
-valueKeys=${debugInfo.valueKeys.join(',') || 'none'}
-recordKeys=${debugInfo.recordKeys.join(',') || 'none'}
-value=${debugInfo.valuePreview}
-record0=${debugInfo.recordPreview}`
-            : 'No interaction captured yet.'}
-        </span>
+        <span className="ic-pill" data-active="true">Year: {activeYear.toFixed(1)}</span>
       </div>
       <div className="ic-flint-dimpvis-panel">
-        <div className="ic-flint-dimpvis-panel-header">
-          <strong>Unified trajectory view</strong>
-          <span>
-            Legend selection changes the active country. Point clicks on that country step the background
-            snapshot through discrete years without changing which trajectory stays expanded.
-          </span>
-        </div>
-        <div className="ic-flint-dimpvis-mount" ref={mainMountRef} />
+        <ScaleToFit
+          height={large ? 540 : 390}
+          minHeight={large ? 400 : 285}
+          adaptiveHeight
+          padding={8}
+        >
+          <div className="ic-flint-dimpvis-mount" ref={mainMountRef} />
+        </ScaleToFit>
+      </div>
+      <div className="ic-toolbar">
+        <button
+          type="button"
+          className="ic-pill"
+          data-active={isPlaying}
+          aria-pressed={isPlaying}
+          onClick={() => setIsPlaying((playing) => !playing)}
+        >
+          {isPlaying ? 'Pause' : '▶ Play China'}
+        </button>
       </div>
     </div>
   );

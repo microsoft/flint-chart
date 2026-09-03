@@ -811,7 +811,16 @@ function vlApplyFieldContext(
             // Example: individual percentages range 20–50% (no snap), but
             // they sum to ~100% per group → should snap to 100%.
             let skipDomain = false;
-            let effectiveDomainConstraint = cs.domainConstraint;
+            // Size and color scales must not silently re-normalize when a
+            // mounted chart replaces its rows. An explicit intrinsic domain is
+            // the author's stable reference frame for both symbol area and
+            // quantitative color (including a diverging scale's center).
+            const declaredScaleDomain = ch === 'size' || ch === 'color'
+                ? cs.semanticAnnotation?.intrinsicDomain
+                : undefined;
+            let effectiveDomainConstraint = declaredScaleDomain
+                ? { min: declaredScaleDomain[0], max: declaredScaleDomain[1], clamp: true }
+                : cs.domainConstraint;
 
             if (isSumStacked) {
                 // Use explicit intrinsicDomain from annotation, or infer from
@@ -873,7 +882,7 @@ function vlApplyFieldContext(
                 }
             }
 
-            if (effectiveDomainConstraint && enc.type === 'quantitative' && (ch === 'x' || ch === 'y') && !enc.bin && !skipDomain) {
+            if (effectiveDomainConstraint && enc.type === 'quantitative' && (ch === 'x' || ch === 'y' || ch === 'size' || ch === 'color') && !enc.bin && !skipDomain) {
                 if (!enc.scale) enc.scale = {};
                 let { min } = effectiveDomainConstraint;
                 const { max, clamp } = effectiveDomainConstraint;

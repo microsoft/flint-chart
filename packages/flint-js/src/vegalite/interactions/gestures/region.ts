@@ -29,6 +29,7 @@ import {
     normalizeVegaAngularRegionEvent,
     normalizeVegaLassoEvent,
     normalizeVegaRegionEvent,
+    polarFrameFromRadarGrid,
     plotToClientPoint,
     sceneItems,
     type RendererCoordinateSpace,
@@ -236,7 +237,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         const points = intervalPoints(interval, intervalAxis());
         showRegion(points.start, points.end);
     };
-    const frameAt = (point: PlotPoint): PolarFrame | undefined => {
+    const frameAt = (point: PlotPoint, plotFrame: PlotFrame): PolarFrame => {
         const frames = new Map<string, PolarFrame>();
         for (const item of sceneItems(view)) {
             if (item.mark?.marktype !== 'arc' || typeof item.x !== 'number' || typeof item.y !== 'number'
@@ -253,9 +254,17 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
                 outerRadius: item.outerRadius,
             });
         }
-        return [...frames.values()].sort((left, right) =>
+        const arcFrame = [...frames.values()].sort((left, right) =>
             Math.hypot(point.x - left.center.x, point.y - left.center.y)
             - Math.hypot(point.x - right.center.x, point.y - right.center.y))[0];
+        return arcFrame ?? polarFrameFromRadarGrid(view, point) ?? {
+            center: {
+                x: plotFrame.x + plotFrame.width / 2,
+                y: plotFrame.y + plotFrame.height / 2,
+            },
+            innerRadius: 0,
+            outerRadius: Math.min(plotFrame.width, plotFrame.height) / 2,
+        };
     };
     const showAngularSector = (sector: PlotAngularSector): void => {
         if (!guide.visible) return;
@@ -382,8 +391,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         const point = localPoint(event);
         const candidateFrame = facetPlotFrameAt(view, point, rootPlotFrame());
         if (angularBrush) {
-            const frame = frameAt(point);
-            if (!frame) return;
+            const frame = frameAt(point, candidateFrame);
             angularSession = new AngularRegionSession(point, frame);
             angularAction = 'create';
             initialSector = undefined;

@@ -130,6 +130,46 @@ export interface StyleSpec {
     mutedOpacity?: number;
 }
 
+export interface OverlayStyleSpec {
+    fill?: string;
+    fillOpacity?: number;
+    stroke?: string;
+    strokeWidth?: number;
+    strokeDash?: readonly number[];
+    opacity?: number;
+    pointRadius?: number;
+    fontSize?: number;
+    fontWeight?: number | 'normal' | 'bold';
+    textAlign?: 'start' | 'middle' | 'end';
+    dx?: number;
+    dy?: number;
+}
+
+export type OverlayMark = 'line' | 'point' | 'rule' | 'rect' | 'text';
+
+export interface OverlayFieldEncoding {
+    field: string;
+}
+
+/** A retained visual projected through an existing plot's scales. */
+export interface ChartOverlaySpec {
+    mark: OverlayMark;
+    data: { values: readonly Record<string, unknown>[] };
+    encodings: {
+        x: OverlayFieldEncoding;
+        y: OverlayFieldEncoding;
+        x2?: OverlayFieldEncoding;
+        y2?: OverlayFieldEncoding;
+        order?: OverlayFieldEncoding;
+        color?: OverlayFieldEncoding;
+        text?: OverlayFieldEncoding;
+    };
+    role: string;
+    interactive?: boolean;
+    projectable?: boolean;
+    style?: OverlayStyleSpec;
+}
+
 export type ChartUpdateOp =
     | {
         op: 'set-style';
@@ -151,6 +191,16 @@ export type ChartUpdateOp =
         scope: 'category' | 'series' | 'facet';
         field: string;
         values: readonly unknown[];
+    }
+    | {
+        op: 'set-overlay';
+        name: string;
+        value: ChartOverlaySpec | null;
+    }
+    | {
+        op: 'set-data';
+        source: 'main';
+        value: { rows: readonly Record<string, unknown>[] };
     };
 
 export interface ChartUpdate {

@@ -571,7 +571,7 @@ The corresponding `brushX()` and `brushY()` presets apply semantic emphasis to t
 
 `angularBrushTrigger()` emits an annular-sector region centered on a rendered polar chart. Pointer angles use the renderer's convention: zero is 12 o'clock and positive angles proceed clockwise. The runtime unwraps pointer motion continuously, so a drag can cross the $0/2\pi$ seam or proceed counterclockwise without jumping to the complementary sector.
 
-The corresponding `brushAngle()` preset is accepted only when the owning ChartDef declares angular-region support. Pie, donut, and rose charts opt in; Cartesian ChartDefs reject the interaction during planning. Arc intersection and containment are evaluated from rendered `startAngle`, `endAngle`, `innerRadius`, and `outerRadius` geometry, while the existing ChartDef resolver retains ownership of semantic identity.
+The corresponding `brushAngle()` preset is accepted only when the owning ChartDef declares angular-region support. Pie, donut, rose, and radar charts opt in; Cartesian ChartDefs reject the interaction during planning. Arc intersection and containment use rendered `startAngle`, `endAngle`, `innerRadius`, and `outerRadius` geometry. Radar line segments and points are tested against the same rendered sector, while the existing ChartDef resolver retains ownership of semantic identity.
 
 Brushes support two lifecycle modes:
 

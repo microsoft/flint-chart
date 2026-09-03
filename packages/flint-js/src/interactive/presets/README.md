@@ -50,7 +50,7 @@ semantic runtime. Current presets consume the public canvas event shape and prod
 public update JSON; target resolution and backend application remain internal. Other
 interactive backends and additional appearance/visibility operations remain future work.
 
-Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, and rose. All three produce the same semantic `set-style` operation after the owning ChartDef resolves physical hits.
+Region presets follow chart geometry. `brushX()` and `brushY()` consume Cartesian intervals, while `brushAngle()` consumes an annular sector and is admitted only by polar ChartDefs such as pie, donut, rose, and radar. Angular brushing resolves arc slices as well as Radar line segments and points contained by or intersecting the sector. All three produce the same semantic `set-style` operation after the owning ChartDef resolves physical hits.
 
 ## Emphasis Behavior
 

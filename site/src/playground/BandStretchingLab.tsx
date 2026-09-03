@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Copy, RotateCcw } from 'lucide-react';
 import { THEME_PRESETS, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { SiteRange } from '../components/SiteRange';
 import { siteTheme } from '../shared/theme';
 import './band-stretching-lab.css';
 
@@ -149,19 +150,16 @@ function Slider({
   suffix?: string;
   onChange: (value: number) => void;
 }) {
-  const pct = ((value - min) / (max - min)) * 100;
   return (
     <label style={{ display: 'grid', gridTemplateColumns: '110px minmax(120px, 1fr) 54px', gap: 10, alignItems: 'center' }}>
       <span style={{ fontSize: 12, color: siteTheme.textMuted }}>{label}</span>
-      <input
-        type="range"
+      <SiteRange
         min={min}
         max={max}
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="site-range"
-        style={{ '--pct': `${pct}%`, width: '100%' } as CSSProperties}
+        style={{ width: '100%' }}
       />
       <output style={{ fontFamily: siteTheme.fontMono, fontSize: 12, color: siteTheme.text, textAlign: 'right' }}>
         {value}{suffix}

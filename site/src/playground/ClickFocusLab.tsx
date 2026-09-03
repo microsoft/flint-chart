@@ -35,6 +35,7 @@ import {
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { SiteRange } from '../components/SiteRange';
 import foodPrices from '../data/cpi-food-prices.json';
 import { BACKENDS } from '../shared/supported-backends';
 import { testCaseToAssemblyInput } from '../shared/test-case-utils';
@@ -557,7 +558,7 @@ const navigationCases: InteractionCase[] = navigationDemoCases.map((item) => ({
   chartType: item.input.chart_spec.chartType,
 }));
 
-const polarBrushCases = new Set(['Pie Chart', 'Donut Chart', 'Rose Chart']);
+const polarBrushCases = new Set(['Pie Chart', 'Donut Chart', 'Rose Chart', 'Radar Chart']);
 
 const navigationAxesByCase = new Map([...interactionCases, ...navigationCases].flatMap((item) => {
   const spec = assembleVegaLite(item.input) as any;
@@ -1043,7 +1044,7 @@ export function ClickFocusLab() {
           <li><strong>Linked brush:</strong> Brush marks to highlight matching semantic groups across available views.</li>
           <li><strong>X brush:</strong> Drag across an X interval; polar charts automatically use an angular sector.</li>
           <li><strong>Y brush:</strong> Drag vertically to focus marks across a Y interval.</li>
-          <li><strong>Angle brush:</strong> Drag an angular sector across a pie, donut, or rose chart.</li>
+          <li><strong>Angle brush:</strong> Drag an angular sector across a pie, donut, rose, or radar chart.</li>
           <li><strong>Stateful brush:</strong> Move the committed interval, resize either edge, or click outside to clear it.</li>
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel, trackpad, or a two-finger pinch to zoom.</li>
           <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>
@@ -1057,7 +1058,7 @@ export function ClickFocusLab() {
           <div className="cf-navigation-controls" aria-label="Navigation guards">
             <label>
               <span>Minimum span <strong>{Math.round(navigationGuard.minVisibleFraction * 100)}%</strong></span>
-              <input type="range" min="1" max="25"
+              <SiteRange min={1} max={25}
                 value={navigationGuard.minVisibleFraction * 100}
                 onChange={(event) => setNavigationGuard((guard) => ({
                   ...guard, minVisibleFraction: Number(event.target.value) / 100,
@@ -1065,7 +1066,7 @@ export function ClickFocusLab() {
             </label>
             <label>
               <span>Maximum span <strong>{Math.round(navigationGuard.maxVisibleFraction * 100)}%</strong></span>
-              <input type="range" min="25" max="160"
+              <SiteRange min={25} max={160}
                 value={navigationGuard.maxVisibleFraction * 100}
                 onChange={(event) => setNavigationGuard((guard) => ({
                   ...guard, maxVisibleFraction: Number(event.target.value) / 100,
@@ -1073,7 +1074,7 @@ export function ClickFocusLab() {
             </label>
             <label>
               <span>Overscroll <strong>{Math.round(navigationGuard.overscrollFraction * 100)}%</strong></span>
-              <input type="range" min="0" max="30"
+              <SiteRange min={0} max={30}
                 value={navigationGuard.overscrollFraction * 100}
                 onChange={(event) => setNavigationGuard((guard) => ({
                   ...guard, overscrollFraction: Number(event.target.value) / 100,

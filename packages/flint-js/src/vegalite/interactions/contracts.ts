@@ -77,6 +77,11 @@ export interface VegaInteractionPlan {
     /** Polar templates realize the primary X brush as an angular sector. */
     angularXBrush?: boolean;
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;
+    /** Unambiguous existing Cartesian scales available to external overlays. */
+    overlayScales?: Partial<Record<'x' | 'y' | 'color', string>>;
+    /** Mutable compiled inline source used by `set-data`. */
+    mutableDataSource?: string;
+    initialDataRows?: readonly Record<string, unknown>[];
     reorderAxis?: VegaReorderAxis;
     reorderAxes?: readonly VegaReorderAxis[];
     resolve?: ChartInteractionResolver;

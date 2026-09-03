@@ -39,6 +39,7 @@ export type {
     AnnotationCandidate,
     AnnotationConnection,
     AnnotationSpec,
+    ChartOverlaySpec,
     ChartUpdate,
     ChartUpdateOp,
     ChartUpdatePresenter,
@@ -73,6 +74,9 @@ export type {
     PlotAngularSector,
     PlotPolygon,
     PlotRect,
+    OverlayFieldEncoding,
+    OverlayMark,
+    OverlayStyleSpec,
     RegionAxis,
     RegionOperation,
     RenderHit,
@@ -89,6 +93,7 @@ export type {
     CanvasInteractionEvent,
     DomainCoordinate,
     DomainGeometry,
+    PathProjection,
     PlotGeometry,
 } from './language/events';
 export { toCanvasInteractionEvent } from './canvas-interaction';
@@ -103,6 +108,7 @@ export type { InspectIndexShow, InteractionEventSource } from './triggers';
 export {
     axisBrushTrigger,
     angularBrushTrigger,
+    dragTrigger,
     brushZoomTrigger,
     clickTrigger,
     contextTrigger,

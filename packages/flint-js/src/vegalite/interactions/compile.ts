@@ -281,7 +281,11 @@ function pinChannelDomain(
             values.sort((left, right) => (left as any) < (right as any) ? -1 : (left as any) > (right as any) ? 1 : 0);
             if (sort === 'descending') values.reverse();
         }
-        encoding.scale = { ...(encoding.scale ?? {}), domain: values };
+        const continuous = encoding.type === 'quantitative' || encoding.type === 'temporal';
+        const domain = continuous && values.length > 1
+            ? [values[0], values[values.length - 1]]
+            : values;
+        encoding.scale = { ...(encoding.scale ?? {}), domain };
     }
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
@@ -373,7 +377,8 @@ export function addVegaLiteInteractions(
     const templateSemantics = spec._interactionSemantics as TemplateInteractionSemantics | undefined;
     delete spec._interactionSemantics;
     const reorderInteraction = canvasInteractions.find(
-        (interaction) => interaction.eventSource.gesture === 'drag-element',
+        (interaction) => interaction.eventSource.gesture === 'drag-element'
+            && interaction.eventSource.type === 'reorder',
     );
     if (!templateSemantics) {
         if (reorderInteraction) {

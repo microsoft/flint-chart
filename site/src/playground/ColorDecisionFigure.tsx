@@ -1,6 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { assembleVegaLite, THEME_PRESETS, type ChartAssemblyInput } from 'flint-chart';
 import { VegaLiteView } from '../components/VegaLiteView';
+import { SiteRange } from '../components/SiteRange';
 import { siteTheme } from '../shared/theme';
 
 /**
@@ -163,7 +164,6 @@ export function ColorDecisionFigure() {
     }
   }, [kind, count, scheme]);
 
-  const pct = ((count - 3) / (40 - 3)) * 100;
 
   return (
     <section
@@ -237,15 +237,13 @@ export function ColorDecisionFigure() {
           {/* Category-count slider */}
           <label style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 240 }}>
             <span style={{ ...labelStyle, whiteSpace: 'nowrap' }}>Categories</span>
-            <input
-              type="range"
+            <SiteRange
               min={3}
               max={40}
               step={1}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="site-range"
-              style={{ '--pct': `${pct}%`, flex: 1 } as CSSProperties}
+              style={{ flex: 1 }}
             />
             <span
               style={{

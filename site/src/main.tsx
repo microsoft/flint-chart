@@ -31,6 +31,7 @@ import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { InteractionCandidates } from './playground/InteractionCandidates';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
 import { ChartToExternalLab } from './playground/ChartToExternalLab';
+import { BespokeInteractionLab } from './playground/BespokeInteractionLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { DebugGym } from './playground/DebugGym';
@@ -90,6 +91,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
+          <Route path="bespoke-interaction" element={<BespokeInteractionLab />} />
           <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
           <Route path="debug-gym" element={<DebugGym />} />

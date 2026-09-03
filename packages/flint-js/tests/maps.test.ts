@@ -151,6 +151,26 @@ describe('choropleth maps from names', () => {
     expect(spec.transform?.[0]?.lookup).toBe('id');
     expect(spec.transform?.[0]?.from?.key).toBe('__geo_id');
   });
+
+  it('keeps a declared quantitative color domain stable and centered', () => {
+    const spec = assembleVegaLite({
+      data: { values: [{ state: 'CA', margin: 30 }, { state: 'TX', margin: -14 }] },
+      semantic_types: {
+        state: 'State',
+        margin: { semanticType: 'Quantity', intrinsicDomain: [-100, 100] },
+      },
+      chart_spec: {
+        chartType: 'Choropleth',
+        encodings: { id: 'state', color: { field: 'margin', scheme: 'redblue' } },
+      },
+    }) as any;
+
+    expect(spec.encoding.color.scale).toMatchObject({
+      domain: [-100, 100],
+      clamp: true,
+      scheme: 'redblue',
+    });
+  });
 });
 
 describe('choropleth lookup robustness', () => {

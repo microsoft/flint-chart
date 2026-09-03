@@ -9,6 +9,7 @@ import {
     injectVegaInteractionStore,
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
+    findVegaAxisScale,
     withoutSemanticInteractionField,
 } from './interactions/compile';
 import { mountVegaInteractions } from './interactions/runtime';
@@ -105,6 +106,20 @@ export function createVegaInteractiveRenderer(
                 ?.name as string | undefined;
             if (viewports.length > 0 && !source) {
                 throw new Error('Compiled chart has no mutable inline data source.');
+            }
+            if (interactionPlan) {
+                interactionPlan.overlayScales = {
+                    x: findVegaAxisScale(vegaSpec, 'x')?.name,
+                    y: findVegaAxisScale(vegaSpec, 'y')?.name,
+                    color: vegaSpec.scales?.find((scale: any) => scale.name === 'color')?.name
+                        ?? (() => {
+                            const matches = (vegaSpec.scales ?? []).filter((scale: any) =>
+                                typeof scale.name === 'string' && scale.name.endsWith('_color'));
+                            return matches.length === 1 ? matches[0].name : undefined;
+                        })(),
+                };
+                interactionPlan.mutableDataSource = source;
+                interactionPlan.initialDataRows = firstInput.data.values ?? [];
             }
             const view = new View(
                 parse(vegaSpec, { background: options.background } as any, { ast: true } as any),

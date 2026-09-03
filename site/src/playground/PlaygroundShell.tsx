@@ -7,17 +7,19 @@ type NavEntry = NavLeaf | { group: string; children: NavLeaf[] };
 
 const pages: NavEntry[] = [
   {
-    group: 'Illustrations',
+    group: 'Charts',
     children: [
       { to: 'illustrations', label: 'Gallery', end: true },
       { to: 'illustrations/architecture', label: 'Architecture' },
+      { to: 'demo-wall', label: 'Demo wall' },
+      { to: 'full-test-cases', label: 'Full test cases' },
+      { to: 'new-case-preview', label: 'New case preview' },
     ],
   },
-  { to: 'mcp-ui', label: 'MCP UI test' },
   {
-    group: 'Labs',
+    group: 'Layout',
     children: [
-      { to: 'labs', label: 'Labs' },
+      { to: 'labs', label: 'Overview' },
       { to: 'overflow-viewport', label: 'Overflow viewport' },
       { to: 'band-stretching', label: 'Band stretching' },
     ],
@@ -26,6 +28,7 @@ const pages: NavEntry[] = [
     group: 'Interactions',
     children: [
       { to: 'click-focus', label: 'Test cases' },
+      { to: 'bespoke-interaction', label: 'Advanced prototypes' },
       { to: 'annotation-lab', label: 'Annotation lab' },
       { to: 'interaction-candidates', label: 'References' },
       { to: 'interaction-dashboard', label: 'Demo: dashboard' },
@@ -33,19 +36,25 @@ const pages: NavEntry[] = [
       { to: 'chart-to-external', label: 'Demo: chart to external' },
     ],
   },
-  { to: 'debug-gym', label: 'Debug gym' },
-  { to: 'demo-wall', label: 'Demo wall' },
   {
-    group: 'Theme',
+    group: 'Themes',
     children: [
-      { to: 'theme-labs', label: 'Theme' },
+      { to: 'theme-labs', label: 'Theme lab' },
       { to: 'theme-lab-r2', label: 'R2 evaluation' },
       { to: 'theme-lab-real', label: 'Real-world evaluation' },
       { to: 'label-experiment', label: 'Label experiment' },
       { to: 'style-references', label: 'Style references' },
     ],
   },
-  { to: 'full-test-cases', label: 'Full test cases' },
+  {
+    group: 'Tools',
+    children: [
+      { to: 'mcp-ui', label: 'MCP UI test' },
+      { to: 'debug-gym', label: 'Debug gym' },
+      { to: 'year-legend', label: 'Year legend' },
+      { to: 'interaction-coverage', label: 'Interaction coverage' },
+    ],
+  },
 ];
 
 function NavGroupMenu({ group, children }: { group: string; children: NavLeaf[] }) {

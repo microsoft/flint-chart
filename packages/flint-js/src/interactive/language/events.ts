@@ -1,28 +1,9 @@
 import type { RenderHit, SemanticTarget } from '../../core/interaction-semantics';
+import type { PlotAngularSector, PlotPoint, PlotPolygon, PlotRect } from './geometry';
+import type { VisualProjection } from './projections';
 
-export interface PlotPoint {
-    x: number;
-    y: number;
-}
-
-export interface PlotRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-}
-
-export interface PlotPolygon {
-    points: readonly PlotPoint[];
-}
-
-export interface PlotAngularSector {
-    center: PlotPoint;
-    innerRadius: number;
-    outerRadius: number;
-    startAngle: number;
-    endAngle: number;
-}
+export type { PlotAngularSector, PlotPoint, PlotPolygon, PlotRect } from './geometry';
+export type { PathProjection, VisualProjection } from './projections';
 
 export interface InteractionModifiers {
     shift: boolean;
@@ -152,6 +133,7 @@ export interface CanvasInteractionEvent {
     geometry: {
         plot?: PlotGeometry;
         domain?: DomainGeometry;
+        projection?: VisualProjection;
     };
     target: SemanticTarget | null;
     dropTarget?: SemanticTarget | null;

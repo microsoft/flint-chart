@@ -386,6 +386,70 @@ export function arcIntersectsAngularSector(
     ));
 }
 
+function pointInSector(point: PlotPoint, sector: PlotAngularSector): boolean {
+    const dx = point.x - sector.center.x;
+    const dy = point.y - sector.center.y;
+    const radius = Math.hypot(dx, dy);
+    if (radius < sector.innerRadius - 1e-9 || radius > sector.outerRadius + 1e-9) return false;
+    const angle = ((Math.atan2(dx, -dy) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    return angularSegments(sector.startAngle, sector.endAngle)
+        .some(([start, end]) => angle >= start - 1e-9 && angle <= end + 1e-9);
+}
+
+function angularSectorPolygon(sector: PlotAngularSector): PlotPoint[] {
+    const sweep = Math.max(-2 * Math.PI, Math.min(2 * Math.PI, sector.endAngle - sector.startAngle));
+    const steps = Math.max(8, Math.ceil(Math.abs(sweep) * sector.outerRadius / 4));
+    const pointAt = (radius: number, angle: number): PlotPoint => ({
+        x: sector.center.x + radius * Math.sin(angle),
+        y: sector.center.y - radius * Math.cos(angle),
+    });
+    const points: PlotPoint[] = [];
+    for (let index = 0; index <= steps; index += 1) {
+        points.push(pointAt(sector.outerRadius, sector.startAngle + sweep * index / steps));
+    }
+    if (sector.innerRadius <= 0) {
+        points.push(sector.center);
+    } else {
+        for (let index = steps; index >= 0; index -= 1) {
+            points.push(pointAt(sector.innerRadius, sector.startAngle + sweep * index / steps));
+        }
+    }
+    return points;
+}
+
+export function pathIntersectsAngularSector(
+    points: readonly PlotPoint[],
+    sector: PlotAngularSector,
+    contain = false,
+): boolean {
+    if (points.length === 0) return false;
+    if (contain) {
+        for (let index = 0; index < points.length - 1; index += 1) {
+            const start = points[index];
+            const end = points[index + 1];
+            const steps = Math.max(1, Math.ceil(Math.hypot(end.x - start.x, end.y - start.y) / 4));
+            for (let step = 0; step <= steps; step += 1) {
+                const fraction = step / steps;
+                if (!pointInSector({
+                    x: start.x + (end.x - start.x) * fraction,
+                    y: start.y + (end.y - start.y) * fraction,
+                }, sector)) return false;
+            }
+        }
+        return points.length === 1 ? pointInSector(points[0], sector) : true;
+    }
+    if (points.some((point) => pointInSector(point, sector))) return true;
+    const boundary = angularSectorPolygon(sector);
+    for (let index = 0; index < points.length - 1; index += 1) {
+        const start = points[index];
+        const end = points[index + 1];
+        for (let edge = 0; edge < boundary.length; edge += 1) {
+            if (segmentsIntersect(start, end, boundary[edge], boundary[(edge + 1) % boundary.length])) return true;
+        }
+    }
+    return false;
+}
+
 export function polarFrameFromItems(
     items: readonly any[],
     point?: PlotPoint,
@@ -407,6 +471,44 @@ export function polarFrameFromItems(
         });
     }
     const available = [...frames.values()];
+    if (!point) return available[0];
+    return available.sort((left, right) =>
+        Math.hypot(point.x - left.center.x, point.y - left.center.y)
+        - Math.hypot(point.x - right.center.x, point.y - right.center.y))[0];
+}
+
+/** Infer each rendered Radar frame from its grid spokes, excluding labels and legends. */
+export function polarFrameFromRadarGrid(
+    view: any,
+    point?: PlotPoint,
+): { center: PlotPoint; innerRadius: number; outerRadius: number } | undefined {
+    const frames = new Map<string, { center: PlotPoint; innerRadius: number; outerRadius: number }>();
+    const visit = (item: any, offsetX: number, offsetY: number): void => {
+        if (!item) return;
+        const isGroup = item.mark?.marktype === 'group';
+        const childOffsetX = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
+        const childOffsetY = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
+        if (item.mark?.marktype === 'rule' && item.datum?.__type === 'spoke'
+            && [item.x, item.y, item.x2, item.y2].every(
+                (value) => typeof value === 'number' && Number.isFinite(value),
+            )) {
+            const center = { x: item.x + offsetX, y: item.y + offsetY };
+            const end = { x: item.x2 + offsetX, y: item.y2 + offsetY };
+            const key = `${center.x}\u0000${center.y}`;
+            const outerRadius = Math.hypot(end.x - center.x, end.y - center.y);
+            const existing = frames.get(key);
+            frames.set(key, {
+                center,
+                innerRadius: 0,
+                outerRadius: Math.max(existing?.outerRadius ?? 0, outerRadius),
+            });
+        }
+        if (Array.isArray(item.items)) {
+            for (const child of item.items) visit(child, childOffsetX, childOffsetY);
+        }
+    };
+    visit(view.scenegraph()?.root, 0, 0);
+    const available = [...frames.values()].filter((frame) => frame.outerRadius > 0);
     if (!point) return available[0];
     return available.sort((left, right) =>
         Math.hypot(point.x - left.center.x, point.y - left.center.y)
@@ -453,7 +555,17 @@ export function angularRegionHits(
     contain = false,
 ): RenderHit[] {
     return sceneItems(view)
-        .filter((item) => arcIntersectsAngularSector(item, sector, contain))
+        .filter((item) => {
+            if (arcIntersectsAngularSector(item, sector, contain)) return true;
+            const markType = item?.mark?.marktype;
+            if (markType === 'symbol' && typeof item.x === 'number' && typeof item.y === 'number') {
+                return pointInSector({ x: item.x, y: item.y }, sector);
+            }
+            const points = item?.interactionGeometry?.points as readonly PlotPoint[] | undefined;
+            return markType === 'line' && points
+                ? pathIntersectsAngularSector(points, sector, contain)
+                : false;
+        })
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
 }
@@ -500,7 +612,11 @@ export function renderHit(item: any): RenderHit | null {
 
 export function physicalItemAt(view: any, item: any, point: PlotPoint): any {
     const pathItems = item?.mark?.marktype === 'line' || item?.mark?.marktype === 'area'
-        ? sceneItems(view).filter((candidate) => candidate.mark === item.mark && candidate.interactionGeometry)
+        ? sceneItems(view).filter((candidate) =>
+            candidate.interactionGeometry
+            && candidate.mark?.marktype === item.mark.marktype
+            && (candidate.mark === item.mark
+                || (item.mark?.name && candidate.mark?.name === item.mark.name)))
         : [];
     if (item?.mark?.marktype === 'area') {
         return pathItems.find((candidate) => pointInPolygon(point, candidate.interactionGeometry.points));

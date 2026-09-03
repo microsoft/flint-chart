@@ -293,8 +293,7 @@
 
 .ic-flint-dimpvis-mount {
   min-height: 152px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   border: 1px solid #edf0f2;
   border-radius: 6px;
   background: #fcfcfd;

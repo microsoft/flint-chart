@@ -16,6 +16,7 @@ import {
     clickTrigger,
     contextTrigger,
     doubleActivateTrigger,
+    dragTrigger,
     hoverTrigger,
     inspectTrigger,
     parseInspectMode,
@@ -27,6 +28,14 @@ import {
     xBrushTrigger,
     yBrushTrigger,
 } from '../src/interactive/triggers';
+
+describe('generic drag trigger', () => {
+    it('uses a forgiving visual acquisition tolerance', () => {
+        expect(dragTrigger().targetTolerance).toBe(12);
+        expect(dragTrigger(20).targetTolerance).toBe(20);
+        expect(dragTrigger(-1).targetTolerance).toBe(0);
+    });
+});
 import { AngularRegionSession } from '../src/interactive/gestures/angular-region';
 
 const clickMark = (options: Omit<ClickHighlightOptions, 'targets'> = {}) =>

@@ -297,6 +297,7 @@ export const radarChartDef: ChartTemplateDef = {
             seriesField: groupField,
             legendFields: groupField ? { color: groupField } : undefined,
             selectableMarks: ['line', 'point'],
+            supportedRegionGestures: ['angular'],
             renderHoverStyles: {
                 line: { strokeWidth: 3 },
                 symbol: { strokeWidth: 2 },

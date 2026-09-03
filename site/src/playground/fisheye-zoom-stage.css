@@ -1,0 +1,84 @@
+.fisheye-shell {
+  padding: 12px 12px 14px;
+}
+
+.fisheye-frame {
+  overflow: hidden;
+}
+
+.fisheye-chart-stack {
+  position: relative;
+  width: 900px;
+  min-height: 520px;
+}
+
+.fisheye-flint-mount {
+  min-height: 520px;
+}
+
+.fisheye-custom-layer {
+  position: absolute;
+  z-index: 3;
+  width: 238px;
+  height: 238px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.96);
+  transition: opacity 90ms linear, transform 90ms ease-out;
+}
+
+.fisheye-custom-layer[data-visible='true'] {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.fisheye-custom-layer svg {
+  display: block;
+  width: 238px;
+  height: 238px;
+  overflow: visible;
+  filter: drop-shadow(0 8px 15px rgba(31, 35, 40, 0.13));
+}
+
+.fisheye-point {
+  stroke: #fff;
+  stroke-width: 1.5px;
+  transition: opacity 90ms linear;
+}
+
+.fisheye-lens {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: #8b949b;
+  stroke-width: 1px;
+}
+
+.fisheye-lens-grid path {
+  fill: none;
+  stroke: #dcdcdc;
+  stroke-width: 1px;
+  stroke-dasharray: 2 2;
+}
+
+.fisheye-label {
+  pointer-events: none;
+}
+
+.fisheye-label text {
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.fisheye-label-id {
+  fill: #20272c;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.fisheye-source {
+  padding: 0 4px;
+  color: #7a858d;
+  font-size: 10px;
+  text-align: right;
+}

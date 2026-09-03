@@ -51,6 +51,15 @@ export function elementDragTrigger(): InteractionEventSource {
     return { type: 'reorder', gesture: 'drag-element' };
 }
 
+/** Freeform pointer drag locked to the semantic visual acquired at pointer-down. */
+export function dragTrigger(targetTolerance = 12): InteractionEventSource {
+    return {
+        type: 'element',
+        gesture: 'drag-element',
+        targetTolerance: Math.max(0, targetTolerance),
+    };
+}
+
 export const clickTrigger = Object.freeze({
     type: 'element',
     gesture: 'click',

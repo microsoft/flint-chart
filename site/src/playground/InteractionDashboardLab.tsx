@@ -15,6 +15,7 @@ import {
   select,
 } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
+import { SiteRange } from '../components/SiteRange';
 import type { InteractionDemoFixture } from './interaction-demo-data';
 import { gapminderRows, type GapminderRow } from './gapminder-dashboard-data';
 import './interaction-dashboard-lab.css';
@@ -330,8 +331,7 @@ export function InteractionDashboardLab() {
       <section className="idash-summary" aria-label="Story controls and current selection summary">
         <label className="idash-summary-item idash-year-control">
           <span>Snapshot year</span>
-          <input
-            type="range"
+          <SiteRange
             min={0}
             max={years.length - 1}
             step={1}
