@@ -81,11 +81,6 @@ export interface ValidateResult {
     computedSize?: { width: number; height: number };
 }
 
-export interface SemanticTypeIssue {
-    field: string;
-    semanticType: string;
-}
-
 const ASSEMBLERS: Record<ValidationBackend, (input: ChartAssemblyInput) => any> = {
     vegalite: assembleVegaLite,
     echarts: assembleECharts,
@@ -127,9 +122,7 @@ export function validateChartInput(
         throw new Error('input.data is required (provide { values: [...] })');
     }
     if (!Array.isArray(data.values)) {
-        throw new Error(
-            'input.data must provide inline values (resolve data.url to rows before validating)',
-        );
+        throw new Error('input.data must provide inline values');
     }
     if (data.values.length > maxDataRows) {
         throw new Error(
@@ -237,23 +230,28 @@ function encodingFields(value: unknown): string[] {
 }
 
 /**
- * Report `semantic_types` labels that are not in Flint's type registry.
- * Unregistered labels are not an error — assembly falls back to inferring
- * from the data — but a host that expects the registry to be honored can use
- * this to catch typos and drift.
+ * Report `semantic_types` labels that are not in Flint's type registry as
+ * `unknown_semantic_type` warnings. Unregistered labels are not an error —
+ * assembly falls back to inferring from the data — but a host that expects
+ * the registry to be honored can use this to catch typos and drift.
  */
 export function validateSemanticTypes(
     semanticTypes: ChartAssemblyInput['semantic_types'] | undefined,
-): SemanticTypeIssue[] {
+): ChartWarning[] {
     if (semanticTypes == null || typeof semanticTypes !== 'object') return [];
-    const issues: SemanticTypeIssue[] = [];
+    const warnings: ChartWarning[] = [];
     for (const [field, annotation] of Object.entries(semanticTypes)) {
         const semanticType = toTypeString(annotation);
         if (!semanticType || !isRegistered(semanticType)) {
-            issues.push({ field, semanticType });
+            warnings.push({
+                severity: 'warning',
+                code: 'unknown_semantic_type',
+                message: `semantic_types.${field} "${semanticType}" is not a registered semantic type; the field's type will be inferred from the data`,
+                field,
+            });
         }
     }
-    return issues;
+    return warnings;
 }
 
 /**
@@ -283,8 +281,8 @@ export function assembleForBackend(
  * Validate a {@link ChartAssemblyInput} for a backend: report warnings/errors,
  * applicability, and the computed layout size. Never throws — validation and
  * assembly failures are surfaced as an error entry. Unregistered
- * `semantic_types` labels are reported as `unknown_semantic_type` warnings and
- * do not affect `valid`.
+ * `semantic_types` labels are included as warnings (see
+ * {@link validateSemanticTypes}) and do not affect `valid`.
  */
 export function validateChart(
     input: ChartAssemblyInput,
@@ -292,14 +290,7 @@ export function validateChart(
     options: ValidateChartOptions = {},
 ): ValidateResult {
     const chartType = input?.chart_spec?.chartType ?? '(unknown)';
-    const semanticTypeWarnings: ChartWarning[] = validateSemanticTypes(
-        input?.semantic_types,
-    ).map(({ field, semanticType }) => ({
-        severity: 'warning',
-        code: 'unknown_semantic_type',
-        message: `semantic_types.${field} "${semanticType}" is not a registered semantic type; the field's type will be inferred from the data`,
-        field,
-    }));
+    const semanticTypeWarnings = validateSemanticTypes(input?.semantic_types);
     try {
         const { warnings, width, height } = assembleForBackend(backend, input, options);
         const all = [...warnings, ...semanticTypeWarnings];

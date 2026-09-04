@@ -143,9 +143,9 @@ describe('validateSemanticTypes', () => {
                 c: 'NotAType',
                 d: { semanticType: '' },
             }),
-        ).toEqual([
-            { field: 'c', semanticType: 'NotAType' },
-            { field: 'd', semanticType: '' },
+        ).toMatchObject([
+            { severity: 'warning', code: 'unknown_semantic_type', field: 'c' },
+            { severity: 'warning', code: 'unknown_semantic_type', field: 'd' },
         ]);
         expect(validateSemanticTypes(undefined)).toEqual([]);
     });

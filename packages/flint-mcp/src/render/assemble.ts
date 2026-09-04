@@ -25,7 +25,7 @@ export const MAX_DATA_ROWS = DEFAULT_MAX_DATA_ROWS;
 /** Maximum canvas dimension in pixels the host will honor (DoS guard). */
 export const MAX_CANVAS_DIM = DEFAULT_MAX_CANVAS_DIM;
 
-const CAPS: ValidateChartOptions = {
+export const CAPS: ValidateChartOptions = {
   maxDataRows: MAX_DATA_ROWS,
   maxCanvasDim: MAX_CANVAS_DIM,
 };
@@ -42,7 +42,7 @@ export function validateInput(
   validateChartInput(resolveInput(input, options), undefined, CAPS);
 }
 
-/** Resolve `data.url` to inline rows so the core validator can see them. */
+/** Resolve `data.url` to inline rows so the core validator can see them. Throws on unreadable references. */
 export function resolveInput(
   input: ChartAssemblyInput,
   options: DataSourceOptions = {},
@@ -50,18 +50,7 @@ export function resolveInput(
   if (input == null || typeof input !== 'object') {
     throw new Error('input must be a ChartAssemblyInput object');
   }
-  const resolvedInput = resolveDataSource(input, {
-    ...options,
-    maxDataRows: MAX_DATA_ROWS,
-  });
-  // The core message assumes a host that never sees data.url; ours does.
-  const data: any = (resolvedInput as any).data;
-  if (data && typeof data === 'object' && !Array.isArray(data.values)) {
-    throw new Error(
-      'input.data must provide inline values or a readable local data.url',
-    );
-  }
-  return resolvedInput;
+  return resolveDataSource(input, { ...options, maxDataRows: MAX_DATA_ROWS });
 }
 
 /**

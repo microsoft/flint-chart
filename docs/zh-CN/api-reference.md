@@ -276,7 +276,7 @@ if (!result.valid) {
 |--------|---------|
 | `validateChart(input, backend, options?)` | 校验并装配；不抛出异常 |
 | `validateChartInput(input, backend?, options?)` | 仅做结构检查；遇到第一个问题即抛出 |
-| `validateSemanticTypes(semantic_types)` | 返回未在类型注册表中的标签（`validateChart` 以 `unknown_semantic_type` 警告报告） |
+| `validateSemanticTypes(semantic_types)` | 对未在类型注册表中的标签返回 `unknown_semantic_type` 警告（`validateChart` 也会包含这些警告） |
 | `assembleForBackend(backend, input, options?)` | 装配并拆出 `_warnings` / `_width` / `_height` |
 | `stripPrivateKeys(spec)` | 从 spec 中移除 Flint 的 `_` 前缀元数据 |
 

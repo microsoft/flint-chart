@@ -4,15 +4,13 @@
 import {
   validateChart as coreValidateChart,
   type ChartAssemblyInput,
-  type ValidateResult as CoreValidateResult,
+  type ValidateResult,
 } from 'flint-chart';
-import { MAX_CANVAS_DIM, MAX_DATA_ROWS, resolveInput } from '../render/assemble.js';
+import { CAPS, resolveInput } from '../render/assemble.js';
 import type { DataSourceOptions } from '../render/data-source.js';
 import type { RenderBackend } from '../render/types.js';
 
-export interface ValidateResult extends CoreValidateResult {
-  backend: RenderBackend;
-}
+export type { ValidateResult };
 
 /**
  * Resolve `data.url`, then validate a {@link ChartAssemblyInput} for a backend
@@ -37,11 +35,5 @@ export function validateChart(
       errors: [{ severity: 'error', code: 'assembly_failed', message }],
     };
   }
-  return {
-    ...coreValidateChart(resolvedInput, backend, {
-      maxDataRows: MAX_DATA_ROWS,
-      maxCanvasDim: MAX_CANVAS_DIM,
-    }),
-    backend,
-  };
+  return coreValidateChart(resolvedInput, backend, CAPS);
 }
