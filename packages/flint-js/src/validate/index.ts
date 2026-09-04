@@ -100,7 +100,7 @@ const TEMPLATE_LOOKUP: Record<
 
 /**
  * Validate the shape of a {@link ChartAssemblyInput} before it reaches an
- * assembler: data presence and caps, `chartType`, encodings against the
+ * assembler: data presence, row shape and caps, `chartType`, encodings against the
  * backend's template (channel support, required channels, field existence),
  * and canvas caps. Throws on the first problem found. When `backend` is given
  * and the chart type is unknown to that backend, encoding checks are skipped
@@ -135,6 +135,9 @@ function validateData(data: unknown, maxDataRows: number): Record<string, unknow
     if (!Array.isArray(rows)) {
         throw new Error('input.data must provide inline values');
     }
+    if (typeof data.url === 'string') {
+        throw new Error('input.data must provide either values or url, not both');
+    }
     if (rows.length > maxDataRows) {
         throw new Error(
             `input.data.values has ${rows.length} rows, exceeding the limit of ${maxDataRows}`,
@@ -142,6 +145,11 @@ function validateData(data: unknown, maxDataRows: number): Record<string, unknow
     }
     if (rows.length === 0) {
         throw new Error('input.data.values must contain at least one row');
+    }
+    for (const [index, row] of rows.entries()) {
+        if (!isRecord(row)) {
+            throw new Error(`data row ${index + 1} must be an object`);
+        }
     }
     return rows;
 }

@@ -129,6 +129,18 @@ describe('validateChartInput', () => {
         );
     });
 
+    it('rejects rows that are not objects', () => {
+        expect(() =>
+            validateChartInput({ ...barChart, data: { values: [{ region: 'a', revenue: 1 }, 2] } }, 'vegalite'),
+        ).toThrow(/data row 2 must be an object/);
+    });
+
+    it('rejects data that provides both values and url', () => {
+        expect(() =>
+            validateChartInput({ ...barChart, data: { values: barChart.data.values, url: 'x.json' } } as any, 'vegalite'),
+        ).toThrow(/either values or url, not both/);
+    });
+
     it('honours a caller-supplied row cap', () => {
         expect(() => validateChartInput(barChart, 'vegalite', { maxDataRows: 2 })).toThrow(
             /exceeding the limit of 2/,
