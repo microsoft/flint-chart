@@ -279,6 +279,7 @@ if (!result.valid) {
 | `validateSemanticTypes(semantic_types)` | 对未在类型注册表中的标签返回 `unknown_semantic_type` 警告（`validateChart` 也会包含这些警告） |
 | `assembleForBackend(backend, input, options?)` | 装配并拆出 `_warnings` / `_width` / `_height` |
 | `stripPrivateKeys(spec)` | 从 spec 中移除 Flint 的 `_` 前缀元数据 |
+| `VALIDATION_BACKENDS` | 运行时可用的 backend 列表（`vegalite`、`echarts`、`chartjs`、`plotly`） |
 
 `options.maxDataRows`（默认 100,000）与 `options.maxCanvasDim`（默认 4000）限制输入
 大小。要求内联的 `data.values` —— 请在校验前先把 `data.url` 解析为行数据。

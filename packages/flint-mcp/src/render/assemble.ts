@@ -25,7 +25,7 @@ export const MAX_DATA_ROWS = DEFAULT_MAX_DATA_ROWS;
 /** Maximum canvas dimension in pixels the host will honor (DoS guard). */
 export const MAX_CANVAS_DIM = DEFAULT_MAX_CANVAS_DIM;
 
-export const CAPS: ValidateChartOptions = {
+export const INPUT_CAPS: ValidateChartOptions = {
   maxDataRows: MAX_DATA_ROWS,
   maxCanvasDim: MAX_CANVAS_DIM,
 };
@@ -39,7 +39,7 @@ export function validateInput(
   input: ChartAssemblyInput,
   options: DataSourceOptions = {},
 ): void {
-  validateChartInput(resolveInput(input, options), undefined, CAPS);
+  validateChartInput(resolveInput(input, options), undefined, INPUT_CAPS);
 }
 
 /** Resolve `data.url` to inline rows so the core validator can see them. Throws on unreadable references. */
@@ -64,5 +64,5 @@ export function assembleForBackend(
   input: ChartAssemblyInput,
   options: DataSourceOptions = {},
 ): AssembleResult {
-  return coreAssembleForBackend(backend, resolveInput(input, options), CAPS);
+  return coreAssembleForBackend(backend, resolveInput(input, options), INPUT_CAPS);
 }

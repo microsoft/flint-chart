@@ -6,7 +6,7 @@ import {
   type ChartAssemblyInput,
   type ValidateResult,
 } from 'flint-chart';
-import { CAPS, resolveInput } from '../render/assemble.js';
+import { INPUT_CAPS, resolveInput } from '../render/assemble.js';
 import type { DataSourceOptions } from '../render/data-source.js';
 import type { RenderBackend } from '../render/types.js';
 
@@ -35,5 +35,5 @@ export function validateChart(
       errors: [{ severity: 'error', code: 'assembly_failed', message }],
     };
   }
-  return coreValidateChart(resolvedInput, backend, CAPS);
+  return coreValidateChart(resolvedInput, backend, INPUT_CAPS);
 }

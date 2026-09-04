@@ -317,6 +317,7 @@ if (!result.valid) {
 | `validateSemanticTypes(semantic_types)` | `unknown_semantic_type` warnings for labels not in the type registry (also included by `validateChart`) |
 | `assembleForBackend(backend, input, options?)` | Assemble and split out `_warnings` / `_width` / `_height` |
 | `stripPrivateKeys(spec)` | Remove Flint's `_`-prefixed metadata from a spec |
+| `VALIDATION_BACKENDS` | Runtime list of accepted backends (`vegalite`, `echarts`, `chartjs`, `plotly`) |
 
 `options.maxDataRows` (default 100,000) and `options.maxCanvasDim` (default
 4000) cap input size. Inline `data.values` are required — resolve `data.url`

@@ -111,80 +111,59 @@ export function validateChartInput(
     backend?: ValidationBackend,
     options: ValidateChartOptions = {},
 ): void {
-    const maxDataRows = options.maxDataRows ?? DEFAULT_MAX_DATA_ROWS;
-    const maxCanvasDim = options.maxCanvasDim ?? DEFAULT_MAX_CANVAS_DIM;
-
-    if (input == null || typeof input !== 'object') {
+    if (!isRecord(input)) {
         throw new Error('input must be a ChartAssemblyInput object');
     }
-    const data: any = (input as any).data;
-    if (data == null || typeof data !== 'object') {
-        throw new Error('input.data is required (provide { values: [...] })');
-    }
-    if (!Array.isArray(data.values)) {
-        throw new Error('input.data must provide inline values');
-    }
-    if (data.values.length > maxDataRows) {
-        throw new Error(
-            `input.data.values has ${data.values.length} rows, exceeding the limit of ${maxDataRows}`,
-        );
-    }
-    const cs: any = (input as any).chart_spec;
-    if (cs == null || typeof cs !== 'object' || typeof cs.chartType !== 'string') {
+    const rows = validateData(input.data, options.maxDataRows ?? DEFAULT_MAX_DATA_ROWS);
+    const chartSpec = input.chart_spec;
+    if (!isRecord(chartSpec) || typeof chartSpec.chartType !== 'string') {
         throw new Error('input.chart_spec.chartType is required');
     }
-    if (data.values.length === 0) {
-        throw new Error('input.data.values must contain at least one row');
-    }
-    validateChartSpec(cs, data.values, backend);
-    for (const field of ['baseSize', 'canvasSize'] as const) {
-        const size = cs[field];
-        if (size) {
-            if (
-                (typeof size.width === 'number' && size.width > maxCanvasDim) ||
-                (typeof size.height === 'number' && size.height > maxCanvasDim)
-            ) {
-                throw new Error(
-                    `chart_spec.${field} exceeds the maximum dimension of ${maxCanvasDim}px`,
-                );
-            }
-        }
-    }
+    validateEncodings(chartSpec.chartType, chartSpec.encodings, rows, backend);
+    validateCanvasCaps(chartSpec, options.maxCanvasDim ?? DEFAULT_MAX_CANVAS_DIM);
 }
 
-function validateChartSpec(
-    cs: any,
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validateData(data: unknown, maxDataRows: number): Record<string, unknown>[] {
+    if (!isRecord(data)) {
+        throw new Error('input.data is required (provide { values: [...] })');
+    }
+    const rows = data.values;
+    if (!Array.isArray(rows)) {
+        throw new Error('input.data must provide inline values');
+    }
+    if (rows.length > maxDataRows) {
+        throw new Error(
+            `input.data.values has ${rows.length} rows, exceeding the limit of ${maxDataRows}`,
+        );
+    }
+    if (rows.length === 0) {
+        throw new Error('input.data.values must contain at least one row');
+    }
+    return rows;
+}
+
+function validateEncodings(
+    chartType: string,
+    encodings: unknown,
     rows: Record<string, unknown>[],
     backend?: ValidationBackend,
 ): void {
-    const encodings = cs.encodings;
-    if (encodings == null || typeof encodings !== 'object' || Array.isArray(encodings)) {
+    if (!isRecord(encodings)) {
         throw new Error('input.chart_spec.encodings must be a channel-to-encoding object');
     }
-
     const entries = Object.entries(encodings);
     if (entries.length === 0) {
         throw new Error('input.chart_spec.encodings must bind at least one channel');
     }
 
-    const template = backend ? TEMPLATE_LOOKUP[backend]?.(cs.chartType) : undefined;
-    if (backend && !template) return;
-
-    if (template) {
-        const allowed = new Set(template.channels ?? []);
-        for (const [channel] of entries) {
-            if (!allowed.has(channel)) {
-                throw new Error(
-                    `chart_spec.encodings.${channel} is not supported by ${cs.chartType} for ${backend}`,
-                );
-            }
-        }
-
-        for (const channel of requiredChannels(template)) {
-            if (!hasEncodingBinding(encodings[channel])) {
-                throw new Error(`chart_spec.encodings.${channel} is required for ${cs.chartType}`);
-            }
-        }
+    if (backend) {
+        const template = TEMPLATE_LOOKUP[backend]?.(chartType);
+        if (!template) return;
+        validateEncodingsAgainstTemplate(chartType, backend, template, encodings);
     }
 
     const dataFields = new Set(rows.flatMap((row) => Object.keys(row)));
@@ -195,6 +174,43 @@ function validateChartSpec(
                     `chart_spec.encodings.${channel}.field "${field}" does not exist in data.values`,
                 );
             }
+        }
+    }
+}
+
+function validateEncodingsAgainstTemplate(
+    chartType: string,
+    backend: ValidationBackend,
+    template: ChartTemplateDef,
+    encodings: Record<string, unknown>,
+): void {
+    const allowed = new Set(template.channels ?? []);
+    for (const channel of Object.keys(encodings)) {
+        if (!allowed.has(channel)) {
+            throw new Error(
+                `chart_spec.encodings.${channel} is not supported by ${chartType} for ${backend}`,
+            );
+        }
+    }
+    for (const channel of requiredChannels(template)) {
+        if (!hasEncodingBinding(encodings[channel])) {
+            throw new Error(`chart_spec.encodings.${channel} is required for ${chartType}`);
+        }
+    }
+}
+
+function validateCanvasCaps(chartSpec: Record<string, unknown>, maxCanvasDim: number): void {
+    for (const field of ['baseSize', 'canvasSize'] as const) {
+        const size = chartSpec[field];
+        if (!isRecord(size)) continue;
+        const { width, height } = size;
+        if (
+            (typeof width === 'number' && width > maxCanvasDim) ||
+            (typeof height === 'number' && height > maxCanvasDim)
+        ) {
+            throw new Error(
+                `chart_spec.${field} exceeds the maximum dimension of ${maxCanvasDim}px`,
+            );
         }
     }
 }
@@ -238,7 +254,7 @@ function encodingFields(value: unknown): string[] {
 export function validateSemanticTypes(
     semanticTypes: ChartAssemblyInput['semantic_types'] | undefined,
 ): ChartWarning[] {
-    if (semanticTypes == null || typeof semanticTypes !== 'object') return [];
+    if (!isRecord(semanticTypes)) return [];
     const warnings: ChartWarning[] = [];
     for (const [field, annotation] of Object.entries(semanticTypes)) {
         const semanticType = toTypeString(annotation);
@@ -289,7 +305,9 @@ export function validateChart(
     backend: ValidationBackend,
     options: ValidateChartOptions = {},
 ): ValidateResult {
-    const chartType = input?.chart_spec?.chartType ?? '(unknown)';
+    const chartType = typeof input?.chart_spec?.chartType === 'string'
+        ? input.chart_spec.chartType
+        : '(unknown)';
     const semanticTypeWarnings = validateSemanticTypes(input?.semantic_types);
     try {
         const { warnings, width, height } = assembleForBackend(backend, input, options);
@@ -302,9 +320,7 @@ export function validateChart(
             warnings: all,
             errors,
             computedSize:
-                typeof width === 'number' && typeof height === 'number'
-                    ? { width, height }
-                    : undefined,
+                width !== undefined && height !== undefined ? { width, height } : undefined,
         };
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

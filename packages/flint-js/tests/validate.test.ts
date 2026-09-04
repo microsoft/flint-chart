@@ -34,10 +34,7 @@ function withSpec(chart_spec: Partial<ChartAssemblyInput['chart_spec']>): ChartA
 describe('validateChart', () => {
     it.each(VALIDATION_BACKENDS)('accepts a valid bar chart for %s', (backend) => {
         const result = validateChart(barChart, backend);
-        expect(result.backend).toBe(backend);
-        expect(result.chartType).toBe('Bar Chart');
-        expect(result.valid).toBe(true);
-        expect(result.errors).toEqual([]);
+        expect(result).toMatchObject({ backend, chartType: 'Bar Chart', valid: true, errors: [] });
     });
 
     it('reports the computed layout size', () => {
@@ -52,6 +49,12 @@ describe('validateChart', () => {
         expect(result.chartType).toBe('Not A Real Chart');
         expect(result.errors[0].code).toBe('assembly_failed');
         expect(result.errors[0].message).toMatch(/Unknown chart type/);
+    });
+
+    it('flags an unknown backend as invalid without throwing', () => {
+        const result = validateChart(barChart, 'excel' as any);
+        expect(result.valid).toBe(false);
+        expect(result.errors[0].message).toMatch(/unknown backend: excel/);
     });
 
     it('flags a nonexistent field', () => {
@@ -74,24 +77,31 @@ describe('validateChart', () => {
         expect(result.errors[0].message).toContain('encodings.banana is not supported by Bar Chart for echarts');
     });
 
-    it('flags a canvas that exceeds the cap', () => {
+    it('flags a canvas that exceeds the default cap', () => {
         const result = validateChart(withSpec({ canvasSize: { width: 5000, height: 300 } }), 'vegalite');
         expect(result.valid).toBe(false);
         expect(result.errors[0].message).toContain('maximum dimension of 4000px');
-
-        const relaxed = validateChart(withSpec({ canvasSize: { width: 5000, height: 300 } }), 'vegalite', {
-            maxCanvasDim: 8000,
-        });
-        expect(relaxed.valid).toBe(true);
     });
 
-    it('rejects malformed input without throwing', () => {
-        for (const input of [null, undefined, 42, {}, { data: {} }, { data: { url: 'x.csv' } }]) {
-            const result = validateChart(input as any, 'vegalite');
-            expect(result.valid).toBe(false);
-            expect(result.chartType).toBe('(unknown)');
-            expect(result.errors).toHaveLength(1);
-        }
+    it('honours a caller-supplied canvas cap', () => {
+        const result = validateChart(withSpec({ canvasSize: { width: 5000, height: 300 } }), 'vegalite', {
+            maxCanvasDim: 8000,
+        });
+        expect(result.valid).toBe(true);
+    });
+
+    it.each([
+        ['null', null],
+        ['undefined', undefined],
+        ['a number', 42],
+        ['an empty object', {}],
+        ['data without values', { data: {} }],
+        ['data with a url only', { data: { url: 'x.csv' } }],
+        ['non-array values', { data: { values: 'nope' } }],
+    ])('rejects %s without throwing', (_label, input) => {
+        const result = validateChart(input as any, 'vegalite');
+        expect(result).toMatchObject({ valid: false, chartType: '(unknown)' });
+        expect(result.errors).toHaveLength(1);
     });
 
     it('surfaces unregistered semantic_types as warnings, not errors', () => {
@@ -100,24 +110,29 @@ describe('validateChart', () => {
             'vegalite',
         );
         expect(result.valid).toBe(true);
-        const warning = result.warnings.find((w) => w.code === 'unknown_semantic_type');
-        expect(warning?.severity).toBe('warning');
-        expect(warning?.field).toBe('revenue');
-        expect(warning?.message).toContain('"Dollarz"');
+        expect(result.warnings).toContainEqual(
+            expect.objectContaining({ severity: 'warning', code: 'unknown_semantic_type', field: 'revenue' }),
+        );
     });
 });
 
 describe('validateChartInput', () => {
-    it('throws on the first problem', () => {
+    it('rejects encodings that bind no channel', () => {
         expect(() => validateChartInput(withSpec({ encodings: {} }), 'vegalite')).toThrow(
             /must bind at least one channel/,
         );
-        expect(() =>
-            validateChartInput({ ...barChart, data: { values: [] } }, 'vegalite'),
-        ).toThrow(/at least one row/);
-        expect(() =>
-            validateChartInput(barChart, 'vegalite', { maxDataRows: 2 }),
-        ).toThrow(/exceeding the limit of 2/);
+    });
+
+    it('rejects empty data', () => {
+        expect(() => validateChartInput({ ...barChart, data: { values: [] } }, 'vegalite')).toThrow(
+            /at least one row/,
+        );
+    });
+
+    it('honours a caller-supplied row cap', () => {
+        expect(() => validateChartInput(barChart, 'vegalite', { maxDataRows: 2 })).toThrow(
+            /exceeding the limit of 2/,
+        );
     });
 
     it('requires x and y for cartesian templates', () => {
@@ -126,27 +141,33 @@ describe('validateChartInput', () => {
         ).toThrow(/encodings\.y is required for Bar Chart/);
     });
 
-    it('checks fields without a backend', () => {
-        expect(() =>
-            validateChartInput(withSpec({ encodings: { x: 'nope', y: 'revenue' } })),
-        ).toThrow(/"nope" does not exist/);
+    it('checks field existence even without a backend', () => {
+        expect(() => validateChartInput(withSpec({ encodings: { x: 'nope', y: 'revenue' } }))).toThrow(
+            /"nope" does not exist/,
+        );
         expect(() => validateChartInput(barChart)).not.toThrow();
+    });
+
+    it('skips template checks for a chart type the backend does not know', () => {
+        expect(() =>
+            validateChartInput(withSpec({ chartType: 'Not A Real Chart' }), 'vegalite'),
+        ).not.toThrow();
     });
 });
 
 describe('validateSemanticTypes', () => {
-    it('returns only unregistered labels', () => {
-        expect(
-            validateSemanticTypes({
-                a: 'Amount',
-                b: { semanticType: 'Percentage' },
-                c: 'NotAType',
-                d: { semanticType: '' },
-            }),
-        ).toMatchObject([
-            { severity: 'warning', code: 'unknown_semantic_type', field: 'c' },
-            { severity: 'warning', code: 'unknown_semantic_type', field: 'd' },
-        ]);
+    it('returns one warning per unregistered label', () => {
+        const warnings = validateSemanticTypes({
+            a: 'Amount',
+            b: { semanticType: 'Percentage' },
+            c: 'NotAType',
+            d: { semanticType: '' },
+        });
+        expect(warnings.map((w) => w.field)).toEqual(['c', 'd']);
+        expect(warnings.every((w) => w.code === 'unknown_semantic_type')).toBe(true);
+    });
+
+    it('returns nothing for missing semantic_types', () => {
         expect(validateSemanticTypes(undefined)).toEqual([]);
     });
 });
@@ -158,11 +179,16 @@ describe('assembleForBackend', () => {
         expect(typeof width).toBe('number');
         expect(typeof height).toBe('number');
         expect(Object.keys(spec).some((k) => k.startsWith('_'))).toBe(true);
-        stripPrivateKeys(spec);
-        expect(Object.keys(spec).some((k) => k.startsWith('_'))).toBe(false);
     });
 
     it('rejects an unknown backend', () => {
         expect(() => assembleForBackend('excel' as any, barChart)).toThrow(/unknown backend/);
+    });
+});
+
+describe('stripPrivateKeys', () => {
+    it('removes only top-level underscore keys', () => {
+        const spec = stripPrivateKeys({ _warnings: [], width: 1, nested: { _keep: true } });
+        expect(spec).toEqual({ width: 1, nested: { _keep: true } });
     });
 });
