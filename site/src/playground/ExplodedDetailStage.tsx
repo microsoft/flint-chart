@@ -13,7 +13,7 @@ import './exploded-detail-stage.css';
 const FOCUS_RADIUS = 48;
 const DETAIL_RADIUS = 108;
 const DETAIL_OFFSET = 220;
-const DETAIL_SCALE = 1.7;
+const DETAIL_SCALE = DETAIL_RADIUS / FOCUS_RADIUS;
 const DETAIL_MIN_SCALE = 1;
 const DETAIL_MAX_SCALE = 3.4;
 
@@ -167,7 +167,7 @@ function eccentricLabels(
 }
 
 function explodedGeometry(scene: VectorScene, focus: PlotPoint, scale = DETAIL_SCALE) {
-  const focusRadius = FOCUS_RADIUS * DETAIL_SCALE / scale;
+  const focusRadius = DETAIL_RADIUS / scale;
   const placeRight = focus.x + DETAIL_OFFSET + DETAIL_RADIUS <= scene.plot.right;
   const center = {
     x: focus.x + (placeRight ? DETAIL_OFFSET : -DETAIL_OFFSET),

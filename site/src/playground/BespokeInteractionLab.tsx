@@ -2,6 +2,7 @@ import { FlintDimpVisStage } from './FlintDimpVisStage';
 import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
 import { ExplodedDetailStage, FreeformExplodedDetailStage } from './ExplodedDetailStage';
+import { RetailDrilldownStage } from './RetailDrilldownStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -27,7 +28,6 @@ export function BespokeInteractionLab() {
                 <strong>Flint in → Flint out</strong>
               </div>
             </div>
-            <span className="bespoke-status">Case 01</span>
           </header>
           <FlintDimpVisStage large />
         </article>
@@ -44,7 +44,6 @@ export function BespokeInteractionLab() {
                 <strong>Animation: external in → Flint out</strong>
               </div>
             </div>
-            <span className="bespoke-status">Case 02</span>
           </header>
           <ClimatePhaseStage />
         </article>
@@ -61,7 +60,6 @@ export function BespokeInteractionLab() {
                 <strong>Rendered SVG → custom out</strong>
               </div>
             </div>
-            <span className="bespoke-status">Case 03</span>
           </header>
           <div className="bespoke-treatment-stack">
             <section className="bespoke-treatment">
@@ -74,6 +72,21 @@ export function BespokeInteractionLab() {
               <FreeformExplodedDetailStage />
             </section>
           </div>
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>Food basket price navigator</h2>
+              <p>
+                Explore how five U.S. average food prices compose a one-unit basket over time.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → temporal window</strong>
+              </div>
+            </div>
+          </header>
+          <RetailDrilldownStage />
         </article>
       </div>
     </div>
