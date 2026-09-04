@@ -2010,6 +2010,14 @@ function applyMarks(spec: any, d: DesignDecisions, table: any[], say: (p: string
             if (isLiteralMark(node)) return;
             const enc = node.encoding ?? {};
             if (isGridCell(node, enc)) return;
+            if (enc.x2 != null || enc.y2 != null) {
+                // Ranged bars such as histogram bins are authored with a start
+                // and end position. Rounding only the value end can collapse
+                // them into zero-width paths once interactive instrumentation
+                // wraps the marks, so keep these bars square.
+                node.mark = { ...normalizeMark(node.mark), cornerRadiusEnd: 0 };
+                return;
+            }
             const barW = estimateBarExtent(node, enc, table, plotWidth, plotHeight);
             const capped = Math.round(barW * MAX_CORNER_FRACTION * 10) / 10;
             if (capped >= m.cornerRadius!) return;

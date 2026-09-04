@@ -327,6 +327,29 @@ describe('Vega-Lite semantic interactions', () => {
         view.finalize();
     });
 
+    it('keeps interactive Power BI histogram bins non-zero in width', async () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [1.7, 1.9, 2.1, 2.4, 3.1, 3.4, 3.8, 4.2, 4.6].map((duration) => ({
+                    'Duration (min)': duration,
+                })),
+            },
+            semantic_types: { 'Duration (min)': 'Quantity' },
+            chart_spec: { chartType: 'Histogram', encodings: { x: 'Duration (min)' } },
+            theme_spec: 'powerbi',
+        } as never) as any;
+        const { compiled } = instrument(spec, [clickMark()]);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const bars = sceneItems(view)
+            .filter((item) => item.mark.marktype === 'rect' && item.datum[INTERACTION_KEY]);
+        expect(bars.length).toBeGreaterThan(1);
+        for (const bar of bars) {
+            expect(bar.bounds.x2).toBeGreaterThan(bar.bounds.x1);
+        }
+        view.finalize();
+    });
+
     it('inspect-x chooses one stacked category and returns all of its segments', async () => {
         const spec = assembleVegaLite({
             data: { values: [
