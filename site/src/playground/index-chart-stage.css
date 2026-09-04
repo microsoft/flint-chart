@@ -1,0 +1,53 @@
+.index-chart-shell {
+  padding: 12px 12px 14px;
+}
+
+.index-chart-stack {
+  position: relative;
+  width: 900px;
+  min-height: 520px;
+}
+
+.index-chart-mount {
+  min-height: 520px;
+}
+
+.index-chart-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 900px;
+  height: 520px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.index-chart-baseline {
+  stroke: #cad2d8;
+  stroke-dasharray: 4 4;
+  stroke-width: 1px;
+}
+
+.index-chart-rule {
+  stroke: #9a3f3f;
+  stroke-width: 1.4px;
+  stroke-dasharray: 3 2;
+}
+
+.index-chart-badge rect {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: #aeb8bf;
+  stroke-width: 1px;
+}
+
+.index-chart-badge text {
+  fill: #3a434a;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.index-chart-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 2px;
+}

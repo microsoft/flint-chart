@@ -1,8 +1,8 @@
 import { FlintDimpVisStage } from './FlintDimpVisStage';
 import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
-import { ExplodedDetailStage, FreeformExplodedDetailStage } from './ExplodedDetailStage';
-import { RetailDrilldownStage } from './RetailDrilldownStage';
+import { ExplodedDetailStage } from './ExplodedDetailStage';
+import { IndexChartStage } from './IndexChartStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -28,6 +28,7 @@ export function BespokeInteractionLab() {
                 <strong>Flint in → Flint out</strong>
               </div>
             </div>
+            <span className="bespoke-status">Case 01</span>
           </header>
           <FlintDimpVisStage large />
         </article>
@@ -44,8 +45,27 @@ export function BespokeInteractionLab() {
                 <strong>Animation: external in → Flint out</strong>
               </div>
             </div>
+            <span className="bespoke-status">Case 02</span>
           </header>
           <ClimatePhaseStage />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>Index chart with host-owned reference cursor</h2>
+              <p>
+                Re-index the same stock series against a movable date while the overlay owns pointer acquisition
+                and the active reference marker.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Host overlay → custom out</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 03</span>
+          </header>
+          <IndexChartStage />
         </article>
 
         <article className="bespoke-case">
@@ -60,6 +80,7 @@ export function BespokeInteractionLab() {
                 <strong>Rendered SVG → custom out</strong>
               </div>
             </div>
+            <span className="bespoke-status">Case 04</span>
           </header>
           <div className="bespoke-treatment-stack">
             <section className="bespoke-treatment">
@@ -68,26 +89,9 @@ export function BespokeInteractionLab() {
             <section className="bespoke-treatment">
               <ExplodedDetailStage />
             </section>
-            <section className="bespoke-treatment">
-              <FreeformExplodedDetailStage />
-            </section>
           </div>
         </article>
 
-        <article className="bespoke-case bespoke-case--single">
-          <header className="bespoke-case-header">
-            <div>
-              <h2>Food basket price navigator</h2>
-              <p>
-                Explore how five U.S. average food prices compose a one-unit basket over time.
-              </p>
-              <div className="bespoke-pattern">
-                <strong>Flint in → temporal window</strong>
-              </div>
-            </div>
-          </header>
-          <RetailDrilldownStage />
-        </article>
       </div>
     </div>
   );
