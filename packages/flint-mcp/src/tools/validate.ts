@@ -1,57 +1,47 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { ChartAssemblyInput, ChartWarning } from 'flint-chart';
-import { assembleForBackend } from '../render/assemble.js';
+import {
+  validateChart as coreValidateChart,
+  type ChartAssemblyInput,
+  type ValidateResult as CoreValidateResult,
+} from 'flint-chart';
+import { MAX_CANVAS_DIM, MAX_DATA_ROWS, resolveInput } from '../render/assemble.js';
 import type { DataSourceOptions } from '../render/data-source.js';
 import type { RenderBackend } from '../render/types.js';
 
-export interface ValidateResult {
+export interface ValidateResult extends CoreValidateResult {
   backend: RenderBackend;
-  chartType: string;
-  /** True when assembly succeeded with no error-severity warnings. */
-  valid: boolean;
-  /** All warnings (info/warning/error) emitted during assembly. */
-  warnings: ChartWarning[];
-  /** Error-severity warnings plus any thrown assembly failure. */
-  errors: ChartWarning[];
-  /** Computed layout size from Flint's stretch model, if available. */
-  computedSize?: { width: number; height: number };
 }
 
 /**
- * Validate a {@link ChartAssemblyInput} for a backend: report warnings/errors,
- * applicability, and the computed layout size. Never throws — assembly failures
- * are surfaced as an error entry. Pure JS — no native dependencies.
+ * Resolve `data.url`, then validate a {@link ChartAssemblyInput} for a backend
+ * via `flint-chart`'s `validateChart`. Never throws — data-source and assembly
+ * failures are surfaced as an error entry.
  */
 export function validateChart(
   input: ChartAssemblyInput,
   backend: RenderBackend,
   options: DataSourceOptions = {},
 ): ValidateResult {
-  const chartType = input?.chart_spec?.chartType ?? '(unknown)';
+  let resolvedInput: ChartAssemblyInput;
   try {
-    const { warnings, width, height } = assembleForBackend(backend, input, options);
-    const errors = warnings.filter((w) => w.severity === 'error');
-    return {
-      backend,
-      chartType,
-      valid: errors.length === 0,
-      warnings,
-      errors,
-      computedSize:
-        typeof width === 'number' && typeof height === 'number'
-          ? { width, height }
-          : undefined,
-    };
+    resolvedInput = resolveInput(input, options);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
       backend,
-      chartType,
+      chartType: input?.chart_spec?.chartType ?? '(unknown)',
       valid: false,
       warnings: [],
       errors: [{ severity: 'error', code: 'assembly_failed', message }],
     };
   }
+  return {
+    ...coreValidateChart(resolvedInput, backend, {
+      maxDataRows: MAX_DATA_ROWS,
+      maxCanvasDim: MAX_CANVAS_DIM,
+    }),
+    backend,
+  };
 }

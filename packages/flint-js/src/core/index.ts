@@ -196,6 +196,7 @@ export {
     resolveStackable,
     resolveSortDirection,
 } from './field-semantics';
+export { isRegistered, getRegisteredTypes } from './type-registry';
 
 // ThemeSpec: public visual-system vocabulary and chart-specific grounding
 export {

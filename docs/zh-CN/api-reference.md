@@ -255,6 +255,34 @@ vlGetTemplateChannels('Scatter Plot');
 
 关键类型：`ChartAssemblyInput`、`ChartEncoding`、`ChartTemplateDef`、`AssembleOptions`、`ChartWarning`、`ChannelSemantics`。
 
+## 校验
+
+让 Agent 编写 `ChartAssemblyInput` 的宿主可以在渲染前先校验输入。`validateChart`
+不会抛出异常；它会返回 assembler 产生的全部警告，并在输入无法编译时（未知图表类型、
+不支持的通道、不存在的字段、画布上限）返回一条 `assembly_failed` 错误。
+从 `flint-chart` 与 `flint-chart/validate` 再导出：
+
+```ts
+import { validateChart } from 'flint-chart/validate';
+
+const result = validateChart(input, 'vegalite');
+// { backend, chartType, valid, warnings, errors, computedSize? }
+if (!result.valid) {
+  // 将 result.errors 反馈给 Agent
+}
+```
+
+| 符号 | 用途 |
+|--------|---------|
+| `validateChart(input, backend, options?)` | 校验并装配；不抛出异常 |
+| `validateChartInput(input, backend?, options?)` | 仅做结构检查；遇到第一个问题即抛出 |
+| `validateSemanticTypes(semantic_types)` | 返回未在类型注册表中的标签（`validateChart` 以 `unknown_semantic_type` 警告报告） |
+| `assembleForBackend(backend, input, options?)` | 装配并拆出 `_warnings` / `_width` / `_height` |
+| `stripPrivateKeys(spec)` | 从 spec 中移除 Flint 的 `_` 前缀元数据 |
+
+`options.maxDataRows`（默认 100,000）与 `options.maxCanvasDim`（默认 4000）限制输入
+大小。要求内联的 `data.values` —— 请在校验前先把 `data.url` 解析为行数据。
+
 ---
 
 # §8 溢出与警告
@@ -288,6 +316,7 @@ vlGetTemplateChannels('Scatter Plot');
 | `flint-chart/vegalite` | VL 模板与 `assembleVegaLite` |
 | `flint-chart/echarts` | ECharts 模板与 `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js 模板与 `assembleChartjs` |
+| `flint-chart/validate` | `validateChart` 与输入校验辅助函数 |
 | `flint-chart/test-data` | 图库生成器（`TEST_GENERATORS`） |
 
 ---

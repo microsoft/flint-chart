@@ -292,6 +292,36 @@ Re-exported from `flint-chart` and `flint-chart/core`:
 
 Key types: `ChartAssemblyInput`, `ChartEncoding`, `ChartTemplateDef`, `AssembleOptions`, `ChartWarning`, `ChannelSemantics`.
 
+## Validation
+
+Hosts that let an agent author a `ChartAssemblyInput` can validate it before
+rendering. `validateChart` never throws; it reports every warning the assembler
+emits plus a single `assembly_failed` error when the input cannot be compiled
+(unknown chart type, unsupported channel, nonexistent field, canvas caps).
+Re-exported from `flint-chart` and `flint-chart/validate`:
+
+```ts
+import { validateChart } from 'flint-chart/validate';
+
+const result = validateChart(input, 'vegalite');
+// { backend, chartType, valid, warnings, errors, computedSize? }
+if (!result.valid) {
+  // feed result.errors back to the agent
+}
+```
+
+| Symbol | Purpose |
+|--------|---------|
+| `validateChart(input, backend, options?)` | Validate and assemble; never throws |
+| `validateChartInput(input, backend?, options?)` | Shape checks only; throws on the first problem |
+| `validateSemanticTypes(semantic_types)` | Labels not in the type registry (reported by `validateChart` as `unknown_semantic_type` warnings) |
+| `assembleForBackend(backend, input, options?)` | Assemble and split out `_warnings` / `_width` / `_height` |
+| `stripPrivateKeys(spec)` | Remove Flint's `_`-prefixed metadata from a spec |
+
+`options.maxDataRows` (default 100,000) and `options.maxCanvasDim` (default
+4000) cap input size. Inline `data.values` are required — resolve `data.url`
+to rows before validating.
+
 ---
 
 # §8 Overflow and warnings
@@ -325,6 +355,7 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/vegalite` | VL templates and `assembleVegaLite` |
 | `flint-chart/echarts` | ECharts templates and `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
+| `flint-chart/validate` | `validateChart` and input validation helpers |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 
 ---
