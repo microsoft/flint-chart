@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Chart validation is now part of the core package. `validateChart(input,
+  backend)` returns `{ valid, warnings, errors, computedSize }` without
+  throwing, alongside `validateChartInput`, `validateSemanticTypes`,
+  `assembleForBackend`, and `stripPrivateKeys`, from `flint-chart` and the new
+  `flint-chart/validate` subpath. Hosts that let an agent author chart inputs
+  outside MCP get the same per-problem feedback the `validate_chart` tool
+  provides; `flint-chart-mcp` now consumes this implementation. Unregistered
+  `semantic_types` labels surface as `unknown_semantic_type` warnings, and
+  `isRegistered` / `getRegisteredTypes` are exported from `flint-chart/core`
+  ([#104](https://github.com/microsoft/flint-chart/issues/104)).
+
 ### Fixed
 
 - Keyboard targeting now navigates and emits `focus-element` through the
