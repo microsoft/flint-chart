@@ -34,6 +34,7 @@ const pages: NavEntry[] = [
       { to: 'interaction-dashboard', label: 'Demo: dashboard' },
       { to: 'external-to-chart', label: 'Demo: external to chart' },
       { to: 'chart-to-external', label: 'Demo: chart to external' },
+      { to: 'interactive-data-report', label: 'Demo: interactive data report' },
     ],
   },
   {

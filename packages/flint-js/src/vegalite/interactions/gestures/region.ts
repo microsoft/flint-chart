@@ -425,7 +425,19 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         pointerId = event.pointerId;
         committed = new Set(getSelected());
         setDragging(true);
-        container.setPointerCapture(event.pointerId);
+    };
+    // Capture only once the pointer has actually moved into a drag. Capturing on
+    // pointerdown would redirect the following click to the container, so a plain
+    // click on a mark, legend entry, or axis label would never reach the renderer.
+    const beginDragCapture = (event: PointerEvent): void => {
+        setSuppressClick(true);
+        if (!container.hasPointerCapture(event.pointerId)) {
+            try {
+                container.setPointerCapture(event.pointerId);
+            } catch {
+                // Synthetic pointer events have no active pointer to capture.
+            }
+        }
     };
     const pointerMove = (event: PointerEvent): void => {
         if (!dragStart || pointerId !== event.pointerId) {
@@ -458,7 +470,7 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
             if (last && Math.hypot(point.x - last.x, point.y - last.y) < 2) return;
             lassoPoints.push(point);
             if (lassoPoints.length < 3) return;
-            setSuppressClick(true);
+            beginDragCapture(event);
             showLasso(lassoPoints);
             dispatchLasso('preview', lassoPoints, event);
             return;
@@ -467,21 +479,21 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
             if (initialSector && angularSession) {
                 const edited = sectorForEdit(polarPointerAngle(point, angularSession.frame));
                 if (!edited) return;
-                setSuppressClick(true);
+                beginDragCapture(event);
                 showAngularSector(edited);
                 dispatchAngularRegion('preview', edited, event, angularAction);
                 return;
             }
             angularSession?.move(point);
             if (!angularSession || angularSession.dragDistance() < 4) return;
-            setSuppressClick(true);
+            beginDragCapture(event);
             const sector = angularSession.sector();
             showAngularSector(sector);
             dispatchAngularRegion('preview', sector, event);
             return;
         }
         if (cartesianDragDistance(dragStart, point, regionAxis) < 4) return;
-        setSuppressClick(true);
+        beginDragCapture(event);
         const interval = regionAxis === 'xy' ? undefined : intervalForDrag(point);
         const points = interval ? intervalPoints(interval, intervalAxis()) : { start: dragStart, end: point };
         if (interval) showInterval(interval);

@@ -107,7 +107,6 @@ export function mountVegaNavigationGesture(
         dragged = false;
         setDragging(true);
         container.style.cursor = 'grabbing';
-        container.setPointerCapture(event.pointerId);
         emit({
             type: 'navigation', phase: 'start', operation: 'pan', axes,
             modifiers: interactionModifiers(event),
@@ -132,6 +131,14 @@ export function mountVegaNavigationGesture(
         const delta = session.move(localPoint(event));
         pendingDelta = { x: pendingDelta.x + delta.x, y: pendingDelta.y + delta.y };
         if (session.dragDistance() < 4) return;
+        if (!dragged && !container.hasPointerCapture(event.pointerId)) {
+            // Capture only once this is a real pan, so a plain click still reaches the marks.
+            try {
+                container.setPointerCapture(event.pointerId);
+            } catch {
+                // Synthetic pointer events have no active pointer to capture.
+            }
+        }
         dragged = true;
         setSuppressClick(true);
         emit({

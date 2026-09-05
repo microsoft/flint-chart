@@ -32,6 +32,7 @@ import { InteractionCandidates } from './playground/InteractionCandidates';
 import { ExternalToChartLab } from './playground/ExternalToChartLab';
 import { ChartToExternalLab } from './playground/ChartToExternalLab';
 import { BespokeInteractionLab } from './playground/BespokeInteractionLab';
+import { InteractiveDataReportLab } from './playground/InteractiveDataReportLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
 import { DebugGym } from './playground/DebugGym';
@@ -92,6 +93,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="external-to-chart" element={<ExternalToChartLab />} />
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
           <Route path="bespoke-interaction" element={<BespokeInteractionLab />} />
+          <Route path="interactive-data-report" element={<InteractiveDataReportLab />} />
           <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
           <Route path="debug-gym" element={<DebugGym />} />
