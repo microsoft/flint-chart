@@ -1,0 +1,713 @@
+/* The heading and the sections share one left edge. */
+.idr-page .dev-page-heading,
+.idr-page .it-examples {
+  width: min(100%, 1040px);
+}
+
+.idr-workspace {
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  /* The shared workspace clips its content, which would also disable the sticky chart panel. */
+  overflow: visible;
+}
+
+/* A long report scrolls past the chart, so the chart stays in view below the sticky dev header. */
+.idr-workspace .it-chart-panel {
+  position: sticky;
+  top: 60px;
+  min-height: 320px;
+}
+
+.idr-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.idr-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 360px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.idr-preset-list li {
+  display: contents;
+}
+
+/* The same icon-and-label combo as the interaction gallery's mode rail, shown as a static chip. */
+.idr-chip-interaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #d7dde1;
+  border-radius: 12px;
+  padding: 3px 9px 3px 7px;
+  color: #4e5961;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.idr-chip-interaction svg {
+  flex: none;
+  color: #176f58;
+}
+
+.idr-chip-interaction.idr-op-viewport svg { color: #5b7fb5; }
+.idr-chip-interaction.idr-op-order svg { color: #c0924a; }
+.idr-chip-interaction.idr-op-annotation svg { color: #4d9a74; }
+
+.idr-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.idr-report-panel {
+  gap: 0;
+}
+
+.idr-report {
+  margin-top: 14px;
+  color: #3b454c;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+.idr-report p {
+  margin: 0 0 12px;
+}
+
+.idr-fragment {
+  display: inline;
+  border-bottom: 1px dotted #b3bcc2;
+  border-radius: 2px;
+  padding: 1px 1px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.idr-fragment:hover,
+.idr-fragment.is-preview {
+  border-bottom: 1px solid var(--it-accent);
+  color: #0f5b47;
+  background: #eef7f3;
+}
+
+.idr-fragment.is-preview-related {
+  border-bottom: 1px dashed var(--it-accent);
+  background: #f5faf8;
+}
+
+.idr-fragment.is-related {
+  border-bottom: 1px solid #9cc9b9;
+  background: #f3f8f6;
+}
+
+.idr-fragment.is-active {
+  border-bottom: 1px solid #176f58;
+  color: #0f5b47;
+  background: #d8efe5;
+}
+
+.idr-fragment.is-active.is-preview {
+  background: #c9e8db;
+}
+
+.idr-fragment:focus-visible {
+  outline: 2px solid var(--it-accent);
+  outline-offset: 1px;
+}
+
+.idr-key {
+  width: min(100%, 1040px);
+  margin-top: 10px;
+  color: #7a858d;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.idr-key-intro {
+  max-width: 880px;
+  margin: 0 0 8px;
+  color: #4e5961;
+}
+
+.idr-key-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.idr-key-item dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4e5961;
+  font-weight: 600;
+}
+
+.idr-key-item dd {
+  margin: 3px 0 0;
+}
+
+.idr-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 9px;
+  border-bottom: 1px solid #b3bcc2;
+  border-radius: 2px;
+  background: transparent;
+}
+
+.idr-swatch.is-preview { border-bottom-color: var(--it-accent); background: #eef7f3; }
+.idr-swatch.is-active { border-bottom-color: #176f58; background: #d8efe5; }
+.idr-swatch.is-related { border-bottom-color: #9cc9b9; background: #f3f8f6; }
+
+@media (max-width: 760px) {
+  .idr-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .idr-section-header {
+    flex-direction: column;
+  }
+
+  .idr-preset-list {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+/* ---------- figures beyond the report panel ---------- */
+
+/* ---------- slides ---------- */
+
+.idr-slides {
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+  align-items: stretch;
+  min-height: 400px;
+}
+
+/* The left panel scrolls sideways one slide at a time; the controls stay put under it. */
+.idr-slide-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid #e9edef;
+}
+
+.idr-slide-scroller {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.idr-slide {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 22px;
+  box-sizing: border-box;
+  opacity: 0.45;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  transition: opacity 260ms ease;
+}
+
+.idr-slide.is-active {
+  opacity: 1;
+}
+
+.idr-slide-count {
+  color: #7a858d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.idr-slide-sentence {
+  margin: 0;
+  color: #0f5b47;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(18px, 1.8vw, 23px);
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.idr-control {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  padding: 0;
+  color: #4e5961;
+  background: transparent;
+  place-items: center;
+  cursor: pointer;
+}
+
+.idr-control:hover:not(:disabled) {
+  border-color: #d7dde1;
+  color: #0f5b47;
+  background: #eef7f3;
+}
+
+.idr-control:disabled {
+  color: #c3cad0;
+  cursor: default;
+}
+
+.idr-control.is-playing {
+  color: #fff;
+  background: #176f58;
+}
+
+.idr-slide-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid #e9edef;
+  padding: 10px 22px 12px;
+}
+
+.idr-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.idr-dots button {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: #d7dde1;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.idr-dots li.is-done button {
+  background: #9cc9b9;
+}
+
+.idr-dots li.is-active button {
+  background: #176f58;
+  transform: scale(1.35);
+}
+
+.idr-slide-chart {
+  padding: 16px;
+}
+
+/*
+ * Vega keeps one SVG node per mark item and rewrites its attributes on each update, so a
+ * transition on those nodes carries a mark from one slide's state to the next.
+ */
+.idr-animated .idr-slide-chart svg.marks path {
+  transition: d 500ms ease, transform 500ms ease, opacity 500ms ease;
+}
+
+.idr-animated .idr-slide-chart svg.marks g,
+.idr-animated .idr-slide-chart svg.marks text {
+  transition: transform 500ms ease, opacity 500ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idr-animated .idr-slide-chart svg.marks path,
+  .idr-animated .idr-slide-chart svg.marks g,
+  .idr-animated .idr-slide-chart svg.marks text,
+  .idr-dots button {
+    transition: none;
+  }
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 760px) {
+  .idr-slides,
+  .idr-story {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .idr-slide-panel {
+    max-height: 60vh;
+    border-right: 0;
+    border-bottom: 1px solid #e9edef;
+  }
+}
+
+/* ---------- the story section: the chart on the left, the story on the right ---------- */
+
+.idr-story {
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  align-items: stretch;
+  min-height: 400px;
+}
+
+.idr-story-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid #e9edef;
+}
+
+.idr-story-panel .idr-slide-panel {
+  flex: 1 1 0;
+  min-height: 0;
+  border-right: 0;
+}
+
+/* The story as rows: a grip, the sentence, a pencil. */
+.idr-story-rows {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 14px 22px 10px;
+  list-style: none;
+  color: #3b454c;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+.idr-story-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: start;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 4px;
+  padding: 3px 4px;
+}
+
+.idr-story-row:hover {
+  background: #f7f9f9;
+}
+
+.idr-story-row.is-dragging {
+  opacity: 0.4;
+}
+
+.idr-story-row.is-drop-before {
+  border-top-color: var(--it-accent);
+}
+
+.idr-story-row.is-drop-after {
+  border-bottom-color: var(--it-accent);
+}
+
+.idr-story-text {
+  display: block;
+  min-width: 0;
+}
+
+.idr-grip,
+.idr-edit {
+  display: inline-grid;
+  width: 18px;
+  height: 22px;
+  border: 0;
+  border-radius: 3px;
+  padding: 0;
+  color: #9aa4ab;
+  background: transparent;
+  place-items: center;
+  cursor: pointer;
+}
+
+.idr-grip {
+  cursor: grab;
+}
+
+.idr-grip:active {
+  cursor: grabbing;
+}
+
+.idr-edit {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.idr-story-row:hover .idr-edit,
+.idr-edit:focus-visible,
+.idr-edit-actions .idr-edit {
+  opacity: 1;
+}
+
+.idr-grip:hover,
+.idr-edit:hover {
+  color: var(--it-accent);
+  background: #eef7f3;
+}
+
+.idr-edit.is-done {
+  color: #fff;
+  background: var(--it-accent);
+}
+
+.idr-edit-actions {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.idr-story-editor {
+  width: 100%;
+  border: 1px dashed var(--it-accent);
+  border-radius: 4px;
+  padding: 4px 6px;
+  color: #0f5b47;
+  background: #fff;
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.idr-story-empty {
+  padding: 12px 22px 22px;
+}
+
+/* Paragraph or slides. */
+.idr-format {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 22px 0;
+}
+
+.idr-format button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 5px;
+  color: var(--it-muted);
+  background: transparent;
+  font: 600 11px/1.3 inherit;
+  cursor: pointer;
+}
+
+.idr-format button.is-active {
+  border-bottom-color: var(--it-accent);
+  color: var(--it-ink);
+}
+
+/* The reader's own sentence, from the chart's selection. */
+.idr-format .idr-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  border: 1px solid var(--it-line);
+  border-radius: 12px;
+  padding: 3px 9px 3px 7px;
+  color: #4e5961;
+  background: #fff;
+  font: 600 10px/1.3 inherit;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+/* With a selection on the chart the button is live: a solid green border, green text. */
+.idr-format .idr-add:not(:disabled) {
+  border-color: var(--it-accent);
+  color: #0f5b47;
+  background: #eef7f3;
+}
+
+.idr-format .idr-add:hover:not(:disabled) {
+  color: #fff;
+  background: var(--it-accent);
+}
+
+.idr-format .idr-add:disabled {
+  color: #b3bcc2;
+  cursor: default;
+}
+
+.idr-edit.is-delete:hover {
+  color: var(--it-warm);
+  background: #f7eee9;
+}
+
+.idr-warning {
+  margin: 10px 0 0;
+  color: var(--it-warm);
+  font-size: 12px;
+}
+
+.idr-warning code {
+  font-size: 11px;
+}
+
+/* ---------- a question in the chat is a paragraph too; its sentences sit on the green bubble ---------- */
+
+.idr-chat-turn-user .idr-chat-bubble p {
+  margin: 0;
+}
+
+.idr-chat-turn-user .idr-chat-bubble .idr-fragment {
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+  color: inherit;
+  background: transparent;
+}
+
+.idr-chat-turn-user .idr-chat-bubble .idr-fragment:hover,
+.idr-chat-turn-user .idr-chat-bubble .idr-fragment.is-preview,
+.idr-chat-turn-user .idr-chat-bubble .idr-fragment.is-related,
+.idr-chat-turn-user .idr-chat-bubble .idr-fragment.is-active {
+  border-bottom-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* A sentence already in the story shows a check instead of the plus. */
+.idr-chat-adopt.is-added {
+  display: inline-grid;
+  border-color: var(--it-accent);
+  color: #fff;
+  background: var(--it-accent);
+}
+
+/* ---------- editable presets: a cross on each chip, a drop box to add one ---------- */
+
+.idr-chip-interaction.is-editable {
+  padding-right: 4px;
+}
+
+.idr-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 1px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  color: #9aa4ab;
+  background: transparent;
+  cursor: pointer;
+}
+
+.idr-chip-remove:hover {
+  color: var(--it-warm);
+  background: #f7eee9;
+}
+
+/* The other items are display: contents; this one needs a box to anchor the menu. */
+.idr-preset-list li.idr-preset-add {
+  position: relative;
+  display: inline-flex;
+}
+
+.idr-preset-add-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px dashed #b9c2c8;
+  border-radius: 12px;
+  padding: 3px 9px 3px 7px;
+  color: #56616a;
+  background: #fff;
+  font: 600 10px/1.3 inherit;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.idr-preset-add-toggle:hover:not(:disabled),
+.idr-preset-add-toggle.is-open {
+  border-style: solid;
+  border-color: var(--it-accent);
+  color: #0f5b47;
+  background: #eef7f3;
+}
+
+.idr-preset-add-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The menu: one row per interaction, icon then name, the op kind at the end. */
+.idr-preset-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 210px;
+  border: 1px solid #d7dde1;
+  border-radius: 8px;
+  padding: 5px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+}
+
+.idr-preset-menu button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #3b454c;
+  background: transparent;
+  font: 600 11px/1.3 inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.idr-preset-menu button:hover {
+  background: #f1f5f4;
+  color: #0f5b47;
+}
+
+.idr-preset-menu-icon {
+  color: var(--it-accent);
+}
+
+.idr-preset-menu-icon.idr-op-viewport { color: #5b7fb5; }
+.idr-preset-menu-icon.idr-op-order { color: #c0924a; }
+.idr-preset-menu-icon.idr-op-annotation { color: #4d9a74; }
+
+.idr-preset-menu-kind {
+  color: #9aa4ab;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 10px;
+  font-weight: 400;
+}
+

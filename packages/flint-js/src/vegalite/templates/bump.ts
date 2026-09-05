@@ -4,6 +4,13 @@
 import { ChartTemplateDef } from '../../core/types';
 import { defaultBuildEncodings } from './utils';
 import { interpolateConfigProperty, applyInterpolate } from './line';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 /** Semantic types that indicate a rank-like field */
 const RANK_SEMANTIC_TYPES = new Set(['Rank', 'Score', 'Level']);
@@ -18,7 +25,29 @@ export const bumpChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "detail", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'detail']),
+            categoryField: firstDiscreteEncodingField(resolvedEncodings, ['x']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     properties: [interpolateConfigProperty],
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 80, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.4 },

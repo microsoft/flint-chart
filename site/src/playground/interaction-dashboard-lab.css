@@ -1,0 +1,323 @@
+.idash-page {
+  gap: 18px;
+  width: min(100%, 1080px);
+  max-width: 1080px;
+  margin: 0 auto;
+  color: #20262c;
+}
+
+.idash-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 10px 0 18px;
+  border-bottom: 2px solid #20262c;
+}
+
+.idash-heading h1 {
+  margin: 5px 0 7px;
+  font-family: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  font-size: 38px;
+  font-weight: 620;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.idash-heading > div > p:last-child {
+  margin: 0;
+  color: #647078;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.idash-status {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 16px;
+}
+
+.idash-status > div {
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+}
+
+.idash-status span {
+  color: #7a858d;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.idash-status strong {
+  max-width: 190px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.idash-status button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  border: 1px solid #cbd2d7;
+  border-radius: 5px;
+  padding: 0 10px;
+  color: #44515a;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.idash-status button:hover:not(:disabled) {
+  border-color: #8f9aa2;
+  background: #f4f6f7;
+}
+
+.idash-status button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.idash-summary {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.3fr) minmax(190px, 1.2fr) repeat(4, minmax(110px, 0.8fr));
+  align-items: stretch;
+  border-block: 1px solid #cfd6da;
+}
+
+.idash-year-control,
+.idash-control-group {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.idash-year-control {
+  grid-template-columns: 1fr 52px;
+}
+
+.idash-year-control > span,
+.idash-control-group > span {
+  grid-column: 1 / -1;
+  color: #748088;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.idash-year-control input {
+  width: 100%;
+  margin: 0;
+  accent-color: #27749d;
+}
+
+.idash-year-control strong {
+  align-self: center;
+  font-family: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.idash-segments {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  min-height: 32px;
+  border: 1px solid #cbd2d7;
+  border-radius: 6px;
+  padding: 2px;
+  background: #f4f6f7;
+}
+
+.idash-segments button {
+  min-width: 0;
+  border: 0;
+  border-radius: 4px;
+  padding: 0 10px;
+  color: #5d6971;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.idash-segments button:hover {
+  color: #20262c;
+}
+
+.idash-segments button[aria-pressed="true"] {
+  color: #20262c;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(32 38 44 / 12%);
+}
+
+.idash-summary-item {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  min-width: 0;
+  padding: 12px 14px;
+  border-right: 1px solid #e1e5e8;
+}
+
+.idash-summary-item:first-child {
+  padding-left: 0;
+}
+
+.idash-summary-item:last-child {
+  border-right: 0;
+}
+
+.idash-summary-item > span {
+  color: #748088;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.idash-summary-item > strong {
+  font-family: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  font-size: 18px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.idash-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  width: 100%;
+  gap: 12px;
+}
+
+.idash-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d9dfe3;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.idash-panel .it-chart-mount {
+  display: grid;
+  align-items: start;
+  justify-items: center;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px;
+}
+
+@media (max-width: 900px) {
+  .idash-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .idash-summary-item:nth-child(3) {
+    border-right: 0;
+  }
+
+  .idash-summary-item:nth-child(-n + 3) {
+    border-bottom: 1px solid #e1e5e8;
+  }
+
+  .idash-chart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .idash-panel-countries,
+  .idash-panel-continents,
+  .idash-panel-trends,
+  .idash-panel-history {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .idash-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .idash-status {
+    width: 100%;
+  }
+
+  .idash-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .idash-summary-item {
+    padding: 8px 12px 12px;
+    border-bottom: 1px solid #e1e5e8;
+  }
+
+  .idash-summary-item:first-child {
+    padding-left: 12px;
+  }
+
+  .idash-panel .it-chart-mount {
+    height: 350px;
+    min-height: 300px;
+    padding: 8px;
+  }
+
+}
+
+@media (max-width: 540px) {
+  .idash-status {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+
+  .idash-status > div:first-child {
+    flex: 1 1 170px;
+  }
+
+  .idash-status button {
+    margin-left: auto;
+  }
+
+  .idash-heading h1 {
+    font-size: 32px;
+  }
+
+  .idash-panel .it-chart-mount {
+    height: 350px;
+    min-height: 350px;
+  }
+
+  .idash-panel .flint-interactive-surface {
+    position: relative;
+    left: 50%;
+    justify-self: start;
+    width: 516px !important;
+    max-width: none !important;
+    margin-left: -258px !important;
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 420px) {
+  .idash-panel .it-chart-mount {
+    height: 260px;
+    min-height: 260px;
+  }
+
+  .idash-panel .flint-interactive-surface {
+    transform: scale(0.64);
+  }
+}

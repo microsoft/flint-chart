@@ -16,6 +16,10 @@ export default defineConfig({
     // is matched before the bare 'flint-chart' substring alias.
     alias: [
       {
+        find: 'flint-chart/interactive',
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/interactive/index.ts'),
+      },
+      {
         find: 'flint-chart/test-data',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/test-data/index.ts'),
       },

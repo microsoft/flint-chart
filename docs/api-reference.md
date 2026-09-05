@@ -209,7 +209,7 @@ interface AssembleOptions {
   maxStretchX?: number;        // per-dimension width cap (derived from canvasSize)
   maxStretchY?: number;        // per-dimension height cap (derived from canvasSize)
   facetElasticity?: number;    // facet stretch (default 0.3)
-  minStep?: number;            // min px per discrete item (default 6)
+  minStep?: number;            // min px per discrete item (default 8)
   minSubplotSize?: number;     // min facet subplot px (default 60)
   maxColorValues?: number;     // color cardinality before truncation (default 24)
   stepPadding?: number;        // band inner padding fraction (default 0.1)

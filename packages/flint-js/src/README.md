@@ -163,6 +163,49 @@ Each backend has its own assembly function. All accept the same
 | `assembleECharts(input)` | ECharts option object | `import { assembleECharts } from 'flint-chart'` |
 | `assembleChartjs(input)` | Chart.js config object | `import { assembleChartjs } from 'flint-chart'` |
 
+### Interactive surface
+
+Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns interaction coordination, viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
+
+```ts
+import { buildInteractiveChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
+
+const surface = buildInteractiveChart(
+  container,
+  input,
+  {
+    backend: 'vegalite',
+    renderer: 'canvas',
+    interactions: [clickHighlight({ targets: ['mark', 'legend', 'discreteAxis'] })],
+  },
+);
+
+await surface.ready;
+// Later: surface.destroy();
+```
+
+Application input is transport-neutral. Register an external handler with the chart,
+then dispatch payloads by interaction ID from React state, a DOM listener, a WebSocket,
+or another chart:
+
+```ts
+const countryPicker = externalInteraction<{ country: string }>({
+  id: 'country-picker',
+  handle: ({ country }) => ({
+    id: 'country-selection',
+    ops: [{
+      op: 'set-style',
+      targets: [{ select: { key: { Country: country } } }],
+      value: { state: 'emphasized' },
+    }],
+  }),
+});
+
+await surface.dispatch('country-picker', { country: 'Japan' });
+```
+
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` focuses configured mark, legend, and discrete-axis targets, Shift/Ctrl/Meta-click toggles targets, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+
 ### Input types
 
 ```ts

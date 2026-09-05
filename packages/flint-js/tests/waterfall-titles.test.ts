@@ -84,6 +84,39 @@ function allEncodings(spec: any): Array<[string, any]> {
 }
 
 describe('Waterfall Chart axis titles', () => {
+  it('uses display names in tooltips without exposing internal transform fields', () => {
+    const spec = build({ wsu_change: 'WSU weekly change', week: 'Week (Mon, JST)' });
+    const bar = spec.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'bar');
+    const connector = spec.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'rule');
+
+    expect(bar.encoding.tooltip).toEqual([
+      { field: 'week', type: 'ordinal', title: 'Week (Mon, JST)' },
+      { field: 'wsu_change', type: 'quantitative', title: 'WSU weekly change' },
+      { field: '__wf_color', type: 'nominal', title: 'Type' },
+    ]);
+    expect(bar.encoding.tooltip.every((entry: any) => !entry.title.startsWith('__wf_'))).toBe(true);
+    expect(connector.encoding.tooltip).toBeNull();
+  });
+
+  it('uses the authored type field and its display name in tooltips', () => {
+    const spec = assembleVegaLite({
+      data: { values: DATA.map((row, index) => ({ ...row, kind: index === 0 ? 'start' : 'delta' })) },
+      semantic_types: { week: 'Date', wsu_change: 'Quantity', kind: 'Category' },
+      chart_spec: {
+        chartType: 'Waterfall Chart',
+        encodings: { x: { field: 'week' }, y: { field: 'wsu_change' }, color: { field: 'kind' } },
+      },
+      field_display_names: { week: 'Week', wsu_change: 'Weekly change', kind: 'Change type' },
+    } as never) as any;
+    const bar = spec.layer.find((layer: any) => (layer.mark?.type ?? layer.mark) === 'bar');
+
+    expect(bar.encoding.tooltip).toEqual([
+      { field: 'week', type: 'ordinal', title: 'Week' },
+      { field: 'wsu_change', type: 'quantitative', title: 'Weekly change' },
+      { field: 'kind', type: 'nominal', title: 'Change type' },
+    ]);
+  });
+
   it('applies field_display_names to the x and y axes', () => {
     const spec = build({ wsu_change: 'WSU weekly change', week: 'Week (Mon, JST)' });
 

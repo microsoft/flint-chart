@@ -3,6 +3,17 @@
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { computeCircumferencePressure, computeEffectiveBarCount } from '../../core/decisions';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 import { setMarkProp } from './utils';
 
 export const pieChartDef: ChartTemplateDef = {
@@ -10,6 +21,31 @@ export const pieChartDef: ChartTemplateDef = {
     template: { mark: "arc", encoding: {} },
     channels: ["size", "color", "column", "row"],
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const valueField = resolvedEncodings.size?.field;
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['color']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['arc'],
+            annotationMarkType: 'arc',
+            supportedRegionGestures: ['angular'],
+            renderHoverStyles: { arc: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'slice' });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('radial-midpoint', 'outer-radial'),
+                categoryValueAnnotationText(seriesField, valueField),
+            ),
+        };
+    },
     geometryKinds: ['arc'],
     instantiate: (spec, ctx) => {
         // Remap abstract channels to VL channels:
@@ -91,6 +127,7 @@ export const pieChartDef: ChartTemplateDef = {
                 margin: 50,   // room for labels around pie
             });
 
+        spec.mark = setMarkProp(spec.mark, 'outerRadius', radius);
         // Set explicit width/height — overrides config.view defaults
         spec.width = canvasW;
         spec.height = canvasH;

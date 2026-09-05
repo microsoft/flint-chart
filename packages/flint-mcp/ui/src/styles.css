@@ -661,8 +661,8 @@ input[type="range"]::-webkit-slider-runnable-track {
   border-radius: 999px;
   background: linear-gradient(
     to right,
-    var(--accent) 0 var(--pct, 50%),
-    rgba(0, 0, 0, 0.16) var(--pct, 50%) 100%
+    var(--accent) 0 var(--pct, 0%),
+    rgba(0, 0, 0, 0.16) var(--pct, 0%) 100%
   );
 }
 

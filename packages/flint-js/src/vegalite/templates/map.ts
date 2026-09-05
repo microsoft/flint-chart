@@ -7,6 +7,18 @@ import {
     type MapScope, inferBubbleScope, inferChoroplethScope, semanticScope, pickMapScope,
 } from '../../chart-types/geo';
 import { toTypeString } from '../../core/field-semantics';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    categoryValueAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 const mapProjections = [
     { value: "mercator", label: "Mercator" },
@@ -158,6 +170,32 @@ export const mapDef: ChartTemplateDef = {
     },
     channels: ["longitude", "latitude", "color", "size", "opacity"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['longitude', 'latitude', 'color', 'size', 'opacity']),
+            seriesField,
+            legendFields: colorField || sizeField
+                ? { ...(colorField ? { color: colorField } : {}), ...(sizeField ? { size: sizeField } : {}) }
+                : undefined,
+            selectableMarks: ['circle'],
+            renderHoverStyles: {
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+            },
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
+        };
+    },
     instantiate: (spec, ctx) => {
         const rows = ctx.fullTable ?? ctx.table ?? [];
         const lonField = ctx.resolvedEncodings.longitude?.field;
@@ -248,7 +286,7 @@ function buildChoroplethJoin(spec: any, ctx: any, resolver: GeoResolver): void {
 
     if (idField) {
         const joined = rows.map((r) => ({ ...r, __geo_id: resolver(r[idField]) }));
-        const lookupFields = [valueField, labelField].filter(Boolean) as string[];
+        const lookupFields = [idField, valueField, labelField].filter(Boolean) as string[];
         spec.transform = [
             {
                 lookup: 'id',
@@ -276,6 +314,30 @@ export const choroplethDef: ChartTemplateDef = {
     },
     channels: ["id", "color", "detail"],
     markCognitiveChannel: 'color',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const idField = resolvedEncodings.id?.field;
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['id', 'color', 'detail']),
+            categoryField: idField,
+            selectableMarks: ['geoshape'],
+            renderHoverStyles: { shape: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+            resolve: (event, context) => {
+                const hits = event.role === 'legend-item' && colorField
+                    ? legendMatchedHits(event, context, colorField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'region',
+                    role: event.role === 'legend-item' ? 'legend-item' : 'geographic-region',
+                });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('center'),
+                categoryValueAnnotationText(idField, colorField),
+            ),
+            legendFields: colorField ? { color: colorField } : undefined,
+        };
+    },
     instantiate: (spec, ctx) => {
         const rows = ctx.fullTable ?? ctx.table ?? [];
         const idField = ctx.resolvedEncodings.id?.field;

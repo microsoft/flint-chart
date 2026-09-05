@@ -16,6 +16,7 @@ from .decisions import (
 from . import js_round
 
 
+DEFAULT_MIN_STEP = 8
 VL_SHORT_DISCRETE_CATEGORY_COUNT = 4
 VL_SHORT_DISCRETE_LABEL_MAX_LEN = 8
 
@@ -190,7 +191,7 @@ def compute_layout(
     elasticity_val = options.get("elasticity", 0.5)
     max_stretch_x, max_stretch_y = resolve_stretch_caps(options)
     facet_elasticity_val = options.get("facetElasticity", 0.3)
-    min_step_val = options.get("minStep", 6)
+    min_step_val = options.get("minStep", DEFAULT_MIN_STEP)
     min_subplot_val = options.get("minSubplotSize", 60)
     step_padding_val = options.get("stepPadding", 0.1)
     maintain_continuous_axis_ratio = options.get("maintainContinuousAxisRatio", False)
@@ -894,7 +895,7 @@ def compute_channel_budgets(
     options: dict[str, Any],
 ) -> dict[str, Any]:
     max_stretch_x, max_stretch_y = resolve_stretch_caps(options)
-    min_step_val = options.get("minStep", 6)
+    min_step_val = options.get("minStep", DEFAULT_MIN_STEP)
     step_padding_val = options.get("stepPadding", 0.1)
     max_color_val = options.get("maxColorValues", 24)
 
@@ -996,7 +997,7 @@ def compute_facet_grid(
     fix_w = facet_fixed_padding.get("width", 0)
     fix_h = facet_fixed_padding.get("height", 0)
     gap = options.get("facetGap", 0)
-    min_step = options.get("minStep", 6)
+    min_step = options.get("minStep", DEFAULT_MIN_STEP)
     step_padding = options.get("stepPadding", 0.1)
     base_min_subplot = options.get("minSubplotSize", 60)
 
@@ -1190,7 +1191,7 @@ def compute_min_subplot_dimensions(
     data: list[dict[str, Any]],
     options: dict[str, Any],
 ) -> dict[str, float]:
-    min_step = options.get("minStep", 6)
+    min_step = options.get("minStep", DEFAULT_MIN_STEP)
     min_subplot = options.get("minSubplotSize", 60)
 
     min_subplot_width = min_subplot

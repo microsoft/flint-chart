@@ -4,6 +4,13 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { makeCartesianPivot } from '../../core/pivot';
 import { defaultBuildEncodings, setMarkProp, alignStackOrderToColorOrder } from './utils';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    resolveSeriesTarget,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -22,6 +29,16 @@ const interpolateConfigProperty: ChartPropertyDef = {
 function applyInterpolate(vgSpec: any, config?: Record<string, any>): void {
     if (!config?.interpolate) return;
     vgSpec.mark = setMarkProp(vgSpec.mark, 'interpolate', config.interpolate);
+}
+
+function resolveAreaTarget(event: any, context: any, seriesField: string | undefined) {
+    if (event.role === 'text-label' && seriesField) {
+        const value = event.hits[0]?.datum?.[seriesField];
+        const hits = context.allHits.filter((hit: any) =>
+            hit.markType === 'area' && hit.datum?.[seriesField] === value);
+        return targetFromHits(hits, context.keyField, { kind: 'path', role: 'text-label' });
+    }
+    return resolveSeriesTarget(event, context, seriesField);
 }
 
 /**
@@ -116,8 +133,27 @@ export const areaChartDef: ChartTemplateDef = {
     chart: "Area Chart",
     template: { mark: "area", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'area',
     geometryKinds: ['area', 'line', 'point'],
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => resolveAreaTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),
@@ -180,7 +216,25 @@ export const streamgraphDef: ChartTemplateDef = {
     chart: "Streamgraph",
     template: { mark: "area", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            categoryField: firstDiscreteEncodingField(resolvedEncodings, ['x']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['area'],
+            renderHoverStyles: { area: { opacity: 'spotlight' } },
+            resolve: (event, context) => resolveAreaTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('segment-midpoint', 'center', 'right', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

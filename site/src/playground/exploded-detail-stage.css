@@ -1,0 +1,79 @@
+.exploded-detail-shell {
+  padding: 12px 12px 14px;
+}
+
+.exploded-detail-panel {
+  overflow: hidden;
+}
+
+.exploded-detail-stack {
+  position: relative;
+  width: 900px;
+  min-height: 520px;
+}
+
+.exploded-detail-mount {
+  min-height: 520px;
+}
+
+.exploded-detail-overlay {
+  position: absolute;
+  z-index: 3;
+  opacity: 0;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 70ms linear;
+}
+
+.exploded-detail-overlay[data-visible='true'] {
+  opacity: 1;
+}
+
+.exploded-detail-focus {
+  fill: none;
+  stroke: #65747d;
+  stroke-dasharray: 3 2;
+  stroke-width: 1.2px;
+}
+
+.exploded-detail-bridge {
+  stroke: #8d999f;
+  stroke-dasharray: 2 3;
+  stroke-width: 1px;
+}
+
+.exploded-detail-background {
+  fill: rgba(255, 255, 255, 0.97);
+  stroke: #65747d;
+  stroke-width: 1.1px;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 5px 9px rgba(31, 35, 40, 0.13));
+}
+
+.exploded-detail-point {
+  stroke: #fff;
+  stroke-width: 1.3px;
+}
+
+.exploded-detail-label path {
+  fill: none;
+  stroke: #87939a;
+  stroke-width: 0.8px;
+}
+
+.exploded-detail-label text {
+  fill: #222a30;
+  font-size: 12px;
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.exploded-detail-source {
+  padding: 0 4px;
+  color: #7a858d;
+  font-size: 10px;
+  text-align: right;
+}

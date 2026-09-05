@@ -421,7 +421,20 @@ understates what you know:
 }
 ```
 
-- `unit` — the unit or currency code: `"USD"`, `"°C"`, `"kg"`.
+- `unit` — an optional assertion that authorizes Flint to display a unit. Add
+  it only when the data or surrounding context establishes the measurement
+  and seeing it materially changes how a reader interprets the number. A type
+  such as `Duration`, a field name such as `life_expectancy`, or values that
+  merely look plausible are not enough evidence by themselves.
+  - Prefer canonical codes: `"USD"`, `"°C"`, `"kg"`, `"km/h"`, `"min"`.
+  - Conventional compact units are normalized and may appear beside values
+    (`USD` → `$`, `hours` → `hr`).
+  - Lexical units such as `"years"` are stated once beside the field name as
+    `field (years)`, not repeated after every value.
+  - Do not put explanatory phrases in `unit`. Put qualifications such as
+    `"per working-age resident"` or `"constant 2024 prices"` in the subtitle.
+  - Omit `unit` when its meaning, scale, or denominator is uncertain. Flint
+    does not infer a visible unit from the semantic type or field name.
 - `intrinsicDomain` — the field's own bounds, for bounded scales only: `[1, 5]`
   for a five-star rating, `[0, 100]` for a percentage score. Not for
   open-ended measures.

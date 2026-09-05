@@ -1,0 +1,18 @@
+.retail-drilldown-stage {
+  padding: 18px;
+}
+
+.retail-drilldown-chart {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.retail-drilldown-mount {
+  position: relative;
+  height: 500px;
+}
+
+.retail-drilldown-layer {
+  position: absolute;
+  inset: 0 auto auto 0;
+}

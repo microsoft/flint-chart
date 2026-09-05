@@ -129,7 +129,7 @@ the authored blocks and their jobs:
 | `layout` | Density, target width, title block, and band step |
 | `chartDefaults` | Optional defaults keyed by registered chart type or `*`; caller values still win |
 | `compileDefaults` | Preferred base size, canvas size, and supported assemble options |
-| `interaction` | Tooltip format |
+| `interaction` | Tooltip format and semantic selection-boundary paint |
 | `variants` | Conditional policy adaptations; variants may not change `ink` or `type` |
 
 ### High-value nested shapes
@@ -153,6 +153,8 @@ the authored blocks and their jobs:
   }
 }
 ```
+
+`interaction.selectionBoundary` accepts `color`, `width`, `opacity`, `haloColor`, `haloWidth`, and `haloOpacity`. Omitted paint is grounded from the theme: foreground from `ink.accent` then primary text, and halo from the plot or canvas surface. Use explicit values only when the house has a distinct interaction treatment.
 
 This is a shape example, not a palette recommendation. Derive actual values
 from the user's references.

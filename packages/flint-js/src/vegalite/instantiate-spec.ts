@@ -553,6 +553,54 @@ function computeStackedExtremes(
     return { maxPos, minNeg };
 }
 
+const NICE_E10 = Math.sqrt(50);
+const NICE_E5 = Math.sqrt(10);
+const NICE_E2 = Math.SQRT2;
+
+function niceStackSpan(start: number, stop: number, count: number): [number, number] {
+    let lo = start;
+    let hi = stop;
+    let previousStep: number | undefined;
+    for (let index = 0; index < 32; index += 1) {
+        const rawStep = (hi - lo) / Math.max(1, count);
+        const power = Math.floor(Math.log10(rawStep));
+        const error = rawStep / 10 ** power;
+        const factor = error >= NICE_E10 ? 10 : error >= NICE_E5 ? 5 : error >= NICE_E2 ? 2 : 1;
+        const step = power >= 0 ? factor * 10 ** power : -(10 ** -power) / factor;
+        if (step === previousStep || step === 0 || !Number.isFinite(step)) break;
+        if (step > 0) {
+            lo = Math.floor(lo / step) * step;
+            hi = Math.ceil(hi / step) * step;
+        } else {
+            lo = Math.ceil(lo * step) / step;
+            hi = Math.floor(hi * step) / step;
+        }
+        previousStep = step;
+    }
+    return [lo, hi];
+}
+
+/**
+ * Pin a positive sum stack that already ends on the clean tick `nice` would
+ * choose. Stored calculated shares can total 99.9999999999; leaving that to
+ * Vega's post-stack arithmetic may cross the tick by a rounding bit and add a
+ * whole empty interval. A meaningful excess remains on automatic nice.
+ */
+function pinCleanStackEndpoint(enc: any, extremes: { maxPos: number; minNeg: number }): void {
+    if (extremes.minNeg < 0 || !(extremes.maxPos > 0)) return;
+    if (enc.scale?.domain != null || enc.scale?.domainMax != null || enc.scale?.nice === false) return;
+    const count = typeof enc.scale?.nice === 'number' ? enc.scale.nice : 10;
+    const tolerance = Math.max(1, Math.abs(extremes.maxPos)) * 1e-9;
+    const [, cleanMax] = niceStackSpan(0, extremes.maxPos - tolerance, count);
+    if (Math.abs(cleanMax - extremes.maxPos) > tolerance) return;
+    enc.scale = {
+        ...(enc.scale ?? {}),
+        domainMin: enc.scale?.domainMin ?? 0,
+        domainMax: cleanMax,
+        nice: false,
+    };
+}
+
 /**
  * Detect whether a discrete category repeats across rows — i.e., multiple rows
  * share the same category value, which makes Vega-Lite stack the measure even
@@ -745,11 +793,15 @@ function vlApplyFieldContext(
             const otherChannel = ch === 'y' ? 'x' : 'y';
             const otherCS = channelSemantics[otherChannel];
             const otherIsDiscrete = otherCS?.type === 'nominal' || otherCS?.type === 'ordinal';
-            const isImplicitlyStacked = isBarLike && otherIsDiscrete && enc.stack !== null
-                && (hasColorEncoding || hasRepeatedCategory(context.table, otherCS?.field, enc.field));
+            const isImplicitlyStacked = isBarLike && enc.stack !== null
+                && (hasColorEncoding
+                    || (otherIsDiscrete && hasRepeatedCategory(context.table, otherCS?.field, enc.field)));
             const isStacked = isExplicitlyStacked || isImplicitlyStacked;
             const isNormalizeStacked = enc.stack === 'normalize';
             const isSumStacked = isStacked && !isNormalizeStacked;
+            const stackedExtremes = isSumStacked
+                ? computeStackedExtremes(context.table, enc.field, ch, channelSemantics)
+                : undefined;
 
             // For sum-stacked charts, check if stacked totals exceed the
             // intrinsic domain.  If they do, skip the domain constraint.
@@ -759,7 +811,16 @@ function vlApplyFieldContext(
             // Example: individual percentages range 20–50% (no snap), but
             // they sum to ~100% per group → should snap to 100%.
             let skipDomain = false;
-            let effectiveDomainConstraint = cs.domainConstraint;
+            // Size and color scales must not silently re-normalize when a
+            // mounted chart replaces its rows. An explicit intrinsic domain is
+            // the author's stable reference frame for both symbol area and
+            // quantitative color (including a diverging scale's center).
+            const declaredScaleDomain = ch === 'size' || ch === 'color'
+                ? cs.semanticAnnotation?.intrinsicDomain
+                : undefined;
+            let effectiveDomainConstraint = declaredScaleDomain
+                ? { min: declaredScaleDomain[0], max: declaredScaleDomain[1], clamp: true }
+                : cs.domainConstraint;
 
             if (isSumStacked) {
                 // Use explicit intrinsicDomain from annotation, or infer from
@@ -770,9 +831,7 @@ function vlApplyFieldContext(
                 // can't find the intrinsic bounds to snap totals against.
                 const intrinsic = getEffectiveIntrinsicDomain(cs, context.table, enc.field);
                 if (intrinsic) {
-                    const extremes = computeStackedExtremes(
-                        context.table, enc.field, ch, channelSemantics,
-                    );
+                    const extremes = stackedExtremes;
 
                     if (extremes !== undefined) {
                         // VL stacks positive and negative contributions
@@ -823,7 +882,7 @@ function vlApplyFieldContext(
                 }
             }
 
-            if (effectiveDomainConstraint && enc.type === 'quantitative' && (ch === 'x' || ch === 'y') && !enc.bin && !skipDomain) {
+            if (effectiveDomainConstraint && enc.type === 'quantitative' && (ch === 'x' || ch === 'y' || ch === 'size' || ch === 'color') && !enc.bin && !skipDomain) {
                 if (!enc.scale) enc.scale = {};
                 let { min } = effectiveDomainConstraint;
                 const { max, clamp } = effectiveDomainConstraint;
@@ -865,6 +924,8 @@ function vlApplyFieldContext(
                     enc.scale.clamp = true;
                 }
             }
+
+            if (stackedExtremes) pinCleanStackEndpoint(enc, stackedExtremes);
 
             // ── 4. Tick constraint (axis.tickMinStep + axis.values) ──
             // Skip binned encodings — VL handles bin ticks natively.

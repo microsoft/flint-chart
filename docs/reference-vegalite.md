@@ -31,7 +31,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-scatter.svg) Scatter Plot
 
-**Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `opacity`, `column`, `row`
+**Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `detail`, `opacity`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -110,7 +110,7 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 ### ![](chart-icon-column-grouped.svg) Grouped Bar Chart
 
-**Encoding channels:** `x`, `y`, `group`, `column`, `row`
+**Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -415,7 +415,9 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `color`
 
-_No template-specific parameters._
+| Parameter | Control | Domain | Default | Availability | Description |
+|---|---|---|---|---|---|
+| `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
 
 ### ![](chart-icon-bar-table.svg) Bar Table
 

@@ -656,7 +656,10 @@ Only override native formatting when semantic context adds value: prefix/suffix,
 | **Sentiment / Correlation** | `+` + data-driven | — | — | — | Signed decimal |
 | **Latitude / Longitude** | — (empty) | — | — | — | VL native |
 
-Unit/currency priority is `annotation.unit` > column-name heuristics > data-value scanning > type defaults.
+Visible unit text requires `annotation.unit`; semantic types, column names, and
+data values do not authorize display by themselves. Conventional compact units
+such as `$`, `%`, `°C`, `kg`, or `min` may accompany values. Lexical units such
+as `years` are stated once with the field title (`field (years)`).
 
 **Parsing** is the compiler's job, guided by semantic type rather than stored on context:
 

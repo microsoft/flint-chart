@@ -57,3 +57,6 @@ export * from './plotly';
 
 // Excel backend: assembleExcel + Excel chart spec types
 export * from './excel';
+
+// Image-Charts backend: assembleImageCharts + hosted-image-URL artifact type
+export * from './image-charts';

@@ -669,6 +669,8 @@ channels. This decouples user/AI intent from rendering specifics.
 First-class channel for grouped bar charts. The analysis stage resolves
 its semantics (type, color scheme) without any VL knowledge. The grouping
 axis is auto-detected: whichever of `x`/`y` is discrete gets subdivided.
+For a Grouped Bar Chart, `color` is an equivalent alias for `group`; when only
+`color` is supplied, Flint canonicalizes it to `group` before analysis.
 
 During instantiation, `buildVLEncodings()` translates:
 - `group` → VL `color` encoding (for coloring)

@@ -29,6 +29,7 @@ import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-se
 import { detectBandedAxisFromSemantics } from '../core/axis-detection';
 import { computeChannelBudgets, deriveStretchCaps, resolveBaseSize } from '../core/compute-layout';
 import { filterOverflow } from '../core/filter-overflow';
+import { normalizeChartEncodingAliases } from '../core/static-series';
 import { formatSpecToExcel } from './chart-types';
 import { excelGetTemplateDef } from './templates';
 import type {
@@ -191,7 +192,10 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
     const flintType = input.chart_spec.chartType;
     const semanticTypes = input.semantic_types ?? {};
     const rawData: any[] = input.data.values ?? [];
-    const encodings = normalizeEncodings(input.chart_spec.encodings);
+    const encodings = normalizeChartEncodingAliases(
+        flintType,
+        normalizeEncodings(input.chart_spec.encodings),
+    );
 
     // ── Phase 0 (reused core): resolve per-channel semantics ────────────────
     let convertedData = convertTemporalData(rawData, semanticTypes);
