@@ -1142,6 +1142,13 @@ describe('interaction definitions', () => {
         ))).toBe('pointer');
         expect(resolveInteractionAffordance([hoverGroupFocus({ groupBy: 'Series' })], 'mark'))
             .toMatchObject({ hover: 'cohort' });
+        const freehand = {
+            id: 'freehand', eventSource: lassoTrigger('contain', false),
+            affordances: [{ target: 'plot' as const, cursor: 'draw' as const }],
+        };
+        const drawCursor = affordanceCursor(resolveInteractionAffordance([freehand, select()], 'plot'));
+        expect(drawCursor).toMatch(/^url\("data:image\/svg\+xml/);
+        expect(drawCursor).toMatch(/, crosshair$/);
     });
 
     it('declares affordances only for configured click highlight targets', () => {

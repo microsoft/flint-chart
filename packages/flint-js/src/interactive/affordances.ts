@@ -1,7 +1,7 @@
 import type { CanvasInteractionDef } from './interactions';
 
 export type InteractionAffordanceTarget = 'mark' | 'legend-item' | 'axis-label' | 'plot';
-export type InteractionCursor = 'activate' | 'drag' | 'region' | 'navigate' | 'inspect';
+export type InteractionCursor = 'activate' | 'drag' | 'region' | 'navigate' | 'inspect' | 'draw';
 export type InteractionHoverEffect = 'target' | 'cohort';
 
 export interface InteractionAffordance {
@@ -16,8 +16,22 @@ const CURSOR_PRIORITY: Record<InteractionCursor, number> = {
     inspect: 20,
     navigate: 30,
     region: 40,
+    draw: 45,
     drag: 50,
 };
+
+/**
+ * A pen for freehand input over the plot. Like an arrow cursor, its tip is the
+ * top-left hotspot and the body trails to the bottom right.
+ */
+const DRAW_CURSOR_SVG = [
+    "<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'>",
+    "<path d='M3 3l4.6 1.2L20 16.6a1.8 1.8 0 0 1 0 2.6l-.8.8a1.8 1.8 0 0 1-2.6 0L4.2 7.6z' ",
+    "fill='%23333333' stroke='%23ffffff' stroke-width='1.4' stroke-linejoin='round'/>",
+    "<path d='M18 14.6l-3.4 3.4' stroke='%23ffffff' stroke-width='1.2'/>",
+    '</svg>',
+].join('');
+export const DRAW_CURSOR = `url("data:image/svg+xml;utf8,${DRAW_CURSOR_SVG}") 3 3, crosshair`;
 
 export function resolveInteractionAffordance(
     interactions: readonly CanvasInteractionDef[],
@@ -47,6 +61,7 @@ export function affordanceCursor(affordance: InteractionAffordance | undefined):
         case 'region': return 'crosshair';
         case 'navigate': return 'grab';
         case 'inspect': return 'crosshair';
+        case 'draw': return DRAW_CURSOR;
         default: return undefined;
     }
 }

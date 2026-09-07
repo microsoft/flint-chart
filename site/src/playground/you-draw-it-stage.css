@@ -1,0 +1,28 @@
+.ydi-stage {
+  position: relative;
+}
+
+.ydi-stage .ic-flint-dimpvis-mount {
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ydi-stage__hint {
+  color: #66707a;
+  font-size: 10px;
+}
+
+.ydi-stage__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.ydi-stage .ic-pill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
