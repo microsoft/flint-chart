@@ -2235,6 +2235,7 @@ export function mountVegaInteractions(
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
         resetViewport: resetViewportRegion,
+        escapeClears: dismissPolicy.escape,
     }) : undefined;
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,
