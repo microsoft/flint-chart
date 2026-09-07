@@ -3293,6 +3293,58 @@ describe('legend, inspect, zoom, and touch presets', () => {
         expect(domain).toEqual({ y: { kind: 'interval', start: 35, end: 25 } });
     });
 
+    it('inverts a point gesture through the overlay scales when no axis navigates', () => {
+        const domain = domainForPlotGeometry(
+            { kind: 'point', point: { x: 50, y: 20 } },
+            undefined,
+            (name) => name === 'x'
+                ? { invert: (pixel: number) => 2000 + pixel / 10 }
+                : { invert: (pixel: number) => 60 - pixel / 2 },
+            { x: 'x', y: 'y' },
+        );
+
+        expect(domain).toEqual({
+            x: { kind: 'value', value: 2005 },
+            y: { kind: 'value', value: 50 },
+        });
+    });
+
+    it('inverts the current point of an element drag', () => {
+        const domain = domainForPlotGeometry(
+            {
+                kind: 'drag',
+                start: { x: 0, y: 0 },
+                current: { x: 30, y: 40 },
+                delta: { x: 30, y: 40 },
+            },
+            { x: { scale: 'x', signal: 'xDomain', type: 'linear' } },
+            () => ({ invert: (pixel: number) => pixel * 2 }),
+            { y: 'y' },
+        );
+
+        expect(domain).toEqual({
+            x: { kind: 'value', value: 60 },
+            y: { kind: 'value', value: 80 },
+        });
+    });
+
+    it('inverts every polygon vertex and skips axes without an invertible scale', () => {
+        const domain = domainForPlotGeometry(
+            { kind: 'polygon', polygon: { points: [{ x: 10, y: 5 }, { x: 20, y: 15 }, { x: 30, y: 25 }] } },
+            undefined,
+            (name) => name === 'x' ? { invert: (pixel: number) => pixel / 10 } : {},
+            { x: 'x', y: 'y' },
+        );
+
+        expect(domain).toEqual({ points: [{ x: 1 }, { x: 2 }, { x: 3 }] });
+        expect(domainForPlotGeometry(
+            { kind: 'polygon', polygon: { points: [{ x: 10, y: 5 }] } },
+            undefined,
+            () => undefined,
+            { x: 'x' },
+        )).toBeUndefined();
+    });
+
     it('normalizes viewport brush geometry without scanning marks', () => {
         const view = {
             width: () => 100,
