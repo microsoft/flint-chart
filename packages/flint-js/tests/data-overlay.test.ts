@@ -6,6 +6,22 @@ import type { ChartOverlaySpec } from '../src/interactive/language/updates';
 import { orderedOverlayRows, projectPointToPath } from '../src/vegalite/interactions/presentation/data-overlay';
 
 describe('retained data overlays', () => {
+    it('orders a path by time when the order field holds dates', () => {
+        const values = [
+            { Year: new Date(Date.UTC(2016, 0, 1)), x: 3, y: 4 },
+            { Year: new Date(Date.UTC(2013, 6, 1)), x: 1, y: 2 },
+            { Year: new Date(Date.UTC(2014, 0, 1)), x: 2, y: 3 },
+        ];
+        const spec: ChartOverlaySpec = {
+            mark: 'line',
+            data: { values },
+            encodings: { x: { field: 'x' }, y: { field: 'y' }, order: { field: 'Year' } },
+            role: 'drawn-line',
+        };
+
+        expect(orderedOverlayRows(spec).map((row) => row.x)).toEqual([1, 2, 3]);
+    });
+
     it('orders a path without mutating application rows', () => {
         const values = [
             { Year: 2000, x: 3, y: 4 },

@@ -102,6 +102,9 @@ export function sourceRecordsForRenderedRecords(
 
 export function elementsFromHits(hits: readonly RenderHit[], keyField: string): SemanticElement[] {
     const seen = new Set<string>();
+    const startKeys = new Set(hits
+        .map((hit) => hit.datum[keyField])
+        .filter((key): key is string => typeof key === 'string'));
     const elements: SemanticElement[] = [];
     for (const hit of hits) {
         const key = hit.datum[keyField];
@@ -109,10 +112,15 @@ export function elementsFromHits(hits: readonly RenderHit[], keyField: string): 
         seen.add(key);
         const records = (hit.endDatum ? [hit.datum, hit.endDatum] : [hit.datum])
             .map((datum) => withoutRenderIdentity(datum, keyField));
+        // A path's final vertex only ever appears as a segment end, so the
+        // last segment carries its key too; otherwise hiding the path would
+        // strand that vertex as a zero-length stub.
+        const endKey = hit.endDatum?.[keyField];
+        const renderKeys = typeof endKey === 'string' && !startKeys.has(endKey) ? [key, endKey] : [key];
         elements.push(associateSemanticElementRenderKeys({
             value: withoutRenderIdentity(hit.datum, keyField),
             records,
-        }, [key]));
+        }, renderKeys));
     }
     return elements;
 }

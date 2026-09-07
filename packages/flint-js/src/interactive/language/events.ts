@@ -120,6 +120,12 @@ export type PlotGeometry =
 export interface DomainGeometry {
     x?: DomainCoordinate;
     y?: DomainCoordinate;
+    points?: readonly DomainPoint[];
+}
+
+export interface DomainPoint {
+    x?: unknown;
+    y?: unknown;
 }
 
 export type DomainCoordinate =

@@ -34,7 +34,7 @@ export type {
     InteractionCursor,
     InteractionHoverEffect,
 } from './affordances';
-export { affordanceCursor, resolveInteractionAffordance } from './affordances';
+export { DRAW_CURSOR, affordanceCursor, resolveInteractionAffordance } from './affordances';
 export type {
     AnnotationCandidate,
     AnnotationConnection,

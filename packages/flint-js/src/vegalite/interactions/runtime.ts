@@ -202,24 +202,57 @@ export function domainForPlotGeometry(
     scaleFor: (name: string) => {
         invert?(value: number): unknown;
     } | undefined,
+    fallbackScales?: Partial<Record<'x' | 'y', string>>,
 ): DomainGeometry | undefined {
-    if (!plot || plot.kind !== 'rect') return undefined;
-    const domain: DomainGeometry = {};
-    for (const axis of ['x', 'y'] as const) {
-        const config = axes?.[axis];
-        if (!config) continue;
-        const scale = scaleFor(config.scale);
-        if (typeof scale?.invert !== 'function') continue;
-        const lower = axis === 'x' ? plot.rect.x : plot.rect.y;
-        const upper = lower + (axis === 'x' ? plot.rect.width : plot.rect.height);
-        const lowerValue = scale.invert(lower);
-        const upperValue = scale.invert(upper);
-        const start = axis === 'y' ? upperValue : lowerValue;
-        const end = axis === 'y' ? lowerValue : upperValue;
-        if (start === undefined || end === undefined) continue;
-        domain[axis] = { kind: 'interval', start, end };
+    if (!plot) return undefined;
+    // Navigation axes name the authoritative scales; the overlay scales cover
+    // charts that project overlays but do not navigate.
+    const inverter = (axis: 'x' | 'y'): ((pixel: number) => unknown) | undefined => {
+        const name = axes?.[axis]?.scale ?? fallbackScales?.[axis];
+        if (!name) return undefined;
+        const scale = scaleFor(name);
+        if (typeof scale?.invert !== 'function') return undefined;
+        return (pixel: number) => scale.invert!(pixel);
+    };
+    if (plot.kind === 'rect') {
+        const domain: DomainGeometry = {};
+        for (const axis of ['x', 'y'] as const) {
+            const invert = inverter(axis);
+            if (!invert) continue;
+            const lower = axis === 'x' ? plot.rect.x : plot.rect.y;
+            const upper = lower + (axis === 'x' ? plot.rect.width : plot.rect.height);
+            const lowerValue = invert(lower);
+            const upperValue = invert(upper);
+            const start = axis === 'y' ? upperValue : lowerValue;
+            const end = axis === 'y' ? lowerValue : upperValue;
+            if (start === undefined || end === undefined) continue;
+            domain[axis] = { kind: 'interval', start, end };
+        }
+        return domain.x || domain.y ? domain : undefined;
     }
-    return domain.x || domain.y ? domain : undefined;
+    if (plot.kind === 'point' || plot.kind === 'drag') {
+        const point = plot.kind === 'point' ? plot.point : plot.current;
+        const domain: DomainGeometry = {};
+        for (const axis of ['x', 'y'] as const) {
+            const invert = inverter(axis);
+            if (!invert) continue;
+            const value = invert(axis === 'x' ? point.x : point.y);
+            if (value === undefined) continue;
+            domain[axis] = { kind: 'value', value };
+        }
+        return domain.x || domain.y ? domain : undefined;
+    }
+    if (plot.kind === 'polygon') {
+        const invertX = inverter('x');
+        const invertY = inverter('y');
+        if (!invertX && !invertY) return undefined;
+        const points = plot.polygon.points.map((vertex) => ({
+            ...(invertX ? { x: invertX(vertex.x) } : {}),
+            ...(invertY ? { y: invertY(vertex.y) } : {}),
+        }));
+        return { points };
+    }
+    return undefined;
 }
 
 export function nearestReorderHit(
@@ -996,8 +1029,15 @@ export function mountVegaInteractions(
                                         .filter((channel) => op.value[channel] !== undefined)
                                         .map((channel) => [channel, op.value[channel]]),
                                 );
-                                if (Object.keys(style).length > 0) {
-                                    stylesByKey[key] = { ...stylesByKey[key], ...style };
+                                if (Object.keys(style).length === 0) continue;
+                                // A path's first vertex resolves under the path key, but the
+                                // rendered item keeps the plain row key, and Vega styles a
+                                // whole line from that first item. Style both spellings.
+                                const styleKeys = key.endsWith(PATH_KEY_SUFFIX)
+                                    ? [key, key.slice(0, -PATH_KEY_SUFFIX.length)]
+                                    : [key];
+                                for (const styleKey of styleKeys) {
+                                    stylesByKey[styleKey] = { ...stylesByKey[styleKey], ...style };
                                 }
                             }
                         }
@@ -1210,7 +1250,7 @@ export function mountVegaInteractions(
     );
     // A region can be read as data domains, which is what viewport updates need.
     const domainForGeometry = (plot: CanvasInteractionEvent['geometry']['plot']) =>
-        domainForPlotGeometry(plot, plan.navigationAxes, (name) => view.scale(name));
+        domainForPlotGeometry(plot, plan.navigationAxes, (name) => view.scale(name), plan.overlayScales);
     const dispatch = async (
         interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
@@ -2058,6 +2098,8 @@ export function mountVegaInteractions(
         } else if (elementDrag.projection) {
             canvasEvent.geometry.projection = elementDrag.projection;
         }
+        const dragDomain = domainForGeometry(canvasEvent.geometry.plot);
+        if (dragDomain) canvasEvent.geometry.domain = dragDomain;
         emitCanvasInteractionEvent(elementDragInteraction, canvasEvent);
         const request = invokeHandler
             ? elementDragInteraction.handle?.(canvasEvent, context()) ?? null
@@ -2193,6 +2235,7 @@ export function mountVegaInteractions(
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
         resetViewport: resetViewportRegion,
+        escapeClears: dismissPolicy.escape,
     }) : undefined;
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,

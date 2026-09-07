@@ -3,6 +3,7 @@ import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
 import { ExplodedDetailStage } from './ExplodedDetailStage';
 import { IndexChartStage } from './IndexChartStage';
+import { YouDrawItStage } from './YouDrawItStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -92,6 +93,23 @@ export function BespokeInteractionLab() {
           </div>
         </article>
 
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>You draw it</h2>
+              <p>
+                Draw the future part of a line chart with a freehand stroke; the chart reveals the real
+                series and scores the guess.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Reveal: external in → Flint out</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 05</span>
+          </header>
+          <YouDrawItStage />
+        </article>
       </div>
     </div>
   );

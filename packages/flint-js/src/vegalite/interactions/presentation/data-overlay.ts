@@ -25,11 +25,14 @@ export function orderedOverlayRows(spec: ChartOverlaySpec): readonly Record<stri
     const rows = [...spec.data.values];
     const field = spec.encodings.order?.field;
     if (!field) return rows;
+    // Dates order by time, not by their string form.
+    const ordinal = (value: unknown): number | undefined =>
+        typeof value === 'number' ? value : value instanceof Date ? value.getTime() : undefined;
     return rows.sort((left, right) => {
-        const a = left[field];
-        const b = right[field];
-        if (typeof a === 'number' && typeof b === 'number') return a - b;
-        return String(a ?? '').localeCompare(String(b ?? ''));
+        const a = ordinal(left[field]);
+        const b = ordinal(right[field]);
+        if (a !== undefined && b !== undefined) return a - b;
+        return String(left[field] ?? '').localeCompare(String(right[field] ?? ''));
     });
 }
 

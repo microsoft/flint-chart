@@ -55,6 +55,8 @@ export interface VegaRegionGestureOptions {
     setSuppressClick(suppress: boolean): void;
     setDragging(dragging: boolean): void;
     resetViewport?(): void;
+    /** Escape outside a drag clears the retained selection. Defaults to true; the dismiss policy can turn it off. */
+    escapeClears?: boolean;
 }
 
 export interface VegaRegionGestureController {
@@ -604,6 +606,8 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
     };
     const keyDown = (event: KeyboardEvent): void => {
         if (event.key !== 'Escape') return;
+        // Outside a drag, Escape is a dismiss gesture; honour a policy that disables it.
+        if (!dragStart && options.escapeClears === false) return;
         if (interaction.eventSource.viewport) resetViewport?.();
         if (dragStart) {
             setSelected(new Set(committed));
