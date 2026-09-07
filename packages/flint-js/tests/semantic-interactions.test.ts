@@ -7,6 +7,7 @@ import type { CanvasInteractionDef, ClickHighlightOptions, RenderHit, SemanticEl
 import { dragTrigger } from '../src/interactive/triggers';
 import {
     associateSemanticElementRenderKeys,
+    elementsFromHits,
     MUTED_HOVER_FILL,
     MUTED_HOVER_STROKE,
     legendMatchedHits,
@@ -4185,5 +4186,32 @@ describe('set-style visibility', () => {
         expect(bars()).toHaveLength(2);
         expect(yDomain()[1]).toBe(fullMax);
         view.finalize();
+    });
+});
+
+describe('elementsFromHits', () => {
+    const key = '__flint_interaction_key';
+    const row = (year: number, id: string) => ({ Year: year, Share: year - 2000, Segment: 'Hidden', [key]: id });
+
+    it('gives the terminal vertex of a path to the last segment', () => {
+        const hits: RenderHit[] = [
+            { datum: row(2012, 'a'), endDatum: row(2013, 'b'), source: 'mark', markType: 'line' },
+            { datum: row(2013, 'b'), endDatum: row(2014, 'c'), source: 'mark', markType: 'line' },
+        ];
+        const elements = elementsFromHits(hits, key);
+        expect(elements).toHaveLength(2);
+        expect(semanticElementRenderKeys(elements[0])).toEqual(['a']);
+        expect(semanticElementRenderKeys(elements[1])).toEqual(['b', 'c']);
+        expect(elements[1].value).toEqual({ Year: 2013, Share: 13, Segment: 'Hidden' });
+    });
+
+    it('keeps one key per element when every vertex starts a segment', () => {
+        const hits: RenderHit[] = [
+            { datum: row(2012, 'a'), endDatum: row(2013, 'b'), source: 'mark', markType: 'line' },
+            { datum: row(2013, 'b'), endDatum: row(2012, 'a'), source: 'mark', markType: 'line' },
+            { datum: row(2020, 'z'), source: 'mark', markType: 'symbol' },
+        ];
+        const elements = elementsFromHits(hits, key);
+        expect(elements.map((element) => semanticElementRenderKeys(element))).toEqual([['a'], ['b'], ['z']]);
     });
 });

@@ -1029,8 +1029,15 @@ export function mountVegaInteractions(
                                         .filter((channel) => op.value[channel] !== undefined)
                                         .map((channel) => [channel, op.value[channel]]),
                                 );
-                                if (Object.keys(style).length > 0) {
-                                    stylesByKey[key] = { ...stylesByKey[key], ...style };
+                                if (Object.keys(style).length === 0) continue;
+                                // A path's first vertex resolves under the path key, but the
+                                // rendered item keeps the plain row key, and Vega styles a
+                                // whole line from that first item. Style both spellings.
+                                const styleKeys = key.endsWith(PATH_KEY_SUFFIX)
+                                    ? [key, key.slice(0, -PATH_KEY_SUFFIX.length)]
+                                    : [key];
+                                for (const styleKey of styleKeys) {
+                                    stylesByKey[styleKey] = { ...stylesByKey[styleKey], ...style };
                                 }
                             }
                         }
