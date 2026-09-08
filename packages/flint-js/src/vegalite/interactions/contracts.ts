@@ -34,7 +34,8 @@ export interface ContinuousColorFocusStyle {
 export interface VegaNavigationAxis {
     scale: string;
     signal: string;
-    type: 'linear' | 'log' | 'time' | 'utc';
+    /** `geo` axes share one projection-extent signal instead of a scale domain. */
+    type: 'linear' | 'log' | 'time' | 'utc' | 'geo';
 }
 
 export interface VegaReorderAxis {
@@ -74,6 +75,8 @@ export interface VegaInteractionPlan {
     selectionBoundary?: Readonly<SelectionBoundaryStyle>;
     continuousColorFocus?: Readonly<ContinuousColorFocusStyle>;
     navigationChannels?: readonly ('x' | 'y')[];
+    /** Navigation moves a cartographic projection's extent rather than scale domains. */
+    geoNavigation?: boolean;
     /** Polar templates realize the primary X brush as an angular sector. */
     angularXBrush?: boolean;
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;

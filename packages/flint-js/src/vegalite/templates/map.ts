@@ -169,6 +169,7 @@ export const mapDef: ChartTemplateDef = {
         ],
     },
     channels: ["longitude", "latitude", "color", "size", "opacity"],
+    navigation: { geo: true },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
@@ -313,6 +314,7 @@ export const choroplethDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["id", "color", "detail"],
+    navigation: { geo: true },
     markCognitiveChannel: 'color',
     semanticInteractions: ({ resolvedEncodings }) => {
         const idField = resolvedEncodings.id?.field;

@@ -63,6 +63,8 @@ export function guardNavigationDomain(
 export interface VegaNavigationController {
     resolve(event: NavigationRequest, guard: NavigationDomainGuard): NavigationUpdate | null;
     apply(update: NavigationUpdate): boolean;
+    /** Scale-like inverters for navigation axes that have no Vega scale (geo). */
+    scale?(name: string): { invert?(value: number): unknown } | undefined;
 }
 
 export function createVegaNavigationController(

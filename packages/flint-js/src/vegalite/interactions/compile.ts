@@ -32,6 +32,7 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
+import { GEO_AXIS_SCALES, GEO_EXTENT_SIGNAL, GEO_PROJECTION_SIGNAL } from './navigation-geo';
 
 const CLEAR_MARK = '__flint_interaction_clear';
 const LEGEND_ENTRY_MARK = '__flint_legend_entry';
@@ -53,6 +54,7 @@ interface TemplateInteractionSemantics {
     annotationMarkType?: string;
     supportedRegionGestures?: ('cartesian' | 'angular')[];
     navigationAxes?: ('x' | 'y')[];
+    geoNavigation?: boolean;
     reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
     reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
     renderHoverStyles?: Record<string, HoverStyle>;
@@ -509,6 +511,7 @@ export function addVegaLiteInteractions(
         selectionBoundary: templateSemantics.selectionBoundary,
         continuousColorFocus: templateSemantics.continuousColorFocus,
         navigationChannels: [...requestedNavigationAxes],
+        geoNavigation: templateSemantics.geoNavigation ?? false,
         angularXBrush: templateSemantics.supportedRegionGestures?.includes('angular') ?? false,
         reorderAxis: hasElementDrag && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
@@ -566,6 +569,37 @@ export function injectVegaNavigationSignals(
         vegaSpec.signals = [...(vegaSpec.signals ?? []), { name: signal, value: null }];
         scale.domainRaw = { signal };
         result[channel] = { scale: scale.name, signal, type: scale.type };
+    }
+    return result;
+}
+
+/**
+ * Geo navigation keeps Vega-Lite's automatic `fit`, but feeds it an extent
+ * signal instead of the fixed `[width, height]` size. Panning shifts that
+ * extent in pixels and zooming scales it about an anchor, so the fitted
+ * projection follows without the base scale and translate ever being known at
+ * compile time. A second signal copies the live projection (`copy()` tracks
+ * the projection as a dependency) so the runtime can invert pixels exactly.
+ */
+export function injectVegaGeoNavigationSignals(
+    vegaSpec: Record<string, any>,
+    channels: readonly ('x' | 'y')[] = [],
+): Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> {
+    const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
+    const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
+    if (!projection || !projection.fit) {
+        throw new Error('Vega geo navigation requires a fitted top-level projection.');
+    }
+    vegaSpec.signals = [
+        ...(vegaSpec.signals ?? []),
+        { name: GEO_EXTENT_SIGNAL, value: null },
+        { name: GEO_PROJECTION_SIGNAL, update: `copy(${JSON.stringify(projection.name)})` },
+    ];
+    projection.extent = { signal: `${GEO_EXTENT_SIGNAL} || [[0, 0], [width, height]]` };
+    delete projection.size;
+    const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
+    for (const channel of channels) {
+        result[channel] = { scale: GEO_AXIS_SCALES[channel], signal: GEO_EXTENT_SIGNAL, type: 'geo' };
     }
     return result;
 }

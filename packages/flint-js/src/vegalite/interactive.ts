@@ -7,6 +7,7 @@ import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
     injectVegaInteractionStore,
+    injectVegaGeoNavigationSignals,
     injectVegaNavigationSignals,
     injectVegaReorderSignal,
     findVegaAxisScale,
@@ -92,10 +93,9 @@ export function createVegaInteractiveRenderer(
                 if (interactionPlan.semanticStores) {
                     injectVegaInteractionStore(vegaSpec, interactionPlan);
                 }
-                interactionPlan.navigationAxes = injectVegaNavigationSignals(
-                    vegaSpec,
-                    interactionPlan.navigationChannels,
-                );
+                interactionPlan.navigationAxes = interactionPlan.geoNavigation
+                    ? injectVegaGeoNavigationSignals(vegaSpec, interactionPlan.navigationChannels)
+                    : injectVegaNavigationSignals(vegaSpec, interactionPlan.navigationChannels);
                 interactionPlan.reorderAxes = (interactionPlan.reorderAxes ?? [])
                     .map((axis) => injectVegaReorderSignal(vegaSpec, axis))
                     .filter((axis): axis is NonNullable<typeof axis> => !!axis);

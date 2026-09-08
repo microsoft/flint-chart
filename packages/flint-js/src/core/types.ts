@@ -904,6 +904,12 @@ export interface ChartTemplateDef {
     /** Cartesian positional channels whose continuous domains may be navigated at runtime. */
     navigation?: {
         axes?: readonly ('x' | 'y')[];
+        /**
+         * The chart places marks through a cartographic projection instead of
+         * x/y scales. Pan and zoom then move the projection's fitted extent,
+         * and both axes navigate together.
+         */
+        geo?: boolean;
     };
 
     /** Whether authored categorical position axes support runtime domain reorder. */

@@ -71,6 +71,7 @@ import {
 import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/region';
 import { mountVegaNavigationGesture } from './gestures/navigation';
 import { createVegaNavigationController } from './navigation-scale';
+import { createVegaGeoNavigationController } from './navigation-geo';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
 import {
     createDragReorderOverlay,
@@ -714,7 +715,9 @@ export function mountVegaInteractions(
                 layer.get(regionInteraction.id)?.ops.some((op) => op.op === 'set-viewport'))),
         reset: resetViewportRegion,
     });
-    const navigationController = createVegaNavigationController(view, plan.navigationAxes ?? {});
+    const navigationController = plan.geoNavigation
+        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {})
+        : createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
     const renderLegendRange = (): void => legendRangeOverlay.render(selectedLegend, hoveredLegend);
@@ -1250,7 +1253,12 @@ export function mountVegaInteractions(
     );
     // A region can be read as data domains, which is what viewport updates need.
     const domainForGeometry = (plot: CanvasInteractionEvent['geometry']['plot']) =>
-        domainForPlotGeometry(plot, plan.navigationAxes, (name) => view.scale(name), plan.overlayScales);
+        domainForPlotGeometry(
+            plot,
+            plan.navigationAxes,
+            (name) => navigationController.scale?.(name) ?? view.scale(name),
+            plan.overlayScales,
+        );
     const dispatch = async (
         interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
