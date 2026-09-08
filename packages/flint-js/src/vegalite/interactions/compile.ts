@@ -613,36 +613,46 @@ export function injectVegaGeoNavigationSignals(
 }
 
 /**
- * A chart with runtime detail levels gates each level's features behind a
- * filter on the level signal, so a hidden level costs nothing per frame. The
- * fitted projection must not follow that gate: it would refit to whichever
- * level is showing, and the map would shift by the difference between the
- * levels' outlines on every swap. So the projection fits the coarsest level
- * alone, whose gate moves downstream of the fit.
+ * A chart with runtime detail levels gates each level's rows behind a filter
+ * on the level signal, so a hidden level costs nothing per frame. The fitted
+ * projection must not follow that gate: it would refit to whichever level is
+ * showing, and the map would shift by the difference between the levels'
+ * outlines on every swap. A choropleth gates its coarsest shapes at their own
+ * source, so that gate moves downstream and the projection fits the ungated
+ * source alone. A bubble map gates only its points, so the projection fits
+ * the base shapes. Either way the fitted dataset is recorded on the config as
+ * the source of focus regions.
  */
 export function injectVegaGeoLevelFit(vegaSpec: Record<string, any>, levels: GeoLevelConfig): void {
     const coarsest = levels.levels[0]?.name;
     if (coarsest === undefined) return;
     const gate = geoLevelGate(levels.signal, coarsest);
     const datasets: any[] = Array.isArray(vegaSpec.data) ? vegaSpec.data : [];
+    const marks: any[] = Array.isArray(vegaSpec.marks) ? vegaSpec.marks : [];
     const isGate = (transform: any): boolean => transform?.type === 'filter' && transform.expr === gate;
-    const index = datasets.findIndex((dataset) => dataset.transform?.some(isGate));
-    if (index < 0) return;
-    const source = datasets[index];
-    const derived = {
-        name: `${source.name}_${coarsest}`,
-        source: source.name,
-        transform: source.transform.filter(isGate),
-    };
-    source.transform = source.transform.filter((transform: any) => !isGate(transform));
-    datasets.splice(index + 1, 0, derived);
-    for (const mark of vegaSpec.marks ?? []) {
-        if (mark.from?.data === source.name) mark.from.data = derived.name;
+    const gated = datasets.findIndex((dataset) => dataset.transform?.some(isGate));
+    let fitSource: string | undefined;
+    if (gated >= 0) {
+        const source = datasets[gated];
+        const derived = {
+            name: `${source.name}_${coarsest}`,
+            source: source.name,
+            transform: source.transform.filter(isGate),
+        };
+        source.transform = source.transform.filter((transform: any) => !isGate(transform));
+        datasets.splice(gated + 1, 0, derived);
+        for (const mark of marks) {
+            if (mark.from?.data === source.name) mark.from.data = derived.name;
+        }
+        fitSource = source.name;
+    } else {
+        fitSource = marks.find((mark) => mark.type === 'shape')?.from?.data;
     }
+    if (!fitSource) return;
     const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
     const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
-    if (projection) projection.fit = { signal: `data(${JSON.stringify(source.name)})` };
-    levels.source = source.name;
+    if (projection) projection.fit = { signal: `data(${JSON.stringify(fitSource)})` };
+    levels.source = fitSource;
 }
 
 export function collectVegaAxisTargets(

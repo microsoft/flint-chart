@@ -5,6 +5,7 @@ import { ExplodedDetailStage } from './ExplodedDetailStage';
 import { IndexChartStage } from './IndexChartStage';
 import { YouDrawItStage } from './YouDrawItStage';
 import { MapSemanticZoomStage } from './MapSemanticZoomStage';
+import { ChinaSemanticZoomStage } from './ChinaSemanticZoomStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -129,6 +130,25 @@ export function BespokeInteractionLab() {
             <span className="bespoke-status">Case 06</span>
           </header>
           <MapSemanticZoomStage />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>Semantic zoom: provinces to cities</h2>
+              <p>
+                The China bubble map from the dimpvis candidates, rebuilt on Flint&apos;s projection
+                navigation: province centroids give way to city points as the zoom narrows, in one chart,
+                with the province under the centre read from the base map.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Level swap: Flint in → Flint out</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 07</span>
+          </header>
+          <ChinaSemanticZoomStage />
         </article>
       </div>
     </div>

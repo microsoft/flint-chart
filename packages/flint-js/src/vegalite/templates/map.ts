@@ -136,6 +136,45 @@ function applyPointEncodings(layer: any, resolved: Record<string, any>): void {
     }
 }
 
+/**
+ * Runtime detail levels for a bubble map, read from two chart properties:
+ * `levelField` names the column that tags each row with its level, and
+ * `levels` lists the levels coarsest first (`{ value, enter?, exit? }`, the
+ * spans in degrees of visible longitude at which a zoom enters and leaves each
+ * finer level). The point layer keeps only the rows of the level the signal
+ * names, so hidden rows cost nothing, and the projection keeps its fit to the
+ * base map across a swap.
+ */
+function configureBubbleLevels(spec: any, chartProperties: any, rows: readonly any[]): void {
+    const levelField = chartProperties?.levelField;
+    const declared = chartProperties?.levels;
+    if (typeof levelField !== 'string' || !Array.isArray(declared)) return;
+    const levels: GeoLevel[] = declared.flatMap((level: any) => {
+        const value = level && typeof level === 'object' ? level.value : level;
+        if (typeof value !== 'string') return [];
+        return [{
+            name: value,
+            ...(Number.isFinite(level?.enter) ? { enter: Number(level.enter) } : {}),
+            ...(Number.isFinite(level?.exit) ? { exit: Number(level.exit) } : {}),
+        }];
+    });
+    if (levels.length < 2) return;
+    spec.params = [...(spec.params ?? []), { name: GEO_LEVEL_SIGNAL, value: levels[0].name }];
+    const points = spec.layer[1];
+    points.transform = [
+        ...(points.transform ?? []),
+        { filter: `datum[${JSON.stringify(levelField)}] === ${GEO_LEVEL_SIGNAL}` },
+    ];
+    // Vega-Lite reads a scale's domain from the filtered rows, so a nominal
+    // colour would re-key on every swap. Pin it to the whole table's values.
+    const color = points.encoding?.color;
+    if (color?.field && (color.type ?? 'nominal') === 'nominal' && color.scale?.domain === undefined) {
+        const domain = [...new Set(rows.map((row) => row[color.field]).filter((value) => value != null))];
+        color.scale = { ...(color.scale ?? {}), domain };
+    }
+    spec._geoLevels = { signal: GEO_LEVEL_SIGNAL, levels };
+}
+
 /** Point the base + circle layers of a bubble map at the chosen geography. */
 function configureBubble(spec: any, scope: MapScope): void {
     const g = SCOPE_GEO[scope];
@@ -265,7 +304,15 @@ export const mapDef: ChartTemplateDef = {
         const scope = pickMapScope(ctx.chartProperties, undefined, () => inferBubbleScope(rows, lonField, latField));
 
         configureBubble(spec, scope);
+        // `baseMapUrl` swaps the region's base map for a GeoJSON
+        // FeatureCollection of the host's own (a country's provinces, say);
+        // the projection still fits to it.
+        const baseMapUrl = ctx.chartProperties?.baseMapUrl;
+        if (typeof baseMapUrl === 'string' && baseMapUrl) {
+            spec.layer[0].data = { url: baseMapUrl, format: { type: 'json', property: 'features' } };
+        }
         applyPointEncodings(spec.layer[1], ctx.resolvedEncodings);
+        configureBubbleLevels(spec, ctx.chartProperties, rows);
 
         // Projection controls only apply to the world map; the US map is fixed
         // to albersUsa (which insets Alaska + Hawaii).

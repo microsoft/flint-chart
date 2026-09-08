@@ -279,8 +279,13 @@ export function createVegaGeoNavigationController(
         const east = invertNear([width, height / 2], center, extent);
         const south = invertNear([width / 2, height], center, extent);
         const north = invertNear([width / 2, 0], center, extent);
+        // A view across the antimeridian inverts its east edge below its west
+        // one; report a range that runs eastward so its span stays positive.
+        const lon = west && east
+            ? [west[0], east[0] < west[0] ? east[0] + 360 : east[0]] as [number, number]
+            : undefined;
         return {
-            ...(west && east ? { x: [west[0], east[0]] as [number, number] } : {}),
+            ...(lon ? { x: lon } : {}),
             ...(south && north ? { y: [south[1], north[1]] as [number, number] } : {}),
         };
     };

@@ -262,3 +262,98 @@ describe('focus region', () => {
         view.finalize();
     });
 });
+
+describe('bubble map levels', () => {
+    const PROVINCE = {
+        type: 'Feature',
+        properties: { adcode: 330000, name: '浙江省' },
+        geometry: { type: 'Polygon', coordinates: [[[118, 27.5], [123, 27.5], [123, 31.5], [118, 31.5], [118, 27.5]]] },
+    };
+    const ROWS = [
+        { Place: 'Zhejiang', Level: 'province', Lon: 120.2, Lat: 30.3, Pop: 65.7 },
+        { Place: 'Hangzhou', Level: 'city', Lon: 120.2, Lat: 30.3, Pop: 12.5 },
+        { Place: 'Ningbo', Level: 'city', Lon: 121.6, Lat: 29.9, Pop: 9.6 },
+    ];
+    const LEVELS = [{ value: 'province' }, { value: 'city', enter: 24, exit: 30 }];
+
+    function bubble(chartProperties: Record<string, unknown>): any {
+        return assembleVegaLite({
+            data: { values: ROWS },
+            semantic_types: { Place: 'Category', Level: 'Category', Lon: 'Longitude', Lat: 'Latitude', Pop: 'Quantity' },
+            chart_spec: {
+                chartType: 'Map',
+                encodings: { longitude: 'Lon', latitude: 'Lat', size: 'Pop', color: 'Place' },
+                chartProperties: { region: 'world', projection: 'mercator', ...chartProperties },
+            },
+        } as any);
+    }
+
+    async function mountedBubble() {
+        const spec = bubble({ baseMapUrl: '/map-data/provinces.geojson', levelField: 'Level', levels: LEVELS });
+        spec.layer[0].data = { values: [PROVINCE] };
+        const plan = addVegaLiteInteractions(spec, [navigate()])!;
+        const compiled = compile(spec).spec as any;
+        const axes = injectVegaGeoNavigationSignals(compiled, plan.navigationChannels);
+        injectVegaGeoLevelFit(compiled, plan.geoLevels!);
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const controller = createVegaGeoNavigationController(view, axes, plan.geoLevels);
+        return { view, controller, compiled, plan };
+    }
+
+    const symbolCount = (view: any): number => view.scenegraph().root.items[0].items
+        .filter((mark: any) => mark.marktype === 'symbol')
+        .reduce((total: number, mark: any) => total + mark.items.length, 0);
+
+    it('swaps the base map for a GeoJSON URL and gates the points by a level column', () => {
+        const spec = bubble({ baseMapUrl: '/map-data/provinces.geojson', levelField: 'Level', levels: LEVELS });
+        expect(spec.layer[0].data).toEqual({ url: '/map-data/provinces.geojson', format: { type: 'json', property: 'features' } });
+        expect(spec.params).toEqual([{ name: GEO_LEVEL_SIGNAL, value: 'province' }]);
+        expect(spec.layer[1].transform).toEqual([{ filter: `datum["Level"] === ${GEO_LEVEL_SIGNAL}` }]);
+        expect(spec._geoLevels).toBeUndefined();
+        expect(spec._interactionSemantics.geoLevels).toEqual({
+            signal: GEO_LEVEL_SIGNAL,
+            levels: [{ name: 'province' }, { name: 'city', enter: 24, exit: 30 }],
+        });
+        // The colour domain covers both levels, so a swap never re-keys it.
+        expect([...spec.layer[1].encoding.color.scale.domain].sort()).toEqual(['Hangzhou', 'Ningbo', 'Zhejiang']);
+    });
+
+    it('leaves a plain bubble map alone', () => {
+        const spec = bubble({});
+        expect(spec.layer[0].data.url).toContain('world-110m');
+        expect(spec.params).toBeUndefined();
+        expect(spec.layer[1].transform).toBeUndefined();
+        expect(spec.layer[1].encoding.color.scale?.domain).toBeUndefined();
+        expect(spec._interactionSemantics.geoLevels).toBeUndefined();
+        // Levels need a level column and at least two levels.
+        expect(bubble({ levelField: 'Level', levels: [{ value: 'province' }] }).params).toBeUndefined();
+        expect(bubble({ levels: LEVELS }).params).toBeUndefined();
+    });
+
+    it('fits the projection to the base shapes and flips the points with the zoom', async () => {
+        const { view, controller, compiled, plan } = await mountedBubble();
+        const shape = compiled.marks.find((mark: any) => mark.type === 'shape');
+        expect(compiled.projections[0].fit).toEqual({ signal: `data("${shape.from.data}")` });
+        expect(plan.geoLevels!.source).toBe(shape.from.data);
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('province');
+        expect(symbolCount(view)).toBe(1);
+        const initialScale = view.signal(GEO_PROJECTION_SIGNAL).scale();
+
+        // Frame the province's middle: a 4° box, so the city level shows.
+        expect(controller.apply({ op: 'set-viewport', axes: 'xy', value: { x: [118.5, 122.5], y: [28, 31] } })).toBe(true);
+        await view.runAsync();
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('city');
+        expect(symbolCount(view)).toBe(2);
+        expect(view.signal(GEO_PROJECTION_SIGNAL).scale()).toBeGreaterThan(initialScale);
+        // The province under the centre comes from the base map's own feature.
+        expect(controller.focus!()).toMatchObject({ adcode: 330000, name: '浙江省' });
+
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} });
+        await view.runAsync();
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('province');
+        expect(symbolCount(view)).toBe(1);
+        expect(view.signal(GEO_PROJECTION_SIGNAL).scale()).toBeCloseTo(initialScale);
+        view.finalize();
+    });
+});
