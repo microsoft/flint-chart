@@ -3425,6 +3425,19 @@ describe('legend, inspect, zoom, and touch presets', () => {
     });
 });
 
+describe('navigate reset transition', () => {
+    it('carries a reset transition onto the interaction and validates it', () => {
+        expect(navigate().navigationResetTransition).toBeUndefined();
+        expect(navigate().eventSource.reset).toBe('double-click');
+        expect(navigate({ reset: 'click-background' }).eventSource.reset).toBe('click-background');
+        expect(navigate({ reset: 'both' }).eventSource.reset).toBe('both');
+        expect(navigate({ reset: false }).eventSource.reset).toBe(false);
+        expect(navigate({ resetTransition: { duration: 500 } }).navigationResetTransition).toEqual({ duration: 500 });
+        expect(() => navigate({ resetTransition: { duration: -1 } })).toThrow(/resetTransition/);
+        expect(() => navigate({ resetTransition: { duration: Number.NaN } })).toThrow(/resetTransition/);
+    });
+});
+
 describe('retained viewport precedence', () => {
     it('lets the newest viewport retire every other retained viewport op', () => {
         const retained = new Map<string, ChartUpdate>([

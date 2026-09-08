@@ -506,3 +506,22 @@ describe('fits read the rendered frame', () => {
         view.finalize();
     });
 });
+
+describe('a fly home keeps its level until the last frame', () => {
+    it('starts at the level on screen even after the runtime baseline reset', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: { x: [-116, -108], y: [35, 41] } });
+        await view.runAsync();
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('county');
+        // The runtime resets once per axis, then re-applies the stored reset with its transition.
+        controller.apply({ op: 'set-viewport', axes: 'x', value: {} }, { baseline: true });
+        controller.apply({ op: 'set-viewport', axes: 'y', value: {} }, { baseline: true });
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, { transition: { duration: 60 } });
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('county');
+        expect(controller.level!()).toBe('county');
+        await controller.settled!();
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('state');
+        expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
+        view.finalize();
+    });
+});

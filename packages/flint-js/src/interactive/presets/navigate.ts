@@ -37,14 +37,20 @@ export function createNavigateInteraction(options: NavigateOptions = {}): Canvas
     if (domainGuard.maxVisibleFraction < domainGuard.minVisibleFraction) {
         throw new Error('navigate() requires maxVisibleFraction >= minVisibleFraction.');
     }
+    const resetTransition = options.resetTransition;
+    if (resetTransition && !(Number.isFinite(resetTransition.duration) && resetTransition.duration >= 0)) {
+        throw new Error('navigate() requires a finite, non-negative resetTransition duration.');
+    }
     return {
         id,
         navigationDomainGuard: domainGuard,
+        ...(resetTransition ? { navigationResetTransition: { duration: resetTransition.duration } } : {}),
         eventSource: navigationTrigger({
             axes: options.axes ?? 'available',
             pan: options.pan ?? true,
             zoom: options.zoom ?? true,
             wheelSensitivity: options.wheelSensitivity ?? 0.002,
+            reset: options.reset ?? 'double-click',
         }),
         affordances: options.pan === false ? [] : [{ target: 'plot', cursor: 'navigate' }],
         handle(event, context) {

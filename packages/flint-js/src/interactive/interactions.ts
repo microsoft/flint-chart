@@ -5,7 +5,8 @@ import type {
     SemanticElement,
     SemanticTargetSelector,
 } from '../core/interaction-contracts';
-import type { InteractionEventSource } from './triggers';
+import type { InteractionEventSource, NavigationResetGesture } from './triggers';
+export type { NavigationResetGesture } from './triggers';
 import type { InspectIndexShow, InspectMode } from './triggers';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import type { InteractionAffordance } from './affordances';
@@ -104,6 +105,8 @@ export interface CanvasInteractionDef {
     /** Retained updates from interactions in the same group replace one another. */
     readonly retainedStateGroup?: string;
     readonly navigationDomainGuard?: NavigationDomainGuard;
+    /** A reset gesture on this interaction tweens home over this duration. */
+    readonly navigationResetTransition?: NavigationTransition;
     /** Claims legend activations exclusively, so a legend click never also reads as an element click. */
     readonly claimsLegendActivation?: boolean;
     /** Claims native axis tick activations instead of treating them as mark activations. */
@@ -248,6 +251,11 @@ export interface DoubleActivateOptions {
     dimOpacity?: number;
 }
 
+/** How long a gesture-driven viewport change animates, in milliseconds. */
+export interface NavigationTransition {
+    duration: number;
+}
+
 export interface NavigateOptions {
     id?: string;
     axes?: NavigationAxes | 'available';
@@ -255,6 +263,13 @@ export interface NavigateOptions {
     zoom?: boolean;
     wheelSensitivity?: number;
     domainGuard?: Partial<NavigationDomainGuard>;
+    /**
+     * The gesture that resets the viewport: a double-click (the default), a
+     * click on the plot background that hits no mark, both, or none.
+     */
+    reset?: NavigationResetGesture | false;
+    /** Animate the reset gesture back to the full frame instead of snapping. */
+    resetTransition?: NavigationTransition;
 }
 
 export interface DragReorderOptions {

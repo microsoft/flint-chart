@@ -68,7 +68,8 @@ export function MapSemanticZoomStage() {
     const { phase, action, operation, geometry, target } = detail.event;
     if (phase === 'start' || phase === 'cancel') return;
     if (detail.interactionId === CLICK_ID) {
-      // Only a state at the overview level flies in; a county click is a plain click.
+      // A state at the overview level flies in; a county click is a plain
+      // click, and a click on empty map resets through navigate() itself.
       if (phase !== 'commit' || target?.visual.kind !== 'region' || levelRef.current !== 'state') return;
       const code = target.elements[0]?.value?.Region;
       if (typeof code !== 'string') return;
@@ -79,10 +80,12 @@ export function MapSemanticZoomStage() {
     // Every navigation event reports the level the chart settled on; the swap
     // itself already happened inside the chart.
     if (isLevel(geometry.domain?.level)) setLevel(geometry.domain.level);
-    setLonSpan(operation === 'reset' ? undefined : longitudeSpan(geometry.domain));
+    // A fly home reports each frame as a reset; the span counts down until the last one.
+    const home = operation === 'reset' && phase === 'commit';
+    setLonSpan(home ? undefined : longitudeSpan(geometry.domain));
     // The state under the plot centre, read from the state layer's joined row.
     const place = geometry.domain?.focus?.Place;
-    setFocusState(operation !== 'reset' && typeof place === 'string' ? place : undefined);
+    setFocusState(!home && typeof place === 'string' ? place : undefined);
   }, [flyTo]);
 
   useEffect(() => {
@@ -97,6 +100,9 @@ export function MapSemanticZoomStage() {
       interactions: [
         navigate({
           domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
+          // A click on empty map, not a double-click, flies home.
+          reset: 'click-background',
+          resetTransition: { duration: FLY_MS },
         }),
         CLICK_REGION,
       ],
@@ -126,10 +132,10 @@ export function MapSemanticZoomStage() {
       <div className="ic-stage-meta">
         <strong>Semantic zoom on a two-level US choropleth</strong>
         <span>
-          Wheel or pinch to zoom, drag to pan, double-click to reset. One chart holds a state layer and a
+          Wheel or pinch to zoom, drag to pan. One chart holds a state layer and a
           county layer; once fewer than {COUNTY_ENTER_SPAN}° of longitude are on screen, Flint&apos;s navigation
           flips the visible layer in place. Click a state to fly into its counties over {FLY_MS} ms; Reset
-          flies back. The host only reads the level, the visible box, and the state under the
+          or a click on empty map flies back. The host only reads the level, the visible box, and the state under the
           centre from each event.
         </span>
       </div>

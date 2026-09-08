@@ -69,7 +69,7 @@ import {
     type SpatialDirection,
 } from './hit-adapter';
 import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/region';
-import { mountVegaNavigationGesture } from './gestures/navigation';
+import { mountVegaNavigationGesture, resolvedNavigationAxes } from './gestures/navigation';
 import { createVegaNavigationController, type NavigationApplyOptions } from './navigation-scale';
 import { createVegaGeoNavigationController } from './navigation-geo';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
@@ -599,6 +599,12 @@ export function mountVegaInteractions(
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
+    // A click on the plot background that hits no mark can reset the viewport.
+    const backgroundResetInteraction = navigationInteraction
+        && (navigationInteraction.eventSource.reset === 'click-background'
+            || navigationInteraction.eventSource.reset === 'both')
+        ? navigationInteraction
+        : undefined;
     const elementDragInteraction = elementDragInteractions[0];
     const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
         resolveAssistDistance(eligible, assistDistance);
@@ -776,16 +782,24 @@ export function mountVegaInteractions(
         return [...selectedElements].flatMap(([key, element]) => keys.has(key) ? [element] : []);
     };
     const context = (includeAvailable = true, interaction?: CanvasInteractionDef) => {
-        // Navigation resolves per gesture frame, so the scenegraph scan stays behind this flag.
-        const available = includeAvailable
-            ? (() => {
+        // The scan behind `available` walks the whole scene and resolves
+        // provenance for every mark, which a county map turns into hundreds of
+        // milliseconds. Most handlers never read it, and navigation never may
+        // (the flag), so it runs on first access only.
+        let availableScanned = false;
+        let available: readonly SemanticElement[] | undefined;
+        const scanAvailable = (): readonly SemanticElement[] | undefined => {
+            if (!includeAvailable) return undefined;
+            if (!availableScanned) {
+                availableScanned = true;
                 const hits = allHits();
-                return withSourceProvenance(resolve?.(
+                available = withSourceProvenance(resolve?.(
                     { gesture: 'rectangle', role: 'region', hits },
                     resolveContext(hits),
                 ) ?? null)?.elements;
-            })()
-            : undefined;
+            }
+            return available;
+        };
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         const currentReorderAxes = reorderAxes.map((axis) => {
             const signaledOrder = view.signal(axis.signal);
@@ -808,7 +822,7 @@ export function mountVegaInteractions(
         return {
             chartType,
             selected: interaction ? selectedForInteraction(interaction) : [...selectedElements.values()],
-            available,
+            get available() { return scanAvailable(); },
             resolveGroupValue: plan.resolveGroupValue,
             resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
@@ -1211,6 +1225,7 @@ export function mountVegaInteractions(
         destination: Map<string, ChartUpdate>,
         legendSelection: LegendHitIdentity | null = null,
         options?: ChartUpdateApplyOptions,
+        waitForTransition = true,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
         // A viewport-only update presents nothing that needs the scene's
@@ -1233,8 +1248,9 @@ export function mountVegaInteractions(
         } finally {
             pendingTransition = undefined;
         }
-        // The update settles with its last frame, so a host can chain on it.
-        if (options?.transition) await navigationController.settled?.();
+        // A host's update settles with its last frame, so it can chain on it;
+        // a gesture's tween runs on, so the next gesture is not held behind it.
+        if (options?.transition && waitForTransition) await navigationController.settled?.();
         return resolved.result;
     };
 
@@ -1243,6 +1259,7 @@ export function mountVegaInteractions(
         phase: import('../../interactive/interactions').InteractionPhase,
         update: ChartUpdate | null,
         legendSelection: LegendHitIdentity | null = null,
+        options?: ChartUpdateApplyOptions,
     ): Promise<void> => {
         if (phase === 'cancel') {
             if (previewUpdates.delete(interaction.id)) await renderUpdates();
@@ -1258,7 +1275,7 @@ export function mountVegaInteractions(
                     if (sibling.claimsLegendActivation) selectedLegend = null;
                 }
             }
-            await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection);
+            await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection, options, false);
             return;
         }
         if (phase === 'commit') {
@@ -1379,7 +1396,12 @@ export function mountVegaInteractions(
         const run = async (event: NavigationInteractionEvent): Promise<void> => {
             const base = toCanvasInteractionEvent(event, interaction.eventSource);
             const request = interaction.handle?.(base, context(false)) ?? null;
-            await applyInteractionUpdate(interaction, event.phase, request);
+            // A reset may tween home; its frames then report themselves.
+            const transition = event.operation === 'reset' && event.phase === 'commit' && request
+                ? interaction.navigationResetTransition
+                : undefined;
+            await applyInteractionUpdate(interaction, event.phase, request, null, transition ? { transition } : undefined);
+            if (transition) return;
             // The event reports the viewport that resulted from the gesture.
             emitCanvasInteractionEvent(interaction, withViewportState(base));
         };
@@ -1659,7 +1681,8 @@ export function mountVegaInteractions(
         return show === 'single' || typeof show === 'object';
     });
     const clickHandler = (event: MouseEvent, item: any): void => {
-        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0) || suppressClick) return;
+        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0
+            && !backgroundResetInteraction) || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
@@ -1681,6 +1704,21 @@ export function mountVegaInteractions(
             resolveTarget('click', 'legend-item', [], legend),
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
+        if (backgroundResetInteraction && !target && !legend) {
+            const space = coordinateSpace();
+            const inPlot = point.x >= 0 && point.x <= space.plotWidth
+                && point.y >= 0 && point.y <= space.plotHeight;
+            if (inPlot) {
+                void dispatchNavigation(backgroundResetInteraction, {
+                    type: 'navigation', phase: 'commit', operation: 'reset',
+                    axes: resolvedNavigationAxes(
+                        backgroundResetInteraction.eventSource.axes,
+                        Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
+                    ),
+                    modifiers: normalized.event.modifiers,
+                });
+            }
+        }
         for (const interaction of markClickInteractions) {
             const affordanceTarget = legend ? 'legend-item' : 'mark';
             if (!resolveInteractionAffordance([interaction], affordanceTarget)) continue;
@@ -2018,7 +2056,7 @@ export function mountVegaInteractions(
     if (contextInteractions.length > 0) {
         container.addEventListener('contextmenu', contextHandler);
     }
-    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
+    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
         view.addEventListener('click', clickHandler);
     }
     if (hoverPresentationInteractions.length > 0) {
@@ -2522,7 +2560,7 @@ export function mountVegaInteractions(
     observeRenderer();
 
     const destroy = (): void => {
-        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
+        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
             view.removeEventListener('click', clickHandler);
         }
         if (hoverPresentationInteractions.length > 0) {

@@ -31,6 +31,8 @@ import './map-semantic-zoom-stage.css';
 
 /** Degrees of visible longitude at which the zoom enters and leaves the city level. */
 const CITY_SPANS = { enter: 24, exit: 30 } as const;
+/** Milliseconds the Reset fly back to the full frame takes. */
+const FLY_MS = 700;
 
 function chartInput(): ChartAssemblyInput {
   return {
@@ -88,13 +90,22 @@ export function ChinaSemanticZoomStage() {
   const mountRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
 
+  const flyHome = useCallback(() => {
+    void surfaceRef.current?.applyUpdate(
+      { id: 'china-semantic-zoom-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] },
+      { transition: { duration: FLY_MS } },
+    );
+  }, []);
+
   const handleInteraction = useCallback((event: Event) => {
     const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
     const { phase, action, operation, geometry } = detail.event;
     if (phase === 'start' || phase === 'cancel' || !action.endsWith('-viewport')) return;
     if (isLevel(geometry.domain?.level)) setLevel(geometry.domain.level);
-    setLonSpan(operation === 'reset' ? undefined : longitudeSpan(geometry.domain));
-    setFocus(operation === 'reset' ? undefined : focusLabel(geometry.domain?.focus));
+    // A fly home reports each frame as a reset; the span counts down until the last one.
+    const home = operation === 'reset' && phase === 'commit';
+    setLonSpan(home ? undefined : longitudeSpan(geometry.domain));
+    setFocus(home ? undefined : focusLabel(geometry.domain?.focus));
   }, []);
 
   useEffect(() => {
@@ -106,6 +117,9 @@ export function ChinaSemanticZoomStage() {
       renderer: 'canvas',
       interactions: [navigate({
         domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
+        // A click on empty map, not a double-click, flies home.
+        reset: 'click-background',
+        resetTransition: { duration: FLY_MS },
       })],
       expressionInterpreter,
       ariaLabel: 'Bubble map of Chinese provinces and cities by population',
@@ -122,15 +136,8 @@ export function ChinaSemanticZoomStage() {
     };
   }, [handleInteraction]);
 
-  const reset = () => {
-    setLevel('province');
-    setLonSpan(undefined);
-    setFocus(undefined);
-    void surfaceRef.current?.applyUpdate({
-      id: 'china-semantic-zoom-reset',
-      ops: [{ op: 'set-viewport', axes: 'xy', value: {} }],
-    });
-  };
+  // The fly home reports as a reset on its last frame, which clears the pills.
+  const reset = () => flyHome();
 
   const levelLabel = level === 'city'
     ? `Cities${focus ? ` · ${focus}` : ''}`
@@ -141,7 +148,8 @@ export function ChinaSemanticZoomStage() {
       <div className="ic-stage-meta">
         <strong>Semantic zoom on a two-level bubble map of China</strong>
         <span>
-          Wheel or pinch to zoom, drag to pan, double-click to reset. One Map chart carries province
+          Wheel or pinch to zoom, drag to pan; Reset or a click on empty map flies home.
+          One Map chart carries province
           centroids and city points in one table; the template gates the point layer by level, and once
           fewer than {CITY_SPANS.enter}° of longitude are on screen the navigation flips it to cities. The
           province under the centre comes from the base map&apos;s own features.

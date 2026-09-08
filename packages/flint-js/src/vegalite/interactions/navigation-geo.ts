@@ -478,6 +478,16 @@ export function createVegaGeoNavigationController(
         cancel(): void;
     }
     let active: ActiveTransition | undefined;
+    // The runtime's baseline reset (one per axis) flips the level to the
+    // coarsest before it re-applies the retained viewport in the same
+    // synchronous pass; a tween that starts in that pass must still begin at
+    // the level that was on screen. The record lives until the pass ends.
+    let levelBeforeBaseline: string | undefined;
+    const rememberLevelBeforeBaseline = (): void => {
+        if (levelBeforeBaseline !== undefined || currentLevel === levels?.levels[0]?.name) return;
+        levelBeforeBaseline = currentLevel;
+        queueMicrotask(() => { levelBeforeBaseline = undefined; });
+    };
     const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const nextFrame = (callback: () => void): void => {
         if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => callback());
@@ -540,6 +550,9 @@ export function createVegaGeoNavigationController(
         const from = liveExtent();
         const target = to ?? baseExtent();
         const path = zoomPath(viewOf(from), viewOf(target));
+        const startLevel = levelBeforeBaseline ?? currentLevel;
+        levelBeforeBaseline = undefined;
+        setLevel(startLevel);
         let cancelled = false;
         let finish!: () => void;
         const done = new Promise<void>((resolve) => { finish = resolve; });
@@ -547,7 +560,7 @@ export function createVegaGeoNavigationController(
         const entry: ActiveTransition = {
             key,
             frame: from,
-            startLevel: currentLevel,
+            startLevel,
             done,
             cancel: () => { cancelled = true; finish(); },
         };
@@ -625,6 +638,8 @@ export function createVegaGeoNavigationController(
             }
             active?.cancel();
             active = undefined;
+            if (options?.baseline) rememberLevelBeforeBaseline();
+            else levelBeforeBaseline = undefined;
             view.signal(GEO_EXTENT_SIGNAL, target.extent);
             setLevel(target.level);
             return true;
