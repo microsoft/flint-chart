@@ -60,9 +60,24 @@ export function guardNavigationDomain(
     return values.map((value, index) => domainValue(value, type, initial[index], logSign)) as [unknown, unknown];
 }
 
+export interface NavigationApplyOptions {
+    /**
+     * Tween the viewport to the update over `duration` ms. `onFrame` reports
+     * each rendered frame, as a zoom or, when the target is the base fit, a reset.
+     */
+    transition?: {
+        duration: number;
+        onFrame?: (phase: 'preview' | 'commit', operation: 'zoom' | 'reset') => void;
+    };
+    /** The runtime's own reset before it re-applies retained viewports; must not end a running tween. */
+    baseline?: boolean;
+}
+
 export interface VegaNavigationController {
     resolve(event: NavigationRequest, guard: NavigationDomainGuard): NavigationUpdate | null;
-    apply(update: NavigationUpdate): boolean;
+    apply(update: NavigationUpdate, options?: NavigationApplyOptions): boolean;
+    /** Resolves once a running viewport tween has rendered its last frame. */
+    settled?(): Promise<void>;
     /** Scale-like inverters for navigation axes that have no Vega scale (geo). */
     scale?(name: string): { invert?(value: number): unknown } | undefined;
     /** The detail level the chart draws now, on projected charts with runtime levels. */

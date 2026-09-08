@@ -28,8 +28,14 @@ export interface AssistedTargetingOptions extends TargetFeedbackOptions {
     maxDistance?: number;
 }
 
+/** Animates a viewport change over `duration` milliseconds; projected charts honour it. */
+export interface ChartUpdateTransition {
+    duration: number;
+}
+
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
+    transition?: ChartUpdateTransition;
 }
 
 export interface InteractionDismissPolicy {

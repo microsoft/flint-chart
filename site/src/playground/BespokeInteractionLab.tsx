@@ -119,8 +119,9 @@ export function BespokeInteractionLab() {
               <h2>Semantic zoom: states to counties</h2>
               <p>
                 Zoom the US map; once the view narrows enough, the state choropleth becomes a county
-                choropleth at the same place, using Chetty &amp; Hendren’s childhood-exposure data.
-                Both levels live in one chart, so the swap is a layer flip, not a rebuild.
+                choropleth at the same place.
+                Both levels live in one chart, so the swap is a layer flip, not a rebuild. Click a state
+                to fly into it: the viewport fits the state's shape over a transition and lands on counties.
               </p>
               <div className="bespoke-pattern">
                 <strong>Flint in → Flint out</strong>

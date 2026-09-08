@@ -9,6 +9,7 @@ export type {
     TargetFeedbackOptions,
     BuildInteractiveChartOptions,
     ChartUpdateApplyOptions,
+    ChartUpdateTransition,
     ChartUpdateComposition,
     InteractiveBackend,
     InteractiveChartSurface,

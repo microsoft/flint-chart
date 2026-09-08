@@ -7,7 +7,12 @@ import {
     type MapScope, inferBubbleScope, inferChoroplethScope, semanticScope, pickMapScope,
 } from '../../chart-types/geo';
 import { toTypeString } from '../../core/field-semantics';
-import { GEO_LEVEL_SIGNAL, geoLevelGate, type GeoLevel } from '../interactions/navigation-geo';
+import {
+    GEO_LEVEL_SIGNAL,
+    geoLevelGate,
+    type GeoLevel,
+    type GeoPreProjection,
+} from '../interactions/navigation-geo';
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
@@ -188,6 +193,28 @@ function configureBubble(spec: any, scope: MapScope): void {
 export type ChoroplethLevel = 'state' | 'county' | 'auto';
 
 /**
+ * The US choropleth draws the us-atlas TopoJSON, which ships its states and
+ * counties already projected with albersUsa into a 975 × 610 frame. The
+ * chart then uses an identity projection: a pan or zoom only scales and
+ * shifts points, instead of running the composite projection over every
+ * county vertex twice per frame (about 14× cheaper). Navigation converts
+ * between that frame and longitude/latitude through the projection the
+ * atlas documents, so viewports, levels, and focus keep their meaning.
+ */
+const US_ATLAS = {
+    url: 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-albers-10m.json',
+    // The atlas is already in screen orientation (y down), so no reflection.
+    projection: { type: 'identity' },
+    preProjection: { type: 'albersUsa', scale: 1300, translate: [487.5, 305] } as GeoPreProjection,
+};
+
+/**
+ * The atlas keys its features by zero-padded FIPS strings ("06", "06037");
+ * the resolver produces numbers. Read the key as a number before the join.
+ */
+const US_ATLAS_ID_TRANSFORM = { calculate: 'toNumber(datum.id)', as: 'id' };
+
+/**
  * The US detail levels, coarsest first. A zoom enters the county level once
  * fewer than `enter` degrees of longitude are visible and leaves it again
  * only above `exit`.
@@ -216,14 +243,16 @@ function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel 
     const g = SCOPE_GEO[scope];
     spec.width = g.width;
     spec.height = g.height;
-    spec.projection = { type: g.projection };
+    const url = scope === 'us' ? US_ATLAS.url : g.url;
+    spec.projection = scope === 'us' ? { ...US_ATLAS.projection } : { type: g.projection };
+    if (scope === 'us') spec._geoPreProjection = US_ATLAS.preProjection;
     if (scope === 'us' && level === 'auto') {
         delete spec.mark;
         spec.data = { name: GEO_JOIN_DATASET };
         spec.params = [{ name: GEO_LEVEL_SIGNAL, value: US_CHOROPLETH_LEVELS[0].name }];
         spec.layer = US_CHOROPLETH_LEVELS.map(({ name, feature, strokeWidth }) => ({
-            data: { url: g.url, format: { type: "topojson", feature } },
-            transform: [{ filter: geoLevelGate(GEO_LEVEL_SIGNAL, name) }],
+            data: { url, format: { type: "topojson", feature } },
+            transform: [US_ATLAS_ID_TRANSFORM, { filter: geoLevelGate(GEO_LEVEL_SIGNAL, name) }],
             mark: { type: "geoshape", stroke: "white", strokeWidth },
         }));
         spec._geoLevels = {
@@ -237,7 +266,8 @@ function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel 
         return;
     }
     const county = scope === 'us' && level === 'county';
-    spec.data = { url: g.url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
+    spec.data = { url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
+    if (scope === 'us') spec.transform = [US_ATLAS_ID_TRANSFORM];
     if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = county ? 0.2 : g.strokeWidth;
 }
 
@@ -411,6 +441,7 @@ function buildChoroplethJoin(spec: any, ctx: any, resolver: GeoResolver): void {
             }
         } else {
             spec.transform = [
+                ...(spec.transform ?? []),
                 {
                     lookup: 'id',
                     from: { data: { values: joined }, key: '__geo_id', fields: lookupFields },

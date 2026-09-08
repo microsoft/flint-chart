@@ -68,6 +68,11 @@ export type ChartInteractionResolver = (
 
 export type UpdateDomain = readonly [unknown, unknown];
 
+/** Names a region of a multi-level projected chart by the row fields that identify it. */
+export interface UpdateRegionSelector {
+    key: Record<string, unknown>;
+}
+
 export interface SemanticTargetRef {
     visual: SemanticTarget['visual'];
     elements: readonly SemanticElement[];
@@ -214,7 +219,8 @@ export type ChartUpdateOp =
     | {
         op: 'set-viewport';
         axes: 'x' | 'y' | 'xy';
-        value: { x?: UpdateDomain; y?: UpdateDomain };
+        /** A box on each axis, or a region of a multi-level projected chart to frame. */
+        value: { x?: UpdateDomain; y?: UpdateDomain; region?: UpdateRegionSelector };
     }
     | {
         op: 'set-order';

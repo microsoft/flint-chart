@@ -11,7 +11,7 @@
  */
 
 import { compile } from 'vega-lite';
-import { parse, View } from 'vega';
+import { parse, projection as vegaProjection, View } from 'vega';
 import { describe, expect, it } from 'vitest';
 import { assembleVegaLite } from '../src';
 import { navigate } from '../src/interactive/interactions';
@@ -20,8 +20,10 @@ import {
     injectVegaGeoLevelFit,
     injectVegaGeoNavigationSignals,
 } from '../src/vegalite/interactions/compile';
+import { resolveSupportedOperation } from '../src/vegalite/interactions/runtime';
 import {
     createVegaGeoNavigationController,
+    GEO_AXIS_SCALES,
     GEO_EXTENT_SIGNAL,
     GEO_LEVEL_SIGNAL,
     GEO_PROJECTION_SIGNAL,
@@ -34,6 +36,16 @@ const JOIN = '__flint_geo_join';
 
 const feature = (id: number, ring: number[][]) => ({
     type: 'Feature', id, properties: {}, geometry: { type: 'Polygon', coordinates: [ring] },
+});
+/** The projection the us-atlas files were built with; the chart draws them through identity. */
+const ATLAS = (vegaProjection as any)('albersUsa')().scale(1300).translate([487.5, 305]);
+/** A longitude/latitude polygon feature as the atlas would ship it: in its projected frame. */
+const preProject = (feature: any) => ({
+    ...feature,
+    geometry: {
+        ...feature.geometry,
+        coordinates: feature.geometry.coordinates.map((ring: number[][]) => ring.map((point) => ATLAS(point))),
+    },
 });
 /** One state block; two county blocks that cover only its middle, so a county-only fit would differ. */
 const STATE_FEATURES = [feature(6, [[-120, 32], [-100, 32], [-100, 44], [-120, 44], [-120, 32]])];
@@ -61,15 +73,15 @@ function autoChoropleth(): any {
 
 async function mountedAutoChoropleth() {
     const spec = autoChoropleth();
-    spec.layer[0].data = { values: STATE_FEATURES };
-    spec.layer[1].data = { values: COUNTY_FEATURES };
+    spec.layer[0].data = { values: STATE_FEATURES.map(preProject) };
+    spec.layer[1].data = { values: COUNTY_FEATURES.map(preProject) };
     const plan = addVegaLiteInteractions(spec, [navigate()])!;
     const compiled = compile(spec).spec as any;
     const axes = injectVegaGeoNavigationSignals(compiled, plan.navigationChannels);
     injectVegaGeoLevelFit(compiled, plan.geoLevels!);
     const view = new View(parse(compiled), { renderer: 'none' });
     await view.runAsync();
-    const controller = createVegaGeoNavigationController(view, axes, plan.geoLevels);
+    const controller = createVegaGeoNavigationController(view, axes, plan.geoLevels, plan.geoPreProjection);
     return { view, controller, compiled };
 }
 
@@ -83,7 +95,9 @@ describe('choropleth auto level assembly', () => {
         const spec = autoChoropleth();
         expect(spec.mark).toBeUndefined();
         expect(spec.layer.map((layer: any) => layer.data.format.feature)).toEqual(['states', 'counties']);
-        expect(spec.layer.map((layer: any) => layer.transform[0].filter)).toEqual([
+        // The atlas keys features by padded strings; each layer reads them as numbers first.
+        expect(spec.layer.map((layer: any) => layer.transform[0].calculate)).toEqual(['toNumber(datum.id)', 'toNumber(datum.id)']);
+        expect(spec.layer.map((layer: any) => layer.transform[1].filter)).toEqual([
             `${GEO_LEVEL_SIGNAL} === "state"`,
             `${GEO_LEVEL_SIGNAL} === "county"`,
         ]);
@@ -91,10 +105,12 @@ describe('choropleth auto level assembly', () => {
         // State codes and county FIPS ids resolve into one numeric id space.
         expect(spec.datasets[JOIN].map((row: any) => row.__geo_id)).toEqual([6, 6037, 6059]);
         for (const layer of spec.layer) {
-            expect(layer.transform[1].lookup).toBe('id');
-            expect(layer.transform[1].from.data.name).toBe(JOIN);
+            expect(layer.transform[2].lookup).toBe('id');
+            expect(layer.transform[2].from.data.name).toBe(JOIN);
         }
-        expect(spec.projection.type).toBe('albersUsa');
+        expect(spec.projection).toEqual({ type: 'identity' });
+        expect(spec._interactionSemantics.geoPreProjection).toEqual({ type: 'albersUsa', scale: 1300, translate: [487.5, 305] });
+        expect(spec._geoPreProjection).toBeUndefined();
         expect(spec.encoding.color.field).toBe('Value');
     });
 
@@ -354,6 +370,139 @@ describe('bubble map levels', () => {
         expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('province');
         expect(symbolCount(view)).toBe(1);
         expect(view.signal(GEO_PROJECTION_SIGNAL).scale()).toBeCloseTo(initialScale);
+        view.finalize();
+    });
+});
+
+describe('region fit and viewport transition', () => {
+    const REGION = { op: 'set-viewport' as const, axes: 'xy' as const, value: { region: { key: { Region: 'CA' } } } };
+
+    it('keeps a region selector through operation resolution', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        const resolved = resolveSupportedOperation(REGION, {
+            navigationAxes: {
+                x: { scale: 'x', signal: GEO_EXTENT_SIGNAL, type: 'geo' },
+                y: { scale: 'y', signal: GEO_EXTENT_SIGNAL, type: 'geo' },
+            },
+        });
+        expect(resolved.unsupported).toBe(false);
+        expect((resolved.op as any).value.region).toEqual({ key: { Region: 'CA' } });
+        expect(controller.apply({ ...REGION, value: { region: { key: { Region: 'ZZ' } } } })).toBe(false);
+        view.finalize();
+    });
+
+    it('frames a region by its joined row fields, with a margin around its shape', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        const initialScale = view.signal(GEO_PROJECTION_SIGNAL).scale();
+        expect(controller.apply(REGION)).toBe(true);
+        await view.runAsync();
+        // The base fit already frames this lone state exactly; the region fit
+        // keeps 8% clear on each side, so it sits at 1 / 1.16 of that scale.
+        expect(view.signal(GEO_PROJECTION_SIGNAL).scale() / initialScale).toBeCloseTo(1 / 1.16, 2);
+        const lon = controller.scale!(GEO_AXIS_SCALES.x)!;
+        const west = lon.invert!(0) as number;
+        const east = lon.invert!(view.width()) as number;
+        // The state spans 120°W to 100°W; the frame clears it on both sides.
+        expect(west).toBeLessThan(-120);
+        expect(east).toBeGreaterThan(-100);
+        expect(controller.focus!()).toMatchObject({ id: 6, Place: 'California' });
+        // A 20° state stays at the state level under the 20° county threshold.
+        expect(controller.level!()).toBe(resolveGeoLevel(east - west, 'state', [{ name: 'state' }, { name: 'county', enter: 20, exit: 28 }]));
+        view.finalize();
+    });
+
+    it('tweens the extent to a target and flips the level only on the last frame', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        const box = { op: 'set-viewport' as const, axes: 'xy' as const, value: { x: [-116, -108] as const, y: [35, 41] as const } };
+        // The direct fit is the reference the tween must land on.
+        expect(controller.apply(box)).toBe(true);
+        await view.runAsync();
+        const target = view.signal(GEO_EXTENT_SIGNAL).flat() as number[];
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('county');
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} });
+        await view.runAsync();
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('state');
+
+        const phases: string[] = [];
+        expect(controller.apply(box, { transition: { duration: 60, onFrame: (phase) => phases.push(phase) } })).toBe(true);
+        // Nothing moves until the first frame, and the level waits for the last.
+        expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
+        expect(controller.level!()).toBe('state');
+        // The runtime's baseline reset and the re-applied target keep the tween.
+        expect(controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, { baseline: true })).toBe(true);
+        expect(controller.apply(box)).toBe(true);
+        expect(controller.level!()).toBe('state');
+        await controller.settled!();
+        const landed = view.signal(GEO_EXTENT_SIGNAL).flat() as number[];
+        landed.forEach((value, index) => expect(value).toBeCloseTo(target[index], 6));
+        expect(view.signal(GEO_LEVEL_SIGNAL)).toBe('county');
+        expect(phases.length).toBeGreaterThan(1);
+        expect(phases.slice(0, -1).every((phase) => phase === 'preview')).toBe(true);
+        expect(phases[phases.length - 1]).toBe('commit');
+        expect(shapeCounts(view)).toEqual([0, 2]);
+        view.finalize();
+    });
+
+    it('lets a plain viewport change cancel a running tween', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        const phases: string[] = [];
+        controller.apply(REGION, { transition: { duration: 500, onFrame: (phase) => phases.push(phase) } });
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} });
+        await controller.settled!();
+        await view.runAsync();
+        expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
+        expect(phases).not.toContain('commit');
+        // A tween home reports as a reset, so a host clears its viewport state.
+        const operations: string[] = [];
+        controller.apply(REGION);
+        await view.runAsync();
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, {
+            transition: { duration: 30, onFrame: (_phase, operation) => operations.push(operation) },
+        });
+        await controller.settled!();
+        expect(new Set(operations)).toEqual(new Set(['reset']));
+        expect(view.signal(GEO_EXTENT_SIGNAL)).toBeNull();
+        view.finalize();
+    });
+});
+
+describe('fits read the rendered frame', () => {
+    const REGION_BY_NAME = { op: 'set-viewport' as const, axes: 'xy' as const, value: { region: { key: { Place: 'California' } } } };
+    const ELSEWHERE = { op: 'set-viewport' as const, axes: 'xy' as const, value: { x: [-104, -100] as const, y: [33, 36] as const } };
+
+    it('fits a region the same way from a zoomed frame as from the base fit', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: { region: { key: { Region: 'CA' } } } });
+        await view.runAsync();
+        const reference = view.signal(GEO_EXTENT_SIGNAL).flat() as number[];
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} });
+        await view.runAsync();
+        // Render a zoomed frame elsewhere, then fit the region the way the
+        // runtime does: after its own reset of the signal, before any run.
+        controller.apply(ELSEWHERE);
+        await view.runAsync();
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, { baseline: true });
+        expect(controller.apply(REGION_BY_NAME)).toBe(true);
+        await view.runAsync();
+        const fitted = view.signal(GEO_EXTENT_SIGNAL).flat() as number[];
+        fitted.forEach((value, index) => expect(value).toBeCloseTo(reference[index], 4));
+        view.finalize();
+    });
+
+    it('starts a tween from the frame on screen, not from the base fit', async () => {
+        const { view, controller } = await mountedAutoChoropleth();
+        controller.apply(ELSEWHERE);
+        await view.runAsync();
+        const zoomedScale = view.signal(GEO_PROJECTION_SIGNAL).scale();
+        const scales: number[] = [];
+        controller.apply({ op: 'set-viewport', axes: 'xy', value: {} }, { baseline: true });
+        controller.apply(REGION_BY_NAME, {
+            transition: { duration: 400, onFrame: () => scales.push(view.signal(GEO_PROJECTION_SIGNAL).scale()) },
+        });
+        await controller.settled!();
+        expect(scales.length).toBeGreaterThan(3);
+        // The first frame sits within a few percent of the zoomed scale.
+        expect(Math.abs(scales[0] - zoomedScale) / zoomedScale).toBeLessThan(0.15);
         view.finalize();
     });
 });

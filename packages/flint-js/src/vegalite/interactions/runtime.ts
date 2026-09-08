@@ -70,7 +70,7 @@ import {
 } from './hit-adapter';
 import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/region';
 import { mountVegaNavigationGesture } from './gestures/navigation';
-import { createVegaNavigationController } from './navigation-scale';
+import { createVegaNavigationController, type NavigationApplyOptions } from './navigation-scale';
 import { createVegaGeoNavigationController } from './navigation-geo';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
 import {
@@ -181,9 +181,12 @@ export function resolveSupportedOperation(
             op: {
                 ...op,
                 axes,
-                value: Object.fromEntries(supportedAxes
-                    .filter((axis) => op.value[axis] !== undefined)
-                    .map((axis) => [axis, op.value[axis]])),
+                value: {
+                    ...Object.fromEntries(supportedAxes
+                        .filter((axis) => op.value[axis] !== undefined)
+                        .map((axis) => [axis, op.value[axis]])),
+                    ...(op.value.region ? { region: op.value.region } : {}),
+                },
             },
             unsupported: supportedAxes.length < requestedAxes.length,
         };
@@ -733,7 +736,7 @@ export function mountVegaInteractions(
         reset: resetViewportRegion,
     });
     const navigationController = plan.geoNavigation
-        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {}, plan.geoLevels)
+        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {}, plan.geoLevels, plan.geoPreProjection)
         : createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
@@ -980,7 +983,7 @@ export function mountVegaInteractions(
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         for (const axis of reorderAxes) view.signal(axis.signal, null);
         for (const axis of Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[]) {
-            navigationController.apply({ op: 'set-viewport', axes: axis, value: {} });
+            navigationController.apply({ op: 'set-viewport', axes: axis, value: {} }, { baseline: true });
         }
         for (const update of displayUpdates) {
             for (const op of update.ops) {
@@ -1063,7 +1066,7 @@ export function mountVegaInteractions(
                         }
                     }
                 } else if (op.op === 'set-viewport') {
-                    navigationController.apply(op);
+                    navigationController.apply(op, transitionOptionsFor(update.id));
                 } else if (op.op === 'set-order' && op.scope === 'category') {
                     const axis = reorderAxes.find((candidate) => candidate.field === op.field);
                     if (axis) view.signal(axis.signal, op.values);
@@ -1195,10 +1198,19 @@ export function mountVegaInteractions(
         }
     };
 
+    // A host may ask for one update's viewport to animate. Only that update's
+    // op gets the tween; the render still re-applies every retained viewport.
+    let pendingTransition: { id: string; duration: number } | undefined;
+    const transitionOptionsFor = (id: string): NavigationApplyOptions | undefined =>
+        pendingTransition && pendingTransition.id === id
+            ? { transition: { duration: pendingTransition.duration, onFrame: emitTransitionFrame } }
+            : undefined;
+
     const storeUpdate = async (
         update: ChartUpdate,
         destination: Map<string, ChartUpdate>,
         legendSelection: LegendHitIdentity | null = null,
+        options?: ChartUpdateApplyOptions,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
         // A viewport-only update presents nothing that needs the scene's
@@ -1213,7 +1225,16 @@ export function mountVegaInteractions(
         if (hasViewportOp(update)) supersedeRetainedViewports(retainedUpdates, update.id);
         destination.set(update.id, presented);
         if (legendSelection) selectedLegend = legendSelection;
-        await renderUpdates();
+        pendingTransition = options?.transition
+            ? { id: update.id, duration: options.transition.duration }
+            : undefined;
+        try {
+            await renderUpdates();
+        } finally {
+            pendingTransition = undefined;
+        }
+        // The update settles with its last frame, so a host can chain on it.
+        if (options?.transition) await navigationController.settled?.();
         return resolved.result;
     };
 
@@ -1285,6 +1306,33 @@ export function mountVegaInteractions(
             (name) => navigationController.scale?.(name) ?? view.scale(name),
             plan.overlayScales,
         );
+    /**
+     * The viewport a change resulted in: the visible data domain of the plot
+     * rectangle, and on a multi-level map the level and the focus region.
+     */
+    const withViewportState = (base: CanvasInteractionEvent): CanvasInteractionEvent => {
+        const space = coordinateSpace();
+        const domain = domainForGeometry({
+            kind: 'rect',
+            rect: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
+            axis: 'xy',
+        });
+        const level = navigationController.level?.();
+        const focus = navigationController.focus?.();
+        const resolvedDomain = domain || level !== undefined
+            ? { ...domain, ...(level !== undefined ? { level } : {}), ...(focus ? { focus } : {}) }
+            : undefined;
+        return resolvedDomain ? { ...base, geometry: { ...base.geometry, domain: resolvedDomain } } : base;
+    };
+    /** A frame of a host-requested viewport tween reports like a zoom or reset gesture. */
+    const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset'): void => {
+        if (!navigationInteraction) return;
+        const base = toCanvasInteractionEvent(
+            { type: 'navigation', phase, operation, axes: 'xy' },
+            navigationInteraction.eventSource,
+        );
+        emitCanvasInteractionEvent(navigationInteraction, withViewportState(base));
+    };
     const dispatch = async (
         interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
@@ -1332,23 +1380,8 @@ export function mountVegaInteractions(
             const base = toCanvasInteractionEvent(event, interaction.eventSource);
             const request = interaction.handle?.(base, context(false)) ?? null;
             await applyInteractionUpdate(interaction, event.phase, request);
-            // The event reports the viewport that resulted from the gesture: the
-            // visible data domain of the plot rectangle, read after the update.
-            const space = coordinateSpace();
-            const domain = domainForGeometry({
-                kind: 'rect',
-                rect: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
-                axis: 'xy',
-            });
-            // A multi-level map also reports the level the gesture settled on.
-            const level = navigationController.level?.();
-            const focus = navigationController.focus?.();
-            const resolvedDomain = domain || level !== undefined
-                ? { ...domain, ...(level !== undefined ? { level } : {}), ...(focus ? { focus } : {}) }
-                : undefined;
-            emitCanvasInteractionEvent(interaction, resolvedDomain
-                ? { ...base, geometry: { ...base.geometry, domain: resolvedDomain } }
-                : base);
+            // The event reports the viewport that resulted from the gesture.
+            emitCanvasInteractionEvent(interaction, withViewportState(base));
         };
         const drain = async (): Promise<void> => {
             if (navigationDraining) return;
@@ -2572,7 +2605,7 @@ export function mountVegaInteractions(
     };
     return {
         getInteractionContext: context,
-        applyUpdate: (update, _options) => storeUpdate(update, retainedUpdates),
+        applyUpdate: (update, options) => storeUpdate(update, retainedUpdates, null, options),
         setUpdates: replaceUpdates,
         clearUpdate,
         refresh: () => {

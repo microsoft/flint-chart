@@ -137,7 +137,7 @@ describe('map navigation declaration', () => {
         const plan = addVegaLiteInteractions(spec, [navigate()])!;
         const compiled = compile(spec).spec as any;
         injectVegaGeoNavigationSignals(compiled, plan.navigationChannels);
-        expect(compiled.projections[0].type).toBe('albersUsa');
+        expect(compiled.projections[0].type).toBe('identity');
         expect(compiled.projections[0].extent.signal).toContain(GEO_EXTENT_SIGNAL);
     });
 });

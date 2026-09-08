@@ -864,8 +864,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
 
     const result: any = { ...vgObj, data: vgObj.data ?? { values } };
-    // Runtime detail levels travel with the interaction semantics, not the spec.
+    // Runtime detail levels and a pre-projected base map travel with the
+    // interaction semantics, not the spec.
     delete result._geoLevels;
+    delete result._geoPreProjection;
     if (themeDecisions) {
         result._theme = {
             id: themeDecisions.themeId,
@@ -959,6 +961,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             navigationAxes,
             geoNavigation,
             ...(vgObj._geoLevels ? { geoLevels: vgObj._geoLevels } : {}),
+            ...(vgObj._geoPreProjection ? { geoPreProjection: vgObj._geoPreProjection } : {}),
             reorderAxis: reorderAxes[0],
             reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,

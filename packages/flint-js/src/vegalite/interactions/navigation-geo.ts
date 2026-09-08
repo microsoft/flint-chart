@@ -20,9 +20,15 @@
  * geographic round trip; external values are fitted from their bounding box.
  */
 
+import { projection as vegaProjection } from 'vega';
+import type { UpdateRegionSelector } from '../../core/interaction-contracts';
 import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
-import { guardNavigationDomain, type VegaNavigationController } from './navigation-scale';
+import {
+    guardNavigationDomain,
+    type NavigationApplyOptions,
+    type VegaNavigationController,
+} from './navigation-scale';
 
 export const GEO_EXTENT_SIGNAL = '__flint_geo_extent';
 export const GEO_PROJECTION_SIGNAL = '__flint_geo_projection';
@@ -51,29 +57,59 @@ export interface GeoLevelConfig {
 
 type Ring = readonly (readonly number[])[];
 
+/**
+ * The projection a pre-projected base map was built with. The chart draws
+ * such a map with an identity projection, so navigation converts between
+ * the map's frame and longitude/latitude through this one.
+ */
+export interface GeoPreProjection {
+    type: string;
+    scale?: number;
+    translate?: readonly [number, number];
+    rotate?: readonly number[];
+    center?: readonly [number, number];
+    parallels?: readonly [number, number];
+}
+
+function createPreProjection(config: GeoPreProjection): GeoProjection | undefined {
+    const factory = (vegaProjection as any)(config.type);
+    if (typeof factory !== 'function') return undefined;
+    const instance = factory();
+    for (const key of ['scale', 'translate', 'rotate', 'center', 'parallels'] as const) {
+        const value = config[key];
+        if (value !== undefined && typeof instance[key] === 'function') instance[key](value);
+    }
+    return instance as GeoProjection;
+}
+
 /** Vega's own fields on a datum, plus the join key the choropleth adds. */
 const INTERNAL_DATUM_FIELDS = new Set(['_vgsid_', '__geo_id', 'type', 'geometry', 'properties']);
 
 /**
- * Whether a longitude/latitude point falls inside a GeoJSON polygon geometry.
- * Ray casting in plate-carrée coordinates is exact enough for regions the size
- * of states and counties. A ring that straddles the antimeridian (the
- * Aleutians) is unrolled to one side of it first.
+ * Whether a point falls inside a GeoJSON polygon geometry. Ray casting in
+ * plate-carrée coordinates is exact enough for regions the size of states and
+ * counties. On a spherical geometry a ring that straddles the antimeridian
+ * (the Aleutians) is unrolled to one side of it first; a pre-projected
+ * geometry is planar and gets no such treatment.
  */
-export function geometryContainsPoint(geometry: any, point: readonly [number, number]): boolean {
+export function geometryContainsPoint(
+    geometry: any,
+    point: readonly [number, number],
+    spherical = true,
+): boolean {
     if (!geometry) return false;
     const polygons: Ring[][] = geometry.type === 'Polygon'
         ? [geometry.coordinates]
         : geometry.type === 'MultiPolygon' ? geometry.coordinates : [];
     for (const rings of polygons) {
-        if (rings.length === 0 || !ringContains(rings[0], point)) continue;
-        if (rings.slice(1).some((hole) => ringContains(hole, point))) continue;
+        if (rings.length === 0 || !ringContains(rings[0], point, spherical)) continue;
+        if (rings.slice(1).some((hole) => ringContains(hole, point, spherical))) continue;
         return true;
     }
     return false;
 }
 
-function ringContains(ring: Ring, [lon, lat]: readonly [number, number]): boolean {
+function ringContains(ring: Ring, [lon, lat]: readonly [number, number], spherical: boolean): boolean {
     let west = Number.POSITIVE_INFINITY;
     let east = Number.NEGATIVE_INFINITY;
     for (const [x] of ring) {
@@ -82,7 +118,7 @@ function ringContains(ring: Ring, [lon, lat]: readonly [number, number]): boolea
     }
     // A ring wider than a hemisphere really wraps the antimeridian: read it,
     // and the query, on the eastern side.
-    const unroll = east - west > 180 ? (x: number) => (x < 0 ? x + 360 : x) : (x: number) => x;
+    const unroll = spherical && east - west > 180 ? (x: number) => (x < 0 ? x + 360 : x) : (x: number) => x;
     const px = unroll(lon);
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
@@ -94,6 +130,24 @@ function ringContains(ring: Ring, [lon, lat]: readonly [number, number]): boolea
     }
     return inside;
 }
+
+/** Every vertex of a GeoJSON geometry, as longitude/latitude points. */
+export function geometryVertices(geometry: any): Point[] {
+    if (!geometry) return [];
+    const rings: Ring[] = geometry.type === 'Polygon' ? geometry.coordinates
+        : geometry.type === 'MultiPolygon' ? geometry.coordinates.flat()
+        : geometry.type === 'LineString' ? [geometry.coordinates]
+        : geometry.type === 'MultiLineString' ? geometry.coordinates
+        : geometry.type === 'Point' ? [[geometry.coordinates]]
+        : geometry.type === 'MultiPoint' ? [geometry.coordinates]
+        : [];
+    return rings
+        .flatMap((ring) => ring.map((vertex) => [vertex[0], vertex[1]] as Point))
+        .filter(isPoint);
+}
+
+/** Share of a region's box kept clear on each side when the viewport frames it. */
+const REGION_FIT_MARGIN = 0.08;
 
 /** A feature datum without Vega's bookkeeping and without its geometry. */
 function describeFeature(datum: Record<string, unknown>): Record<string, unknown> {
@@ -188,7 +242,15 @@ export function createVegaGeoNavigationController(
     view: any,
     axes: Partial<Record<Axis, VegaNavigationAxis>>,
     levels?: GeoLevelConfig,
+    preProjected?: GeoPreProjection,
 ): VegaNavigationController {
+    // On a pre-projected base map the live projection is an identity fit over
+    // the map's own frame; these two take a location the rest of the way.
+    const preProjection = preProjected ? createPreProjection(preProjected) : undefined;
+    const toGeo = (point: Point | undefined): Point | undefined =>
+        point && preProjection ? finitePoint(preProjection.invert?.(point)) : point;
+    const fromGeo = (location: Point): Point | undefined =>
+        preProjection ? finitePoint(preProjection(location)) : location;
     // Recent gesture values → their exact extents (and the level chosen with
     // them, so a re-applied update never re-decides through the hysteresis).
     // Content-keyed because the runtime re-creates op objects; bounded because
@@ -196,7 +258,7 @@ export function createVegaGeoNavigationController(
     const rememberedExtents = new Map<string, { extent: GeoExtent; level?: string }>();
     const REMEMBERED_LIMIT = 64;
     const valueKey = (value: NavigationUpdate['value']): string =>
-        JSON.stringify([value.x ?? null, value.y ?? null]);
+        JSON.stringify([value.x ?? null, value.y ?? null, value.region ?? null]);
     const remember = (value: NavigationUpdate['value'], extent: GeoExtent, level?: string): void => {
         const key = valueKey(value);
         rememberedExtents.delete(key);
@@ -224,9 +286,10 @@ export function createVegaGeoNavigationController(
         if (!centre) return undefined;
         const features: Record<string, unknown>[] = view.data(levels.source) ?? [];
         if (focusedFeature && !features.includes(focusedFeature)) focusedFeature = undefined;
-        const hit = focusedFeature && geometryContainsPoint(focusedFeature.geometry, centre)
+        const spherical = !preProjection;
+        const hit = focusedFeature && geometryContainsPoint(focusedFeature.geometry, centre, spherical)
             ? focusedFeature
-            : features.find((feature) => geometryContainsPoint(feature.geometry, centre));
+            : features.find((feature) => geometryContainsPoint(feature.geometry, centre, spherical));
         focusedFeature = hit;
         return hit ? describeFeature(hit) : undefined;
     };
@@ -243,6 +306,17 @@ export function createVegaGeoNavigationController(
         const signaled = view.signal(GEO_EXTENT_SIGNAL);
         return isExtent(signaled) ? signaled : baseExtent();
     };
+    // The extent the view last rendered with. A set signal reads back at
+    // once, before the run: the runtime resets it before it re-applies the
+    // retained viewports, while the live projection copy still reflects the
+    // frame on screen. Projection math must pair that copy with this extent.
+    let renderedExtent: GeoExtent | null = isExtent(view.signal(GEO_EXTENT_SIGNAL))
+        ? view.signal(GEO_EXTENT_SIGNAL)
+        : null;
+    view.addSignalListener?.(GEO_EXTENT_SIGNAL, (_name: string, value: unknown) => {
+        renderedExtent = isExtent(value) ? value : null;
+    });
+    const liveExtent = (): GeoExtent => renderedExtent ?? baseExtent();
     const projection = (): GeoProjection | undefined => {
         const copy = view.signal(GEO_PROJECTION_SIGNAL);
         return typeof copy === 'function' ? copy as GeoProjection : undefined;
@@ -256,7 +330,7 @@ export function createVegaGeoNavigationController(
     const invertAt = (point: Point, extent: GeoExtent): Point | undefined => {
         const live = projection();
         if (!live?.invert) return undefined;
-        return finitePoint(live.invert(remapExtentPoint(point, extent, currentExtent())));
+        return toGeo(finitePoint(live.invert(remapExtentPoint(point, extent, liveExtent()))));
     };
     /**
      * The plot edge can sit exactly on a projection's outline (a fitted world
@@ -297,30 +371,17 @@ export function createVegaGeoNavigationController(
         return resolveGeoLevel(span, currentLevel, levels.levels);
     };
 
-    /** Fit an extent so a longitude/latitude box fills the plot. */
-    const extentForBox = (value: NavigationUpdate['value']): GeoExtent | undefined => {
-        const live = projection();
+    /**
+     * The extent that fits a set of base-fit pixels into the plot, centred,
+     * with `margin` of the box kept clear on every side.
+     */
+    const extentFittingPoints = (points: readonly Point[], margin = 0): GeoExtent | undefined => {
         const { width, height } = plotSize();
-        if (!live || !(width > 0 && height > 0)) return undefined;
-        const current = currentExtent();
-        const base = baseExtent();
-        const visible = geographicBox(current);
-        const lon = value.x !== undefined ? value.x.map(Number) : visible.x;
-        const lat = value.y !== undefined ? value.y.map(Number) : visible.y;
-        if (!lon || !lat || ![...lon, ...lat].every(Number.isFinite)) return undefined;
-        const corners: Point[] = [
-            [lon[0], lat[0]], [lon[0], lat[1]], [lon[1], lat[0]], [lon[1], lat[1]],
-        ];
-        const projected = corners
-            .map((corner) => finitePoint(live(corner)))
-            .filter((point): point is Point => !!point)
-            // Pixels under the current extent → pixels under the base fit.
-            .map((point) => remapExtentPoint(point, current, base));
-        if (projected.length < 2) return undefined;
-        const xs = projected.map((point) => point[0]);
-        const ys = projected.map((point) => point[1]);
-        const boxWidth = Math.max(...xs) - Math.min(...xs);
-        const boxHeight = Math.max(...ys) - Math.min(...ys);
+        if (points.length < 2 || !(width > 0 && height > 0)) return undefined;
+        const xs = points.map((point) => point[0]);
+        const ys = points.map((point) => point[1]);
+        const boxWidth = (Math.max(...xs) - Math.min(...xs)) * (1 + 2 * margin);
+        const boxHeight = (Math.max(...ys) - Math.min(...ys)) * (1 + 2 * margin);
         if (!(boxWidth > 0) && !(boxHeight > 0)) return undefined;
         const scale = Math.min(
             boxWidth > 0 ? width / boxWidth : Number.POSITIVE_INFINITY,
@@ -332,6 +393,183 @@ export function createVegaGeoNavigationController(
         const x0 = width / 2 - scale * centerX;
         const y0 = height / 2 - scale * centerY;
         return [[x0, y0], [x0 + scale * width, y0 + scale * height]];
+    };
+
+    /** Project locations through the live projection into pixels under the base fit. */
+    const projectToBase = (locations: readonly Point[]): Point[] => {
+        const live = projection();
+        if (!live) return [];
+        const current = liveExtent();
+        const base = baseExtent();
+        return locations
+            .map((location) => finitePoint(live(location)))
+            .filter((point): point is Point => !!point)
+            .map((point) => remapExtentPoint(point, current, base));
+    };
+
+    /** Fit an extent so a longitude/latitude box fills the plot. */
+    const extentForBox = (value: NavigationUpdate['value']): GeoExtent | undefined => {
+        if (!projection()) return undefined;
+        const visible = geographicBox(liveExtent());
+        const lon = value.x !== undefined ? value.x.map(Number) : visible.x;
+        const lat = value.y !== undefined ? value.y.map(Number) : visible.y;
+        if (!lon || !lat || ![...lon, ...lat].every(Number.isFinite)) return undefined;
+        const corners: Point[] = [[lon[0], lat[0]], [lon[0], lat[1]], [lon[1], lat[0]], [lon[1], lat[1]]];
+        return extentFittingPoints(projectToBase(corners
+            .map(fromGeo)
+            .filter((corner): corner is Point => !!corner)));
+    };
+
+    /** The coarsest-level feature whose row carries every field of `key`. */
+    const featureForKey = (key: Record<string, unknown>): Record<string, unknown> | undefined => {
+        if (!levels?.source) return undefined;
+        const features: Record<string, unknown>[] = view.data(levels.source) ?? [];
+        const same = (actual: unknown, expected: unknown): boolean => Object.is(actual, expected)
+            || (actual != null && expected != null && String(actual) === String(expected));
+        return features.find((feature) => Object.entries(key).every(([field, expected]) => {
+            const properties = feature.properties as Record<string, unknown> | undefined;
+            return same(feature[field], expected) || same(properties?.[field], expected);
+        }));
+    };
+
+    /**
+     * Fit an extent so a region's shape fills the plot with a margin around
+     * it. Its vertices go through the live projection, so a region the map
+     * draws in an inset (Alaska on the US map) frames where it is drawn.
+     */
+    const extentForRegion = (selector: UpdateRegionSelector): GeoExtent | undefined => {
+        const feature = featureForKey(selector.key);
+        if (!feature) return undefined;
+        return extentFittingPoints(projectToBase(geometryVertices(feature.geometry)), REGION_FIT_MARGIN);
+    };
+
+    /** The extent and level an update asks for; a reset asks for the base fit. */
+    const targetFor = (
+        value: NavigationUpdate['value'],
+    ): { extent: GeoExtent | null; level?: string } | undefined => {
+        const remembered = rememberedExtents.get(valueKey(value));
+        if (remembered) return { extent: remembered.extent, level: remembered.level };
+        if (value.region) {
+            const extent = extentForRegion(value.region);
+            if (!extent) return undefined;
+            const level = levelForRange(geographicBox(extent).x);
+            remember(value, extent, level);
+            return { extent, level };
+        }
+        if (value.x === undefined && value.y === undefined) {
+            return { extent: null, level: levels?.levels[0]?.name };
+        }
+        const extent = extentForBox(value);
+        if (!extent) return undefined;
+        const level = levelForRange(value.x !== undefined
+            ? value.x.map(Number) as [number, number]
+            : geographicBox(extent).x);
+        remember(value, extent, level);
+        return { extent, level };
+    };
+
+    // A viewport tween renders one extent per animation frame and flips the
+    // level only on the last, so no intermediate frame draws the finer level.
+    interface ActiveTransition {
+        key: string;
+        frame: GeoExtent;
+        startLevel?: string;
+        done: Promise<void>;
+        cancel(): void;
+    }
+    let active: ActiveTransition | undefined;
+    const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const nextFrame = (callback: () => void): void => {
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => callback());
+        else setTimeout(callback, 16);
+    };
+    const easeInOut = (t: number): number => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
+    /** A view as a window over the base fit: its centre and its width, in base pixels. */
+    type ZoomView = readonly [number, number, number];
+    const viewOf = (extent: GeoExtent): ZoomView => {
+        const { width, height } = plotSize();
+        const k = (extent[1][0] - extent[0][0]) / width;
+        return [(width / 2 - extent[0][0]) / k, (height / 2 - extent[0][1]) / k, width / k];
+    };
+    const extentOf = ([cx, cy, w]: ZoomView): GeoExtent => {
+        const { width, height } = plotSize();
+        const k = width / w;
+        const x0 = width / 2 - k * cx;
+        const y0 = height / 2 - k * cy;
+        return [[x0, y0], [x0 + k * width, y0 + k * height]];
+    };
+    /**
+     * "Smooth and efficient zooming and panning" (van Wijk & Nuij, 2003), the
+     * path d3-zoom flies. Zoom and pan progress together, and a long pan
+     * zooms out, travels, and zooms back in, so the target never rushes past
+     * the frame the way a linear blend of the extents makes it.
+     */
+    const zoomPath = (from: ZoomView, to: ZoomView): ((t: number) => ZoomView) => {
+        const rho = Math.SQRT2;
+        const rho2 = 2;
+        const rho4 = 4;
+        const [ux0, uy0, w0] = from;
+        const [ux1, uy1, w1] = to;
+        const dx = ux1 - ux0;
+        const dy = uy1 - uy0;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 1e-12) {
+            const S = Math.log(w1 / w0) / rho;
+            return (t) => [ux0 + t * dx, uy0 + t * dy, w0 * Math.exp(rho * t * S)];
+        }
+        const d1 = Math.sqrt(d2);
+        const b0 = (w1 * w1 - w0 * w0 + rho4 * d2) / (2 * w0 * rho2 * d1);
+        const b1 = (w1 * w1 - w0 * w0 - rho4 * d2) / (2 * w1 * rho2 * d1);
+        const r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0);
+        const r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
+        const S = (r1 - r0) / rho;
+        return (t) => {
+            const s = t * S;
+            const coshr0 = Math.cosh(r0);
+            const u = (w0 / (rho2 * d1)) * (coshr0 * Math.tanh(rho * s + r0) - Math.sinh(r0));
+            return [ux0 + u * dx, uy0 + u * dy, (w0 * coshr0) / Math.cosh(rho * s + r0)];
+        };
+    };
+    const startTransition = (
+        key: string,
+        to: GeoExtent | null,
+        level: string | undefined,
+        transition: NonNullable<NavigationApplyOptions['transition']>,
+    ): void => {
+        active?.cancel();
+        const from = liveExtent();
+        const target = to ?? baseExtent();
+        const path = zoomPath(viewOf(from), viewOf(target));
+        let cancelled = false;
+        let finish!: () => void;
+        const done = new Promise<void>((resolve) => { finish = resolve; });
+        const startedAt = now();
+        const entry: ActiveTransition = {
+            key,
+            frame: from,
+            startLevel: currentLevel,
+            done,
+            cancel: () => { cancelled = true; finish(); },
+        };
+        active = entry;
+        const step = (): void => {
+            if (cancelled) return;
+            const t = transition.duration > 0 ? Math.min(1, (now() - startedAt) / transition.duration) : 1;
+            const last = t >= 1;
+            entry.frame = last ? target : extentOf(path(easeInOut(t)));
+            view.signal(GEO_EXTENT_SIGNAL, last ? to : entry.frame);
+            if (last) {
+                if (active === entry) active = undefined;
+                setLevel(level);
+            }
+            void Promise.resolve(view.runAsync()).then(() => {
+                if (cancelled) return;
+                transition.onFrame?.(last ? 'commit' : 'preview', to === null ? 'reset' : 'zoom');
+                if (last) finish();
+                else nextFrame(step);
+            });
+        };
+        nextFrame(step);
     };
 
     return {
@@ -368,29 +606,30 @@ export function createVegaGeoNavigationController(
             remember(value, guarded, levelForRange(value.x));
             return { op: 'set-viewport', axes: event.axes, value };
         },
-        apply(update): boolean {
+        apply(update, options): boolean {
             if (affectedAxes(update.axes).length === 0) return false;
-            const remembered = rememberedExtents.get(valueKey(update.value));
-            if (remembered) {
-                view.signal(GEO_EXTENT_SIGNAL, remembered.extent);
-                setLevel(remembered.level);
+            const key = valueKey(update.value);
+            if (active && (options?.baseline || active.key === key)) {
+                // The runtime re-applies retained viewports, after its own
+                // reset, on every render: a render during a tween keeps the
+                // tween's frame and its starting level.
+                view.signal(GEO_EXTENT_SIGNAL, active.frame);
+                setLevel(active.startLevel);
                 return true;
             }
-            if (update.value.x === undefined && update.value.y === undefined) {
-                view.signal(GEO_EXTENT_SIGNAL, null);
-                setLevel(levels?.levels[0]?.name);
+            const target = targetFor(update.value);
+            if (!target) return false;
+            if (options?.transition) {
+                startTransition(key, target.extent, target.level, options.transition);
                 return true;
             }
-            const extent = extentForBox(update.value);
-            if (!extent) return false;
-            view.signal(GEO_EXTENT_SIGNAL, extent);
-            setLevel(levelForRange(
-                update.value.x !== undefined
-                    ? update.value.x.map(Number) as [number, number]
-                    : geographicBox(extent).x,
-            ));
+            active?.cancel();
+            active = undefined;
+            view.signal(GEO_EXTENT_SIGNAL, target.extent);
+            setLevel(target.level);
             return true;
         },
+        settled: () => active?.done ?? Promise.resolve(),
         level: () => currentLevel,
         focus: focusRegion,
         scale(name) {
@@ -401,7 +640,7 @@ export function createVegaGeoNavigationController(
                 invert: (pixel: number) => {
                     const { width, height } = plotSize();
                     const point: Point = axis === 'x' ? [pixel, height / 2] : [width / 2, pixel];
-                    const location = finitePoint(projection()?.invert?.(point));
+                    const location = toGeo(finitePoint(projection()?.invert?.(point)));
                     return location ? location[axis === 'x' ? 0 : 1] : undefined;
                 },
             };

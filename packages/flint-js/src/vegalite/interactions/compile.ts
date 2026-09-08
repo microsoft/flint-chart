@@ -38,6 +38,7 @@ import {
     GEO_PROJECTION_SIGNAL,
     geoLevelGate,
     type GeoLevelConfig,
+    type GeoPreProjection,
 } from './navigation-geo';
 
 const CLEAR_MARK = '__flint_interaction_clear';
@@ -62,6 +63,7 @@ interface TemplateInteractionSemantics {
     navigationAxes?: ('x' | 'y')[];
     geoNavigation?: boolean;
     geoLevels?: GeoLevelConfig;
+    geoPreProjection?: GeoPreProjection;
     reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
     reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
     renderHoverStyles?: Record<string, HoverStyle>;
@@ -520,6 +522,7 @@ export function addVegaLiteInteractions(
         navigationChannels: [...requestedNavigationAxes],
         geoNavigation: templateSemantics.geoNavigation ?? false,
         geoLevels: templateSemantics.geoLevels,
+        geoPreProjection: templateSemantics.geoPreProjection,
         angularXBrush: templateSemantics.supportedRegionGestures?.includes('angular') ?? false,
         reorderAxis: hasElementDrag && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
