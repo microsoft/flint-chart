@@ -1,0 +1,54 @@
+.map-semantic-zoom-shell {
+  gap: 14px;
+}
+
+.map-semantic-zoom-mount {
+  border: 1px solid #edf0f2;
+  border-radius: 8px;
+  background: #fcfcfd;
+}
+
+.map-semantic-zoom-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #98a2ab;
+}
+
+.map-semantic-zoom-crumb {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #65707a;
+  font: inherit;
+  font-weight: 600;
+}
+
+button.map-semantic-zoom-crumb {
+  cursor: pointer;
+}
+
+.map-semantic-zoom-crumb[data-active='true'] {
+  color: #2f5f47;
+}
+
+.map-semantic-zoom-credit {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 11px;
+  border: 1px solid #e6eaed;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.map-semantic-zoom-credit strong {
+  color: #2d3439;
+  font-size: 11px;
+}
+
+.map-semantic-zoom-credit span {
+  color: #67727c;
+  font-size: 10px;
+  line-height: 1.45;
+}

@@ -16,6 +16,12 @@ const DETAIL_OFFSET = 220;
 const DETAIL_SCALE = DETAIL_RADIUS / FOCUS_RADIUS;
 const DETAIL_MIN_SCALE = 1;
 const DETAIL_MAX_SCALE = 3.4;
+/**
+ * The lens radius the slider allows, in plot pixels. The bubble magnifies by
+ * `DETAIL_RADIUS / lensRadius`, so the whole lens always fills the bubble:
+ * the largest lens shows at 1×, the smallest at 4.5×.
+ */
+const LENS_RADIUS_RANGE = { min: 24, max: DETAIL_RADIUS, step: 2 } as const;
 
 const ROWS = CLIMATE_CITIES.flatMap((city) => CLIMATE_MONTHS.map((month, monthIndex) => ({
   City: city.name,
@@ -198,6 +204,8 @@ function recordLatency(
 export function ExplodedDetailStage() {
   const [active, setActive] = useState(false);
   const [focus, setFocus] = useState<PlotPoint>({ x: 450, y: 260 });
+  const [lensRadius, setLensRadius] = useState(FOCUS_RADIUS);
+  const detailScale = DETAIL_RADIUS / lensRadius;
   const [scene, setScene] = useState<VectorScene | null>(null);
   const mountRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<SVGSVGElement | null>(null);
@@ -207,8 +215,8 @@ export function ExplodedDetailStage() {
   const [latency, setLatency] = useState<number | null>(null);
 
   const explosion = useMemo(() => {
-    return scene ? explodedGeometry(scene, focus) : null;
-  }, [focus, scene]);
+    return scene ? explodedGeometry(scene, focus, detailScale) : null;
+  }, [detailScale, focus, scene]);
 
   useLayoutEffect(() => {
     if (presentationStartedRef.current === null) return;
@@ -268,6 +276,19 @@ export function ExplodedDetailStage() {
         <span className="ic-pill">Eccentric labels</span>
         <span className="ic-pill">0 Flint updates</span>
         <span className="ic-pill">React commit {latency === null ? '—' : `${latency.toFixed(1)} ms`}</span>
+        <label className="ic-pill exploded-detail-slider">
+          <span>Lens radius</span>
+          <input
+            type="range"
+            min={LENS_RADIUS_RANGE.min}
+            max={LENS_RADIUS_RANGE.max}
+            step={LENS_RADIUS_RANGE.step}
+            value={lensRadius}
+            onChange={(event) => setLensRadius(Number(event.currentTarget.value))}
+            aria-label="Lens radius in plot pixels"
+          />
+          <span className="exploded-detail-slider-value">{lensRadius} px · {detailScale.toFixed(2)}×</span>
+        </label>
       </div>
       <div className="ic-flint-dimpvis-panel exploded-detail-panel">
         <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
@@ -306,7 +327,7 @@ export function ExplodedDetailStage() {
                   <circle
                     cx={focus.x}
                     cy={focus.y}
-                    r={explosion?.focusRadius ?? FOCUS_RADIUS}
+                    r={explosion?.focusRadius ?? lensRadius}
                     className="exploded-detail-focus"
                   />
                   {explosion && (
@@ -327,7 +348,7 @@ export function ExplodedDetailStage() {
                       <g clipPath="url(#exploded-detail-bubble-clip)">
                         <use
                           href="#exploded-detail-scene"
-                          transform={`translate(${explosion.center.x} ${explosion.center.y}) scale(${DETAIL_SCALE}) translate(${-focus.x} ${-focus.y})`}
+                          transform={`translate(${explosion.center.x} ${explosion.center.y}) scale(${detailScale}) translate(${-focus.x} ${-focus.y})`}
                         />
                       </g>
                     </>

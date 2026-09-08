@@ -21,7 +21,7 @@ export interface VegaNavigationGestureController {
     destroy(): void;
 }
 
-function resolvedAxes(requested: unknown, available: readonly ('x' | 'y')[]): NavigationAxes {
+export function resolvedNavigationAxes(requested: unknown, available: readonly ('x' | 'y')[]): NavigationAxes {
     const axes = requested === 'available'
         ? available
         : requested === 'xy'
@@ -43,7 +43,7 @@ export function mountVegaNavigationGesture(
         setDragging,
     } = options;
     const source = interaction.eventSource;
-    const axes = resolvedAxes(source.axes, availableAxes);
+    const axes = resolvedNavigationAxes(source.axes, availableAxes);
     let pointerId: number | undefined;
     let session: PanSession | undefined;
     let pendingDelta: PlotPoint = { x: 0, y: 0 };
@@ -249,7 +249,9 @@ export function mountVegaNavigationGesture(
     container.addEventListener('pointerup', finish, true);
     container.addEventListener('pointercancel', cancel, true);
     container.addEventListener('wheel', wheel, { passive: false });
-    container.addEventListener('dblclick', doubleClick);
+    // An unset `reset` keeps the double-click, as hand-built sources predate the option.
+    const doubleClickResets = source.reset === undefined || source.reset === 'double-click' || source.reset === 'both';
+    if (doubleClickResets) container.addEventListener('dblclick', doubleClick);
 
     return {
         destroy(): void {

@@ -864,6 +864,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
 
     const result: any = { ...vgObj, data: vgObj.data ?? { values } };
+    // Runtime detail levels and a pre-projected base map travel with the
+    // interaction semantics, not the spec.
+    delete result._geoLevels;
+    delete result._geoPreProjection;
     if (themeDecisions) {
         result._theme = {
             id: themeDecisions.themeId,
@@ -877,12 +881,18 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     if (overflowResult.viewports.length > 0) {
         result._viewports = overflowResult.viewports;
     }
-    const navigationAxes = chartTemplate.navigation && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
-        ? (chartTemplate.navigation.axes ?? ['x', 'y']).filter((axis) => {
-            const encoding = resolvedEncodings[axis];
-            return !!encoding?.field && (encoding.type === 'quantitative' || encoding.type === 'temporal');
-        })
-        : [];
+    const unfaceted = !resolvedEncodings.column?.field && !resolvedEncodings.row?.field;
+    // A projected chart navigates its projection extent, so both axes move
+    // together and no continuous x/y encoding is required.
+    const geoNavigation = !!chartTemplate.navigation?.geo && unfaceted;
+    const navigationAxes: ('x' | 'y')[] = geoNavigation
+        ? ['x', 'y']
+        : chartTemplate.navigation && unfaceted
+            ? (chartTemplate.navigation.axes ?? ['x', 'y']).filter((axis) => {
+                const encoding = resolvedEncodings[axis];
+                return !!encoding?.field && (encoding.type === 'quantitative' || encoding.type === 'temporal');
+            })
+            : [];
     if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
         const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
             fields: [],
@@ -949,6 +959,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
             rangeLegendChannels,
             navigationAxes,
+            geoNavigation,
+            ...(vgObj._geoLevels ? { geoLevels: vgObj._geoLevels } : {}),
+            ...(vgObj._geoPreProjection ? { geoPreProjection: vgObj._geoPreProjection } : {}),
             reorderAxis: reorderAxes[0],
             reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,

@@ -1,10 +1,13 @@
 import type { ChartAssemblyInput } from 'flint-chart';
+import { genChoroplethTests, genMapTests } from 'flint-chart/test-data';
+import { testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { gapminderRows } from './gapminder-dashboard-data';
 
 export interface NavigationDemoCase {
   id: string;
   input: ChartAssemblyInput;
-  navigationAxes: 'x' | 'y' | 'xy';
+  /** Omit to let the compiled spec decide which axes navigate (none for a map today). */
+  navigationAxes?: 'x' | 'y' | 'xy';
   expectation: string;
 }
 
@@ -37,6 +40,20 @@ const airQuality = Array.from({ length: 45 * 24 }, (_, hour) => {
     'PM2.5 (ug/m3)': Number(Math.max(3, 16 + commute + weather).toFixed(1)),
   };
 });
+
+/**
+ * Gallery maps as navigation cases. A map has no continuous x/y scale, so the
+ * navigate preset moves the projection's fitted extent instead: both axes pan
+ * together and zoom is uniform about the pointer.
+ */
+function mapInput(cases: readonly { chartProperties?: any }[], region: 'us' | 'world', title: string): ChartAssemblyInput {
+  const testCase = cases.find((candidate) => candidate.chartProperties?.region === region) ?? cases[0];
+  const input = testCaseToAssemblyInput(testCase as any, NAVIGATION_SIZE);
+  return {
+    ...input,
+    chart_spec: { ...input.chart_spec, title },
+  } as ChartAssemblyInput;
+}
 
 export const navigationDemoCases: readonly NavigationDemoCase[] = [
   {
@@ -97,5 +114,17 @@ export const navigationDemoCases: readonly NavigationDemoCase[] = [
       },
     } as ChartAssemblyInput,
     expectation: 'Zoom into dense regional clusters and pan across the income range.',
+  },
+  {
+    id: 'navigate-world-metro-map',
+    input: mapInput(genMapTests(), 'world', 'World metro areas'),
+    expectation: 'Zoom into a continent under the pointer, then pan across the world map. '
+      + 'The circles keep their size while the base map refits.',
+  },
+  {
+    id: 'navigate-us-population-choropleth',
+    input: mapInput(genChoroplethTests(), 'us', 'US state population'),
+    expectation: 'Zoom into a region of the albersUsa frame and pan between states. '
+      + 'Alaska and Hawaii stay in their insets.',
   },
 ];

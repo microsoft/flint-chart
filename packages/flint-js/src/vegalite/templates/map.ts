@@ -8,6 +8,12 @@ import {
 } from '../../chart-types/geo';
 import { toTypeString } from '../../core/field-semantics';
 import {
+    GEO_LEVEL_SIGNAL,
+    geoLevelGate,
+    type GeoLevel,
+    type GeoPreProjection,
+} from '../interactions/navigation-geo';
+import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
     legendMatchedHits,
@@ -135,6 +141,45 @@ function applyPointEncodings(layer: any, resolved: Record<string, any>): void {
     }
 }
 
+/**
+ * Runtime detail levels for a bubble map, read from two chart properties:
+ * `levelField` names the column that tags each row with its level, and
+ * `levels` lists the levels coarsest first (`{ value, enter?, exit? }`, the
+ * spans in degrees of visible longitude at which a zoom enters and leaves each
+ * finer level). The point layer keeps only the rows of the level the signal
+ * names, so hidden rows cost nothing, and the projection keeps its fit to the
+ * base map across a swap.
+ */
+function configureBubbleLevels(spec: any, chartProperties: any, rows: readonly any[]): void {
+    const levelField = chartProperties?.levelField;
+    const declared = chartProperties?.levels;
+    if (typeof levelField !== 'string' || !Array.isArray(declared)) return;
+    const levels: GeoLevel[] = declared.flatMap((level: any) => {
+        const value = level && typeof level === 'object' ? level.value : level;
+        if (typeof value !== 'string') return [];
+        return [{
+            name: value,
+            ...(Number.isFinite(level?.enter) ? { enter: Number(level.enter) } : {}),
+            ...(Number.isFinite(level?.exit) ? { exit: Number(level.exit) } : {}),
+        }];
+    });
+    if (levels.length < 2) return;
+    spec.params = [...(spec.params ?? []), { name: GEO_LEVEL_SIGNAL, value: levels[0].name }];
+    const points = spec.layer[1];
+    points.transform = [
+        ...(points.transform ?? []),
+        { filter: `datum[${JSON.stringify(levelField)}] === ${GEO_LEVEL_SIGNAL}` },
+    ];
+    // Vega-Lite reads a scale's domain from the filtered rows, so a nominal
+    // colour would re-key on every swap. Pin it to the whole table's values.
+    const color = points.encoding?.color;
+    if (color?.field && (color.type ?? 'nominal') === 'nominal' && color.scale?.domain === undefined) {
+        const domain = [...new Set(rows.map((row) => row[color.field]).filter((value) => value != null))];
+        color.scale = { ...(color.scale ?? {}), domain };
+    }
+    spec._geoLevels = { signal: GEO_LEVEL_SIGNAL, levels };
+}
+
 /** Point the base + circle layers of a bubble map at the chosen geography. */
 function configureBubble(spec: any, scope: MapScope): void {
     const g = SCOPE_GEO[scope];
@@ -145,15 +190,100 @@ function configureBubble(spec: any, scope: MapScope): void {
     spec.layer[1].projection = { type: g.projection };
 }
 
-/** Point a choropleth's geoshape at the chosen base map. */
-function configureChoropleth(spec: any, scope: MapScope): void {
+export type ChoroplethLevel = 'state' | 'county' | 'auto';
+
+/**
+ * The US choropleth draws the us-atlas TopoJSON, which ships its states and
+ * counties already projected with albersUsa into a 975 × 610 frame. The
+ * chart then uses an identity projection: a pan or zoom only scales and
+ * shifts points, instead of running the composite projection over every
+ * county vertex twice per frame (about 14× cheaper). Navigation converts
+ * between that frame and longitude/latitude through the projection the
+ * atlas documents, so viewports, levels, and focus keep their meaning.
+ */
+const US_ATLAS = {
+    url: 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-albers-10m.json',
+    // The atlas is already in screen orientation (y down), so no reflection.
+    projection: { type: 'identity' },
+    preProjection: { type: 'albersUsa', scale: 1300, translate: [487.5, 305] } as GeoPreProjection,
+};
+
+/**
+ * The atlas keys its features by zero-padded FIPS strings ("06", "06037");
+ * the resolver produces numbers. Read the key as a number before the join.
+ */
+const US_ATLAS_ID_TRANSFORM = { calculate: 'toNumber(datum.id)', as: 'id' };
+
+/**
+ * The US detail levels, coarsest first. A zoom enters the county level once
+ * fewer than `enter` degrees of longitude are visible and leaves it again
+ * only above `exit`.
+ */
+export const US_CHOROPLETH_LEVELS: readonly (GeoLevel & { feature: string; strokeWidth: number })[] = [
+    { name: 'state', feature: 'states', strokeWidth: 0.5 },
+    { name: 'county', feature: 'counties', strokeWidth: 0.2, enter: 20, exit: 28 },
+];
+
+/** Name of the shared join table that every level of a multi-level choropleth reads. */
+const GEO_JOIN_DATASET = '__flint_geo_join';
+
+/**
+ * Point a choropleth's geoshape at the chosen base map. The US TopoJSON also
+ * carries a `counties` object keyed by five-digit FIPS, so the county level
+ * only swaps the feature set (and thins the borders); the world map has no
+ * second level.
+ *
+ * The `auto` level draws one layer per US level, each gated behind the level
+ * signal by a filter, so the hidden level holds no shapes. The navigation
+ * runtime flips the signal as the zoom crosses a level's threshold; the chart
+ * itself never rebuilds, and the projection extent carries the viewer's
+ * place across the swap.
+ */
+function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel = 'state'): void {
     const g = SCOPE_GEO[scope];
     spec.width = g.width;
     spec.height = g.height;
-    spec.data = { url: g.url, format: { type: "topojson", feature: g.feature } };
-    spec.projection = { type: g.projection };
-    if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = g.strokeWidth;
+    const url = scope === 'us' ? US_ATLAS.url : g.url;
+    spec.projection = scope === 'us' ? { ...US_ATLAS.projection } : { type: g.projection };
+    if (scope === 'us') spec._geoPreProjection = US_ATLAS.preProjection;
+    if (scope === 'us' && level === 'auto') {
+        delete spec.mark;
+        spec.data = { name: GEO_JOIN_DATASET };
+        spec.params = [{ name: GEO_LEVEL_SIGNAL, value: US_CHOROPLETH_LEVELS[0].name }];
+        spec.layer = US_CHOROPLETH_LEVELS.map(({ name, feature, strokeWidth }) => ({
+            data: { url, format: { type: "topojson", feature } },
+            transform: [US_ATLAS_ID_TRANSFORM, { filter: geoLevelGate(GEO_LEVEL_SIGNAL, name) }],
+            mark: { type: "geoshape", stroke: "white", strokeWidth },
+        }));
+        spec._geoLevels = {
+            signal: GEO_LEVEL_SIGNAL,
+            levels: US_CHOROPLETH_LEVELS.map(({ name, enter, exit }) => ({
+                name,
+                ...(enter !== undefined ? { enter } : {}),
+                ...(exit !== undefined ? { exit } : {}),
+            })),
+        };
+        return;
+    }
+    const county = scope === 'us' && level === 'county';
+    spec.data = { url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
+    if (scope === 'us') spec.transform = [US_ATLAS_ID_TRANSFORM];
+    if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = county ? 0.2 : g.strokeWidth;
 }
+
+/** Choropleth granularity within the US base map; the world map has countries only. */
+const levelProperty: ChartPropertyDef = {
+    key: "level",
+    label: "Level",
+    type: "discrete",
+    options: [
+        { value: "state", label: "States" },
+        { value: "county", label: "Counties (FIPS ids)" },
+        { value: "auto", label: "Zoom: states, then counties" },
+    ],
+    defaultValue: "state",
+    check: (ctx) => ({ applicable: ctx.chartProperties?.region !== 'world' }),
+};
 
 export const mapDef: ChartTemplateDef = {
     chart: "Map",
@@ -169,6 +299,7 @@ export const mapDef: ChartTemplateDef = {
         ],
     },
     channels: ["longitude", "latitude", "color", "size", "opacity"],
+    navigation: { geo: true },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
@@ -203,7 +334,15 @@ export const mapDef: ChartTemplateDef = {
         const scope = pickMapScope(ctx.chartProperties, undefined, () => inferBubbleScope(rows, lonField, latField));
 
         configureBubble(spec, scope);
+        // `baseMapUrl` swaps the region's base map for a GeoJSON
+        // FeatureCollection of the host's own (a country's provinces, say);
+        // the projection still fits to it.
+        const baseMapUrl = ctx.chartProperties?.baseMapUrl;
+        if (typeof baseMapUrl === 'string' && baseMapUrl) {
+            spec.layer[0].data = { url: baseMapUrl, format: { type: 'json', property: 'features' } };
+        }
         applyPointEncodings(spec.layer[1], ctx.resolvedEncodings);
+        configureBubbleLevels(spec, ctx.chartProperties, rows);
 
         // Projection controls only apply to the world map; the US map is fixed
         // to albersUsa (which insets Alaska + Hawaii).
@@ -287,12 +426,28 @@ function buildChoroplethJoin(spec: any, ctx: any, resolver: GeoResolver): void {
     if (idField) {
         const joined = rows.map((r) => ({ ...r, __geo_id: resolver(r[idField]) }));
         const lookupFields = [idField, valueField, labelField].filter(Boolean) as string[];
-        spec.transform = [
-            {
-                lookup: 'id',
-                from: { data: { values: joined }, key: '__geo_id', fields: lookupFields },
-            },
-        ];
+        if (Array.isArray(spec.layer)) {
+            // Every level joins the same table: state ids and county FIPS
+            // codes share one numeric id space, so each layer matches its own.
+            spec.datasets = { ...(spec.datasets ?? {}), [GEO_JOIN_DATASET]: joined };
+            for (const layer of spec.layer) {
+                layer.transform = [
+                    ...(layer.transform ?? []),
+                    {
+                        lookup: 'id',
+                        from: { data: { name: GEO_JOIN_DATASET }, key: '__geo_id', fields: lookupFields },
+                    },
+                ];
+            }
+        } else {
+            spec.transform = [
+                ...(spec.transform ?? []),
+                {
+                    lookup: 'id',
+                    from: { data: { values: joined }, key: '__geo_id', fields: lookupFields },
+                },
+            ];
+        }
     }
 
     spec.encoding = {};
@@ -313,6 +468,7 @@ export const choroplethDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["id", "color", "detail"],
+    navigation: { geo: true },
     markCognitiveChannel: 'color',
     semanticInteractions: ({ resolvedEncodings }) => {
         const idField = resolvedEncodings.id?.field;
@@ -349,9 +505,14 @@ export const choroplethDef: ChartTemplateDef = {
             () => inferChoroplethScope(rows, idField),
         );
 
-        configureChoropleth(spec, scope);
+        const requestedLevel = ctx.chartProperties?.level;
+        const level: ChoroplethLevel = requestedLevel === 'county' || requestedLevel === 'auto'
+            ? requestedLevel
+            : 'state';
+        configureChoropleth(spec, scope, level);
+        // County rows carry numeric FIPS ids, which the state resolver passes through.
         const resolver: GeoResolver = scope === 'us' ? resolveUsState : resolveCountry;
         buildChoroplethJoin(spec, ctx, resolver);
     },
-    properties: [regionProperty] as ChartPropertyDef[],
+    properties: [regionProperty, levelProperty] as ChartPropertyDef[],
 };

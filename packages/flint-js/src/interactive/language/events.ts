@@ -121,6 +121,13 @@ export interface DomainGeometry {
     x?: DomainCoordinate;
     y?: DomainCoordinate;
     points?: readonly DomainPoint[];
+    /** The detail level a multi-level projected chart draws for this viewport. */
+    level?: string;
+    /**
+     * On a multi-level projected chart, the coarsest-level region under the
+     * plot centre: its feature id and properties plus the joined row fields.
+     */
+    focus?: Record<string, unknown>;
 }
 
 export interface DomainPoint {

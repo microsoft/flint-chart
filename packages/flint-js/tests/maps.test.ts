@@ -45,7 +45,7 @@ function buildChoropleth(
   }) as any;
 
   const joined = new Map<any, any>();
-  const values = spec?.transform?.[0]?.from?.data?.values ?? [];
+  const values = spec?.transform?.find((transform: any) => transform.lookup)?.from?.data?.values ?? [];
   for (const r of values) joined.set(r[idField], r.__geo_id);
 
   return {
@@ -67,7 +67,7 @@ describe('choropleth maps from names', () => {
     const r = buildChoropleth(rows, 'state', 'pop', 'State');
 
     expect(r.feature).toBe('states');
-    expect(r.projection).toBe('albersUsa');
+    expect(r.projection).toBe('identity');
     expect(r.joined.get('California')).toBe(6);
     expect(r.joined.get('Texas')).toBe(48);
     expect(r.joined.get('New York')).toBe(36);
@@ -83,7 +83,7 @@ describe('choropleth maps from names', () => {
     const r = buildChoropleth(rows, 'st', 'pop', 'State');
 
     expect(r.feature).toBe('states');
-    expect(r.projection).toBe('albersUsa');
+    expect(r.projection).toBe('identity');
     expect(r.joined.get('CA')).toBe(6);
     expect(r.joined.get('tx')).toBe(48);
     expect(r.joined.get('NY')).toBe(36);
@@ -135,7 +135,7 @@ describe('choropleth maps from names', () => {
     // 'auto' on the same data resolves back to the US frame.
     const auto = buildChoropleth(usNames, 'state', 'pop', 'State', 'auto');
     expect(auto.feature).toBe('states');
-    expect(auto.projection).toBe('albersUsa');
+    expect(auto.projection).toBe('identity');
   });
 
   it('colors the geoshape by the measure and keeps the TopoJSON as base data', () => {
@@ -145,11 +145,11 @@ describe('choropleth maps from names', () => {
     ];
     const { spec } = buildChoropleth(rows, 'state', 'pop', 'State');
 
-    expect(spec.data?.url).toContain('us-10m.json');
+    expect(spec.data?.url).toContain('us-atlas');
     expect(spec.mark?.type).toBe('geoshape');
     expect(spec.encoding?.color?.field).toBe('pop');
-    expect(spec.transform?.[0]?.lookup).toBe('id');
-    expect(spec.transform?.[0]?.from?.key).toBe('__geo_id');
+    expect(spec.transform?.find((transform: any) => transform.lookup)?.lookup).toBe('id');
+    expect(spec.transform?.find((transform: any) => transform.lookup)?.from?.key).toBe('__geo_id');
   });
 
   it('keeps a declared quantitative color domain stable and centered', () => {
@@ -254,5 +254,36 @@ describe('choropleth lookup robustness', () => {
     expect(r.joined.get('Qatar')).toBe(634);
     expect(r.joined.get('Croatia')).toBe(191);
     expect(r.joined.get('Taiwan')).toBe(158);
+  });
+});
+
+describe('Choropleth level', () => {
+  const rows = [
+    { FIPS: 1079, County: 'Lawrence, AL', Value: 0.23 },
+    { FIPS: 6037, County: 'Los Angeles, CA', Value: -0.5 },
+  ];
+  const build = (chartProperties: Record<string, unknown>) => assembleVegaLite({
+    data: { values: rows },
+    semantic_types: { FIPS: 'Category', County: 'Category', Value: 'Quantity' },
+    chart_spec: {
+      chartType: 'Choropleth',
+      encodings: { id: 'FIPS', color: 'Value', detail: 'County' },
+      chartProperties,
+    },
+  } as any) as any;
+
+  it('draws counties from the same pre-projected US atlas and passes numeric FIPS ids through', () => {
+    const spec = build({ region: 'us', level: 'county' });
+    expect(spec.data.url).toContain('counties-albers-10m');
+    expect(spec.data.format.feature).toBe('counties');
+    expect(spec.projection.type).toBe('identity');
+    expect(spec.mark.strokeWidth).toBe(0.2);
+    const joined = spec.transform.find((transform: any) => transform.lookup).from.data.values;
+    expect(joined.map((row: any) => row.__geo_id)).toEqual([1079, 6037]);
+  });
+
+  it('keeps the state layer by default and on the world map', () => {
+    expect(build({ region: 'us' }).data.format.feature).toBe('states');
+    expect(build({ region: 'world', level: 'county' }).data.format.feature).toBe('countries');
   });
 });

@@ -77,3 +77,22 @@
   font-size: 10px;
   text-align: right;
 }
+
+.exploded-detail-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+}
+
+.exploded-detail-slider input[type='range'] {
+  width: 120px;
+  margin: 0;
+  accent-color: #2f5f47;
+}
+
+.exploded-detail-slider-value {
+  min-width: 84px;
+  color: #2f5f47;
+  font-variant-numeric: tabular-nums;
+}

@@ -32,6 +32,14 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
+import {
+    GEO_AXIS_SCALES,
+    GEO_EXTENT_SIGNAL,
+    GEO_PROJECTION_SIGNAL,
+    geoLevelGate,
+    type GeoLevelConfig,
+    type GeoPreProjection,
+} from './navigation-geo';
 
 const CLEAR_MARK = '__flint_interaction_clear';
 const LEGEND_ENTRY_MARK = '__flint_legend_entry';
@@ -53,6 +61,9 @@ interface TemplateInteractionSemantics {
     annotationMarkType?: string;
     supportedRegionGestures?: ('cartesian' | 'angular')[];
     navigationAxes?: ('x' | 'y')[];
+    geoNavigation?: boolean;
+    geoLevels?: GeoLevelConfig;
+    geoPreProjection?: GeoPreProjection;
     reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
     reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
     renderHoverStyles?: Record<string, HoverStyle>;
@@ -509,6 +520,9 @@ export function addVegaLiteInteractions(
         selectionBoundary: templateSemantics.selectionBoundary,
         continuousColorFocus: templateSemantics.continuousColorFocus,
         navigationChannels: [...requestedNavigationAxes],
+        geoNavigation: templateSemantics.geoNavigation ?? false,
+        geoLevels: templateSemantics.geoLevels,
+        geoPreProjection: templateSemantics.geoPreProjection,
         angularXBrush: templateSemantics.supportedRegionGestures?.includes('angular') ?? false,
         reorderAxis: hasElementDrag && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
@@ -568,6 +582,80 @@ export function injectVegaNavigationSignals(
         result[channel] = { scale: scale.name, signal, type: scale.type };
     }
     return result;
+}
+
+/**
+ * Geo navigation keeps Vega-Lite's automatic `fit`, but feeds it an extent
+ * signal instead of the fixed `[width, height]` size. Panning shifts that
+ * extent in pixels and zooming scales it about an anchor, so the fitted
+ * projection follows without the base scale and translate ever being known at
+ * compile time. A second signal copies the live projection (`copy()` tracks
+ * the projection as a dependency) so the runtime can invert pixels exactly.
+ */
+export function injectVegaGeoNavigationSignals(
+    vegaSpec: Record<string, any>,
+    channels: readonly ('x' | 'y')[] = [],
+): Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> {
+    const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
+    const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
+    if (!projection || !projection.fit) {
+        throw new Error('Vega geo navigation requires a fitted top-level projection.');
+    }
+    vegaSpec.signals = [
+        ...(vegaSpec.signals ?? []),
+        { name: GEO_EXTENT_SIGNAL, value: null },
+        { name: GEO_PROJECTION_SIGNAL, update: `copy(${JSON.stringify(projection.name)})` },
+    ];
+    projection.extent = { signal: `${GEO_EXTENT_SIGNAL} || [[0, 0], [width, height]]` };
+    delete projection.size;
+    const result: Partial<Record<'x' | 'y', import('./contracts').VegaNavigationAxis>> = {};
+    for (const channel of channels) {
+        result[channel] = { scale: GEO_AXIS_SCALES[channel], signal: GEO_EXTENT_SIGNAL, type: 'geo' };
+    }
+    return result;
+}
+
+/**
+ * A chart with runtime detail levels gates each level's rows behind a filter
+ * on the level signal, so a hidden level costs nothing per frame. The fitted
+ * projection must not follow that gate: it would refit to whichever level is
+ * showing, and the map would shift by the difference between the levels'
+ * outlines on every swap. A choropleth gates its coarsest shapes at their own
+ * source, so that gate moves downstream and the projection fits the ungated
+ * source alone. A bubble map gates only its points, so the projection fits
+ * the base shapes. Either way the fitted dataset is recorded on the config as
+ * the source of focus regions.
+ */
+export function injectVegaGeoLevelFit(vegaSpec: Record<string, any>, levels: GeoLevelConfig): void {
+    const coarsest = levels.levels[0]?.name;
+    if (coarsest === undefined) return;
+    const gate = geoLevelGate(levels.signal, coarsest);
+    const datasets: any[] = Array.isArray(vegaSpec.data) ? vegaSpec.data : [];
+    const marks: any[] = Array.isArray(vegaSpec.marks) ? vegaSpec.marks : [];
+    const isGate = (transform: any): boolean => transform?.type === 'filter' && transform.expr === gate;
+    const gated = datasets.findIndex((dataset) => dataset.transform?.some(isGate));
+    let fitSource: string | undefined;
+    if (gated >= 0) {
+        const source = datasets[gated];
+        const derived = {
+            name: `${source.name}_${coarsest}`,
+            source: source.name,
+            transform: source.transform.filter(isGate),
+        };
+        source.transform = source.transform.filter((transform: any) => !isGate(transform));
+        datasets.splice(gated + 1, 0, derived);
+        for (const mark of marks) {
+            if (mark.from?.data === source.name) mark.from.data = derived.name;
+        }
+        fitSource = source.name;
+    } else {
+        fitSource = marks.find((mark) => mark.type === 'shape')?.from?.data;
+    }
+    if (!fitSource) return;
+    const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
+    const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
+    if (projection) projection.fit = { signal: `data(${JSON.stringify(fitSource)})` };
+    levels.source = fitSource;
 }
 
 export function collectVegaAxisTargets(

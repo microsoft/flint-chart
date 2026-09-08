@@ -69,8 +69,9 @@ import {
     type SpatialDirection,
 } from './hit-adapter';
 import { isInteractiveControlTarget, mountVegaRegionGesture } from './gestures/region';
-import { mountVegaNavigationGesture } from './gestures/navigation';
-import { createVegaNavigationController } from './navigation-scale';
+import { mountVegaNavigationGesture, resolvedNavigationAxes } from './gestures/navigation';
+import { createVegaNavigationController, type NavigationApplyOptions } from './navigation-scale';
+import { createVegaGeoNavigationController } from './navigation-geo';
 import { createAnnotationOverlay } from './presentation/annotation-overlay';
 import {
     createDragReorderOverlay,
@@ -180,9 +181,12 @@ export function resolveSupportedOperation(
             op: {
                 ...op,
                 axes,
-                value: Object.fromEntries(supportedAxes
-                    .filter((axis) => op.value[axis] !== undefined)
-                    .map((axis) => [axis, op.value[axis]])),
+                value: {
+                    ...Object.fromEntries(supportedAxes
+                        .filter((axis) => op.value[axis] !== undefined)
+                        .map((axis) => [axis, op.value[axis]])),
+                    ...(op.value.region ? { region: op.value.region } : {}),
+                },
             },
             unsupported: supportedAxes.length < requestedAxes.length,
         };
@@ -513,6 +517,23 @@ export function evictRetainedStateSiblings(
     return siblings;
 }
 
+const hasViewportOp = (update: ChartUpdate): boolean => update.ops.some((op) => op.op === 'set-viewport');
+
+/**
+ * Drop the `set-viewport` ops of every retained update except `exceptId`, and
+ * the updates that held nothing else. Retained updates apply in insertion
+ * order, so without this an older viewport stored after a newer one's id
+ * would keep winning every render.
+ */
+export function supersedeRetainedViewports(retained: Map<string, ChartUpdate>, exceptId: string): void {
+    for (const [id, update] of [...retained]) {
+        if (id === exceptId || !hasViewportOp(update)) continue;
+        const ops = update.ops.filter((op) => op.op !== 'set-viewport');
+        if (ops.length === 0) retained.delete(id);
+        else retained.set(id, { ...update, ops });
+    }
+}
+
 export function mountVegaInteractions(
     view: any,
     container: HTMLElement,
@@ -578,6 +599,12 @@ export function mountVegaInteractions(
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
+    // A click on the plot background that hits no mark can reset the viewport.
+    const backgroundResetInteraction = navigationInteraction
+        && (navigationInteraction.eventSource.reset === 'click-background'
+            || navigationInteraction.eventSource.reset === 'both')
+        ? navigationInteraction
+        : undefined;
     const elementDragInteraction = elementDragInteractions[0];
     const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
         resolveAssistDistance(eligible, assistDistance);
@@ -714,7 +741,9 @@ export function mountVegaInteractions(
                 layer.get(regionInteraction.id)?.ops.some((op) => op.op === 'set-viewport'))),
         reset: resetViewportRegion,
     });
-    const navigationController = createVegaNavigationController(view, plan.navigationAxes ?? {});
+    const navigationController = plan.geoNavigation
+        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {}, plan.geoLevels, plan.geoPreProjection)
+        : createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
     const renderLegendRange = (): void => legendRangeOverlay.render(selectedLegend, hoveredLegend);
@@ -753,16 +782,24 @@ export function mountVegaInteractions(
         return [...selectedElements].flatMap(([key, element]) => keys.has(key) ? [element] : []);
     };
     const context = (includeAvailable = true, interaction?: CanvasInteractionDef) => {
-        // Navigation resolves per gesture frame, so the scenegraph scan stays behind this flag.
-        const available = includeAvailable
-            ? (() => {
+        // The scan behind `available` walks the whole scene and resolves
+        // provenance for every mark, which a county map turns into hundreds of
+        // milliseconds. Most handlers never read it, and navigation never may
+        // (the flag), so it runs on first access only.
+        let availableScanned = false;
+        let available: readonly SemanticElement[] | undefined;
+        const scanAvailable = (): readonly SemanticElement[] | undefined => {
+            if (!includeAvailable) return undefined;
+            if (!availableScanned) {
+                availableScanned = true;
                 const hits = allHits();
-                return withSourceProvenance(resolve?.(
+                available = withSourceProvenance(resolve?.(
                     { gesture: 'rectangle', role: 'region', hits },
                     resolveContext(hits),
                 ) ?? null)?.elements;
-            })()
-            : undefined;
+            }
+            return available;
+        };
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         const currentReorderAxes = reorderAxes.map((axis) => {
             const signaledOrder = view.signal(axis.signal);
@@ -785,7 +822,7 @@ export function mountVegaInteractions(
         return {
             chartType,
             selected: interaction ? selectedForInteraction(interaction) : [...selectedElements.values()],
-            available,
+            get available() { return scanAvailable(); },
             resolveGroupValue: plan.resolveGroupValue,
             resolveNavigation: navigationController.resolve,
             categoryField: plan.categoryField,
@@ -960,7 +997,7 @@ export function mountVegaInteractions(
         const reorderAxes = plan.reorderAxes ?? (plan.reorderAxis ? [plan.reorderAxis] : []);
         for (const axis of reorderAxes) view.signal(axis.signal, null);
         for (const axis of Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[]) {
-            navigationController.apply({ op: 'set-viewport', axes: axis, value: {} });
+            navigationController.apply({ op: 'set-viewport', axes: axis, value: {} }, { baseline: true });
         }
         for (const update of displayUpdates) {
             for (const op of update.ops) {
@@ -1043,7 +1080,7 @@ export function mountVegaInteractions(
                         }
                     }
                 } else if (op.op === 'set-viewport') {
-                    navigationController.apply(op);
+                    navigationController.apply(op, transitionOptionsFor(update.id));
                 } else if (op.op === 'set-order' && op.scope === 'category') {
                     const axis = reorderAxes.find((candidate) => candidate.field === op.field);
                     if (axis) view.signal(axis.signal, op.values);
@@ -1175,16 +1212,45 @@ export function mountVegaInteractions(
         }
     };
 
+    // A host may ask for one update's viewport to animate. Only that update's
+    // op gets the tween; the render still re-applies every retained viewport.
+    let pendingTransition: { id: string; duration: number } | undefined;
+    const transitionOptionsFor = (id: string): NavigationApplyOptions | undefined =>
+        pendingTransition && pendingTransition.id === id
+            ? { transition: { duration: pendingTransition.duration, onFrame: emitTransitionFrame } }
+            : undefined;
+
     const storeUpdate = async (
         update: ChartUpdate,
         destination: Map<string, ChartUpdate>,
         legendSelection: LegendHitIdentity | null = null,
+        options?: ChartUpdateApplyOptions,
+        waitForTransition = true,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
-        const presented = presentUpdate(resolved.update, context());
+        // A viewport-only update presents nothing that needs the scene's
+        // available elements; skipping that scan keeps navigation frames cheap
+        // on dense charts (a county map has thousands of shapes).
+        const needsAvailable = update.ops.some((op) => op.op !== 'set-viewport');
+        const presented = presentUpdate(resolved.update, context(needsAvailable));
+        // A chart shows one viewport. A host's set-viewport (a reset button, a
+        // report's framing) must not keep overriding the gestures that follow
+        // it, and a gesture's retained viewport must yield to a later host
+        // update, so the newest viewport retires every other retained one.
+        if (hasViewportOp(update)) supersedeRetainedViewports(retainedUpdates, update.id);
         destination.set(update.id, presented);
         if (legendSelection) selectedLegend = legendSelection;
-        await renderUpdates();
+        pendingTransition = options?.transition
+            ? { id: update.id, duration: options.transition.duration }
+            : undefined;
+        try {
+            await renderUpdates();
+        } finally {
+            pendingTransition = undefined;
+        }
+        // A host's update settles with its last frame, so it can chain on it;
+        // a gesture's tween runs on, so the next gesture is not held behind it.
+        if (options?.transition && waitForTransition) await navigationController.settled?.();
         return resolved.result;
     };
 
@@ -1193,6 +1259,7 @@ export function mountVegaInteractions(
         phase: import('../../interactive/interactions').InteractionPhase,
         update: ChartUpdate | null,
         legendSelection: LegendHitIdentity | null = null,
+        options?: ChartUpdateApplyOptions,
     ): Promise<void> => {
         if (phase === 'cancel') {
             if (previewUpdates.delete(interaction.id)) await renderUpdates();
@@ -1208,7 +1275,7 @@ export function mountVegaInteractions(
                     if (sibling.claimsLegendActivation) selectedLegend = null;
                 }
             }
-            await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection);
+            await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection, options, false);
             return;
         }
         if (phase === 'commit') {
@@ -1250,7 +1317,39 @@ export function mountVegaInteractions(
     );
     // A region can be read as data domains, which is what viewport updates need.
     const domainForGeometry = (plot: CanvasInteractionEvent['geometry']['plot']) =>
-        domainForPlotGeometry(plot, plan.navigationAxes, (name) => view.scale(name), plan.overlayScales);
+        domainForPlotGeometry(
+            plot,
+            plan.navigationAxes,
+            (name) => navigationController.scale?.(name) ?? view.scale(name),
+            plan.overlayScales,
+        );
+    /**
+     * The viewport a change resulted in: the visible data domain of the plot
+     * rectangle, and on a multi-level map the level and the focus region.
+     */
+    const withViewportState = (base: CanvasInteractionEvent): CanvasInteractionEvent => {
+        const space = coordinateSpace();
+        const domain = domainForGeometry({
+            kind: 'rect',
+            rect: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
+            axis: 'xy',
+        });
+        const level = navigationController.level?.();
+        const focus = navigationController.focus?.();
+        const resolvedDomain = domain || level !== undefined
+            ? { ...domain, ...(level !== undefined ? { level } : {}), ...(focus ? { focus } : {}) }
+            : undefined;
+        return resolvedDomain ? { ...base, geometry: { ...base.geometry, domain: resolvedDomain } } : base;
+    };
+    /** A frame of a host-requested viewport tween reports like a zoom or reset gesture. */
+    const emitTransitionFrame = (phase: 'preview' | 'commit', operation: 'zoom' | 'reset'): void => {
+        if (!navigationInteraction) return;
+        const base = toCanvasInteractionEvent(
+            { type: 'navigation', phase, operation, axes: 'xy' },
+            navigationInteraction.eventSource,
+        );
+        emitCanvasInteractionEvent(navigationInteraction, withViewportState(base));
+    };
     const dispatch = async (
         interaction: CanvasInteractionDef,
         event: SemanticInteractionEvent,
@@ -1271,17 +1370,62 @@ export function mountVegaInteractions(
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
     };
     let navigationDispatch = Promise.resolve();
+    // Navigation frames queue behind the render they trigger. While one is in
+    // flight, later frames of the same kind merge (pan deltas add, zoom factors
+    // multiply) so a burst of wheel ticks or pointer moves never builds a backlog.
+    const navigationQueue: NavigationInteractionEvent[] = [];
+    let navigationDraining = false;
+    const mergeNavigationEvents = (
+        previous: NavigationInteractionEvent,
+        next: NavigationInteractionEvent,
+    ): NavigationInteractionEvent | null => {
+        if (previous.phase !== next.phase || previous.operation !== next.operation
+            || previous.axes !== next.axes) return null;
+        if (next.operation === 'pan' && previous.delta && next.delta) {
+            return { ...next, delta: { x: previous.delta.x + next.delta.x, y: previous.delta.y + next.delta.y } };
+        }
+        if (next.operation === 'zoom' && previous.factor && next.factor && previous.anchor && next.anchor) {
+            return { ...next, factor: previous.factor * next.factor };
+        }
+        return null;
+    };
     const dispatchNavigation = (
         interaction: CanvasInteractionDef,
         event: NavigationInteractionEvent,
     ): Promise<void> => {
-        const run = async (): Promise<void> => {
-            const canvasEvent = toCanvasInteractionEvent(event, interaction.eventSource);
-            emitCanvasInteractionEvent(interaction, canvasEvent);
-            const request = interaction.handle?.(canvasEvent, context(false)) ?? null;
-            await applyInteractionUpdate(interaction, event.phase, request);
+        const run = async (event: NavigationInteractionEvent): Promise<void> => {
+            const base = toCanvasInteractionEvent(event, interaction.eventSource);
+            const request = interaction.handle?.(base, context(false)) ?? null;
+            // A reset may tween home; its frames then report themselves.
+            const transition = event.operation === 'reset' && event.phase === 'commit' && request
+                ? interaction.navigationResetTransition
+                : undefined;
+            await applyInteractionUpdate(interaction, event.phase, request, null, transition ? { transition } : undefined);
+            if (transition) return;
+            // The event reports the viewport that resulted from the gesture.
+            emitCanvasInteractionEvent(interaction, withViewportState(base));
         };
-        navigationDispatch = navigationDispatch.then(run, run);
+        const drain = async (): Promise<void> => {
+            if (navigationDraining) return;
+            navigationDraining = true;
+            try {
+                while (navigationQueue.length > 0) {
+                    const next = navigationQueue.shift()!;
+                    try {
+                        await run(next);
+                    } catch {
+                        // A failed frame must not stall the frames behind it.
+                    }
+                }
+            } finally {
+                navigationDraining = false;
+            }
+        };
+        const last = navigationQueue[navigationQueue.length - 1];
+        const merged = last ? mergeNavigationEvents(last, event) : null;
+        if (merged) navigationQueue[navigationQueue.length - 1] = merged;
+        else navigationQueue.push(event);
+        navigationDispatch = navigationDraining ? navigationDispatch : drain();
         return navigationDispatch;
     };
     const resolveTarget = (
@@ -1537,7 +1681,8 @@ export function mountVegaInteractions(
         return show === 'single' || typeof show === 'object';
     });
     const clickHandler = (event: MouseEvent, item: any): void => {
-        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0) || suppressClick) return;
+        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0
+            && !backgroundResetInteraction) || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
@@ -1559,6 +1704,21 @@ export function mountVegaInteractions(
             resolveTarget('click', 'legend-item', [], legend),
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
+        if (backgroundResetInteraction && !target && !legend) {
+            const space = coordinateSpace();
+            const inPlot = point.x >= 0 && point.x <= space.plotWidth
+                && point.y >= 0 && point.y <= space.plotHeight;
+            if (inPlot) {
+                void dispatchNavigation(backgroundResetInteraction, {
+                    type: 'navigation', phase: 'commit', operation: 'reset',
+                    axes: resolvedNavigationAxes(
+                        backgroundResetInteraction.eventSource.axes,
+                        Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
+                    ),
+                    modifiers: normalized.event.modifiers,
+                });
+            }
+        }
         for (const interaction of markClickInteractions) {
             const affordanceTarget = legend ? 'legend-item' : 'mark';
             if (!resolveInteractionAffordance([interaction], affordanceTarget)) continue;
@@ -1896,7 +2056,7 @@ export function mountVegaInteractions(
     if (contextInteractions.length > 0) {
         container.addEventListener('contextmenu', contextHandler);
     }
-    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
+    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
         view.addEventListener('click', clickHandler);
     }
     if (hoverPresentationInteractions.length > 0) {
@@ -2400,7 +2560,7 @@ export function mountVegaInteractions(
     observeRenderer();
 
     const destroy = (): void => {
-        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
+        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
             view.removeEventListener('click', clickHandler);
         }
         if (hoverPresentationInteractions.length > 0) {
@@ -2483,7 +2643,7 @@ export function mountVegaInteractions(
     };
     return {
         getInteractionContext: context,
-        applyUpdate: (update, _options) => storeUpdate(update, retainedUpdates),
+        applyUpdate: (update, options) => storeUpdate(update, retainedUpdates, null, options),
         setUpdates: replaceUpdates,
         clearUpdate,
         refresh: () => {

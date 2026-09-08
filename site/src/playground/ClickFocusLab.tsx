@@ -995,7 +995,11 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const visibleCases = mode === 'navigate' || mode === 'brush-zoom'
+  // Pan & zoom lists every curated navigation case, including charts the
+  // preset cannot drive yet (maps), so their unsupported status stays visible.
+  const visibleCases = mode === 'navigate'
+      ? navigationCases
+    : mode === 'brush-zoom'
       ? navigationCases.filter((item) => navigationAxesByCase.has(item.id))
       : mode === 'drag-reorder'
         ? interactionCases.filter((item) => reorderAxesByCase.has(item.id))
