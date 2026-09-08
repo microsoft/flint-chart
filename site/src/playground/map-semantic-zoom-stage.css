@@ -1,0 +1,75 @@
+.map-semantic-zoom-shell {
+  gap: 14px;
+}
+
+.map-semantic-zoom-viewport {
+  position: relative;
+  height: 100%;
+}
+
+.map-semantic-zoom-viewport .map-semantic-zoom-mount {
+  min-height: 560px;
+  border: 1px solid #edf0f2;
+  border-radius: 8px;
+  background: #fcfcfd;
+}
+
+.map-semantic-zoom-status {
+  color: #67727c;
+  cursor: default;
+}
+
+.map-semantic-zoom-breadcrumbs {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(216, 221, 226, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 6px 20px rgba(24, 35, 28, 0.08);
+  color: #758089;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.map-semantic-zoom-crumb {
+  border: 0;
+  background: transparent;
+  color: #65707a;
+  font-size: 10px;
+  font-weight: 600;
+  pointer-events: auto;
+}
+
+button.map-semantic-zoom-crumb {
+  cursor: pointer;
+}
+
+.map-semantic-zoom-crumb[data-active='true'] {
+  color: #2f5f47;
+}
+
+.map-semantic-zoom-credit {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 11px;
+  border: 1px solid #e6eaed;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.map-semantic-zoom-credit strong {
+  color: #2d3439;
+  font-size: 11px;
+}
+
+.map-semantic-zoom-credit span {
+  color: #67727c;
+  font-size: 10px;
+  line-height: 1.45;
+}

@@ -1284,10 +1284,20 @@ export function mountVegaInteractions(
         event: NavigationInteractionEvent,
     ): Promise<void> => {
         const run = async (): Promise<void> => {
-            const canvasEvent = toCanvasInteractionEvent(event, interaction.eventSource);
-            emitCanvasInteractionEvent(interaction, canvasEvent);
-            const request = interaction.handle?.(canvasEvent, context(false)) ?? null;
+            const base = toCanvasInteractionEvent(event, interaction.eventSource);
+            const request = interaction.handle?.(base, context(false)) ?? null;
             await applyInteractionUpdate(interaction, event.phase, request);
+            // The event reports the viewport that resulted from the gesture: the
+            // visible data domain of the plot rectangle, read after the update.
+            const space = coordinateSpace();
+            const domain = domainForGeometry({
+                kind: 'rect',
+                rect: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
+                axis: 'xy',
+            });
+            emitCanvasInteractionEvent(interaction, domain
+                ? { ...base, geometry: { ...base.geometry, domain } }
+                : base);
         };
         navigationDispatch = navigationDispatch.then(run, run);
         return navigationDispatch;

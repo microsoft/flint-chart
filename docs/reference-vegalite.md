@@ -464,3 +464,4 @@ The **Availability** column shows whether a parameter is `always` available or `
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
+| `level` | choice | `state` (States), `county` (Counties (FIPS ids)) | `state` | conditional | Level |

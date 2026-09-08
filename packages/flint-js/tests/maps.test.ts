@@ -256,3 +256,34 @@ describe('choropleth lookup robustness', () => {
     expect(r.joined.get('Taiwan')).toBe(158);
   });
 });
+
+describe('Choropleth level', () => {
+  const rows = [
+    { FIPS: 1079, County: 'Lawrence, AL', Value: 0.23 },
+    { FIPS: 6037, County: 'Los Angeles, CA', Value: -0.5 },
+  ];
+  const build = (chartProperties: Record<string, unknown>) => assembleVegaLite({
+    data: { values: rows },
+    semantic_types: { FIPS: 'Category', County: 'Category', Value: 'Quantity' },
+    chart_spec: {
+      chartType: 'Choropleth',
+      encodings: { id: 'FIPS', color: 'Value', detail: 'County' },
+      chartProperties,
+    },
+  } as any) as any;
+
+  it('draws counties from the same US TopoJSON and passes numeric FIPS ids through', () => {
+    const spec = build({ region: 'us', level: 'county' });
+    expect(spec.data.url).toContain('us-10m.json');
+    expect(spec.data.format.feature).toBe('counties');
+    expect(spec.projection.type).toBe('albersUsa');
+    expect(spec.mark.strokeWidth).toBe(0.2);
+    const joined = spec.transform[0].from.data.values;
+    expect(joined.map((row: any) => row.__geo_id)).toEqual([1079, 6037]);
+  });
+
+  it('keeps the state layer by default and on the world map', () => {
+    expect(build({ region: 'us' }).data.format.feature).toBe('states');
+    expect(build({ region: 'world', level: 'county' }).data.format.feature).toBe('countries');
+  });
+});

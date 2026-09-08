@@ -145,15 +145,36 @@ function configureBubble(spec: any, scope: MapScope): void {
     spec.layer[1].projection = { type: g.projection };
 }
 
-/** Point a choropleth's geoshape at the chosen base map. */
-function configureChoropleth(spec: any, scope: MapScope): void {
+export type ChoroplethLevel = 'state' | 'county';
+
+/**
+ * Point a choropleth's geoshape at the chosen base map. The US TopoJSON also
+ * carries a `counties` object keyed by five-digit FIPS, so the county level
+ * only swaps the feature set (and thins the borders); the world map has no
+ * second level.
+ */
+function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel = 'state'): void {
     const g = SCOPE_GEO[scope];
+    const county = scope === 'us' && level === 'county';
     spec.width = g.width;
     spec.height = g.height;
-    spec.data = { url: g.url, format: { type: "topojson", feature: g.feature } };
+    spec.data = { url: g.url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
     spec.projection = { type: g.projection };
-    if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = g.strokeWidth;
+    if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = county ? 0.2 : g.strokeWidth;
 }
+
+/** Choropleth granularity within the US base map; the world map has countries only. */
+const levelProperty: ChartPropertyDef = {
+    key: "level",
+    label: "Level",
+    type: "discrete",
+    options: [
+        { value: "state", label: "States" },
+        { value: "county", label: "Counties (FIPS ids)" },
+    ],
+    defaultValue: "state",
+    check: (ctx) => ({ applicable: ctx.chartProperties?.region !== 'world' }),
+};
 
 export const mapDef: ChartTemplateDef = {
     chart: "Map",
@@ -351,9 +372,11 @@ export const choroplethDef: ChartTemplateDef = {
             () => inferChoroplethScope(rows, idField),
         );
 
-        configureChoropleth(spec, scope);
+        const level: ChoroplethLevel = ctx.chartProperties?.level === 'county' ? 'county' : 'state';
+        configureChoropleth(spec, scope, level);
+        // County rows carry numeric FIPS ids, which the state resolver passes through.
         const resolver: GeoResolver = scope === 'us' ? resolveUsState : resolveCountry;
         buildChoroplethJoin(spec, ctx, resolver);
     },
-    properties: [regionProperty] as ChartPropertyDef[],
+    properties: [regionProperty, levelProperty] as ChartPropertyDef[],
 };

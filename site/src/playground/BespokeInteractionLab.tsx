@@ -4,6 +4,7 @@ import { FisheyeZoomStage } from './FisheyeZoomStage';
 import { ExplodedDetailStage } from './ExplodedDetailStage';
 import { IndexChartStage } from './IndexChartStage';
 import { YouDrawItStage } from './YouDrawItStage';
+import { MapSemanticZoomStage } from './MapSemanticZoomStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -109,6 +110,24 @@ export function BespokeInteractionLab() {
             <span className="bespoke-status">Case 05</span>
           </header>
           <YouDrawItStage />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>Semantic zoom: states to counties</h2>
+              <p>
+                Zoom the US map; once the view narrows enough, the state choropleth becomes a county
+                choropleth at the same place, using Chetty &amp; Hendren’s childhood-exposure data.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Level swap: external in → Flint out</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 06</span>
+          </header>
+          <MapSemanticZoomStage />
         </article>
       </div>
     </div>
