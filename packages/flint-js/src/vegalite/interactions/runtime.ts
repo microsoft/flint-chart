@@ -1184,7 +1184,11 @@ export function mountVegaInteractions(
         legendSelection: LegendHitIdentity | null = null,
     ): Promise<ChartUpdateResult> => {
         const resolved = resolveUpdate(update);
-        const presented = presentUpdate(resolved.update, context());
+        // A viewport-only update presents nothing that needs the scene's
+        // available elements; skipping that scan keeps navigation frames cheap
+        // on dense charts (a county map has thousands of shapes).
+        const needsAvailable = update.ops.some((op) => op.op !== 'set-viewport');
+        const presented = presentUpdate(resolved.update, context(needsAvailable));
         destination.set(update.id, presented);
         if (legendSelection) selectedLegend = legendSelection;
         await renderUpdates();
@@ -1279,11 +1283,30 @@ export function mountVegaInteractions(
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
     };
     let navigationDispatch = Promise.resolve();
+    // Navigation frames queue behind the render they trigger. While one is in
+    // flight, later frames of the same kind merge (pan deltas add, zoom factors
+    // multiply) so a burst of wheel ticks or pointer moves never builds a backlog.
+    const navigationQueue: NavigationInteractionEvent[] = [];
+    let navigationDraining = false;
+    const mergeNavigationEvents = (
+        previous: NavigationInteractionEvent,
+        next: NavigationInteractionEvent,
+    ): NavigationInteractionEvent | null => {
+        if (previous.phase !== next.phase || previous.operation !== next.operation
+            || previous.axes !== next.axes) return null;
+        if (next.operation === 'pan' && previous.delta && next.delta) {
+            return { ...next, delta: { x: previous.delta.x + next.delta.x, y: previous.delta.y + next.delta.y } };
+        }
+        if (next.operation === 'zoom' && previous.factor && next.factor && previous.anchor && next.anchor) {
+            return { ...next, factor: previous.factor * next.factor };
+        }
+        return null;
+    };
     const dispatchNavigation = (
         interaction: CanvasInteractionDef,
         event: NavigationInteractionEvent,
     ): Promise<void> => {
-        const run = async (): Promise<void> => {
+        const run = async (event: NavigationInteractionEvent): Promise<void> => {
             const base = toCanvasInteractionEvent(event, interaction.eventSource);
             const request = interaction.handle?.(base, context(false)) ?? null;
             await applyInteractionUpdate(interaction, event.phase, request);
@@ -1299,7 +1322,27 @@ export function mountVegaInteractions(
                 ? { ...base, geometry: { ...base.geometry, domain } }
                 : base);
         };
-        navigationDispatch = navigationDispatch.then(run, run);
+        const drain = async (): Promise<void> => {
+            if (navigationDraining) return;
+            navigationDraining = true;
+            try {
+                while (navigationQueue.length > 0) {
+                    const next = navigationQueue.shift()!;
+                    try {
+                        await run(next);
+                    } catch {
+                        // A failed frame must not stall the frames behind it.
+                    }
+                }
+            } finally {
+                navigationDraining = false;
+            }
+        };
+        const last = navigationQueue[navigationQueue.length - 1];
+        const merged = last ? mergeNavigationEvents(last, event) : null;
+        if (merged) navigationQueue[navigationQueue.length - 1] = merged;
+        else navigationQueue.push(event);
+        navigationDispatch = navigationDraining ? navigationDispatch : drain();
         return navigationDispatch;
     };
     const resolveTarget = (

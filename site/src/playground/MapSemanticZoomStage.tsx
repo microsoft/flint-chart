@@ -160,7 +160,9 @@ export function MapSemanticZoomStage() {
     mount.addEventListener('flint-interaction', handleInteraction);
     const surface = buildInteractiveChart(mount, INPUTS[level](), {
       backend: 'vegalite',
-      renderer: 'svg',
+      // Thousands of county shapes redraw on every pan/zoom frame; canvas
+      // avoids the per-path SVG DOM churn.
+      renderer: 'canvas',
       interactions: [navigate({
         domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
       })],
