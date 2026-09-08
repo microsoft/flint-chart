@@ -221,7 +221,10 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
 
     if (chartTemplate.instantiate) {
         return applyFieldDisplayNames(
-            chartTemplate.instantiate(templateContext),
+            {
+                ...chartTemplate.instantiate(templateContext),
+                ...(input.chart_spec.title !== undefined ? { title: input.chart_spec.title } : {}),
+            },
             input.field_display_names,
         );
     }
@@ -555,7 +558,7 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         const measureMinimum = measureValues.length > 0 ? Math.min(...measureValues) : undefined;
         const measureMaximum = measureValues.length > 0 ? Math.max(...measureValues) : undefined;
         const focusedLineMinimum = flintType === 'Line Chart' && measureMinimum !== undefined && measureMaximum !== undefined
-            ? Math.max(0, measureMinimum - (measureMaximum - measureMinimum) * 0.05)
+            ? Math.max(measureMinimum < 0 ? -Infinity : 0, measureMinimum - (measureMaximum - measureMinimum) * 0.05)
             : undefined;
         const numericXScale = hasNumericAxes
             ? focusedNumericAxis(convertedData.map((row) => Number(row[catField])))
@@ -593,5 +596,6 @@ export function assembleExcel(input: ChartAssemblyInput): ExcelChartSpec {
         spec.overlap = 0;
     }
 
+    if (input.chart_spec.title !== undefined) spec.title = input.chart_spec.title;
     return applyFieldDisplayNames(spec, input.field_display_names);
 }

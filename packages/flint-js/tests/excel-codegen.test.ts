@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateOfficeJs, prepareExcelArtifact } from '../src/excel';
+import { assembleExcel, generateOfficeJs, prepareExcelArtifact } from '../src/excel';
 import type { ExcelNativeChartSpec } from '../src/excel';
 
 const funnelArtifact: ExcelNativeChartSpec = {
@@ -21,6 +21,43 @@ const funnelArtifact: ExcelNativeChartSpec = {
 };
 
 describe('Excel Office.js artifacts', () => {
+    it.each([
+        { values: [-970, 580], minimum: -1047.5 },
+        { values: [-970, -370], minimum: -1000 },
+        { values: [10, 20], minimum: 9.5 },
+        { values: [0, 20], minimum: 0 },
+    ])('keeps line values visible for $values', ({ values, minimum }) => {
+        const artifact = assembleExcel({
+            data: { values: values.map((amount, index) => ({ year: 2020 + index, amount })) },
+            semantic_types: { year: 'Date', amount: 'Quantity' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'year', y: 'amount' } },
+        });
+        expect(artifact.valueAxis?.minimumScale).toBe(minimum);
+        expect(generateOfficeJs(artifact).code).toContain(`chart.axes.valueAxis.minimum = ${minimum};`);
+    });
+
+    it.each(['Bar Chart', 'Histogram'])('preserves authored titles and field labels for %s', (chartType) => {
+        const input: Parameters<typeof assembleExcel>[0] = {
+            data: { values: [{ category: 'One', amount: 10 }, { category: 'Two', amount: 20 }] },
+            semantic_types: { category: 'Category', amount: 'Quantity' },
+            field_display_names: { category: 'Requested category', amount: 'Requested amount' },
+            chart_spec: {
+                chartType,
+                title: 'Requested chart title',
+                encodings: chartType === 'Histogram' ? { x: 'amount' } : { x: 'category', y: 'amount' },
+            },
+        };
+        const artifact = assembleExcel(input);
+        expect(artifact.title).toBe('Requested chart title');
+        expect(artifact.categoryAxis?.title).toBe(chartType === 'Histogram' ? 'Requested amount' : 'Requested category');
+        if (chartType === 'Bar Chart') expect(artifact.valueAxis?.title).toBe('Requested amount');
+        expect(generateOfficeJs(artifact).code).toContain('chart.title.text = "Requested chart title"');
+        const { title: _title, ...chartSpec } = input.chart_spec;
+        expect(assembleExcel({ ...input, chart_spec: chartSpec }).title).toBe(
+            chartType === 'Histogram' ? 'Distribution of amount' : 'amount by category',
+        );
+    });
+
     it('prepares a versioned artifact without legacy coercion', () => {
         expect(prepareExcelArtifact(funnelArtifact)).toMatchObject({
             chartType: 'Funnel',
