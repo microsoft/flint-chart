@@ -2,47 +2,26 @@
   gap: 14px;
 }
 
-.map-semantic-zoom-viewport {
-  position: relative;
-  height: 100%;
-}
-
-.map-semantic-zoom-viewport .map-semantic-zoom-mount {
-  min-height: 560px;
+.map-semantic-zoom-mount {
   border: 1px solid #edf0f2;
   border-radius: 8px;
   background: #fcfcfd;
 }
 
-.map-semantic-zoom-status {
-  color: #67727c;
-  cursor: default;
-}
-
 .map-semantic-zoom-breadcrumbs {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid rgba(216, 221, 226, 0.95);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 6px 20px rgba(24, 35, 28, 0.08);
-  color: #758089;
-  font-size: 10px;
-  pointer-events: none;
+  gap: 6px;
+  color: #98a2ab;
 }
 
 .map-semantic-zoom-crumb {
+  padding: 0;
   border: 0;
   background: transparent;
   color: #65707a;
-  font-size: 10px;
+  font: inherit;
   font-weight: 600;
-  pointer-events: auto;
 }
 
 button.map-semantic-zoom-crumb {

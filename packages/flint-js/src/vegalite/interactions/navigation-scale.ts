@@ -65,6 +65,10 @@ export interface VegaNavigationController {
     apply(update: NavigationUpdate): boolean;
     /** Scale-like inverters for navigation axes that have no Vega scale (geo). */
     scale?(name: string): { invert?(value: number): unknown } | undefined;
+    /** The detail level the chart draws now, on projected charts with runtime levels. */
+    level?(): string | undefined;
+    /** The coarsest-level region under the plot centre, on projected charts with runtime levels. */
+    focus?(): Record<string, unknown> | undefined;
 }
 
 export function createVegaNavigationController(

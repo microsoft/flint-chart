@@ -20,17 +20,115 @@
  * geographic round trip; external values are fitted from their bounding box.
  */
 
-import type {
-    NavigationDomainGuard,
-    NavigationRequest,
-    NavigationUpdate,
-} from '../../interactive/interactions';
+import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
 import { guardNavigationDomain, type VegaNavigationController } from './navigation-scale';
 
 export const GEO_EXTENT_SIGNAL = '__flint_geo_extent';
 export const GEO_PROJECTION_SIGNAL = '__flint_geo_projection';
 export const GEO_AXIS_SCALES = { x: '__flint_geo_x', y: '__flint_geo_y' } as const;
+/** Names the detail level a multi-level projected chart currently draws. */
+export const GEO_LEVEL_SIGNAL = '__flint_geo_level';
+
+/**
+ * One runtime detail level of a projected chart. A finer level is entered
+ * once the visible longitude span drops to `enter` degrees and left again only
+ * above `exit`, so a view that rests near the threshold does not flicker.
+ */
+export interface GeoLevel {
+    name: string;
+    enter?: number;
+    exit?: number;
+}
+
+/** Runtime detail levels, coarsest first, and the signal that selects one. */
+export interface GeoLevelConfig {
+    signal: string;
+    levels: readonly GeoLevel[];
+    /** The compiled dataset that holds the coarsest level's features (set once the fit is patched). */
+    source?: string;
+}
+
+type Ring = readonly (readonly number[])[];
+
+/** Vega's own fields on a datum, plus the join key the choropleth adds. */
+const INTERNAL_DATUM_FIELDS = new Set(['_vgsid_', '__geo_id', 'type', 'geometry', 'properties']);
+
+/**
+ * Whether a longitude/latitude point falls inside a GeoJSON polygon geometry.
+ * Ray casting in plate-carrée coordinates is exact enough for regions the size
+ * of states and counties. A ring that straddles the antimeridian (the
+ * Aleutians) is unrolled to one side of it first.
+ */
+export function geometryContainsPoint(geometry: any, point: readonly [number, number]): boolean {
+    if (!geometry) return false;
+    const polygons: Ring[][] = geometry.type === 'Polygon'
+        ? [geometry.coordinates]
+        : geometry.type === 'MultiPolygon' ? geometry.coordinates : [];
+    for (const rings of polygons) {
+        if (rings.length === 0 || !ringContains(rings[0], point)) continue;
+        if (rings.slice(1).some((hole) => ringContains(hole, point))) continue;
+        return true;
+    }
+    return false;
+}
+
+function ringContains(ring: Ring, [lon, lat]: readonly [number, number]): boolean {
+    let west = Number.POSITIVE_INFINITY;
+    let east = Number.NEGATIVE_INFINITY;
+    for (const [x] of ring) {
+        if (x < west) west = x;
+        if (x > east) east = x;
+    }
+    // A ring wider than a hemisphere really wraps the antimeridian: read it,
+    // and the query, on the eastern side.
+    const unroll = east - west > 180 ? (x: number) => (x < 0 ? x + 360 : x) : (x: number) => x;
+    const px = unroll(lon);
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+        const xi = unroll(ring[i][0]);
+        const yi = ring[i][1];
+        const xj = unroll(ring[j][0]);
+        const yj = ring[j][1];
+        if ((yi > lat) !== (yj > lat) && px < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+}
+
+/** A feature datum without Vega's bookkeeping and without its geometry. */
+function describeFeature(datum: Record<string, unknown>): Record<string, unknown> {
+    const properties = datum.properties && typeof datum.properties === 'object'
+        ? datum.properties as Record<string, unknown>
+        : {};
+    return {
+        ...properties,
+        ...Object.fromEntries(Object.entries(datum).filter(([key]) => !INTERNAL_DATUM_FIELDS.has(key))),
+    };
+}
+
+/** The filter expression that gates one level's features behind the level signal. */
+export function geoLevelGate(signal: string, level: string): string {
+    return `${signal} === ${JSON.stringify(level)}`;
+}
+
+/** Pick the level for a visible longitude span, with hysteresis about the current level. */
+export function resolveGeoLevel(
+    lonSpan: number,
+    current: string | undefined,
+    levels: readonly GeoLevel[],
+): string | undefined {
+    if (levels.length === 0) return undefined;
+    if (!Number.isFinite(lonSpan)) return current ?? levels[0].name;
+    const currentIndex = Math.max(0, levels.findIndex((level) => level.name === current));
+    let next = 0;
+    for (let index = 1; index < levels.length; index += 1) {
+        const level = levels[index];
+        const threshold = currentIndex >= index ? level.exit ?? level.enter : level.enter;
+        if (threshold === undefined || !(lonSpan <= threshold)) break;
+        next = index;
+    }
+    return levels[next].name;
+}
 
 type Axis = 'x' | 'y';
 type Point = [number, number];
@@ -89,20 +187,48 @@ export function guardGeoExtent(
 export function createVegaGeoNavigationController(
     view: any,
     axes: Partial<Record<Axis, VegaNavigationAxis>>,
+    levels?: GeoLevelConfig,
 ): VegaNavigationController {
-    // Recent gesture values → their exact extents. Content-keyed because the
-    // runtime re-creates op objects; bounded because a drag produces one per frame.
-    const rememberedExtents = new Map<string, GeoExtent>();
+    // Recent gesture values → their exact extents (and the level chosen with
+    // them, so a re-applied update never re-decides through the hysteresis).
+    // Content-keyed because the runtime re-creates op objects; bounded because
+    // a drag produces one per frame.
+    const rememberedExtents = new Map<string, { extent: GeoExtent; level?: string }>();
     const REMEMBERED_LIMIT = 64;
     const valueKey = (value: NavigationUpdate['value']): string =>
         JSON.stringify([value.x ?? null, value.y ?? null]);
-    const remember = (value: NavigationUpdate['value'], extent: GeoExtent): void => {
+    const remember = (value: NavigationUpdate['value'], extent: GeoExtent, level?: string): void => {
         const key = valueKey(value);
         rememberedExtents.delete(key);
-        rememberedExtents.set(key, extent);
+        rememberedExtents.set(key, { extent, level });
         if (rememberedExtents.size > REMEMBERED_LIMIT) {
             rememberedExtents.delete(rememberedExtents.keys().next().value!);
         }
+    };
+    const signaledLevel = levels ? view.signal(levels.signal) : undefined;
+    let currentLevel: string | undefined = typeof signaledLevel === 'string'
+        ? signaledLevel
+        : levels?.levels[0]?.name;
+    const setLevel = (level: string | undefined): void => {
+        if (!levels || level === undefined) return;
+        currentLevel = level;
+        view.signal(levels.signal, level);
+    };
+    // The coarsest-level feature under the plot centre. Checked first on the
+    // next call, since a pan rarely leaves it.
+    let focusedFeature: Record<string, unknown> | undefined;
+    const focusRegion = (): Record<string, unknown> | undefined => {
+        if (!levels?.source) return undefined;
+        const { width, height } = plotSize();
+        const centre = finitePoint(projection()?.invert?.([width / 2, height / 2]));
+        if (!centre) return undefined;
+        const features: Record<string, unknown>[] = view.data(levels.source) ?? [];
+        if (focusedFeature && !features.includes(focusedFeature)) focusedFeature = undefined;
+        const hit = focusedFeature && geometryContainsPoint(focusedFeature.geometry, centre)
+            ? focusedFeature
+            : features.find((feature) => geometryContainsPoint(feature.geometry, centre));
+        focusedFeature = hit;
+        return hit ? describeFeature(hit) : undefined;
     };
 
     const plotSize = (): { width: number; height: number } => ({
@@ -157,6 +283,13 @@ export function createVegaGeoNavigationController(
             ...(west && east ? { x: [west[0], east[0]] as [number, number] } : {}),
             ...(south && north ? { y: [south[1], north[1]] as [number, number] } : {}),
         };
+    };
+
+    /** The level a longitude range calls for, judged from the level shown now. */
+    const levelForRange = (lon: [number, number] | undefined): string | undefined => {
+        if (!levels) return undefined;
+        const span = lon ? Number(lon[1]) - Number(lon[0]) : Number.NaN;
+        return resolveGeoLevel(span, currentLevel, levels.levels);
     };
 
     /** Fit an extent so a longitude/latitude box fills the plot. */
@@ -227,25 +360,34 @@ export function createVegaGeoNavigationController(
             if (!proposed) return null;
             const guarded = guardGeoExtent(proposed, { width, height }, guard);
             const value = geographicBox(guarded);
-            remember(value, guarded);
+            remember(value, guarded, levelForRange(value.x));
             return { op: 'set-viewport', axes: event.axes, value };
         },
         apply(update): boolean {
             if (affectedAxes(update.axes).length === 0) return false;
             const remembered = rememberedExtents.get(valueKey(update.value));
             if (remembered) {
-                view.signal(GEO_EXTENT_SIGNAL, remembered);
+                view.signal(GEO_EXTENT_SIGNAL, remembered.extent);
+                setLevel(remembered.level);
                 return true;
             }
             if (update.value.x === undefined && update.value.y === undefined) {
                 view.signal(GEO_EXTENT_SIGNAL, null);
+                setLevel(levels?.levels[0]?.name);
                 return true;
             }
             const extent = extentForBox(update.value);
             if (!extent) return false;
             view.signal(GEO_EXTENT_SIGNAL, extent);
+            setLevel(levelForRange(
+                update.value.x !== undefined
+                    ? update.value.x.map(Number) as [number, number]
+                    : geographicBox(extent).x,
+            ));
             return true;
         },
+        level: () => currentLevel,
+        focus: focusRegion,
         scale(name) {
             const axis: Axis | undefined = name === GEO_AXIS_SCALES.x ? 'x'
                 : name === GEO_AXIS_SCALES.y ? 'y' : undefined;

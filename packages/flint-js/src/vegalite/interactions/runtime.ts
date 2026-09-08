@@ -514,6 +514,23 @@ export function evictRetainedStateSiblings(
     return siblings;
 }
 
+const hasViewportOp = (update: ChartUpdate): boolean => update.ops.some((op) => op.op === 'set-viewport');
+
+/**
+ * Drop the `set-viewport` ops of every retained update except `exceptId`, and
+ * the updates that held nothing else. Retained updates apply in insertion
+ * order, so without this an older viewport stored after a newer one's id
+ * would keep winning every render.
+ */
+export function supersedeRetainedViewports(retained: Map<string, ChartUpdate>, exceptId: string): void {
+    for (const [id, update] of [...retained]) {
+        if (id === exceptId || !hasViewportOp(update)) continue;
+        const ops = update.ops.filter((op) => op.op !== 'set-viewport');
+        if (ops.length === 0) retained.delete(id);
+        else retained.set(id, { ...update, ops });
+    }
+}
+
 export function mountVegaInteractions(
     view: any,
     container: HTMLElement,
@@ -716,7 +733,7 @@ export function mountVegaInteractions(
         reset: resetViewportRegion,
     });
     const navigationController = plan.geoNavigation
-        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {})
+        ? createVegaGeoNavigationController(view, plan.navigationAxes ?? {}, plan.geoLevels)
         : createVegaNavigationController(view, plan.navigationAxes ?? {});
     const selectedKeys = (): Set<string> => new Set(selectedElements.keys());
     const renderPathFocus = (): void => focusOverlay.render(selectedKeys(), hoveredPathKeys);
@@ -1189,6 +1206,11 @@ export function mountVegaInteractions(
         // on dense charts (a county map has thousands of shapes).
         const needsAvailable = update.ops.some((op) => op.op !== 'set-viewport');
         const presented = presentUpdate(resolved.update, context(needsAvailable));
+        // A chart shows one viewport. A host's set-viewport (a reset button, a
+        // report's framing) must not keep overriding the gestures that follow
+        // it, and a gesture's retained viewport must yield to a later host
+        // update, so the newest viewport retires every other retained one.
+        if (hasViewportOp(update)) supersedeRetainedViewports(retainedUpdates, update.id);
         destination.set(update.id, presented);
         if (legendSelection) selectedLegend = legendSelection;
         await renderUpdates();
@@ -1318,8 +1340,14 @@ export function mountVegaInteractions(
                 rect: { x: 0, y: 0, width: space.plotWidth, height: space.plotHeight },
                 axis: 'xy',
             });
-            emitCanvasInteractionEvent(interaction, domain
-                ? { ...base, geometry: { ...base.geometry, domain } }
+            // A multi-level map also reports the level the gesture settled on.
+            const level = navigationController.level?.();
+            const focus = navigationController.focus?.();
+            const resolvedDomain = domain || level !== undefined
+                ? { ...domain, ...(level !== undefined ? { level } : {}), ...(focus ? { focus } : {}) }
+                : undefined;
+            emitCanvasInteractionEvent(interaction, resolvedDomain
+                ? { ...base, geometry: { ...base.geometry, domain: resolvedDomain } }
                 : base);
         };
         const drain = async (): Promise<void> => {

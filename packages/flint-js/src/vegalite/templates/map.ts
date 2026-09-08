@@ -7,6 +7,7 @@ import {
     type MapScope, inferBubbleScope, inferChoroplethScope, semanticScope, pickMapScope,
 } from '../../chart-types/geo';
 import { toTypeString } from '../../core/field-semantics';
+import { GEO_LEVEL_SIGNAL, geoLevelGate, type GeoLevel } from '../interactions/navigation-geo';
 import {
     fieldsFromEncodingChannels,
     firstDiscreteEncodingField,
@@ -145,21 +146,59 @@ function configureBubble(spec: any, scope: MapScope): void {
     spec.layer[1].projection = { type: g.projection };
 }
 
-export type ChoroplethLevel = 'state' | 'county';
+export type ChoroplethLevel = 'state' | 'county' | 'auto';
+
+/**
+ * The US detail levels, coarsest first. A zoom enters the county level once
+ * fewer than `enter` degrees of longitude are visible and leaves it again
+ * only above `exit`.
+ */
+export const US_CHOROPLETH_LEVELS: readonly (GeoLevel & { feature: string; strokeWidth: number })[] = [
+    { name: 'state', feature: 'states', strokeWidth: 0.5 },
+    { name: 'county', feature: 'counties', strokeWidth: 0.2, enter: 20, exit: 28 },
+];
+
+/** Name of the shared join table that every level of a multi-level choropleth reads. */
+const GEO_JOIN_DATASET = '__flint_geo_join';
 
 /**
  * Point a choropleth's geoshape at the chosen base map. The US TopoJSON also
  * carries a `counties` object keyed by five-digit FIPS, so the county level
  * only swaps the feature set (and thins the borders); the world map has no
  * second level.
+ *
+ * The `auto` level draws one layer per US level, each gated behind the level
+ * signal by a filter, so the hidden level holds no shapes. The navigation
+ * runtime flips the signal as the zoom crosses a level's threshold; the chart
+ * itself never rebuilds, and the projection extent carries the viewer's
+ * place across the swap.
  */
 function configureChoropleth(spec: any, scope: MapScope, level: ChoroplethLevel = 'state'): void {
     const g = SCOPE_GEO[scope];
-    const county = scope === 'us' && level === 'county';
     spec.width = g.width;
     spec.height = g.height;
-    spec.data = { url: g.url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
     spec.projection = { type: g.projection };
+    if (scope === 'us' && level === 'auto') {
+        delete spec.mark;
+        spec.data = { name: GEO_JOIN_DATASET };
+        spec.params = [{ name: GEO_LEVEL_SIGNAL, value: US_CHOROPLETH_LEVELS[0].name }];
+        spec.layer = US_CHOROPLETH_LEVELS.map(({ name, feature, strokeWidth }) => ({
+            data: { url: g.url, format: { type: "topojson", feature } },
+            transform: [{ filter: geoLevelGate(GEO_LEVEL_SIGNAL, name) }],
+            mark: { type: "geoshape", stroke: "white", strokeWidth },
+        }));
+        spec._geoLevels = {
+            signal: GEO_LEVEL_SIGNAL,
+            levels: US_CHOROPLETH_LEVELS.map(({ name, enter, exit }) => ({
+                name,
+                ...(enter !== undefined ? { enter } : {}),
+                ...(exit !== undefined ? { exit } : {}),
+            })),
+        };
+        return;
+    }
+    const county = scope === 'us' && level === 'county';
+    spec.data = { url: g.url, format: { type: "topojson", feature: county ? 'counties' : g.feature } };
     if (spec.mark && typeof spec.mark === 'object') spec.mark.strokeWidth = county ? 0.2 : g.strokeWidth;
 }
 
@@ -171,6 +210,7 @@ const levelProperty: ChartPropertyDef = {
     options: [
         { value: "state", label: "States" },
         { value: "county", label: "Counties (FIPS ids)" },
+        { value: "auto", label: "Zoom: states, then counties" },
     ],
     defaultValue: "state",
     check: (ctx) => ({ applicable: ctx.chartProperties?.region !== 'world' }),
@@ -309,12 +349,27 @@ function buildChoroplethJoin(spec: any, ctx: any, resolver: GeoResolver): void {
     if (idField) {
         const joined = rows.map((r) => ({ ...r, __geo_id: resolver(r[idField]) }));
         const lookupFields = [idField, valueField, labelField].filter(Boolean) as string[];
-        spec.transform = [
-            {
-                lookup: 'id',
-                from: { data: { values: joined }, key: '__geo_id', fields: lookupFields },
-            },
-        ];
+        if (Array.isArray(spec.layer)) {
+            // Every level joins the same table: state ids and county FIPS
+            // codes share one numeric id space, so each layer matches its own.
+            spec.datasets = { ...(spec.datasets ?? {}), [GEO_JOIN_DATASET]: joined };
+            for (const layer of spec.layer) {
+                layer.transform = [
+                    ...(layer.transform ?? []),
+                    {
+                        lookup: 'id',
+                        from: { data: { name: GEO_JOIN_DATASET }, key: '__geo_id', fields: lookupFields },
+                    },
+                ];
+            }
+        } else {
+            spec.transform = [
+                {
+                    lookup: 'id',
+                    from: { data: { values: joined }, key: '__geo_id', fields: lookupFields },
+                },
+            ];
+        }
     }
 
     spec.encoding = {};
@@ -372,7 +427,10 @@ export const choroplethDef: ChartTemplateDef = {
             () => inferChoroplethScope(rows, idField),
         );
 
-        const level: ChoroplethLevel = ctx.chartProperties?.level === 'county' ? 'county' : 'state';
+        const requestedLevel = ctx.chartProperties?.level;
+        const level: ChoroplethLevel = requestedLevel === 'county' || requestedLevel === 'auto'
+            ? requestedLevel
+            : 'state';
         configureChoropleth(spec, scope, level);
         // County rows carry numeric FIPS ids, which the state resolver passes through.
         const resolver: GeoResolver = scope === 'us' ? resolveUsState : resolveCountry;

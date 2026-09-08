@@ -864,6 +864,8 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
 
     const result: any = { ...vgObj, data: vgObj.data ?? { values } };
+    // Runtime detail levels travel with the interaction semantics, not the spec.
+    delete result._geoLevels;
     if (themeDecisions) {
         result._theme = {
             id: themeDecisions.themeId,
@@ -956,6 +958,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             rangeLegendChannels,
             navigationAxes,
             geoNavigation,
+            ...(vgObj._geoLevels ? { geoLevels: vgObj._geoLevels } : {}),
             reorderAxis: reorderAxes[0],
             reorderAxes,
             selectionBoundary: design.interaction.selectionBoundary,

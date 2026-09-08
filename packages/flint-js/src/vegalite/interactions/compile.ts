@@ -32,7 +32,13 @@ import {
     LEGEND_SELECTION_STORE,
     STYLE_SIGNAL,
 } from './stores';
-import { GEO_AXIS_SCALES, GEO_EXTENT_SIGNAL, GEO_PROJECTION_SIGNAL } from './navigation-geo';
+import {
+    GEO_AXIS_SCALES,
+    GEO_EXTENT_SIGNAL,
+    GEO_PROJECTION_SIGNAL,
+    geoLevelGate,
+    type GeoLevelConfig,
+} from './navigation-geo';
 
 const CLEAR_MARK = '__flint_interaction_clear';
 const LEGEND_ENTRY_MARK = '__flint_legend_entry';
@@ -55,6 +61,7 @@ interface TemplateInteractionSemantics {
     supportedRegionGestures?: ('cartesian' | 'angular')[];
     navigationAxes?: ('x' | 'y')[];
     geoNavigation?: boolean;
+    geoLevels?: GeoLevelConfig;
     reorderAxis?: { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
     reorderAxes?: readonly { axis: 'x' | 'y'; field: string; includeConnectiveMarks?: boolean; markTypes?: readonly string[] }[];
     renderHoverStyles?: Record<string, HoverStyle>;
@@ -512,6 +519,7 @@ export function addVegaLiteInteractions(
         continuousColorFocus: templateSemantics.continuousColorFocus,
         navigationChannels: [...requestedNavigationAxes],
         geoNavigation: templateSemantics.geoNavigation ?? false,
+        geoLevels: templateSemantics.geoLevels,
         angularXBrush: templateSemantics.supportedRegionGestures?.includes('angular') ?? false,
         reorderAxis: hasElementDrag && declaredReorderAxes[0]
             ? { ...declaredReorderAxes[0], scale: '', signal: '' }
@@ -602,6 +610,39 @@ export function injectVegaGeoNavigationSignals(
         result[channel] = { scale: GEO_AXIS_SCALES[channel], signal: GEO_EXTENT_SIGNAL, type: 'geo' };
     }
     return result;
+}
+
+/**
+ * A chart with runtime detail levels gates each level's features behind a
+ * filter on the level signal, so a hidden level costs nothing per frame. The
+ * fitted projection must not follow that gate: it would refit to whichever
+ * level is showing, and the map would shift by the difference between the
+ * levels' outlines on every swap. So the projection fits the coarsest level
+ * alone, whose gate moves downstream of the fit.
+ */
+export function injectVegaGeoLevelFit(vegaSpec: Record<string, any>, levels: GeoLevelConfig): void {
+    const coarsest = levels.levels[0]?.name;
+    if (coarsest === undefined) return;
+    const gate = geoLevelGate(levels.signal, coarsest);
+    const datasets: any[] = Array.isArray(vegaSpec.data) ? vegaSpec.data : [];
+    const isGate = (transform: any): boolean => transform?.type === 'filter' && transform.expr === gate;
+    const index = datasets.findIndex((dataset) => dataset.transform?.some(isGate));
+    if (index < 0) return;
+    const source = datasets[index];
+    const derived = {
+        name: `${source.name}_${coarsest}`,
+        source: source.name,
+        transform: source.transform.filter(isGate),
+    };
+    source.transform = source.transform.filter((transform: any) => !isGate(transform));
+    datasets.splice(index + 1, 0, derived);
+    for (const mark of vegaSpec.marks ?? []) {
+        if (mark.from?.data === source.name) mark.from.data = derived.name;
+    }
+    const projections: any[] = Array.isArray(vegaSpec.projections) ? vegaSpec.projections : [];
+    const projection = projections.find((entry) => entry?.name === 'projection') ?? projections[0];
+    if (projection) projection.fit = { signal: `data(${JSON.stringify(source.name)})` };
+    levels.source = source.name;
 }
 
 export function collectVegaAxisTargets(

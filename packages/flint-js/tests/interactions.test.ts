@@ -84,6 +84,7 @@ import {
     interactionsForHoverPresentation,
     longPressMovedBeyond,
     domainForPlotGeometry,
+    supersedeRetainedViewports,
     keyboardTargetItems,
     mergeRetainedPreview,
     nearestReorderHit,
@@ -3421,5 +3422,27 @@ describe('legend, inspect, zoom, and touch presets', () => {
             regionGeometry: 'angular', mode: 'stateful',
         });
         expect(brushAngle().eventSource).toMatchObject({ mode: 'ephemeral' });
+    });
+});
+
+describe('retained viewport precedence', () => {
+    it('lets the newest viewport retire every other retained viewport op', () => {
+        const retained = new Map<string, ChartUpdate>([
+            ['navigate', { id: 'navigate', ops: [{ op: 'set-viewport', axes: 'xy', value: { x: [0, 5], y: [0, 5] } }] }],
+            ['report', { id: 'report', ops: [
+                { op: 'set-viewport', axes: 'x', value: { x: [2, 3] } },
+                { op: 'set-style', targets: [], value: { state: 'emphasized' } },
+            ] }],
+            ['note', { id: 'note', ops: [{ op: 'set-annotation', target: { select: { key: { a: 1 } } }, value: { text: 'x' } }] }],
+        ]);
+        supersedeRetainedViewports(retained, 'host-reset');
+        // The viewport-only update goes; the mixed one keeps its other ops.
+        expect(retained.has('navigate')).toBe(false);
+        expect(retained.get('report')?.ops.map((op) => op.op)).toEqual(['set-style']);
+        expect(retained.get('note')?.ops.map((op) => op.op)).toEqual(['set-annotation']);
+        // The update being stored is left alone.
+        retained.set('host-reset', { id: 'host-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] });
+        supersedeRetainedViewports(retained, 'host-reset');
+        expect(retained.get('host-reset')?.ops).toHaveLength(1);
     });
 });

@@ -119,10 +119,11 @@ export function BespokeInteractionLab() {
               <p>
                 Zoom the US map; once the view narrows enough, the state choropleth becomes a county
                 choropleth at the same place, using Chetty &amp; Hendren’s childhood-exposure data.
+                Both levels live in one chart, so the swap is a layer flip, not a rebuild.
               </p>
               <div className="bespoke-pattern">
                 <strong>Flint in → Flint out</strong>
-                <strong>Level swap: external in → Flint out</strong>
+                <strong>Level swap: Flint in → Flint out</strong>
               </div>
             </div>
             <span className="bespoke-status">Case 06</span>

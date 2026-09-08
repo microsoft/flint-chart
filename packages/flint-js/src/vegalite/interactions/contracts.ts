@@ -1,5 +1,6 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
 import type { ChartUpdatePresenter, InteractionContext } from '../../interactive/interactions';
+import type { GeoLevelConfig } from './navigation-geo';
 
 export interface HoverStyle {
     fill?: string;
@@ -77,6 +78,8 @@ export interface VegaInteractionPlan {
     navigationChannels?: readonly ('x' | 'y')[];
     /** Navigation moves a cartographic projection's extent rather than scale domains. */
     geoNavigation?: boolean;
+    /** Runtime detail levels a projected chart swaps as the zoom crosses their thresholds. */
+    geoLevels?: GeoLevelConfig;
     /** Polar templates realize the primary X brush as an angular sector. */
     angularXBrush?: boolean;
     navigationAxes?: Partial<Record<'x' | 'y', VegaNavigationAxis>>;
