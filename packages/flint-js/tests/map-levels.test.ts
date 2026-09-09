@@ -246,7 +246,7 @@ describe('point in region', () => {
         expect(geometryContainsPoint(withHole, [12, 5])).toBe(false);
         const two = { type: 'MultiPolygon', coordinates: [withHole.coordinates, [[[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]]]] };
         expect(geometryContainsPoint(two, [25, 5])).toBe(true);
-        expect(geometryContainsPoint(two, [15, 5])).toBe(true === false);
+        expect(geometryContainsPoint(two, [15, 5])).toBe(false);
         expect(geometryContainsPoint({ type: 'Point', coordinates: [1, 1] }, [1, 1])).toBe(false);
     });
 
