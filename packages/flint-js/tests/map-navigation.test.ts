@@ -193,7 +193,7 @@ describe('geo navigation controller', () => {
         expect(zoomEast).toBeLessThan(fullLon + 1e-6);
 
         const pan = controller.resolve({
-            type: 'navigation', phase: 'move', operation: 'pan', axes: 'xy',
+            type: 'navigation', phase: 'preview', operation: 'pan', axes: 'xy',
             delta: { x: 0.1, y: 0 },
         }, GUARD)!;
         controller.apply(pan);
