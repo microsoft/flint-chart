@@ -1,0 +1,22 @@
+.timebox-shell {
+  padding: 12px 12px 14px;
+}
+
+.timebox-mount {
+  min-height: 520px;
+}
+
+.timebox-toolbar {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timebox-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  color: #68737c;
+  font-size: 11px;
+  line-height: 1.45;
+}

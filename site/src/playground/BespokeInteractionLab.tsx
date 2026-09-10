@@ -3,6 +3,7 @@ import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
 import { ExplodedDetailStage } from './ExplodedDetailStage';
 import { IndexChartStage } from './IndexChartStage';
+import { TimeboxStage } from './TimeboxStage';
 import { YouDrawItStage } from './YouDrawItStage';
 import { MapSemanticZoomStage } from './MapSemanticZoomStage';
 import { ChinaSemanticZoomStage } from './ChinaSemanticZoomStage';
@@ -116,6 +117,24 @@ export function BespokeInteractionLab() {
         <article className="bespoke-case bespoke-case--single">
           <header className="bespoke-case-header">
             <div>
+              <h2>Timebox on sampled line series</h2>
+              <p>
+                Drag a box directly over a time window and value band; only the series whose sampled points
+                all remain inside that box survive the filter.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Host overlay + region drag → set-style</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 06</span>
+          </header>
+          <TimeboxStage />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
               <h2>Semantic zoom: states to counties</h2>
               <p>
                 Zoom the US map; once the view narrows enough, the state choropleth becomes a county
@@ -128,7 +147,7 @@ export function BespokeInteractionLab() {
                 <strong>Level swap: Flint in → Flint out</strong>
               </div>
             </div>
-            <span className="bespoke-status">Case 06</span>
+            <span className="bespoke-status">Case 07</span>
           </header>
           <MapSemanticZoomStage />
         </article>
@@ -147,7 +166,7 @@ export function BespokeInteractionLab() {
                 <strong>Level swap: Flint in → Flint out</strong>
               </div>
             </div>
-            <span className="bespoke-status">Case 07</span>
+            <span className="bespoke-status">Case 08</span>
           </header>
           <ChinaSemanticZoomStage />
         </article>
