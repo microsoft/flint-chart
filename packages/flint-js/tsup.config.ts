@@ -10,6 +10,7 @@ export default defineConfig({
     'plotly/index': 'src/plotly/index.ts',
     'excel/index': 'src/excel/index.ts',
     'image-charts/index': 'src/image-charts/index.ts',
+    'validate/index': 'src/validate/index.ts',
     'interactive/index': 'src/interactive/index.ts',
     'vegalite/interactive': 'src/vegalite/interactive.ts',
     'echarts/interactive': 'src/echarts/interactive.ts',

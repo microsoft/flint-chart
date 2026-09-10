@@ -70,6 +70,11 @@
       "import": "./dist/image-charts/index.js",
       "require": "./dist/image-charts/index.cjs"
     },
+    "./validate": {
+      "types": "./dist/validate/index.d.ts",
+      "import": "./dist/validate/index.js",
+      "require": "./dist/validate/index.cjs"
+    },
     "./interactive": {
       "types": "./dist/interactive/index.d.ts",
       "import": "./dist/interactive/index.js",
