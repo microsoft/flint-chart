@@ -8,7 +8,7 @@
 
 .fisheye-chart-stack {
   position: relative;
-  width: 900px;
+  width: max-content;
   min-height: 520px;
 }
 

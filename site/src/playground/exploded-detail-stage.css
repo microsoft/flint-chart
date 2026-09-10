@@ -8,25 +8,12 @@
 
 .exploded-detail-stack {
   position: relative;
-  width: 900px;
+  width: max-content;
   min-height: 520px;
 }
 
 .exploded-detail-mount {
   min-height: 520px;
-}
-
-.exploded-detail-overlay {
-  position: absolute;
-  z-index: 3;
-  opacity: 0;
-  overflow: visible;
-  pointer-events: none;
-  transition: opacity 70ms linear;
-}
-
-.exploded-detail-overlay[data-visible='true'] {
-  opacity: 1;
 }
 
 .exploded-detail-focus {
@@ -76,23 +63,4 @@
   color: #7a858d;
   font-size: 10px;
   text-align: right;
-}
-
-.exploded-detail-slider {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: default;
-}
-
-.exploded-detail-slider input[type='range'] {
-  width: 120px;
-  margin: 0;
-  accent-color: #2f5f47;
-}
-
-.exploded-detail-slider-value {
-  min-width: 84px;
-  color: #2f5f47;
-  font-variant-numeric: tabular-nums;
 }

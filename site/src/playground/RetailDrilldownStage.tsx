@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { buildInteractiveChart } from 'flint-chart/interactive';
+import { ScaleToFit } from '../components/ScaleToFit';
 import foodPrices from '../data/cpi-food-prices.json';
 import './retail-drilldown-stage.css';
 
@@ -28,7 +29,6 @@ const MONTH_COUNT = MONTHS.length;
 const MIN_VISIBLE_MONTHS = 6;
 
 function chartInput(rows: DrillRow[]): ChartAssemblyInput {
-
   return {
     data: { values: rows },
     semantic_types: {
@@ -44,12 +44,20 @@ function chartInput(rows: DrillRow[]): ChartAssemblyInput {
       title: 'What is driving the food basket?',
       subtitle: 'Monthly U.S. average prices for one unit of each item · BLS, Aug 2015–Aug 2025',
       encodings: { x: 'Month', y: 'Price', color: 'Food' },
-      baseSize: { width: 560, height: 400 },
-      canvasSize: { width: 560, height: 400 },
+      // Flint adds the title, subtitle, legend, and axes around this canvas; the
+      // rendered SVG lands at about 900 x 520, the size the other stages use.
+      baseSize: { width: 816, height: 416 },
+      canvasSize: { width: 816, height: 416 },
     },
   };
 }
 
+/**
+ * Semantic zoom by re-layout. Each wheel step picks a narrower month window,
+ * and Flint compiles a fresh chart for those rows: the bar step, the y domain,
+ * the tick density, and the label formats all follow the visible data. The new
+ * chart renders in a hidden layer and swaps in once it is ready.
+ */
 export function RetailDrilldownStage() {
   const mountRef = useRef<HTMLDivElement>(null);
   const activeSurfaceRef = useRef<{
@@ -139,9 +147,11 @@ export function RetailDrilldownStage() {
   }, []);
 
   return (
-    <div className="retail-drilldown-stage">
-      <div className="retail-drilldown-chart">
-        <div ref={mountRef} className="retail-drilldown-mount" />
+    <div className="ic-flint-dimpvis-shell retail-drilldown-stage">
+      <div className="ic-flint-dimpvis-panel">
+        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+          <div ref={mountRef} className="ic-flint-dimpvis-mount retail-drilldown-mount" />
+        </ScaleToFit>
       </div>
     </div>
   );

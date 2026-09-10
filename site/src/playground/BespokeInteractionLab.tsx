@@ -1,12 +1,13 @@
 import { FlintDimpVisStage } from './FlintDimpVisStage';
 import { ClimatePhaseStage } from './ClimatePhaseStage';
 import { FisheyeZoomStage } from './FisheyeZoomStage';
-import { ExplodedDetailStage } from './ExplodedDetailStage';
+import { FreeformExplodedDetailStage } from './ExplodedDetailStage';
 import { IndexChartStage } from './IndexChartStage';
 import { TimeboxStage } from './TimeboxStage';
 import { YouDrawItStage } from './YouDrawItStage';
 import { MapSemanticZoomStage } from './MapSemanticZoomStage';
 import { ChinaSemanticZoomStage } from './ChinaSemanticZoomStage';
+import { RetailDrilldownStage } from './RetailDrilldownStage';
 import './bespoke-interaction-lab.css';
 
 export function BespokeInteractionLab() {
@@ -81,7 +82,7 @@ export function BespokeInteractionLab() {
               </p>
               <div className="bespoke-pattern">
                 <strong>Flint in → custom out</strong>
-                <strong>Rendered SVG → custom out</strong>
+                <strong>Flint in → set-freeform-overlay</strong>
               </div>
             </div>
             <span className="bespoke-status">Case 04</span>
@@ -91,7 +92,7 @@ export function BespokeInteractionLab() {
               <FisheyeZoomStage />
             </section>
             <section className="bespoke-treatment">
-              <ExplodedDetailStage />
+              <FreeformExplodedDetailStage />
             </section>
           </div>
         </article>
@@ -99,19 +100,20 @@ export function BespokeInteractionLab() {
         <article className="bespoke-case bespoke-case--single">
           <header className="bespoke-case-header">
             <div>
-              <h2>You draw it</h2>
+              <h2>Food basket price navigator</h2>
               <p>
-                Draw the future part of a line chart with a freehand stroke; the chart reveals the real
-                series and scores the guess.
+                Explore how five U.S. average food prices compose a one-unit basket over time. The wheel
+                narrows the month window, and Flint re-lays out the chart for the visible months, so the
+                bar step, the price domain, and the tick labels all follow the data.
               </p>
               <div className="bespoke-pattern">
-                <strong>Flint in → Flint out</strong>
-                <strong>Reveal: external in → Flint out</strong>
+                <strong>DOM wheel → filtered rows</strong>
+                <strong>Semantic zoom by re-layout</strong>
               </div>
             </div>
             <span className="bespoke-status">Case 05</span>
           </header>
-          <YouDrawItStage />
+          <RetailDrilldownStage />
         </article>
 
         <article className="bespoke-case bespoke-case--single">
@@ -169,6 +171,24 @@ export function BespokeInteractionLab() {
             <span className="bespoke-status">Case 08</span>
           </header>
           <ChinaSemanticZoomStage />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>You draw it</h2>
+              <p>
+                Draw the future part of a line chart with a freehand stroke; the chart reveals the real
+                series and scores the guess.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Reveal: external in → Flint out</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 09</span>
+          </header>
+          <YouDrawItStage />
         </article>
       </div>
     </div>

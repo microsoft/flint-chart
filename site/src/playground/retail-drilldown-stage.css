@@ -1,18 +1,11 @@
-.retail-drilldown-stage {
-  padding: 18px;
-}
-
-.retail-drilldown-chart {
-  overflow: hidden;
+.retail-drilldown-mount {
+  display: grid;
+  width: max-content;
+  min-height: 520px;
   overscroll-behavior: contain;
 }
 
-.retail-drilldown-mount {
-  position: relative;
-  height: 500px;
-}
-
+/* Layers stack in one grid cell so the mount follows the chart while a swap is pending. */
 .retail-drilldown-layer {
-  position: absolute;
-  inset: 0 auto auto 0;
+  grid-area: 1 / 1;
 }
