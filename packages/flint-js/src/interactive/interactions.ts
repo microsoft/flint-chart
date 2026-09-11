@@ -100,6 +100,8 @@ export type {
 
 export interface CanvasInteractionDef {
     readonly id: string;
+    /** Set by the spec resolver. A definition made in code has no origin. */
+    readonly origin?: 'spec';
     readonly eventSource: InteractionEventSource;
     readonly affordances?: readonly InteractionAffordance[];
     /** Retained updates from interactions in the same group replace one another. */

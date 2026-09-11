@@ -52,6 +52,11 @@ export type {
     ClickHighlightOptions,
     ClickHighlightTarget,
     ClickGroupFocusOptions,
+    ContextActivateOptions,
+    DoubleActivateOptions,
+    DragReorderOptions,
+    LegendToggleOptions,
+    LongPressOptions,
     LinkedBrushOptions,
     HoverGroupFocusOptions,
     GroupBy,
@@ -137,6 +142,16 @@ export type {
     InteractionPresetType,
     InteractionSpec,
 } from '../core/interaction-spec';
+export type { InteractionPresetOptions, InteractionPresetSpec } from './spec/types';
+export { INTERACTION_PRESETS, listInteractionPresets } from './spec/registry';
+export type {
+    InteractionCapability,
+    InteractionGestureFamily,
+    InteractionPresetDefinition,
+    InteractionPresetSummary,
+} from './spec/registry';
+export { resolveInteractionSpec } from './spec/resolve';
+export type { ResolvedInteractionSpec } from './spec/resolve';
 
 export function buildInteractiveChart(
     container: HTMLElement,
