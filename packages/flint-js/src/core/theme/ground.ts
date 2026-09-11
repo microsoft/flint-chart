@@ -42,7 +42,7 @@ import {
     resolvePresenceInk,
     sampleRamp,
 } from './presence.js';
-import { CURRENCY_MAP } from '../field-semantics.js';
+import { resolveDisplayUnit } from '../field-semantics.js';
 import { getRegistryEntry } from '../type-registry.js';
 import { inferValueLabelFormat, longestLabelChars } from './value-label-format.js';
 import { deepMerge } from './merge.js';
@@ -581,26 +581,9 @@ function percentOfWhole(ctx: GroundingContext, channel: string): string | undefi
     return n >= 3 && Math.abs(sum - 100) < 0.5 ? '%' : undefined;
 }
 
-/**
- * The unit a measure is counted in, when the chart already knows it.
- *
- * Either the annotation says so outright, or the field names it the way a
- * person does — `CO₂ (ppm)`, `Unemployment (%)`. Anything longer than a short
- * tag is a phrase, not a unit, and belongs in the subtitle.
- */
-const UNIT_IN_FIELD_NAME = /\(([^()]{1,6})\)\s*$/;
-
-function unitText(ctx: GroundingContext, channel: string): string | undefined {
+function displayUnit(ctx: GroundingContext, channel: string) {
     const sem = ctx.channelSemantics?.[channel];
-    const declared = sem?.semanticAnnotation?.unit;
-    const field = sem?.field ?? (ctx.positional as any)?.[channel]?.field;
-    const named = typeof field === 'string' ? field.match(UNIT_IN_FIELD_NAME) : null;
-    const raw = (typeof declared === 'string' && declared.length > 0 && declared.length <= 6)
-        ? declared
-        : named?.[1];
-    if (!raw) return undefined;
-    // A currency is written with its sign, not its ISO code: `$8`, not `8 USD`.
-    return CURRENCY_MAP[raw.toUpperCase()] ?? raw;
+    return resolveDisplayUnit(sem?.semanticAnnotation);
 }
 
 /**
@@ -923,12 +906,14 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // reads in shares, whatever the field was measured in.
         const unitPolicy = theme.annotation?.unit ?? 'never';
         const inFieldUnits = ctx.stacked !== 'normalize' && !ctx.partToWhole;
-        const unit = role === 'measure' && inFieldUnits ? unitText(ctx, channel) : undefined;
-        const unitTag = unitPolicy !== 'never' ? unit : undefined;
+        const unit = role === 'measure' && inFieldUnits ? displayUnit(ctx, channel) : undefined;
+        const unitTag = unitPolicy !== 'never' && unit?.placement === 'value' ? unit.text : undefined;
 
         // Where the house keeps its axis titles, the title is the natural place
         // for the unit — `Weight (lb)` — and the ticks stay bare numbers.
-        const titleUnit = showTitle && theme.annotation?.unitsInAxisTitle === true ? unit : undefined;
+        const titleUnit = showTitle && unit && (
+            unit.placement === 'field' || theme.annotation?.unitsInAxisTitle === true
+        ) ? unit.text : undefined;
 
         // The gap between a label and the plot is the same gap whether or not a
         // tick is drawn in it. Where there is one, the tick spans the first part
@@ -1460,22 +1445,20 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     const shareUnit = signals.isPartToWhole && !axisStatesUnit
         ? percentOfWhole(ctx, valueUnitChannel ?? '')
         : undefined;
+    const valueDisplayUnit = displayUnit(ctx, valueUnitChannel ?? '');
     const valueUnit = houseStatesUnit
-        ? (unitText(ctx, valueUnitChannel ?? '') ?? shareUnit)
+        ? (valueDisplayUnit?.placement === 'value' ? valueDisplayUnit.text : shareUnit)
         : shareUnit;
 
     // A label placed at the mark sits *inside* it, which only works while the
     // mark is longer than the label. Below that length the label has to move
-    // out, and above the point where the mark reaches the end of the scale an
-    // outside label has nowhere left to go. Grounding is the stage that can
-    // say where those two lines are.
+    // out. Outside placement is chart-wide: the backend reserves room instead
+    // of flipping only the longest mark inward.
     let insideMinValue: number | undefined;
-    let outsideMaxValue: number | undefined;
     if (dlShow && measureChannel) {
         const span = measureChannel === 'x' ? ctx.layout.subplotWidth : ctx.layout.subplotHeight;
         if (valueMaxAbs > 0 && span > 0) {
             insideMinValue = (valueLabelWidthPx / span) * valueMaxAbs;
-            outsideMaxValue = valueMaxAbs - insideMinValue;
         }
     }
 
@@ -1715,6 +1698,8 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     const padding = isPaintedSurface(canvas)
         ? Math.max(densityPadding, Math.round((axisLabelText.fontSize ?? 10) * 1.5))
         : densityPadding;
+    const selectionBoundary = theme.interaction?.selectionBoundary;
+    const selectionBoundaryWidth = Math.max(0, selectionBoundary?.width ?? 1.25);
 
     return {
         themeId: theme.id ?? 'flint',
@@ -1754,7 +1739,6 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             format: numberFormat,
             ...(valueUnit ? { unit: valueUnit } : {}),
             insideMinValue,
-            outsideMaxValue,
             ...(segmentMinShare !== undefined ? { segmentMinShare } : {}),
         },
         // A house that dots the end of a line is saying where the story stops.
@@ -1768,11 +1752,29 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             }
             : undefined,
         marks,
+        interaction: {
+            continuousColorFocus: {
+                mutedFill: mixHex(plot ?? canvas, text.primary, 0.08, '#eeeeee'),
+                boundaryWidth: Math.min(selectionBoundaryWidth, 0.8),
+                boundaryOpacity: 0.42,
+                haloWidth: Math.min(Math.max(0, selectionBoundary?.haloWidth ?? 2.5), 1.25),
+                haloOpacity: 0.18,
+            },
+            selectionBoundary: {
+                color: selectionBoundary?.color ?? theme.ink?.accent ?? text.primary,
+                width: selectionBoundaryWidth,
+                opacity: clamp(selectionBoundary?.opacity ?? 0.68, 0, 1),
+                haloColor: selectionBoundary?.haloColor ?? plot ?? canvas,
+                haloWidth: Math.max(0, selectionBoundary?.haloWidth ?? 2.5),
+                haloOpacity: clamp(selectionBoundary?.haloOpacity ?? 0.35, 0, 1),
+            },
+        },
         facets,
         layout: {
             padding,
             density,
             plotWidth: ctx.layout.subplotWidth,
+            plotHeight: ctx.layout.subplotHeight,
             xStep: ctx.layout.xStep,
             canvasWidth: ctx.canvasSize?.width,
         },

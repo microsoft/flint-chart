@@ -20,6 +20,12 @@ export interface DataSourceOptions {
   maxDataFileBytes?: number;
   /** Row-count guard after loading inline or referenced data. */
   maxDataRows?: number;
+  /**
+   * Base directory for resolving relative `data.url` paths. Defaults to the
+   * current working directory. The CLI passes the input file's directory so a
+   * hand-edited `chart.json` can reference `./data.csv` next to it.
+   */
+  cwd?: string;
 }
 
 /**
@@ -68,7 +74,7 @@ export function resolveDataSource(
     );
   }
 
-  const filePath = resolveTrustedDataPath(data.url);
+  const filePath = resolveTrustedDataPath(data.url, options.cwd);
   const rows = readLocalRows(filePath, options);
   return { ...input, data: { values: rows } } as ChartAssemblyInput;
 }
@@ -80,11 +86,11 @@ function isRemoteReference(rawUrl: string): boolean {
 
 /**
  * Resolve a local data.url. Any local file the agent can name is read — the host
- * governs the agent's file access. Relative references resolve against the
- * working directory.
+ * governs the agent's file access. Relative references resolve against `cwd` (or
+ * the working directory when not specified).
  */
-function resolveTrustedDataPath(rawUrl: string): string {
-  const candidatePaths = trustedReferenceToPaths(rawUrl.trim());
+function resolveTrustedDataPath(rawUrl: string, cwd?: string): string {
+  const candidatePaths = trustedReferenceToPaths(rawUrl.trim(), cwd);
   let lastError: unknown;
   for (const candidatePath of candidatePaths) {
     try {
@@ -105,7 +111,7 @@ function resolveTrustedDataPath(rawUrl: string): string {
   );
 }
 
-function trustedReferenceToPaths(rawReference: string): string[] {
+function trustedReferenceToPaths(rawReference: string, cwd?: string): string[] {
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(rawReference)) {
     const parsedUrl = new URL(rawReference);
     if (parsedUrl.protocol !== 'file:') {
@@ -116,7 +122,9 @@ function trustedReferenceToPaths(rawReference: string): string[] {
     }
     return [fileURLToPath(parsedUrl)];
   }
-  // Absolute paths are used as given; relative paths resolve against cwd.
+  // Absolute paths are used as given; relative paths resolve against cwd when
+  // given, or the process working directory otherwise.
+  if (cwd) return [resolvePath(cwd, rawReference)];
   return [resolvePath(rawReference)];
 }
 

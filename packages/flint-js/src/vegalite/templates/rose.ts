@@ -17,10 +17,23 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/presentation/annotation';
+import { withInteractionTextLabel } from '../interaction-provenance';
 import { setMarkProp } from './utils';
 
 export const roseChartDef: ChartTemplateDef = {
     chart: "Rose Chart",
+    reorder: false,
     template: {
         mark: {
             type: "arc",
@@ -31,6 +44,40 @@ export const roseChartDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'area',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const valueField = resolvedEncodings.y?.field;
+        const colorLegendField = resolvedEncodings.color?.field ?? resolvedEncodings.x?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorLegendField ? { color: colorLegendField } : undefined,
+            selectableMarks: ['arc'],
+            annotationMarkType: 'arc',
+            supportedRegionGestures: ['angular'],
+            renderHoverStyles: { arc: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField ?? categoryField;
+                let hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                if (event.role === 'text-label' && categoryField) {
+                    const category = event.hits[0]?.datum[categoryField];
+                    hits = context.allHits.filter((hit) => hit.datum[categoryField] === category);
+                }
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'mark',
+                    role: event.role === 'text-label' ? 'text-label' : 'polar-bar',
+                });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('outer-radial'),
+                valueAnnotationText(valueField),
+            ),
+        };
+    },
 
     // Polar charts have no positional axes — declare no banded axes
     // so the layout pipeline won't produce step-based sizing.
@@ -152,10 +199,13 @@ export const roseChartDef: ChartTemplateDef = {
             const arcMark = spec.mark;
             spec.layer = [
                 { mark: arcMark, encoding: {} as any },
-                {
+                withInteractionTextLabel({
                     mark: { type: "text", radiusOffset: 15, fontSize: 11 },
                     encoding: {} as any,
-                },
+                }, {
+                    fields: x?.field ? [x.field] : undefined,
+                    presentation: 'independent',
+                }),
             ];
             delete spec.mark;
 

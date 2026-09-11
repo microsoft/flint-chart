@@ -8,6 +8,7 @@ import {
   assembleChartjs,
   assemblePlotly,
   assembleExcel,
+  assembleImageCharts,
 } from '../src';
 
 const DATA = [
@@ -96,6 +97,41 @@ describe('public API smoke', () => {
       { name: 'EU', xColumn: 4, yColumn: 5, rowCount: 1 },
     ]);
     expect(spec.seriesBy).toBe('Columns');
+  });
+
+  it('assembleImageCharts returns a permanent free-tier Image-Charts URL', () => {
+    const artifact = assembleImageCharts({
+      data: { values: [
+        { Category: 'A', Value: 10 },
+        { Category: 'B', Value: 20 },
+        { Category: 'C', Value: 15 },
+      ] },
+      semantic_types: { Category: 'Category', Value: 'Quantity' },
+      chart_spec: {
+        chartType: 'Bar Chart',
+        encodings: { x: 'Category', y: 'Value' },
+        title: 'Sales by region',
+      },
+    });
+
+    expect(artifact.type).toBe('image-charts');
+    expect(artifact.url.startsWith('https://image-charts.com/chart?')).toBe(true);
+    expect(artifact.url).toContain('cht=bvg');
+    expect(artifact.url).toContain('chd=a:10,20,15');
+    expect(artifact.url).toContain('chxl=0:|A|B|C');
+    expect(artifact.url).toContain('chtt=Sales+by+region');
+    // Free tier only: never signed, never an output override.
+    expect(artifact.url).not.toContain('icac');
+    expect(artifact.url).not.toContain('ichm');
+    expect(artifact.url).not.toContain('chof');
+  });
+
+  it('assembleImageCharts throws on chart types with no faithful cht', () => {
+    expect(() => assembleImageCharts({
+      data: { values: [{ Group: 'A', Value: 1 }, { Group: 'A', Value: 5 }] },
+      semantic_types: { Group: 'Category', Value: 'Quantity' },
+      chart_spec: { chartType: 'Boxplot', encodings: { x: 'Group', y: 'Value' } },
+    })).toThrow('does not support chart type "Boxplot"');
   });
 
   it('assembleExcel uses field display names for native axis titles', () => {

@@ -525,13 +525,14 @@ function repositionFacetedLegendBesideGrids(combined: any): void {
     const BUFFER = 16;
 
     const rightMost = Math.max(...grids.map((g: any) => (g.left ?? 0) + (g.width ?? 0)));
+    const { left: _ignoredLeft, ...legendRest } = combined.legend;
+    void _ignoredLeft;
     combined.legend = {
-        ...combined.legend,
-        left: rightMost + GAP,
+        ...legendRest,
+        right: BUFFER,
         top: combined.legend.top ?? 20,
         orient: combined.legend.orient || 'vertical',
         align: 'left',
-        right: undefined,
         textStyle: {
             fontSize: highCardinality ? 8 : 11,
             ...(combined.legend.textStyle || {}),
@@ -565,13 +566,14 @@ function repositionFacetedPolarLegend(combined: any): void {
         const r = Number(p?.radius) || 0;
         return cx + r;
     }));
+    const { left: _ignoredLeft, ...legendRest } = combined.legend;
+    void _ignoredLeft;
     combined.legend = {
-        ...combined.legend,
-        left: rightMost + GAP,
+        ...legendRest,
+        right: BUFFER,
         top: combined.legend.top ?? 20,
         orient: combined.legend.orient || 'vertical',
         align: 'left',
-        right: undefined,
         textStyle: {
             fontSize: highCardinality ? 8 : 11,
             ...(combined.legend.textStyle || {}),

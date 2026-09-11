@@ -141,7 +141,7 @@ const styles = `
   .fci-caption { max-width: 1060px; margin: 18px 0 0; color: ${palette.secondary}; font-family: ${swissFontSans}; font-size: 15px; font-weight: 400; line-height: 1.55; }
   .fci-stage svg { display: block; width: 100%; min-width: 980px; height: auto; font-family: ${swissFontSans}; }
   .fci-type-kicker { font-size: 12px; font-weight: 700; text-transform: uppercase; }
-  .fci-type-label { font-size: 14px; font-weight: 700; text-transform: uppercase; }
+  .fci-type-label { font-size: 14px; font-weight: 700; }
   .fci-type-title { font-size: 22px; font-weight: 600; }
   .fci-type-process { font-size: 25px; font-weight: 500; }
   .fci-type-body { font-size: 19px; font-weight: 500; }

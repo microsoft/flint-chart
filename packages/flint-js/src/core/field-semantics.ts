@@ -261,6 +261,44 @@ const UNIT_SUFFIX_MAP: Record<string, string> = {
     '%': '%',
 };
 
+export interface DisplayUnit {
+    /** Normalized display text, e.g. `USD` becomes `$` and `hours` becomes `hr`. */
+    text: string;
+    /** Compact conventional tags may accompany values; lexical units belong once beside the field name. */
+    placement: 'value' | 'field';
+    /** Currency symbols precede values; other compact units follow them. */
+    position: 'prefix' | 'suffix';
+}
+
+/**
+ * Resolve display intent only from a unit explicitly declared in the semantic
+ * annotation. A semantic type or suggestive field name is not permission to
+ * print a unit.
+ */
+export function resolveDisplayUnit(annotation?: SemanticAnnotation): DisplayUnit | undefined {
+    const declared = annotation?.unit?.trim();
+    if (!declared) return undefined;
+
+    const currency = CURRENCY_MAP[declared.toUpperCase()] ?? CURRENCY_MAP[declared];
+    if (currency) return { text: currency, placement: 'value', position: 'prefix' };
+
+    const compact = UNIT_SUFFIX_MAP[declared] ?? UNIT_SUFFIX_MAP[declared.toLowerCase()];
+    if (compact) return { text: compact.trim(), placement: 'value', position: 'suffix' };
+
+    // Field-level units are labels, not prose. Reject control characters,
+    // parenthetical fragments, and long descriptions; those belong in a
+    // subtitle supplied by the authoring agent.
+    if (declared.length > 24 || /[\r\n()]/.test(declared)) return undefined;
+    return { text: declared, placement: 'field', position: 'suffix' };
+}
+
+/** Append a field-level unit once, preserving labels that already name it. */
+export function titleWithDisplayUnit(title: string, unit?: DisplayUnit): string {
+    if (unit?.placement !== 'field') return title;
+    if (title.toLocaleLowerCase().includes(`(${unit.text.toLocaleLowerCase()})`)) return title;
+    return `${title} (${unit.text})`;
+}
+
 /**
  * Detect whether percentage data uses 0–1 (fractional) or 0–100 (whole-number)
  * representation.

@@ -169,6 +169,8 @@ describe('Vega-Lite Calendar Heatmap', () => {
         expect(spec.encoding.color.field).toBe('value');
         expect(spec.encoding.color.aggregate).toBe('sum');
         expect(spec.encoding.color.type).toBe('quantitative');
+        expect(spec._interactionSemantics.legendFields).toEqual({ color: 'value' });
+        expect(spec._interactionSemantics.rangeLegendChannels).toEqual(['color']);
     });
 
     it('falls back to a derived per-day count when no value field is given', () => {

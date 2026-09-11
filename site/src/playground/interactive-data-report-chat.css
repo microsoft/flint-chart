@@ -1,0 +1,384 @@
+/*
+ * The chat panel of the interactive data report: the agent's turns, the suggested
+ * questions, the selection chip, and the composer.
+ */
+
+.idr-chat-page .it-examples {
+  width: min(100%, 1100px);
+}
+
+.idr-chat-page .it-heading code {
+  font-size: 12px;
+}
+
+.idr-chat-page-warning {
+  margin: 10px 0 0;
+  color: var(--it-warm);
+  font-size: 12px;
+}
+
+.idr-chat-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.idr-chat-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 360px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.idr-chat-preset-list li { display: contents; }
+
+.idr-chat-chip-interaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--it-line);
+  border-radius: 12px;
+  padding: 3px 9px 3px 7px;
+  color: #4e5961;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.idr-chat-chip-interaction svg { flex: none; color: var(--it-accent); }
+.idr-chat-chip-interaction.idr-chat-kind-viewport svg { color: #5b7fb5; }
+.idr-chat-chip-interaction.idr-chat-kind-order svg { color: #c0924a; }
+.idr-chat-chip-interaction.idr-chat-kind-hide svg { color: #9a6fa5; }
+.idr-chat-chip-interaction.idr-chat-kind-annotation svg { color: #4d9a74; }
+
+/* Workspace: chart on the left, the chart's agent on the right. */
+
+.idr-chat-workspace {
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  min-height: 420px;
+}
+
+.idr-chat-chart-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 16px 12px 12px;
+}
+
+.idr-chat-chart {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.idr-chat-chart .it-chart-mount { display: flex; justify-content: center; min-width: 0; }
+
+.idr-chat-gestures {
+  margin: 0;
+  padding: 0 8px;
+  color: #7a858d;
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.idr-chat-agent-panel {
+  gap: 10px;
+  padding: 16px 16px 14px;
+  background: #fbfcfc;
+}
+
+.idr-chat-agent-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.idr-chat-agent-head .it-component-title { margin: 0; }
+.idr-chat-agent-head span { color: var(--it-muted); font-size: 10px; }
+
+/* Context chips above the composer */
+
+.idr-chat-context-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.idr-chat-context-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 8px 3px 7px;
+  border: 1px dashed var(--it-line);
+  border-radius: 6px;
+  color: var(--it-muted);
+  background: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.idr-chat-context-chip svg { flex: none; }
+
+.idr-chat-context-chip.is-selection {
+  border-style: solid;
+  border-color: #cfe3dc;
+  background: #e6f2ee;
+  color: var(--it-accent);
+}
+
+.idr-chat-context-chip.is-agent {
+  border-style: solid;
+  border-color: #ead9cf;
+  background: #fbf3ee;
+  color: var(--it-warm);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.idr-chat-context-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.idr-chat-context-chip button:hover { background: rgba(0, 0, 0, 0.08); }
+
+/* Messages */
+
+.idr-chat-messages {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 220px;
+  padding: 6px 2px;
+  overflow-y: auto;
+}
+
+.idr-chat-messages-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--it-muted);
+  text-align: center;
+}
+
+.idr-chat-messages-empty p { max-width: 280px; margin: 0; font-size: 11.5px; line-height: 1.5; }
+.idr-chat-warning { color: var(--it-warm); }
+
+.idr-chat-turn { display: flex; flex-direction: column; gap: 5px; }
+.idr-chat-turn-user { align-items: flex-end; }
+.idr-chat-turn-assistant { align-items: flex-start; }
+
+.idr-chat-bubble {
+  max-width: 92%;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.idr-chat-turn-user .idr-chat-bubble {
+  background: var(--it-accent);
+  color: #fff;
+  border-bottom-right-radius: 3px;
+}
+
+/* The answer reads like the report: a serif measure with generous leading, not a chat bubble. */
+.idr-chat-turn-assistant .idr-chat-bubble {
+  max-width: 100%;
+  padding: 4px 2px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #3b454c;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13.5px;
+  line-height: 1.85;
+  white-space: normal;
+}
+
+.idr-chat-turn-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 3px;
+  color: var(--it-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.idr-chat-turn-assistant .idr-chat-turn-context { color: var(--it-warm); }
+.idr-chat-thinking { color: var(--it-muted); font-size: 12.5px; font-style: italic; }
+
+.idr-chat-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--it-accent);
+  animation: idr-chat-blink 1s steps(2, start) infinite;
+}
+
+@keyframes idr-chat-blink { to { visibility: hidden; } }
+
+.idr-chat-error {
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: #fbeee7;
+  color: var(--it-warm);
+  font-size: 11px;
+}
+
+/* Prompts and composer */
+
+.idr-chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.idr-chat-suggestions button {
+  padding: 3px 9px;
+  border: 1px solid var(--it-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--it-ink);
+  font: inherit;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.idr-chat-suggestions button:hover:not(:disabled) { border-color: var(--it-accent); color: var(--it-accent); }
+.idr-chat-suggestions button:disabled { opacity: 0.5; cursor: default; }
+
+.idr-chat-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.idr-chat-composer textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--it-line);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.idr-chat-composer textarea:focus { outline: 2px solid #e6f2ee; border-color: var(--it-accent); }
+
+.idr-chat-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--it-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.idr-chat-send:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 760px) {
+  .idr-chat-workspace { grid-template-columns: minmax(0, 1fr); }
+  .idr-chat-section-header { flex-direction: column; }
+  .idr-chat-preset-list { justify-content: flex-start; max-width: none; }
+  .idr-chat-agent-panel { border-left: 0; border-top: 1px solid #e9edef; }
+}
+
+/* Sentence-bound updates in the answer, as in the interactive data report */
+
+.idr-chat-answer p { margin: 0 0 12px; }
+.idr-chat-answer p:last-child { margin-bottom: 0; }
+
+.idr-chat-fragment {
+  display: inline;
+  border-bottom: 1px dotted #b3bcc2;
+  border-radius: 2px;
+  padding: 1px 1px;
+  color: inherit;
+  background: transparent;
+  cursor: help;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.idr-chat-fragment.idr-chat-kind-viewport { border-bottom-color: #9fb4d6; }
+.idr-chat-fragment.idr-chat-kind-order { border-bottom-color: #d3b98c; }
+.idr-chat-fragment.idr-chat-kind-hide { border-bottom-color: #c3a8ca; }
+.idr-chat-fragment.idr-chat-kind-annotation { border-bottom-color: #93bfa7; }
+
+.idr-chat-fragment:hover,
+.idr-chat-fragment.is-preview {
+  border-bottom: 1px solid var(--it-accent);
+  color: #0f5b47;
+  background: #eef7f3;
+}
+
+.idr-chat-fragment:focus-visible {
+  outline: 2px solid var(--it-accent);
+  outline-offset: 1px;
+}
+
+/* The plus sign after a sentence that a page can adopt into its own report. */
+.idr-chat-adopt {
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  margin: 0 2px 0 3px;
+  border: 1px solid #cfd6da;
+  border-radius: 50%;
+  padding: 0;
+  color: #6f7a82;
+  background: #fff;
+  font: 700 11px/1 inherit;
+  place-items: center;
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+.idr-chat-adopt:hover {
+  border-color: var(--it-accent);
+  color: #fff;
+  background: var(--it-accent);
+}

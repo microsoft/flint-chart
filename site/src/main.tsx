@@ -15,6 +15,7 @@ import { AutoLayoutPlayground } from './routes/AutoLayoutPlayground';
 import { DocSectionPage } from './routes/DocSectionPage';
 import { PlaygroundShell } from './playground/PlaygroundShell';
 import { Illustrations } from './playground/Illustrations';
+import { ArchitectureIllustrations } from './playground/ArchitectureIllustrations';
 import { McpUi } from './playground/McpUi';
 import { Labs } from './playground/Labs';
 import { DemoWall } from './playground/DemoWall';
@@ -22,8 +23,19 @@ import { ThemeLab } from './playground/ThemeLab';
 import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
 import { BandStretchingLab } from './playground/BandStretchingLab';
+import { LabelExperimentLab } from './playground/LabelExperimentLab';
+import { OverflowViewportLab } from './playground/OverflowViewportLab';
+import { ClickFocusLab } from './playground/ClickFocusLab';
+import { AnnotationLab } from './playground/AnnotationLab';
+import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
+import { InteractionCandidates } from './playground/InteractionCandidates';
+import { ExternalToChartLab } from './playground/ExternalToChartLab';
+import { ChartToExternalLab } from './playground/ChartToExternalLab';
+import { BespokeInteractionLab } from './playground/BespokeInteractionLab';
+import { InteractiveDataReportLab } from './playground/InteractiveDataReportLab';
 import { StyleReferences } from './playground/StyleReferences';
 import { FullTestCases } from './playground/FullTestCases';
+import { DebugGym } from './playground/DebugGym';
 import { LocaleProvider, useLocale } from './i18n/LocaleContext';
 import type { Locale } from './i18n/locales';
 import { localePath } from './i18n/paths';
@@ -61,6 +73,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="playground" element={<PlaygroundShell />}>
           <Route index element={<Navigate to="illustrations" replace />} />
           <Route path="illustrations" element={<Illustrations />} />
+          <Route path="illustrations/architecture" element={<ArchitectureIllustrations />} />
           <Route path="mcp-ui" element={<McpUi />} />
           <Route path="labs" element={<Labs />} />
           <Route path="demo-wall" element={<DemoWall />} />
@@ -70,7 +83,21 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-lab-r2" element={<ThemeLabR2 />} />
           <Route path="theme-lab-real" element={<ThemeLabReal />} />
           <Route path="band-stretching" element={<BandStretchingLab />} />
+          <Route path="label-experiment" element={<LabelExperimentLab />} />
+          <Route path="overflow-viewport" element={<OverflowViewportLab />} />
+          <Route path="click-focus" element={<ClickFocusLab />} />
+          <Route path="annotation-lab" element={<AnnotationLab />} />
+          <Route path="interaction-coverage" element={<Navigate to="../click-focus" replace />} />
+          <Route path="pan-zoom" element={<Navigate to="../click-focus" replace />} />
+          <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
+          <Route path="external-to-chart" element={<ExternalToChartLab />} />
+          <Route path="chart-to-external" element={<ChartToExternalLab />} />
+          <Route path="bespoke-interaction" element={<BespokeInteractionLab />} />
+          <Route path="interactive-data-report" element={<InteractiveDataReportLab />} />
+          <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />
+          <Route path="debug-gym" element={<DebugGym />} />
+          <Route path="year-legend" element={<Navigate to="../debug-gym" replace />} />
           {/* The Swiss and cartoon labs were the same page twice; keep the
               links they were reached by working. */}
           <Route path="swiss-lab" element={<Navigate to="../style-references/swiss" replace />} />

@@ -2,6 +2,12 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
+import { withInteractionDecorative, withInteractionTextLabel } from '../interaction-provenance';
 
 /**
  * KPI Card — "big number" dashboard tile, one row per tile.
@@ -57,6 +63,18 @@ export const kpiCardDef: ChartTemplateDef = {
     template: { layer: [] },
     channels: ["metric", "value", "goal"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => ({
+        fields: fieldsFromEncodingChannels(resolvedEncodings, ['metric', 'value', 'goal']),
+        categoryField: resolvedEncodings.metric?.field,
+        selectableMarks: ['rect'],
+        resolve: (event, context) => targetFromHits(event.hits, context.keyField, {
+            kind: 'widget',
+            role: 'kpi-tile',
+        }),
+        presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+            'right', 'left', 'top', 'bottom', 'center',
+        )),
+    }),
     instantiate: (spec, ctx) => {
         const { metric, value, goal } = ctx.resolvedEncodings;
         const config = ctx.chartProperties || {};
@@ -78,6 +96,7 @@ export const kpiCardDef: ChartTemplateDef = {
             caption: string;
             valueText: string;
             goalText?: string;
+            record: Record<string, any>;
             // Progress is shown only when both value & goal are numeric.
             progress?: { fraction: number; valueNum: number; goalNum: number };
         };
@@ -111,12 +130,12 @@ export const kpiCardDef: ChartTemplateDef = {
                     };
                 }
 
-                tiles.push({ caption, valueText, goalText, progress });
+                tiles.push({ caption, valueText, goalText, record: row, progress });
             }
         }
 
         if (tiles.length === 0) {
-            tiles.push({ caption: 'Value', valueText: '—' });
+            tiles.push({ caption: 'Value', valueText: '—', record: {} });
         }
 
         // ── Layout ─────────────────────────────────────────────────────────
@@ -221,7 +240,10 @@ export const kpiCardDef: ChartTemplateDef = {
             Math.floor(cardInnerW / Math.max(1, chars * charW));
 
         const valueFontByWidth   = fontFitsWidth(maxValueChars,   CHAR_W_BOLD);
-        const captionFontByWidth = fontFitsWidth(maxCaptionChars, CHAR_W_REGULAR);
+        // Captions may use two lines. Size them for roughly half the longest
+        // caption rather than shrinking a long title to an unreadable single
+        // line; the final text mark also has a hard pixel limit as a safety net.
+        const captionFontByWidth = fontFitsWidth(Math.ceil(maxCaptionChars / 2), CHAR_W_REGULAR);
         const subFontByWidth     = fontFitsWidth(maxSubChars,     CHAR_W_REGULAR);
 
         // Detect sub-line presence early — used both to size value (more
@@ -245,6 +267,42 @@ export const kpiCardDef: ChartTemplateDef = {
         const captionFont = Math.max(11, Math.min(22, Math.floor(Math.min(valueFont / 3.0, captionFontByWidth))));
         const subFont     = Math.max(10, Math.min(18, Math.floor(Math.min(captionFont,       subFontByWidth))));
 
+        const captionCharsPerLine = Math.max(
+            1,
+            Math.floor(cardInnerW / Math.max(1, captionFont * CHAR_W_REGULAR)),
+        );
+        const wrapCaption = (text: string): { text: string; lines: number } => {
+            if (text.length <= captionCharsPerLine) return { text, lines: 1 };
+
+            const words = text.trim().split(/\s+/);
+            let first = '';
+            let splitAt = 0;
+            for (; splitAt < words.length; splitAt++) {
+                const candidate = first ? `${first} ${words[splitAt]}` : words[splitAt];
+                if (candidate.length > captionCharsPerLine && first) break;
+                first = candidate;
+            }
+
+            // A single unbroken token still needs a deterministic hard wrap.
+            if (splitAt === words.length && first.length > captionCharsPerLine) {
+                const firstLine = first.slice(0, captionCharsPerLine);
+                const remainder = first.slice(captionCharsPerLine);
+                const secondLine = remainder.length > captionCharsPerLine
+                    ? `${remainder.slice(0, Math.max(1, captionCharsPerLine - 1))}…`
+                    : remainder;
+                return { text: `${firstLine}\n${secondLine}`, lines: 2 };
+            }
+
+            const remainder = words.slice(splitAt).join(' ');
+            const second = remainder.length > captionCharsPerLine
+                ? `${remainder.slice(0, Math.max(1, captionCharsPerLine - 1)).trimEnd()}…`
+                : remainder;
+            return { text: `${first}\n${second}`, lines: 2 };
+        };
+        const wrappedCaptions = tiles.map(t => wrapCaption(t.caption));
+        const captionLines = wrappedCaptions.some(caption => caption.lines === 2) ? 2 : 1;
+        const captionLineHeight = Math.ceil(captionFont * 1.15);
+
         const padTop   = Math.max(4, Math.floor(captionFont * 0.55));
         const padBot   = Math.max(4, Math.floor(subFont * 0.6));
         const gapCV    = Math.max(6, Math.floor(captionFont * 0.55));  // caption → value
@@ -253,7 +311,7 @@ export const kpiCardDef: ChartTemplateDef = {
         const barHeight = Math.max(2, Math.floor(subFont * 0.4));
 
         const captionTop = padTop;
-        const captionBot = captionTop + captionFont;
+        const captionBot = captionTop + captionFont + (captionLines - 1) * captionLineHeight;
         const valueTop   = captionBot + gapCV;
         const valueMid   = valueTop + Math.floor(valueFont / 2);
         const valueBot   = valueTop + valueFont;
@@ -291,13 +349,14 @@ export const kpiCardDef: ChartTemplateDef = {
         const showCardFrame = config.style !== false;
 
         // ── Per-tile spec builder ──────────────────────────────────────────
-        const buildTile = (t: Tile): any => {
+        const buildTile = (t: Tile, tileIndex: number): any => {
             const layers: any[] = [];
+            const wrappedCaption = wrappedCaptions[tileIndex];
 
             // Card frame (bottom layer) — sized to content, centered with it.
             if (showCardFrame) {
                 layers.push({
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'rect',
                         fill: CARD_FILL,
@@ -316,8 +375,8 @@ export const kpiCardDef: ChartTemplateDef = {
             }
 
             // Caption
-            layers.push({
-                data: { values: [{}] },
+            layers.push(withInteractionTextLabel({
+                data: { values: [t.record] },
                 mark: {
                     type: 'text',
                     fontSize: captionFont,
@@ -325,18 +384,22 @@ export const kpiCardDef: ChartTemplateDef = {
                     fill: '#4a4a4a',
                     align: 'center',
                     baseline: 'top',
-                    text: t.caption,
+                    text: wrappedCaption.text,
+                    lineBreak: '\n',
+                    lineHeight: captionLineHeight,
+                    limit: cardInnerW,
+                    ellipsis: '…',
                     tooltip: null,
                 },
                 encoding: {
                     x: { value: tileW / 2 },
                     y: { value: captionY },
                 },
-            });
+            }, { presentation: 'on-mark' }));
 
             // Big number
-            layers.push({
-                data: { values: [{}] },
+            layers.push(withInteractionTextLabel({
+                data: { values: [t.record] },
                 mark: {
                     type: 'text',
                     fontSize: valueFont,
@@ -351,7 +414,7 @@ export const kpiCardDef: ChartTemplateDef = {
                     x: { value: tileW / 2 },
                     y: { value: valueY },
                 },
-            });
+            }, { presentation: 'on-mark' }));
 
             // Optional goal / progress line
             if (t.progress) {
@@ -371,12 +434,12 @@ export const kpiCardDef: ChartTemplateDef = {
                         ? PROGRESS_BEHIND
                         : PROGRESS_ON_TRACK;
 
-                layers.push({
+                layers.push(withInteractionTextLabel({
                     // Only the exceeded state paints this line a status hue;
                     // otherwise it is ordinary caption grey and re-tones with
                     // the rest of the card's text.
                     ...(isExceeded ? { __themeRole: 'positive' } : {}),
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'text',
                         fontSize: subFont,
@@ -391,10 +454,10 @@ export const kpiCardDef: ChartTemplateDef = {
                         x: { value: tileW / 2 },
                         y: { value: subY },
                     },
-                });
+                }, { presentation: 'on-mark' }));
 
                 // Track
-                layers.push({
+                layers.push(withInteractionDecorative({
                     data: { values: [{}] },
                     mark: {
                         type: 'rect',
@@ -408,7 +471,7 @@ export const kpiCardDef: ChartTemplateDef = {
                         y:  { value: barY },
                         y2: { value: barY + barHeight },
                     },
-                });
+                }));
                 // Fill — clamped to track width; overshoot capped visually
                 // at 100% of the track, but the % label and color reveal
                 // that the goal was exceeded.
@@ -419,7 +482,7 @@ export const kpiCardDef: ChartTemplateDef = {
                     // where the reading is simply in progress, and the
                     // house's status inks where the reading has a verdict.
                     __themeRole: isExceeded ? 'positive' : isBehind ? 'negative' : 'accent',
-                    data: { values: [{}] },
+                    data: { values: [t.record] },
                     mark: {
                         type: 'rect',
                         fill: fillColor,
@@ -435,8 +498,8 @@ export const kpiCardDef: ChartTemplateDef = {
                 });
             } else if (t.goalText != null) {
                 // Non-numeric goal (or non-numeric value) → just show "Goal: …".
-                layers.push({
-                    data: { values: [{}] },
+                layers.push(withInteractionTextLabel({
+                    data: { values: [t.record] },
                     mark: {
                         type: 'text',
                         fontSize: subFont,
@@ -450,7 +513,7 @@ export const kpiCardDef: ChartTemplateDef = {
                         x: { value: tileW / 2 },
                         y: { value: subY },
                     },
-                });
+                }, { presentation: 'on-mark' }));
             }
 
             return {

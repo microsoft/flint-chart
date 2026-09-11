@@ -4,6 +4,14 @@
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
 import { defaultBuildEncodings } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const stripPlotDef: ChartTemplateDef = {
     chart: "Strip Plot",
@@ -12,7 +20,35 @@ export const stripPlotDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "size", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const sizeField = resolvedEncodings.size?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color', 'size']),
+            categoryField,
+            seriesField,
+            legendFields: {
+                ...(colorField ? { color: colorField } : {}),
+                ...(sizeField ? { size: sizeField } : {}),
+            },
+            selectableMarks: ['circle'],
+            renderHoverStyles: { symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'point' });
+            },
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'center', 'top', 'right', 'bottom', 'left',
+            )),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { defaultBandSize: 50, minStep: 16 },
     }),

@@ -4,6 +4,11 @@
 import { ChartTemplateDef, ChartPropertyDef, type InstantiateContext } from '../../core/types';
 import { defaultBuildEncodings, setMarkProp } from './utils';
 import { makeCartesianPivot } from '../../core/pivot';
+import {
+    MUTED_HOVER_STROKE,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate, transitionAnnotationText } from '../../interactive/presentation/annotation';
 
 export const interpolateConfigProperty: ChartPropertyDef = {
     key: "interpolate", label: "Curve", type: "discrete", options: [
@@ -67,6 +72,16 @@ function isContinuousColor(ctx: InstantiateContext): boolean {
     return type === 'quantitative' || type === 'temporal';
 }
 
+function discreteField(
+    resolvedEncodings: Readonly<Record<string, any>>,
+    channels: readonly string[],
+): string | undefined {
+    return channels
+        .map((channel) => resolvedEncodings[channel])
+        .find((encoding) => encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal'))
+        ?.field;
+}
+
 /**
  * Vega-Lite splits a line into one segment per datum when color is quantitative,
  * so nothing visible connects. Mirror ECharts: a neutral line + colored points.
@@ -117,8 +132,36 @@ export const lineChartDef: ChartTemplateDef = {
     chart: "Line Chart",
     template: { mark: "line", encoding: {} },
     channels: ["x", "y", "color", "strokeDash", "detail", "opacity", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'position',
     geometryKinds: ['line', 'point'],
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const fields = ['x', 'y', 'color', 'detail']
+            .map((channel) => resolvedEncodings[channel]?.field)
+            .filter((field): field is string => !!field);
+        const categoryField = discreteField(resolvedEncodings, ['x']);
+        const seriesField = discreteField(resolvedEncodings, ['color', 'detail']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: [...new Set(fields)],
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['line', 'point'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                (_element, _context, visual) => visual?.kind === 'path'
+                    ? annotationCandidates('segment-midpoint', 'center', 'top', 'bottom', 'right', 'left')
+                    : annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
+                transitionAnnotationText(resolvedEncodings.y?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         paramOverrides: { continuousMarkCrossSection: { x: 100, y: 20, seriesCountAxis: 'auto' }, facetAspectRatioResistance: 0.5 },
     }),

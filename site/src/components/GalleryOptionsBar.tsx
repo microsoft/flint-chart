@@ -16,6 +16,7 @@ import type { ChartOption } from 'flint-chart';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { siteTheme } from '../shared/theme';
 import { chartIconFor } from '../shared/chart-categories';
+import { SiteRange } from './SiteRange';
 import { valueKey } from '../shared/chart-options';
 import type { ControlSpec, PanelModel, ResolvedAction } from '../shared/chart-options';
 import './gallery-options-bar.css';
@@ -340,7 +341,6 @@ function ControlRow(props: {
   if (spec.type === 'continuous') {
     const step = spec.step ?? ((spec.max - spec.min) / 100 || 1);
     const num = typeof value === 'number' ? value : spec.min;
-    const pct = spec.max > spec.min ? ((num - spec.min) / (spec.max - spec.min)) * 100 : 0;
     // Reserve enough width for the widest value the slider can show so the
     // readout never clips (e.g. "50") or reflows as digits change.
     const readoutCh = Math.max(
@@ -350,14 +350,11 @@ function ControlRow(props: {
     );
     control = (
       <span className="gopt-inline">
-        <input
-          type="range"
-          className="site-range"
+        <SiteRange
           min={spec.min}
           max={spec.max}
           step={step}
           value={num}
-          style={{ ['--pct' as string]: `${pct}%` } as CSSProperties}
           onChange={(e) => onChange(Number(e.target.value))}
         />
         <span className="gopt-readout" style={{ minWidth: `${readoutCh}ch` }}>

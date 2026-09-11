@@ -3,14 +3,18 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+    normalizeChartEncodingAliases,
     normalizeStaticSeries,
     STATIC_SERIES_KEY_COLUMN,
     STATIC_SERIES_VALUE_COLUMN,
 } from '../src/core/static-series';
 import {
-    assembleVegaLite,
-    assembleECharts,
     assembleChartjs,
+    assembleECharts,
+    assembleExcel,
+    assembleImageCharts,
+    assemblePlotly,
+    assembleVegaLite,
 } from '../src';
 import type { ChartAssemblyInput } from '../src';
 
@@ -23,6 +27,42 @@ const WIDE_DATA = [
     { Month: '2018-08-01', 'Sales Amount': 3964801.20, 'Sales Due Date': 3636830.87 },
     { Month: '2018-09-01', 'Sales Amount': 3287605.93, 'Sales Due Date': 3707611.99 },
 ];
+
+describe('grouped bar encoding aliases', () => {
+    const rows = [
+        { Region: 'East', Segment: 'Consumer', Sales: 10 },
+        { Region: 'East', Segment: 'Business', Sales: 20 },
+        { Region: 'West', Segment: 'Consumer', Sales: 30 },
+        { Region: 'West', Segment: 'Business', Sales: 40 },
+    ];
+    const input = (seriesChannel: 'color' | 'group'): ChartAssemblyInput => ({
+        data: { values: rows },
+        semantic_types: { Region: 'Category', Segment: 'Category', Sales: 'Quantity' },
+        chart_spec: {
+            chartType: 'Grouped Bar Chart',
+            encodings: { x: 'Region', y: 'Sales', [seriesChannel]: 'Segment' },
+        },
+    });
+
+    it('canonicalizes a lone color binding without changing other chart types', () => {
+        expect(normalizeChartEncodingAliases('Grouped Bar Chart', { color: 'Segment' }))
+            .toEqual({ group: 'Segment' });
+        expect(normalizeChartEncodingAliases('Stacked Bar Chart', { color: 'Segment' }))
+            .toEqual({ color: 'Segment' });
+    });
+
+    it.each([
+        ['Vega-Lite', assembleVegaLite],
+        ['ECharts', assembleECharts],
+        ['Chart.js', assembleChartjs],
+        ['Plotly', assemblePlotly],
+        ['Excel', assembleExcel],
+        ['Image-Charts', assembleImageCharts],
+    ] as const)('%s compiles color and group bindings identically', (_name, assemble) => {
+        expect(JSON.stringify(assemble(input('color') as never)))
+            .toBe(JSON.stringify(assemble(input('group') as never)));
+    });
+});
 
 // ---------------------------------------------------------------------------
 // normalizeStaticSeries — validation tests

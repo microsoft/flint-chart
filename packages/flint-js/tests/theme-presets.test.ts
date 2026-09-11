@@ -317,6 +317,23 @@ describe('cartoon mark character', () => {
         expect(JSON.stringify(thin._theme?.report ?? [])).toContain('round the bar away');
     });
 
+    it('keeps ranged histogram bars square under Power BI', () => {
+        const spec = assembleVegaLite({
+            data: {
+                values: [1.7, 1.9, 2.1, 2.4, 3.1, 3.4, 3.8, 4.2, 4.6].map((duration) => ({
+                    'Duration (min)': duration,
+                })),
+            },
+            semantic_types: { 'Duration (min)': 'Quantity' },
+            chart_spec: { chartType: 'Histogram', encodings: { x: 'Duration (min)' } },
+            theme_spec: THEME_PRESETS.powerbi.spec,
+        } as any) as any;
+
+        const barMark = (spec.layer ?? [spec]).find((l: any) => markTypeOf(l.mark) === 'bar')?.mark;
+        expect(spec.config.bar.cornerRadiusEnd).toBe(3);
+        expect(barMark?.cornerRadiusEnd).toBe(0);
+    });
+
     it('keeps a crowded trajectory in the lab dot-to-line proportion', () => {
         const diameter = (size: number) => 2 * Math.sqrt(size / Math.PI);
         const ratioOf = (spec: any) => {

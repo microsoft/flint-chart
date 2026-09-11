@@ -246,7 +246,7 @@ describe('semantic geometry survives house styling', () => {
         ]);
     });
 
-    it('thins labels on a dense categorical axis without dropping bars', () => {
+    it('thins labels in the visible dense window and retains the full viewport domain', () => {
         const values = Array.from({ length: 100 }, (_v, i) => ({
             category: `Page ${i + 1}`,
             value: i + 1,
@@ -261,8 +261,14 @@ describe('semantic geometry survives house styling', () => {
             },
             theme_spec: theme(),
         } as any) as any;
-        expect(fig.data[0].x).toHaveLength(100);
-        expect(fig.layout.xaxis.tickvals.length).toBeLessThan(100);
+        expect(fig.data[0].x).toHaveLength(90);
+        expect(fig.layout.xaxis.tickvals.length).toBeLessThan(90);
+        expect(fig._viewports).toMatchObject([{
+            channel: 'x',
+            visibleCount: 90,
+            totalCount: 100,
+        }]);
+        expect(fig._viewports[0].orderedValues).toHaveLength(100);
     });
 
     it('factors color and dash into separate forecast legend dimensions', () => {

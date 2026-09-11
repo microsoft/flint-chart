@@ -1,0 +1,103 @@
+.architecture-page {
+  --architecture-ink: #1f2328;
+  --architecture-muted: #66707a;
+  --architecture-blue: #2878a8;
+  --architecture-line: rgba(31, 35, 40, 0.18);
+  --architecture-soft: #f4f5f3;
+  gap: 64px;
+  color: var(--architecture-ink);
+  font-family: 'Helvetica Neue', Helvetica, 'Inter Variable', sans-serif;
+}
+
+.architecture-section {
+  box-sizing: border-box;
+  width: min(100%, 1400px);
+}
+
+.architecture-section {
+  padding-top: 24px;
+}
+
+.architecture-page .fci-stage svg {
+  min-width: 700px;
+}
+
+.architecture-page figcaption {
+  display: none;
+}
+
+.iai-figure {
+  width: min(100%, 1400px);
+  margin: 0;
+}
+
+.iai-stage {
+  --iai-artifact-fill: #f1f1ef;
+  --iai-process-fill: #fff;
+  --iai-compiler-fill: #eaf4f8;
+  --iai-boundary-fill: #f4f1ea;
+  --iai-box-stroke: 1.5px;
+  --iai-inner-stroke: 1px;
+  --iai-flow-stroke: 2px;
+  --iai-stage-flow-stroke: 1.5px;
+  --iai-arrow-stroke: 1.75px;
+  --iai-type-artifact: 19px;
+  --iai-type-artifact-expanded: 21px;
+  --iai-type-process: 19px;
+  --iai-type-nested: 17px;
+  --iai-type-detail: 15px;
+  --iai-type-detail-expanded: 15px;
+  --iai-type-flow-note: 14px;
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+}
+
+.iai-stage svg {
+  display: block;
+  width: 100%;
+  min-width: 980px;
+  height: auto;
+  font-family: 'Helvetica Neue', Helvetica, 'Inter Variable', sans-serif;
+  shape-rendering: geometricPrecision;
+}
+
+.iai-figure figcaption {
+  display: block;
+  max-width: 1080px;
+  margin-top: 18px;
+  color: var(--architecture-muted);
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.iai-boundary path { fill: var(--iai-boundary-fill); fill-opacity: 0.62; stroke: none; }
+.iai-boundary text { fill: var(--architecture-muted); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.iai-item rect { fill: var(--iai-artifact-fill); stroke: var(--architecture-ink); stroke-width: var(--iai-box-stroke); }
+.iai-item-title { fill: var(--architecture-ink); font-size: var(--iai-type-artifact); font-weight: 600; letter-spacing: 0; }
+.iai-item-detail { fill: var(--architecture-muted); font-size: var(--iai-type-detail); font-weight: 400; letter-spacing: 0; }
+.iai-item-expanded .iai-item-title { font-size: var(--iai-type-artifact-expanded); }
+.iai-item-expanded .iai-item-detail { font-size: var(--iai-type-detail-expanded); font-weight: 400; }
+.iai-item-expanded .iai-item-detail-key { fill: var(--architecture-blue); font-weight: 700; }
+.iai-box rect { fill: var(--iai-process-fill); stroke: var(--architecture-ink); stroke-width: var(--iai-box-stroke); }
+.iai-title { fill: var(--architecture-ink); font-size: var(--iai-type-process); font-weight: 600; letter-spacing: 0; }
+.iai-title-qualifier { fill: var(--architecture-muted); font-size: 13px; font-weight: 400; }
+.iai-box .iai-title { font-weight: 500; }
+.iai-detail { fill: var(--architecture-muted); font-size: var(--iai-type-detail); font-weight: 400; }
+.iai-acquisition > rect:first-child { fill: var(--iai-process-fill); stroke: var(--architecture-ink); stroke-width: var(--iai-box-stroke); }
+.iai-stage-box rect { fill: var(--iai-process-fill); stroke: var(--architecture-line); stroke-width: var(--iai-inner-stroke); }
+.iai-compiler-pass rect { fill: var(--iai-compiler-fill); stroke: var(--architecture-blue); stroke-width: 2.25px; }
+.iai-compiler-pass .iai-title,
+.iai-compiler-pass .iai-stage-title { fill: var(--architecture-blue); font-weight: 600; }
+.iai-stage-title { fill: var(--architecture-ink); font-size: var(--iai-type-nested); font-weight: 500; letter-spacing: 0; }
+.iai-stage-connector { fill: none; stroke: var(--architecture-muted); stroke-width: var(--iai-stage-flow-stroke); stroke-linecap: square; stroke-linejoin: miter; }
+.iai-flow { fill: none; stroke: var(--architecture-ink); stroke-width: var(--iai-flow-stroke); stroke-linecap: square; stroke-linejoin: miter; }
+.iai-flow-dashed { stroke-dasharray: 7 6; }
+.iai-flow-label { fill: var(--architecture-muted); font-size: var(--iai-type-flow-note); font-weight: 400; }
+.iai-extension-label { fill: var(--architecture-muted); font-size: var(--iai-type-flow-note); font-weight: 400; }
+.iai-arrow-head { fill: none; stroke: var(--architecture-ink); stroke-width: var(--iai-arrow-stroke); stroke-linecap: square; stroke-linejoin: miter; }
+.iai-note { fill: var(--architecture-muted); font-size: 13px; }
+
+@media (max-width: 620px) {
+  .architecture-page { gap: 48px; }
+}

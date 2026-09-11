@@ -79,6 +79,9 @@ const APPROX_CHAR_WIDTH_RATIO = 0.62;
  */
 const SPARSE_FIT_BAND_CEILING = 100;
 
+/** Smallest readable default step for a discrete item before overflow activates. */
+export const DEFAULT_MIN_STEP = 8;
+
 /** Distinct label strings for a discrete axis field, plus derived stats. */
 interface DiscreteLabelStats {
     count: number;
@@ -292,7 +295,7 @@ export function computeLayout(
     const {
         elasticity: elasticityVal = 0.5,
         facetElasticity: facetElasticityVal = 0.3,
-        minStep: minStepVal = 6,
+        minStep: minStepVal = DEFAULT_MIN_STEP,
         minSubplotSize: minSubplotVal = 60,
         stepPadding: stepPaddingVal = 0.1,
         bandStepFit: bandStepFitVal = 0,
@@ -1436,7 +1439,7 @@ export function computeChannelBudgets(
     options: AssembleOptions,
 ): ChannelBudgets {
     const {
-        minStep: minStepVal = 6,
+        minStep: minStepVal = DEFAULT_MIN_STEP,
         stepPadding: stepPaddingVal = 0.1,
         maxColorValues: maxColorVal = 24,
     } = options;
@@ -1592,7 +1595,7 @@ export function computeFacetGrid(
     const fixW = options.facetFixedPadding?.width ?? 0;
     const fixH = options.facetFixedPadding?.height ?? 0;
     const gap = options.facetGap ?? 0;
-    const minStep = options.minStep ?? 6;
+    const minStep = options.minStep ?? DEFAULT_MIN_STEP;
     const stepPadding = options.stepPadding ?? 0.1;
     const baseMinSubplot = options.minSubplotSize ?? 60;
 
@@ -1888,7 +1891,7 @@ export function computeMinSubplotDimensions(
     data: any[],
     options: { minStep?: number; minSubplotSize?: number },
 ): { minSubplotWidth: number; minSubplotHeight: number } {
-    const minStep = options.minStep ?? 6;
+    const minStep = options.minStep ?? DEFAULT_MIN_STEP;
     const minSubplot = options.minSubplotSize ?? 60;
 
     let minSubplotWidth = minSubplot;

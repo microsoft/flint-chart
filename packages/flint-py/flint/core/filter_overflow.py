@@ -36,6 +36,7 @@ def filter_overflow(
     nominal_counts: dict[str, int] = {"x": 0, "y": 0, "column": 0, "row": 0, "group": 0}
     truncations: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
+    viewports: list[dict[str, Any]] = []
     filtered_data = data
 
     group_cs = channel_semantics.get("group")
@@ -83,7 +84,23 @@ def filter_overflow(
         nominal_counts[channel] = int(min(len(unique_values), max_to_keep))
 
         if len(unique_values) > max_to_keep:
-            values_to_keep = strategy(channel, field_name, unique_values, int(max_to_keep), strategy_context)
+            ordered_values = (
+                strategy(channel, field_name, unique_values, len(unique_values), strategy_context)
+                if strategy is _default_overflow_strategy else None
+            )
+            values_to_keep = (
+                ordered_values[:int(max_to_keep)] if ordered_values is not None
+                else strategy(channel, field_name, unique_values, int(max_to_keep), strategy_context)
+            )
+
+            if channel in ("x", "y") and ordered_values is not None:
+                viewports.append({
+                    "channel": channel,
+                    "field": field_name,
+                    "orderedValues": ordered_values,
+                    "visibleCount": len(values_to_keep),
+                    "totalCount": len(ordered_values),
+                })
 
             omitted_count = len(unique_values) - len(values_to_keep)
             placeholder = f"...{omitted_count} items omitted"
@@ -111,7 +128,28 @@ def filter_overflow(
         "nominalCounts": nominal_counts,
         "truncations": truncations,
         "warnings": warnings,
+        "viewports": viewports,
     }
+
+
+def resolve_category_viewport(viewport: dict[str, Any], requested_start: int = 0) -> dict[str, Any]:
+    max_start = max(0, viewport["totalCount"] - viewport["visibleCount"])
+    start = min(max_start, max(0, math.floor(requested_start)))
+    end = min(viewport["totalCount"], start + viewport["visibleCount"])
+    return {"start": start, "end": end, "values": viewport["orderedValues"][start:end]}
+
+
+def apply_category_viewports(
+    data: list[dict[str, Any]],
+    viewports: list[dict[str, Any]],
+    starts: Optional[dict[str, int]] = None,
+) -> list[dict[str, Any]]:
+    starts = starts or {}
+    windows = [
+        (viewport["field"], set(resolve_category_viewport(viewport, starts.get(viewport["channel"], 0))["values"]))
+        for viewport in viewports
+    ]
+    return [row for row in data if all(row.get(field) in values for field, values in windows)]
 
 
 def _js_sort_key(v: Any) -> str:

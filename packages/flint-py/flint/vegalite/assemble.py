@@ -509,6 +509,8 @@ def assemble_vegalite(input_doc: dict) -> dict:
 
     if len(warnings) > 0:
         result["_warnings"] = warnings
+    if len(overflow_result["viewports"]) > 0:
+        result["_viewports"] = overflow_result["viewports"]
     result["_width"] = layout_result["subplotWidth"]
     result["_height"] = layout_result["subplotHeight"]
 

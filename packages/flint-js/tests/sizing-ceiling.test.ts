@@ -3,7 +3,13 @@
 
 import { describe, it, expect } from 'vitest';
 import { assembleVegaLite } from '../src';
-import { deriveStretchCaps, resolveStretchCaps, resolveBaseSize } from '../src/core/compute-layout';
+import {
+  computeChannelBudgets,
+  DEFAULT_MIN_STEP,
+  deriveStretchCaps,
+  resolveStretchCaps,
+  resolveBaseSize,
+} from '../src/core/compute-layout';
 import { computeAxisStep } from '../src/core/decisions';
 
 /**
@@ -18,6 +24,25 @@ import { computeAxisStep } from '../src/core/decisions';
  */
 
 const BASE = { width: 400, height: 320 };
+
+describe('minimum discrete step', () => {
+  it('uses an 8px default when computing overflow capacity', () => {
+    const data = Array.from({ length: 20 }, (_, index) => ({ category: `C${index}`, value: index }));
+    const budgets = computeChannelBudgets(
+      {
+        x: { field: 'category', type: 'nominal' },
+        y: { field: 'value', type: 'quantitative' },
+      } as never,
+      {},
+      data,
+      { width: 80, height: 100 },
+      { maxStretch: 1 },
+    );
+
+    expect(DEFAULT_MIN_STEP).toBe(8);
+    expect(budgets.maxValues.x).toBe(10);
+  });
+});
 
 describe('bandStepFit (base pitch ↔ available span)', () => {
   const decision = (bandStepFit: number) => computeAxisStep(4, 0, 400, {

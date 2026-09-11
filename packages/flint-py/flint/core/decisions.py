@@ -68,7 +68,7 @@ def _resolve_temporal_encoding(
             "vlType": "ordinal", "visCategory": vis_category,
             "channelOverride": True, "cardinalityGuard": False,
         }
-    if channel == "color":
+    if channel in ("color", "group"):
         unique_count = len({r.get(field_name) for r in data})
         if unique_count <= 12:
             return {

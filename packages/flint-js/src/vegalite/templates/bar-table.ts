@@ -3,7 +3,18 @@
 
 import { ChartTemplateDef, ChartPropertyDef, ChannelSemantics } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
-import type { FormatSpec } from '../../core/field-semantics';
+import { resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import {
+    barAnnotationCandidates,
+    presentAnnotationUpdate,
+    valueAnnotationText,
+} from '../../interactive/presentation/annotation';
 import { formatSpecToVegaExpr } from '../format';
 
 /**
@@ -36,6 +47,32 @@ export const barTableDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const valueField = resolvedEncodings.x?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'color']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar'],
+            renderHoverStyles: { rect: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'bar-table-row' });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => barAnnotationCandidates('x'),
+                valueAnnotationText(valueField),
+            ),
+        };
+    },
+    suppressValueLabels: true,
     declareLayoutMode: (cs, table, chartProperties) => {
         // Bar tables split the plot width into 3 horizontal panels
         // (bar | % | value), so they need a wider canvas than a basic
@@ -115,6 +152,17 @@ export const barTableDef: ChartTemplateDef = {
         const yCS: ChannelSemantics | undefined = ctx.channelSemantics?.y;
         const xEntry = getRegistryEntry(xCS?.semanticAnnotation?.semanticType ?? 'Unknown');
 
+        // ── Ordinal measures (Rank) ──────────────────────────────────
+        // An ordinal is a standing, not a magnitude: "how much better is 1st
+        // than 2nd" has no answer. Length-encoding it (bar length + sequential
+        // colour ramp) would invert the ranking — rank 1 gets the shortest,
+        // palest bar. Honor the documented `Rank` behaviour instead (see
+        // flint://agent-skill: "Rank → reversed axis (1 on top), discrete
+        // color"): sort by rank ascending (1 first), use a discrete colour
+        // scale, and keep bars equal-length so the mark does not imply a
+        // magnitude that isn't there.
+        const xIsOrdinal = xCS?.type === 'ordinal';
+
         // Sign profile of x values — used by the diverging-palette check.
         let hasNegative = false;
         let hasPositive = false;
@@ -192,7 +240,9 @@ export const barTableDef: ChartTemplateDef = {
             && maxScopedCategoryCount > maxRows;
 
         const sortRowsByValue = (items: Array<{ cat: any; value: number }>) => items
-            .sort((a, b) => yCS?.reversed ? a.value - b.value : b.value - a.value);
+            .sort((a, b) => xIsOrdinal
+                ? a.value - b.value
+                : (yCS?.reversed ? a.value - b.value : b.value - a.value));
 
         let displayTable: any[] = [];
         let othersCatLabel: string | undefined;
@@ -268,7 +318,6 @@ export const barTableDef: ChartTemplateDef = {
         // Derived directly from field names; no override knobs.
         const categoryHeader = yField;
         const percentHeader  = '%';
-        const valueHeader    = xField;
         // headerStyle.fontSize is set below once the responsive
         // `fontSize` constant is available.
 
@@ -284,7 +333,19 @@ export const barTableDef: ChartTemplateDef = {
         // The %-share column (panel 1) is a different story: it's a
         // *derived* 0..1 ratio computed by us, so it always needs `%`
         // formatting. That's `pctPattern` below.
-        const valueFmt: FormatSpec | undefined = xCS?.format;
+        const displayUnit = resolveDisplayUnit(xCS?.semanticAnnotation);
+        const valueFmt: FormatSpec | undefined = displayUnit?.placement === 'value'
+            ? {
+                ...(xCS?.format ?? {}),
+                ...(displayUnit.position === 'prefix' && !xCS?.format?.prefix
+                    ? { prefix: displayUnit.text }
+                    : {}),
+                ...(displayUnit.position === 'suffix' && !xCS?.format?.suffix
+                    ? { suffix: /^[A-Za-z]/.test(displayUnit.text) ? ` ${displayUnit.text}` : displayUnit.text }
+                    : {}),
+            }
+            : xCS?.format;
+        const valueHeader = titleWithDisplayUnit(xField, displayUnit);
         const pctPattern = '.1%';
 
         // ── Text-panel transforms ────────────────────────────────────
@@ -418,7 +479,9 @@ export const barTableDef: ChartTemplateDef = {
             }
             return uniqueCats
                 .map(cat => ({ cat, value: aggValue(globalCategoryAgg.get(cat)!) }))
-                .sort((a, b) => yCS?.reversed ? a.value - b.value : b.value - a.value)
+                .sort((a, b) => xIsOrdinal
+                    ? a.value - b.value
+                    : (yCS?.reversed ? a.value - b.value : b.value - a.value))
                 .map(a => a.cat);
         })();
         const ySort: any = ySortOrder && ySortOrder.length > 0
@@ -483,12 +546,19 @@ export const barTableDef: ChartTemplateDef = {
                     legend: null,
                     scale: { scheme: 'redyellowgreen', domainMid: 0 },
                 }
-                : {
-                    field: xField,
-                    type: 'quantitative',
-                    legend: null,
-                    scale: { range: ['#cdebd3', '#41a25f'] },
-                };
+                : xIsOrdinal
+                    ? {
+                        field: xField,
+                        type: 'ordinal',
+                        legend: null,
+                        scale: { scheme: 'tableau10' },
+                    }
+                    : {
+                        field: xField,
+                        type: 'quantitative',
+                        legend: null,
+                        scale: { range: ['#cdebd3', '#41a25f'] },
+                    };
 
         // ── Dynamic panel widths from longest formatted label ────────
         //
@@ -616,13 +686,14 @@ export const barTableDef: ChartTemplateDef = {
             outFieldHint: string,
         ): any => {
             if (!fmt || (!fmt.pattern && !fmt.prefix && !fmt.suffix)) {
-                return { field: sourceField, type: 'quantitative' };
-            }
-            if (!fmt.abbreviate && fmt.pattern && !fmt.prefix && !fmt.suffix) {
-                return { field: sourceField, type: 'quantitative', format: fmt.pattern };
+                transformsOut.push({ calculate: `datum[${JSON.stringify(sourceField)}] + ''`, as: outFieldHint });
+                return { field: outFieldHint, type: 'nominal' };
             }
             const formatExpr = formatSpecToVegaExpr(fmt, `datum[${JSON.stringify(sourceField)}]`);
-            if (!formatExpr) return { field: sourceField, type: 'quantitative' };
+            if (!formatExpr) {
+                transformsOut.push({ calculate: `datum[${JSON.stringify(sourceField)}] + ''`, as: outFieldHint });
+                return { field: outFieldHint, type: 'nominal' };
+            }
             transformsOut.push({
                 calculate: formatExpr,
                 as: outFieldHint,
@@ -708,12 +779,14 @@ export const barTableDef: ChartTemplateDef = {
             },
             encoding: {
                 y: yEncWithLabels,
-                x: {
-                    field: barXField,
-                    type: 'quantitative',
-                    axis: null,
-                    scale: barXScale,
-                },
+                x: xIsOrdinal
+                    ? { datum: 1, type: 'quantitative', axis: null, scale: { domain: [0, 1], nice: false } }
+                    : {
+                        field: barXField,
+                        type: 'quantitative',
+                        axis: null,
+                        scale: barXScale,
+                    },
                 color: barColorEnc,
             },
         });

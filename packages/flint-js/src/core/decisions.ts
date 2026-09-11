@@ -139,8 +139,8 @@ function resolveTemporalEncoding(
     if (['size', 'column', 'row'].includes(channel)) {
         return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: false };
     }
-    // Temporal on color with low cardinality → ordinal for distinct colors
-    if (channel === 'color') {
+    // Temporal on color/group with low cardinality → ordinal for distinct colors
+    if (channel === 'color' || channel === 'group') {
         const uniqueCount = new Set(data.map(r => r[fieldName])).size;
         if (uniqueCount <= 12) {
             return { vlType: 'ordinal', visCategory, channelOverride: true, cardinalityGuard: false };

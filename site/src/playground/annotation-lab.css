@@ -1,0 +1,121 @@
+.annotation-page {
+  gap: 12px;
+}
+
+.annotation-heading {
+  width: min(100%, 1120px);
+}
+
+.annotation-title-row,
+.annotation-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.annotation-toolbar {
+  align-items: center;
+  margin-top: 8px;
+}
+
+.annotation-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.annotation-coverage span {
+  padding: 3px 7px;
+  border: 1px solid #d8dde2;
+  border-radius: 4px;
+  color: #5f6972;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.annotation-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  border: 1px solid #cfd5da;
+  border-radius: 5px;
+  padding: 0 10px;
+  color: #4d5963;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.annotation-reset:hover {
+  background: #eef1f3;
+}
+
+.annotation-grid {
+  width: min(100%, 1440px);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 8px;
+}
+
+.annotation-static-card {
+  grid-template-rows: auto auto;
+  min-width: 0;
+}
+
+.annotation-static-card .cf-probe-header {
+  min-height: 38px;
+  padding: 7px 9px;
+}
+
+.annotation-static-card .cf-probe-header h2 {
+  font-size: 12px;
+}
+
+.annotation-static-card .cf-probe-header p {
+  margin-top: 1px;
+  font-size: 9px;
+}
+
+.annotation-static-card .cf-probe-header p span {
+  color: #87919a;
+}
+
+.annotation-static-card .cf-status {
+  padding: 2px 5px;
+  font-size: 8px;
+}
+
+.annotation-static-stage {
+  padding: 6px;
+  pointer-events: none;
+}
+
+.annotation-static-stage .cf-mount {
+  min-height: 0;
+}
+
+/* The Vega SVG carries a viewBox, so it scales down like an image. */
+.annotation-static-stage svg.marks {
+  max-width: 100%;
+  height: auto;
+}
+@media (max-width: 640px) {
+  .annotation-title-row,
+  .annotation-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .annotation-static-card .cf-probe-header {
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  .annotation-static-card .cf-status {
+    align-self: auto;
+  }
+}

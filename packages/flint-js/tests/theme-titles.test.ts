@@ -129,6 +129,30 @@ describe('axis titles', () => {
         expect(bare.title).toBeUndefined();
     });
 
+    it('lifts a flat y title above column facet headers', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { Year: 2000, Country: 'Germany', Rate: 8 },
+                { Year: 2020, Country: 'Germany', Rate: 4 },
+                { Year: 2000, Country: 'United States', Rate: 4 },
+                { Year: 2020, Country: 'United States', Rate: 8 },
+            ] },
+            semantic_types: { Year: 'Year', Country: 'Country', Rate: 'Quantity' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                title: 'Out of work',
+                encodings: { x: 'Year', y: 'Rate', column: 'Country' },
+            },
+            theme_spec: {
+                ...house({ axisTitles: 'whenAmbiguous', axisTitlePlacement: 'flatAboveAxis', axisTitleGap: 8 }),
+                structure: { axis: { measure: { placement: 'opposite' } } },
+            },
+        } as any) as any;
+        const y = spec.encoding?.y ?? spec.spec?.encoding?.y;
+        expect(y.axis.orient).toBe('right');
+        expect(y.axis.titleY).toBeLessThanOrEqual(-30);
+    });
+
     it('leaves an authored subtitle untouched and keeps the measure named', () => {
         const spec = assembleVegaLite({
             data: { values: MONTHLY },

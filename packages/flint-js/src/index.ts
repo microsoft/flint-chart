@@ -26,6 +26,11 @@
  *   ecTemplateDefs / ecGetTemplateDef / ecGetTemplateChannels
  *   cjsTemplateDefs / cjsGetTemplateDef / cjsGetTemplateChannels
  *
+ * Validation (also available from 'flint-chart/validate'):
+ *   validateChart(input, backend)      — never throws; { valid, warnings, errors, computedSize }
+ *   validateChartInput(input, backend) — throws on the first problem
+ *   validateSemanticTypes(types)       — unregistered semantic_types labels
+ *
  * Usage:
  * ```ts
  * import { assembleVegaLite } from 'flint-chart';
@@ -57,3 +62,9 @@ export * from './plotly';
 
 // Excel backend: assembleExcel + Excel chart spec types
 export * from './excel';
+
+// Image-Charts backend: assembleImageCharts + hosted-image-URL artifact type
+export * from './image-charts';
+
+// Validation: validateChart, validateChartInput, assembleForBackend
+export * from './validate';

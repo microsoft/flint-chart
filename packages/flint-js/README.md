@@ -80,6 +80,7 @@ const xl = assembleExcel(input);       // Native Excel chart artifact
 | `flint-chart/chartjs` | Chart.js backend |
 | `flint-chart/plotly` | Plotly backend |
 | `flint-chart/excel` | Native Excel / Office.js backend |
+| `flint-chart/validate` | `validateChart` — per-problem input validation for agent loops |
 | `flint-chart/test-data` | Sample data generators used by the gallery and tests |
 | `flint-chart/gallery` | Curated example specs |
 

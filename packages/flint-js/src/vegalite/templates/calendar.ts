@@ -18,6 +18,16 @@
  */
 
 import { ChartTemplateDef, ChartPropertyDef, EncodingActionDef } from '../../core/types';
+import {
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+    type SemanticElement,
+} from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
 
 /** Weekday row order, Monday-first — mirrors the ECharts template's dayLabel.firstDay = 1. */
 const WEEKDAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -33,6 +43,21 @@ const COUNT_FIELD = '__flintCalendarCount';
 const DATE_FIELD = '__flintCalendarDate';
 const WEEK_FIELD = '__flintCalendarWeek';
 const WEEKDAY_FIELD = '__flintCalendarWeekday';
+
+function calendarAnnotationText(valueField: string): (element: SemanticElement) => string | undefined {
+    return (element) => {
+        const record = element.value ?? element.records?.[0] ?? {};
+        const rawDate = record[DATE_FIELD];
+        const rawValue = record[`sum_${valueField}`];
+        const date = typeof rawDate === 'number' && Number.isFinite(rawDate)
+            ? new Intl.DateTimeFormat(undefined, { timeZone: 'UTC' }).format(new Date(rawDate))
+            : undefined;
+        const value = typeof rawValue === 'number' && Number.isFinite(rawValue)
+            ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(rawValue)
+            : rawValue === null || rawValue === undefined ? undefined : String(rawValue);
+        return date && value ? `${date}: ${value}` : date ?? value;
+    };
+}
 
 function calendarDate(raw: unknown): Date | undefined {
     if (raw instanceof Date) {
@@ -81,6 +106,31 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
     template: { mark: { type: 'rect', cornerRadius: 2 }, encoding: {} },
     channels: ['x', 'color'],
     markCognitiveChannel: 'color',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const valueField = resolvedEncodings.color?.field ?? COUNT_FIELD;
+        return {
+        fields: [WEEK_FIELD, WEEKDAY_FIELD, DATE_FIELD],
+        categoryField: WEEK_FIELD,
+        legendFields: { color: valueField },
+        selectableMarks: ['rect'],
+        renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 } },
+        renderSelectionStyles: { rect: { boundary: 'contiguous-region' } },
+        resolve: (event, context) => targetFromHits(
+            event.role === 'legend-item'
+                ? legendMatchedHits(event, context, `sum_${valueField}`)
+                : event.hits,
+            context.keyField,
+            {
+            kind: 'mark',
+            role: 'calendar-day',
+            },
+        ),
+        presentUpdate: presentAnnotationUpdate(
+            () => annotationCandidates('center', 'top', 'right', 'bottom', 'left'),
+            calendarAnnotationText(valueField),
+        ),
+    };
+    },
     declareLayoutMode: () => ({
         // Both axes are ordinal bands (week columns × weekday rows); square-ish
         // cells read as a calendar rather than a stretched grid.
@@ -163,6 +213,12 @@ export const vlCalendarHeatmapDef: ChartTemplateDef = {
                 legend: { title: null },
                 scale: colorScale,
             },
+            tooltip: [
+                { field: DATE_FIELD, type: 'temporal', title: 'Date' },
+                valueField
+                    ? { field: valueField, aggregate: 'sum', type: 'quantitative' }
+                    : { field: COUNT_FIELD, aggregate: 'sum', type: 'quantitative' },
+            ],
         };
     },
     encodingActions: [

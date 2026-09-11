@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createServer, resolveBackends, VERSION } from './server.js';
+import { createServer, resolveBackends } from './server.js';
+import { VERSION } from './version.js';
 import { startHttpServer, DEFAULT_MCP_PATH } from './http.js';
 import { SUPPORTED_BACKENDS, type SupportedBackend } from './tools/schemas.js';
 
@@ -12,7 +13,7 @@ MCP server that compiles and renders Flint chart specs to Vega-Lite, ECharts,
 or Chart.js artifacts (PNG/SVG), entirely in-process.
 
 Usage:
-  flint-chart-mcp [options]
+  flint-chart-mcp [options]   Start the MCP server (stdio by default)
 
 Options:
   --transport <stdio|http>  Transport to use. Default: stdio.
@@ -25,7 +26,7 @@ Options:
   --allowed-hosts <list>  Comma-separated Host header allowlist enabling
                           DNS-rebinding protection (http transport only).
   --allowed-origins <list> Comma-separated Origin header allowlist enabling
-                          DNS-rebinding protection (http transport only).
+                           DNS-rebinding protection (http transport only).
   --backends <list>       Comma-separated backends to expose
                           (subset of: ${SUPPORTED_BACKENDS.join(', ')}).
                           Overridden by the FLINT_MCP_BACKENDS env var if set.
@@ -54,18 +55,21 @@ Prompts:
 
 Example MCP client config:
   { "command": "npx", "args": ["-y", "flint-chart-mcp"] }
+
+Local file compile (no agent needed):
+  flint-chart compile chart.json --format svg   (via the separate "flint-chart" binary)
+  See "flint-chart --help" for compile options.
 `;
+
+// keep runCompile re-export for existing tests importing from cli.js
+export { runCompile, type CompileIo } from './compile.js';
 
 interface ParsedArgs {
   transport: string;
   backends?: SupportedBackend[];
-  /** When true, reject local data.url file references (inline rows only). */
   disableFileReference: boolean;
-  /** True when --disable-file-reference was explicitly passed on the CLI. */
   disableFileReferenceSet: boolean;
-  /** True when a deprecated --data-root(s) flag was passed (ignored, warned). */
   usedDeprecatedDataRoots: boolean;
-  /** HTTP transport options. */
   port?: number;
   host?: string;
   path?: string;
@@ -75,24 +79,16 @@ interface ParsedArgs {
 
 function parseBackends(raw: string | undefined): SupportedBackend[] | undefined {
   if (!raw) return undefined;
-  const list = raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean) as SupportedBackend[];
+  const list = raw.split(',').map((s) => s.trim()).filter(Boolean) as SupportedBackend[];
   return list.length ? list : undefined;
 }
 
-/** Split a comma-separated allowlist into trimmed entries. */
 function parseList(raw: string | undefined): string[] | undefined {
   if (!raw) return undefined;
-  const list = raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
   return list.length ? list : undefined;
 }
 
-/** Parse a boolean env var; undefined when unset so the flag can win. */
 function parseBoolEnv(raw: string | undefined): boolean | undefined {
   if (raw == null) return undefined;
   const value = raw.trim().toLowerCase();
@@ -147,28 +143,19 @@ function parseArgs(argv: string[]): ParsedArgs {
         break;
       case '--data-roots':
       case '--data-root':
-        // Deprecated: consume and ignore the value; warned about in main().
         i++;
         out.usedDeprecatedDataRoots = true;
         break;
       default:
-        if (arg.startsWith('--transport=')) {
-          out.transport = arg.slice('--transport='.length);
-        } else if (arg.startsWith('--port=')) {
-          out.port = Number(arg.slice('--port='.length));
-        } else if (arg.startsWith('--host=')) {
-          out.host = arg.slice('--host='.length);
-        } else if (arg.startsWith('--path=')) {
-          out.path = arg.slice('--path='.length);
-        } else if (arg.startsWith('--allowed-hosts=')) {
-          out.allowedHosts = parseList(arg.slice('--allowed-hosts='.length));
-        } else if (arg.startsWith('--allowed-origins=')) {
-          out.allowedOrigins = parseList(arg.slice('--allowed-origins='.length));
-        } else if (arg.startsWith('--backends=')) {
-          out.backends = parseBackends(arg.slice('--backends='.length));
-        } else if (arg.startsWith('--data-roots=') || arg.startsWith('--data-root=')) {
-          out.usedDeprecatedDataRoots = true;
-        } else {
+        if (arg.startsWith('--transport=')) out.transport = arg.slice('--transport='.length);
+        else if (arg.startsWith('--port=')) out.port = Number(arg.slice('--port='.length));
+        else if (arg.startsWith('--host=')) out.host = arg.slice('--host='.length);
+        else if (arg.startsWith('--path=')) out.path = arg.slice('--path='.length);
+        else if (arg.startsWith('--allowed-hosts=')) out.allowedHosts = parseList(arg.slice('--allowed-hosts='.length));
+        else if (arg.startsWith('--allowed-origins=')) out.allowedOrigins = parseList(arg.slice('--allowed-origins='.length));
+        else if (arg.startsWith('--backends=')) out.backends = parseBackends(arg.slice('--backends='.length));
+        else if (arg.startsWith('--data-roots=') || arg.startsWith('--data-root=')) out.usedDeprecatedDataRoots = true;
+        else {
           process.stderr.write(`Unknown argument: ${arg}\n`);
           process.exit(2);
         }
@@ -182,46 +169,24 @@ async function main(): Promise<void> {
 
   const transport = (process.env.FLINT_MCP_TRANSPORT?.trim() || args.transport).toLowerCase();
   if (transport !== 'stdio' && transport !== 'http') {
-    process.stderr.write(
-      `Unsupported transport "${transport}". Use "stdio" or "http".\n`,
-    );
+    process.stderr.write(`Unsupported transport "${transport}". Use "stdio" or "http".\n`);
     process.exit(2);
   }
 
-  // Env var takes precedence over the flag for deployment-time gating.
-  const enabledBackends =
-    parseBackends(process.env.FLINT_MCP_BACKENDS) ?? args.backends;
+  const enabledBackends = parseBackends(process.env.FLINT_MCP_BACKENDS) ?? args.backends;
   const envDisable = parseBoolEnv(process.env.FLINT_MCP_DISABLE_FILE_REFERENCE);
-  // The http transport is remote: local files belong to the server, not the
-  // user, so default to blocking file references unless explicitly overridden.
-  const disableFileReference =
-    envDisable ?? (args.disableFileReferenceSet ? args.disableFileReference : transport === 'http');
+  const disableFileReference = envDisable ?? (args.disableFileReferenceSet ? args.disableFileReference : transport === 'http');
 
-  // The legacy --data-roots/--data-root flags and FLINT_MCP_DATA_ROOTS env var
-  // are deprecated and no longer take effect. They USED to allow/whitelist local
-  // file reads, so we must NOT steer migrators toward --disable-file-reference
-  // (the opposite intent) — that would accidentally turn off all file charting.
   if (args.usedDeprecatedDataRoots || process.env.FLINT_MCP_DATA_ROOTS?.trim()) {
     process.stderr.write(
-      'flint-chart-mcp: --data-roots / --data-root (and FLINT_MCP_DATA_ROOTS) are ' +
-        'deprecated and have NO effect. Local data.url files are now readable by ' +
-        'default, so you can safely REMOVE these flags and local-file charts keep ' +
-        'working. (Only add --disable-file-reference if you instead want to BLOCK ' +
-        'local file reads.)\n',
+      'flint-chart-mcp: --data-roots / --data-root (and FLINT_MCP_DATA_ROOTS) are deprecated and have NO effect. Local data.url files are now readable by default, so you can safely REMOVE these flags and local-file charts keep working. (Only add --disable-file-reference if you instead want to BLOCK local file reads.)\n',
     );
   }
 
-  // Validate eagerly so a bad config fails fast with a clear message.
   const resolved = resolveBackends({ enabledBackends });
-
-  const dataMode = disableFileReference
-    ? 'local file references disabled'
-    : 'local files readable on request';
+  const dataMode = disableFileReference ? 'local file references disabled' : 'local files readable on request';
 
   if (transport === 'http') {
-    // Some hosts (e.g. Azure App Service custom containers) inject an empty
-    // PORT env var that would override the intended port; treat blank env
-    // values as unset so the flag/default still applies.
     const portEnv = process.env.PORT?.trim() || process.env.FLINT_MCP_PORT?.trim();
     const port = Number(portEnv || args.port || 8080);
     if (!Number.isFinite(port) || port <= 0) {
@@ -238,10 +203,7 @@ async function main(): Promise<void> {
       allowedHosts: args.allowedHosts,
       allowedOrigins: args.allowedOrigins,
     });
-    process.stderr.write(
-      `flint-chart-mcp ${VERSION} listening on ${running.url} ` +
-        `(backends: ${resolved.join(', ')}; ${dataMode})\n`,
-    );
+    process.stderr.write(`flint-chart-mcp ${VERSION} listening on ${running.url} (backends: ${resolved.join(', ')}; ${dataMode})\n`);
     const shutdown = () => {
       void running.close().finally(() => process.exit(0));
     };
@@ -253,16 +215,10 @@ async function main(): Promise<void> {
   const server = createServer({ enabledBackends, disableFileReference });
   const stdio = new StdioServerTransport();
   await server.connect(stdio);
-
-  // stdout is the protocol channel; log to stderr only.
-  process.stderr.write(
-    `flint-chart-mcp ${VERSION} ready on stdio (backends: ${resolved.join(', ')}; ` +
-      `${dataMode})\n`,
-  );
+  process.stderr.write(`flint-chart-mcp ${VERSION} ready on stdio (backends: ${resolved.join(', ')}; ${dataMode})\n`);
 }
 
 main().catch((err) => {
   process.stderr.write(`flint-chart-mcp failed to start: ${err?.stack ?? err}\n`);
   process.exit(1);
 });
-

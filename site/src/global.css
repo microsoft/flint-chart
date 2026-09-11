@@ -46,8 +46,8 @@ input[type='range'].site-range::-webkit-slider-runnable-track {
   border-radius: 999px;
   background: linear-gradient(
     to right,
-    #0078d4 0 var(--pct, 50%),
-    rgba(0, 0, 0, 0.16) var(--pct, 50%) 100%
+    var(--site-range-color, #0078d4) 0 var(--pct, 0%),
+    rgba(0, 0, 0, 0.16) var(--pct, 0%) 100%
   );
 }
 
@@ -59,7 +59,7 @@ input[type='range'].site-range::-webkit-slider-thumb {
   margin-top: -3.5px;
   border: 0;
   border-radius: 50%;
-  background: #0078d4;
+  background: var(--site-range-color, #0078d4);
 }
 
 input[type='range'].site-range::-moz-range-track {
@@ -71,7 +71,7 @@ input[type='range'].site-range::-moz-range-track {
 input[type='range'].site-range::-moz-range-progress {
   height: 3px;
   border-radius: 999px;
-  background: #0078d4;
+  background: var(--site-range-color, #0078d4);
 }
 
 input[type='range'].site-range::-moz-range-thumb {
@@ -79,11 +79,11 @@ input[type='range'].site-range::-moz-range-thumb {
   height: 10px;
   border: 0;
   border-radius: 50%;
-  background: #0078d4;
+  background: var(--site-range-color, #0078d4);
 }
 
 input[type='range'].site-range:focus-visible {
-  outline: 2px solid #0078d4;
+  outline: 2px solid var(--site-range-color, #0078d4);
   outline-offset: 3px;
 }
 

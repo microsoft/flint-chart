@@ -495,41 +495,24 @@ export function ecApplyLayoutToSpec(
                     option.graphic = Array.isArray(existing) ? [...existing, titleGraphic] : (existing ? [existing, titleGraphic] : [titleGraphic]);
                 }
             } else {
-                // Single legend: use left positioning so title and legend circles share the same left edge
+                // Single legend: pin to the canvas right edge (not a design-width
+                // `left` px). Hosts that call chart.resize() keep the gutter;
+                // `right = designW - left` is wrong — ECharts `right` is the inset
+                // to the legend's *right* edge, which would grow into the plot.
+                // See https://github.com/microsoft/flint-chart/issues/98
                 const maxLabelLen = Math.max(...legendLabels.map((l: string) => l.length), 3);
                 const highCardinality = legendLabels.length >= 16;
                 const legendSymbolWidth = highCardinality ? 12 : 14;
                 const legendItemGap = 5;
                 const estimatedTextWidth = Math.min(120, maxLabelLen * 7 + 30);
                 option._legendWidth = legendSymbolWidth + legendItemGap + estimatedTextWidth;
-                const LEGEND_GAP = 12;
                 const CANVAS_BUFFER = 16;
-                const rightMarginPx = option._legendWidth + LEGEND_GAP + CANVAS_BUFFER;
-                const hasYTitle = !!option.yAxis?.name;
-                const gridLeft = (hasYTitle ? 70 : 50) + CANVAS_BUFFER;
-                // Use same effective plot width as canvas block (grouped bar/boxplot widen the plot) so legend does not overlap chart
-                let plotW = layout?.subplotWidth ?? canvasSize?.width ?? 400;
-                const xIsDiscreteForLegend = layout.xNominalCount > 0 || layout.xContinuousAsDiscrete > 0;
-                if (xIsDiscreteForLegend) {
-                    let xItemCount = layout.xNominalCount || layout.xContinuousAsDiscrete || 0;
-                    if (layout.xStepUnit === 'group' && option.series && Array.isArray(option.series) && layout.xNominalCount > 0) {
-                        const barSeriesCount = option.series.filter((s: any) => s.type === 'bar').length || option.series.length;
-                        if (barSeriesCount > 0) {
-                            xItemCount = Math.max(1, Math.round(layout.xNominalCount / barSeriesCount));
-                        }
-                    }
-                    plotW = xItemCount > 0 ? layout.xStep * xItemCount : plotW;
-                }
-                const boxplotMinWForLegend = estimateGroupedBoxplotMinPlotWidth(option, layout);
-                if (boxplotMinWForLegend > 0) {
-                    plotW = Math.max(plotW, boxplotMinWForLegend);
-                }
-                const effectiveChartWidth = plotW + gridLeft + rightMarginPx;
-                const legendLeftPx = Math.max(0, effectiveChartWidth - rightMarginPx);
+                const { left: _ignoredLeft, ...legendRest } = option.legend;
+                void _ignoredLeft;
                 option.legend = {
-                    ...option.legend,
+                    ...legendRest,
                     top: legendTitle != null ? 20 : 0,
-                    left: legendLeftPx,
+                    right: CANVAS_BUFFER,
                     orient: option.legend.orient || 'vertical',
                     align: 'left', // icon on left, text on right
                     textStyle: {
@@ -542,7 +525,7 @@ export function ecApplyLayoutToSpec(
                 if (legendTitle != null) {
                     const titleGraphic = {
                         type: 'text' as const,
-                        left: legendLeftPx,
+                        right: CANVAS_BUFFER,
                         top: 4,
                         z: 100,
                         style: {
@@ -551,6 +534,7 @@ export function ecApplyLayoutToSpec(
                             fontWeight: 'bold',
                             fill: '#333',
                             textAlign: 'left',
+                            width: option._legendWidth,
                         },
                     };
                     const existing = option.graphic;

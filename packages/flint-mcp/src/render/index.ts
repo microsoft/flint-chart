@@ -71,6 +71,7 @@ export async function renderChart(
 
   const { spec, warnings, width, height } = assembleForBackend(backend, input, {
     disableFileReference: options.disableFileReference,
+    cwd: options.cwd,
   });
 
   // Extract sizing before stripping Flint's private annotation keys. Vega-Lite

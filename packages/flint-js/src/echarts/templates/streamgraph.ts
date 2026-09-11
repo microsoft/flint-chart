@@ -200,22 +200,20 @@ export const ecStreamgraphDef: ChartTemplateDef = {
             option.singleAxis.left = option.singleAxis.left || 50;
             option.singleAxis.right = Math.max(option.singleAxis.right || 0, rightMargin);
 
-            // Position legend in the right margin so it doesn't overlap the stream
+            // Pin legend to the right gutter (not design-canvas `left`) so resize()
+            // does not drop it into the stream. See microsoft/flint-chart#98.
             if (hasLegend && option.legend) {
-                const legendLeft = option._width - rightMargin + BUFFER;
-                option.legend.left = legendLeft;
-                delete option.legend.right; // Use left to align with graphic titles
+                delete option.legend.left;
+                option.legend.right = BUFFER;
                 option.legend.top = 20;
                 option.legend.orient = option.legend.orient || 'vertical';
                 option.legend.align = 'left';
 
-                // Also update any custom graphic legend titles
                 if (Array.isArray(option.graphic)) {
                     for (const g of option.graphic) {
-                        // The legend title added in instantiate-spec.ts typically has top: 4 and type: 'text'
                         if (g.type === 'text' && (g.top === 4 || g.top === 20) && g.style && g.style.fontWeight === 'bold') {
-                            g.left = legendLeft;
-                            delete g.right;
+                            delete g.left;
+                            g.right = BUFFER;
                         }
                     }
                 }

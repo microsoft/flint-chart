@@ -64,6 +64,27 @@ const radarInput = (house: string) => ({
 } as never);
 
 describe('point size', () => {
+    it('keeps an explicitly bounded bubble-size domain stable', () => {
+        const spec = assembleVegaLite({
+            data: { values: [
+                { X: 1, Y: 2, Population: 10 },
+                { X: 2, Y: 3, Population: 40 },
+            ] },
+            semantic_types: {
+                X: 'Quantity',
+                Y: 'Quantity',
+                Population: { semanticType: 'Quantity', intrinsicDomain: [0, 100] },
+            },
+            chart_spec: {
+                chartType: 'Scatter Plot',
+                encodings: { x: 'X', y: 'Y', size: 'Population' },
+            },
+        } as never) as any;
+
+        expect(spec.encoding.size.scale.domain).toEqual([0, 100]);
+        expect(spec.encoding.size.scale.clamp).toBe(true);
+    });
+
     it('every house says how big its dots are', () => {
         // Silence is not a style. A house that never names a size inherits
         // the renderer's own default, which is nobody's design decision, and

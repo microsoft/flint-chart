@@ -23,7 +23,7 @@
  *     is one number for the whole figure rather than per mark.
  *   - Text on marks is a trace property (`text` + `textposition`), and Plotly
  *     places inside/outside labels itself — the geometry stage 2 computed
- *     (`insideMinValue`/`outsideMaxValue`) is handed over as `textposition:
+ *     (`insideMinValue`) is handed over as `textposition:
  *     'auto'` rather than realized as two filtered layers.
  *   - A figure may hold several subplot axis pairs (`xaxis2`, `yaxis3`, …) for
  *     facets and composites. Every axis pass walks all of them.
@@ -2472,7 +2472,7 @@ function applyDataLabels(figure: any, d: DesignDecisions, table: any[], say: Say
             }
             // Plotly places the label inside where it fits and outside where it
             // does not, which is exactly the geometry stage 2 computed with
-            // `insideMinValue`/`outsideMaxValue`. `auto` hands that decision to
+            // `insideMinValue`. `auto` hands that decision to
             // the renderer, which can measure the drawn bar; `outside` is
             // honoured literally because it is a house habit, not a fit.
             // A segment of a stack has no outside — "outside" is the middle of

@@ -6,6 +6,7 @@ import { assembleVegaLite, getChartOptions } from '../src';
 import { coerceGanttEndpoint, formatGanttDuration, sortGanttRows } from '../src/chart-types/gantt';
 import { genGanttTests, genBulletTests } from '../src/test-data';
 import type { TestCase } from '../src/test-data/types';
+import { bulletChartDef } from '../src/vegalite/templates/bullet';
 
 /**
  * Gantt and Bullet chart types.
@@ -223,6 +224,20 @@ describe('Bullet chart', () => {
       : undefined;
     expect(typeof step).toBe('number');
     expect(tick.mark.size).toBeLessThanOrEqual(step);
+  });
+
+  it('uses the rendered rect mark for a clear value-bar hover affordance', () => {
+    const semantics = bulletChartDef.semanticInteractions!({
+      resolvedEncodings: {
+        y: { field: 'Country', type: 'nominal' },
+        x: { field: 'Share', type: 'quantitative' },
+        goal: { field: 'Target', type: 'quantitative' },
+      },
+    } as any);
+    expect(semantics.renderHoverStyles).toMatchObject({
+      rect: { opacity: 'contrast' },
+    });
+    expect(semantics.renderHoverStyles).not.toHaveProperty('bar');
   });
 });
 

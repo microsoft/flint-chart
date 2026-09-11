@@ -3,6 +3,14 @@
 
 import { ChartTemplateDef } from '../../core/types';
 import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { presentAnnotationUpdate, rangeAnnotationText, valueEndAnnotationCandidates } from '../../interactive/presentation/annotation';
+import { withInteractionTextLabel } from '../interaction-provenance';
+import {
     coerceGanttEndpoint,
     ganttDurationLabelExpression,
     ganttLabelReservePx,
@@ -31,7 +39,35 @@ export const ganttChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["y", "x", "x2", "color", "detail", "column", "row"],
+    navigation: { axes: ['x'] },
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'x2', 'color', 'detail']),
+            categoryField,
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['bar'],
+            renderHoverStyles: { rect: { opacity: 'contrast' } },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, {
+                    kind: 'mark',
+                    role: event.role === 'text-label' ? 'text-label' : 'task',
+                });
+            },
+            presentUpdate: presentAnnotationUpdate(
+                () => valueEndAnnotationCandidates('x', 'top', 'bottom'),
+                rangeAnnotationText(resolvedEncodings.x?.field, resolvedEncodings.x2?.field),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         axisFlags: { y: { banded: true } },
     }),
@@ -100,7 +136,7 @@ export const ganttChartDef: ChartTemplateDef = {
             spec.encoding = facetEncoding;
             spec.layer = [
                 { mark: spec.mark, encoding: barEncoding },
-                {
+                withInteractionTextLabel({
                     mark: { type: 'text', align: 'left', baseline: 'middle', dx: 4, fontSize: 10 },
                     encoding: {
                         y: { ...y },
@@ -111,7 +147,7 @@ export const ganttChartDef: ChartTemplateDef = {
                         },
                         text: { field: labelField, type: 'nominal' },
                     },
-                },
+                }, { presentation: 'independent' }),
             ];
             delete spec.mark;
         }

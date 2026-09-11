@@ -70,10 +70,30 @@ Every field is optional. Start with the decisions that matter to your product, t
 | `annotation` | Units, axis titles, number formats, point emphasis, and statistics |
 | `layout`, `facets` | Density, title spacing, band steps, panel spacing, and shared scales |
 | `chartDefaults`, `compileDefaults` | House defaults for chart controls, base size, canvas size, and layout limits |
+| `interaction` | Tooltip formatting and semantic selection-boundary paint |
 | `furniture` | Rules, tabs, and other recurring chart chrome |
 | `variants` | Semantic conditions that adapt policy to a chart's role, density, or shape |
 
 Theme rules are semantic. For example, `structure.grid.measure` controls the grid used to read values, whichever physical axis carries the measure. `legend.placement` gives the compiler an ordered set of acceptable positions rather than fixed coordinates. This is what lets one theme generalize across different chart types, data, and canvas sizes.
+
+Selection boundaries are inferred from the theme unless explicitly stated. Their foreground defaults to `ink.accent`, then `ink.text.primary`; their halo defaults to the plot or canvas surface. This gives a continuous-color grid an outline that belongs to the house while remaining legible across both ends of its ramp. A theme can override the treatment:
+
+```json
+{
+  "interaction": {
+    "selectionBoundary": {
+      "color": "#b54a20",
+      "width": 1.25,
+      "opacity": 0.68,
+      "haloColor": "#ffffff",
+      "haloWidth": 2.5,
+      "haloOpacity": 0.35
+    }
+  }
+}
+```
+
+This block controls paint only. Set `haloWidth` to `0` to disable the contrast halo. The ChartDef still decides whether a representation needs a boundary and the renderer still computes its contiguous geometry.
 
 ### 3. Inherit and override
 

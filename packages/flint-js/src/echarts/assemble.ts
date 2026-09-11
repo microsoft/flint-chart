@@ -143,7 +143,7 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
     const rawData = input.data.values ?? [];
     const normalized = normalizeStaticSeries(
-        input.chart_spec.encodings, rawData, semanticTypes,
+        input.chart_spec.encodings, rawData, semanticTypes, chartType,
     );
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;
@@ -537,6 +537,9 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // Attach metadata
     if (warnings.length > 0) {
         ecOption._warnings = warnings;
+    }
+    if (overflowResult.viewports.length > 0) {
+        ecOption._viewports = overflowResult.viewports;
     }
 
     // Store data reference (unlike VL which embeds data.values,

@@ -601,6 +601,20 @@ export interface ThemeCompileDefaults extends Partial<AssembleOptions> {
     canvasSize?: { width: number; height: number };
 }
 
+export interface ThemeInteraction {
+    tooltipFormat?: string;
+    /** Paint for the exterior of a contiguous semantic selection. */
+    selectionBoundary?: {
+        color?: string;
+        width?: number;
+        opacity?: number;
+        haloColor?: string;
+        /** Set to zero to disable the contrast halo. */
+        haloWidth?: number;
+        haloOpacity?: number;
+    };
+}
+
 /**
  * Level 1. One JSON document per design language.
  *
@@ -634,7 +648,7 @@ export interface ThemeSpec {
     geometry?: ThemeGeometry;
     chartDefaults?: ThemeChartDefaults;
     compileDefaults?: ThemeCompileDefaults;
-    interaction?: { tooltipFormat?: string };
+    interaction?: ThemeInteraction;
     variants?: ThemeVariant[];
 }
 
@@ -803,11 +817,6 @@ export interface ResolvedDataLabels {
      */
     insideMinValue?: number;
     /**
-     * Above this magnitude the mark reaches the end of the scale, so an
-     * outside label would fall off the plot. The mirror of `insideMinValue`.
-     */
-    outsideMaxValue?: number;
-    /**
      * The smallest share of the measure axis a stacked segment may occupy and
      * still be labelled — a line of text over the plot's extent along that
      * axis. Segments below it get no number: it would not fit between the
@@ -921,6 +930,23 @@ export interface DesignDecisions {
         size: number;
     };
     marks: ResolvedMarks;
+    interaction: {
+        continuousColorFocus: {
+            mutedFill: string;
+            boundaryWidth: number;
+            boundaryOpacity: number;
+            haloWidth: number;
+            haloOpacity: number;
+        };
+        selectionBoundary: {
+            color: string;
+            width: number;
+            opacity: number;
+            haloColor: string;
+            haloWidth: number;
+            haloOpacity: number;
+        };
+    };
     facets: {
         header: { show: boolean; fieldTitle: boolean } & ResolvedText;
         panelFrame: boolean;
@@ -928,11 +954,12 @@ export interface DesignDecisions {
         spacing?: number;
         preferredColumns?: number;
     };
-    /** `plotWidth`/`xStep` are what the layout settled, so an axis can ask whether its names still fit. */
+    /** Plot dimensions and step are what layout settled, so realization can test whether annotations fit. */
     layout: {
         padding: number;
         density: 'compact' | 'normal' | 'airy';
         plotWidth?: number;
+        plotHeight?: number;
         xStep?: number;
         /** The graphic the caller asked for. Wider than `plotWidth` by the axis gutter. */
         canvasWidth?: number;

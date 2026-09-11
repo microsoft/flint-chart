@@ -209,7 +209,7 @@ interface AssembleOptions {
   maxStretchX?: number;        // per-dimension width cap (derived from canvasSize)
   maxStretchY?: number;        // per-dimension height cap (derived from canvasSize)
   facetElasticity?: number;    // facet stretch (default 0.3)
-  minStep?: number;            // min px per discrete item (default 6)
+  minStep?: number;            // min px per discrete item (default 8)
   minSubplotSize?: number;     // min facet subplot px (default 60)
   maxColorValues?: number;     // color cardinality before truncation (default 24)
   stepPadding?: number;        // band inner padding fraction (default 0.1)
@@ -292,6 +292,37 @@ Re-exported from `flint-chart` and `flint-chart/core`:
 
 Key types: `ChartAssemblyInput`, `ChartEncoding`, `ChartTemplateDef`, `AssembleOptions`, `ChartWarning`, `ChannelSemantics`.
 
+## Validation
+
+Hosts that let an agent author a `ChartAssemblyInput` can validate it before
+rendering. `validateChart` never throws; it reports every warning the assembler
+emits plus a single `assembly_failed` error when the input cannot be compiled
+(unknown chart type, unsupported channel, nonexistent field, canvas caps).
+Re-exported from `flint-chart` and `flint-chart/validate`:
+
+```ts
+import { validateChart } from 'flint-chart/validate';
+
+const result = validateChart(input, 'vegalite');
+// { backend, chartType, valid, warnings, errors, computedSize? }
+if (!result.valid) {
+  // feed result.errors back to the agent
+}
+```
+
+| Symbol | Purpose |
+|--------|---------|
+| `validateChart(input, backend, options?)` | Validate and assemble; never throws |
+| `validateChartInput(input, backend?, options?)` | Shape checks only; throws on the first problem |
+| `validateSemanticTypes(semantic_types)` | `unknown_semantic_type` warnings for labels not in the type registry (also included by `validateChart`) |
+| `assembleForBackend(backend, input, options?)` | Assemble and split out `_warnings` / `_width` / `_height` |
+| `stripPrivateKeys(spec)` | Remove Flint's `_`-prefixed metadata from a spec |
+| `VALIDATION_BACKENDS` | Runtime list of accepted backends (`vegalite`, `echarts`, `chartjs`, `plotly`) |
+
+`options.maxDataRows` (default 100,000) and `options.maxCanvasDim` (default
+4000) cap input size. Inline `data.values` are required — resolve `data.url`
+to rows before validating.
+
 ---
 
 # §8 Overflow and warnings
@@ -325,6 +356,7 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/vegalite` | VL templates and `assembleVegaLite` |
 | `flint-chart/echarts` | ECharts templates and `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
+| `flint-chart/validate` | `validateChart` and input validation helpers |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 
 ---

@@ -136,6 +136,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         description: 'Every native Excel chart type, its channels, and Office.js mapping.',
         file: '../../../docs/reference-excel.md',
       },
+      {
+        slug: 'community-backends',
+        title: 'Community backends',
+        description: 'Community-contributed renderers and delivery targets, their coverage, and integration notes.',
+        file: '../../../docs/community-backends.md',
+      },
     ],
   },
   {

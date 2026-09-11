@@ -6,6 +6,14 @@ import { makeSortAction } from '../../core/encoding-actions';
 import { makeCartesianPivot } from '../../core/pivot';
 import { detectBandedAxisFromSemantics } from '../../core/axis-detection';
 import { setMarkProp } from './utils';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    legendMatchedHits,
+    MUTED_HOVER_STROKE,
+    targetFromHits,
+} from '../../core/interaction-semantics';
+import { lollipopAnnotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 export const lollipopChartDef: ChartTemplateDef = {
     chart: "Lollipop Chart",
@@ -17,7 +25,32 @@ export const lollipopChartDef: ChartTemplateDef = {
         ],
     },
     channels: ["x", "y", "color", "column", "row"],
+    navigation: {},
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['x', 'y', 'color']),
+            seriesField,
+            legendFields: colorField ? { color: colorField } : undefined,
+            selectableMarks: ['rule', 'circle'],
+            renderHoverStyles: {
+                rule: { stroke: MUTED_HOVER_STROKE },
+                symbol: { stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
+            },
+            resolve: (event, context) => {
+                const legendField = event.legend?.field ?? seriesField;
+                const hits = event.role === 'legend-item' && legendField
+                    ? legendMatchedHits(event, context, legendField)
+                    : event.hits;
+                return targetFromHits(hits, context.keyField, { kind: 'mark', role: 'lollipop' });
+            },
+            presentUpdate: presentAnnotationUpdate(() => lollipopAnnotationCandidates(
+                resolvedEncodings.x?.type === 'quantitative' ? 'x' : 'y',
+            )),
+        };
+    },
     declareLayoutMode: (cs, table) => {
         const result = detectBandedAxisFromSemantics(cs, table, { preferAxis: 'x' });
         return {

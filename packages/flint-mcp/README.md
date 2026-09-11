@@ -176,6 +176,21 @@ deployment, reject local file references and accept only inline rows:
 npx -y flint-chart-mcp --disable-file-reference
 ```
 
+### Local file compile (`flint-chart`)
+
+Compile a saved `ChartAssemblyInput` JSON to SVG or PNG without an agent:
+
+```bash
+flint-chart compile chart.json --format svg
+flint-chart compile chart.json --backend echarts --format png --output chart.png
+cat chart.json | flint-chart compile - --format svg > chart.svg
+flint-chart chart.json --format svg --output chart.svg   # shorthand, compile is optional
+```
+
+Options: `--backend <vegalite|echarts|chartjs>` (default `vegalite`), `--format <png|svg>` (default `svg` except `chartjs` → `png`), `--output <path>` / `-o <path>` (`-` for stdout; default `<input>.<format>` next to input, stdout when input is `-`), `--scale <0.5–4>`, `--background <color>`, `-h/--help`, `-v/--version`.
+
+Relative `data.url` paths in the input resolve against the input file's directory, or the current working directory when reading from stdin (`-`).
+
 ## Example `render_chart` call
 
 ```jsonc

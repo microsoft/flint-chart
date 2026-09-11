@@ -2,6 +2,17 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef } from '../../core/types';
+import {
+    fieldsFromEncodingChannels,
+    firstDiscreteEncodingField,
+    resolveSeriesTarget,
+} from '../../core/interaction-semantics';
+import {
+    annotationCandidates,
+    comparisonAnnotationText,
+    presentAnnotationUpdate,
+} from '../../interactive/presentation/annotation';
+import { INTERACTION_ROLE } from '../interactions/hit-adapter';
 
 /**
  * Bullet chart — a compact KPI panel: one row per label, each showing a measure
@@ -41,6 +52,38 @@ export const bulletChartDef: ChartTemplateDef = {
     },
     channels: ["y", "x", "goal", "color", "column", "row"],
     markCognitiveChannel: 'length',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const categoryField = resolvedEncodings.y?.field;
+        const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
+        const colorField = resolvedEncodings.color?.field;
+        const actualField = resolvedEncodings.x?.field;
+        const expectedField = resolvedEncodings.goal?.field;
+        const statusField = !colorField && actualField && expectedField ? '__status' : undefined;
+        return {
+            fields: fieldsFromEncodingChannels(resolvedEncodings, ['y', 'x', 'goal', 'color', 'column', 'row']),
+            categoryField,
+            seriesField,
+            legendFields: colorField || statusField ? { color: colorField ?? statusField! } : undefined,
+            selectableMarks: ['bar', 'tick'],
+            renderHoverStyles: {
+                // Vega compiles a Vega-Lite bar to a rect. Treat that filled
+                // area like every other bar: preserve its colour, add no
+                // border, and distinguish it through opacity contrast.
+                rect: { opacity: 'contrast' },
+            },
+            resolve: (event, context) => resolveSeriesTarget(event, context, seriesField),
+            presentUpdate: presentAnnotationUpdate(
+                () => annotationCandidates('right', 'left', 'top', 'bottom', 'center').map((candidate) => ({
+                    ...candidate,
+                    connectorAnchors: [
+                        { role: 'bullet-actual', connection: 'value-end' as const, valueAxis: 'x' as const },
+                        { role: 'bullet-expected', connection: 'center' as const },
+                    ],
+                })),
+                comparisonAnnotationText(actualField, expectedField),
+            ),
+        };
+    },
     declareLayoutMode: () => ({
         axisFlags: { y: { banded: true } },
     }),
@@ -120,6 +163,10 @@ export const bulletChartDef: ChartTemplateDef = {
                 title: null,
             };
         }
+        barLayer.transform = [
+            ...(barLayer.transform ?? []),
+            { calculate: "'bullet-actual'", as: INTERACTION_ROLE },
+        ];
         layers.push(barLayer);
 
         // --- Target marker — a dark tick at the goal, sized to the row band ---
@@ -134,6 +181,7 @@ export const bulletChartDef: ChartTemplateDef = {
                 ? Math.min(band, Math.max(8, Math.round(band * 0.72)))
                 : 22;
             layers.push({
+                transform: [{ calculate: "'bullet-expected'", as: INTERACTION_ROLE }],
                 mark: { type: 'tick', color: '#1a1a1a', thickness: 3, opacity: 1, size: tickSize },
                 encoding: {
                     x: { field: goal.field, type: 'quantitative', axis: xAxis },

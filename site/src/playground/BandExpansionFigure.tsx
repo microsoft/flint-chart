@@ -5,6 +5,7 @@ import { VegaLiteView } from '../components/VegaLiteView';
 import { EChartsView } from '../components/EChartsView';
 import { ChartjsView } from '../components/ChartjsView';
 import { PlotlyView } from '../components/PlotlyView';
+import { SiteRange } from '../components/SiteRange';
 import { siteTheme } from '../shared/theme';
 
 /**
@@ -72,7 +73,6 @@ export function BandExpansionFigure() {
     }
   }, [backend, count]);
 
-  const pct = ((count - 2) / (40 - 2)) * 100;
 
   return (
     <section
@@ -137,15 +137,13 @@ export function BandExpansionFigure() {
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 260 }}>
             <span style={{ ...labelStyle, whiteSpace: 'nowrap' }}>Categories</span>
-            <input
-              type="range"
+            <SiteRange
               min={2}
               max={40}
               step={1}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="site-range"
-              style={{ '--pct': `${pct}%`, flex: 1 } as CSSProperties}
+              style={{ flex: 1 }}
             />
             <span style={{ fontFamily: siteTheme.fontMono, fontWeight: 700, fontSize: 18, color: siteTheme.text, minWidth: 22, textAlign: 'right' }}>
               {count}

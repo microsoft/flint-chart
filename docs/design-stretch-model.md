@@ -283,12 +283,12 @@ The layout balances two directions:
 | $L_{\max}$ | Maximum axis length | `base × β` (β from `maxStretch` or `canvasSize`) | 800 px |
 | $N$ | Number of banded items | Field cardinality | data-dependent |
 | $\ell_0$ | Natural (base) size per band | `defaultBandSize` | ~20 px |
-| $\ell_{\min}$ | Minimum size per band | `minStep` option | 6 px |
+| $\ell_{\min}$ | Minimum size per band | `minStep` option | 8 px |
 | $\ell_{\max}$ | Maximum size per band | `maxBandSize` option | = $\ell_0$ |
 | $\alpha$ | Elasticity exponent | `elasticity` option | 0.5 |
 | $\beta$ | Maximum stretch multiplier | `maxStretch`, or derived from `canvasSize` | 1.5 |
 
-> **Code defaults:** `elasticity: 0.5`, `minStep: 6`, and `maxStretch: 1.5` when no `canvasSize` ceiling is set. $\ell_0$ and $\ell_{\max}$ are given at a 300 px reference canvas and scaled with size: `round(bandSize × max(1, sizeRatio))`.
+> **Code defaults:** `elasticity: 0.5`, `minStep: 8`, and `maxStretch: 1.5` when no `canvasSize` ceiling is set. $\ell_0$ and $\ell_{\max}$ are given at a 300 px reference canvas and scaled with size: `round(bandSize × max(1, sizeRatio))`.
 
 ### §2.2.1 Band size bounds — min, base, max
 
@@ -422,7 +422,7 @@ Grouped items, such as a grouped bar chart with $m$ sub-bars per group, are trea
 | Parameter | Simple discrete | Grouped bar ($m$ sub-bars) |
 |---|---|---|
 | $\ell_0$ (natural) | `defaultStepSize` | $m \times$ `defaultStepSize` |
-| $\ell_{\min}$ (solid) | `minStep` (6 px) | $2m$ px (2 px per sub-bar) |
+| $\ell_{\min}$ (solid) | `minStep` (8 px) | $2m$ px (2 px per sub-bar) |
 | $N$ (item count) | Field cardinality | Number of **groups** |
 
 The elastic budget formula is unchanged — only the parameter values change.
@@ -530,7 +530,7 @@ The minimum subplot size ($S_{\min}$) is axis-aware:
 |---|---|---|
 | $N$ | Number of discrete items | data-dependent |
 | $\ell_0$ | Natural step size | ~20 px |
-| $\ell_{\min}$ | Minimum step size | 6 px |
+| $\ell_{\min}$ | Minimum step size | 8 px |
 | $\alpha$ | Elasticity exponent | 0.5 |
 | $\beta$ | Maximum stretch | 1.5 |
 

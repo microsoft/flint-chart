@@ -263,11 +263,11 @@ continuousWidth = stepSize × (N + 1)
 | $L_{\max}$ | Maximum axis length | `base × β`（β 来自 `maxStretch` 或 `canvasSize`） | 800 px |
 | $N$ | Number of banded items | Field cardinality | data-dependent |
 | $\ell_0$ | Natural length per item | `defaultStepSize` | ~20 px |
-| $\ell_{\min}$ | Minimum length per item | `minStep` option | 6 px |
+| $\ell_{\min}$ | Minimum length per item | `minStep` option | 8 px |
 | $\alpha$ | Elasticity exponent | `elasticity` option | 0.5 |
 | $\beta$ | Maximum stretch multiplier | `maxStretch`，或从 `canvasSize` 推导 | 1.5 |
 
-> **Code defaults:** 未设置 `canvasSize` 上限时，`elasticity: 0.5`、`minStep: 6`、`maxStretch: 1.5`。`defaultStepSize` 根据画布尺寸动态计算：`round(20 × max(1, sizeRatio) × defaultStepMultiplier)`。
+> **Code defaults:** 未设置 `canvasSize` 上限时，`elasticity: 0.5`、`minStep: 8`、`maxStretch: 1.5`。`defaultStepSize` 根据画布尺寸动态计算：`round(20 × max(1, sizeRatio) × defaultStepMultiplier)`。
 
 ## §2.3 三种状态
 
@@ -357,7 +357,7 @@ $$\boxed{\ell = \frac{\kappa \cdot \ell_0 + L_0 / N}{1 + \kappa}}$$
 | Parameter | Simple discrete | Grouped bar ($m$ sub-bars) |
 |---|---|---|
 | $\ell_0$ (natural) | `defaultStepSize` | $m \times$ `defaultStepSize` |
-| $\ell_{\min}$ (solid) | `minStep` (6 px) | $2m$ px（每子 bar 2 px） |
+| $\ell_{\min}$ (solid) | `minStep` (8 px) | $2m$ px（每子 bar 2 px） |
 | $N$ (item count) | Field cardinality | **组**数量 |
 
 elastic budget 公式不变 — 仅参数值变化。
@@ -465,7 +465,7 @@ gas pressure 模型（§3）在每个子图内运行，容器为 $W_{\text{sub}}
 |---|---|---|
 | $N$ | Number of discrete items | data-dependent |
 | $\ell_0$ | Natural step size | ~20 px |
-| $\ell_{\min}$ | Minimum step size | 6 px |
+| $\ell_{\min}$ | Minimum step size | 8 px |
 | $\alpha$ | Elasticity exponent | 0.5 |
 | $\beta$ | Maximum stretch | 1.5 |
 

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { ChartTemplateDef, ChartPropertyDef } from '../../core/types';
+import { resolveSeriesTarget } from '../../core/interaction-semantics';
+import { annotationCandidates, presentAnnotationUpdate } from '../../interactive/presentation/annotation';
 
 /**
  * Radar / Spider Chart
@@ -96,6 +98,9 @@ function buildRadarLayers(
         const rawVal = Math.round((v.rawSum / v.count) * 100) / 100;
         const rad = (angle * Math.PI) / 180;
         finalData.push({
+            [axisField]: axis,
+            [valueField]: rawVal,
+            ...(groupField ? { [groupField]: grp } : {}),
             __group: grp,
             __axis: axis,
             __value: normVal,
@@ -274,6 +279,7 @@ function buildRadarLayers(
 // ---------------------------------------------------------------------------
 export const radarChartDef: ChartTemplateDef = {
     chart: "Radar Chart",
+    reorder: false,
     template: {
         description: "Radar / Spider chart",
         mark: "point",
@@ -281,6 +287,28 @@ export const radarChartDef: ChartTemplateDef = {
     },
     channels: ["x", "y", "color", "column", "row"],
     markCognitiveChannel: 'position',
+    semanticInteractions: ({ resolvedEncodings }) => {
+        const axisField = resolvedEncodings.x?.field;
+        const valueField = resolvedEncodings.y?.field;
+        const groupField = resolvedEncodings.color?.field;
+        return {
+            fields: [axisField, valueField, groupField].filter((field): field is string => !!field),
+            categoryField: axisField,
+            seriesField: groupField,
+            legendFields: groupField ? { color: groupField } : undefined,
+            selectableMarks: ['line', 'point'],
+            supportedRegionGestures: ['angular'],
+            renderHoverStyles: {
+                line: { strokeWidth: 3 },
+                symbol: { strokeWidth: 2 },
+            },
+            renderSelectionStyles: { line: { strokeWidthMultiplier: 1.2 } },
+            resolve: (event, context) => resolveSeriesTarget(event, context, groupField),
+            presentUpdate: presentAnnotationUpdate(() => annotationCandidates(
+                'right', 'left', 'top', 'bottom', 'center',
+            )),
+        };
+    },
     instantiate: (spec, ctx) => {
         const axisField: string | undefined = ctx.resolvedEncodings.x?.field;
         const valueField: string | undefined = ctx.resolvedEncodings.y?.field;
