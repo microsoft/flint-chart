@@ -599,10 +599,7 @@ export function mountVegaInteractions(
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
-    // A click on the plot background that hits no mark can reset the viewport.
-    const backgroundResetInteraction = navigationInteraction
-        && (navigationInteraction.eventSource.reset === 'click-background'
-            || navigationInteraction.eventSource.reset === 'both')
+    const backgroundResetInteraction = navigationInteraction?.eventSource.reset?.includes('click-background')
         ? navigationInteraction
         : undefined;
     const elementDragInteraction = elementDragInteractions[0];

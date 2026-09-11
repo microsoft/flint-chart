@@ -101,7 +101,7 @@ export function MapSemanticZoomStage() {
         navigate({
           domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
           // A click on empty map, not a double-click, flies home.
-          reset: 'click-background',
+          reset: ['click-background'],
           resetTransition: { duration: FLY_MS },
         }),
         CLICK_REGION,
