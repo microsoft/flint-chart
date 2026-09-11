@@ -61,6 +61,8 @@ export interface InteractiveChartSurfaceOptions {
     keyboardTargeting?: boolean;
     /** How committed presentation and annotation state is cleared. */
     dismiss?: InteractionDismissPolicy | false;
+    /** Warnings known before the mount; the surface reports them with the mount's own. */
+    warnings?: readonly ChartWarning[];
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
@@ -76,6 +78,8 @@ export interface InteractiveChartSurface {
     readonly element: HTMLElement;
     readonly chartId: string;
     readonly ready: Promise<void>;
+    /** Every warning about this chart's interactions, once the mount has settled. Never rejects. */
+    readonly warnings: Promise<readonly ChartWarning[]>;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
     dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
