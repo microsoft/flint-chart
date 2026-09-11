@@ -86,7 +86,7 @@ export function createVegaInteractiveRenderer(
                     vegaSpec,
                     interactionPlan.axisFields,
                     interactionPlan.reorderAxes,
-                    canvasInteractions.some((interaction) => interaction.affordances?.some((affordance) =>
+                    (interactionPlan.interactions ?? canvasInteractions).some((interaction) => interaction.affordances?.some((affordance) =>
                         affordance.target === 'axis-label' && affordance.hover))
                         ? interactionPlan.selectionBoundary?.color ?? '#20262c'
                         : undefined,
@@ -139,13 +139,17 @@ export function createVegaInteractiveRenderer(
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
             await view.runAsync();
+            // The runtime mounts what admission kept; external definitions pass through untouched.
+            const admittedCanvas = new Set<InteractionDef>(interactionPlan?.interactions ?? canvasInteractions);
+            const mountedInteractions = interactions.filter((interaction) =>
+                !isCanvasInteraction(interaction) || admittedCanvas.has(interaction));
             const interactionController = interactionPlan
                 ? mountVegaInteractions(
                     view,
                     container,
                     input.chart_spec.chartType,
                     interactionPlan,
-                    interactions,
+                    mountedInteractions,
                     interactionPlan.resolve,
                     interactionPlan.presentUpdate ?? ((update) => update),
                     options.assistDistance,
@@ -185,6 +189,7 @@ export function createVegaInteractiveRenderer(
 
             return {
                 viewports,
+                warnings: interactionPlan?.warnings ?? [],
                 getInteractionContext() {
                     return interactionController?.getInteractionContext() ?? {
                         chartType: input.chart_spec.chartType,

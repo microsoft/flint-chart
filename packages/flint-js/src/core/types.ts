@@ -6,6 +6,7 @@ import type { LabelSizingDecision } from './decisions';
 import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint } from './field-semantics';
 import type { ColorDecisionResult } from './color-decisions';
 import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
+import type { InteractionSpec } from './interaction-spec';
 
 /**
  * Core types for the chart engine library.
@@ -1224,6 +1225,21 @@ export interface ChartAssemblyInput {
      * accept the shared input field but do not apply it.
      */
     theme_spec?: ThemeSpec | string;
+
+    /**
+     * Interactions — describes *how it behaves*.
+     *
+     * Presets named by type with their options, retained updates applied at
+     * mount, and the surface policies (dismiss, assisted and keyboard
+     * targeting). Sits beside `chart_spec` for the same reason `theme_spec`
+     * does: one behaviour applies to many charts, and a static backend ignores
+     * it without harm.
+     *
+     * Read by the interactive surface in `flint-chart/interactive` (Vega-Lite
+     * only). The assemblers leave it untouched. A preset the chart cannot
+     * honour is dropped with a warning rather than failing the chart.
+     */
+    interaction_spec?: InteractionSpec;
 
     /**
      * Options for the assembler — layout tuning, tooltips, etc.

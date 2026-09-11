@@ -1,5 +1,6 @@
 import type { ChartAssemblyInput } from '../core/types';
-import { isCanvasInteraction, normalizeInteractions } from './interactions';
+import { isCanvasInteraction } from './interactions';
+import { composeInteractiveOptions } from './spec/compose';
 import { mountInteractiveChartSurface } from './surface';
 import type { BuildInteractiveChartOptions, InteractiveChartSurface } from './types';
 
@@ -52,6 +53,11 @@ export type {
     ClickHighlightOptions,
     ClickHighlightTarget,
     ClickGroupFocusOptions,
+    ContextActivateOptions,
+    DoubleActivateOptions,
+    DragReorderOptions,
+    LegendToggleOptions,
+    LongPressOptions,
     LinkedBrushOptions,
     HoverGroupFocusOptions,
     GroupBy,
@@ -131,17 +137,36 @@ export {
     yBrushTrigger,
 } from './triggers';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
+export { INTERACTION_PRESET_TYPES } from '../core/interaction-spec';
+export type {
+    InteractionEntry,
+    InteractionPresetType,
+    InteractionSpec,
+} from '../core/interaction-spec';
+export type { InteractionPresetOptions, InteractionPresetSpec } from './spec/types';
+export { INTERACTION_PRESETS, listInteractionPresets } from './spec/registry';
+export type {
+    InteractionCapability,
+    InteractionGestureFamily,
+    InteractionPresetDefinition,
+    InteractionPresetSummary,
+} from './spec/registry';
+export { resolveInteractionSpec } from './spec/resolve';
+export { admitInteractions } from './spec/admission';
+export { composeInteractiveOptions } from './spec/compose';
+export type { ComposedInteractiveOptions } from './spec/compose';
+export type { InteractionAdmission, InteractionAdmissionPlan } from './spec/admission';
+export type { ResolvedInteractionSpec } from './spec/resolve';
 
 export function buildInteractiveChart(
     container: HTMLElement,
     input: ChartAssemblyInput,
     options: BuildInteractiveChartOptions,
 ): InteractiveChartSurface {
-    const {
-        backend, renderer, expressionInterpreter, background,
-        className, ariaLabel, chartId, updates, assistedTargeting, keyboardTargeting, dismiss,
-    } = options;
-    const interactions = normalizeInteractions(options.interactions);
+    const { backend, renderer, expressionInterpreter, background, className, ariaLabel, chartId } = options;
+    // The spec and the code are two sources of one configuration; the spec comes first.
+    const { interactions, updates, assistedTargeting, keyboardTargeting, dismiss, warnings } =
+        composeInteractiveOptions(input, options);
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const hoverTolerance = Math.max(0, ...canvasInteractions
         .filter((interaction) => interaction.eventSource.gesture === 'hover')
@@ -155,7 +180,7 @@ export function buildInteractiveChart(
                     throw new Error(`Semantic interactions are not supported by backend "${backend}".`);
                 },
             },
-            { className, ariaLabel, chartId, updates },
+            { className, ariaLabel, chartId, updates, warnings },
         );
     }
     switch (backend) {
@@ -188,7 +213,7 @@ export function buildInteractiveChart(
                         }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
             );
         case 'echarts':
             return mountInteractiveChartSurface(
@@ -200,7 +225,7 @@ export function buildInteractiveChart(
                         return createEChartsInteractiveRenderer({ renderer }).mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
             );
         case 'chartjs':
             return mountInteractiveChartSurface(
@@ -212,7 +237,7 @@ export function buildInteractiveChart(
                         return createChartjsInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
             );
         case 'plotly':
             return mountInteractiveChartSurface(
@@ -224,7 +249,7 @@ export function buildInteractiveChart(
                         return createPlotlyInteractiveRenderer().mount(chartContainer, chartInput);
                     },
                 },
-                { className, ariaLabel, chartId, updates, interactions },
+                { className, ariaLabel, chartId, updates, interactions, warnings },
             );
     }
 }

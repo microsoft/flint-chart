@@ -1,7 +1,14 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
-import { assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
+import { AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import {
+  assembleVegaLite,
+  type ChartAssemblyInput,
+  type ChartWarning,
+  type InteractionEntry,
+  type InteractionPresetType,
+  type InteractionSpec,
+} from 'flint-chart';
 import {
   genBarTests,
   genGroupedBarTests,
@@ -52,6 +59,8 @@ export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotat
   | 'long-press' | 'double-activate' | 'legend-toggle' | 'brush-zoom'
   | 'keyboard-focus' | 'select-context';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
+/** Where a card's interactions come from: factory calls in code, or `interaction_spec` JSON. */
+export type InteractionSource = 'code' | 'spec';
 
 export interface NavigationGuard {
   minVisibleFraction: number;
@@ -124,6 +133,79 @@ function modeInteractions(
     case 'double-activate': return [doubleActivate()];
     case 'brush-zoom': return [brushZoom()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
+  }
+}
+
+/** Colours a JSON document by token: keys, preset type names, other strings, numbers. */
+function highlightJson(value: unknown): ReactNode[] {
+  const text = JSON.stringify(value, null, 2);
+  const tokens = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?)|\b(true|false|null)\b/g;
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  let previousKey = '';
+  let match: RegExpExecArray | null;
+  while ((match = tokens.exec(text)) !== null) {
+    if (match.index > last) nodes.push(text.slice(last, match.index));
+    const [whole, string, colon, number, literal] = match;
+    if (string && colon) {
+      previousKey = string.slice(1, -1);
+      nodes.push(<span key={match.index} className="cf-json-key">{string}</span>, colon);
+    } else if (string) {
+      nodes.push(<span key={match.index} className={previousKey === 'type' ? 'cf-json-type' : 'cf-json-string'}>{string}</span>);
+      previousKey = '';
+    } else {
+      nodes.push(<span key={match.index} className="cf-json-number">{number ?? literal}</span>);
+      previousKey = '';
+    }
+    last = match.index + whole.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+/**
+ * The same table as `modeInteractions`, spelled as `interaction_spec`. Each mode
+ * maps to the same preset with the same options, so the two tabs test one
+ * design from two entry points. Surface policies ride in the spec too.
+ */
+function modeSpec(
+  mode: InteractionMode,
+  navigationAxes: 'x' | 'y' | 'xy' | undefined,
+  navigationGuard: NavigationGuard | undefined,
+  groupBy: string | readonly string[] | undefined,
+  indexInspection: InteractionCase['indexInspection'],
+): InteractionSpec {
+  const entry = (type: InteractionPresetType, options?: Record<string, unknown>): InteractionEntry =>
+    options ? { type, options } : { type };
+  switch (mode) {
+    case 'click-highlight': return { interactions: [entry('click-highlight', { targets: ['mark', 'legend', 'discreteAxis'] })] };
+    case 'click-group-focus': return { interactions: [entry('click-group-focus', groupBy ? { groupBy } : undefined)] };
+    case 'hover-group-focus': return { interactions: groupBy ? [entry('hover-group-focus', { groupBy })] : [] };
+    case 'annotate': return { interactions: [entry('click-annotate')] };
+    case 'select': return { interactions: [entry('select')] };
+    case 'linked-brush': return { interactions: groupBy ? [entry('linked-brush', { groupBy })] : [] };
+    case 'brush-x': return { interactions: [entry('brush-x')] };
+    case 'brush-y': return { interactions: [entry('brush-y')] };
+    case 'brush-angle': return { interactions: [entry('brush-angle')] };
+    case 'brush-x-stateful': return { interactions: [entry('brush-x', { mode: 'stateful' })] };
+    case 'brush-y-stateful': return { interactions: [entry('brush-y', { mode: 'stateful' })] };
+    case 'brush-angle-stateful': return { interactions: [entry('brush-angle', { mode: 'stateful' })] };
+    case 'drag-reorder': return { interactions: [entry('drag-reorder')] };
+    case 'lasso': return { interactions: [entry('lasso-select')] };
+    case 'inspect': return { interactions: [entry('inspect', { mode: 'y' })] };
+    case 'inspect-index': return { interactions: indexInspection ? [entry('inspect-index', { ...indexInspection })] : [] };
+    case 'keyboard-focus': return { interactions: [entry('click-highlight', { targets: ['mark'] })], keyboardTargeting: true };
+    case 'select-context': return { interactions: [entry('select'), entry('context-activate')] };
+    case 'legend-toggle': return { interactions: [entry('legend-toggle')] };
+    case 'long-press': return { interactions: [entry('long-press')], dismiss: { click: 'any', escape: true } };
+    case 'double-activate': return { interactions: [entry('double-activate')], dismiss: { click: 'any', escape: true } };
+    case 'brush-zoom': return { interactions: [entry('brush-zoom')] };
+    default: return {
+      interactions: [entry('navigate', {
+        axes: navigationAxes ?? 'available',
+        ...(navigationGuard ? { domainGuard: navigationGuard } : {}),
+      })],
+    };
   }
 }
 
@@ -720,6 +802,7 @@ function InteractiveChart({
   navigationAxes,
   groupBy,
   indexInspection,
+  spec,
   resetVersion,
   onStatus,
   onSemanticEvent,
@@ -731,8 +814,10 @@ function InteractiveChart({
   navigationAxes?: 'x' | 'y' | 'xy';
   groupBy?: string | readonly string[];
   indexInspection?: InteractionCase['indexInspection'];
+  /** When set, the chart mounts from this spec and the code-side options stay empty. */
+  spec?: InteractionSpec;
   resetVersion: number;
-  onStatus: (status: ProbeStatus, message?: string) => void;
+  onStatus: (status: ProbeStatus, message?: string, warnings?: readonly ChartWarning[]) => void;
   onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -772,34 +857,59 @@ function InteractiveChart({
     };
     container.addEventListener('contextmenu', captureContextPoint, true);
     container.addEventListener('flint-interaction', handleInteraction);
-    const interactions = modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection);
     const themedInput = themeId ? { ...input, theme_spec: themeId } : input;
-    const surface = buildInteractiveChart(container, themedInput, {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions,
-      expressionInterpreter,
-      ariaLabel: input.chart_spec.title,
-      keyboardTargeting: mode === 'keyboard-focus',
-      dismiss: mode === 'long-press' || mode === 'double-activate'
-        ? { click: 'any', escape: true }
-        : undefined,
-    });
-    surfaceRef.current = surface;
-    void surface.ready.then(() => statusRef.current('ready')).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      statusRef.current(message.includes('requires') || message.includes('support') ? 'unsupported' : 'error', message);
-    });
-    return () => {
+    const detach = () => {
       container.removeEventListener('contextmenu', captureContextPoint, true);
       container.removeEventListener('flint-interaction', handleInteraction);
       surfaceRef.current = null;
       selectionRef.current = null;
       setContextMenu(null);
       setComment(null);
+    };
+    let surface: ReturnType<typeof buildInteractiveChart>;
+    try {
+      surface = spec
+        // The spec tab: behaviour comes from the JSON, nothing from the options.
+        ? buildInteractiveChart(container, { ...themedInput, interaction_spec: spec }, {
+          backend: 'vegalite',
+          renderer: 'svg',
+          expressionInterpreter,
+          ariaLabel: input.chart_spec.title,
+        })
+        : buildInteractiveChart(container, themedInput, {
+          backend: 'vegalite',
+          renderer: 'svg',
+          interactions: modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection),
+          expressionInterpreter,
+          ariaLabel: input.chart_spec.title,
+          keyboardTargeting: mode === 'keyboard-focus',
+          dismiss: mode === 'long-press' || mode === 'double-activate'
+            ? { click: 'any', escape: true }
+            : undefined,
+        });
+    } catch (error) {
+      // The resolver rejects a malformed spec before anything mounts.
+      statusRef.current('error', error instanceof Error ? error.message : String(error));
+      return detach;
+    }
+    surfaceRef.current = surface;
+    void surface.ready.then(async () => {
+      // A spec entry the chart cannot honour is dropped and reported, not thrown.
+      const warnings = spec ? await surface.warnings : [];
+      if (warnings.length > 0) {
+        statusRef.current('unsupported', warnings.map((warning) => warning.message).join('\n'), warnings);
+        return;
+      }
+      statusRef.current('ready');
+    }).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      statusRef.current(message.includes('requires') || message.includes('support') ? 'unsupported' : 'error', message);
+    });
+    return () => {
+      detach();
       surface.destroy();
     };
-  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, themeId]);
+  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, spec, themeId]);
 
   const menuTarget = contextMenu?.detail.event.target ?? null;
   const menuElement = menuTarget?.elements[0];
@@ -883,15 +993,43 @@ export function CaseCard({
   themeId,
   navigationGuard,
   resetVersion,
+  source = 'code',
+  showSpec = true,
+  onProbe,
 }: {
   item: InteractionCase;
   mode: InteractionMode;
   themeId: string | undefined;
   navigationGuard: NavigationGuard;
   resetVersion: number;
+  source?: InteractionSource;
+  /** Show the JSON panel under the chart on the spec tab. */
+  showSpec?: boolean;
+  /** Reports the card's status so the page can tally ready and dropped cards. */
+  onProbe?: (id: string, status: ProbeStatus) => void;
 }) {
   const [status, setStatus] = useState<ProbeStatus>('loading');
   const [statusMessage, setStatusMessage] = useState('Compiling');
+  const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
+  const [copied, setCopied] = useState(false);
+  // Each card folds its own JSON; the page switch sets the default for all of them.
+  const [specOpen, setSpecOpen] = useState(showSpec);
+  useEffect(() => { setSpecOpen(showSpec); }, [showSpec]);
+  useEffect(() => { onProbe?.(item.id, status); }, [item.id, onProbe, status]);
+  // Memoised, so a re-render does not remount the chart through a fresh spec object.
+  const spec = useMemo(
+    () => source === 'spec'
+      ? modeSpec(mode, item.navigationAxes, navigationGuard, item.groupBy, item.indexInspection)
+      : undefined,
+    [source, mode, item, navigationGuard],
+  );
+  const copySpec = () => {
+    if (!spec) return;
+    void navigator.clipboard?.writeText(JSON.stringify(spec, null, 2)).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    });
+  };
   const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
   const title = item.title || item.input.chart_spec.title || item.input.chart_spec.chartType;
   const availableNavigationAxes = navigationAxesByCase.get(item.id);
@@ -922,6 +1060,25 @@ export function CaseCard({
             : status === 'ready' ? 'Ready' : status}
         </span>
       </header>
+      {spec && status === 'unsupported' && warnings.length > 0 && (
+        <div className="cf-spec-warning" role="status">
+          <AlertTriangle size={13} strokeWidth={2} aria-hidden="true" />
+          <ul>
+            {warnings.map((warning, index) => (
+              <li key={index}>
+                <span className="cf-spec-code">{warning.code}</span>
+                {warning.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {spec && status === 'error' && (
+        <div className="cf-spec-warning cf-spec-error" role="alert">
+          <AlertTriangle size={13} strokeWidth={2} aria-hidden="true" />
+          <ul><li><span className="cf-spec-code">rejected</span>{statusMessage}</li></ul>
+        </div>
+      )}
       <div className="cf-stage">
         <ScaleToFit
           height={item.stageHeight ?? 420}
@@ -938,15 +1095,43 @@ export function CaseCard({
             navigationAxes={item.navigationAxes}
             groupBy={item.groupBy}
             indexInspection={item.indexInspection}
+            spec={spec}
             resetVersion={resetVersion}
-            onStatus={(nextStatus, message) => {
+            onStatus={(nextStatus, message, nextWarnings) => {
               setStatus(nextStatus);
               setStatusMessage(message ?? (nextStatus === 'ready' ? 'Interactive surface ready' : 'Compiling'));
+              setWarnings(nextWarnings ?? []);
             }}
             onSemanticEvent={setLastInteraction}
           />
         </ScaleToFit>
       </div>
+      {spec && (
+        <div className={`cf-spec-panel${specOpen ? ' cf-spec-panel-open' : ''}`}>
+          <div className="cf-spec-panel-bar">
+            <button
+              type="button"
+              className="cf-spec-panel-toggle"
+              aria-expanded={specOpen}
+              onClick={() => setSpecOpen((open) => !open)}
+            >
+              {specOpen
+                ? <ChevronDown size={12} strokeWidth={2} aria-hidden="true" />
+                : <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />}
+              <Braces size={12} strokeWidth={2} aria-hidden="true" />
+              interaction_spec
+              <span className="cf-spec-panel-count">
+                {spec.interactions.length} {spec.interactions.length === 1 ? 'entry' : 'entries'}
+              </span>
+            </button>
+            <button type="button" className="cf-spec-panel-copy" onClick={copySpec} aria-label="Copy interaction_spec JSON">
+              {copied ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+          {specOpen && <pre className="cf-json">{highlightJson(spec)}</pre>}
+        </div>
+      )}
       <footer className={`cf-probe-event ${responded ? 'cf-probe-event-resolved' : 'cf-probe-event-warning'}`}>
         {lastInteraction ? (
           <>
@@ -986,7 +1171,7 @@ export function CaseCard({
   );
 }
 
-export function ClickFocusLab() {
+export function ClickFocusLab({ source = 'code' }: { source?: InteractionSource } = {}) {
   const [mode, setMode] = useState<InteractionMode>('click-highlight');
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
   const [navigationGuard, setNavigationGuard] = useState<NavigationGuard>({
@@ -995,6 +1180,11 @@ export function ClickFocusLab() {
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
+  const [showSpec, setShowSpec] = useState(true);
+  const [probes, setProbes] = useState<Record<string, ProbeStatus>>({});
+  const onProbe = useCallback((id: string, status: ProbeStatus) => {
+    setProbes((current) => current[id] === status ? current : { ...current, [id]: status });
+  }, []);
   // Pan & zoom lists every curated navigation case, including charts the
   // preset cannot drive yet (maps), so their unsupported status stays visible.
   const visibleCases = mode === 'navigate'
@@ -1012,6 +1202,11 @@ export function ClickFocusLab() {
         : mode === 'legend-toggle'
           ? interactionCases.filter((item) => discreteLegendCases.has(item.id))
       : interactionCases;
+  const tally = visibleCases.reduce((counts, item) => {
+    const status = probes[item.id] ?? 'loading';
+    counts[status] += 1;
+    return counts;
+  }, { ready: 0, unsupported: 0, error: 0, loading: 0 } as Record<ProbeStatus, number>);
 
   return (
     <div className="dev-page cf-page">
@@ -1037,8 +1232,16 @@ export function ClickFocusLab() {
         ))}
       </div>
       <header className="dev-page-heading cf-heading">
-        <h1>Interaction gallery</h1>
-        <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
+        <h1>{source === 'spec' ? 'Interaction gallery, from a spec' : 'Interaction gallery'}</h1>
+        {source === 'spec' ? (
+          <p>
+            The same cases as Test cases, but every chart mounts from <code>interaction_spec</code> instead
+            of factory calls. Open <em>interaction_spec</em> on a card to read the JSON it used. A card marked
+            unsupported still rendered; the message under its header names the entry the chart dropped.
+          </p>
+        ) : (
+          <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
+        )}
         <ul className="cf-interaction-list">
           <li><strong>Click highlight:</strong> Click a mark, legend entry, or categorical axis label to focus its cohort.</li>
           <li><strong>Click group focus:</strong> Click a mark to focus related marks in the same category or series.</li>
@@ -1054,7 +1257,25 @@ export function ClickFocusLab() {
           <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>
           <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
         </ul>
-        <div className="cf-summary"><span><strong>{visibleCases.length}</strong> test cases</span></div>
+        <div className="cf-summary">
+          <span><strong>{visibleCases.length}</strong> test cases</span>
+          <span className={tally.ready === visibleCases.length ? 'cf-summary-ok' : undefined}>
+            <strong>{tally.ready}</strong> ready
+          </span>
+          {(source === 'spec' || tally.unsupported > 0) && (
+            <span className={tally.unsupported > 0 ? 'cf-summary-warn' : undefined}>
+              <strong>{tally.unsupported}</strong> {source === 'spec' ? 'with dropped entries' : 'unsupported'}
+            </span>
+          )}
+          {tally.error > 0 && <span className="cf-summary-error"><strong>{tally.error}</strong> errors</span>}
+          {tally.loading > 0 && <span><strong>{tally.loading}</strong> loading</span>}
+          {source === 'spec' && (
+            <label className="cf-spec-toggle">
+              <input type="checkbox" checked={showSpec} onChange={(event) => setShowSpec(event.target.checked)} />
+              Expand interaction_spec on every card
+            </label>
+          )}
+        </div>
         <div className="cf-theme-picker">
           <ThemePicker themeId={themeId} onTheme={setThemeId} />
         </div>
@@ -1099,9 +1320,17 @@ export function ClickFocusLab() {
             themeId={themeId}
             navigationGuard={navigationGuard}
             resetVersion={resetVersion}
+            source={source}
+            showSpec={showSpec}
+            onProbe={onProbe}
           />
         ))}
       </div>
     </div>
   );
+}
+
+/** The Test cases gallery driven by `interaction_spec`: one design, checked from the JSON side. */
+export function SpecTestCasesLab() {
+  return <ClickFocusLab source="spec" />;
 }

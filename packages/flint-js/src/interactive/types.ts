@@ -1,6 +1,14 @@
-import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
 import type { InteractionContext, InteractionDef } from './interactions';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
+import type { AssistedTargetingOptions, InteractionDismissPolicy } from '../core/interaction-spec';
+
+export type {
+    AssistedTargetingOptions,
+    InteractionDismissPolicy,
+    TargetDetailsOptions,
+    TargetFeedbackOptions,
+} from '../core/interaction-spec';
 
 export type ViewportChannel = 'x' | 'y';
 export type ViewportState = Partial<Record<ViewportChannel, number>>;
@@ -12,22 +20,6 @@ export interface ViewportGeometry {
 
 export type ChartUpdateComposition = 'auto';
 
-/** Pointer acquisition that snaps to a nearby mark instead of requiring a direct hit. */
-export interface TargetDetailsOptions {
-    fields?: readonly string[];
-    maxRows?: number;
-}
-
-export interface TargetFeedbackOptions {
-    indicator?: boolean;
-    details?: boolean | TargetDetailsOptions;
-}
-
-export interface AssistedTargetingOptions extends TargetFeedbackOptions {
-    /** Hard override for eligible preset distances, in renderer pixels. */
-    maxDistance?: number;
-}
-
 /** Animates a viewport change over `duration` milliseconds; projected charts honour it. */
 export interface ChartUpdateTransition {
     duration: number;
@@ -38,13 +30,10 @@ export interface ChartUpdateApplyOptions {
     transition?: ChartUpdateTransition;
 }
 
-export interface InteractionDismissPolicy {
-    click?: 'any' | 'non-element' | 'plot-background' | false;
-    escape?: boolean;
-}
-
 export interface InteractiveRenderer {
     viewports: CategoryViewport[];
+    /** Admission warnings from the mount: spec interactions the chart could not honour. */
+    readonly warnings?: readonly ChartWarning[];
     setViewports(starts: ViewportState): void | Promise<void>;
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     getInteractionContext?(): InteractionContext;
@@ -72,6 +61,8 @@ export interface InteractiveChartSurfaceOptions {
     keyboardTargeting?: boolean;
     /** How committed presentation and annotation state is cleared. */
     dismiss?: InteractionDismissPolicy | false;
+    /** Warnings known before the mount; the surface reports them with the mount's own. */
+    warnings?: readonly ChartWarning[];
 }
 
 export type InteractiveBackend = 'vegalite' | 'echarts' | 'chartjs' | 'plotly';
@@ -87,6 +78,8 @@ export interface InteractiveChartSurface {
     readonly element: HTMLElement;
     readonly chartId: string;
     readonly ready: Promise<void>;
+    /** Every warning about this chart's interactions, once the mount has settled. Never rejects. */
+    readonly warnings: Promise<readonly ChartWarning[]>;
     getViewportState(): ViewportState;
     setViewport(channel: ViewportChannel, start: number): void;
     dispatch(interactionId: string, payload: unknown): Promise<ChartUpdateResult | null>;
