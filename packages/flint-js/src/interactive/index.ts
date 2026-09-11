@@ -131,6 +131,12 @@ export {
     yBrushTrigger,
 } from './triggers';
 export { clampViewportStart, mountInteractiveChartSurface } from './surface';
+export { INTERACTION_PRESET_TYPES } from '../core/interaction-spec';
+export type {
+    InteractionEntry,
+    InteractionPresetType,
+    InteractionSpec,
+} from '../core/interaction-spec';
 
 export function buildInteractiveChart(
     container: HTMLElement,

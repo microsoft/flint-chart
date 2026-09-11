@@ -1,6 +1,14 @@
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
 import type { InteractionContext, InteractionDef } from './interactions';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
+import type { AssistedTargetingOptions, InteractionDismissPolicy } from '../core/interaction-spec';
+
+export type {
+    AssistedTargetingOptions,
+    InteractionDismissPolicy,
+    TargetDetailsOptions,
+    TargetFeedbackOptions,
+} from '../core/interaction-spec';
 
 export type ViewportChannel = 'x' | 'y';
 export type ViewportState = Partial<Record<ViewportChannel, number>>;
@@ -12,22 +20,6 @@ export interface ViewportGeometry {
 
 export type ChartUpdateComposition = 'auto';
 
-/** Pointer acquisition that snaps to a nearby mark instead of requiring a direct hit. */
-export interface TargetDetailsOptions {
-    fields?: readonly string[];
-    maxRows?: number;
-}
-
-export interface TargetFeedbackOptions {
-    indicator?: boolean;
-    details?: boolean | TargetDetailsOptions;
-}
-
-export interface AssistedTargetingOptions extends TargetFeedbackOptions {
-    /** Hard override for eligible preset distances, in renderer pixels. */
-    maxDistance?: number;
-}
-
 /** Animates a viewport change over `duration` milliseconds; projected charts honour it. */
 export interface ChartUpdateTransition {
     duration: number;
@@ -36,11 +28,6 @@ export interface ChartUpdateTransition {
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
     transition?: ChartUpdateTransition;
-}
-
-export interface InteractionDismissPolicy {
-    click?: 'any' | 'non-element' | 'plot-background' | false;
-    escape?: boolean;
 }
 
 export interface InteractiveRenderer {
