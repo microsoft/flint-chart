@@ -152,6 +152,8 @@ export type {
 } from './spec/registry';
 export { resolveInteractionSpec } from './spec/resolve';
 export type { ResolvedInteractionSpec } from './spec/resolve';
+export { admitInteractions } from './spec/admission';
+export type { InteractionAdmission, InteractionAdmissionPlan } from './spec/admission';
 
 export function buildInteractiveChart(
     container: HTMLElement,

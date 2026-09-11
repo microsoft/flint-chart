@@ -6,6 +6,7 @@ import {
     type InteractionDef,
 } from '../../interactive/interactions';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import { admitInteractions, navigationAxesFor } from '../../interactive/spec/admission';
 import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
 import type {
@@ -394,26 +395,21 @@ export function addVegaLiteInteractions(
         }
         return null;
     }
-    const navigationInteraction = canvasInteractions.find(
+    // Admission decides what this chart can honour. A code definition still throws; a spec
+    // entry is dropped with a warning. Everything below reads the admitted list, and the plan
+    // carries it so the runtime mounts the same list.
+    const admission = admitInteractions(templateSemantics, canvasInteractions);
+    const admitted = admission.admitted;
+    const navigationInteraction = admitted.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
     const declaredReorderAxes = templateSemantics.reorderAxes
         ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
-    const hasElementDrag = canvasInteractions.some(
+    const hasElementDrag = admitted.some(
         (interaction) => interaction.eventSource.type === 'element'
             && interaction.eventSource.gesture === 'drag',
     );
-    const semanticGestureInteraction = canvasInteractions.find(
-        (interaction) => interaction.eventSource.type === 'element'
-            || interaction.eventSource.type === 'region',
-    );
-    if (semanticGestureInteraction
-        && !templateSemantics.resolve
-        && templateSemantics.fields.length === 0
-        && templateSemantics.selectableMarks.length === 0) {
-        throw new Error(`Interaction "${semanticGestureInteraction.id}" requires chart element semantics.`);
-    }
-    const semanticInteractions = canvasInteractions.filter(
+    const semanticInteractions = admitted.filter(
         (interaction) => interaction.eventSource.type !== 'navigation',
     );
     const presentationInteractions = semanticInteractions.filter(
@@ -422,41 +418,14 @@ export function addVegaLiteInteractions(
     const needsSemanticPresentation = enableSemanticUpdates
         || presentationInteractions.length > 0
         || canvasInteractions.length < interactions.length;
-    if (navigationInteraction?.eventSource.pan
-        && semanticInteractions.some((interaction) => interaction.eventSource.gesture === 'drag')) {
-        throw new Error('Pan navigation cannot share an unmodified drag gesture with a region interaction.');
-    }
     const availableNavigationAxes = templateSemantics.navigationAxes ?? [];
     // A region interaction can drive the viewport, which still needs domain signals.
-    const viewportRegion = canvasInteractions.find((interaction) => interaction.eventSource.viewport);
+    const viewportRegion = admitted.find((interaction) => interaction.eventSource.viewport);
     const requestedNavigationAxes = navigationInteraction
-        ? navigationInteraction.eventSource.axes === 'available'
-            ? availableNavigationAxes
-            : navigationInteraction.eventSource.axes === 'xy'
-            ? ['x', 'y'] as const
-            : [navigationInteraction.eventSource.axes as 'x' | 'y']
+        ? navigationAxesFor(navigationInteraction.eventSource.axes, availableNavigationAxes)
         : viewportRegion
             ? availableNavigationAxes
             : [];
-    const unsupportedNavigationAxes = requestedNavigationAxes.filter(
-        (axis) => !availableNavigationAxes.includes(axis),
-    );
-    if (navigationInteraction && requestedNavigationAxes.length === 0) {
-        throw new Error(`Interaction "${navigationInteraction.id}" requires a chart with a navigable continuous axis.`);
-    }
-    if (unsupportedNavigationAxes.length > 0) {
-        throw new Error(
-            `Interaction "${navigationInteraction?.id}" requested unsupported navigation axis: ${unsupportedNavigationAxes.join(', ')}.`,
-        );
-    }
-    const angularInteraction = canvasInteractions.find(
-        (interaction) => interaction.eventSource.regionGeometry === 'angular',
-    );
-    if (angularInteraction && !templateSemantics.supportedRegionGestures?.includes('angular')) {
-        throw new Error(
-            `Interaction "${angularInteraction.id}" requires a polar chart with angular-region support.`,
-        );
-    }
     const selectableMarks = new Set(templateSemantics.selectableMarks ?? SUPPORTED_SPEC_MARKS);
     const fields = templateSemantics.fields ?? [];
     if (needsSemanticPresentation) expandInteractiveLinePoints(spec);
@@ -490,7 +459,7 @@ export function addVegaLiteInteractions(
         : false;
     if (needsSemanticPresentation && !instrumented) return null;
     if (instrumented) addLocalKeyTransforms(spec, fields, selectableMarks);
-    if (instrumented && canvasInteractions.some((interaction) => interaction.claimsLegendActivation)) {
+    if (instrumented && admitted.some((interaction) => interaction.claimsLegendActivation)) {
         pinLegendDomains(spec, templateSemantics.legendFields);
     }
     stripInteractionProvenance(spec);
@@ -532,6 +501,8 @@ export function addVegaLiteInteractions(
             : [],
         resolve: templateSemantics.resolve,
         presentUpdate: templateSemantics.presentUpdate,
+        interactions: admitted,
+        warnings: admission.warnings,
     };
 }
 

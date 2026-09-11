@@ -1,4 +1,4 @@
-import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
 import type { InteractionContext, InteractionDef } from './interactions';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 import type { AssistedTargetingOptions, InteractionDismissPolicy } from '../core/interaction-spec';
@@ -32,6 +32,8 @@ export interface ChartUpdateApplyOptions {
 
 export interface InteractiveRenderer {
     viewports: CategoryViewport[];
+    /** Admission warnings from the mount: spec interactions the chart could not honour. */
+    readonly warnings?: readonly ChartWarning[];
     setViewports(starts: ViewportState): void | Promise<void>;
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     getInteractionContext?(): InteractionContext;
