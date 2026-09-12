@@ -67,6 +67,7 @@ export function createLegendToggleInteraction(options: LegendToggleOptions = {})
         eventSource: clickTrigger,
         claimsLegendActivation: true,
         affordances: [{ target: 'legend-item', cursor: 'activate', hover: 'cohort' }],
+        onReset() { hidden = []; },
         handle(event, context) {
             if (!legendActivation(event)) return null;
             const elements = event.target?.elements ?? [];

@@ -236,21 +236,11 @@ export function mountVegaNavigationGesture(
             modifiers: interactionModifiers(event),
         });
     };
-    const doubleClick = (event: MouseEvent): void => {
-        event.preventDefault();
-        emit({
-            type: 'navigation', phase: 'commit', operation: 'reset', axes,
-            modifiers: interactionModifiers(event),
-        });
-    };
-
     container.addEventListener('pointerdown', pointerDown, true);
     container.addEventListener('pointermove', pointerMove, true);
     container.addEventListener('pointerup', finish, true);
     container.addEventListener('pointercancel', cancel, true);
     container.addEventListener('wheel', wheel, { passive: false });
-    const doubleClickResets = (source.reset ?? ['double-click']).includes('double-click');
-    if (doubleClickResets) container.addEventListener('dblclick', doubleClick);
 
     return {
         destroy(): void {
@@ -259,7 +249,6 @@ export function mountVegaNavigationGesture(
             container.removeEventListener('pointerup', finish, true);
             container.removeEventListener('pointercancel', cancel, true);
             container.removeEventListener('wheel', wheel);
-            container.removeEventListener('dblclick', doubleClick);
             container.style.cursor = previousCursor;
             container.style.touchAction = previousTouchAction;
             container.style.userSelect = previousUserSelect;

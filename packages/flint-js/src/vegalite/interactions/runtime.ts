@@ -36,6 +36,7 @@ import type {
 import { matchesSemanticTargetSelector } from '../../interactive/language/updates';
 import type { VegaInteractionPlan, VegaReorderAxis } from './contracts';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import { interactionsToReset, type InteractionResetGesture } from '../../interactive/reset';
 import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
@@ -549,7 +550,6 @@ export function mountVegaInteractions(
         assisted: import('../../interactive/types').TargetFeedbackOptions | false;
         keyboard: import('../../interactive/types').TargetFeedbackOptions | false;
     } | undefined = undefined,
-    dismiss: import('../../interactive/types').InteractionDismissPolicy | false | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const clickInteractions = resolve
@@ -599,9 +599,6 @@ export function mountVegaInteractions(
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
-    const backgroundResetInteraction = navigationInteraction?.eventSource.reset?.includes('click-background')
-        ? navigationInteraction
-        : undefined;
     const elementDragInteraction = elementDragInteractions[0];
     const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
         resolveAssistDistance(eligible, assistDistance);
@@ -1678,8 +1675,7 @@ export function mountVegaInteractions(
         return show === 'single' || typeof show === 'object';
     });
     const clickHandler = (event: MouseEvent, item: any): void => {
-        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0
-            && !backgroundResetInteraction) || suppressClick) return;
+        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0) || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
@@ -1701,21 +1697,6 @@ export function mountVegaInteractions(
             resolveTarget('click', 'legend-item', [], legend),
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        if (backgroundResetInteraction && !target && !legend) {
-            const space = coordinateSpace();
-            const inPlot = point.x >= 0 && point.x <= space.plotWidth
-                && point.y >= 0 && point.y <= space.plotHeight;
-            if (inPlot) {
-                void dispatchNavigation(backgroundResetInteraction, {
-                    type: 'navigation', phase: 'commit', operation: 'reset',
-                    axes: resolvedNavigationAxes(
-                        backgroundResetInteraction.eventSource.axes,
-                        Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
-                    ),
-                    modifiers: normalized.event.modifiers,
-                });
-            }
-        }
         for (const interaction of markClickInteractions) {
             const affordanceTarget = legend ? 'legend-item' : 'mark';
             if (!resolveInteractionAffordance([interaction], affordanceTarget)) continue;
@@ -1939,10 +1920,11 @@ export function mountVegaInteractions(
     };
     let longPressTimer: number | undefined;
     let longPressPointer: { id: number; x: number; y: number } | undefined;
-    const dismissPolicy = dismiss === false ? { click: false as const, escape: false } : {
-        click: dismiss?.click ?? 'non-element' as const,
-        escape: dismiss?.escape ?? true,
-    };
+    // Per-interaction reset. A gesture resets only the interactions whose `reset` list holds
+    // it, each by its own id. Host updates and the other interactions keep their state.
+    const clickNoneResets = interactionsToReset(canvasInteractions, 'click-none').length > 0;
+    const doubleClickResets = interactionsToReset(canvasInteractions, 'double-click').length > 0;
+    const escapeResets = interactionsToReset(canvasInteractions, 'escape').length > 0;
     let dismissTimer: number | undefined;
     let consumeDismissClick = false;
     const cancelPendingDismiss = (): void => {
@@ -1950,22 +1932,43 @@ export function mountVegaInteractions(
         window.clearTimeout(dismissTimer);
         dismissTimer = undefined;
     };
-    const clearDismissibleState = (): void => {
-        cancelPendingDismiss();
+    const resetInteraction = (interaction: CanvasInteractionDef): boolean => {
+        if (interaction.eventSource.type === 'navigation') {
+            // The viewport flies home through the navigation path, so its retained state is not dropped first.
+            void dispatchNavigation(interaction, {
+                type: 'navigation', phase: 'commit', operation: 'reset',
+                axes: resolvedNavigationAxes(
+                    interaction.eventSource.axes,
+                    Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
+                ),
+            });
+            interaction.onReset?.();
+            return false;
+        }
         let changed = false;
         for (const layer of [retainedUpdates, previewUpdates]) {
-            for (const [id, update] of layer) {
-                const ops = update.ops.filter((op) =>
-                    op.op !== 'set-style' && op.op !== 'set-annotation');
-                if (ops.length > 0) layer.set(id, { id, ops });
-                else layer.delete(id);
-                changed = changed || ops.length !== update.ops.length;
-            }
+            if (layer.delete(interaction.id)) changed = true;
         }
-        if (changed) void renderUpdates();
+        if (inspectSeriesLocks.delete(interaction.id)) {
+            inspectSeriesPresentation.delete(interaction.id);
+            changed = true;
+        }
+        if (interaction === regionInteraction) regionGesture?.reset();
+        interaction.onReset?.();
+        return changed;
     };
-    const dismissOnClick = (event: MouseEvent, item: any): void => {
-        if (!dismissPolicy.click || suppressClick || isInteractiveControlTarget(event.target)) return;
+    const runReset = (gesture: InteractionResetGesture): void => {
+        cancelPendingDismiss();
+        let changed = false;
+        for (const interaction of interactionsToReset(canvasInteractions, gesture)) {
+            changed = resetInteraction(interaction) || changed;
+        }
+        if (!changed) return;
+        selectedLegend = null;
+        void renderUpdates();
+    };
+    const resetOnClick = (event: MouseEvent, item: any): void => {
+        if (suppressClick || isInteractiveControlTarget(event.target)) return;
         if (consumeDismissClick) {
             consumeDismissClick = false;
             return;
@@ -1981,20 +1984,23 @@ export function mountVegaInteractions(
                 resolveTarget('click', 'legend-item', [], normalized.legend),
             )
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        const space = coordinateSpace();
-        const inPlot = point.x >= 0 && point.x <= space.plotWidth
-            && point.y >= 0 && point.y <= space.plotHeight;
-        if (dismissPolicy.click === 'non-element' && target) return;
-        if (dismissPolicy.click === 'plot-background' && (!inPlot || target)) return;
+        // click-none: the hit resolved to nothing. A mark, a legend item, or an axis label is something.
+        if (target || resolveAxisTarget(item)) return;
         cancelPendingDismiss();
         if (doubleInteractions.length > 0) {
+            // The first click of a double-click must not reset what the double-click is about to select.
             dismissTimer = window.setTimeout(() => {
                 dismissTimer = undefined;
-                clearDismissibleState();
+                runReset('click-none');
             }, 250);
         } else {
-            clearDismissibleState();
+            runReset('click-none');
         }
+    };
+    const resetOnDoubleClick = (event: MouseEvent): void => {
+        if (isInteractiveControlTarget(event.target)) return;
+        event.preventDefault();
+        runReset('double-click');
     };
     const cancelLongPress = (): void => {
         if (longPressTimer !== undefined) window.clearTimeout(longPressTimer);
@@ -2049,11 +2055,12 @@ export function mountVegaInteractions(
         container.addEventListener('pointercancel', cancelLongPress, true);
     }
     if (doubleInteractions.length > 0) container.addEventListener('dblclick', doubleHandler);
-    if (dismissPolicy.click) view.addEventListener('click', dismissOnClick);
+    if (clickNoneResets) view.addEventListener('click', resetOnClick);
+    if (doubleClickResets) container.addEventListener('dblclick', resetOnDoubleClick);
     if (contextInteractions.length > 0) {
         container.addEventListener('contextmenu', contextHandler);
     }
-    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
+    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
         view.addEventListener('click', clickHandler);
     }
     if (hoverPresentationInteractions.length > 0) {
@@ -2391,8 +2398,6 @@ export function mountVegaInteractions(
         sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
-        resetViewport: resetViewportRegion,
-        escapeClears: dismissPolicy.escape,
     }) : undefined;
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,
@@ -2404,13 +2409,19 @@ export function mountVegaInteractions(
         setDragging: (dragging) => { regionDragging = dragging; },
     }) : undefined;
     setAffordanceCursor('plot', false);
-    const dismissKeyDown = (event: KeyboardEvent): void => {
-        if (regionInteraction || event.key !== 'Escape' || !dismissPolicy.escape) return;
-        selectedLegend = null;
-        clearDismissibleState();
+    // Escape resets the interactions that list it, on the chart that has focus. Such a chart
+    // must be focusable, and a pointer press inside it takes the focus, so a click then Escape works.
+    const resetKeyDown = (event: KeyboardEvent): void => {
+        if (event.key !== 'Escape') return;
+        runReset('escape');
     };
-    if (dismissPolicy.escape && !regionInteraction) {
-        container.addEventListener('keydown', dismissKeyDown);
+    const focusOnPointer = (): void => {
+        if (!container.contains(document.activeElement)) container.focus({ preventScroll: true });
+    };
+    if (escapeResets) {
+        if (container.tabIndex < 0) container.tabIndex = 0;
+        container.addEventListener('pointerdown', focusOnPointer, true);
+        container.addEventListener('keydown', resetKeyDown);
     }
 
     // One tab stop enters the chart; arrows move to the nearest target in that direction.
@@ -2557,7 +2568,7 @@ export function mountVegaInteractions(
     observeRenderer();
 
     const destroy = (): void => {
-        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
+        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
             view.removeEventListener('click', clickHandler);
         }
         if (hoverPresentationInteractions.length > 0) {
@@ -2566,8 +2577,9 @@ export function mountVegaInteractions(
         }
         if (cursorInteractions.length > 0) view.removeEventListener('mousemove', affordanceHandler);
         if (hoverClearTimer !== undefined) clearTimeout(hoverClearTimer);
-        if (dismissPolicy.escape && !regionInteraction) {
-            container.removeEventListener('keydown', dismissKeyDown);
+        if (escapeResets) {
+            container.removeEventListener('pointerdown', focusOnPointer, true);
+            container.removeEventListener('keydown', resetKeyDown);
         }
         if (keyboardEnabled) {
             container.removeEventListener('keydown', keyboardKeyDown);
@@ -2582,10 +2594,9 @@ export function mountVegaInteractions(
             container.removeEventListener('pointercancel', cancelLongPress, true);
         }
         if (doubleInteractions.length > 0) container.removeEventListener('dblclick', doubleHandler);
-        if (dismissPolicy.click) {
-            cancelPendingDismiss();
-            view.removeEventListener('click', dismissOnClick);
-        }
+        cancelPendingDismiss();
+        if (clickNoneResets) view.removeEventListener('click', resetOnClick);
+        if (doubleClickResets) container.removeEventListener('dblclick', resetOnDoubleClick);
         if (inspectInteractions.length > 0) {
             container.removeEventListener('pointermove', inspectHandler);
             container.removeEventListener('pointerleave', inspectLeave);

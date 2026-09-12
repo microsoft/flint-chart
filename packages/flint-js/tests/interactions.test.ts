@@ -3429,9 +3429,9 @@ describe('navigate reset transition', () => {
     it('carries a reset transition onto the interaction and validates it', () => {
         expect(navigate().navigationResetTransition).toBeUndefined();
         expect(navigate().eventSource.reset).toEqual(['double-click']);
-        expect(navigate({ reset: ['click-background'] }).eventSource.reset).toEqual(['click-background']);
-        expect(navigate({ reset: ['double-click', 'click-background'] }).eventSource.reset)
-            .toEqual(['double-click', 'click-background']);
+        expect(navigate({ reset: ['click-none'] }).eventSource.reset).toEqual(['click-none']);
+        expect(navigate({ reset: ['double-click', 'click-none'] }).eventSource.reset)
+            .toEqual(['double-click', 'click-none']);
         expect(navigate({ reset: [] }).eventSource.reset).toEqual([]);
         expect(navigate({ resetTransition: { duration: 500 } }).navigationResetTransition).toEqual({ duration: 500 });
         expect(() => navigate({ resetTransition: { duration: -1 } })).toThrow(/resetTransition/);

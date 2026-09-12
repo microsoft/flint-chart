@@ -452,3 +452,139 @@
     width: min(100%, 220px);
   }
 }
+/* Spec test cases: the tally, the warning callout, and the JSON panel under each chart. */
+.cf-summary-ok strong { color: #3f6b57; }
+.cf-summary-warn strong { color: #806327; }
+.cf-summary-error strong { color: #cf222e; }
+
+.cf-spec-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: #4b525a;
+  cursor: pointer;
+}
+
+.cf-spec-toggle input {
+  margin: 0;
+  accent-color: #0078d4;
+}
+
+.cf-spec-warning {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f0e2c4;
+  background: #fbf6ea;
+  color: #6b5320;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.cf-spec-warning svg { flex: none; margin-top: 1px; color: #a67c1e; }
+.cf-spec-warning ul { margin: 0; padding: 0; list-style: none; }
+.cf-spec-warning li + li { margin-top: 3px; }
+
+.cf-spec-error {
+  border-bottom-color: #f1cfd2;
+  background: #fbeef0;
+  color: #7a1f27;
+}
+
+.cf-spec-error svg { color: #cf222e; }
+
+.cf-spec-code {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: inherit;
+}
+
+.cf-spec-panel {
+  border-top: 1px solid #edf0f2;
+  background: #fafbfc;
+}
+
+.cf-spec-panel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 4px 6px;
+  color: #737d86;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.cf-spec-panel-open .cf-spec-panel-bar {
+  padding-bottom: 0;
+}
+
+.cf-spec-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #4b525a;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cf-spec-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1f2328;
+}
+
+.cf-spec-panel-count {
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  font-family: Inter, -apple-system, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 500;
+  color: #737d86;
+}
+
+.cf-spec-panel-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  background: #fff;
+  color: #4b525a;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.cf-spec-panel-copy:hover { background: rgba(0, 0, 0, 0.04); }
+
+.cf-json {
+  margin: 0;
+  padding: 6px 12px 10px;
+  max-height: 320px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: #4b525a;
+  tab-size: 2;
+}
+
+.cf-json-key { color: #1f2328; }
+.cf-json-type { color: #0078d4; font-weight: 600; }
+.cf-json-string { color: #0b6e4f; }
+.cf-json-number { color: #8250df; }
