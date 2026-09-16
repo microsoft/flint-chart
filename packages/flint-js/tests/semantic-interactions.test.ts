@@ -90,6 +90,7 @@ import {
 import { createVegaNavigationController } from '../src/vegalite/interactions/navigation-scale';
 import { INTERACTION_PROVENANCE } from '../src/vegalite/interaction-provenance';
 import { THEME_PRESETS } from '../src/core/theme/presets';
+import { INTERACTION_CAPABILITIES } from '../src/core/interaction-spec';
 import { lineChartDef } from '../src/vegalite/templates/line';
 import { bumpChartDef } from '../src/vegalite/templates/bump';
 import { slopeChartDef } from '../src/vegalite/templates/slope';
@@ -112,6 +113,9 @@ import {
     resolveRetainedLegendPresentationTargets,
     resolvedLegendInteractionTarget,
 } from '../src/vegalite/interactions/runtime';
+
+/** Hand-built semantics in this file offer every capability unless a test says otherwise. */
+const ALL_CAPABILITIES = [...INTERACTION_CAPABILITIES];
 
 const clickMark = (options: Omit<ClickHighlightOptions, 'targets'> = {}) =>
     clickHighlight({ ...options, targets: ['mark'] });
@@ -569,7 +573,7 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual({ signal: `__flint_reorder_${axis}_domain` });
     });
 
-    it('leaves drag reorder inert without a template-declared category scale', () => {
+    it('refuses drag reorder without a template-declared category scale', () => {
         expect(() => addVegaLiteInteractions({ mark: 'bar' }, [dragReorder()]))
             .toThrow('requires chart interaction semantics');
         const scatter = assembleVegaLite({
@@ -580,7 +584,8 @@ describe('Vega-Lite semantic interactions', () => {
             semantic_types: { x: 'Number', y: 'Number' },
             data: { values: [{ x: 1, y: 2 }] },
         }) as any;
-        expect(addVegaLiteInteractions(scatter, [dragReorder()])?.reorderAxis).toBeUndefined();
+        expect(() => addVegaLiteInteractions(scatter, [dragReorder()]))
+            .toThrow('Interaction "drag-reorder" requires a discrete axis whose order can change; Scatter Plot has none.');
 
         const facetedSemantics = barChartDef.semanticInteractions!({
             resolvedEncodings: {
@@ -681,7 +686,8 @@ describe('Vega-Lite semantic interactions', () => {
             data: { values: [{ month: 'Jan', low: 1, high: 3 }, { month: 'Feb', low: 2, high: 4 }] },
         }) as any;
         expect(spec._interactionSemantics.reorderAxes).toEqual([]);
-        expect(addVegaLiteInteractions(spec, [dragReorder()])?.reorderAxis).toBeUndefined();
+        expect(() => addVegaLiteInteractions(spec, [dragReorder()]))
+            .toThrow('Interaction "drag-reorder" requires a discrete axis whose order can change; Range Area Chart has none.');
     });
 
     it('distinguishes dumbbell connectors from stationary Slope stems during reorder preview', () => {
@@ -730,8 +736,8 @@ describe('Vega-Lite semantic interactions', () => {
             .toThrow('requires chart interaction semantics');
         expect(() => addVegaLiteInteractions({
             mark: 'line',
-            _interactionSemantics: { fields: [], selectableMarks: [], navigationAxes: ['x'] },
-        }, [clickMark()])).toThrow('requires chart element semantics');
+            _interactionSemantics: { fields: [], selectableMarks: [], navigationAxes: ['x'], capabilities: ['navigation'] },
+        }, [clickMark()])).toThrow('requires marks that resolve to data');
     });
 
     it('instruments semantic targets for external interactions without adding canvas gestures', () => {
@@ -1010,6 +1016,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('updates arc opacity in a composed Rose chart', async () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Direction'],
                 categoryField: 'Direction',
                 selectableMarks: ['arc'],
@@ -1450,6 +1457,7 @@ describe('Vega-Lite semantic interactions', () => {
                 color: { field: 'Color', type: 'nominal' },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['X', 'Y', 'Color'],
                 seriesField: 'Color',
                 legendFields: { color: 'Color' },
@@ -1477,6 +1485,7 @@ describe('Vega-Lite semantic interactions', () => {
                 y: { field: 'Y', type: 'quantitative' },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['X', 'Y'],
                 selectableMarks: ['point'],
             },
@@ -1501,6 +1510,7 @@ describe('Vega-Lite semantic interactions', () => {
                     y: { field: 'Y', type: 'quantitative' },
                 },
                 _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                     fields: ['X', 'Y'],
                     selectableMarks: [mark],
                     renderHoverStyles: { [renderMark]: { stroke: '#59636d', strokeWidth: width } },
@@ -1640,6 +1650,7 @@ describe('Vega-Lite semantic interactions', () => {
                 y: { field: 'Value', type: 'quantitative' },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category', 'Value'],
                 selectableMarks: ['rule', 'circle'],
                 renderHoverStyles: {
@@ -1678,6 +1689,7 @@ describe('Vega-Lite semantic interactions', () => {
                     color: { field: 'Group', type: 'nominal' },
                 },
                 _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                     fields: ['X', 'Y', 'Group'], selectableMarks: ['point'],
                     renderHoverStyles: { symbol: { stroke: '#59636d', strokeWidth: 2 } },
                 },
@@ -1687,6 +1699,7 @@ describe('Vega-Lite semantic interactions', () => {
                 mark: { type: 'line', strokeWidth: 2 },
                 encoding: { x: { field: 'X', type: 'quantitative' }, y: { field: 'Y', type: 'quantitative' } },
                 _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                     fields: ['X', 'Y'], selectableMarks: ['line'],
                     renderHoverStyles: { line: { strokeWidth: 3 } },
                 },
@@ -1699,6 +1712,7 @@ describe('Vega-Lite semantic interactions', () => {
                     { mark: 'bar', encoding: { y: { field: 'Open', type: 'quantitative' }, y2: { field: 'Close' } } },
                 ],
                 _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                     fields: ['X'], selectableMarks: ['rule', 'bar'],
                     renderHoverStyles: { rule: { strokeWidth: 2.5 }, rect: { stroke: '#59636d', strokeWidth: 1.5 } },
                 },
@@ -1713,6 +1727,7 @@ describe('Vega-Lite semantic interactions', () => {
                     y: { field: 'Value', type: 'quantitative' },
                 },
                 _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                     fields: ['Group'], selectableMarks: ['boxplot'],
                     renderHoverStyles: {
                         rect: { opacity: 'contrast', stroke: '#59636d', strokeWidth: 2 },
@@ -1750,6 +1765,7 @@ describe('Vega-Lite semantic interactions', () => {
                 y: { field: 'Value', type: 'quantitative' },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Group'], selectableMarks: ['boxplot'],
                 renderHoverStyles: {
                     rect: { opacity: 'contrast', stroke: MUTED_HOVER_STROKE, strokeWidth: 2 },
@@ -1928,20 +1944,26 @@ describe('Vega-Lite semantic interactions', () => {
             mark: 'bar',
             data: { values: [{ category: 'A', value: 1 }] },
             encoding: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
-            _interactionSemantics: barChartDef.semanticInteractions!({
-                resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
-            }),
+            _interactionSemantics: {
+                ...barChartDef.semanticInteractions!({
+                    resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
+                }),
+                capabilities: ['elements', 'cartesian-region'],
+            },
         };
         expect(() => addVegaLiteInteractions(cartesian, [brushAngle()]))
-            .toThrow('requires a polar chart with angular-region support');
+            .toThrow('requires a polar chart with an angular region');
 
         const polar = {
             mark: 'arc',
             data: { values: [{ category: 'A', value: 1 }] },
             encoding: { theta: { field: 'value', type: 'quantitative' }, color: { field: 'category', type: 'nominal' } },
-            _interactionSemantics: roseChartDef.semanticInteractions!({
-                resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
-            }),
+            _interactionSemantics: {
+                ...roseChartDef.semanticInteractions!({
+                    resolvedEncodings: { x: { field: 'category', type: 'nominal' }, y: { field: 'value', type: 'quantitative' } },
+                }),
+                capabilities: ['elements', 'cartesian-region', 'angular-region'],
+            },
         };
         const polarPlan = addVegaLiteInteractions(polar, [brushX()]);
         expect(polarPlan?.angularXBrush).toBe(true);
@@ -1954,13 +1976,16 @@ describe('Vega-Lite semantic interactions', () => {
                 y: { field: 'value', type: 'quantitative' },
                 color: { field: 'series', type: 'nominal' },
             },
-            _interactionSemantics: radarChartDef.semanticInteractions!({
-                resolvedEncodings: {
-                    x: { field: 'metric', type: 'nominal' },
-                    y: { field: 'value', type: 'quantitative' },
-                    color: { field: 'series', type: 'nominal' },
-                },
-            }),
+            _interactionSemantics: {
+                ...radarChartDef.semanticInteractions!({
+                    resolvedEncodings: {
+                        x: { field: 'metric', type: 'nominal' },
+                        y: { field: 'value', type: 'quantitative' },
+                        color: { field: 'series', type: 'nominal' },
+                    },
+                }),
+                capabilities: ['elements', 'cartesian-region', 'angular-region'],
+            },
         };
         expect(addVegaLiteInteractions(radar, [brushAngle()])?.angularXBrush).toBe(true);
     });
@@ -2079,6 +2104,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('keys a basic bar by its category and emits a valid retained store', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Region'], categoryField: 'Region', selectableMarks: ['bar'],
             },
             data: { values: [{ Region: 'West', Sales: 10 }] },
@@ -2101,6 +2127,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('uses category plus series for grouped-bar element identity', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Region', 'Segment'],
                 categoryField: 'Region',
                 seriesField: 'Segment',
@@ -2127,6 +2154,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('uses both discrete axes for a heatmap cell', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Month', 'Product'], categoryField: 'Month', selectableMarks: ['rect'],
             },
             mark: 'rect',
@@ -2143,6 +2171,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('instruments concatenated pyramid bars with constant opacity', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Age', 'Gender'],
                 categoryField: 'Age',
                 seriesField: 'Gender',
@@ -2218,6 +2247,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('hovers Pyramid bars without changing their geometry or center gap', async () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Age', 'Gender'], categoryField: 'Age', seriesField: 'Gender',
                 selectableMarks: ['bar'],
                 renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 1.5 } },
@@ -2273,6 +2303,7 @@ describe('Vega-Lite semantic interactions', () => {
     ])('contrasts target opacity from $authoredOpacity without changing peers', async ({ authoredOpacity, hoveredOpacity }) => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category'], categoryField: 'Category', selectableMarks: ['bar'],
                 renderHoverStyles: { rect: { opacity: 'contrast' } },
             },
@@ -2313,6 +2344,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('preserves a data-encoded opacity channel and uses an outline on hover', async () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category'], categoryField: 'Category', selectableMarks: ['bar'],
                 renderHoverStyles: { rect: { stroke: MUTED_HOVER_STROKE, strokeWidth: 1.5 } },
             },
@@ -2564,6 +2596,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('calculates keys inside a Bar Table panel with its own named data', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category'], categoryField: 'Category', selectableMarks: ['bar'],
             },
             datasets: { rows: [{ Category: 'Alpha', Value: 10 }] },
@@ -2600,6 +2633,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('uses template-owned quantitative fields for point identity', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Horsepower', 'Efficiency'],
                 selectableMarks: ['circle'],
                 markClick: 'element',
@@ -2623,6 +2657,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('coalesces lollipop rule and circle layers under one semantic key', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category', 'Value'],
                 categoryField: 'Category',
                 selectableMarks: ['rule', 'circle'],
@@ -2659,6 +2694,7 @@ describe('Vega-Lite semantic interactions', () => {
     it('dims independent text labels without instrumenting unrelated annotations', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category', 'Value'],
                 categoryField: 'Category',
                 selectableMarks: ['bar'],
@@ -3407,7 +3443,7 @@ describe('Vega-Lite semantic interactions', () => {
     });
 
     it('pins a themed Calendar continuous legend to its full extent', async () => {
-        const spec = assembleVegaLite({
+        const assembleCalendar = (): any => assembleVegaLite({
             data: { values: [
                 { Date: '2024-01-01', Activity: 26 },
                 { Date: '2024-01-02', Activity: 27 },
@@ -3420,8 +3456,11 @@ describe('Vega-Lite semantic interactions', () => {
                 encodings: { x: 'Date', color: 'Activity' },
             },
             theme_spec: 'pop',
-        } as any) as any;
-        const { compiled } = instrument(spec, [legendToggle()]);
+        } as any);
+        expect(() => instrument(assembleCalendar(), [legendToggle()]))
+            .toThrow('Interaction "legend-toggle" requires a discrete legend; Calendar Heatmap has none.');
+        const legendClaimer = { ...legendToggle(), preset: undefined };
+        const { compiled } = instrument(assembleCalendar(), [legendClaimer]);
         const view = new View(parse(compiled), { renderer: 'none' });
         await view.runAsync();
 
@@ -3631,6 +3670,7 @@ describe('Vega-Lite semantic interactions', () => {
                 y: { field: 'Value', type: 'quantitative' },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Date', 'Value'],
                 categoryField: 'Date',
                 selectableMarks: ['line'],
@@ -3824,6 +3864,7 @@ describe('Vega-Lite semantic interactions', () => {
                 },
             },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Group', 'X', 'Value'],
                 categoryField: 'Group',
                 selectableMarks: ['line'],
@@ -3889,6 +3930,7 @@ describe('Vega-Lite semantic interactions', () => {
                 },
             ],
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category'],
                 selectableMarks: ['rect'],
             },
@@ -3916,6 +3958,7 @@ describe('Vega-Lite semantic interactions', () => {
             mark: 'geoshape',
             projection: { type: 'mercator' },
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Region'],
                 categoryField: 'Region',
                 selectableMarks: ['geoshape'],
@@ -3940,7 +3983,7 @@ describe('Vega-Lite semantic interactions', () => {
 describe('set-style visibility', () => {
     it('injects absolute runtime style channels keyed by semantic identity', () => {
         const spec: Record<string, any> = {
-            _interactionSemantics: { fields: ['Category'], selectableMarks: ['bar'] },
+            _interactionSemantics: { capabilities: ALL_CAPABILITIES, fields: ['Category'], selectableMarks: ['bar'] },
             data: { values: [{ Category: 'A', Value: 1 }] },
             mark: 'bar',
             encoding: {
@@ -4045,6 +4088,7 @@ describe('set-style visibility', () => {
     it('pins the legend domain so a hidden series keeps a key to click', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category', 'Series'],
                 categoryField: 'Category',
                 legendFields: { color: 'Series' },
@@ -4072,6 +4116,7 @@ describe('set-style visibility', () => {
     it('pins an aggregate-sorted donut legend so hidden slices keep their keys', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['OS', 'Users'],
                 legendFields: { color: 'OS' },
                 selectableMarks: ['arc'],
@@ -4101,6 +4146,7 @@ describe('set-style visibility', () => {
     it('clips marks when a region interaction drives the viewport', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Year', 'Value'],
                 selectableMarks: ['line'],
                 navigationAxes: ['x', 'y'],
@@ -4125,6 +4171,7 @@ describe('set-style visibility', () => {
     it('leaves the legend domain alone when nothing can hide a series', () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category', 'Series'],
                 categoryField: 'Category',
                 legendFields: { color: 'Series' },
@@ -4147,6 +4194,7 @@ describe('set-style visibility', () => {
     it('filters a hidden key out of the data and rescales the remaining rows', async () => {
         const spec: Record<string, any> = {
             _interactionSemantics: {
+                capabilities: ALL_CAPABILITIES,
                 fields: ['Category'],
                 categoryField: 'Category',
                 selectableMarks: ['bar'],

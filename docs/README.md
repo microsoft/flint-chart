@@ -9,7 +9,8 @@
 > For the semantic type system, see
 > [design-semantics.md](design-semantics.md). For the axis layout
 > compression models, see
-> [design-stretch-model.md](design-stretch-model.md).
+> [design-stretch-model.md](design-stretch-model.md). For the interaction
+> model, see [design-interactions.md](design-interactions.md).
 
 ---
 

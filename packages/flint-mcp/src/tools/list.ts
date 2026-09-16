@@ -6,8 +6,10 @@ import {
   ecAllTemplateDefs,
   cjsAllTemplateDefs,
   listThemePresets,
+  supportedInteractionPresets,
   THEME_PRESETS,
   type ChartTemplateDef,
+  type InteractionPresetType,
 } from 'flint-chart';
 import type { RenderBackend } from '../render/types.js';
 
@@ -21,6 +23,13 @@ export interface ChartTypeInfo {
   chartType: string;
   /** Encoding channels this chart type accepts (e.g. x, y, color, size). */
   channels: string[];
+  /**
+   * Interaction presets the chart type supports in `interaction_spec`, by
+   * declaration. The data can still remove one at mount: a legend needs a
+   * bound discrete legend channel, navigation needs a continuous axis. Empty
+   * for backends that run no interactions.
+   */
+  interactions: InteractionPresetType[];
 }
 
 export interface BackendCatalog {
@@ -40,7 +49,11 @@ export function listChartTypes(backend?: RenderBackend): BackendCatalog[] {
   return backends.map((b) => {
     const defs = REGISTRY[b] ?? [];
     const chartTypes = defs
-      .map((d) => ({ chartType: d.chart, channels: d.channels ?? [] }))
+      .map((d) => ({
+        chartType: d.chart,
+        channels: d.channels ?? [],
+        interactions: supportedInteractionPresets(d.interactionSupport),
+      }))
       .sort((a, b2) => a.chartType.localeCompare(b2.chartType));
     return { backend: b, count: chartTypes.length, chartTypes };
   });

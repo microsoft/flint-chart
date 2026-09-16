@@ -25,7 +25,15 @@ export const bumpChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "detail", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+        index: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);

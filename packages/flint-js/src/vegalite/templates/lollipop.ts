@@ -25,7 +25,14 @@ export const lollipopChartDef: ChartTemplateDef = {
         ],
     },
     channels: ["x", "y", "color", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);

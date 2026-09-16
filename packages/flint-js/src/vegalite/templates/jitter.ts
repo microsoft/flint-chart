@@ -20,7 +20,14 @@ export const stripPlotDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "size", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x', 'y']);

@@ -89,6 +89,11 @@ body {
   display: contents;
 }
 
+.chart-interactive {
+  display: block;
+  width: 100%;
+}
+
 .chart-pending {
   color: var(--muted);
 }

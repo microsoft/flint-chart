@@ -38,6 +38,119 @@ export const INTERACTION_PRESET_TYPES = [
 export type InteractionPresetType = (typeof INTERACTION_PRESET_TYPES)[number];
 
 /**
+ * A fact about a chart that at least one interaction preset reads at runtime.
+ * `cartesian-region` is a rectangle, interval, or lasso drag the plot resolves marks in;
+ * `angular-region` is a sector drag, which only the angular brush needs. A polar chart
+ * offers both: its interval brush is honoured as a sector.
+ */
+export const INTERACTION_CAPABILITIES = [
+    'elements',
+    'cartesian-region',
+    'angular-region',
+    'navigation',
+    'reorder',
+    'legend',
+    'discrete-axis',
+    'index',
+] as const;
+
+export type InteractionCapability = (typeof INTERACTION_CAPABILITIES)[number];
+
+/** What each capability is, in the words a warning or a tooltip uses. */
+export const INTERACTION_CAPABILITY_DESCRIPTIONS: Readonly<Record<InteractionCapability, string>> = {
+    'elements': 'marks that resolve to data',
+    'cartesian-region': 'a plot to drag a region on',
+    'angular-region': 'a polar chart with an angular region',
+    'navigation': 'a navigable continuous axis',
+    'reorder': 'a discrete axis whose order can change',
+    'legend': 'a discrete legend',
+    'discrete-axis': 'a discrete axis with category labels',
+    'index': 'an index axis shared by the series',
+};
+
+/**
+ * What a chart type offers to interaction presets, declared on
+ * `ChartTemplateDef.interactionSupport`. An absent key means the chart type never
+ * offers that capability. The assembler confirms the data-dependent ones
+ * against the encodings: a legend needs a bound discrete legend channel,
+ * navigation needs a continuous unfaceted axis, reorder needs a discrete axis.
+ */
+export interface ChartInteractionSupport {
+    /** Marks resolve to data elements, so click, hover, annotate, and inspect presets work. */
+    elements?: boolean;
+    /** Drag regions the plot can resolve marks in. */
+    region?: readonly ('cartesian' | 'angular')[];
+    /**
+     * Continuous positional axes whose domains pan and zoom. `geo` marks a
+     * chart that places marks through a projection: pan and zoom then move the
+     * projection's extent, and both axes navigate together.
+     */
+    navigation?: { axes?: readonly ('x' | 'y')[]; geo?: boolean };
+    /** Discrete positional axes whose domain order a drag can change. */
+    reorder?: { axes?: readonly ('x' | 'y')[]; includeConnectiveMarks?: boolean; markTypes?: readonly string[] };
+    /** A discrete legend whose items stand for series or categories. */
+    legend?: boolean;
+    /** Axis labels stand for categories a pointer can target. */
+    discreteAxis?: boolean;
+    /** One position on the index axis reads a value from every series. */
+    index?: boolean;
+}
+
+/** The capabilities each preset needs: the smallest set without which it does nothing. */
+export const INTERACTION_PRESET_REQUIREMENTS: Readonly<Record<InteractionPresetType, readonly InteractionCapability[]>> = {
+    'click-highlight': ['elements'],
+    'axis-highlight': ['discrete-axis'],
+    'click-group-focus': ['elements'],
+    'hover-group-focus': ['elements'],
+    'click-annotate': ['elements'],
+    'select': ['elements', 'cartesian-region'],
+    'lasso-select': ['elements', 'cartesian-region'],
+    'brush-x': ['elements', 'cartesian-region'],
+    'brush-y': ['elements', 'cartesian-region'],
+    'brush-angle': ['elements', 'angular-region'],
+    'brush-zoom': ['navigation'],
+    'linked-brush': ['elements', 'cartesian-region'],
+    'legend-toggle': ['legend'],
+    'context-activate': ['elements'],
+    'long-press': ['elements'],
+    'double-activate': ['elements'],
+    'inspect': ['elements'],
+    'inspect-index': ['index'],
+    'navigate': ['navigation'],
+    'drag-reorder': ['reorder'],
+};
+
+/** The capabilities a chart type declares, before the assembler confirms the data-dependent ones. */
+export function declaredInteractionCapabilities(
+    support: ChartInteractionSupport | undefined,
+): InteractionCapability[] {
+    if (!support) return [];
+    const list: InteractionCapability[] = [];
+    if (support.elements) list.push('elements');
+    if (support.region?.includes('cartesian')) list.push('cartesian-region');
+    if (support.region?.includes('angular')) list.push('angular-region');
+    if (support.navigation) list.push('navigation');
+    if (support.reorder) list.push('reorder');
+    if (support.legend) list.push('legend');
+    if (support.discreteAxis) list.push('discrete-axis');
+    if (support.index) list.push('index');
+    return list;
+}
+
+/**
+ * The presets a chart type can honour by declaration. The data may still remove
+ * one at assemble time: a legend needs a bound discrete legend channel, and
+ * navigation needs a continuous unfaceted axis.
+ */
+export function supportedInteractionPresets(
+    support: ChartInteractionSupport | undefined,
+): InteractionPresetType[] {
+    const declared = new Set(declaredInteractionCapabilities(support));
+    return INTERACTION_PRESET_TYPES.filter((type) =>
+        INTERACTION_PRESET_REQUIREMENTS[type].every((capability) => declared.has(capability)));
+}
+
+/**
  * One preset as JSON: the type name, an optional id, and that preset's options
  * under `options`, for example
  * `{ "type": "navigate", "options": { "axes": "x", "pan": false } }`.

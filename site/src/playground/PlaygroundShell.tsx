@@ -29,6 +29,7 @@ const pages: NavEntry[] = [
     children: [
       { to: 'click-focus', label: 'Test cases' },
       { to: 'spec-test-cases', label: 'Spec test cases' },
+      { to: 'interaction-coverage', label: 'Coverage' },
       { to: 'bespoke-interaction', label: 'Advanced prototypes' },
       { to: 'annotation-lab', label: 'Annotation lab' },
       { to: 'interaction-candidates', label: 'References' },

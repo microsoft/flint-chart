@@ -39,7 +39,14 @@ export const ganttChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["y", "x", "x2", "color", "detail", "column", "row"],
-    navigation: { axes: ['x'] },
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: { axes: ['x'] },
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);

@@ -48,10 +48,16 @@ const interpolateConfigProperty: ChartPropertyDef = {
 
 export const rangeAreaChartDef: ChartTemplateDef = {
     chart: 'Range Area Chart',
-    reorder: false,
     template: { mark: { type: 'area', opacity: 0.5, line: { strokeWidth: 1 } }, encoding: {} },
     channels: ['x', 'y', 'y2', 'color', 'column', 'row'],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        legend: true,
+        discreteAxis: true,
+        index: true,
+    },
     markCognitiveChannel: 'area',
     geometryKinds: ['area'],
     semanticInteractions: ({ resolvedEncodings }) => {

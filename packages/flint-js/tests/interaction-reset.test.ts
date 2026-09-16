@@ -92,7 +92,7 @@ describe('the dispatcher picks interactions by their own list', () => {
 });
 
 describe('admission: a double-click cannot both activate and reset', () => {
-    const PLAN = { fields: ['c'], selectableMarks: ['bar'], resolve: () => null, navigationAxes: ['x'] as const };
+    const PLAN = { capabilities: ['elements', 'cartesian-region', 'navigation'] as const, navigationAxes: ['x'] as const };
     const fromSpec = (entries: readonly InteractionEntry[]) => resolveInteractionSpec({ interactions: entries }).interactions;
 
     it('drops the later spec entry with a warning', async () => {

@@ -62,6 +62,9 @@ export const kpiCardDef: ChartTemplateDef = {
     chart: "KPI Card",
     template: { layer: [] },
     channels: ["metric", "value", "goal"],
+    interactionSupport: {
+        elements: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => ({
         fields: fieldsFromEncodingChannels(resolvedEncodings, ['metric', 'value', 'goal']),

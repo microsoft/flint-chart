@@ -51,6 +51,13 @@ export const bulletChartDef: ChartTemplateDef = {
         layer: [],
     },
     channels: ["y", "x", "goal", "color", "column", "row"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = resolvedEncodings.y?.field;

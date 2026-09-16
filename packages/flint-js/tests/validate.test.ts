@@ -204,3 +204,37 @@ describe('stripPrivateKeys', () => {
         expect(spec).toEqual({ width: 1, nested: { _keep: true } });
     });
 });
+
+describe('validateChart with interaction_spec', () => {
+    const withInteractions = (interactions: unknown, backend: 'vegalite' | 'echarts' = 'vegalite') =>
+        validateChart({ ...barChart, interaction_spec: { interactions } } as ChartAssemblyInput, backend);
+
+    it('reports an entry the chart would drop as a warning and keeps the chart valid', () => {
+        const result = withInteractions([{ type: 'legend-toggle' }, { type: 'click-highlight' }]);
+        expect(result.valid).toBe(true);
+        const dropped = result.warnings.filter((warning) => warning.code === 'unsupported_interaction');
+        expect(dropped).toHaveLength(1);
+        expect(dropped[0].message).toBe(
+            'Interaction "legend-toggle" requires a discrete legend; Bar Chart has none. The interaction was dropped.',
+        );
+    });
+
+    it('reports a malformed spec as an error', () => {
+        const result = withInteractions([{ type: 'no-such-preset' }]);
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toMatchObject({ code: 'invalid_interaction_spec' });
+        expect(result.errors[0].message).toContain('no-such-preset');
+    });
+
+    it('says a static backend ignores the spec', () => {
+        const result = withInteractions([{ type: 'click-highlight' }], 'echarts');
+        expect(result.valid).toBe(true);
+        expect(result.warnings).toContainEqual(expect.objectContaining({ severity: 'info', code: 'interactions_ignored' }));
+    });
+
+    it('adds nothing without a spec', () => {
+        const result = validateChart(barChart, 'vegalite');
+        expect(result.warnings.some((warning) => warning.code.includes('interaction'))).toBe(false);
+    });
+});

@@ -116,6 +116,8 @@ interface ChartAssemblyInput {
     chartProperties?: Record<string, unknown>;
   };
   options?: AssembleOptions;
+  theme_spec?: ThemeSpec | string;                     // 呈现，仅 Vega-Lite
+  interaction_spec?: InteractionSpec;                  // 行为，仅 Vega-Lite 交互层
   field_display_names?: Record<string, string>;
 }
 ```
@@ -130,6 +132,20 @@ interface ChartAssemblyInput {
 ### `semantic_types`
 
 将列名映射到语义类型。这驱动编码类型、格式化、聚合默认值、颜色类与布局。见[语义类型](/documentation/semantic-types)。
+
+### `interaction_spec`
+
+图表的行为。按 `type` 列出交互预设，每项带自己的 `options`，另有 `assistedTargeting` 与 `keyboardTargeting` 两个交互层策略：
+
+```ts
+interface InteractionSpec {
+  interactions: { type: InteractionPresetType; id?: string; options?: Record<string, any> }[];
+  assistedTargeting?: boolean | AssistedTargetingOptions;
+  keyboardTargeting?: boolean;
+}
+```
+
+`buildInteractiveChart()` 读取它，装配器忽略它。图表类型无法支持的条目会以 `unsupported_interaction` 警告被丢弃；`validateChart` 在渲染前报告同样的警告。`supportedInteractionPresets(def.interactionSupport)` 列出模板按声明支持的预设。参见[使用交互](/documentation/interaction-spec)。
 
 ### `chart_spec`
 

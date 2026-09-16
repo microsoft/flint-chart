@@ -20,6 +20,11 @@ export const pieChartDef: ChartTemplateDef = {
     chart: "Pie Chart",
     template: { mark: "arc", encoding: {} },
     channels: ["size", "color", "column", "row"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian', 'angular'],
+        legend: true,
+    },
     markCognitiveChannel: 'area',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color']);
@@ -31,7 +36,6 @@ export const pieChartDef: ChartTemplateDef = {
             legendFields: colorField ? { color: colorField } : undefined,
             selectableMarks: ['arc'],
             annotationMarkType: 'arc',
-            supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
                 const legendField = event.legend?.field ?? seriesField;

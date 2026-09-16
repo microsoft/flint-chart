@@ -13,11 +13,12 @@
  * Output:   docs/reference-<backend>.md
  */
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 import type { ChartTemplateDef, ChartPropertyDef } from '../packages/flint-js/src/core/types';
+import { supportedInteractionPresets } from '../packages/flint-js/src/core/interaction-spec';
 import type { ExcelTemplateDef } from '../packages/flint-js/src/excel/templates/types';
 import { vlTemplateDefs } from '../packages/flint-js/src/vegalite/templates/index';
 import { ecTemplateDefs } from '../packages/flint-js/src/echarts/templates/index';
@@ -309,6 +310,11 @@ function renderChart(def: ChartTemplateDef): string {
     const channels = (def.channels ?? []).map((c) => `\`${c}\``).join(', ') || '_none_';
     lines.push(`**Encoding channels:** ${channels}`);
     lines.push('');
+    if (def.interactionSupport) {
+        const presets = supportedInteractionPresets(def.interactionSupport).map((type) => `\`${type}\``).join(', ') || '_none_';
+        lines.push(`**Interactions:** ${presets}`);
+        lines.push('');
+    }
 
     const props = def.properties ?? [];
     if (props.length === 0) {
@@ -357,6 +363,11 @@ function renderBackend(spec: BackendSpec): string {
     out.push(
         '- **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.',
     );
+    if (spec.name.toLowerCase().includes('vega')) {
+        out.push(
+            '- **Interactions** — the presets the chart type supports in `interaction_spec`. The data can still remove one at mount: a legend needs a bound discrete legend channel, navigation needs a continuous axis. See the [interaction guide](/documentation/interaction-spec).',
+        );
+    }
     out.push('');
     out.push('Use the chart type name exactly as shown in `chart_spec.chartType`.');
     out.push('');
@@ -399,6 +410,10 @@ function renderChartZh(def: ChartTemplateDef): string {
     lines.push(`### ${icon ? `![](${icon}) ` : ''}${def.chart}`, '');
     const channels = (def.channels ?? []).map((channel) => `\`${channel}\``).join(', ') || '_无_';
     lines.push(`**编码通道：** ${channels}`, '');
+    if (def.interactionSupport) {
+        const presets = supportedInteractionPresets(def.interactionSupport).map((type) => `\`${type}\``).join(', ') || '_无_';
+        lines.push(`**交互：** ${presets}`, '');
+    }
     const props = def.properties ?? [];
     if (props.length === 0) return [...lines, '_无模板专用参数。_', ''].join('\n');
     lines.push('| 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |', '|---|---|---|---|---|---|');
@@ -517,6 +532,45 @@ function renderExcelReference(locale: 'en' | 'zh-CN'): string {
             : 'Use `excelGetTemplateDef(chartType)` or `excelGetTemplateChannels(chartType)` to check support before compiling.',
     ];
     return out.join('\n') + '\n';
+}
+
+/** The declaration table of the interaction design doc: one row per Vega-Lite chart type, one column per capability. */
+function renderInteractionSupportTable(locale: 'en' | 'zh-CN'): string {
+    const zh = locale === 'zh-CN';
+    const yes = '✓';
+    const rows = Object.values(vlTemplateDefs).flat()
+        .sort((left, right) => left.chart.localeCompare(right.chart))
+        .map((def) => {
+            const support = def.interactionSupport ?? {};
+            const navigation = support.navigation
+                ? support.navigation.geo ? 'geo' : (support.navigation.axes ?? ['x', 'y']).join(', ')
+                : '';
+            const reorder = support.reorder
+                ? support.reorder.includeConnectiveMarks
+                    ? (zh ? '含连接标记' : 'connective marks')
+                    : support.reorder.markTypes
+                        ? `${support.reorder.markTypes.join(', ')} ${zh ? '标记' : 'marks'}`
+                        : yes
+                : '';
+            return `| ${def.chart} | ${support.elements ? yes : ''} | ${(support.region ?? []).join(', ')} | ${navigation} | ${reorder} | ${support.legend ? yes : ''} | ${support.discreteAxis ? yes : ''} | ${support.index ? yes : ''} |`;
+        });
+    const header = zh
+        ? '| 图表类型 | elements | region | navigation | reorder | legend | discrete axis | index |'
+        : '| Chart type | elements | region | navigation | reorder | legend | discrete axis | index |';
+    return [header, '|---|---|---|---|---|---|---|---|', ...rows].join('\n');
+}
+
+for (const [locale, directory] of [['en', DOCS_DIR], ['zh-CN', ZH_DOCS_DIR]] as const) {
+    const path = resolve(directory, 'design-interactions.md');
+    const doc = readFileSync(path, 'utf8');
+    const start = '<!-- interaction-support:start -->';
+    const end = '<!-- interaction-support:end -->';
+    const from = doc.indexOf(start);
+    const to = doc.indexOf(end);
+    if (from < 0 || to < 0) throw new Error(`${path}: declaration table markers not found`);
+    writeFileSync(path, `${doc.slice(0, from + start.length)}\n${renderInteractionSupportTable(locale)}\n${doc.slice(to)}`, 'utf8');
+    // eslint-disable-next-line no-console
+    console.log(`Wrote the declaration table into ${locale === 'en' ? '' : 'zh-CN/'}design-interactions.md`);
 }
 
 for (const spec of BACKENDS) {

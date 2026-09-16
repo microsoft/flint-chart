@@ -3,7 +3,6 @@ import { scaleLinear, scaleUtc } from 'd3';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
   buildInteractiveChart,
-  inspectIndex,
   type FlintInteractionEventDetail,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
@@ -54,6 +53,9 @@ function chartInput(rows: ReturnType<typeof deriveIndexChartState>['indexedRows'
       },
     },
     options: { addTooltips: false },
+    interaction_spec: {
+      interactions: [{ type: 'inspect-index', id: INSPECT_INTERACTION_ID, options: { axis: 'x', show: 'all' } }],
+    },
     chart_spec: {
       chartType: 'Line Chart',
       title: 'Index chart (Flint + D3 reference)',
@@ -115,11 +117,6 @@ export function IndexChartStage() {
   const [cursorX, setCursorX] = useState(() => xScaleForBounds(FALLBACK_PLOT_BOUNDS)(initialState.activeDate));
   const mountRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
-  const inspectInteraction = useMemo(() => inspectIndex({
-    id: INSPECT_INTERACTION_ID,
-    axis: 'x',
-    show: 'all',
-  }), []);
   const plotWidth = Math.max(1, plotBounds.right - plotBounds.left);
   const plotXScale = useMemo(() => (
     scaleUtc()
@@ -176,7 +173,6 @@ export function IndexChartStage() {
     const surface = buildInteractiveChart(mount, chartInput(initialState.indexedRows), {
       backend: 'vegalite',
       renderer: 'svg',
-      interactions: [inspectInteraction],
       ariaLabel: 'Index chart with a movable reference date',
       chartId: 'index-chart-stage',
     });
@@ -191,7 +187,7 @@ export function IndexChartStage() {
       surfaceRef.current = null;
       surface.destroy();
     };
-  }, [initialState.indexedRows, inspectInteraction]);
+  }, [initialState.indexedRows]);
 
   useEffect(() => {
     const surface = surfaceRef.current;

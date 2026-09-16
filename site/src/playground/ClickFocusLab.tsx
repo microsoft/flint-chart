@@ -45,7 +45,7 @@ import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteRange } from '../components/SiteRange';
 import foodPrices from '../data/cpi-food-prices.json';
 import { BACKENDS } from '../shared/supported-backends';
-import { testCaseToAssemblyInput } from '../shared/test-case-utils';
+import { representativeCasesByChartType, testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
 import { navigationDemoCases } from './navigation-demo-data';
 import { gapminderRows } from './gapminder-dashboard-data';
@@ -255,24 +255,9 @@ function interactionCase(testCase: TestCase, suffix = ''): InteractionCase {
 }
 
 function representativeCases(): InteractionCase[] {
-  const byChartType = new Map<string, TestCase>();
-  for (const generator of Object.values(TEST_GENERATORS)) {
-    let cases: TestCase[];
-    try {
-      cases = generator();
-    } catch {
-      continue;
-    }
-    for (const testCase of cases) {
-      if (!BACKENDS.vegalite.getTemplateDef(testCase.chartType)) continue;
-      const current = byChartType.get(testCase.chartType);
-      const preferred = testCase.tags?.includes('real')
-        && !testCase.encodingMap.column?.fieldID
-        && !testCase.encodingMap.row?.fieldID;
-      if (!current || preferred) byChartType.set(testCase.chartType, testCase);
-    }
-  }
-  const cases = [...byChartType.values()].map((testCase) => interactionCase(testCase));
+  const cases = [...representativeCasesByChartType().values()]
+    .filter((testCase) => BACKENDS.vegalite.getTemplateDef(testCase.chartType))
+    .map((testCase) => interactionCase(testCase));
   const horizontalBar = genBarTests().find((testCase) => testCase.description.includes('Horizontal'));
   if (horizontalBar) cases.push(interactionCase(horizontalBar, '-horizontal'));
   return cases.sort((left, right) => left.chartType.localeCompare(right.chartType) || left.id.localeCompare(right.id));

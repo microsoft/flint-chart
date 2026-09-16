@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `interaction_spec`, a third document beside `chart_spec` and `theme_spec`: a
+  list of interaction presets by `type`, each with its `options`.
+  `buildInteractiveChart()`, the MCP chart view, and the site editor mount from
+  it. Guide: `docs/interaction-spec.md`.
+- Admission per chart type. Each Vega-Lite template declares its capabilities
+  in `ChartTemplateDef.interactionSupport`; each preset declares its needs in
+  `INTERACTION_PRESET_REQUIREMENTS`. A spec entry the chart cannot honour is
+  dropped with an `unsupported_interaction` warning; a code definition throws.
+  `validateChart()` and the MCP `validate_chart` report the same warnings;
+  `list_chart_types` and the Vega-Lite reference list the supported presets.
 - Chart validation is now part of the core package. `validateChart(input,
   backend)` returns `{ valid, warnings, errors, computedSize }` without
   throwing, alongside `validateChartInput`, `validateSemanticTypes`,

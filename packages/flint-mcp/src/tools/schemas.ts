@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { z } from 'zod';
-import type { ChartAssemblyInput } from 'flint-chart';
+import { INTERACTION_PRESET_TYPES, type ChartAssemblyInput, type InteractionPresetType } from 'flint-chart';
 
 /** The three backends this server can compile, validate, and render. */
 export const SUPPORTED_BACKENDS = ['vegalite', 'echarts', 'chartjs'] as const;
@@ -108,6 +108,29 @@ export function buildAssemblyInputShape(disableFileReference = false) {
       .describe(
         'Visual theme for Vega-Lite. Prefer a preset id from list_themes (e.g. "economist"). To customize it, pass an object with `extends` plus a small set of overrides. Full guide: https://microsoft.github.io/flint-chart/#/documentation/theme-spec',
       ),
+    interaction_spec: z
+      .object({
+        interactions: z
+          .array(
+            z.object({
+              type: z
+                .enum(INTERACTION_PRESET_TYPES as unknown as [InteractionPresetType, ...InteractionPresetType[]])
+                .describe('The preset that makes this interaction; also its default id.'),
+              id: z.string().optional().describe('Names the interaction when one chart uses the same preset twice.'),
+              options: z
+                .record(z.string(), z.any())
+                .optional()
+                .describe('The preset\'s own options, including its `reset` gesture list ("click-none", "double-click", "escape").'),
+            }),
+          )
+          .describe('One entry per interaction. Take the preset names from list_chart_types → chartTypes[].interactions for the chosen chart type.'),
+        assistedTargeting: z.union([z.boolean(), z.record(z.string(), z.any())]).optional(),
+        keyboardTargeting: z.boolean().optional(),
+      })
+      .optional()
+      .describe(
+        'How the chart behaves, for create_chart_view (Vega-Lite only). Lists interaction presets by type with their options nested under `options`. An entry the chart type cannot honour is dropped with a warning and the chart still renders; validate_chart reports the same warnings. Guide: https://microsoft.github.io/flint-chart/#/documentation/interaction-spec',
+      ),
     options: z
       .record(z.string(), z.any())
       .optional()
@@ -136,6 +159,7 @@ export type AssemblyInputArgs = {
   };
   options?: Record<string, unknown>;
   theme_spec?: string | Record<string, unknown>;
+  interaction_spec?: Record<string, unknown>;
   field_display_names?: Record<string, string>;
 };
 
@@ -146,6 +170,7 @@ export function toAssemblyInput(args: AssemblyInputArgs): ChartAssemblyInput {
     semantic_types: args.semantic_types,
     chart_spec: args.chart_spec,
     theme_spec: args.theme_spec,
+    interaction_spec: args.interaction_spec,
     options: args.options,
     field_display_names: args.field_display_names,
   } as ChartAssemblyInput;

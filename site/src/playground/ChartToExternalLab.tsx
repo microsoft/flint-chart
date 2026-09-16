@@ -4,7 +4,6 @@ import type {
   InteractionDef,
   SemanticTarget,
 } from 'flint-chart/interactive';
-import { clickHighlight, select as rectangleSelect } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
   countriesFixture,
@@ -193,15 +192,21 @@ const demos: OutboundDemo[] = [
   },
 ];
 
+const NO_CODE_INTERACTIONS: readonly InteractionDef[] = [];
+
 function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
   const [detail, setDetail] = useState<FlintInteractionEventDetail | null>(null);
-  const interaction: InteractionDef = useMemo(
-    () => demo.gesture === 'select'
-      ? rectangleSelect({ id: `${demo.id}-selection` })
-      : clickHighlight({ id: `${demo.id}-element`, targets: ['mark'] }),
-    [demo.gesture, demo.id],
-  );
-  const interactions = useMemo(() => [interaction], [interaction]);
+  const fixture = useMemo(() => ({
+    ...demo.fixture,
+    input: {
+      ...demo.fixture.input,
+      interaction_spec: {
+        interactions: [demo.gesture === 'select'
+          ? { type: 'select' as const, id: `${demo.id}-selection` }
+          : { type: 'click-highlight' as const, id: `${demo.id}-element`, options: { targets: ['mark'] } }],
+      },
+    },
+  }), [demo]);
   const handleSemanticEvent = useCallback((event: FlintInteractionEventDetail) => setDetail(event), []);
   const records = targetRecords(detail?.event.target ?? null);
   const rendered = demo.render(records, demo.fixture);
@@ -217,8 +222,8 @@ function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
       <div className="it-workspace it-workspace-outbound">
         <section className="it-chart-panel">
           <InteractionDemoChart
-            fixture={demo.fixture}
-            interactions={interactions}
+            fixture={fixture}
+            interactions={NO_CODE_INTERACTIONS}
             chartId={`outbound-${demo.id}`}
             onSemanticEvent={handleSemanticEvent}
           />

@@ -10,6 +10,7 @@ import { Type } from './df-types';
 import { Channel, EncodingItem, FieldItem } from './df-types';
 import { AssembleOptions } from '../core/types';
 import type { SemanticAnnotation } from '../core/field-semantics';
+import type { InteractionSpec } from '../core/interaction-spec';
 
 // ============================================================================
 // Test Case Definition
@@ -32,6 +33,8 @@ export interface TestCase {
      * E.g., { rating: { semanticType: 'Score', intrinsicDomain: [1, 5] } }
      */
     semanticAnnotations?: Record<string, SemanticAnnotation>;
+    /** Behaviour the case asks for; the site mounts the case interactively when present. */
+    interactionSpec?: InteractionSpec;
 }
 
 /** Date format definition for date stress tests */

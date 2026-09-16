@@ -6,7 +6,7 @@ import type { LabelSizingDecision } from './decisions';
 import type { SemanticAnnotation, FormatSpec, DomainConstraint, TickConstraint } from './field-semantics';
 import type { ColorDecisionResult } from './color-decisions';
 import type { GeometryKind, ThemeGeometry, ThemeSpec } from './theme/types';
-import type { InteractionSpec } from './interaction-spec';
+import type { ChartInteractionSupport, InteractionSpec } from './interaction-spec';
 
 /**
  * Core types for the chart engine library.
@@ -902,23 +902,13 @@ export interface ChartTemplateDef {
     /** Which encoding channels are available for this chart */
     channels: string[];
 
-    /** Cartesian positional channels whose continuous domains may be navigated at runtime. */
-    navigation?: {
-        axes?: readonly ('x' | 'y')[];
-        /**
-         * The chart places marks through a cartographic projection instead of
-         * x/y scales. Pan and zoom then move the projection's fitted extent,
-         * and both axes navigate together.
-         */
-        geo?: boolean;
-    };
-
-    /** Whether authored categorical position axes support runtime domain reorder. */
-    reorder?: false | {
-        axes?: readonly ('x' | 'y')[];
-        includeConnectiveMarks?: boolean;
-        markTypes?: readonly string[];
-    };
+    /**
+     * What this chart type offers to interaction presets: the marks that resolve
+     * to data, the drag regions, the navigable and reorderable axes, the legend,
+     * the discrete axis labels, the index axis. Absent means the chart type
+     * supports no interaction.
+     */
+    interactionSupport?: ChartInteractionSupport;
 
     /**
      * How the primary mark encodes its quantitative value.
@@ -949,7 +939,6 @@ export interface ChartTemplateDef {
         selectableMarks: string[];
         /** Backend marktype to anchor annotations to when one key matches several marks. */
         annotationMarkType?: string;
-        supportedRegionGestures?: ('cartesian' | 'angular')[];
         renderHoverStyles?: Record<string, {
             fill?: string;
             fillOpacity?: number;

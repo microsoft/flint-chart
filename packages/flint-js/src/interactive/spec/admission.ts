@@ -1,14 +1,18 @@
 import type { ChartWarning } from '../../core/types';
+import {
+    INTERACTION_CAPABILITY_DESCRIPTIONS,
+    INTERACTION_PRESET_REQUIREMENTS,
+    type InteractionCapability,
+} from '../../core/interaction-spec';
 import type { CanvasInteractionDef } from '../interactions';
 import type { NavigationAxes } from '../language/events';
 
 /** What admission reads from the compiled chart: the fields the assembler writes to `_interactionSemantics`. */
 export interface InteractionAdmissionPlan {
-    readonly fields: readonly string[];
-    readonly selectableMarks: readonly string[];
-    readonly resolve?: unknown;
+    readonly chartType?: string;
+    /** The capabilities the assembler confirmed for this chart and its data. */
+    readonly capabilities: readonly InteractionCapability[];
     readonly navigationAxes?: readonly ('x' | 'y')[];
-    readonly supportedRegionGestures?: readonly ('cartesian' | 'angular')[];
 }
 
 export interface InteractionAdmission {
@@ -32,6 +36,11 @@ export function navigationAxesFor(
 const PAN_DRAG_CONFLICT = 'Pan navigation cannot share an unmodified drag gesture with a region interaction.';
 const DROPPED = 'The interaction was dropped.';
 
+/** A preset needs what the core table says; a definition made by hand needs nothing. */
+export function interactionRequirements(interaction: CanvasInteractionDef): readonly InteractionCapability[] {
+    return interaction.preset ? INTERACTION_PRESET_REQUIREMENTS[interaction.preset] : [];
+}
+
 /**
  * Decide which interactions a compiled chart can honour.
  *
@@ -54,32 +63,25 @@ export function admitInteractions(
         warnings.push({ severity: 'warning', code, message: `${message} ${DROPPED}` });
         return false;
     };
-    const hasElementSemantics = !!plan.resolve || plan.fields.length > 0 || plan.selectableMarks.length > 0;
+    const capabilities = new Set(plan.capabilities);
+    const chart = plan.chartType ?? 'this chart';
     const available = plan.navigationAxes ?? [];
-    const angular = plan.supportedRegionGestures?.includes('angular') ?? false;
 
-    // Capability checks, one interaction at a time.
+    // Every capability the interaction needs must be present on this chart.
     let admitted = interactions.filter((interaction) => {
-        const source = interaction.eventSource;
-        if ((source.type === 'element' || source.type === 'region') && !hasElementSemantics) {
+        const missing = interactionRequirements(interaction).find((capability) => !capabilities.has(capability));
+        if (missing) {
             return reject(interaction, 'unsupported_interaction',
-                `Interaction "${interaction.id}" requires chart element semantics.`);
+                `Interaction "${interaction.id}" requires ${INTERACTION_CAPABILITY_DESCRIPTIONS[missing]}; ${chart} has none.`);
         }
+        const source = interaction.eventSource;
         if (source.type === 'navigation') {
             const requested = navigationAxesFor(source.axes, available);
-            if (requested.length === 0) {
-                return reject(interaction, 'unsupported_interaction',
-                    `Interaction "${interaction.id}" requires a chart with a navigable continuous axis.`);
-            }
             const unsupported = requested.filter((axis) => !available.includes(axis));
             if (unsupported.length > 0) {
                 return reject(interaction, 'unsupported_interaction',
                     `Interaction "${interaction.id}" requested unsupported navigation axis: ${unsupported.join(', ')}.`);
             }
-        }
-        if (source.regionGeometry === 'angular' && !angular) {
-            return reject(interaction, 'unsupported_interaction',
-                `Interaction "${interaction.id}" requires a polar chart with angular-region support.`);
         }
         return true;
     });

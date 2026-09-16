@@ -99,7 +99,7 @@ function previewCanvasSize(viewport?: { width: number; height?: number }): { wid
   return { width, height };
 }
 
-function withAppPreviewDefaults(
+export function withAppPreviewDefaults(
   input: ChartAssemblyInput,
   viewport?: { width: number; height?: number },
 ): ChartAssemblyInput {

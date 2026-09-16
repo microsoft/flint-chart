@@ -1,4 +1,4 @@
-import type { TestCase } from 'flint-chart/test-data';
+import { TEST_GENERATORS, type TestCase } from 'flint-chart/test-data';
 import type { ThemeSpec } from 'flint-chart';
 import { themeOwnsContinuousColor } from './theme-color';
 
@@ -102,6 +102,7 @@ export function testCaseToAssemblyInput(t: TestCase, canvasSize: CanvasSize = DE
     },
     options: t.assembleOptions,
     semantic_annotations: t.semanticAnnotations,
+    ...(t.interactionSpec ? { interaction_spec: t.interactionSpec } : {}),
     // Data goes last so the compact, frequently-edited spec stays at the top of
     // the editor and the bulky values array sits at the bottom.
     data: { values: t.data },
@@ -202,4 +203,30 @@ export function withHouse<T extends { chart_spec: Record<string, unknown> }>(
     },
     ...(theme ? { theme_spec: theme } : {}),
   } as T;
+}
+
+/**
+ * The case each chart type shows first: a real, unfaceted one when there is one, else the first.
+ * One pass over every generator; the labs index the result by chart type.
+ */
+export function representativeCasesByChartType(): Map<string, TestCase> {
+  const byChartType = new Map<string, TestCase>();
+  const settled = new Set<string>();
+  for (const generator of Object.values(TEST_GENERATORS)) {
+    let cases: TestCase[];
+    try {
+      cases = generator();
+    } catch {
+      continue;
+    }
+    for (const testCase of cases) {
+      if (settled.has(testCase.chartType)) continue;
+      const preferred = testCase.tags?.includes('real')
+        && !testCase.encodingMap.column?.fieldID
+        && !testCase.encodingMap.row?.fieldID;
+      if (preferred || !byChartType.has(testCase.chartType)) byChartType.set(testCase.chartType, testCase);
+      if (preferred) settled.add(testCase.chartType);
+    }
+  }
+  return byChartType;
 }
