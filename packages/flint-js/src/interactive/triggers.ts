@@ -45,8 +45,8 @@ export interface InteractionEventSource {
     readonly pan?: boolean;
     readonly zoom?: boolean;
     readonly wheelSensitivity?: number;
-    /** Which gesture resets the viewport on navigation sources; a double-click when unset. */
-    readonly reset?: NavigationResetGesture | false;
+    /** Gestures that reset the viewport on navigation sources; a double-click when unset. */
+    readonly reset?: NavigationResetGesture[];
 }
 
 /** Element drag locked to the semantic visual acquired at pointer-down. */
@@ -217,17 +217,17 @@ export function angularBrushTrigger(
 }
 
 /**
- * The gesture that returns a navigated chart to its full frame: a double-click,
- * a click on the plot background that hits no mark, or both.
+ * A gesture that returns a navigated chart to its full frame: a double-click,
+ * or a click on the plot background that hits no mark. `reset` lists any number of them.
  */
-export type NavigationResetGesture = 'double-click' | 'click-background' | 'both';
+export type NavigationResetGesture = 'double-click' | 'click-background';
 
 export function navigationTrigger(options: {
     axes?: NavigationAxes | 'available';
     pan?: boolean;
     zoom?: boolean;
     wheelSensitivity?: number;
-    reset?: NavigationResetGesture | false;
+    reset?: NavigationResetGesture[];
 } = {}): InteractionEventSource {
     return {
         type: 'navigation',
@@ -236,6 +236,6 @@ export function navigationTrigger(options: {
         pan: options.pan ?? true,
         zoom: options.zoom ?? true,
         wheelSensitivity: options.wheelSensitivity ?? 0.002,
-        reset: options.reset ?? 'double-click',
+        reset: options.reset ?? ['double-click'],
     };
 }

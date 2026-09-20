@@ -249,8 +249,7 @@ export function mountVegaNavigationGesture(
     container.addEventListener('pointerup', finish, true);
     container.addEventListener('pointercancel', cancel, true);
     container.addEventListener('wheel', wheel, { passive: false });
-    // An unset `reset` keeps the double-click, as hand-built sources predate the option.
-    const doubleClickResets = source.reset === undefined || source.reset === 'double-click' || source.reset === 'both';
+    const doubleClickResets = (source.reset ?? ['double-click']).includes('double-click');
     if (doubleClickResets) container.addEventListener('dblclick', doubleClick);
 
     return {

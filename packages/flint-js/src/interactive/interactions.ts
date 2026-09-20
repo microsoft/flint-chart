@@ -263,12 +263,7 @@ export interface NavigateOptions {
     zoom?: boolean;
     wheelSensitivity?: number;
     domainGuard?: Partial<NavigationDomainGuard>;
-    /**
-     * The gesture that resets the viewport: a double-click (the default), a
-     * click on the plot background that hits no mark, both, or none.
-     */
-    reset?: NavigationResetGesture | false;
-    /** Animate the reset gesture back to the full frame instead of snapping. */
+    reset?: NavigationResetGesture[];
     resetTransition?: NavigationTransition;
 }
 

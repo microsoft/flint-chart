@@ -50,7 +50,7 @@ export function createNavigateInteraction(options: NavigateOptions = {}): Canvas
             pan: options.pan ?? true,
             zoom: options.zoom ?? true,
             wheelSensitivity: options.wheelSensitivity ?? 0.002,
-            reset: options.reset ?? 'double-click',
+            reset: options.reset,
         }),
         affordances: options.pan === false ? [] : [{ target: 'plot', cursor: 'navigate' }],
         handle(event, context) {
