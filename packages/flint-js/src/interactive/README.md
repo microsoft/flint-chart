@@ -950,26 +950,39 @@ finds a nearby mark within the preset's default 6-pixel radius. Separately, the 
 `tolerance` keeps the last resolved cohort stable across narrow gaps; set it to zero to disable
 that gap retention.
 
-## Click highlight targets
+## Affordances
 
-`clickHighlight()` emphasizes cohorts through one retained interaction. Its `targets`
-option accepts `mark`, `legend`, and `discreteAxis`; omitted targets enable all three.
-`legendToggle()` remains a separate visibility interaction.
+Every canvas interaction declares `affordances`: a map from the kind of hit it affords the
+reader, `mark`, `legend-item`, `axis-label`, or `plot`, to the cursor and hover that signal it.
+
+```ts
+affordances: {
+    'mark': { cursor: 'activate', hover: 'target' },
+    'legend-item': { cursor: 'activate', hover: 'cohort' },
+}
+```
+
+The keys are the dispatch gate. The runtime sends a hit only to the interactions that afford
+its kind, on every path: click, hover, keyboard, context, long press, and double-click. A
+handler never sees a kind its definition did not declare, so it needs no target checks of its
+own. A key with an empty value affords the hit and changes nothing on screen, the way
+`navigate({ pan: false })` affords the plot for wheel zoom.
+
+The values are the looks. Renderers merge the values of every interaction for the target under
+the pointer, so composed presets share one discoverability policy. An exact key wins; a `plot`
+cursor is the fallback over every other target, so a region cursor also shows over the marks
+inside the plot without claiming them. Priority resolves ties between equally specific values.
+Active gesture states such as dragging temporarily override the passive result.
+
+Affordances do not perform chart updates. The handler still owns semantic behavior, and the
+renderer still owns presentation.
+
+`clickHighlight()` emphasizes cohorts through one retained interaction. Its `targets` option
+accepts `mark`, `legend`, and `discreteAxis`, and picks which affordances the preset declares;
+omitted targets enable all three. `legendToggle()` remains a separate visibility interaction.
 
 Only compiler-declared discrete axis ticks are semantic cohorts; continuous ticks do not
 implicitly become clickable selections. Continuous legend intervals remain resolvable labels.
-
-## Interaction affordances
-
-Canvas interactions declare cursor and hover affordances separately from their update handler.
-Renderers combine those declarations for the semantic target under the pointer, so composed
-presets share one discoverability policy instead of assigning cursors independently. Exact target
-claims (`mark`, `legend-item`, or `axis-label`) take precedence over a plot-wide fallback; priority
-resolves conflicts between equally specific claims. Active gesture states such as dragging and
-resizing temporarily override the passive result.
-
-Affordances do not perform chart updates. The interaction handler still owns semantic behavior,
-and the renderer still owns presentation.
 
 ## Compatibility
 

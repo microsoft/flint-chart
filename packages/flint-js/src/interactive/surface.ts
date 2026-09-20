@@ -1,4 +1,4 @@
-import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
 import type {
     InteractiveChartSurface,
     InteractiveChartSurfaceOptions,
@@ -188,6 +188,7 @@ export function mountInteractiveChartSurface(
     let renderer: InteractiveRenderer | undefined;
     let updateTimer: number | undefined;
     let destroyed = false;
+    const warnings: ChartWarning[] = [...(options.warnings ?? [])];
 
     root.className = options.className ?? 'flint-interactive-surface';
     root.setAttribute('role', 'figure');
@@ -230,6 +231,14 @@ export function mountInteractiveChartSurface(
             return;
         }
         renderer = mounted;
+        warnings.push(...(mounted.warnings ?? []));
+        if (warnings.length > 0) {
+            // A host that never reads `surface.warnings` still learns what the chart dropped.
+            console.warn([
+                `[flint-chart] ${chartId}: ${warnings.length} interaction warning${warnings.length === 1 ? '' : 's'}`,
+                ...warnings.map((warning) => `  - ${warning.code}: ${warning.message}`),
+            ].join('\n'));
+        }
         if ((options.updates?.length ?? 0) > 0) {
             if (!mounted.setUpdates) throw new Error('This interactive backend does not support chart updates.');
             await mounted.setUpdates(options.updates ?? []);
@@ -266,6 +275,7 @@ export function mountInteractiveChartSurface(
         element: root,
         chartId,
         ready,
+        warnings: ready.then(() => warnings as readonly ChartWarning[], () => warnings as readonly ChartWarning[]),
         getViewportState: () => ({ ...state }),
         setViewport,
         dispatch: async (interactionId, payload) => {

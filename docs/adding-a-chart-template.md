@@ -44,6 +44,12 @@ export const dotPlotDef: ChartTemplateDef = {
     chart: 'Dot Plot',
     template: { mark: 'circle', encoding: {} },
     channels: ['x', 'y', 'color', 'size', 'column', 'row'],
+    interactionSupport: {
+        elements: true,            // marks resolve to data rows
+        region: ['cartesian'],     // rectangle and lasso drags resolve marks
+        navigation: {},            // continuous x and y pan and zoom
+        legend: true,              // a discrete colour legend can be toggled
+    },
     markCognitiveChannel: 'position',
 
     declareLayoutMode: (channelSemantics, table, chartProperties) => {
@@ -69,6 +75,7 @@ export const dotPlotDef: ChartTemplateDef = {
 2. **`markCognitiveChannel`** — tells the compiler how readers decode value (affects zero baseline and [Auto Layout Algorithm](/documentation/layout-model) compression).
 3. **`instantiate`** — receives a **deep clone** of `template` plus `InstantiateContext` (resolved encodings, `ChannelSemantics`, `LayoutResult`, data table, canvas size).
 4. **No semantic branching** — read `ctx.channelSemantics[channel].format`, `.type`, `.zero`, etc.; do not switch on raw field names or storage types.
+5. **`interactionSupport`** — what the chart type offers to interaction presets (`ChartInteractionSupport` in `core/interaction-spec.ts`). Declare only what the chart can honour: `elements`, `region`, `navigation`, `reorder`, `legend`, `discreteAxis`, `index`. An absent key means "never"; the assembler confirms the data-dependent ones against the bound encodings. Admission drops or rejects a preset whose `requires` list names a capability the chart lacks, and `list_chart_types` reports the supported presets from the same block.
 
 Optional hooks: `postProcess` (after layout), `encodingActions` (shelf quick actions).
 

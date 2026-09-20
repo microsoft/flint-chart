@@ -204,3 +204,58 @@ describe('stripPrivateKeys', () => {
         expect(spec).toEqual({ width: 1, nested: { _keep: true } });
     });
 });
+
+describe('validateChart with interaction_spec', () => {
+    const withInteractions = (interactions: unknown, backend: 'vegalite' | 'echarts' = 'vegalite') =>
+        validateChart({ ...barChart, interaction_spec: { interactions } } as ChartAssemblyInput, backend);
+
+    it('reports an entry the chart would drop as a warning and keeps the chart valid', () => {
+        const result = withInteractions([{ type: 'legend-toggle' }, { type: 'click-highlight' }]);
+        expect(result.valid).toBe(true);
+        const dropped = result.warnings.filter((warning) => warning.code === 'unsupported_interaction');
+        expect(dropped).toHaveLength(1);
+        expect(dropped[0].message).toBe(
+            'Interaction "legend-toggle" requires a discrete legend; Bar Chart has none. The interaction was dropped.',
+        );
+    });
+
+    it('reports the triggers one entry yields to another as info, and keeps the chart valid', () => {
+        const coloured = {
+            ...barChart,
+            chart_spec: { ...barChart.chart_spec, encodings: { ...barChart.chart_spec.encodings, color: { field: 'region' } } },
+            interaction_spec: { interactions: [
+                { type: 'click-highlight' },
+                { type: 'hover-group-focus', options: { groupBy: 'region' } },
+                { type: 'axis-highlight' },
+                { type: 'legend-toggle' },
+                { type: 'drag-reorder' },
+            ] },
+        } as ChartAssemblyInput;
+        const result = validateChart(coloured, 'vegalite');
+        expect(result.valid).toBe(true);
+        expect(result.warnings.filter((warning) => warning.severity !== 'info')).toEqual([]);
+        expect(result.warnings.map((warning) => warning.message)).toEqual([
+            'Interaction "click-highlight" yields legend clicks to "legend-toggle".',
+            'Interaction "click-highlight" yields axis label clicks to "axis-highlight".',
+        ]);
+    });
+
+    it('reports a malformed spec as an error', () => {
+        const result = withInteractions([{ type: 'no-such-preset' }]);
+        expect(result.valid).toBe(false);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toMatchObject({ code: 'invalid_interaction_spec' });
+        expect(result.errors[0].message).toContain('no-such-preset');
+    });
+
+    it('says a static backend ignores the spec', () => {
+        const result = withInteractions([{ type: 'click-highlight' }], 'echarts');
+        expect(result.valid).toBe(true);
+        expect(result.warnings).toContainEqual(expect.objectContaining({ severity: 'info', code: 'interactions_ignored' }));
+    });
+
+    it('adds nothing without a spec', () => {
+        const result = validateChart(barChart, 'vegalite');
+        expect(result.warnings.some((warning) => warning.code.includes('interaction'))).toBe(false);
+    });
+});

@@ -6,7 +6,6 @@ import type {
 	SemanticTarget,
 	GroupBy,
 } from '../interactions';
-import type { InteractionAffordance } from '../affordances';
 import { emphasisUpdate, isActivationAction, normalizedOpacity } from './utils';
 import { assistedElementTrigger, clickTrigger } from '../triggers';
 import { expandElementsByFields } from './semantic-cohort';
@@ -53,17 +52,13 @@ function groupElements(
 export function createClickGroupFocusInteraction(options: GroupFocusEngineOptions = {}): CanvasInteractionDef {
 	const id = options.id ?? 'click-group-focus';
 	const dimOpacity = normalizedOpacity(options.dimOpacity);
-	const affordances: InteractionAffordance[] = [
-		{ target: 'mark', cursor: 'activate', hover: 'cohort' },
-	];
 	return {
 		id,
 		eventSource: assistedElementTrigger(clickTrigger, 8),
 		retainedStateGroup: 'focus',
-		affordances,
+		affordances: { mark: { cursor: 'activate', hover: 'cohort' } },
 		handle(event, context) {
 			if (!isActivationAction(event.action) || event.phase === 'start' || event.phase === 'cancel') return null;
-			if (event.target?.visual.role === 'legend-item') return null;
 			const target = event.target
 				? { ...event.target, elements: groupElements(
 					event.target, context, options.groupBy,

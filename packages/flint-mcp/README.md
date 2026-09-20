@@ -26,7 +26,7 @@ renders **locally**.
 | `render_chart` | spec + `backend` + `format` (`png`/`svg`) + `scale?` | inline PNG image or SVG text |
 | `compile_chart` | spec + `backend` | backend-native spec JSON + warnings |
 | `validate_chart` | spec + `backend` | validity, warnings/errors, computed size |
-| `list_chart_types` | `backend?` | chart types + encoding channels per backend |
+| `list_chart_types` | `backend?` | chart types, encoding channels, and supported interaction presets per backend |
 | `list_themes` | optional preset `id` | shipped visual themes, plus guidance for a selected theme |
 | `create_chart_view` | spec | interactive chart **UI** (MCP App): live SVG preview + customization panel |
 

@@ -40,7 +40,7 @@ const FLY_MS = 700;
 const CLICK_REGION: CanvasInteractionDef = {
   id: CLICK_ID,
   eventSource: clickTrigger,
-  affordances: [{ target: 'mark', cursor: 'activate', hover: 'target' }],
+  affordances: { mark: { cursor: 'activate', hover: 'target' } },
   handle() {
     return null;
   },
@@ -101,7 +101,7 @@ export function MapSemanticZoomStage() {
         navigate({
           domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
           // A click on empty map, not a double-click, flies home.
-          reset: ['click-background'],
+          reset: ['click-none'],
           resetTransition: { duration: FLY_MS },
         }),
         CLICK_REGION,

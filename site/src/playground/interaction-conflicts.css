@@ -1,0 +1,4 @@
+/* The Conflict cases page reuses the Test cases card; this rule only trims its header. */
+.icf-header {
+  min-height: 0;
+}

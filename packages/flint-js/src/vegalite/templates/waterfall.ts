@@ -37,8 +37,14 @@ export const waterfallChartDef: ChartTemplateDef = {
     chart: "Waterfall Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
-    navigation: {},
-    reorder: { markTypes: ['rect'] },
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: { markTypes: ['rect'] },
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);

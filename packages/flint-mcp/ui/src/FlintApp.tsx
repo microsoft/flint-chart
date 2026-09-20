@@ -14,10 +14,12 @@ import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { ChartAssemblyInput, ChartOption } from 'flint-chart';
+import type { ChartAssemblyInput, ChartOption, ChartWarning } from 'flint-chart';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
+import { buildInteractiveChart } from 'flint-chart/interactive';
+import { expressionInterpreter } from 'vega-interpreter';
 
-import { renderFlintSvg, type FlintRenderResult } from './render';
+import { renderFlintSvg, withAppPreviewDefaults, type FlintRenderResult } from './render';
 import { chartIconFor } from './chart-icons';
 import {
   buildPanelModel,
@@ -735,6 +737,8 @@ export function FlintAppInner(props: {
   const [current, setCurrent] = useState<ChartAssemblyInput>(input);
   const [render, setRender] = useState<FlintRenderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [surfaceWarnings, setSurfaceWarnings] = useState<readonly ChartWarning[]>([]);
+  const [surfaceError, setSurfaceError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied' | 'downloaded' | 'error'>('idle');
   const [copyError, setCopyError] = useState<string | null>(null);
   const renderSeq = useRef(0);
@@ -875,7 +879,14 @@ export function FlintAppInner(props: {
     }
   }, [app, render]);
 
-  const warnings = render?.warnings ?? [];
+  const interactive = (current.interaction_spec?.interactions?.length ?? 0) > 0;
+  const previewInput = useMemo(
+    () => withAppPreviewDefaults(current, chartWidth ? { width: chartWidth } : undefined),
+    [current, chartWidth],
+  );
+  const renderWarnings = render?.warnings ?? [];
+  const warnings = interactive ? [...renderWarnings, ...surfaceWarnings] : renderWarnings;
+  const shownError = error ?? (interactive ? surfaceError : null);
 
   return (
     <main
@@ -888,10 +899,10 @@ export function FlintAppInner(props: {
       }}
     >
       <div className="preview">
-        {error ? (
+        {shownError ? (
           <div className="error">
             <strong>Could not render chart</strong>
-            <pre>{error}</pre>
+            <pre>{shownError}</pre>
           </div>
         ) : (
           // The frame is always mounted, so its size is known before the first
@@ -902,7 +913,15 @@ export function FlintAppInner(props: {
             style={surface ? { background: surface } : undefined}
           >
             {render
-              ? <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
+              ? interactive
+                ? (
+                  <InteractiveChart
+                    input={previewInput}
+                    onWarnings={setSurfaceWarnings}
+                    onError={setSurfaceError}
+                  />
+                )
+                : <div className="chart-svg" dangerouslySetInnerHTML={{ __html: render.svg }} />
               : <span className="chart-pending">Rendering…</span>}
           </div>
         )}
@@ -931,6 +950,51 @@ export function FlintAppInner(props: {
       />
     </main>
   );
+}
+
+/** The live chart when the input carries interaction_spec: the preview input, mounted through the interactive surface. */
+function InteractiveChart({
+  input,
+  onWarnings,
+  onError,
+}: {
+  input: ChartAssemblyInput;
+  onWarnings: (warnings: readonly ChartWarning[]) => void;
+  onError: (message: string | null) => void;
+}) {
+  const mountRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+    let live = true;
+    let surface: ReturnType<typeof buildInteractiveChart>;
+    try {
+      surface = buildInteractiveChart(mount, input, {
+        backend: 'vegalite',
+        renderer: 'svg',
+        expressionInterpreter,
+        chartId: 'flint-chart-view',
+      });
+    } catch (err) {
+      onError(err instanceof Error ? err.message : String(err));
+      return;
+    }
+    void surface.warnings.then((list) => {
+      if (live) onWarnings(list);
+    });
+    void surface.ready
+      .then(() => {
+        if (live) onError(null);
+      })
+      .catch((err) => {
+        if (live) onError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      live = false;
+      surface.destroy();
+    };
+  }, [input, onWarnings, onError]);
+  return <div className="chart-svg chart-interactive" ref={mountRef} />;
 }
 
 export function FlintApp() {

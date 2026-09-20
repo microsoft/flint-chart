@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, lassoSelect, legendToggle, linkedBrush, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import type { ClickHighlightOptions } from '../src/interactive/interactions';
-import { affordanceCursor, resolveInteractionAffordance } from '../src/interactive/affordances';
+import { affordanceCursor, affordsTarget, resolveInteractionAffordance } from '../src/interactive/affordances';
 import { reorderValues } from '../src/interactive/presets/drag-reorder';
 import { annotationCandidates, countAnnotationText, presentAnnotationUpdate } from '../src/interactive/presentation/annotation';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
@@ -404,8 +404,8 @@ describe('hover presentation policy', () => {
 
     it('includes only interactions that register hover presentation', () => {
         const preset = clickMark();
-        const observer: InteractionDef = { id: 'click-observer', eventSource: clickTrigger };
-        const hover: InteractionDef = { id: 'hover-observer', eventSource: hoverTrigger };
+        const observer: InteractionDef = { id: 'click-observer', eventSource: clickTrigger, affordances: { mark: {} } };
+        const hover: InteractionDef = { id: 'hover-observer', eventSource: hoverTrigger, affordances: { mark: {} } };
         const reorder = dragReorder();
         const indexReader = inspectIndex({ show: 'single', seriesBy: 'Series' });
         const sustained = longPress();
@@ -494,6 +494,7 @@ describe('viewport navigation', () => {
         const interaction: InteractionDef = {
             id: 'click-observer',
             eventSource: clickTrigger,
+            affordances: { mark: {} },
         };
 
         expect(interaction.handle).toBeUndefined();
@@ -1145,7 +1146,7 @@ describe('interaction definitions', () => {
             .toMatchObject({ hover: 'cohort' });
         const freehand = {
             id: 'freehand', eventSource: lassoTrigger('contain', false),
-            affordances: [{ target: 'plot' as const, cursor: 'draw' as const }],
+            affordances: { plot: { cursor: 'draw' as const } },
         };
         const drawCursor = affordanceCursor(resolveInteractionAffordance([freehand, select()], 'plot'));
         expect(drawCursor).toMatch(/^url\("data:image\/svg\+xml/);
@@ -1176,14 +1177,44 @@ describe('interaction definitions', () => {
         expect(resolveInteractionAffordance([interaction], 'mark')).toBeDefined();
         expect(resolveInteractionAffordance([interaction], 'legend-item')).toBeDefined();
         expect(resolveInteractionAffordance([interaction], 'axis-label')).toBeDefined();
-        expect(interaction).toMatchObject({
-            retainedStateGroup: 'focus',
-            claimsLegendActivation: true,
-            claimsAxisActivation: true,
-        });
+        expect(interaction).toMatchObject({ retainedStateGroup: 'focus' });
+        expect(Object.keys(interaction.affordances).sort()).toEqual(['axis-label', 'legend-item', 'mark']);
+        expect(Object.keys(markAndAxis.affordances).sort()).toEqual(['axis-label', 'mark']);
         expect(resolveInteractionAffordance([markAndAxis], 'mark')).toBeDefined();
         expect(resolveInteractionAffordance([markAndAxis], 'axis-label')).toBeDefined();
         expect(resolveInteractionAffordance([markAndAxis], 'legend-item')).toBeUndefined();
+    });
+
+    it('each preset affords the kinds of hit it answers', () => {
+        expect(Object.keys(legendToggle().affordances)).toEqual(['legend-item']);
+        expect(Object.keys(axisHighlight().affordances)).toEqual(['axis-label']);
+        for (const preset of [clickGroupFocus(), clickAnnotate(), longPress(), doubleActivate(), hoverGroupFocus({ groupBy: 'Series' })]) {
+            expect(Object.keys(preset.affordances)).toEqual(['mark']);
+        }
+        expect(Object.keys(dragReorder().affordances).sort()).toEqual(['axis-label', 'mark']);
+        for (const preset of [select(), brushX(), lassoSelect(), inspect(), navigate()]) {
+            expect(Object.keys(preset.affordances)).toEqual(['plot']);
+        }
+    });
+
+    it('navigate without pan affords the plot and signals nothing', () => {
+        expect(navigate({ pan: false }).affordances).toEqual({ plot: {} });
+        expect(affordsTarget(navigate({ pan: false }), 'plot')).toBe(true);
+        expect(resolveInteractionAffordance([navigate({ pan: false })], 'plot')).toBeUndefined();
+    });
+
+    it('a plot cursor is a fallback for looks only, never a claim on marks', () => {
+        expect(resolveInteractionAffordance([select()], 'mark')).toMatchObject({ cursor: 'region' });
+        expect(affordsTarget(select(), 'mark')).toBe(false);
+    });
+
+    it('click highlight yields targets through a rebuilt copy that keeps its preset and reset', () => {
+        const full = clickHighlight({ dimOpacity: 0.2, reset: ['escape'] });
+        const narrowed = full.withoutAffordances!(['legend-item', 'axis-label']);
+        expect(Object.keys(narrowed!.affordances)).toEqual(['mark']);
+        expect(narrowed).toMatchObject({ id: 'click-highlight', preset: 'click-highlight', retainedStateGroup: 'focus', reset: ['escape'] });
+        expect(Object.keys(full.affordances)).toHaveLength(3);
+        expect(full.withoutAffordances!(['mark', 'legend-item', 'axis-label'])).toBeNull();
     });
 
     it('provides reusable trigger descriptors', () => {
@@ -1251,8 +1282,11 @@ describe('interaction definitions', () => {
         expect(clickHighlight()).toMatchObject({
             id: 'click-highlight',
             eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
-            claimsLegendActivation: true,
-            claimsAxisActivation: true,
+            affordances: {
+                mark: { cursor: 'activate', hover: 'target' },
+                'legend-item': { cursor: 'activate', hover: 'cohort' },
+                'axis-label': { cursor: 'activate', hover: 'cohort' },
+            },
         });
         expect(clickMark()).toMatchObject({
             id: 'click-mark', eventSource: { ...clickTrigger, defaultAssistDistance: 8 },
@@ -1264,7 +1298,8 @@ describe('interaction definitions', () => {
             id: 'hover-group-focus', eventSource: { ...hoverTrigger, defaultAssistDistance: 6 },
         });
         expect(axisHighlight()).toMatchObject({
-            id: 'axis-highlight', eventSource: clickTrigger, claimsAxisActivation: true,
+            id: 'axis-highlight', eventSource: clickTrigger,
+            affordances: { 'axis-label': { cursor: 'activate', hover: 'cohort' } },
         });
         expect(axisHighlight({ event: 'hover' }).eventSource).toBe(hoverTrigger);
         expect(clickAnnotate()).toMatchObject({
@@ -2960,11 +2995,11 @@ describe('legend, inspect, zoom, and touch presets', () => {
         });
     });
 
-    it('ignores mark activations so it composes with element click presets', () => {
+    it('affords legend items only, so it composes with element click presets', () => {
         const interaction = legendToggle();
-        const markTarget = { visual: { kind: 'mark' as const, role: 'mark' }, elements: [{ value: { key: 'A' } }] };
 
-        expect(activate(interaction, markTarget)).toBeNull();
+        expect(affordsTarget(interaction, 'legend-item')).toBe(true);
+        expect(affordsTarget(interaction, 'mark')).toBe(false);
     });
 
     it('focuses configured discrete-axis and legend targets through one preset', () => {
@@ -2974,13 +3009,11 @@ describe('legend, inspect, zoom, and touch presets', () => {
             visual: { kind: 'axis' as const, role: 'axis-label' },
             elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
         };
-        const markTarget = {
-            visual: { kind: 'mark' as const, role: 'mark' },
-            elements: [{ value: { Category: 'A' } }],
-        };
 
-        expect(axisInteraction).toMatchObject({ claimsAxisActivation: true });
-        expect(legendInteraction).toMatchObject({ claimsLegendActivation: true });
+        expect(affordsTarget(axisInteraction, 'axis-label')).toBe(true);
+        expect(affordsTarget(axisInteraction, 'legend-item')).toBe(false);
+        expect(affordsTarget(legendInteraction, 'legend-item')).toBe(true);
+        expect(affordsTarget(legendInteraction, 'mark')).toBe(false);
         expect(activate(axisInteraction, axisTarget)?.ops[0]).toMatchObject({
             op: 'set-style', targets: [{ elements: axisTarget.elements }],
             value: { state: 'emphasized', mutedOpacity: 0.2 },
@@ -2989,8 +3022,6 @@ describe('legend, inspect, zoom, and touch presets', () => {
             op: 'set-style', targets: [{ elements: seriesTarget('A').elements }],
             value: { state: 'emphasized', mutedOpacity: 0.2 },
         });
-        expect(activate(axisInteraction, markTarget)).toBeNull();
-        expect(activate(legendInteraction, markTarget)).toBeNull();
     });
 
     it('handles mark, legend, and axis activations through one click highlight instance', () => {
@@ -3029,26 +3060,20 @@ describe('legend, inspect, zoom, and touch presets', () => {
                 },
             }],
         };
-        const axisTarget = {
-            visual: { kind: 'axis' as const, role: 'axis-label' },
-            elements: [{ value: { axis: 'x', field: 'Category', value: 'A' } }],
-        };
 
         expect(activate(interaction, intervalTarget)?.ops[0]).toMatchObject({
             op: 'set-style', targets: [{ elements: intervalTarget.elements }],
         });
-        expect(activate(interaction, axisTarget)).toBeNull();
+        expect(affordsTarget(interaction, 'axis-label')).toBe(false);
     });
 
     it('assigns observable legend events only to legend interactions', () => {
-        expect(activate(clickMark(), seriesTarget('A'))).toBeNull();
-        expect(activate(clickGroupFocus(), seriesTarget('A'))).toBeNull();
+        expect(affordsTarget(clickMark(), 'legend-item')).toBe(false);
+        expect(affordsTarget(clickGroupFocus(), 'legend-item')).toBe(false);
+        expect(affordsTarget(clickAnnotate(), 'legend-item')).toBe(false);
+        expect(affordsTarget(hoverGroupFocus({ groupBy: 'Series' }), 'legend-item')).toBe(false);
+        expect(affordsTarget(clickHighlight({ targets: ['legend'] }), 'legend-item')).toBe(true);
         expect(activate(clickHighlight({ targets: ['legend'] }), seriesTarget('A'))).not.toBeNull();
-        expect(activate(clickAnnotate(), seriesTarget('A'))).toBeNull();
-        const hover = (interaction: CanvasInteractionDef) => interaction.handle!(toCanvasInteractionEvent({
-            type: 'semantic', source: 'element', phase: 'preview', target: seriesTarget('A'),
-        }, interaction.eventSource), context);
-        expect(hover(hoverGroupFocus({ groupBy: 'Series' }))).toBeNull();
     });
 
     it('reports the resolved role for context, long-press, and double activation', () => {
@@ -3075,8 +3100,8 @@ describe('legend, inspect, zoom, and touch presets', () => {
         }, clickTrigger);
 
         expect(event).toMatchObject({ action: 'click-legend', target });
-        expect(activate(clickMark(), target)).toBeNull();
-        expect(activate(clickGroupFocus(), target)).toBeNull();
+        expect(affordsTarget(clickMark(), 'legend-item')).toBe(false);
+        expect(affordsTarget(clickGroupFocus(), 'legend-item')).toBe(false);
         expect(activate(clickHighlight({ targets: ['legend'] }), target)?.ops[0]).toMatchObject({
             op: 'set-style',
             targets: [{ visual: target.visual, elements: target.elements }],
@@ -3130,9 +3155,7 @@ describe('legend, inspect, zoom, and touch presets', () => {
         const single = inspectIndex({ axis: 'y', show: 'single', seriesBy: 'Series', tolerance: 0.03 });
         expect(single.eventSource.inspectIndex).toEqual({ axis: 'y', show: 'single', seriesBy: 'Series' });
         expect(single.eventSource.inspectTolerance).toBe(0.03);
-        expect(single.affordances).toEqual([
-            { target: 'legend-item', cursor: 'activate', hover: 'cohort' },
-        ]);
+        expect(single.affordances).toEqual({ 'legend-item': { cursor: 'activate', hover: 'cohort' } });
         expect(inspectIndex({ show: { series: 'Forecast' }, seriesBy: 'Series' }).eventSource.inspectIndex)
             .toEqual({ axis: 'x', show: { series: 'Forecast' }, seriesBy: 'Series' });
         expect(() => inspectIndex({ show: 'single' })).toThrow('requires seriesBy');
@@ -3389,12 +3412,8 @@ describe('legend, inspect, zoom, and touch presets', () => {
             elements: [{ value: { category: 'A' } }],
         };
         expect(longPress({ holdMs: 250 }).eventSource).toMatchObject({ gesture: 'long-press', holdMs: 250 });
-        expect(longPress().affordances).toEqual([
-            { target: 'mark', cursor: 'activate', hover: 'target' },
-        ]);
-        expect(doubleActivate().affordances).toEqual([
-            { target: 'mark', cursor: 'activate', hover: 'target' },
-        ]);
+        expect(longPress().affordances).toEqual({ mark: { cursor: 'activate', hover: 'target' } });
+        expect(doubleActivate().affordances).toEqual({ mark: { cursor: 'activate', hover: 'target' } });
         expect(longPress().handle!(toCanvasInteractionEvent({
             type: 'semantic', source: 'element', phase: 'commit', target,
         }, longPressTrigger()), context)?.ops[0]).toMatchObject({
@@ -3426,16 +3445,29 @@ describe('legend, inspect, zoom, and touch presets', () => {
 });
 
 describe('navigate reset transition', () => {
-    it('carries a reset transition onto the interaction and validates it', () => {
-        expect(navigate().navigationResetTransition).toBeUndefined();
+    it('flies home over 400 ms unless the option says otherwise, and validates it', () => {
+        expect(navigate().navigationResetTransition).toEqual({ duration: 400 });
         expect(navigate().eventSource.reset).toEqual(['double-click']);
-        expect(navigate({ reset: ['click-background'] }).eventSource.reset).toEqual(['click-background']);
-        expect(navigate({ reset: ['double-click', 'click-background'] }).eventSource.reset)
-            .toEqual(['double-click', 'click-background']);
+        expect(navigate({ reset: ['click-none'] }).eventSource.reset).toEqual(['click-none']);
+        expect(navigate({ reset: ['double-click', 'click-none'] }).eventSource.reset)
+            .toEqual(['double-click', 'click-none']);
         expect(navigate({ reset: [] }).eventSource.reset).toEqual([]);
         expect(navigate({ resetTransition: { duration: 500 } }).navigationResetTransition).toEqual({ duration: 500 });
+        expect(navigate({ resetTransition: { duration: 0 } }).navigationResetTransition).toBeUndefined();
         expect(() => navigate({ resetTransition: { duration: -1 } })).toThrow(/resetTransition/);
         expect(() => navigate({ resetTransition: { duration: Number.NaN } })).toThrow(/resetTransition/);
+    });
+});
+
+describe('brush-zoom transitions', () => {
+    it('tweens the zoom and the flight home over 400 ms unless an option turns one off', () => {
+        expect(brushZoom().navigationTransition).toEqual({ duration: 400 });
+        expect(brushZoom().navigationResetTransition).toEqual({ duration: 400 });
+        expect(brushZoom({ transition: { duration: 0 } }).navigationTransition).toBeUndefined();
+        expect(brushZoom({ transition: { duration: 0 } }).navigationResetTransition).toEqual({ duration: 400 });
+        expect(brushZoom({ resetTransition: { duration: 250 } }).navigationResetTransition).toEqual({ duration: 250 });
+        expect(() => brushZoom({ transition: { duration: -1 } })).toThrow(/transition/);
+        expect(() => brushZoom({ resetTransition: { duration: Number.NaN } })).toThrow(/resetTransition/);
     });
 });
 

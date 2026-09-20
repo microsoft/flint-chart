@@ -279,13 +279,17 @@ function buildRadarLayers(
 // ---------------------------------------------------------------------------
 export const radarChartDef: ChartTemplateDef = {
     chart: "Radar Chart",
-    reorder: false,
     template: {
         description: "Radar / Spider chart",
         mark: "point",
         encoding: {},
     },
     channels: ["x", "y", "color", "column", "row"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian', 'angular'],
+        legend: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const axisField = resolvedEncodings.x?.field;
@@ -297,7 +301,6 @@ export const radarChartDef: ChartTemplateDef = {
             seriesField: groupField,
             legendFields: groupField ? { color: groupField } : undefined,
             selectableMarks: ['line', 'point'],
-            supportedRegionGestures: ['angular'],
             renderHoverStyles: {
                 line: { strokeWidth: 3 },
                 symbol: { strokeWidth: 2 },

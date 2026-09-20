@@ -132,7 +132,15 @@ export const lineChartDef: ChartTemplateDef = {
     chart: "Line Chart",
     template: { mark: "line", encoding: {} },
     channels: ["x", "y", "color", "strokeDash", "detail", "opacity", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+        index: true,
+    },
     markCognitiveChannel: 'position',
     geometryKinds: ['line', 'point'],
     semanticInteractions: ({ resolvedEncodings }) => {

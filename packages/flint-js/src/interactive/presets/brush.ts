@@ -10,7 +10,7 @@ export function createBrushInteraction(axis: 'x' | 'y', options: BrushOptions = 
         id,
         axis,
         eventSource: axisBrushTrigger(axis, options.match ?? 'intersect', options.mode ?? 'ephemeral', options.guide),
-        affordances: [{ target: 'plot', cursor: 'region' }],
+        affordances: { plot: { cursor: 'region' } },
         handle(event, context) {
             const acceptsAngular = axis === 'x' && event.action === 'brush-angle';
             if ((event.action !== `brush-${axis}` && !acceptsAngular)

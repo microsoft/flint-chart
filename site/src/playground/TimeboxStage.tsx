@@ -137,7 +137,7 @@ export function TimeboxStage() {
   const timeboxInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: TIMEBOX_INTERACTION_ID,
     eventSource: rectangleTrigger('contain'),
-    affordances: [{ target: 'plot', cursor: 'region' }],
+    affordances: { plot: { cursor: 'region' } },
     handle(event) {
       if (event.action !== 'select-region' || event.phase !== 'commit') return null;
       const nextSelection = selectionFromEvent(event);

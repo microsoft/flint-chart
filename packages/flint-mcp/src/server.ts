@@ -145,7 +145,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'when the host has no App UI support or the user explicitly wants a ' +
         'static image. Use compile_chart for the backend spec JSON, ' +
         'validate_chart to check a spec, and list_chart_types to discover chart ' +
-        'types and their channels. Use list_themes to discover visual themes; ' +
+        'types, their channels, and the interaction presets each supports for ' +
+        'interaction_spec. Use list_themes to discover visual themes; ' +
         'prefer a preset id, and use an `extends` override only when the user ' +
         'asks to customize it. Before authoring chart specs, read the ' +
         'flint://agent-skill resource or use the author_flint_chart prompt. ' +
@@ -245,7 +246,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       title: 'Validate chart spec',
       description:
         'Validate a Flint chart spec for a backend without rendering. Reports ' +
-        'whether it is valid, all warnings/errors, and the computed layout size.',
+        'whether it is valid, all warnings/errors, and the computed layout size. ' +
+        'With an interaction_spec it also reports the entries the chart would drop.',
       inputSchema: { ...assemblyInputShape, backend: backendEnum },
     },
     async (args: any) => {
@@ -264,8 +266,9 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'List chart types',
       description:
-        'List the available chart types and their encoding channels for a ' +
-        'backend, or for all backends when none is given.',
+        'List the available chart types, their encoding channels, and the ' +
+        'interaction presets each supports in interaction_spec (Vega-Lite only), ' +
+        'for a backend, or for all backends when none is given.',
       inputSchema: {
         backend: backendEnum.optional(),
       },

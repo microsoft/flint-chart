@@ -53,6 +53,7 @@ import {
     InstantiateContext,
 } from '../core/types';
 import type { ChartWarning, ChartOption, OptionEvalContext } from '../core/types';
+import { declaredInteractionCapabilities, type InteractionCapability } from '../core/interaction-spec';
 import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
 import { planBandDodge, resolveDodge } from '../core/band-dodge';
@@ -884,91 +885,104 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     const unfaceted = !resolvedEncodings.column?.field && !resolvedEncodings.row?.field;
     // A projected chart navigates its projection extent, so both axes move
     // together and no continuous x/y encoding is required.
-    const geoNavigation = !!chartTemplate.navigation?.geo && unfaceted;
+    const support = chartTemplate.interactionSupport;
+    const geoNavigation = !!support?.navigation?.geo && unfaceted;
     const navigationAxes: ('x' | 'y')[] = geoNavigation
         ? ['x', 'y']
-        : chartTemplate.navigation && unfaceted
-            ? (chartTemplate.navigation.axes ?? ['x', 'y']).filter((axis) => {
+        : support?.navigation && unfaceted
+            ? (support.navigation.axes ?? ['x', 'y']).filter((axis) => {
                 const encoding = resolvedEncodings[axis];
                 return !!encoding?.field && (encoding.type === 'quantitative' || encoding.type === 'temporal');
             })
             : [];
-    if (chartTemplate.semanticInteractions || navigationAxes.length > 0) {
-        const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
-            fields: [],
-            provenanceFields: undefined,
-            temporalProvenanceFields: undefined,
-            rangeProvenance: undefined,
-            selectableMarks: [],
-            reorderAxis: undefined,
-            reorderAxes: undefined,
-        };
-        const semanticEncodings = Object.values(resolvedEncodings)
-            .filter((encoding: any) => typeof encoding?.field === 'string') as any[];
-        const hasAggregate = semanticEncodings.some((encoding) => encoding.aggregate);
-        const provenanceFields = [...new Set(semanticEncodings
-            .filter((encoding) => !hasAggregate || !encoding.aggregate)
-            .map((encoding) => encoding.field as string))];
-        const temporalProvenanceFields = [...new Set(semanticEncodings
-            .filter((encoding) => encoding.type === 'temporal')
-            .map((encoding) => encoding.field as string))];
-        const allowedReorderAxes: readonly ('x' | 'y')[] = chartTemplate.reorder === false
-            ? []
-            : chartTemplate.reorder?.axes ?? ['x', 'y'];
-        const defaultReorderAxes = allowedReorderAxes.length > 0
-            && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
-            ? (['x', 'y'] as const).flatMap((axis) => {
-                const encoding = resolvedEncodings[axis];
-                return allowedReorderAxes.includes(axis)
-                    && encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal')
-                    ? [{
-                        axis,
-                        field: encoding.field,
-                        ...(chartTemplate.reorder && chartTemplate.reorder.includeConnectiveMarks
-                            ? { includeConnectiveMarks: true }
-                            : {}),
-                        ...(chartTemplate.reorder && chartTemplate.reorder.markTypes
-                            ? { markTypes: chartTemplate.reorder.markTypes }
-                            : {}),
-                    }]
-                    : [];
-            })
-            : [];
-        const explicitReorderAxes = templateSemantics.reorderAxes
-            ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
-        const legendFields = 'legendFields' in templateSemantics ? templateSemantics.legendFields : undefined;
-        const rangeLegendChannels = Object.keys(legendFields ?? {})
-            .filter((channel) => {
-                const type = resolvedEncodings[channel]?.type;
-                return type === 'quantitative' || type === 'temporal';
-            });
-        const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
-            .filter((candidate, index, candidates) => candidates.findIndex(
-                (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
-            ) === index);
-        result._interactionSemantics = {
-            ...templateSemantics,
-            axisFields: Object.fromEntries((['x', 'y'] as const).flatMap((axis) => {
-                const encoding = resolvedEncodings[axis];
-                return encoding?.field
-                    ? [[axis, { field: encoding.field, type: encoding.type ?? 'nominal' }]]
-                    : [];
-            })),
-            sourceRecords: values.map((record) => ({ ...record })),
-            provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
-            temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
-            rangeLegendChannels,
-            navigationAxes,
-            geoNavigation,
-            ...(vgObj._geoLevels ? { geoLevels: vgObj._geoLevels } : {}),
-            ...(vgObj._geoPreProjection ? { geoPreProjection: vgObj._geoPreProjection } : {}),
-            reorderAxis: reorderAxes[0],
-            reorderAxes,
-            selectionBoundary: design.interaction.selectionBoundary,
-            continuousColorFocus: design.interaction.continuousColorFocus,
-            neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
-        };
-    }
+    const templateSemantics = chartTemplate.semanticInteractions?.({ resolvedEncodings }) ?? {
+        fields: [],
+        provenanceFields: undefined,
+        temporalProvenanceFields: undefined,
+        rangeProvenance: undefined,
+        selectableMarks: [],
+        reorderAxis: undefined,
+        reorderAxes: undefined,
+    };
+    const semanticEncodings = Object.values(resolvedEncodings)
+        .filter((encoding: any) => typeof encoding?.field === 'string') as any[];
+    const hasAggregate = semanticEncodings.some((encoding) => encoding.aggregate);
+    const provenanceFields = [...new Set(semanticEncodings
+        .filter((encoding) => !hasAggregate || !encoding.aggregate)
+        .map((encoding) => encoding.field as string))];
+    const temporalProvenanceFields = [...new Set(semanticEncodings
+        .filter((encoding) => encoding.type === 'temporal')
+        .map((encoding) => encoding.field as string))];
+    const reorderSupport = support?.reorder;
+    const allowedReorderAxes: readonly ('x' | 'y')[] = reorderSupport
+        ? reorderSupport.axes ?? ['x', 'y']
+        : [];
+    const defaultReorderAxes = allowedReorderAxes.length > 0
+        && !resolvedEncodings.column?.field && !resolvedEncodings.row?.field
+        ? (['x', 'y'] as const).flatMap((axis) => {
+            const encoding = resolvedEncodings[axis];
+            return allowedReorderAxes.includes(axis)
+                && encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal')
+                ? [{
+                    axis,
+                    field: encoding.field,
+                    ...(reorderSupport?.includeConnectiveMarks ? { includeConnectiveMarks: true } : {}),
+                    ...(reorderSupport?.markTypes ? { markTypes: reorderSupport.markTypes } : {}),
+                }]
+                : [];
+        })
+        : [];
+    const explicitReorderAxes = templateSemantics.reorderAxes
+        ?? (templateSemantics.reorderAxis ? [templateSemantics.reorderAxis] : []);
+    const legendFields = 'legendFields' in templateSemantics ? templateSemantics.legendFields : undefined;
+    const rangeLegendChannels = Object.keys(legendFields ?? {})
+        .filter((channel) => {
+            const type = resolvedEncodings[channel]?.type;
+            return type === 'quantitative' || type === 'temporal';
+        });
+    const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
+        .filter((candidate, index, candidates) => candidates.findIndex(
+            (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
+        ) === index);
+    const discreteLegend = Object.keys(legendFields ?? {})
+        .some((channel) => !rangeLegendChannels.includes(channel));
+    const discreteAxis = (['x', 'y'] as const).some((axis) => {
+        const encoding = resolvedEncodings[axis];
+        return !!encoding?.field && (encoding.type === 'nominal' || encoding.type === 'ordinal');
+    });
+    const confirmed: Partial<Record<InteractionCapability, boolean>> = {
+        navigation: navigationAxes.length > 0,
+        reorder: reorderAxes.length > 0,
+        legend: discreteLegend,
+        'discrete-axis': discreteAxis,
+        index: !!resolvedEncodings.x?.field,
+    };
+    const capabilities = declaredInteractionCapabilities(support)
+        .filter((capability) => confirmed[capability] ?? true);
+    result._interactionSemantics = {
+        ...templateSemantics,
+        chartType: chartTemplate.chart,
+        capabilities,
+        axisFields: Object.fromEntries((['x', 'y'] as const).flatMap((axis) => {
+            const encoding = resolvedEncodings[axis];
+            return encoding?.field
+                ? [[axis, { field: encoding.field, type: encoding.type ?? 'nominal' }]]
+                : [];
+        })),
+        sourceRecords: values.map((record) => ({ ...record })),
+        provenanceFields: templateSemantics.provenanceFields ?? provenanceFields,
+        temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? temporalProvenanceFields,
+        rangeLegendChannels,
+        navigationAxes,
+        geoNavigation,
+        ...(vgObj._geoLevels ? { geoLevels: vgObj._geoLevels } : {}),
+        ...(vgObj._geoPreProjection ? { geoPreProjection: vgObj._geoPreProjection } : {}),
+        reorderAxis: reorderAxes[0],
+        reorderAxes,
+        selectionBoundary: design.interaction.selectionBoundary,
+        continuousColorFocus: design.interaction.continuousColorFocus,
+        neutralizeContinuousColor: chartTemplate.chart === 'Map' || chartTemplate.chart === 'Choropleth',
+    };
     result._width = layoutResult.subplotWidth;
     result._height = layoutResult.subplotHeight;
     // Annotated option catalog: every configurable property this template

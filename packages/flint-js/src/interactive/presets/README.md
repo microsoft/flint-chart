@@ -28,6 +28,7 @@ only when they represent broadly reusable canvas policies.
 const legendSelection: CanvasInteractionDef = {
 	id: 'legend-selection',
 	eventSource: clickTrigger,
+	affordances: { 'legend-item': { cursor: 'activate' } },
 	handle: (event) => {
 		if (event.action !== 'click-legend' || !event.target) return null;
 		return {

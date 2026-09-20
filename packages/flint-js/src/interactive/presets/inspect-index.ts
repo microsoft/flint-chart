@@ -1,5 +1,5 @@
 import type { CanvasInteractionDef, InspectIndexOptions } from '../interactions';
-import type { InteractionAffordance } from '../affordances';
+import type { InteractionAffordances } from '../affordances';
 import { inspectIndexTrigger } from '../triggers';
 
 /** Reads values at one independent-axis position across one or more series. */
@@ -10,9 +10,9 @@ export function createInspectIndexInteraction(options: InspectIndexOptions = {})
     if (show !== 'all' && !options.seriesBy) {
         throw new Error('inspectIndex({ show: "single" | { series } }) requires seriesBy.');
     }
-    const affordances: InteractionAffordance[] = show !== 'all'
-        ? [{ target: 'legend-item', cursor: 'activate', hover: 'cohort' }]
-        : [{ target: 'plot', cursor: 'inspect' }];
+    const affordances: InteractionAffordances = show !== 'all'
+        ? { 'legend-item': { cursor: 'activate', hover: 'cohort' } }
+        : { plot: { cursor: 'inspect' } };
     return {
         id,
         eventSource: inspectIndexTrigger(

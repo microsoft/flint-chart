@@ -25,6 +25,7 @@ import type {
 import { isCanvasInteraction } from '../../interactive/interactions';
 import {
     affordanceCursor,
+    affordsTarget,
     resolveInteractionAffordance,
     type InteractionAffordanceTarget,
 } from '../../interactive/affordances';
@@ -36,6 +37,7 @@ import type {
 import { matchesSemanticTargetSelector } from '../../interactive/language/updates';
 import type { VegaInteractionPlan, VegaReorderAxis } from './contracts';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
+import { interactionsToReset, type InteractionResetGesture } from '../../interactive/reset';
 import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
@@ -353,7 +355,7 @@ export function interactionsForHoverPresentation(
         ...clickInteractions,
         ...elementDragInteractions,
         ...inspectInteractions,
-    ].filter((interaction, index, candidates) => interaction.affordances?.some((affordance) => affordance.hover)
+    ].filter((interaction, index, candidates) => Object.values(interaction.affordances).some((affordance) => affordance.hover)
         && candidates.findIndex((candidate) => candidate.id === interaction.id) === index);
 }
 
@@ -549,7 +551,6 @@ export function mountVegaInteractions(
         assisted: import('../../interactive/types').TargetFeedbackOptions | false;
         keyboard: import('../../interactive/types').TargetFeedbackOptions | false;
     } | undefined = undefined,
-    dismiss: import('../../interactive/types').InteractionDismissPolicy | false | undefined = undefined,
 ): VegaInteractionController {
     const canvasInteractions = interactions.filter(isCanvasInteraction);
     const clickInteractions = resolve
@@ -558,15 +559,15 @@ export function mountVegaInteractions(
     const hoverInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'hover')
         : [];
-    const axisClickInteractions = clickInteractions.filter((interaction) => interaction.claimsAxisActivation);
-    const markClickInteractions = clickInteractions.filter((interaction) =>
-        resolveInteractionAffordance([interaction], 'mark')
-        || resolveInteractionAffordance([interaction], 'legend-item'));
-    const axisHoverInteractions = hoverInteractions.filter((interaction) => interaction.claimsAxisActivation);
-    const markHoverInteractions = hoverInteractions.filter((interaction) => !interaction.claimsAxisActivation);
+    // One list per gesture and kind of hit, each defined by the affordance it needs.
+    const axisClickInteractions = clickInteractions.filter((interaction) => affordsTarget(interaction, 'axis-label'));
+    const markClickInteractions = clickInteractions.filter((interaction) => affordsTarget(interaction, 'mark'));
+    const legendClickInteractions = clickInteractions.filter((interaction) => affordsTarget(interaction, 'legend-item'));
+    const axisHoverInteractions = hoverInteractions.filter((interaction) => affordsTarget(interaction, 'axis-label'));
+    const markHoverInteractions = hoverInteractions.filter((interaction) => affordsTarget(interaction, 'mark'));
+    const legendHoverInteractions = hoverInteractions.filter((interaction) => affordsTarget(interaction, 'legend-item'));
     const axisHoverPresentationInteractions = [...axisClickInteractions, ...axisHoverInteractions]
-        .filter((interaction) => interaction.affordances?.some((affordance) =>
-            affordance.target === 'axis-label' && affordance.hover));
+        .filter((interaction) => interaction.affordances['axis-label']?.hover);
     const contextInteractions = resolve
         ? canvasInteractions.filter((interaction) => interaction.eventSource.gesture === 'context')
         : [];
@@ -584,7 +585,7 @@ export function mountVegaInteractions(
             && interaction.eventSource.gesture === 'drag')
         : [];
     const hoverPresentationInteractions = interactionsForHoverPresentation(
-        [...markClickInteractions, ...longPressInteractions, ...doubleInteractions],
+        [...markClickInteractions, ...legendClickInteractions, ...longPressInteractions, ...doubleInteractions],
         markHoverInteractions,
         elementDragInteractions,
         inspectInteractions,
@@ -599,9 +600,6 @@ export function mountVegaInteractions(
     const navigationInteraction = canvasInteractions.find(
         (interaction) => interaction.eventSource.type === 'navigation',
     );
-    const backgroundResetInteraction = navigationInteraction?.eventSource.reset?.includes('click-background')
-        ? navigationInteraction
-        : undefined;
     const elementDragInteraction = elementDragInteractions[0];
     const assistDistanceFor = (eligible: readonly CanvasInteractionDef[]): number =>
         resolveAssistDistance(eligible, assistDistance);
@@ -725,6 +723,7 @@ export function mountVegaInteractions(
     });
     const resetViewportRegion = (): void => {
         if (!regionInteraction?.eventSource.viewport) return;
+        if (flyViewportHome(regionInteraction)) return;
         retainedUpdates.delete(regionInteraction.id);
         previewUpdates.delete(regionInteraction.id);
         void renderUpdates();
@@ -1044,6 +1043,8 @@ export function mountVegaInteractions(
                     }
                     for (const target of op.targets) {
                         if ('select' in target) continue;
+                        // An axis element styles its label, and its marks below, through the
+                        // render keys the axis resolver attached to it.
                         if (target.visual.kind === 'axis') {
                             for (const element of target.elements) {
                                 axisStyles.push({
@@ -1051,7 +1052,6 @@ export function mountVegaInteractions(
                                     style: op.value,
                                 });
                             }
-                            continue;
                         }
                         for (const element of target.elements) {
                             for (const key of semanticElementRenderKeys(element)) {
@@ -1251,6 +1251,31 @@ export function mountVegaInteractions(
         return resolved.result;
     };
 
+    /** The axes of the viewport an interaction holds, or undefined when it holds none. */
+    const heldViewportAxes = (id: string): 'x' | 'y' | 'xy' | undefined => {
+        for (const layer of [retainedUpdates, previewUpdates]) {
+            const op = layer.get(id)?.ops.find((candidate) => candidate.op === 'set-viewport');
+            if (op?.op === 'set-viewport') return op.axes;
+        }
+        return undefined;
+    };
+    // A held viewport flies home the way a navigate reset does: the home
+    // update tweens, then leaves, so nothing stays retained once it lands.
+    const flyViewportHome = (interaction: CanvasInteractionDef): boolean => {
+        const transition = interaction.navigationResetTransition;
+        const axes = heldViewportAxes(interaction.id);
+        if (!transition || axes === undefined) return false;
+        previewUpdates.delete(interaction.id);
+        const home: ChartUpdate = { id: interaction.id, ops: [{ op: 'set-viewport', axes, value: {} }] };
+        void storeUpdate(home, retainedUpdates, null, { transition }).then(async () => {
+            const landed = retainedUpdates.get(interaction.id);
+            if (!landed?.ops.every((op) => op.op === 'set-viewport' && Object.keys(op.value).length === 0)) return;
+            retainedUpdates.delete(interaction.id);
+            await renderUpdates();
+        });
+        return true;
+    };
+
     const applyInteractionUpdate = async (
         interaction: CanvasInteractionDef,
         phase: import('../../interactive/interactions').InteractionPhase,
@@ -1269,7 +1294,7 @@ export function mountVegaInteractions(
                 for (const sibling of evictRetainedStateSiblings(
                     interaction, canvasInteractions, retainedUpdates, previewUpdates,
                 )) {
-                    if (sibling.claimsLegendActivation) selectedLegend = null;
+                    if (affordsTarget(sibling, 'legend-item')) selectedLegend = null;
                 }
             }
             await storeUpdate(update, preview ? previewUpdates : retainedUpdates, legendSelection, options, false);
@@ -1364,7 +1389,11 @@ export function mountVegaInteractions(
         const request = applyHandler && interaction.handle
             ? interaction.handle(canvasEvent, context(!interaction.eventSource.viewport, interaction))
             : null;
-        await applyInteractionUpdate(interaction, event.phase, request, legendSelection);
+        // A committed viewport, a brush zoom, may tween into place.
+        const transition = event.phase === 'commit' && request && hasViewportOp(request)
+            ? interaction.navigationTransition
+            : undefined;
+        await applyInteractionUpdate(interaction, event.phase, request, legendSelection, transition ? { transition } : undefined);
     };
     let navigationDispatch = Promise.resolve();
     // Navigation frames queue behind the render they trigger. While one is in
@@ -1609,12 +1638,10 @@ export function mountVegaInteractions(
         );
         const legend = normalized.legend;
         if (legend) {
-            const legendHoverInteractions = hoverPresentationForTarget('legend-item');
-            if (legendHoverInteractions.length === 0) return clearHover();
+            if (hoverPresentationForTarget('legend-item').length === 0) return clearHover();
             const resolved = legendSemanticTarget(legend);
             hoverActive = true;
-            for (const interaction of markHoverInteractions.filter((candidate) =>
-                legendHoverInteractions.includes(candidate))) {
+            for (const interaction of legendHoverInteractions) {
                 void dispatch(interaction, {
                     type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                     modifiers: normalized.event.modifiers,
@@ -1678,8 +1705,7 @@ export function mountVegaInteractions(
         return show === 'single' || typeof show === 'object';
     });
     const clickHandler = (event: MouseEvent, item: any): void => {
-        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0
-            && !backgroundResetInteraction) || suppressClick) return;
+        if ((clickInteractions.length === 0 && singleSeriesInspectInteractions.length === 0) || suppressClick) return;
         const { point, rootPoint } = pointerPoints(event as unknown as PointerEvent);
         const axisTarget = resolveAxisTarget(item);
         if (axisTarget) {
@@ -1701,24 +1727,7 @@ export function mountVegaInteractions(
             resolveTarget('click', 'legend-item', [], legend),
         )
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        if (backgroundResetInteraction && !target && !legend) {
-            const space = coordinateSpace();
-            const inPlot = point.x >= 0 && point.x <= space.plotWidth
-                && point.y >= 0 && point.y <= space.plotHeight;
-            if (inPlot) {
-                void dispatchNavigation(backgroundResetInteraction, {
-                    type: 'navigation', phase: 'commit', operation: 'reset',
-                    axes: resolvedNavigationAxes(
-                        backgroundResetInteraction.eventSource.axes,
-                        Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
-                    ),
-                    modifiers: normalized.event.modifiers,
-                });
-            }
-        }
-        for (const interaction of markClickInteractions) {
-            const affordanceTarget = legend ? 'legend-item' : 'mark';
-            if (!resolveInteractionAffordance([interaction], affordanceTarget)) continue;
+        for (const interaction of legend ? legendClickInteractions : markClickInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
@@ -1751,7 +1760,7 @@ export function mountVegaInteractions(
         const { legend } = normalized;
         const target = legend ? legendSemanticTarget(legend)
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        for (const interaction of contextInteractions) {
+        for (const interaction of contextInteractions.filter((candidate) => affordsTarget(candidate, legend ? 'legend-item' : 'mark'))) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit', target, point,
                 modifiers: normalized.event.modifiers,
@@ -1939,10 +1948,11 @@ export function mountVegaInteractions(
     };
     let longPressTimer: number | undefined;
     let longPressPointer: { id: number; x: number; y: number } | undefined;
-    const dismissPolicy = dismiss === false ? { click: false as const, escape: false } : {
-        click: dismiss?.click ?? 'non-element' as const,
-        escape: dismiss?.escape ?? true,
-    };
+    // Per-interaction reset. A gesture resets only the interactions whose `reset` list holds
+    // it, each by its own id. Host updates and the other interactions keep their state.
+    const clickNoneResets = interactionsToReset(canvasInteractions, 'click-none').length > 0;
+    const doubleClickResets = interactionsToReset(canvasInteractions, 'double-click').length > 0;
+    const escapeResets = interactionsToReset(canvasInteractions, 'escape').length > 0;
     let dismissTimer: number | undefined;
     let consumeDismissClick = false;
     const cancelPendingDismiss = (): void => {
@@ -1950,22 +1960,48 @@ export function mountVegaInteractions(
         window.clearTimeout(dismissTimer);
         dismissTimer = undefined;
     };
-    const clearDismissibleState = (): void => {
-        cancelPendingDismiss();
+    const resetInteraction = (interaction: CanvasInteractionDef): boolean => {
+        if (interaction.eventSource.type === 'navigation') {
+            // The viewport flies home through the navigation path, so its retained state is not dropped first.
+            void dispatchNavigation(interaction, {
+                type: 'navigation', phase: 'commit', operation: 'reset',
+                axes: resolvedNavigationAxes(
+                    interaction.eventSource.axes,
+                    Object.keys(plan.navigationAxes ?? {}) as ('x' | 'y')[],
+                ),
+            });
+            interaction.onReset?.();
+            return false;
+        }
+        if (flyViewportHome(interaction)) {
+            if (interaction === regionInteraction) regionGesture?.reset();
+            interaction.onReset?.();
+            return false;
+        }
         let changed = false;
         for (const layer of [retainedUpdates, previewUpdates]) {
-            for (const [id, update] of layer) {
-                const ops = update.ops.filter((op) =>
-                    op.op !== 'set-style' && op.op !== 'set-annotation');
-                if (ops.length > 0) layer.set(id, { id, ops });
-                else layer.delete(id);
-                changed = changed || ops.length !== update.ops.length;
-            }
+            if (layer.delete(interaction.id)) changed = true;
         }
-        if (changed) void renderUpdates();
+        if (inspectSeriesLocks.delete(interaction.id)) {
+            inspectSeriesPresentation.delete(interaction.id);
+            changed = true;
+        }
+        if (interaction === regionInteraction) regionGesture?.reset();
+        interaction.onReset?.();
+        return changed;
     };
-    const dismissOnClick = (event: MouseEvent, item: any): void => {
-        if (!dismissPolicy.click || suppressClick || isInteractiveControlTarget(event.target)) return;
+    const runReset = (gesture: InteractionResetGesture): void => {
+        cancelPendingDismiss();
+        let changed = false;
+        for (const interaction of interactionsToReset(canvasInteractions, gesture)) {
+            changed = resetInteraction(interaction) || changed;
+        }
+        if (!changed) return;
+        selectedLegend = null;
+        void renderUpdates();
+    };
+    const resetOnClick = (event: MouseEvent, item: any): void => {
+        if (suppressClick || isInteractiveControlTarget(event.target)) return;
         if (consumeDismissClick) {
             consumeDismissClick = false;
             return;
@@ -1981,20 +2017,23 @@ export function mountVegaInteractions(
                 resolveTarget('click', 'legend-item', [], normalized.legend),
             )
             : resolveTarget('click', normalized.role, normalized.event.hits);
-        const space = coordinateSpace();
-        const inPlot = point.x >= 0 && point.x <= space.plotWidth
-            && point.y >= 0 && point.y <= space.plotHeight;
-        if (dismissPolicy.click === 'non-element' && target) return;
-        if (dismissPolicy.click === 'plot-background' && (!inPlot || target)) return;
+        // click-none: the hit resolved to nothing. A mark, a legend item, or an axis label is something.
+        if (target || resolveAxisTarget(item)) return;
         cancelPendingDismiss();
         if (doubleInteractions.length > 0) {
+            // The first click of a double-click must not reset what the double-click is about to select.
             dismissTimer = window.setTimeout(() => {
                 dismissTimer = undefined;
-                clearDismissibleState();
+                runReset('click-none');
             }, 250);
         } else {
-            clearDismissibleState();
+            runReset('click-none');
         }
+    };
+    const resetOnDoubleClick = (event: MouseEvent): void => {
+        if (isInteractiveControlTarget(event.target)) return;
+        event.preventDefault();
+        runReset('double-click');
     };
     const cancelLongPress = (): void => {
         if (longPressTimer !== undefined) window.clearTimeout(longPressTimer);
@@ -2015,7 +2054,7 @@ export function mountVegaInteractions(
             consumeDismissClick = true;
             suppressClick = true;
             window.setTimeout(() => { suppressClick = false; }, 0);
-            for (const interaction of longPressInteractions) {
+            for (const interaction of longPressInteractions.filter((candidate) => affordsTarget(candidate, acquired.legend ? 'legend-item' : 'mark'))) {
                 void dispatch(interaction, {
                     type: 'semantic', source: 'element', phase: 'commit',
                     target: acquired.target, point: acquired.point, modifiers: acquired.modifiers,
@@ -2035,7 +2074,7 @@ export function mountVegaInteractions(
         event.preventDefault();
         cancelPendingDismiss();
         const acquired = pointerTarget(event, doubleInteractions);
-        for (const interaction of doubleInteractions) {
+        for (const interaction of doubleInteractions.filter((candidate) => affordsTarget(candidate, acquired.legend ? 'legend-item' : 'mark'))) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit',
                 target: acquired.target, point: acquired.point, modifiers: acquired.modifiers,
@@ -2049,11 +2088,12 @@ export function mountVegaInteractions(
         container.addEventListener('pointercancel', cancelLongPress, true);
     }
     if (doubleInteractions.length > 0) container.addEventListener('dblclick', doubleHandler);
-    if (dismissPolicy.click) view.addEventListener('click', dismissOnClick);
+    if (clickNoneResets) view.addEventListener('click', resetOnClick);
+    if (doubleClickResets) container.addEventListener('dblclick', resetOnDoubleClick);
     if (contextInteractions.length > 0) {
         container.addEventListener('contextmenu', contextHandler);
     }
-    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
+    if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
         view.addEventListener('click', clickHandler);
     }
     if (hoverPresentationInteractions.length > 0) {
@@ -2066,7 +2106,7 @@ export function mountVegaInteractions(
     const previousTouchAction = container.style.touchAction;
     if (longPressInteractions.length > 0) container.style.touchAction = 'none';
     const suppressTextSelection = doubleInteractions.length > 0
-        || canvasInteractions.some((interaction) => interaction.claimsLegendActivation);
+        || canvasInteractions.some((interaction) => affordsTarget(interaction, 'legend-item'));
     if (suppressTextSelection) container.style.userSelect = 'none';
     const localPoint = (event: PointerEvent): { x: number; y: number } => {
         return clientToPlotPoint({ x: event.clientX, y: event.clientY }, coordinateSpace());
@@ -2080,7 +2120,7 @@ export function mountVegaInteractions(
         };
     };
     const cursorInteractions = canvasInteractions.filter((interaction) =>
-        interaction.affordances?.some((affordance) => affordance.cursor));
+        Object.values(interaction.affordances).some((affordance) => affordance.cursor));
     const setAffordanceCursor = (
         target: InteractionAffordanceTarget,
         reorderEligible: boolean,
@@ -2391,8 +2431,6 @@ export function mountVegaInteractions(
         sync: renderUpdates,
         setSuppressClick: (suppress) => { suppressClick = suppress; },
         setDragging: (dragging) => { regionDragging = dragging; },
-        resetViewport: resetViewportRegion,
-        escapeClears: dismissPolicy.escape,
     }) : undefined;
     const navigationGesture = navigationInteraction ? mountVegaNavigationGesture({
         container,
@@ -2404,13 +2442,19 @@ export function mountVegaInteractions(
         setDragging: (dragging) => { regionDragging = dragging; },
     }) : undefined;
     setAffordanceCursor('plot', false);
-    const dismissKeyDown = (event: KeyboardEvent): void => {
-        if (regionInteraction || event.key !== 'Escape' || !dismissPolicy.escape) return;
-        selectedLegend = null;
-        clearDismissibleState();
+    // Escape resets the interactions that list it, on the chart that has focus. Such a chart
+    // must be focusable, and a pointer press inside it takes the focus, so a click then Escape works.
+    const resetKeyDown = (event: KeyboardEvent): void => {
+        if (event.key !== 'Escape') return;
+        runReset('escape');
     };
-    if (dismissPolicy.escape && !regionInteraction) {
-        container.addEventListener('keydown', dismissKeyDown);
+    const focusOnPointer = (): void => {
+        if (!container.contains(document.activeElement)) container.focus({ preventScroll: true });
+    };
+    if (escapeResets) {
+        if (container.tabIndex < 0) container.tabIndex = 0;
+        container.addEventListener('pointerdown', focusOnPointer, true);
+        container.addEventListener('keydown', resetKeyDown);
     }
 
     // One tab stop enters the chart; arrows move to the nearest target in that direction.
@@ -2431,6 +2475,7 @@ export function mountVegaInteractions(
     const keyboardInteraction: CanvasInteractionDef = {
         id: 'keyboard-targeting',
         eventSource: keyboardTrigger,
+        affordances: { mark: {} },
     };
     const moveKeyboardTarget = (direction: SpatialDirection): void => {
         const items = keyboardTargets();
@@ -2466,7 +2511,7 @@ export function mountVegaInteractions(
             .find((candidate) => renderHit(candidate)?.datum[INTERACTION_KEY] === activeKeyboardKey);
         const active = item ? keyboardFocus(item) : undefined;
         if (!active) return;
-        for (const interaction of clickInteractions) {
+        for (const interaction of markClickInteractions) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'commit',
                 target: active.target, point: active.point,
@@ -2557,7 +2602,7 @@ export function mountVegaInteractions(
     observeRenderer();
 
     const destroy = (): void => {
-        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0 || backgroundResetInteraction) {
+        if (clickInteractions.length > 0 || singleSeriesInspectInteractions.length > 0) {
             view.removeEventListener('click', clickHandler);
         }
         if (hoverPresentationInteractions.length > 0) {
@@ -2566,8 +2611,9 @@ export function mountVegaInteractions(
         }
         if (cursorInteractions.length > 0) view.removeEventListener('mousemove', affordanceHandler);
         if (hoverClearTimer !== undefined) clearTimeout(hoverClearTimer);
-        if (dismissPolicy.escape && !regionInteraction) {
-            container.removeEventListener('keydown', dismissKeyDown);
+        if (escapeResets) {
+            container.removeEventListener('pointerdown', focusOnPointer, true);
+            container.removeEventListener('keydown', resetKeyDown);
         }
         if (keyboardEnabled) {
             container.removeEventListener('keydown', keyboardKeyDown);
@@ -2582,10 +2628,9 @@ export function mountVegaInteractions(
             container.removeEventListener('pointercancel', cancelLongPress, true);
         }
         if (doubleInteractions.length > 0) container.removeEventListener('dblclick', doubleHandler);
-        if (dismissPolicy.click) {
-            cancelPendingDismiss();
-            view.removeEventListener('click', dismissOnClick);
-        }
+        cancelPendingDismiss();
+        if (clickNoneResets) view.removeEventListener('click', resetOnClick);
+        if (doubleClickResets) container.removeEventListener('dblclick', resetOnDoubleClick);
         if (inspectInteractions.length > 0) {
             container.removeEventListener('pointermove', inspectHandler);
             container.removeEventListener('pointerleave', inspectLeave);

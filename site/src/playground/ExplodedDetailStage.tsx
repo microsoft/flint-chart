@@ -244,7 +244,7 @@ export function FreeformExplodedDetailStage() {
         zoom: true,
         wheelSensitivity: 0.004,
       },
-      affordances: [{ target: 'plot', cursor: 'inspect' }],
+      affordances: { plot: { cursor: 'inspect' } },
       handle(event) {
         if (event.phase === 'cancel') return null;
         if (event.action === 'zoom-viewport') {

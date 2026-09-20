@@ -25,8 +25,11 @@ import type { UpdateRegionSelector } from '../../core/interaction-contracts';
 import type { NavigationDomainGuard, NavigationUpdate } from '../../interactive/interactions';
 import type { VegaNavigationAxis } from './contracts';
 import {
+    easeInOut,
     guardNavigationDomain,
     type NavigationApplyOptions,
+    nextFrame,
+    now,
     type VegaNavigationController,
 } from './navigation-scale';
 
@@ -488,12 +491,6 @@ export function createVegaGeoNavigationController(
         levelBeforeBaseline = currentLevel;
         queueMicrotask(() => { levelBeforeBaseline = undefined; });
     };
-    const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-    const nextFrame = (callback: () => void): void => {
-        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => callback());
-        else setTimeout(callback, 16);
-    };
-    const easeInOut = (t: number): number => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
     /** A view as a window over the base fit: its centre and its width, in base pixels. */
     type ZoomView = readonly [number, number, number];
     const viewOf = (extent: GeoExtent): ZoomView => {

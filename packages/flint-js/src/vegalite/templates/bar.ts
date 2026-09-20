@@ -171,7 +171,14 @@ export const barChartDef: ChartTemplateDef = {
     chart: "Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "opacity", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -259,6 +266,13 @@ export const pyramidChartDef: ChartTemplateDef = {
         config: { view: { stroke: null }, axis: { grid: false } },
     },
     channels: ["x", "y", "color"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -398,7 +412,14 @@ export const groupedBarChartDef: ChartTemplateDef = {
     chart: "Grouped Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "group", "color", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -523,7 +544,14 @@ export const stackedBarChartDef: ChartTemplateDef = {
     chart: "Stacked Bar Chart",
     template: { mark: "bar", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']
@@ -609,7 +637,14 @@ export const histogramDef: ChartTemplateDef = {
         },
     },
     channels: ["x", "color", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const sourceField = resolvedEncodings.x?.field;
@@ -684,7 +719,14 @@ export const heatmapDef: ChartTemplateDef = {
     chart: "Heatmap",
     template: { mark: "rect", encoding: {} },
     channels: ["x", "y", "color", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'color',
     semanticInteractions: ({ resolvedEncodings }) => {
         const fields = ['x', 'y', 'color']

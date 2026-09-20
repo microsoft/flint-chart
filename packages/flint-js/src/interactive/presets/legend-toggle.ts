@@ -50,11 +50,9 @@ function hidesFullLegendDomain(
         })));
 }
 
-/** Only legend activations toggle series, so these presets compose with mark-click presets. */
+/** The runtime sends this preset legend hits only; a toggle happens on the commit. */
 function legendActivation(event: CanvasInteractionEvent): boolean {
-    return isActivationAction(event.action)
-        && event.phase === 'commit'
-        && event.target?.visual.role === 'legend-item';
+    return isActivationAction(event.action) && event.phase === 'commit';
 }
 
 /** Hides or restores the activated series, the way a legend key normally behaves. */
@@ -65,8 +63,8 @@ export function createLegendToggleInteraction(options: LegendToggleOptions = {})
     return {
         id,
         eventSource: clickTrigger,
-        claimsLegendActivation: true,
-        affordances: [{ target: 'legend-item', cursor: 'activate', hover: 'cohort' }],
+        affordances: { 'legend-item': { cursor: 'activate', hover: 'cohort' } },
+        onReset() { hidden = []; },
         handle(event, context) {
             if (!legendActivation(event)) return null;
             const elements = event.target?.elements ?? [];

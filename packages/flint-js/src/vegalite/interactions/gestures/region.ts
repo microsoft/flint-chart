@@ -54,13 +54,12 @@ export interface VegaRegionGestureOptions {
     sync(): Promise<void>;
     setSuppressClick(suppress: boolean): void;
     setDragging(dragging: boolean): void;
-    resetViewport?(): void;
-    /** Escape outside a drag clears the retained selection. Defaults to true; the dismiss policy can turn it off. */
-    escapeClears?: boolean;
 }
 
 export interface VegaRegionGestureController {
     sync(): void;
+    /** Returns the gesture to its neutral state: no selection, no interval, no sector. A drag in progress is left alone. */
+    reset(): void;
     destroy(): void;
 }
 
@@ -114,7 +113,6 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         sync,
         setSuppressClick,
         setDragging,
-        resetViewport,
     } = options;
     const regionAxis: CartesianRegionAxis = interaction.eventSource.axis ?? 'xy';
     const angularBrush = interaction.eventSource.regionGeometry === 'angular';
@@ -604,21 +602,22 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId);
         void sync();
     };
+    const reset = (): void => {
+        if (dragStart) return;
+        setSelected(new Set());
+        activeInterval = undefined;
+        activePlotFrame = undefined;
+        activeSector = undefined;
+        clearAnnotation();
+        overlay.style.display = 'none';
+        angularOverlay.style.display = 'none';
+        void sync();
+    };
     const keyDown = (event: KeyboardEvent): void => {
-        if (event.key !== 'Escape') return;
-        // Outside a drag, Escape is a dismiss gesture; honour a policy that disables it.
-        if (!dragStart && options.escapeClears === false) return;
-        if (interaction.eventSource.viewport) resetViewport?.();
-        if (dragStart) {
-            setSelected(new Set(committed));
-            if (statefulBrush && initialInterval) activeInterval = initialInterval;
-        } else {
-            setSelected(new Set());
-            activeInterval = undefined;
-            activePlotFrame = undefined;
-            activeSector = undefined;
-            clearAnnotation();
-        }
+        // Escape during a drag cancels the drag. Committed state resets through the runtime's dispatcher.
+        if (event.key !== 'Escape' || !dragStart) return;
+        setSelected(new Set(committed));
+        if (statefulBrush && initialInterval) activeInterval = initialInterval;
         dragStart = undefined;
         pointerId = undefined;
         initialInterval = undefined;
@@ -628,20 +627,15 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
         angularOverlay.style.display = 'none';
         void sync();
     };
-    const doubleClick = (event: MouseEvent): void => {
-        if (!interaction.eventSource.viewport) return;
-        event.preventDefault();
-        resetViewport?.();
-    };
 
     container.addEventListener('pointerdown', pointerDown, true);
     container.addEventListener('pointermove', pointerMove, true);
     container.addEventListener('pointerup', finishDrag, true);
     container.addEventListener('pointercancel', cancelDrag, true);
     container.addEventListener('keydown', keyDown);
-    container.addEventListener('dblclick', doubleClick);
 
     return {
+        reset,
         sync(): void {
             if (statefulBrush && activeInterval) showInterval(activeInterval);
             if (statefulAngular && activeSector) showAngularSector(activeSector);
@@ -652,7 +646,6 @@ export function mountVegaRegionGesture(options: VegaRegionGestureOptions): VegaR
             container.removeEventListener('pointerup', finishDrag, true);
             container.removeEventListener('pointercancel', cancelDrag, true);
             container.removeEventListener('keydown', keyDown);
-            container.removeEventListener('dblclick', doubleClick);
             overlay.remove();
             angularOverlay.remove();
             lassoOverlay.remove();

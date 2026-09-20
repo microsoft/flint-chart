@@ -128,7 +128,7 @@ export function YouDrawItStage() {
   const drawInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: DRAW_INTERACTION_ID,
     eventSource: lassoTrigger('contain', false),
-    affordances: [{ target: 'plot', cursor: 'draw' }],
+    affordances: { plot: { cursor: 'draw' } },
     handle(event): ChartUpdate | null {
       if (event.action !== 'select-lasso') return null;
       if (event.phase === 'start') return null;
@@ -176,9 +176,6 @@ export function YouDrawItStage() {
       renderer: 'svg',
       interactions: [drawInteraction, revealInteraction],
       updates: [hideFutureUpdate(), promptUpdate(BOUNDS, true)],
-      // The default dismiss policy drops every retained set-style op on a
-      // click that hits no element, which would unhide the future rows.
-      dismiss: false,
       ariaLabel: 'You draw it: share of U.S. electricity from coal',
       chartId: 'you-draw-it-coal',
     });

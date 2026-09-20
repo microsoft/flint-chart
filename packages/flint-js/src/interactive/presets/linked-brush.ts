@@ -12,7 +12,7 @@ export function createLinkedBrushInteraction(options: LinkedBrushOptions): Canva
         eventSource: lasso
             ? lassoTrigger(options.match ?? 'intersect', options.guide)
             : rectangleTrigger(options.match ?? 'intersect', options.guide),
-        affordances: [{ target: 'plot', cursor: 'region' }],
+        affordances: { plot: { cursor: 'region' } },
         handle(event, context) {
             const expectedAction = lasso ? 'select-lasso' : 'select-region';
             if (event.action !== expectedAction || event.phase === 'start' || event.phase === 'cancel') return null;

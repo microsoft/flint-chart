@@ -4,11 +4,23 @@ export type InteractionAffordanceTarget = 'mark' | 'legend-item' | 'axis-label' 
 export type InteractionCursor = 'activate' | 'drag' | 'region' | 'navigate' | 'inspect' | 'draw';
 export type InteractionHoverEffect = 'target' | 'cohort';
 
+/** The cursor and hover that signal one affordance. */
 export interface InteractionAffordance {
-    readonly target: InteractionAffordanceTarget;
     readonly cursor?: InteractionCursor;
     readonly hover?: InteractionHoverEffect;
     readonly priority?: number;
+}
+
+/** What an interaction affords, by the kind of hit. A key with an empty value affords the hit and signals nothing. */
+export type InteractionAffordances = Readonly<Partial<Record<InteractionAffordanceTarget, InteractionAffordance>>>;
+
+/** A resolved affordance for one target, as the renderer reads it. */
+export interface ResolvedInteractionAffordance extends InteractionAffordance {
+    readonly target: InteractionAffordanceTarget;
+}
+
+export function affordsTarget(interaction: CanvasInteractionDef, target: InteractionAffordanceTarget): boolean {
+    return target in interaction.affordances;
 }
 
 const CURSOR_PRIORITY: Record<InteractionCursor, number> = {
@@ -33,16 +45,26 @@ const DRAW_CURSOR_SVG = [
 ].join('');
 export const DRAW_CURSOR = `url("data:image/svg+xml;utf8,${DRAW_CURSOR_SVG}") 3 3, crosshair`;
 
+/**
+ * The cursor and hover to show for `target`, merged across `interactions`. An exact
+ * affordance wins; a `plot` affordance is the fallback for every other target, so a
+ * region cursor also shows over the marks inside the plot.
+ */
 export function resolveInteractionAffordance(
     interactions: readonly CanvasInteractionDef[],
     target: InteractionAffordanceTarget,
     eligibleInteractionIds?: ReadonlySet<string>,
-): InteractionAffordance | undefined {
-    const claims = interactions
+): ResolvedInteractionAffordance | undefined {
+    const claims: ResolvedInteractionAffordance[] = interactions
         .filter((interaction) => !eligibleInteractionIds || eligibleInteractionIds.has(interaction.id))
-        .flatMap((interaction) => interaction.affordances ?? [])
-        .filter((affordance) => affordance.target === target
-            || (target !== 'plot' && affordance.target === 'plot'));
+        .flatMap((interaction) => {
+            const exact = interaction.affordances[target];
+            const fallback = target !== 'plot' ? interaction.affordances.plot : undefined;
+            return [
+                ...(exact ? [{ target, ...exact }] : []),
+                ...(fallback ? [{ target: 'plot' as const, ...fallback }] : []),
+            ];
+        });
     const exactClaims = claims.filter((claim) => claim.target === target);
     const eligibleClaims = exactClaims.length > 0 ? exactClaims : claims;
     const priority = (claim: InteractionAffordance): number =>
@@ -54,7 +76,7 @@ export function resolveInteractionAffordance(
     return cursor || hover ? { target, ...(cursor ? { cursor } : {}), ...(hover ? { hover } : {}) } : undefined;
 }
 
-export function affordanceCursor(affordance: InteractionAffordance | undefined): string | undefined {
+export function affordanceCursor(affordance: ResolvedInteractionAffordance | undefined): string | undefined {
     switch (affordance?.cursor) {
         case 'activate': return 'pointer';
         case 'drag': return 'grab';

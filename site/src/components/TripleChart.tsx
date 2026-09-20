@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
 import { VegaLiteView } from './VegaLiteView';
+import { InteractiveVegaLiteView, hasInteractionEntries } from './InteractiveVegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { PlotlyView } from './PlotlyView';
@@ -128,7 +129,9 @@ export function TripleChart({
       >
         {compiled.ok ? (
           <>
-            {backend === 'vegalite' && <VegaLiteView spec={compiled.value} />}
+            {backend === 'vegalite' && (hasInteractionEntries(input)
+              ? <InteractiveVegaLiteView input={input} chartId={`triple-${testCase.chartType}`} />
+              : <VegaLiteView spec={compiled.value} />)}
             {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
             {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
             {backend === 'plotly' && <PlotlyView figure={compiled.value} height={320} />}

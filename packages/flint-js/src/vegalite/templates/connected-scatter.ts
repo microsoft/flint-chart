@@ -71,7 +71,14 @@ export const connectedScatterDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "order", "color", "detail", "column", "row"],
-    navigation: {},
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        navigation: {},
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'position',
     semanticInteractions: ({ resolvedEncodings }) => {
         const seriesField = firstDiscreteEncodingField(resolvedEncodings, ['color', 'detail']);

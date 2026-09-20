@@ -152,6 +152,31 @@ describe('MCP server', () => {
     expect(payload[0].count).toBeGreaterThan(10);
     expect(payload[0].chartTypes[0]).toHaveProperty('chartType');
     expect(payload[0].chartTypes[0]).toHaveProperty('channels');
+    expect(payload[0].chartTypes[0]).toHaveProperty('interactions');
+    const bar = payload[0].chartTypes.find((entry: any) => entry.chartType === 'Bar Chart');
+    expect(bar.interactions).toContain('click-highlight');
+    expect(bar.interactions).toContain('drag-reorder');
+    expect(bar.interactions).not.toContain('brush-angle');
+    const kpi = payload[0].chartTypes.find((entry: any) => entry.chartType === 'KPI Card');
+    expect(kpi.interactions).not.toContain('legend-toggle');
+  });
+
+  it('validate_chart reports the interaction_spec entries the chart would drop', async () => {
+    const res: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: {
+        backend: 'vegalite',
+        data: { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] },
+        semantic_types: { revenue: 'Quantity' },
+        chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
+        interaction_spec: { interactions: [{ type: 'click-highlight' }, { type: 'legend-toggle' }] },
+      },
+    });
+    const payload = JSON.parse(res.content[0].text);
+    expect(payload.valid).toBe(true);
+    const dropped = payload.warnings.filter((warning: any) => warning.code === 'unsupported_interaction');
+    expect(dropped).toHaveLength(1);
+    expect(dropped[0].message).toContain('"legend-toggle" requires a discrete legend; Bar Chart has none');
   });
 
   it('render_chart surfaces assembly errors as isError', async () => {

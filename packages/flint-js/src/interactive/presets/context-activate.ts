@@ -11,6 +11,6 @@ export function createContextActivateInteraction(
     return {
         id: options.id ?? 'context-activate',
         eventSource: assistedElementTrigger(contextTrigger, 8),
-        affordances: [{ target: 'mark', cursor: 'activate' }],
+        affordances: { mark: { cursor: 'activate' } },
     };
 }

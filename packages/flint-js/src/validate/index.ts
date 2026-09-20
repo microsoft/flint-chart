@@ -26,6 +26,8 @@ import type {
 import { isRegistered } from '../core/type-registry';
 import { toTypeString } from '../core/field-semantics';
 import { assembleVegaLite } from '../vegalite/assemble';
+import { resolveInteractionSpec } from '../interactive/spec/resolve';
+import { admitInteractions } from '../interactive/spec/admission';
 import { vlGetTemplateDef } from '../vegalite/templates';
 import { assembleECharts } from '../echarts/assemble';
 import { ecGetTemplateDef } from '../echarts/templates';
@@ -302,11 +304,41 @@ export function assembleForBackend(
 }
 
 /**
+ * The warnings `interaction_spec` would produce at mount: a malformed spec is an
+ * error, an entry the assembled chart cannot honour is a warning, and a backend
+ * that runs no interactions reports the spec as ignored.
+ */
+export function validateInteractionSpec(
+    input: ChartAssemblyInput,
+    backend: ValidationBackend,
+    assembled: unknown,
+): ChartWarning[] {
+    if (!input.interaction_spec) return [];
+    if (backend !== 'vegalite') {
+        return [{
+            severity: 'info',
+            code: 'interactions_ignored',
+            message: `interaction_spec is ignored: backend "${backend}" does not run interactions.`,
+        }];
+    }
+    try {
+        const resolved = resolveInteractionSpec(input.interaction_spec);
+        const { _interactionSemantics: plan } = assembled as { _interactionSemantics: Parameters<typeof admitInteractions>[0] };
+        return [...admitInteractions(plan, resolved.interactions).warnings];
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
+    }
+}
+
+/**
  * Validate a {@link ChartAssemblyInput} for a backend: report warnings/errors,
  * applicability, and the computed layout size. Never throws — validation and
  * assembly failures are surfaced as an error entry. Unregistered
  * `semantic_types` labels are included as warnings (see
- * {@link validateSemanticTypes}) and do not affect `valid`.
+ * {@link validateSemanticTypes}) and do not affect `valid`. An
+ * `interaction_spec` is checked the way the mount checks it (see
+ * {@link validateInteractionSpec}).
  */
 export function validateChart(
     input: ChartAssemblyInput,
@@ -318,8 +350,8 @@ export function validateChart(
         : '(unknown)';
     const semanticTypeWarnings = validateSemanticTypes(input?.semantic_types);
     try {
-        const { warnings, width, height } = assembleForBackend(backend, input, options);
-        const all = [...warnings, ...semanticTypeWarnings];
+        const { spec, warnings, width, height } = assembleForBackend(backend, input, options);
+        const all = [...warnings, ...semanticTypeWarnings, ...validateInteractionSpec(input, backend, spec)];
         const errors = all.filter((w) => w.severity === 'error');
         return {
             backend,

@@ -1,5 +1,6 @@
 import type { ChartInteractionResolver } from '../../core/interaction-semantics';
-import type { ChartUpdatePresenter, InteractionContext } from '../../interactive/interactions';
+import type { ChartWarning } from '../../core/types';
+import type { CanvasInteractionDef, ChartUpdatePresenter, InteractionContext } from '../../interactive/interactions';
 import type { GeoLevelConfig, GeoPreProjection } from './navigation-geo';
 
 export interface HoverStyle {
@@ -94,4 +95,8 @@ export interface VegaInteractionPlan {
     reorderAxes?: readonly VegaReorderAxis[];
     resolve?: ChartInteractionResolver;
     presentUpdate?: ChartUpdatePresenter;
+    /** The canvas interactions the chart admitted; the runtime mounts these, not the requested list. */
+    interactions?: readonly CanvasInteractionDef[];
+    /** One warning per spec interaction the chart could not honour and dropped. */
+    warnings?: readonly ChartWarning[];
 }

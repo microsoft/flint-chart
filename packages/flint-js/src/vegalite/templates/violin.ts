@@ -130,7 +130,6 @@ function maxGroupBandwidth(table: any[], measure: string, groupby: string[]): nu
 }
 
 export const violinPlotDef: ChartTemplateDef = {
-    reorder: false,
     chart: 'Violin Plot',
     template: {
         mark: { type: 'area', orient: 'horizontal' },
@@ -149,6 +148,12 @@ export const violinPlotDef: ChartTemplateDef = {
     // `column` is consumed internally for the per-category panels; only `row`
     // is exposed as an additional outer facet.
     channels: ['x', 'y', 'color', 'row'],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'area',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = resolvedEncodings.x?.field;

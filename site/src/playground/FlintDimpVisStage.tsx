@@ -162,9 +162,7 @@ const PLAYBACK_INTERACTION_ID = 'flint-dimpvis-playback';
 const MAIN_MARK_CLICK_INTERACTION: CanvasInteractionDef = {
   id: MAIN_MARK_INTERACTION_ID,
   eventSource: { ...clickTrigger, defaultAssistDistance: 12 },
-  affordances: [
-    { target: 'mark', cursor: 'activate', hover: 'target' },
-  ],
+  affordances: { mark: { cursor: 'activate', hover: 'target' } },
   handle() {
     return null;
   },
@@ -173,10 +171,7 @@ const MAIN_MARK_CLICK_INTERACTION: CanvasInteractionDef = {
 const MAIN_LEGEND_CLICK_INTERACTION: CanvasInteractionDef = {
   id: MAIN_LEGEND_INTERACTION_ID,
   eventSource: clickTrigger,
-  claimsLegendActivation: true,
-  affordances: [
-    { target: 'legend-item', cursor: 'activate', hover: 'cohort' },
-  ],
+  affordances: { 'legend-item': { cursor: 'activate', hover: 'cohort' } },
   handle() {
     return null;
   },
@@ -335,7 +330,7 @@ export function FlintDimpVisStage({ large = false }: { large?: boolean } = {}) {
   const dragInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: TRAJECTORY_UPDATE_ID,
     eventSource: dragTrigger(),
-    affordances: [{ target: 'mark', cursor: 'drag', hover: 'target' }],
+    affordances: { mark: { cursor: 'drag', hover: 'target' } },
     handle(event) {
       if (event.action !== 'drag') return null;
       if (event.phase === 'start') setIsPlaying(false);

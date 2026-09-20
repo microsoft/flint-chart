@@ -22,7 +22,7 @@ const PLAYBACK_ID = 'climate-phase-playback';
 const MARK_CLICK: CanvasInteractionDef = {
   id: MARK_CLICK_ID,
   eventSource: { ...clickTrigger, defaultAssistDistance: 12 },
-  affordances: [{ target: 'mark', cursor: 'activate', hover: 'target' }],
+  affordances: { mark: { cursor: 'activate', hover: 'target' } },
   handle() {
     return null;
   },
@@ -31,8 +31,7 @@ const MARK_CLICK: CanvasInteractionDef = {
 const LEGEND_CLICK: CanvasInteractionDef = {
   id: LEGEND_CLICK_ID,
   eventSource: clickTrigger,
-  claimsLegendActivation: true,
-  affordances: [{ target: 'legend-item', cursor: 'activate', hover: 'cohort' }],
+  affordances: { 'legend-item': { cursor: 'activate', hover: 'cohort' } },
   handle() {
     return null;
   },
@@ -215,7 +214,7 @@ export function ClimatePhaseStage() {
   const dragInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: TRAJECTORY_ID,
     eventSource: dragTrigger(),
-    affordances: [{ target: 'mark', cursor: 'drag', hover: 'target' }],
+    affordances: { mark: { cursor: 'drag', hover: 'target' } },
     handle(event) {
       if (event.action !== 'drag') return null;
       if (event.phase === 'start') setIsPlaying(false);

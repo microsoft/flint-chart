@@ -1,5 +1,6 @@
 import type { BrushZoomOptions, CanvasInteractionDef, UpdateDomain } from '../interactions';
 import { brushZoomTrigger } from '../triggers';
+import { resolveNavigationTransition } from './navigate';
 
 const REGION_ACTIONS = new Set(['select-region', 'brush-x', 'brush-y']);
 
@@ -7,10 +8,14 @@ const REGION_ACTIONS = new Set(['select-region', 'brush-x', 'brush-y']);
 export function createBrushZoomInteraction(options: BrushZoomOptions = {}): CanvasInteractionDef {
     const id = options.id ?? 'brush-zoom';
     const axes = options.axes ?? 'xy';
+    const transition = resolveNavigationTransition('brushZoom', 'transition', options.transition);
+    const resetTransition = resolveNavigationTransition('brushZoom', 'resetTransition', options.resetTransition);
     return {
         id,
         eventSource: brushZoomTrigger(axes, options.guide),
-        affordances: [{ target: 'plot', cursor: 'region' }],
+        ...(transition ? { navigationTransition: transition } : {}),
+        ...(resetTransition ? { navigationResetTransition: resetTransition } : {}),
+        affordances: { plot: { cursor: 'region' } },
         handle(event) {
             if (!REGION_ACTIONS.has(event.action) || event.phase !== 'commit' || event.operation === 'clear') return null;
             const domain = event.geometry.domain;

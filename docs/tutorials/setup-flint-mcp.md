@@ -21,7 +21,7 @@ opens that chart locally.
 | `validate_chart` | Check whether a Flint input is valid and inspect warnings, errors, and computed size. |
 | `render_chart` | Render a static PNG or SVG locally when you need an artifact or the host has no MCP App UI. |
 | `compile_chart` | Return backend-native Vega-Lite, ECharts, or Chart.js JSON. |
-| `list_chart_types` | Inspect supported chart types and encoding channels. |
+| `list_chart_types` | Inspect supported chart types, encoding channels, and the interaction presets each chart type supports. |
 | `list_themes` | Inspect built-in visual themes and retrieve guidance for a selected preset. |
 
 | Resource or prompt | Use it for |

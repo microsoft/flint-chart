@@ -26,10 +26,10 @@ export function createDragReorderInteraction(options: DragReorderOptions = {}): 
     return {
         id,
         eventSource: dragTrigger(),
-        affordances: [
-            { target: 'mark', cursor: 'drag', hover: 'target' },
-            { target: 'axis-label', cursor: 'drag', hover: 'target' },
-        ],
+        affordances: {
+            mark: { cursor: 'drag', hover: 'target' },
+            'axis-label': { cursor: 'drag', hover: 'target' },
+        },
         handle(event, context) {
             if (event.action !== 'drag' || (event.phase !== 'preview' && event.phase !== 'commit')
                 || !event.target || !event.dropTarget) return null;

@@ -46,6 +46,13 @@ export const barTableDef: ChartTemplateDef = {
         config: { view: { stroke: null }, axis: { grid: false, domain: false, ticks: false } },
     },
     channels: ["y", "x", "color", "column", "row"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian'],
+        reorder: {},
+        legend: true,
+        discreteAxis: true,
+    },
     markCognitiveChannel: 'length',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['y']);

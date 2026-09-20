@@ -83,7 +83,7 @@ const CHART_INPUT: ChartAssemblyInput = {
 const HOVER_INTERACTION: CanvasInteractionDef = {
   id: HOVER_ID,
   eventSource: { ...hoverTrigger, defaultAssistDistance: 28, targetTolerance: 28 },
-  affordances: [{ target: 'mark', hover: 'target' }],
+  affordances: { mark: { hover: 'target' } },
   handle() {
     // Acquisition only: the host renders the result without a Flint ChartUpdate.
     return null;

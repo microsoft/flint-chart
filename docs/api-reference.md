@@ -123,6 +123,8 @@ interface ChartAssemblyInput {
     canvasSize?: { width: number; height: number };    // optional hard ceiling on stretch
     chartProperties?: Record<string, unknown>;
   };
+  theme_spec?: ThemeSpec | string;                     // presentation, Vega-Lite only
+  interaction_spec?: InteractionSpec;                  // behaviour, Vega-Lite interactive surface only
   options?: AssembleOptions;
   field_display_names?: Record<string, string>;
 }
@@ -155,6 +157,24 @@ legend headers. Keep encodings bound to the original field names:
   }
 }
 ```
+
+### `interaction_spec`
+
+How the chart behaves. Lists interaction presets by `type`, each with its own
+`options`, plus the surface policies `assistedTargeting` and `keyboardTargeting`:
+
+```ts
+interface InteractionSpec {
+  interactions: { type: InteractionPresetType; id?: string; options?: Record<string, any> }[];
+  assistedTargeting?: boolean | AssistedTargetingOptions;
+  keyboardTargeting?: boolean;
+}
+```
+
+`buildInteractiveChart()` reads it; the assemblers ignore it. An entry the chart type
+cannot honour is dropped with an `unsupported_interaction` warning, and `validateChart`
+reports the same warnings before anything renders. `supportedInteractionPresets(def.interactionSupport)`
+lists the presets a template supports by declaration. See [Using interactions](/documentation/interaction-spec).
 
 ### `chart_spec`
 

@@ -43,6 +43,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/theme-spec.md',
       },
       {
+        slug: 'interaction-spec',
+        title: 'Using interactions',
+        description: 'List interaction presets in interaction_spec, set their reset gestures, and read what each chart type supports.',
+        file: '../../../docs/interaction-spec.md',
+      },
+      {
         slug: 'setup-flint-mcp',
         title: 'Set up Flint MCP',
         description:
@@ -93,6 +99,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         title: 'Auto Layout Algorithm',
         description: 'Spring, gas-pressure, radial, and area sizing models.',
         file: '../../../docs/design-stretch-model.md',
+      },
+      {
+        slug: 'interaction-design',
+        title: 'Interaction Design',
+        description: 'Presets, the interaction spec, chart semantics, capabilities and admission, reset, and the mount pipeline.',
+        file: '../../../docs/design-interactions.md',
       },
       {
         slug: 'api-reference',

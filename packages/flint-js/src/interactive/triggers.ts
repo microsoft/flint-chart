@@ -2,6 +2,7 @@ import type { NavigationAxes } from './language/events';
 import type { SemanticTargetSelector } from '../core/interaction-contracts';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import { normalizeInspectGuideOptions, normalizeRegionGuideOptions } from './guides';
+import type { InteractionResetGesture } from './reset';
 
 export type InspectOperator = '<' | '<=' | '=' | '>=' | '>';
 export type InspectMode =
@@ -46,7 +47,7 @@ export interface InteractionEventSource {
     readonly zoom?: boolean;
     readonly wheelSensitivity?: number;
     /** Gestures that reset the viewport on navigation sources; a double-click when unset. */
-    readonly reset?: NavigationResetGesture[];
+    readonly reset?: readonly NavigationResetGesture[];
 }
 
 /** Element drag locked to the semantic visual acquired at pointer-down. */
@@ -216,18 +217,15 @@ export function angularBrushTrigger(
     };
 }
 
-/**
- * A gesture that returns a navigated chart to its full frame: a double-click,
- * or a click on the plot background that hits no mark. `reset` lists any number of them.
- */
-export type NavigationResetGesture = 'double-click' | 'click-background';
+/** A navigation source honours every reset gesture; the runtime's reset dispatcher runs them. */
+export type NavigationResetGesture = InteractionResetGesture;
 
 export function navigationTrigger(options: {
     axes?: NavigationAxes | 'available';
     pan?: boolean;
     zoom?: boolean;
     wheelSensitivity?: number;
-    reset?: NavigationResetGesture[];
+    reset?: readonly NavigationResetGesture[];
 } = {}): InteractionEventSource {
     return {
         type: 'navigation',

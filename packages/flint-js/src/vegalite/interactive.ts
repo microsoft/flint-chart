@@ -1,7 +1,7 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
 import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
-import type { InteractionDismissPolicy, InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
+import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import {
     addVegaLiteInteractions,
@@ -15,6 +15,23 @@ import {
     withoutSemanticInteractionField,
 } from './interactions/compile';
 import { mountVegaInteractions } from './interactions/runtime';
+
+/**
+ * The runtime mounts what admission kept, in the author's order. Admission may replace a
+ * definition with a copy that affords less, so a canvas definition is matched by id, not
+ * by identity; external definitions pass through untouched.
+ */
+export function mountedInteractionList(
+    interactions: readonly InteractionDef[],
+    admitted: readonly InteractionDef[],
+): InteractionDef[] {
+    const byId = new Map(admitted.map((interaction) => [interaction.id, interaction]));
+    return interactions.flatMap((interaction) => {
+        if (!isCanvasInteraction(interaction)) return [interaction];
+        const kept = byId.get(interaction.id);
+        return kept ? [kept] : [];
+    });
+}
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
 import { Error as VegaError, parse, View } from 'vega';
@@ -30,7 +47,6 @@ export interface VegaInteractiveRendererOptions {
     hoverTolerance?: number;
     keyboardTargeting?: boolean;
     targetFeedback?: { assisted: TargetFeedbackOptions | false; keyboard: TargetFeedbackOptions | false };
-    dismiss?: InteractionDismissPolicy | false;
 }
 
 function windowedInput(
@@ -86,8 +102,8 @@ export function createVegaInteractiveRenderer(
                     vegaSpec,
                     interactionPlan.axisFields,
                     interactionPlan.reorderAxes,
-                    canvasInteractions.some((interaction) => interaction.affordances?.some((affordance) =>
-                        affordance.target === 'axis-label' && affordance.hover))
+                    (interactionPlan.interactions ?? canvasInteractions).some((interaction) =>
+                        interaction.affordances['axis-label']?.hover)
                         ? interactionPlan.selectionBoundary?.color ?? '#20262c'
                         : undefined,
                 );
@@ -139,20 +155,20 @@ export function createVegaInteractiveRenderer(
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
             await view.runAsync();
+            const mountedInteractions = mountedInteractionList(interactions, interactionPlan?.interactions ?? canvasInteractions);
             const interactionController = interactionPlan
                 ? mountVegaInteractions(
                     view,
                     container,
                     input.chart_spec.chartType,
                     interactionPlan,
-                    interactions,
+                    mountedInteractions,
                     interactionPlan.resolve,
                     interactionPlan.presentUpdate ?? ((update) => update),
                     options.assistDistance,
                     options.hoverTolerance ?? 0,
                     options.keyboardTargeting ?? false,
                     options.targetFeedback,
-                    options.dismiss,
                 )
                 : undefined;
 
@@ -185,6 +201,7 @@ export function createVegaInteractiveRenderer(
 
             return {
                 viewports,
+                warnings: interactionPlan?.warnings ?? [],
                 getInteractionContext() {
                     return interactionController?.getInteractionContext() ?? {
                         chartType: input.chart_spec.chartType,

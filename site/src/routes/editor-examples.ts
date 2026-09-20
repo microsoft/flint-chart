@@ -27,3 +27,20 @@ export const EXAMPLES: Example[] = GALLERY_PICKS.flatMap(({ name, generator }) =
   if (!testCase) return [];
   return [{ name, input: testCaseToAssemblyInput(testCase) }];
 });
+
+const interactiveCase = TEST_GENERATORS['Gallery: Stacked Bar']?.()[0];
+if (interactiveCase) {
+  EXAMPLES.push({
+    name: 'Interactive bar',
+    input: testCaseToAssemblyInput({
+      ...interactiveCase,
+      interactionSpec: {
+        interactions: [
+          { type: 'click-highlight' },
+          { type: 'legend-toggle' },
+          { type: 'navigate', options: { axes: 'y', pan: false, reset: ['double-click', 'escape'] } },
+        ],
+      },
+    }),
+  });
+}

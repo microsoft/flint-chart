@@ -198,6 +198,24 @@ export {
 } from './field-semantics';
 export { isRegistered, getRegisteredTypes } from './type-registry';
 
+// Declarative interactions: the JSON contract read by flint-chart/interactive
+export {
+    INTERACTION_PRESET_TYPES,
+    INTERACTION_CAPABILITIES,
+    INTERACTION_CAPABILITY_DESCRIPTIONS,
+    INTERACTION_PRESET_REQUIREMENTS,
+    declaredInteractionCapabilities,
+    supportedInteractionPresets,
+    type InteractionPresetType,
+    type InteractionCapability,
+    type ChartInteractionSupport,
+    type InteractionEntry,
+    type InteractionSpec,
+    type AssistedTargetingOptions,
+    type TargetDetailsOptions,
+    type TargetFeedbackOptions,
+} from './interaction-spec';
+
 // ThemeSpec: public visual-system vocabulary and chart-specific grounding
 export {
     type ThemeSpec,

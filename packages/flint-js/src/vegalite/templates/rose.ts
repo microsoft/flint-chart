@@ -33,7 +33,6 @@ import { setMarkProp } from './utils';
 
 export const roseChartDef: ChartTemplateDef = {
     chart: "Rose Chart",
-    reorder: false,
     template: {
         mark: {
             type: "arc",
@@ -43,6 +42,11 @@ export const roseChartDef: ChartTemplateDef = {
         encoding: {},
     },
     channels: ["x", "y", "color", "column", "row"],
+    interactionSupport: {
+        elements: true,
+        region: ['cartesian', 'angular'],
+        legend: true,
+    },
     markCognitiveChannel: 'area',
     semanticInteractions: ({ resolvedEncodings }) => {
         const categoryField = firstDiscreteEncodingField(resolvedEncodings, ['x']);
@@ -56,7 +60,6 @@ export const roseChartDef: ChartTemplateDef = {
             legendFields: colorLegendField ? { color: colorLegendField } : undefined,
             selectableMarks: ['arc'],
             annotationMarkType: 'arc',
-            supportedRegionGestures: ['angular'],
             renderHoverStyles: { arc: { opacity: 'contrast' } },
             resolve: (event, context) => {
                 const legendField = event.legend?.field ?? seriesField ?? categoryField;

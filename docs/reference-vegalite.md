@@ -10,6 +10,7 @@ This reference lists the 36 chart types currently supported by the Vega-Lite bac
 
 - **Encoding channels** — the visual roles accepted in `chart_spec.encodings`, such as `x`, `y`, `color`, `size`, `column`, or `row`.
 - **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.
+- **Interactions** — the presets the chart type supports in `interaction_spec`. The data can still remove one at mount: a legend needs a bound discrete legend channel, navigation needs a continuous axis. See the [interaction guide](/documentation/interaction-spec).
 
 Use the chart type name exactly as shown in `chart_spec.chartType`.
 
@@ -33,6 +34,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `size`, `shape`, `detail`, `opacity`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `opacity` | number | 0.1 – 1 (step 0.1) | `1` | always | Mark opacity. |
@@ -45,6 +48,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-linear-regression.svg) Regression
 
 **Encoding channels:** `x`, `y`, `size`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -60,6 +65,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `order`, `color`, `detail`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
@@ -72,6 +79,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `logScale_x` | toggle | on / off | `false` | conditional | Use a log/symlog scale on the x-axis. |
@@ -82,6 +91,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-strip-plot.svg) Strip Plot
 
 **Encoding channels:** `x`, `y`, `color`, `size`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -100,6 +111,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 15 (step 1) | `0` | always | Corner radius for supported marks. |
@@ -112,6 +125,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `group`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `dodge` | choice | `auto` (Auto), `local` (Local (compact)), `global` (Global (aligned)) | `auto` | conditional | Dodge |
@@ -122,6 +137,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `stackMode` | choice | Stacked (default) _(default)_, `normalize` (Normalize (100%)), `center` (Center) | — | conditional | Stacking strategy for overlapping series. |
@@ -131,6 +148,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-lollipop.svg) Lollipop Chart
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -144,6 +163,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `0` | always | Corner radius for supported marks. |
@@ -154,6 +175,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-gantt.svg) Gantt Chart
 
 **Encoding channels:** `y`, `x`, `x2`, `color`, `detail`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -170,6 +193,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `y`, `x`, `goal`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `independentYAxis` | toggle | on / off | `false` | conditional | Use independent y-scales for facets. |
@@ -180,6 +205,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `binCount` | number | 5 – 50 (step 1) | `Auto` | always | Maximum bin cap; Auto lets the backend choose. |
@@ -189,6 +216,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `bandwidth` | number | 0.05 – 2 (step 0.05) | `0` | always | Kernel-density bandwidth (0 = auto). |
@@ -197,6 +226,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-ecdf.svg) ECDF Plot
 
 **Encoding channels:** `x`, `color`, `detail`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -211,6 +242,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `bandwidth` | number | 0.05 – 2 (step 0.05) | `0` | always | Kernel-density bandwidth (0 = auto). |
@@ -223,6 +256,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-box-plot.svg) Boxplot
 
 **Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -240,6 +275,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `showValueLabels` | toggle | on / off | `false` | conditional | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
@@ -247,6 +284,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-candlestick.svg) Candlestick Chart
 
 **Encoding channels:** `x`, `open`, `high`, `low`, `close`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -261,6 +300,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-line.svg) Line Chart
 
 **Encoding channels:** `x`, `y`, `color`, `strokeDash`, `detail`, `opacity`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -278,6 +319,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `detail`, `row`, `column`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
@@ -292,6 +335,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `detail`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
@@ -304,6 +349,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-slope.svg) Slope Chart
 
 **Encoding channels:** `x`, `y`, `color`, `detail`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -319,6 +366,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `opacity`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
@@ -332,6 +381,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `interpolate` | choice | Default (linear) _(default)_, `linear` (Linear), `monotone` (Monotone (smooth)), `step` (Step), `step-before` (Step Before), `step-after` (Step After), `basis` (Basis (smooth)), `cardinal` (Cardinal), `catmull-rom` (Catmull-Rom) | — | always | Line or area interpolation method. |
@@ -340,6 +391,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-range-area.svg) Range Area Chart
 
 **Encoding channels:** `x`, `y`, `y2`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `inspect-index`, `navigate`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -353,6 +406,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `size`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-angle`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `innerRadius` | number | 0 – 100 (step 5) | `0` | always | Inner radius as a percentage of the outer radius. |
@@ -363,6 +418,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-doughnut.svg) Donut Chart
 
 **Encoding channels:** `size`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-angle`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -375,6 +432,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-angle`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `padAngle` | number | 0 – 0.1 (step 0.005) | `0` | always | Angular gap between radial segments. |
@@ -386,6 +445,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-radar.svg) Radar Chart
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-angle`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -404,6 +465,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `y`, `color`, `column`, `row`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `showValueLabels` | toggle | on / off | `false` | always | Print the numbers on the marks. Seeded from the theme’s own habit at this density; withheld when the marks are too dense to read. On a stacked bar each segment prints its own value, centred in the segment — or its share, where the stack is normalized. Printed values are rounded to about three significant figures, with a k/M suffix once the numbers get long — but never so far that two different marks print the same number, or a value that is not zero prints as zero, so the mark carries a number rather than a transcription. |
@@ -415,6 +478,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `x`, `color`
 
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `drag-reorder`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `cornerRadius` | number | 0 – 8 (step 1) | `2` | always | Corner radius for supported marks. |
@@ -422,6 +487,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-bar-table.svg) Bar Table
 
 **Encoding channels:** `y`, `x`, `color`, `column`, `row`
+
+**Interactions:** `click-highlight`, `axis-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `drag-reorder`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -432,6 +499,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-kpi-card.svg) KPI Card
 
 **Encoding channels:** `metric`, `value`, `goal`
+
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `context-activate`, `long-press`, `double-activate`, `inspect`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
@@ -447,6 +516,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 
 **Encoding channels:** `longitude`, `latitude`, `color`, `size`, `opacity`
 
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`
+
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|
 | `region` | choice | `auto` (Auto-detect), `us` (United States), `world` (World) | `auto` | always | Region |
@@ -460,6 +531,8 @@ The **Availability** column shows whether a parameter is `always` available or `
 ### ![](chart-icon-us-map.svg) Choropleth
 
 **Encoding channels:** `id`, `color`, `detail`
+
+**Interactions:** `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `select`, `lasso-select`, `brush-x`, `brush-y`, `brush-zoom`, `linked-brush`, `legend-toggle`, `context-activate`, `long-press`, `double-activate`, `inspect`, `navigate`
 
 | Parameter | Control | Domain | Default | Availability | Description |
 |---|---|---|---|---|---|

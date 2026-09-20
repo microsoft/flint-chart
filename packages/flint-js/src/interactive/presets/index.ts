@@ -4,7 +4,7 @@ export { createAngularBrushInteraction } from './angular-brush';
 export { createAxisHighlightInteraction } from './axis-highlight';
 export { createClickAnnotateInteraction } from './click-annotate';
 export { createClickGroupFocusInteraction } from './click-group-highlight';
-export { createClickHighlightInteraction } from './click-highlight';
+export { createClickHighlightInteraction, CLICK_HIGHLIGHT_AFFORDANCE_TARGET, CLICK_HIGHLIGHT_DEFAULT_TARGETS } from './click-highlight';
 export { createContextActivateInteraction } from './context-activate';
 export { createInspectInteraction } from './inspect';
 export { createInspectIndexInteraction } from './inspect-index';
