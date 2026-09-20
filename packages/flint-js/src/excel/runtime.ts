@@ -78,21 +78,23 @@ function applyChartFormat(chart: any, prepared: PreparedExcelArtifact, nativeSer
     }
 }
 
-async function inspectChart(context: any, sheet: any, dataRange: any, chart: any): Promise<unknown> {
+async function inspectChart(context: any, sheet: any, dataRange: any, chart: any, prepared: PreparedExcelArtifact): Promise<unknown> {
     try {
         dataRange.load('address,values,numberFormat');
         const usedRange = sheet.getUsedRangeOrNullObject();
         usedRange.load('isNullObject,address,values');
         chart.load('name,chartType');
-        chart.series.load('items/name,items/chartType,items/axisGroup,items/formula');
+        chart.series.load('items/name');
         await context.sync();
-        for (const series of chart.series.items) {
-            series.binOptions.load('type,count,width,allowOverflow,overflowValue,allowUnderflow,underflowValue');
+        const hasBins = /^(Histogram|Pareto)$/.test(prepared.chartType);
+        if (hasBins) {
+            for (const series of chart.series.items) {
+                series.binOptions.load('type,count,width,allowOverflow,overflowValue,allowUnderflow,underflowValue');
+            }
         }
-        const primaryCategoryAxis = chart.axes.categoryAxis;
-        const primaryValueAxis = chart.axes.valueAxis;
-        for (const axis of [primaryCategoryAxis, primaryValueAxis]) {
-            axis.load('axisType,axisGroup,visible,minimum,maximum,numberFormat');
+        const axes = prepared.hasAxes ? [chart.axes.categoryAxis, chart.axes.valueAxis] : [];
+        for (const axis of axes) {
+            axis.load('axisType,visible,minimum,maximum,numberFormat');
             axis.title.load('text,visible');
         }
         await context.sync();
@@ -112,16 +114,21 @@ async function inspectChart(context: any, sheet: any, dataRange: any, chart: any
                 chartType: chart.chartType,
                 series: chart.series.items.map((series: any) => ({
                     ...series.toJSON(),
-                    binOptions: series.binOptions.toJSON(),
+                    ...(hasBins ? { binOptions: series.binOptions.toJSON() } : {}),
                 })),
-                axes: {
-                    primaryCategory: describeAxis(primaryCategoryAxis),
-                    primaryValue: describeAxis(primaryValueAxis),
-                },
+                axes: prepared.hasAxes ? {
+                    primaryCategory: describeAxis(axes[0]),
+                    primaryValue: describeAxis(axes[1]),
+                } : null,
             },
         };
     } catch (error) {
-        return { error: error instanceof Error ? error.message : String(error) };
+        const details = error as { code?: string; debugInfo?: unknown } | null;
+        return {
+            error: error instanceof Error ? error.message : String(error),
+            code: details?.code,
+            debugInfo: details?.debugInfo,
+        };
     }
 }
 
@@ -146,7 +153,11 @@ export async function renderExcelChart(
             const previousRange = sheet.getUsedRangeOrNullObject();
             await context.sync();
             sheet.charts.items.forEach((existingChart: any) => existingChart.delete());
-            if (!previousRange.isNullObject) previousRange.clear();
+            if (!previousRange.isNullObject) {
+                previousRange.rowHidden = false;
+                previousRange.columnHidden = false;
+                previousRange.clear();
+            }
         }
 
         const dataRange = sheet.getRange(prepared.rangeA1);
@@ -161,7 +172,7 @@ export async function renderExcelChart(
         const chart = sheet.charts.add(prepared.chartType, dataRange, spec.seriesBy);
 
         if (spec.series?.length) {
-            chart.series.load('items');
+            chart.series.load('items/name');
             await context.sync();
             for (let index = chart.series.items.length - 1; index >= 0; index -= 1) {
                 chart.series.getItemAt(index).delete();
@@ -186,7 +197,7 @@ export async function renderExcelChart(
             chart.title.visible = true;
             chart.title.format.font.size = EXCEL_CHART_TITLE_FONT_SIZE;
         }
-        chart.series.load?.('items');
+        chart.series.load?.('items/name');
         await context.sync();
         applyChartFormat(chart, prepared, chart.series.items?.length ?? prepared.seriesCount);
         await context.sync();
@@ -197,7 +208,7 @@ export async function renderExcelChart(
         );
         await context.sync();
         const inspection = options.inspectNativeChart
-            ? await inspectChart(context, sheet, dataRange, chart)
+            ? await inspectChart(context, sheet, dataRange, chart, prepared)
             : null;
         return { pngBase64: image.value, inspection };
     });

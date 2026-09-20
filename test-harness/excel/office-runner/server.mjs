@@ -23,6 +23,7 @@ import { join, dirname, resolve, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { createBackendSnapshot } from './backend-snapshot.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PORT = 3000;
@@ -98,6 +99,7 @@ async function readBody(req) {
 
 async function startServer() {
   execFileSync('npm', ['run', 'build', '--prefix', flintJsRoot], { stdio: 'inherit' });
+  const backendSnapshot = createBackendSnapshot(excelBackendBundle);
   const creds = loadDevCerts();
   const server = https.createServer(creds, async (req, res) => {
     const url = new URL(req.url ?? '/', `https://localhost:${PORT}`);
@@ -122,7 +124,7 @@ async function startServer() {
       for (const f of ['officejs/taskpane.js', 'officejs/taskpane.html']) {
         try { v = Math.max(v, statSync(join(here, f)).mtimeMs); } catch { /* ignore */ }
       }
-      try { v = Math.max(v, statSync(excelBackendBundle).mtimeMs); } catch { /* ignore */ }
+      v = Math.max(v, backendSnapshot().version);
       return send(res, 200, JSON.stringify({ version: Math.round(v) }));
     }
 
@@ -141,7 +143,7 @@ async function startServer() {
       return send(res, 200, html, MIME['.html']);
     }
     if (req.method === 'GET' && path === '/flint-excel-backend.js') {
-      return send(res, 200, await readFile(excelBackendBundle), MIME['.js']);
+      return send(res, 200, backendSnapshot().content, MIME['.js']);
     }
     if (req.method === 'GET' && path.startsWith('/officejs/')) {
       const file = join(here, path.replace(/^\//, ''));

@@ -19,8 +19,11 @@ function createMockExcel() {
         valueBindings: [] as unknown[],
         clears: 0,
         syncs: 0,
+        rowHidden: true,
+        columnHidden: true,
     };
     const series = {
+        toJSON: () => ({ name: 'Amount' }),
         delete: () => { calls.deletedSeries += 1; },
         setXAxisValues: (value: unknown) => { calls.xBindings.push(value); },
         setValues: (value: unknown) => { calls.valueBindings.push(value); },
@@ -30,9 +33,14 @@ function createMockExcel() {
         },
     };
     const chart = {
+        load: vi.fn(),
         series: {
             items: [series],
-            load: vi.fn(),
+            load: vi.fn((properties: string) => {
+                if (properties === 'items' || properties.includes('*')) {
+                    throw new Error('Wildcard series loads query unsupported chart properties.');
+                }
+            }),
             add: (name?: string, index?: number) => {
                 calls.addedSeries.push({ name, index });
                 return series;
@@ -51,7 +59,18 @@ function createMockExcel() {
             set position(value: string) { calls.labels.position = value; },
             set numberFormat(value: string) { calls.labels.numberFormat = value; },
         },
-        axes: {},
+        axes: Object.fromEntries(['categoryAxis', 'valueAxis'].map((name) => [name, {
+            load: vi.fn((properties: string) => {
+                if (properties.includes('axisGroup')) throw new Error('ChartAxis.axisGroup is unsupported.');
+            }),
+            toJSON: () => ({ visible: true }),
+            format: { font: {} },
+            title: {
+                load: vi.fn(),
+                toJSON: () => ({ visible: false }),
+                format: { font: {} },
+            },
+        }])),
         getImage: (width: number, height: number, mode: unknown) => {
             calls.image = { width, height, mode };
             return { value: 'iVBORw0KGgoMOCK' };
@@ -62,6 +81,7 @@ function createMockExcel() {
         size: { set: (value: number) => { calls.labels.fontSize = value; } },
     });
     const range = {
+        load: vi.fn(),
         set values(value: unknown) { calls.values = value; },
         set numberFormat(value: unknown) { calls.numberFormat = value; },
     };
@@ -76,7 +96,10 @@ function createMockExcel() {
             },
         },
         getUsedRangeOrNullObject: () => ({
+            load: vi.fn(),
             isNullObject: false,
+            set rowHidden(value: boolean) { calls.rowHidden = value; },
+            set columnHidden(value: boolean) { calls.columnHidden = value; },
             clear: () => { calls.clears += 1; },
         }),
         getRange: (address: string) => {
@@ -116,6 +139,26 @@ const artifact: ExcelNativeChartSpec = {
 };
 
 describe('renderExcelChart', () => {
+    it('inspects primary axes without querying unsupported axis groups', async () => {
+        const { excel } = createMockExcel();
+        const result = await renderExcelChart(excel, { ...artifact, chartType: 'BoxWhisker' }, { inspectNativeChart: true });
+
+        expect(result.inspection).toMatchObject({
+            chart: { axes: { primaryCategory: { visible: true }, primaryValue: { visible: true } } },
+        });
+        expect(result.inspection).not.toHaveProperty('error');
+    });
+
+    it('inspects axis-free charts without requesting axes or histogram bins', async () => {
+        const { excel } = createMockExcel();
+        const result = await renderExcelChart(excel, artifact, { inspectNativeChart: true });
+
+        expect(result.inspection).toMatchObject({
+            chart: { series: [{ name: 'Amount' }], axes: null },
+        });
+        expect(result.inspection).not.toHaveProperty('error');
+    });
+
     it('executes a Flint artifact against the Office.js object model', async () => {
         const { excel, calls } = createMockExcel();
         const result = await renderExcelChart(excel, artifact, { scale: 2 });
@@ -134,6 +177,8 @@ describe('renderExcelChart', () => {
         expect(calls.typography).toEqual({ chartTitle: 18 });
         expect(calls.image).toEqual({ width: 1280, height: 853, mode: 'fit' });
         expect(calls.clears).toBe(1);
+        expect(calls.rowHidden).toBe(false);
+        expect(calls.columnHidden).toBe(false);
         expect(result).toEqual({ pngBase64: 'iVBORw0KGgoMOCK', inspection: null });
     });
 

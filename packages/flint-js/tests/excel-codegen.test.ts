@@ -109,6 +109,8 @@ describe('Excel Office.js artifacts', () => {
         });
 
         expect(generated.code).toContain('for (let index = chart.series.items.length - 1; index >= 0; index -= 1)');
+        expect(generated.code).toContain("chart.series.load('items/name')");
+        expect(generated.code).not.toContain("chart.series.load('items')");
         expect(generated.code).toContain('chart.series.getItemAt(index).delete()');
         expect(generated.code).toContain('chart.series.add("Male", 0)');
         expect(generated.code).toContain('chart.series.add("Female", 1)');

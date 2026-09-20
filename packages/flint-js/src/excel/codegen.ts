@@ -91,7 +91,7 @@ export function generateOfficeJs(value: unknown, options: OfficeJsCodegenOptions
 
     if (spec.series?.length) {
         lines.push(
-            "  chart.series.load('items');",
+            "  chart.series.load('items/name');",
             '  await context.sync();',
             '  for (let index = chart.series.items.length - 1; index >= 0; index -= 1) {',
             '    chart.series.getItemAt(index).delete();',

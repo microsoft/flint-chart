@@ -59,7 +59,11 @@ async function cleanActiveWorksheet() {
     const usedRange = sheet.getUsedRangeOrNullObject();
     await context.sync();
     sheet.charts.items.forEach((chart) => chart.delete());
-    if (!usedRange.isNullObject) usedRange.clear();
+    if (!usedRange.isNullObject) {
+      usedRange.rowHidden = false;
+      usedRange.columnHidden = false;
+      usedRange.clear();
+    }
     await context.sync();
   });
 }
