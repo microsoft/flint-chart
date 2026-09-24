@@ -87,6 +87,65 @@ const xl = assembleExcel(input);       // Native Excel chart artifact
 Both ESM (`import`) and CommonJS (`require`) builds are published, with type
 declarations for every entry point.
 
+## Typed Vega-Lite authoring
+
+Use `satisfies VegaLiteChartSpec` to check an authored spec without changing
+`ChartAssemblyInput` or the assembly functions:
+
+```ts
+import { assembleVegaLite, type VegaLiteChartSpec } from 'flint-chart';
+
+const chart = {
+  chartType: 'Area Chart',
+  title: 'Revenue by quarter',
+  encodings: { x: 'quarter', y: 'revenue', color: 'region' },
+  chartProperties: { stackMode: 'layered', interpolate: 'monotone' },
+} satisfies VegaLiteChartSpec;
+
+const spec = assembleVegaLite({
+  data: { values: [{ quarter: 'Q1', revenue: 120, region: 'North' }] },
+  chart_spec: chart,
+});
+```
+
+The package root and `flint-chart/vegalite` export three **type-only** helpers:
+
+| Type | Contract |
+|---|---|
+| `VegaLiteChartType` | Literal names from the Vega-Lite template registry |
+| `VegaLiteChartPropertiesMap` | Per-chart optional property shapes, e.g. `VegaLiteChartPropertiesMap['Bar Chart']` |
+| `VegaLiteChartSpec` | Nongeneric union discriminated by `chartType`, preserving the native title, subtitle, sizes, and encodings (including shorthand and static series) |
+
+Properties come from the registry's `properties` and `encodingActions` controls;
+both are stored in `chart_spec.chartProperties`. For example, bar `sort` accepts
+`'value-asc'` or `'value-desc'`, and only Area Chart accepts the `'layered'`
+stack mode. Discrete values are literals, not display labels; registered array
+options retain their tuple values. Continuous controls remain `number`, not a
+UI slider range. Omit a property or pass `undefined` to request default behavior,
+including when using TypeScript's `exactOptionalPropertyTypes`.
+
+Known limitation: `projectionCenter` types describe registered presets, but
+runtime normalization still compares arrays by reference, so fresh or
+JSON-round-tripped tuples can warn and fall back to the default; this behavior
+is unchanged.
+
+Two assembler-supported inputs supplement that metadata: `facetColumns?: number`
+on templates declaring a `column` channel, and deprecated `showTextLabels?: boolean`
+where `showValueLabels` is declared. Legacy `showTextLabels: true` requests labels;
+`false` or omission leaves the automatic choice intact. An explicit boolean
+`showValueLabels` takes precedence over the legacy input. The alias adds no
+second UI control.
+
+This is an opt-in **static authoring** contract, not runtime validation or a
+guarantee of applicability. Data and encodings still determine which options
+apply; inspect `getChartOptions` for the current chart. It does not restrict
+encoding channels beyond the native encoding types. Data-dependent
+`chartProperties.chartType`, `pivot`, and `arrange` IDs, and other runtime inputs
+outside the declared metadata, are deliberately excluded. Dynamic callers can
+continue using the unchanged, broader `ChartAssemblyInput`. As with other
+TypeScript object types, excess-key checks apply to fresh literals; these types
+do not validate external JSON.
+
 ## Rendering
 
 The web backends produce **specs**, not pixels. To render those specs to PNG or SVG
