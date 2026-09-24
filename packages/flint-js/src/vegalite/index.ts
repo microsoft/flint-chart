@@ -13,6 +13,8 @@
 // VL assembly function
 export { assembleVegaLite, getChartOptions, getChartPivot, getChartTransform } from './assemble';
 
+export type { VegaLiteChartType, VegaLiteChartPropertiesMap, VegaLiteChartSpec } from './chart-types.generated';
+
 // VL spec instantiation (Phase 2)
 export { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 
