@@ -39,7 +39,7 @@
     "demoAria": "示例主题",
     "inspiration": "需要灵感？",
     "demos": {
-        "google-material": "Google Material",
+      "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "人民日报"
     },
@@ -174,6 +174,10 @@
       "adding-a-chart-template": {
         "title": "扩展图表模板",
         "description": "为已有后端新增图表类型，并覆盖测试与图表示例。"
+      },
+      "native-echarts-options": {
+        "title": "原生 ECharts 能力",
+        "description": "chart_spec.echarts：语义层未建模的 ECharts 能力的逃生口——原生 option 合并与数据列绑定。"
       }
     }
   },

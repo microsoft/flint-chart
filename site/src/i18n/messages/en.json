@@ -39,7 +39,7 @@
     "demoAria": "Demo themes",
     "inspiration": "Need inspiration?",
     "demos": {
-        "google-material": "Google Material",
+      "google-material": "Google Material",
       "microsoft-fluent": "Microsoft Fluent",
       "peoples-daily": "People's Daily"
     },
@@ -174,6 +174,10 @@
       "adding-a-chart-template": {
         "title": "Extending chart templates",
         "description": "Add a chart type to an existing backend, then cover it in tests and the gallery."
+      },
+      "native-echarts-options": {
+        "title": "Native ECharts options",
+        "description": "chart_spec.echarts: the escape hatch for the ECharts capabilities the semantic layer does not model."
       }
     }
   },

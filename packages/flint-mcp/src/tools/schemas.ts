@@ -85,6 +85,12 @@ export const chartSpecSchema = z
       .record(z.string(), z.any())
       .optional()
       .describe('Template-specific properties (e.g. bar corner radius, show labels).'),
+    echarts: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe(
+        'Native ECharts option patch, for the ECharts backend only — the escape hatch for what the semantic layer does not model (a second value axis, mixed mark types, markLine, dataZoom, formatters, per-series styling). Merged onto the compiled option last: objects merge recursively; arrays of objects (series, xAxis, yAxis) merge element-wise by index with extra entries appended; other arrays replace. A series entry may bind a column instead of carrying data: { type: "line", field: "margin", name: "Margin", axis: "right" } adds that series on a right-hand axis (created if missing); entries without field/fields patch the series at their index. Guide: https://microsoft.github.io/flint-chart/#/documentation/native-echarts-options',
+      ),
   })
   .describe('What to draw.');
 
@@ -156,6 +162,8 @@ export type AssemblyInputArgs = {
     baseSize?: { width: number; height: number };
     canvasSize?: { width: number; height: number };
     chartProperties?: Record<string, unknown>;
+    /** Native ECharts option patch (ECharts backend only) — see the schema's description. */
+    echarts?: Record<string, unknown>;
   };
   options?: Record<string, unknown>;
   theme_spec?: string | Record<string, unknown>;

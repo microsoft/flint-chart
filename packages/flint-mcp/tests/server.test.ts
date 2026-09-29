@@ -99,6 +99,40 @@ describe('MCP server', () => {
     expect(Array.isArray(payload.warnings)).toBe(true);
   });
 
+  it('compile_chart passes chart_spec.echarts through to the assembler', async () => {
+    // The tool input is a zod object, and zod strips unknown keys — a native
+    // patch that is not declared in the schema never reaches ECharts.
+    const res: any = await client.callTool({
+      name: 'compile_chart',
+      arguments: {
+        ...barChart,
+        backend: 'echarts',
+        data: {
+          values: [
+            { region: 'North', revenue: 120, target: 100 },
+            { region: 'South', revenue: 90, target: 105 },
+            { region: 'East', revenue: 150, target: 110 },
+          ],
+        },
+        semantic_types: { region: 'Category', revenue: 'Quantity', target: 'Quantity' },
+        chart_spec: {
+          ...barChart.chart_spec,
+          echarts: {
+            yAxis: [{ name: 'Revenue' }, { name: 'Target', position: 'right' }],
+            series: [{ type: 'line', field: 'target', name: 'Target', axis: 'right' }],
+          },
+        },
+      },
+    });
+    expect(res.isError).toBeFalsy();
+    const payload = JSON.parse(res.content[0].text);
+    const spec = payload.spec;
+    expect(Array.isArray(spec.yAxis)).toBe(true);
+    expect(spec.yAxis[1].position).toBe('right');
+    expect(spec.yAxis[0].name).toBe('Revenue');
+    expect(spec.series.some((s: any) => s.name === 'Target' && s.yAxisIndex === 1)).toBe(true);
+  });
+
   it('validate_chart flags an unknown chart type as invalid', async () => {
     const res: any = await client.callTool({
       name: 'validate_chart',

@@ -1193,6 +1193,19 @@ export interface ChartAssemblyInput {
         canvasSize?: { width: number; height: number };
         /** Template-specific configurable properties (e.g., bar corner radius, show labels) */
         chartProperties?: Record<string, any>;
+        /**
+         * Native ECharts option patch — the escape hatch for everything the
+         * semantic layer does not model (a second value axis, mixed mark
+         * types, `markLine`, `dataZoom`, formatters, per-series styling, …).
+         *
+         * Merged onto the compiled option by the ECharts assembler; see
+         * `echarts/native-option.ts` for the exact merge semantics and the
+         * `field` / `fields` / `axis: "right"` series binding sugar.
+         *
+         * Backend-scoped by name, and ignored by the other assemblers — the
+         * same way `theme_spec` is Vega-Lite's.
+         */
+        echarts?: Record<string, unknown>;
     };
 
     /**

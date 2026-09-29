@@ -13,6 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `chart_spec.echarts`, a native escape hatch for the ECharts capabilities the
+  semantic layer does not model — a second value axis, mixed mark types,
+  `markLine`, `dataZoom`, formatters, per-series styling. The object is merged
+  onto the compiled option last, so it wins over the layout pass: plain objects
+  merge recursively, arrays of plain objects (`series`, `xAxis`, `yAxis`) merge
+  element-wise by index with entries past the end appended, any other array
+  replaces, and `_`-prefixed keys are dropped with an `info` warning. Series
+  entries may bind columns instead of carrying `data`: `field` / `fields` add
+  series read from the rows (`categoryField` picks the pairing column,
+  defaulting to the chart's own x field) and `axis: "right"` puts one on a
+  right-hand value axis, which Flint creates when the chart has none. Bound
+  entries are added, unbound entries patch by index. Backend-scoped: the other
+  assemblers ignore the key the way Vega-Lite ignores `theme_spec`.
+  Guide: `docs/native-echarts-options.md`.
 - Viewport changes a gesture commits animate by default. A `navigate` or
   `brush-zoom` reset flies home, and a brush zoom tweens into the brushed
   region, over 400 ms on every Vega-Lite chart, not only on projected maps.

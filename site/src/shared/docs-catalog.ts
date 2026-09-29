@@ -131,6 +131,12 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/reference-echarts.md',
       },
       {
+        slug: 'native-echarts-options',
+        title: 'Native ECharts options',
+        description: 'chart_spec.echarts: the escape hatch for the ECharts capabilities the semantic layer does not model.',
+        file: '../../../docs/native-echarts-options.md',
+      },
+      {
         slug: 'reference-chartjs',
         title: 'Chart.js charts',
         description: 'Every Chart.js chart type, its channels, and configurable parameters.',

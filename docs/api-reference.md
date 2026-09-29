@@ -30,7 +30,7 @@ Conceptual background: [Overview](/documentation/overview) · Pipeline: [Archite
 |---------------|-----------|----------|
 | Raw table | `data` | `{ values: rows[] }` or `{ url: "..." }` |
 | **dataSpec** | `semantic_types` | `field → string` or `field → SemanticAnnotation` |
-| **chartSpec** | `chart_spec` | `chartType`, `encodings`, `canvasSize`, `chartProperties` |
+| **chartSpec** | `chart_spec` | `chartType`, `encodings`, `canvasSize`, `chartProperties`, `echarts` |
 
 Author `semantic_types` once per dataset and reuse it across charts. During most exploration, `chart_spec` is the only part that changes.
 
@@ -122,6 +122,7 @@ interface ChartAssemblyInput {
     baseSize?: { width: number; height: number };      // target layout size, default 400×320
     canvasSize?: { width: number; height: number };    // optional hard ceiling on stretch
     chartProperties?: Record<string, unknown>;
+    echarts?: Record<string, unknown>;
   };
   theme_spec?: ThemeSpec | string;                     // presentation, Vega-Lite only
   interaction_spec?: InteractionSpec;                  // behaviour, Vega-Lite interactive surface only
@@ -187,6 +188,7 @@ lists the presets a template supports by declaration. See [Using interactions](/
 | `baseSize` | **Target** layout size in pixels (default 400×320): the size the chart aims for with typical data. Dense data may stretch past it, up to the ceiling. |
 | `canvasSize` | **Hard ceiling:** the maximum size the chart may ever reach, including faceted grids. If omitted, the ceiling is `baseSize × options.maxStretch` (default 1.5×). Per-dimension caps are `βx = canvasSize.width / baseSize.width`, `βy = canvasSize.height / baseSize.height` (each ≥ 1). The base is clamped to the ceiling, so a `canvasSize` on its own acts as a fixed box the chart fills and shrinks to fit without overflowing. |
 | `chartProperties` | Template-specific toggles (e.g. `orient`, `opacity`) |
+| `echarts` | Native ECharts option patch — the escape hatch for capabilities the semantic layer does not model. ECharts backend only; see [Native ECharts options](./native-echarts-options.md). |
 
 > **base vs. canvas, in one line:** `baseSize` is what the chart *aims for*;
 > `canvasSize` is what it *may never exceed*. Use `canvasSize` for a fixed slot,

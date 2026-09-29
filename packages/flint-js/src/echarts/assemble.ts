@@ -68,6 +68,7 @@ import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
 import { ecApplyLayoutToSpec, ecApplyTooltips } from './instantiate-spec';
+import { applyNativeEChartsOption } from './native-option';
 import { ecCombineFacetPanels } from './facet';
 import { DEFAULT_COLORS } from './templates/utils';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
@@ -529,6 +530,16 @@ export function assembleECharts(input: ChartAssemblyInput): any {
             chartTemplate.postProcess(ecOption, instantiateContext);
         }
     }
+
+    // ── Native escape hatch (chart_spec.echarts) ──────────────────────────
+    // Applied last so the caller's native patch is authoritative over every
+    // decision above it — including the layout pass and template postProcess.
+    applyNativeEChartsOption(ecOption, input.chart_spec.echarts, {
+        rows: values,
+        categoryField: encodings.x?.field,
+        warnings,
+        faceted: hasFacet,
+    });
 
     // ═══════════════════════════════════════════════════════════════════════
     // RESULT
