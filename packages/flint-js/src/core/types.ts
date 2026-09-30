@@ -1157,12 +1157,9 @@ export interface ChartAssemblyInput {
         /**
          * The headline — what this chart says, in words.
          *
-         * Not decoration. A chart of bare numbers names nothing on its own, and
-         * the headline is where the measure gets named: `Male` and `75+` say
-         * what they are, `35 30 25` does not. Design languages that drop axis
-         * titles are leaning on this line to carry the subject, so a chart
-         * authored without one loses the naming altogether — the compiler
-         * notices, and puts the axis titles back.
+         * Themes that omit required axis titles append their names and units
+         * to the subtitle instead. The compiler does not interpret this text
+         * to decide whether it explains an axis.
          */
         title?: string;
         /** The deck: the reading of the headline — what is measured, of whom, when, in what units. */

@@ -132,9 +132,9 @@
   },
   "peerDependencies": {
     "chart.js": "^4.0.0",
+    "echarts": "^5.0.0 || ^6.0.0",
     "plotly.js": "^2.0.0 || ^3.0.0",
     "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
-    "echarts": "^5.0.0 || ^6.0.0",
     "vega": "^5.0.0 || ^6.0.0",
     "vega-lite": "^5.0.0 || ^6.0.0",
     "vega-tooltip": "^1.0.0"
@@ -163,6 +163,8 @@
     }
   },
   "devDependencies": {
+    "@types/d3-time": "^3.0.4",
+    "@types/d3-time-format": "^4.0.3",
     "@types/node": "^20.14.10",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
@@ -185,5 +187,9 @@
   "overrides": {
     "esbuild": "^0.28.1",
     "js-yaml": "^4.2.0"
+  },
+  "dependencies": {
+    "d3-time": "^3.1.0",
+    "d3-time-format": "^4.1.0"
   }
 }

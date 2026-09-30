@@ -43,7 +43,7 @@ import {
     sampleRamp,
 } from './presence.js';
 import { resolveDisplayUnit } from '../field-semantics.js';
-import { getRegistryEntry } from '../type-registry.js';
+import { getRegistryEntry, isRegistered } from '../type-registry.js';
 import { inferValueLabelFormat, longestLabelChars } from './value-label-format.js';
 import { deepMerge } from './merge.js';
 
@@ -457,6 +457,12 @@ function tokenToPx(size: SizeToken | undefined): number | undefined {
     return Number.isFinite(n) ? n : undefined;
 }
 
+export function resolveThemeFontSize(theme: ThemeSpec, size: SizeToken | undefined, fallback: number, availableWidth: number): number {
+    const targetWidth = theme.layout?.targetWidth ?? 300;
+    const scale = clamp(Math.pow((availableWidth || targetWidth) / targetWidth, 0.3), 0.85, 1.2);
+    return Math.max(theme.type?.minSize ?? 8, Math.round((tokenToPx(size) ?? fallback) * scale * 2) / 2);
+}
+
 // ---------------------------------------------------------------------------
 // Variant resolution
 // ---------------------------------------------------------------------------
@@ -604,7 +610,7 @@ function displayUnit(ctx: GroundingContext, channel: string) {
 function labelsNameThemselves(ctx: GroundingContext, channel: string | undefined): boolean {
     if (!channel) return false;
     const semanticType = ctx.channelSemantics?.[channel]?.semanticAnnotation?.semanticType;
-    if (typeof semanticType !== 'string') {
+    if (typeof semanticType !== 'string' || semanticType === 'Unknown' || !isRegistered(semanticType)) {
         // Nothing said about the field. Fall back to what the chart put on the
         // channel: names and dates read as themselves, numbers do not.
         const type = channelType(ctx, channel);
@@ -748,18 +754,14 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
     // token is a different number of pixels on a 700px chart and a 250px one.
     const targetWidth = theme.layout?.targetWidth ?? 300;
     const available = ctx.layout.subplotWidth || ctx.canvasSize.width || targetWidth;
-    const scale = clamp(Math.pow(available / targetWidth, 0.3), 0.85, 1.2);
-    const minSize = theme.type?.minSize ?? 8;
     const bodyFamily = theme.type?.axisLabel?.family
         ?? theme.type?.valueLabel?.family
         ?? theme.type?.headline?.family;
 
     function resolveType(role: TypeRole | undefined, fallbackSize: number, fallbackColor: string): ResolvedText {
-        const px = tokenToPx(role?.size) ?? fallbackSize;
-        const sized = Math.max(minSize, Math.round(px * scale * 2) / 2);
         return {
             font: role?.family ?? bodyFamily,
-            fontSize: sized,
+            fontSize: resolveThemeFontSize(theme, role?.size, fallbackSize, available),
             fontWeight: role?.weight ? WEIGHTS[role.weight] : undefined,
             fontStyle: role?.style === 'italic' ? 'italic' : undefined,
             color: role?.color ?? fallbackColor,
@@ -868,13 +870,6 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // binned range is in the second group even though it sits on a
         // categorical axis — its labels are numbers wearing an order.
         //
-        // A headline is narrative, not an axis binding. Even when it repeats a
-        // field word, it does not reliably state the quantity, unit, direction
-        // or which ruler carries it. `The female–male life gap` does not tell a
-        // reader that 55–85 means life expectancy in years; `Olympic rank` does
-        // not state the rank direction. Numeric, rank and bin axes therefore
-        // keep their title under every policy. `omit` may still remove titles
-        // over labels that name their own kind, such as months or countries.
         const selfNaming = labelsNameThemselves(ctx, channel);
         const showTitle = axisTitlesPolicy === 'always'
             ? true
@@ -887,7 +882,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         }
         if (axisTitlesPolicy === 'omit' && !selfNaming) {
             say('annotation.axisTitles',
-                `the labels on ${channel} are values, not names — a headline cannot bind them to a quantity, so the axis title stays`);
+                `the title on ${channel} moves to the end of the subtitle so its measure remains named`);
         }
 
         // A measure axis is a ruler, and how finely it is graduated is a house
@@ -912,7 +907,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         // Where the house keeps its axis titles, the title is the natural place
         // for the unit — `Weight (lb)` — and the ticks stay bare numbers.
         const titleUnit = showTitle && unit && (
-            unit.placement === 'field' || theme.annotation?.unitsInAxisTitle === true
+            axisTitlesPolicy === 'omit' || unit.placement === 'field' || theme.annotation?.unitsInAxisTitle === true
         ) ? unit.text : undefined;
 
         // The gap between a label and the plot is the same gap whether or not a
@@ -948,7 +943,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
             title: {
                 show: showTitle,
                 ...axisTitleText,
-                ...(showTitle ? { placement: theme.annotation?.axisTitlePlacement } : {}),
+                ...(showTitle ? { placement: axisTitlesPolicy === 'omit' ? 'subtitle' as const : theme.annotation?.axisTitlePlacement } : {}),
                 ...(showTitle && theme.annotation?.axisTitleGap != null
                     ? { gap: Math.max(0, theme.annotation.axisTitleGap) }
                     : {}),
@@ -1404,7 +1399,7 @@ export function groundTheme(themeIn: ThemeSpec, ctx: GroundingContext): DesignDe
         }
         say('structure.axis.measure.suppressWhenValuesPrinted',
             keptTitle
-                ? 'measure ruler removed — every mark prints its own value; the axis title stays, because a printed number says how much and not of what'
+                ? 'measure ruler removed — every mark prints its own value; its name is retained in the axis title or subtitle'
                 : 'measure axis removed — every mark prints its own value');
     }
 

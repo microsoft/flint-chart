@@ -268,12 +268,11 @@ describe('temporal axis year context', () => {
                 const labels: any[] = [];
                 const visit = (item: any): void => {
                     if (item.mark?.role === 'axis-label' && item.opacity !== 0
-                        && /[A-Za-z]/.test(String(item.text))) labels.push(item);
+                        && Number(item.datum?.value) >= Date.UTC(2020, 0, 1)) labels.push(item);
                     for (const child of item.items ?? []) visit(child);
                 };
                 visit((view.scenegraph() as any).root);
                 expect(labels.length).toBeGreaterThanOrEqual(2);
-                expect(labels.every(label => /202[0-2]/.test(label.text))).toBe(true);
                 expect(labels.some(label => /2020/.test(label.text))).toBe(true);
                 expect(labels.some(label => /2022/.test(label.text))).toBe(true);
                 for (let index = 1; index < labels.length; index++) {
@@ -285,16 +284,34 @@ describe('temporal axis year context', () => {
         }
     });
 
-    it('keeps single-year dates compact', () => {
+    it('keeps single-year dates compact', async () => {
         const spec: any = assembleVegaLite({
             data: { values: [{ date: '2022-03-01', value: 10 }, { date: '2022-09-01', value: 20 }] },
             semantic_types: { date: 'Date', value: 'Quantity' },
             chart_spec: { chartType: 'Bar Chart', encodings: { x: 'date', y: 'value' } },
             theme_spec: 'datawrapper',
         });
-        const plot = spec.vconcat?.[0] ?? spec;
-        const encoding = plot.encoding ?? plot.layer[0].encoding;
-        expect(encoding.x.axis.format).toBe('%b %-d');
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const labels: any[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.role === 'axis-label' && item.opacity !== 0
+                    && item.text != null && String(item.text).length > 0
+                    && Number(item.datum?.value) >= Date.UTC(2022, 0, 1)) labels.push(item);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(labels.length).toBeGreaterThanOrEqual(2);
+            expect(labels[0].text).toContain('2022');
+            expect(labels.filter(label => String(label.text).includes('2022'))).toHaveLength(1);
+            for (let index = 1; index < labels.length; index++) {
+                expect(labels[index].text).toMatch(/^[A-Z][a-z]+( \d{1,2})?$/);
+                expect(labels[index].bounds.x1 - labels[index - 1].bounds.x2).toBeGreaterThanOrEqual(0);
+            }
+        } finally {
+            view.finalize();
+        }
     });
 });
 

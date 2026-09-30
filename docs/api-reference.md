@@ -181,7 +181,7 @@ lists the presets a template supports by declaration. See [Using interactions](/
 | Field | Description |
 |-------|-------------|
 | `chartType` | Template name — must match a backend registry entry (`"Bar Chart"`, `"Heatmap"`, …) |
-| `title` | The headline. Write one: `Jan` and `Cairo` name their own kind, `26` and `5,300` do not, and a theme that omits axis titles is delegating that naming to the headline. Vega-Lite only for now; where no headline is given, the compiler puts the axis titles back. |
+| `title` | The chart headline. Themes that prefer omitting axis titles append required measure names and declared units to the subtitle instead. The compiler does not interpret headline or subtitle prose to infer whether an axis title is redundant. |
 | `subtitle` | The deck — what is measured, of whom, when, in what units. |
 | `encodings` | Channel → encoding map |
 | `baseSize` | **Target** layout size in pixels (default 400×320): the size the chart aims for with typical data. Dense data may stretch past it, up to the ceiling. |
@@ -216,6 +216,25 @@ and producing a derived column named `${field}_${aggregate}` (`count` →
 `_count`). `average` and `mean` are synonyms. Most callers should still
 aggregate their data upstream; if you do, omit `aggregate` and reference the
 derived column by name.
+
+For **Vega-Lite**, `sortBy` accepts a mapped `x`, `y`, or `color` channel, an
+existing data-field name, or a JSON-encoded category-order array string.
+Field-name sorts default to ascending and use the minimum field value per
+category when several rows share a category. Self-channel sorts default to
+ascending; cross-channel sorts default to descending. Explicit arrays preserve
+their order unless `sortOrder: 'descending'` reverses it. Channel names take
+precedence over identically named data fields.
+
+With no `sortBy`, `sortOrder` preserves or reverses a canonical semantic
+sequence, such as January through December for `Month`; it does not request
+lexical ordering. Without a canonical sequence it uses native value order.
+To explicitly sort month labels lexically, use
+`{ field: 'month', sortBy: 'month', sortOrder: 'ascending' }`.
+
+Invalid sort targets, malformed/non-array JSON, unmapped channels, and invalid
+directions are rejected by validation and Vega-Lite compilation with the
+encoding path in the diagnostic. Raw field-name sorting is currently a
+Vega-Lite capability; validation rejects it for other backends.
 
 Common channels: `x`, `y`, `color`, `size`, `shape`, `column`, `row`, `group`, `detail`.
 

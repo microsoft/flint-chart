@@ -60,14 +60,14 @@ import { planBandDodge, resolveDodge } from '../core/band-dodge';
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
-import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
+import { resolveChannelSemantics, convertTemporalData, resolveEncodingSort } from '../core/resolve-semantics';
 import { resolveDisplayUnit, titleWithDisplayUnit, toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
-import { vlApplyLayoutToSpec, vlApplyTooltips, vlPlanBandLabels, vlWrapLegendText } from './instantiate-spec';
+import { vlApplyLayoutToSpec, vlApplyTooltips, vlPlanBandLabels, vlWrapLegendText, vlFinalizeTemporalAxes } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
-import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveGeometry } from '../core/theme/ground';
+import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveGeometry, resolveThemeFontSize } from '../core/theme/ground';
 import { resolveThemeSpec } from '../core/theme/presets';
 import { realizeThemeVegaLite, realizeValueLabelsVegaLite, collectMarkTypes, collectPositional } from './theme';
 
@@ -647,7 +647,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         geometry: chartGeometry,
     };
 
-    if (chartType !== 'Bar Table') vlPlanBandLabels(instantiateContext, vgObj);
+    const axisLabelFontSize = themeSpec
+        ? resolveThemeFontSize(themeSpec, themeSpec.type?.axisLabel?.size, 10, layoutResult.subplotWidth || canvasSize.width)
+        : undefined;
+    if (chartType !== 'Bar Table') vlPlanBandLabels(instantiateContext, vgObj, axisLabelFontSize);
     chartTemplate.instantiate(vgObj, instantiateContext);
 
     // Facet-identity augmentation is presentation-only: the structural series
@@ -695,7 +698,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
 
     // --- vlApplyLayoutToSpec (VL-specific: config, sizing, formatting) ---
 
-    vlApplyLayoutToSpec(vgObj, instantiateContext, warnings);
+    vlApplyLayoutToSpec(vgObj, instantiateContext, warnings, axisLabelFontSize);
 
     // --- Post-layout adjustments (VL-specific) ---
 
@@ -862,6 +865,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     }
 
     chartTemplate.postProcess?.(vgObj, instantiateContext);
+    vlFinalizeTemporalAxes(vgObj, instantiateContext);
     vlWrapLegendText(vgObj, instantiateContext);
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1215,6 +1219,7 @@ function buildVLEncodings(
     chartProperties?: Record<string, any>,
 ): Record<string, any> {
     const resolvedEncodings: Record<string, any> = {};
+    const dataFields = new Set(data.flatMap(row => Object.keys(row)));
 
     // Only process channels the template declares (plus facets which are always valid)
     const templateChannels = new Set([
@@ -1326,10 +1331,14 @@ function buildVLEncodings(
             });
         };
 
-        if (encoding.sortBy || encoding.sortOrder) {
-            if (!encoding.sortBy) {
+        const explicitSort = resolveEncodingSort(encoding, channel, encodings, dataFields);
+        if (encoding.sortBy !== undefined || encoding.sortOrder !== undefined) {
+            if (encoding.sortBy === undefined) {
                 if (encoding.sortOrder) {
-                    encodingObj.sort = encoding.sortOrder;
+                    const canonical = cs?.ordinalSortOrder;
+                    encodingObj.sort = canonical?.length
+                        ? preserveDomainTypes(encoding.sortOrder === 'descending' ? [...canonical].reverse() : canonical)
+                        : encoding.sortOrder;
                 }
             } else if (encoding.sortBy === 'x' || encoding.sortBy === 'y') {
                 if (encoding.sortBy === channel) {
@@ -1341,30 +1350,22 @@ function buildVLEncodings(
                 if (encodings.color?.field) {
                     encodingObj.sort = `${encoding.sortOrder === "ascending" ? "" : "-"}${encoding.sortBy}`;
                 }
-            } else {
+            } else if (explicitSort?.kind === 'field') {
+                encodingObj.sort = explicitSort.field === fieldName ? encoding.sortOrder ?? 'ascending'
+                    : { field: escapeVlFieldName(explicitSort.field), op: 'min', order: encoding.sortOrder ?? 'ascending' };
+            } else if (explicitSort?.kind === 'values') {
+                let sortedValues: any[] = explicitSort.values;
                 // Temporal fields sort chronologically by default in VL; an explicit
                 // value array is redundant, pollutes the spec with potentially hundreds
                 // of date strings, and can break continuous temporal scales.
-                if (encodingObj.type !== 'temporal') {
-                    try {
-                        if (fieldName) {
-                            const fieldSemType = toTypeString(semanticTypes[fieldName]);
-                            const fieldVisCat = inferVisCategory(data.map(r => r[fieldName]));
-                            let sortedValues = JSON.parse(encoding.sortBy);
-
-                            if (fieldVisCat === 'temporal' || fieldSemType === "Year" || fieldSemType === "Decade") {
-                                sortedValues = sortedValues.map((v: any) => v.toString());
-                            }
-
-                            // Preserve numeric types for nominal fields with numeric data
-                            sortedValues = preserveDomainTypes(sortedValues);
-
-                            encodingObj.sort = (encoding.sortOrder === "ascending" || !encoding.sortOrder)
-                                ? sortedValues : sortedValues.reverse();
-                        }
-                    } catch {
-                        console.warn(`sort error > ${encoding.sortBy}`);
+                if (encodingObj.type !== 'temporal' && fieldName) {
+                    const fieldSemType = toTypeString(semanticTypes[fieldName]);
+                    const fieldVisCat = inferVisCategory(data.map(r => r[fieldName]));
+                    if (fieldVisCat === 'temporal' || fieldSemType === "Year" || fieldSemType === "Decade") {
+                        sortedValues = sortedValues.map(value => value.toString());
                     }
+                    sortedValues = preserveDomainTypes(sortedValues);
+                    encodingObj.sort = encoding.sortOrder === 'descending' ? [...sortedValues].reverse() : sortedValues;
                 }
             }
         } else {

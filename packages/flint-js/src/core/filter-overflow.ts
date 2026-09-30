@@ -35,6 +35,7 @@ import type {
 } from './types';
 import type { ChartWarning } from './types';
 import { inferVisCategory } from './semantic-types';
+import { resolveEncodingSort } from './resolve-semantics';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -243,6 +244,29 @@ function defaultOverflowOrder(
     const encoding = encodings[channel];
     const sortBy = encoding?.sortBy;
     const sortOrder = encoding?.sortOrder;
+    const explicitSort = resolveEncodingSort(encoding ?? {}, channel, encodings,
+        new Set(data.flatMap(row => Object.keys(row))));
+    if (explicitSort?.kind === 'field') {
+        const minimums = new Map<any, any>();
+        for (const row of data) {
+            const value = row[explicitSort.field];
+            if (value == null || value !== value) continue;
+            const category = row[fieldName];
+            if (!minimums.has(category) || value < minimums.get(category)) minimums.set(category, value);
+        }
+        const direction = sortOrder === 'descending' ? -1 : 1;
+        return [...uniqueValues].sort((left, right) => {
+            const leftValue = minimums.get(left);
+            const rightValue = minimums.get(right);
+            if (leftValue == null) return rightValue == null ? 0 : -direction;
+            if (rightValue == null) return direction;
+            return direction * (leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0);
+        });
+    }
+    if (explicitSort?.kind === 'values') {
+        const ordered = sortOrder === 'descending' ? [...explicitSort.values].reverse() : explicitSort.values;
+        return ordered.filter(value => uniqueValues.includes(value));
+    }
 
     // Infer sort field and direction
     let sortField: string | undefined;
@@ -256,18 +280,6 @@ function defaultOverflowOrder(
             sortField = sortCS?.field;
             sortFieldType = sortCS?.type;
             isDescending = sortOrder === 'descending' || (sortOrder !== 'ascending' && sortBy !== channel);
-        } else {
-            // Custom sort list — respect insertion order
-            try {
-                const sortedList = JSON.parse(sortBy);
-                if (Array.isArray(sortedList)) {
-                    const orderedValues = (sortOrder === 'descending') ? sortedList.reverse() : sortedList;
-                    return orderedValues.filter((v: any) => uniqueValues.includes(v));
-                }
-            } catch {
-                // not a JSON list, fall through
-            }
-            isDescending = sortOrder === 'descending';
         }
     }
 
@@ -298,12 +310,12 @@ function defaultOverflowOrder(
     }
 
     const canonicalOrder = channelSemantics[channel]?.ordinalSortOrder;
-    if (!sortBy && !sortOrder && canonicalOrder?.length) {
+    if (!sortBy && canonicalOrder?.length) {
         const present = new Set(uniqueValues);
         const ordered = canonicalOrder.filter(value => present.has(value));
         const canonicalValues = new Set(ordered);
         ordered.push(...uniqueValues.filter(value => !canonicalValues.has(value)));
-        return ordered;
+        return sortOrder === 'descending' ? ordered.reverse() : ordered;
     }
 
     // Match the display default for quantitative values treated as discrete.

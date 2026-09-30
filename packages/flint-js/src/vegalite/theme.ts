@@ -271,6 +271,7 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     applySurface(spec, config, d);
     applyTypography(config, d);
     applyAxes(spec, config, d, table, say);
+    moveAxisTitlesToSubtitle(spec, d, say);
     applyZeroRule(spec, d, table, say);
     applyMarks(spec, d, table, say);
     applySeriesInk(spec, d, table, say);
@@ -431,10 +432,57 @@ function fitTitle(spec: any, d: DesignDecisions, table: any[], say: (p: string, 
     // gutter under it is the title's to use. Measuring against the plot alone
     // broke a headline that had 150px of room to spare beside the row labels.
     const plot = blockWidth(spec, table);
-    const block = Math.max(plot ?? 0, d.layout.canvasWidth ?? 0);
+    const gutters = { left: 0, right: 0 };
+    walk(spec, node => {
+        const encoding = node.encoding?.y;
+        if (!encoding?.field || encoding.axis === null
+            || !['nominal', 'ordinal'].includes(encoding.type)) return;
+        const axis = { ...spec.config?.axis, ...spec.config?.axisY, ...encoding.axis };
+        if (axis.labels === false || (axis.labelAngle ?? 0) !== 0) return;
+        const size = axis.labelFontSize ?? d.axes.y?.label.fontSize ?? 10;
+        const limit = axis.labelLimit ?? 180;
+        let labelWidth = 0;
+        const values = axis.values ?? encoding.scale?.domain ?? table.map(row => row[encoding.field]);
+        if (!Array.isArray(values)) return;
+        for (const value of values) {
+            if (value == null) continue;
+            for (const line of String(value).split('\n')) labelWidth = Math.max(labelWidth, textPx(line, size));
+        }
+        if (limit > 0) labelWidth = Math.min(labelWidth, limit);
+        const side = (axis.orient ?? d.axes.y?.orient) === 'right' ? 'right' : 'left';
+        const ticks = axis.ticks === false ? 0 : Math.max(0, axis.tickSize ?? 5);
+        gutters[side] = Math.max(gutters[side], labelWidth + Math.max(0, axis.labelPadding ?? 2) + ticks);
+    });
+    const block = Math.max((plot ?? 0) + gutters.left + gutters.right, d.layout.canvasWidth ?? 0);
     if (!block || !Number.isFinite(block)) return;
     fitHeadline(spec, d, block, say);
     fitDeck(spec, d, block, say);
+}
+
+function moveAxisTitlesToSubtitle(spec: any, decisions: DesignDecisions, say: (path: string, message: string) => void): void {
+    if (spec.title === null) return;
+    const titles = new Map<string, Set<string>>();
+    for (const channel of ['x', 'y'] as const) {
+        if (decisions.axes[channel]?.title.placement !== 'subtitle') continue;
+        walk(spec, node => {
+            const encoding = node.encoding?.[channel];
+            if (!encoding || encoding.axis === null || encoding.axis?.title === null || encoding.title === null) return;
+            const title = encoding.axis?.title ?? titleOf(encoding);
+            const text = Array.isArray(title) ? title.join(' ') : title;
+            if (typeof text !== 'string' || !text.trim()) return;
+            if (!titles.has(channel)) titles.set(channel, new Set());
+            titles.get(channel)!.add(text);
+            encoding.axis = { ...encoding.axis, title: null };
+        });
+    }
+    if (!titles.size) return;
+    const labels = [...titles].map(([channel, names]) =>
+        `${titles.size > 1 ? `${channel.toUpperCase()}: ` : ''}${[...names].join(', ')}`);
+    const title = typeof spec.title === 'string' || Array.isArray(spec.title)
+        ? { text: spec.title } : spec.title ?? { text: '' };
+    const subtitle = [title.subtitle ?? []].flat().join(' ');
+    spec.title = { ...title, subtitle: [[subtitle, ...labels].filter(Boolean).join('; ')] };
+    say('title.subtitle', 'omitted axis titles are appended after the authored subtitle');
 }
 
 /**
@@ -725,7 +773,7 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                 // — "CO2 (ppm)" — a unit on every tick states it a second time
                 // down a ruler of "450 ppm", "400 ppm".
                 const titleNow = enc.axis?.title ?? titleOf(enc);
-                if (axis.unit && typeof titleNow === 'string'
+                if (axis.unit && axis.title.placement !== 'subtitle' && typeof titleNow === 'string'
                     && titleNow.includes(axis.unit.text)) {
                     unitNamedInTitle = true;
                 }

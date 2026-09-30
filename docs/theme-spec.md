@@ -76,6 +76,8 @@ Every field is optional. Start with the decisions that matter to your product, t
 
 Theme rules are semantic. For example, `structure.grid.measure` controls the grid used to read values, whichever physical axis carries the measure. `legend.placement` gives the compiler an ordered set of acceptable positions rather than fixed coordinates. This is what lets one theme generalize across different chart types, data, and canvas sizes.
 
+For axis titles, `annotation.axisTitles: "omit"` moves required axis names and declared units to the end of the chart subtitle. Existing subtitle text is preserved, followed by a semicolon and the measure label, such as `Two shipments in September; Mass (kg)`. If both axes need titles, the appended labels identify `X:` and `Y:`. Without an existing subtitle or headline, the compiler creates a subtitle. Labels shared across layers or facets are included once. This is explicit relocation: the compiler does not interpret the headline or subtitle to decide whether they already explain the measure. `"whenAmbiguous"` retains required titles on their axes, while `"always"` retains all axis titles. Category and date title omission under `"omit"` and `"whenAmbiguous"` is otherwise unchanged.
+
 Selection boundaries are inferred from the theme unless explicitly stated. Their foreground defaults to `ink.accent`, then `ink.text.primary`; their halo defaults to the plot or canvas surface. This gives a continuous-color grid an outline that belongs to the house while remaining legible across both ends of its ramp. A theme can override the treatment:
 
 ```json

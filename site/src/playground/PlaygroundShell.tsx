@@ -13,7 +13,6 @@ const pages: NavEntry[] = [
       { to: 'illustrations/architecture', label: 'Architecture' },
       { to: 'demo-wall', label: 'Demo wall' },
       { to: 'full-test-cases', label: 'Full test cases' },
-      { to: 'new-case-preview', label: 'New case preview' },
     ],
   },
   {
@@ -23,6 +22,7 @@ const pages: NavEntry[] = [
       { to: 'overflow-viewport', label: 'Overflow viewport' },
       { to: 'band-stretching', label: 'Band stretching' },
       { to: 'axis-label', label: 'Axis labels' },
+      { to: 'calendar-axis', label: 'Calendar axes' },
     ],
   },
   {

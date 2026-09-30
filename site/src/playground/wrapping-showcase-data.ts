@@ -25,7 +25,7 @@ const healthRows = health.flatMap(([Cause, previous, current]) => [
 const healthSource = {
   source: 'CDC / NCHS, Data Brief 492, Figure 4',
   sourceUrl: 'https://www.cdc.gov/nchs/products/databriefs/db492.htm',
-  dataNote: 'Selected causes; age-adjusted deaths per 100,000 US residents. Standard cause names; public-domain data.',
+  dataNote: 'Selected US age-adjusted death rates per 100,000.',
 };
 const medals = [
   ['United States of America', 40, 44, 42],
@@ -38,13 +38,13 @@ const medalRows = medals.map(([Team, Gold, Silver, Bronze]) => ({ Team, Gold, Si
 const medalSource = {
   source: 'Paris 2024 Olympic medal table',
   sourceUrl: 'https://en.wikipedia.org/wiki/2024_Summer_Olympics_medal_table',
-  dataNote: 'Five selected delegations. Formal country names used for display; medal counts are unchanged.',
+  dataNote: 'Five delegations, with formal country names.',
 };
 
 export const WRAPPING_EXAMPLES: WrappingExample[] = [
   {
     id: 'health-axis', label: 'Long category names',
-    caption: 'Long category names can wrap onto two lines while the full label block stays centered on its bar. The same data and requested size are used on both sides.',
+    caption: 'Two-line labels stay centered on their bars.',
     ...healthSource,
     input: {
       data: { values: healthRows.filter(row => row.Year === '2022') },
@@ -58,10 +58,10 @@ export const WRAPPING_EXAMPLES: WrappingExample[] = [
   },
   {
     id: 'education-axis', label: 'Tight columns',
-    caption: 'A compact categorical axis can use horizontal, two-line labels instead of turning every label. Wrapping is planned together with the available band width.',
+    caption: 'Wrapping keeps category labels horizontal.',
     source: 'US Bureau of Labor Statistics, Education pays, 2023',
     sourceUrl: 'https://www.bls.gov/careeroutlook/2024/data-on-display/education-pays.htm',
-    dataNote: 'Selected education levels. Median usual weekly earnings of full-time wage and salary workers age 25 and over; US dollars. Public-domain data.',
+    dataNote: 'US median weekly earnings, full-time wage and salary workers age 25+.',
     input: {
       data: { values: [
         { Education: 'High school diploma', Earnings: 899 },
@@ -80,7 +80,7 @@ export const WRAPPING_EXAMPLES: WrappingExample[] = [
   },
   {
     id: 'medal-legend', label: 'Country legend',
-    caption: 'A long legend entry can wrap without shrinking its font. The color swatch stays aligned with the first line, and short names remain compact.',
+    caption: 'Legend entries wrap at the same font size, with swatches on the first line.',
     ...medalSource,
     input: {
       data: { values: medalRows },
@@ -94,10 +94,10 @@ export const WRAPPING_EXAMPLES: WrappingExample[] = [
   },
   {
     id: 'heritage-table', label: 'Bar table',
-    caption: 'Wrapping reveals more of each official property name while keeping the bar and component count aligned with its row.',
+    caption: 'Full property names wrap within aligned table rows.',
     source: 'UNESCO World Heritage Centre (properties 1363, 1424, 1613 and 1273)',
     sourceUrl: 'https://whc.unesco.org/en/list/',
-    dataNote: 'Four selected serial properties; counts are component sites, not visitors or countries.',
+    dataNote: 'Four serial properties, counted by component sites.',
     input: {
       data: { values: [
         { Property: 'Prehistoric Pile Dwellings around the Alps', Components: 111, Source: 'https://whc.unesco.org/en/list/1363/' },
@@ -114,7 +114,7 @@ export const WRAPPING_EXAMPLES: WrappingExample[] = [
   },
   {
     id: 'health-facets', label: 'Small multiples',
-    caption: 'Wrapped category labels also work in small multiples: the label block stays centered on each row while the panels retain a shared reading scale.',
+    caption: 'Wrapped row labels align across panels with a shared scale.',
     ...healthSource,
     input: {
       data: { values: healthRows },

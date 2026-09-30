@@ -394,12 +394,33 @@ string shorthand, expanded to `{ field: "<string>" }`):
 | `field` | column name | Bind the channel to a data column |
 | `type` | `quantitative`, `nominal`, `ordinal`, `temporal` | Override the inferred encoding type (rarely needed) |
 | `aggregate` | `count`, `sum`, `average`, `mean` | Force an aggregation on a measure channel |
-| `sortOrder` | `ascending`, `descending` | Sort direction for a discrete/sorted axis |
-| `sortBy` | channel name (e.g. `"y"`) or field | Sort a category axis by another channel's measure |
+| `sortOrder` | `ascending`, `descending` | Sort direction; in Vega-Lite, direction alone preserves/reverses the semantic sequence |
+| `sortBy` | mapped `"x"`, `"y"`, `"color"`; Vega-Lite also accepts a data field or JSON-array string | Explicit category ordering; see the Vega-Lite contract below |
 | `scheme` | Vega scheme name (e.g. `viridis`, `redblue`) | Color scheme for the `color` channel |
 
 You usually don't need `type`, `aggregate`, or `sortOrder` — they're
 inferred from the semantic type. Set them only with specific intent.
+
+**Vega-Lite sorting.** Omit sorting for canonical Month/Day/Quarter order.
+`sortOrder` alone follows that semantic sequence (descending reverses it),
+not alphabetical month names. Without a semantic sequence, direction alone
+uses the field's native value order.
+
+- `sortBy: "month_number"` sorts by that existing data field, ascending by
+  default. Multiple rows per category use the minimum sort-field value.
+- `sortBy: "y"` sorts by the mapped channel; cross-channel sorts default to
+  descending, while self-channel sorts default to ascending. `x`, `y`, and
+  `color` are reserved channel names and must be mapped.
+- `sortBy: "[\"Mar\",\"Jan\",\"Feb\"]"` supplies an explicit category order;
+  `sortOrder: "descending"` reverses it. Use a JSON-array **string**, not an array
+  or a Vega-Lite sort object. Members must be strings, numbers, or booleans.
+- For explicit lexical ordering of month labels, sort by the category field
+  itself: `{ "field": "month", "sortBy": "month", "sortOrder": "ascending" }`.
+
+Unknown fields, unmapped channels, invalid directions, and malformed sort
+arrays are errors, not fallback orders. Raw field-name sorting is currently
+supported by the Vega-Lite backend; for other backends use their supported
+channel-sort controls. Validate inputs against the selected backend.
 
 **Multi-series (wide → long).** To plot several measure columns as series,
 pass an **array** on `x` or `y` (only those two channels). The library

@@ -377,6 +377,8 @@ export interface ThemeAnnotation {
      * `whenAmbiguous` asks the same question of each axis: `Jan Feb Mar` names
      * its own kind and needs no title over it, `26 20 14` names nothing until
      * one is written. Ranks and binned ranges count as numbers.
+    * `omit` moves required titles and declared units to the end of the
+    * subtitle rather than relying on the author's prose to name the axes.
      */
     axisTitles?: 'omit' | 'whenAmbiguous' | 'always';
     /**
@@ -730,7 +732,7 @@ export interface ResolvedAxis {
     ticks: ResolvedRule & { size: number; offset: number };
     grid: ResolvedRule;
     label: ResolvedText & { show?: boolean; limit?: number; padding: number; flush?: boolean; angle?: number };
-    title: { show: boolean; placement?: 'rotated' | 'flatAboveAxis' | 'inline'; gap?: number; unit?: string } & ResolvedText;
+    title: { show: boolean; placement?: 'rotated' | 'flatAboveAxis' | 'inline' | 'subtitle'; gap?: number; unit?: string } & ResolvedText;
     /** Preferred tick count; undefined = let the renderer choose. */
     tickCount?: number;
     /**

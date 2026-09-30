@@ -77,6 +77,24 @@ describe('overflow category selection', () => {
     )).toEqual(['Delta', 'Charlie', 'Bravo']);
   });
 
+  it('uses field-sort minima consistently before truncation', () => {
+    const data = [
+      { Category: 'A', Value: 1 }, { Category: 'A', Value: 100 },
+      { Category: 'B', Value: 2 }, { Category: 'C', Value: 3 }, { Category: 'D', Value: 4 },
+    ];
+    expect(keptCategories(data, { field: 'Category', type: 'nominal' },
+      { field: 'Category', sortBy: 'Value', sortOrder: 'ascending' })).toEqual(['A', 'B', 'C']);
+    expect(keptCategories(data, { field: 'Category', type: 'nominal' },
+      { field: 'Category', sortBy: 'Value', sortOrder: 'descending' })).toEqual(['D', 'C', 'B']);
+  });
+
+  it('reverses semantic order before truncation for direction-only sorts', () => {
+    const data = ['Mar', 'Jan', 'Apr', 'Feb'].map(Category => ({ Category, Value: 1 }));
+    expect(keptCategories(data,
+      { field: 'Category', type: 'ordinal', ordinalSortOrder: ['Jan', 'Feb', 'Mar', 'Apr'] },
+      { field: 'Category', sortOrder: 'descending' })).toEqual(['Apr', 'Mar', 'Feb']);
+  });
+
   it('retains the complete ordered domain for an interactive viewport', () => {
     const data = [
       { Category: 'Delta', Value: 100 },

@@ -33,10 +33,14 @@ describe('explicit unit display policy', () => {
         expect(axis.title.unit).toBeUndefined();
     });
 
-    it('places a declared compact unit beside values', () => {
-        const axis = bars('kg')._theme.decisions.axes.y;
+    it('keeps a declared compact unit beside values and in a relocated measure title', () => {
+        const spec = bars('kg');
+        const axis = spec._theme.decisions.axes.y;
         expect(axis.unit).toMatchObject({ text: 'kg' });
-        expect(axis.title.unit).toBeUndefined();
+        expect(axis.title).toMatchObject({ unit: 'kg', placement: 'subtitle' });
+        const encoding = spec.encoding ?? spec.layer.find((layer: any) => layer.encoding?.y)?.encoding;
+        expect(encoding.y.axis.labelExpr).toContain('kg');
+        expect(spec.title.subtitle).toEqual(['gain (kg)']);
     });
 
     it('normalizes conventional compact unit names', () => {

@@ -153,7 +153,7 @@ describe('heatmap color defaults', () => {
     } as any) as any;
 
     expect(spec.encoding.x.type).toBe('temporal');
-    expect(spec.encoding.x.axis?.format).toBeUndefined();
+    expect(spec.encoding.x.axis?.labelExpr).toBeDefined();
     expect(spec.data.values.map((row: any) => row.year)).toEqual(
       values.map(row => String(row.year)),
     );

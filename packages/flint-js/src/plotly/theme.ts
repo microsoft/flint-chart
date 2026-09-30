@@ -313,6 +313,7 @@ export function realizeThemePlotly(figure: any, d: DesignDecisions, table: any[]
     applySurface(figure, d);
     applyGeoSurface(figure, d);
     applyFurnitureTraces(figure, d);
+    moveAxisTitlesToSubtitle(figure, d, say);
     const titleH = applyTypography(figure, d);
     applyAxes(figure, d, table, say);
     applyMarks(figure, d, table, say);
@@ -390,6 +391,32 @@ function applyDeltaInk(trace: any, d: DesignDecisions): void {
     };
 }
 
+function moveAxisTitlesToSubtitle(figure: any, decisions: DesignDecisions, say: Say): void {
+    const layout = figure.layout;
+    if (layout.title === null) return;
+    const titles = new Map<string, Set<string>>();
+    for (const channel of ['x', 'y'] as const) {
+        const resolved = decisions.axes[channel]?.title;
+        if (resolved?.placement !== 'subtitle') continue;
+        for (const key of axisKeys(layout, channel)) {
+            const axis = layout[key];
+            const text = typeof axis.title === 'string' ? axis.title : axis.title?.text;
+            if (typeof text !== 'string' || !text.trim()) continue;
+            const label = resolved.unit && !text.includes(`(${resolved.unit})`)
+                ? `${text} (${resolved.unit})` : text;
+            if (!titles.has(channel)) titles.set(channel, new Set());
+            titles.get(channel)!.add(label);
+            axis.title = { ...(typeof axis.title === 'object' ? axis.title : {}), text: '' };
+        }
+    }
+    if (!titles.size) return;
+    const labels = [...titles].map(([channel, names]) =>
+        `${titles.size > 1 ? `${channel.toUpperCase()}: ` : ''}${[...names].join(', ')}`);
+    const title = typeof layout.title === 'string' ? { text: layout.title } : layout.title ?? { text: '' };
+    layout.title = { ...title, _deck: [title._deck, ...labels].filter(Boolean).join('; ') };
+    say('title.subtitle', 'omitted axis titles are appended after the authored subtitle');
+}
+
 function applyTypography(figure: any, d: DesignDecisions): number {
     const layout = figure.layout;
     layout.font = {
@@ -410,25 +437,25 @@ function applyTypography(figure: any, d: DesignDecisions): number {
 
     const title = layout.title;
     const headlineText = typeof title === 'string' ? title : title?.text;
-    if (!headlineText) return 0;
+    const deckText = (title as any)?._deck as string | undefined;
+    if (!headlineText && !deckText) return 0;
 
     // Plotly 2.x has no `title.subtitle`, so a deck is carried as a second line
     // of the title with its own inline type.
     const h = d.title.headline;
-    const deckText = (title as any)?._deck as string | undefined;
     const deck = d.title.deck;
     const width = Number(layout.width) || 400;
 
     const headlineSize = h.fontSize ?? 16;
-    const headLines = wrapToWidth(
+    const headLines = headlineText ? wrapToWidth(
         String(headlineText).replace(/<br>/g, ' '),
         width - 8,
         headlineSize,
         needsMarkup(h).bold,
-    );
-    const lines = [styleText(headLines.join('<br>'), h)];
+    ) : [];
+    const lines = headLines.length ? [styleText(headLines.join('<br>'), h)] : [];
 
-    let height = 8 + titleBlockHeight(headLines.length, headlineSize) + 6;
+    let height = 8 + (headLines.length ? titleBlockHeight(headLines.length, headlineSize) + 6 : 0);
     if (deckText) {
         const size = deck.fontSize ?? 12;
         const color = deck.color ?? d.text.secondary;

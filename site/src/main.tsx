@@ -25,6 +25,7 @@ import { ThemeLabReal } from './playground/ThemeLabReal';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { AxisLabelLab } from './playground/AxisLabelLab';
+import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ClickFocusLab, SpecTestCasesLab } from './playground/ClickFocusLab';
@@ -89,6 +90,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />
           <Route path="axis-label" element={<AxisLabelLab />} />
+          <Route path="calendar-axis" element={<CalendarAxisLab />} />
           <Route path="release-examples">
             <Route index element={<Navigate to="1.0.0" replace />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />

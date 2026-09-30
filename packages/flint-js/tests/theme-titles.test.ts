@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
+import { compile } from 'vega-lite';
+import { parse, View } from 'vega';
 import { assembleVegaLite, THEME_PRESETS } from '../src';
 import type { ThemeSpec } from '../src/core/theme/types';
 
@@ -10,7 +12,7 @@ import type { ThemeSpec } from '../src/core/theme/types';
  *
  * `Jan`, `Cairo`, `Chrome` say what kind of thing they are; `26`, `5300` do
  * not, and something on the page has to. A theme can say where that naming
- * goes — the axis, the headline — but it cannot say the naming is unnecessary,
+ * goes — the axis, the subtitle — but it cannot say the naming is unnecessary,
  * and the compiler holds it to that.
  */
 
@@ -51,6 +53,144 @@ function axisTitle(spec: any, channel: 'x' | 'y'): unknown {
 }
 
 describe('axis titles', () => {
+    it.each([undefined, 'Unknown', 'CustomMeasure', 'Quantity', 'Percentage'].flatMap(semantic =>
+        ['datawrapper', 'swiss'].flatMap(theme => [false, true].map(horizontal => ({ semantic, theme, horizontal }))),
+    ))('renders the raw measure field without a display name or unit ($semantic / $theme / horizontal: $horizontal)', async ({ semantic, theme, horizontal }) => {
+        const measure = semantic === 'Unknown'
+            ? { field: 'yoy_year_change', type: 'quantitative' as const } : 'yoy_year_change';
+        const spec: any = assembleVegaLite({
+            data: { values: [
+                { Item: 'Bananas, per lb.', yoy_year_change: 8.8 },
+                { Item: 'Bread, white, pan, per lb.', yoy_year_change: -5.6 },
+            ] },
+            ...(semantic ? { semantic_types: { Item: 'Category', yoy_year_change: semantic } } : {}),
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Consumer price changes from August 2024 to August 2025',
+                subtitle: 'All available items with positive prices in both months',
+                encodings: horizontal ? { x: measure, y: 'Item' } : { x: 'Item', y: measure },
+            },
+            theme_spec: theme,
+        });
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const subtitles: string[] = [];
+            const axisTitles: string[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.role === 'title-subtitle' && item.opacity !== 0) subtitles.push(...[item.text].flat());
+                if (item.mark?.role === 'axis-title' && item.opacity !== 0) axisTitles.push(...[item.text].flat());
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            if (theme === 'datawrapper') {
+                expect(subtitles.join(' ')).toBe('All available items with positive prices in both months; yoy_year_change');
+            } else {
+                expect(axisTitles).toContain('yoy_year_change');
+                expect(subtitles.join(' ')).toBe('All available items with positive prices in both months');
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
+    it('appends an omitted measure and its declared unit after the authored subtitle', () => {
+        const spec: any = assembleVegaLite({
+            data: { values: [{ Item: 'A', Mass: 10 }, { Item: 'B', Mass: 20 }] },
+            semantic_types: { Item: 'Category', Mass: { semanticType: 'Amount', unit: 'kg' } },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Shipment comparison',
+                subtitle: 'Two shipments in September',
+                encodings: { x: 'Mass', y: 'Item' },
+            },
+            theme_spec: 'mckinsey',
+        });
+
+        expect([spec.title.subtitle].flat().join(' ')).toBe('Two shipments in September; Mass (kg)');
+        expect(axisTitle(spec, 'x')).toBeNull();
+    });
+
+    it.each([240, 640])('appends a shared faceted measure once and fits its subtitle at %i px', async width => {
+        const spec: any = assembleVegaLite({
+            data: { values: [
+                { Year: 2024, Site: 'A', Mass: 10 },
+                { Year: 2025, Site: 'A', Mass: 20 },
+                { Year: 2024, Site: 'B', Mass: 15 },
+                { Year: 2025, Site: 'B', Mass: 25 },
+            ] },
+            semantic_types: { Year: 'Year', Site: 'Category', Mass: { semanticType: 'Amount', unit: 'kg' } },
+            field_display_names: { Mass: 'Shipment mass' },
+            chart_spec: {
+                chartType: 'Line Chart',
+                title: 'Shipment comparison',
+                subtitle: 'Recorded at two sites in consecutive years',
+                encodings: { x: 'Year', y: 'Mass', column: 'Site' },
+                baseSize: { width, height: 320 },
+            },
+            theme_spec: 'mckinsey',
+        });
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const subtitles: any[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.role === 'title-subtitle' && item.opacity !== 0) subtitles.push(item);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(subtitles.flatMap(item => [item.text].flat()).join(' '))
+                .toBe('Recorded at two sites in consecutive years; Shipment mass (kg)');
+            const blockWidth = Math.max(width, spec._theme.decisions.layout.plotWidth * 2);
+            for (const item of subtitles) {
+                expect(item.bounds.width()).toBeLessThanOrEqual(blockWidth * 1.18);
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
+    it.each(Object.keys(THEME_PRESETS).flatMap(theme => [false, true].map(horizontal => ({ theme, horizontal }))))('renders the measure title and unit ($theme / horizontal: $horizontal)', async ({ theme, horizontal }) => {
+        const spec: any = assembleVegaLite({
+            data: { values: [
+                { Item: 'Bananas, per lb.', Change: 8.8 },
+                { Item: 'Bread, white, pan, per lb.', Change: -5.6 },
+                { Item: 'Eggs, grade A, large, per doz.', Change: 12 },
+                { Item: 'Gasoline, unleaded regular, per gallon', Change: -6.4 },
+            ] },
+            semantic_types: { Item: 'Category', Change: 'Quantity' },
+            field_display_names: { Change: 'Price change (%)' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Consumer price changes from August 2024 to August 2025',
+                subtitle: 'All available items with positive prices in both months',
+                encodings: horizontal ? { x: 'Change', y: 'Item' } : { x: 'Item', y: 'Change' },
+                baseSize: { width: 480, height: 320 },
+            },
+            theme_spec: theme,
+        });
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const titles: any[] = [];
+            const visit = (item: any): void => {
+                if (['axis-title', 'title-subtitle'].includes(item.mark?.role) && item.opacity !== 0) titles.push(item);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(titles.some(item => [item.text].flat().join(' ').includes('Price change (%)'))).toBe(true);
+            const channel = horizontal ? 'x' : 'y';
+            if (spec._theme.decisions.axes[channel].title.placement === 'subtitle') {
+                expect(titles.some(item => item.mark.role === 'axis-title'
+                    && [item.text].flat().join(' ').includes('Price change (%)'))).toBe(false);
+                expect(titles.filter(item => item.mark.role === 'title-subtitle')
+                    .flatMap(item => [item.text].flat()).join(' ')).toBe('All available items with positive prices in both months; Price change (%)');
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
     it('omits a title over labels that name their own kind', () => {
         const spec = bars(house({ axisTitles: 'whenAmbiguous' }), 'Wetter than it looks');
         expect(axisTitle(spec, 'x')).toBeNull();
@@ -66,17 +206,16 @@ describe('axis titles', () => {
         expect(axisTitle(spec, 'y')).not.toBeNull();
     });
 
-    it('does not let an omit preference delegate a numeric ruler to the headline', () => {
+    it('moves an omitted title into the subtitle even when the headline names the measure', () => {
         const spec = bars(house({ axisTitles: 'omit' }), 'Rainfall, month by month');
-        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Rainfall']);
     });
 
-    it('keeps the title when the headline names the subject but not the measure', () => {
-        // `omit` is a delegation, and this headline never took it up: "wetter"
-        // is the story, not the quantity, so the axis is the only thing left
-        // that can say the bars are rainfall.
+    it('moves an omitted title into the subtitle regardless of headline wording', () => {
         const spec = bars(house({ axisTitles: 'omit' }), 'Wetter than it looks');
-        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Rainfall']);
     });
 
     it('accepts the measure named by its unit alone', () => {
@@ -90,19 +229,26 @@ describe('axis titles', () => {
             },
             theme_spec: house({ axisTitles: 'omit' }),
         } as any) as any;
-        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Price (USD)']);
     });
 
-    it('keeps the title when there is no headline', () => {
+    it('renders an omitted title as a subtitle when there is no headline', async () => {
         const spec = bars(house({ axisTitles: 'omit' }));
-        expect(axisTitle(spec, 'y')).not.toBeNull();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect(spec.title).toMatchObject({ text: '', subtitle: ['Rainfall'] });
         const report = spec._theme.report.map((r: any) => r.path);
         expect(report).toContain('annotation.axisTitles');
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            expect(await view.toSVG()).toContain('Rainfall');
+        } finally {
+            view.finalize();
+        }
     });
 
-    it('keeps the axis title when the ruler is dropped for printed values', () => {
-        // The ruler is redundant once every bar carries its number; the title
-        // is not, because `42` says how much and never says of what.
+    it('keeps the measure in the subtitle when the ruler is dropped for printed values', () => {
         const spec = bars(
             {
                 ...house({ axisTitles: 'omit' }),
@@ -113,9 +259,8 @@ describe('axis titles', () => {
         );
         const enc = (spec.spec?.encoding ?? spec.encoding ?? spec.layer?.[0]?.encoding ?? {}).y;
         expect(spec.config.axisY.labels).toBe(false);
-        expect(enc?.axis?.title).not.toBeNull();
-        expect(axisTitle(spec, 'y')).not.toBeNull();
-        expect(JSON.stringify(spec._theme.report)).toContain('the axis title stays');
+        expect(enc?.axis?.title).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Rainfall']);
     });
 
     it('keeps a needed measure title on its own axis, headline or not', () => {
@@ -213,7 +358,7 @@ describe('axis titles', () => {
         expect(spec.title.subtitle).toBeUndefined();
     });
 
-    it('keeps a single share measure named on its own axis', () => {
+    it('moves a single share measure into the subtitle for an omission-preferring theme', () => {
         const spec = assembleVegaLite({
             data: { values: [
                 { Institution: 'Congress', Response: 'Some', 'Share (%)': 38 },
@@ -229,14 +374,11 @@ describe('axis titles', () => {
             theme_spec: THEME_PRESETS.economist.spec,
         } as any) as any;
 
-        expect(axisTitle(spec, 'x')).not.toBeNull();
-        expect(spec.title.subtitle).toBeUndefined();
+        expect(axisTitle(spec, 'x')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Share (%)']);
     });
 
-    it.each([
-        { width: 300, titleSize: 11 },
-        { width: 400, titleSize: 12 },
-    ])('keeps two Economist measure titles legible and bound at $width px', ({ width, titleSize }) => {
+    it.each([300, 400])('names both Economist measure axes in the subtitle at %i px', width => {
         const spec = assembleVegaLite({
             data: { values: [
                 { Year: 1956, 'Miles/person': 3675, 'Gas price': 2.38 },
@@ -253,25 +395,12 @@ describe('axis titles', () => {
             theme_spec: THEME_PRESETS.economist.spec,
         } as any) as any;
 
-        expect(axisTitle(spec, 'x')).not.toBeNull();
-        expect(axisTitle(spec, 'y')).not.toBeNull();
-        expect(spec.title.subtitle).toBeUndefined();
+        expect(axisTitle(spec, 'x')).toBeNull();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect([spec.title.subtitle].flat().join(' ')).toBe('X: Miles/person; Y: Gas price');
         const enc = (spec.spec?.encoding ?? spec.encoding ?? spec.layer?.[0]?.encoding ?? {});
-        // The house seats its ruler on the right, so the title hangs off that
-        // side and the renderer's own measurement seats it on the outer edge.
         expect(enc.y.axis.orient).toBe('right');
-        expect(enc.y.axis).toMatchObject({
-            titleAngle: 0,
-            titleAlign: 'right',
-            titlePadding: 0,
-        });
-        expect(enc.y.axis.titleX).toBeUndefined();
-        expect(enc.y.axis.labelPadding).toBeUndefined();
-        // The title clears the topmost value rather than sitting on it.
-        expect(enc.y.axis.titleY).toBeLessThanOrEqual(-16);
-        expect(spec.config.axisX).toMatchObject({ titleFontSize: titleSize, titlePadding: 8 });
-        expect(spec.config.axisY).toMatchObject({ titleFontSize: titleSize, titlePadding: 8 });
-        expect(JSON.stringify(spec._theme.report)).toContain('a headline cannot bind them to a quantity');
+        expect(JSON.stringify(spec._theme.report)).toContain('moves to the end of the subtitle');
     });
 
     it('keeps life expectancy named when the headline only describes the story', () => {
@@ -289,11 +418,11 @@ describe('axis titles', () => {
             theme_spec: THEME_PRESETS.economist.spec,
         } as any) as any;
 
-        expect(axisTitle(spec, 'x')).not.toBeNull();
-        expect(spec.title.subtitle).toBeUndefined();
+        expect(axisTitle(spec, 'x')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Life expectancy (years)']);
     });
 
-    it('keeps rank named on its own axis', () => {
+    it('keeps rank named in the subtitle', () => {
         const spec = assembleVegaLite({
             data: { values: [
                 { Games: 2012, Country: 'United States', Rank: 1 },
@@ -310,8 +439,8 @@ describe('axis titles', () => {
             theme_spec: THEME_PRESETS.economist.spec,
         } as any) as any;
 
-        expect(axisTitle(spec, 'y')).not.toBeNull();
-        expect(spec.title.subtitle).toBeUndefined();
+        expect(axisTitle(spec, 'y')).toBeNull();
+        expect(spec.title.subtitle).toEqual(['Rank']);
     });
 });
 
@@ -495,6 +624,43 @@ describe('a headline wider than its block', () => {
     it('takes the lines it gains out of the plot, not out of the canvas', () => {
         const plot = (s: any) => s.config?.view?.continuousHeight;
         expect(plot(titled(LONG))).toBeLessThan(plot(titled('Rain keeps falling')));
+    });
+});
+
+describe('subtitle fitting', () => {
+    it.each([
+        { shortLabels: false, extra: '', fits: true },
+        { shortLabels: true, extra: '', fits: false },
+        { shortLabels: false, extra: ', including the complete set of comparable observations recorded in both survey periods', fits: false },
+    ])('uses the category-label gutter before wrapping a horizontal bar subtitle ($shortLabels / fits: $fits)', ({ shortLabels, extra, fits }) => {
+        const subtitle = `All available items with positive prices in both months${extra}`;
+        const spec: any = assembleVegaLite({
+            data: { values: [
+                { Item: 'Bananas, per lb.', yoy_change_pct: 8.8 },
+                { Item: 'Bread, white, pan, per lb.', yoy_change_pct: -5.6 },
+                { Item: 'Chicken, fresh, whole, per lb.', yoy_change_pct: 4.4 },
+                { Item: 'Eggs, grade A, large, per doz.', yoy_change_pct: 12 },
+                { Item: 'Electricity per KWH', yoy_change_pct: 7.3 },
+                { Item: 'Gasoline, unleaded regular, per gallon', yoy_change_pct: -6.4 },
+                { Item: 'Ground chuck, 100% beef, per lb.', yoy_change_pct: 17.5 },
+                { Item: 'Milk, fresh, whole, fortified, per gal.', yoy_change_pct: 3.1 },
+                { Item: 'Oranges, Navel, per lb.', yoy_change_pct: 3.9 },
+                { Item: 'Tomatoes, field grown, per lb.', yoy_change_pct: -3.6 },
+                { Item: 'Utility (piped) gas per therm', yoy_change_pct: 16.6 },
+            ].map((row, index) => shortLabels ? { ...row, Item: `Item ${index + 1}` } : row) },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                title: 'Consumer price changes from August 2024 to August 2025',
+                subtitle,
+                encodings: { x: 'yoy_change_pct', y: 'Item' },
+                baseSize: { width: shortLabels ? 180 : 300, height: 400 },
+                ...(shortLabels ? { canvasSize: { width: 180, height: 600 } } : {}),
+            },
+            theme_spec: 'datawrapper',
+        });
+        expect(spec.title.subtitle.join(' ')).toBe(`${subtitle}; yoy_change_pct`);
+        if (fits) expect(spec.title.subtitle).toHaveLength(1);
+        else expect(spec.title.subtitle.length).toBeGreaterThan(1);
     });
 });
 

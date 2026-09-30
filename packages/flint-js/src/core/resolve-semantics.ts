@@ -47,6 +47,41 @@ import {
     type SemanticAnnotation,
 } from './field-semantics';
 
+export function resolveEncodingSort(
+    encoding: { sortBy?: unknown; sortOrder?: unknown },
+    channel: string,
+    encodings: Record<string, unknown>,
+    dataFields: ReadonlySet<string>,
+): { kind: 'channel'; channel: 'x' | 'y' | 'color' } | { kind: 'field'; field: string }
+    | { kind: 'values'; values: (string | number | boolean)[] } | undefined {
+    if (encoding.sortOrder !== undefined && encoding.sortOrder !== 'ascending' && encoding.sortOrder !== 'descending') {
+        throw new Error(`encodings.${channel}.sortOrder must be "ascending" or "descending".`);
+    }
+    const sortBy = encoding.sortBy;
+    if (sortBy === undefined) return;
+    const invalid = () => new Error(`encodings.${channel}.sortBy must name an existing data field, a mapped channel (x, y, color), or a JSON category-order array; received ${JSON.stringify(sortBy)}.`);
+    if (typeof sortBy !== 'string' || !sortBy.trim()) throw invalid();
+    if (sortBy === 'x' || sortBy === 'y' || sortBy === 'color') {
+        const binding = encodings[sortBy];
+        const targets = Array.isArray(binding) ? binding : [binding];
+        if (!targets.some(target => typeof target === 'string' ? target.length > 0
+            : target && typeof target === 'object' && (typeof target.field === 'string' || target.aggregate === 'count'))) {
+            throw new Error(`encodings.${channel}.sortBy: channel "${sortBy}" must be mapped to a field or count aggregation.`);
+        }
+        return { kind: 'channel', channel: sortBy };
+    }
+    if (dataFields.has(sortBy)) return { kind: 'field', field: sortBy };
+    let values: unknown;
+    try {
+        values = JSON.parse(sortBy);
+    } catch {
+        throw invalid();
+    }
+    if (!Array.isArray(values) || !values.every(value => typeof value === 'string'
+        || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value)))) throw invalid();
+    return { kind: 'values', values };
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers (moved from assemble.ts)
 // ---------------------------------------------------------------------------
@@ -473,7 +508,7 @@ export function resolveChannelSemantics(
 
         // Ordinal sort order (canonical ordering for months, days, quarters, etc.)
         if (cs.type === 'ordinal' || cs.type === 'nominal') {
-            if (!encoding.sortOrder && !encoding.sortBy) {
+            if (encoding.sortBy === undefined) {
                 const ordinalSort = inferOrdinalSortOrder(semanticType, fieldValues);
                 if (ordinalSort) {
                     cs.ordinalSortOrder = ordinalSort;

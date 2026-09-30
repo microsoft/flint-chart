@@ -161,6 +161,12 @@ describe('naming a house Flint ships', () => {
         expect(ink.structure?.zero).toBe(ink.structure?.axis);
         expect(ink.structure?.zero).not.toBe(ink.accent);
     });
+
+    it('emphasizes McKinsey values with weight rather than a larger size', () => {
+        const typography = THEME_PRESETS.mckinsey.spec.type!;
+        expect(typography.valueLabel?.size).toBe(typography.axisLabel?.size);
+        expect(typography.valueLabel?.weight).toBe('semibold');
+    });
 });
 
 describe('cartoon mark character', () => {

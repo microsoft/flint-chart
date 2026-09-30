@@ -25,6 +25,7 @@ import type {
 } from '../core/types';
 import { isRegistered } from '../core/type-registry';
 import { toTypeString } from '../core/field-semantics';
+import { resolveEncodingSort } from '../core/resolve-semantics';
 import { assembleVegaLite } from '../vegalite/assemble';
 import { resolveInteractionSpec } from '../interactive/spec/resolve';
 import { admitInteractions } from '../interactive/spec/admission';
@@ -178,6 +179,13 @@ function validateEncodings(
 
     const dataFields = new Set(rows.flatMap((row) => Object.keys(row)));
     for (const [channel, encoding] of entries) {
+        for (const entry of Array.isArray(encoding) ? encoding : [encoding]) {
+            if (!isRecord(entry)) continue;
+            const sort = resolveEncodingSort(entry, channel, encodings, dataFields);
+            if (sort?.kind === 'field' && backend && backend !== 'vegalite') {
+                throw new Error(`chart_spec.encodings.${channel}.sortBy: raw field-name sorting is supported by vegalite; for ${backend}, bind the sort field to a supported measure channel and sort by that channel.`);
+            }
+        }
         for (const field of encodingFields(encoding)) {
             if (!dataFields.has(field)) {
                 throw new Error(

@@ -144,6 +144,52 @@ describe('word-wrapped categorical axis labels', () => {
     expect(spec.height.step).toBeLessThanOrEqual(48);
   });
 
+  it.each([240, 480, 900].flatMap(width => [false, true].map(horizontal => ({ width, horizontal }))))('fits wrapped labels at the scaled theme size ($width / horizontal: $horizontal)', async ({ width, horizontal }) => {
+    const categories = [`${teams[0]} Olympic delegation`, ...teams.slice(1)];
+    const input = barInput(categories, horizontal);
+    input.chart_spec.baseSize.width = width;
+    const spec: any = assembleVegaLite({ ...input, theme_spec: 'mckinsey' });
+    const axis = horizontal ? spec.config.axisY : spec.config.axisX;
+    const size = spec._theme.decisions.dataLabels.text.fontSize;
+    if (width < 300) expect(size).toBeLessThan(10);
+    else expect(size).toBeGreaterThan(10);
+    expect(axis.labelExpr).toBeDefined();
+    expect(axis.labelFontSize).toBe(size);
+    expect(axis.labelLineHeight).toBe(Math.ceil(size * 1.2));
+    const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+    try {
+      await view.runAsync();
+      const labels: any[] = [];
+      const visit = (item: any): void => {
+        if (item.mark?.role === 'axis-label' && categories.includes(item.datum?.value)) labels.push(item);
+        for (const child of item.items ?? []) visit(child);
+      };
+      visit((view.scenegraph() as any).root);
+      expect(labels).toHaveLength(categories.length);
+      expect(labels.every(item => item.fontSize === size)).toBe(true);
+      expect(labels.some(item => Array.isArray(item.text) && item.text.length === 2)).toBe(true);
+      if (horizontal) {
+        const ordered = labels.sort((first, second) => first.bounds.y1 - second.bounds.y1);
+        for (let index = 1; index < ordered.length; index++) {
+          expect(ordered[index].bounds.y1 - ordered[index - 1].bounds.y2).toBeGreaterThanOrEqual(spec.height.step * 0.25 - 1e-6);
+        }
+      }
+    } finally {
+      view.finalize();
+    }
+  });
+
+  it('preserves a custom category/value size hierarchy when wrapping', () => {
+    const spec: any = assembleVegaLite({
+      ...barInput(teams, true),
+      theme_spec: { extends: 'mckinsey', type: { axisLabel: { size: 16 }, valueLabel: { size: 12 } } },
+    });
+    expect(spec.config.axisY.labelExpr).toBeDefined();
+    expect(spec.config.axisY.labelFontSize).toBeGreaterThan(16);
+    expect(spec.config.axisY.labelFontSize).toBeGreaterThan(spec._theme.decisions.dataLabels.text.fontSize);
+    expect(spec.config.axisY.labelLineHeight).toBe(Math.ceil(spec.config.axisY.labelFontSize * 1.2));
+  });
+
   it.each([80, 160])('keeps a readable Y gutter on a %spx plot', (width) => {
     const input = barInput(['International Infrastructure Development and Regional Public Transportation Modernization Programme', ...teams.slice(1)], true);
     input.chart_spec.baseSize.width = width;
@@ -163,7 +209,7 @@ describe('word-wrapped categorical axis labels', () => {
   });
 
   it.each([undefined, 'nyt', 'economist', 'swiss'])('centers wrapped Y label blocks with breathing room (%s)', async (theme) => {
-    const labels = Array.from({ length: 16 }, (_, index) => index % 3 === 2
+    const labels = Array.from({ length: 12 }, (_, index) => index % 3 === 2
       ? `Team ${index + 1}` : `Team ${index + 1} Olympic delegation at Paris 2024`);
     const spec: any = assembleVegaLite({ ...barInput(labels, true), theme_spec: theme });
     expect(spec.config.axisY.labelExpr).toBeDefined();
@@ -186,7 +232,7 @@ describe('word-wrapped categorical axis labels', () => {
       }
       const ordered = items.sort((first, second) => first.bounds.y1 - second.bounds.y1);
       for (let index = 1; index < ordered.length; index++) {
-        expect(ordered[index].bounds.y1 - ordered[index - 1].bounds.y2).toBeGreaterThanOrEqual(4 - 1e-6);
+        expect(ordered[index].bounds.y1 - ordered[index - 1].bounds.y2).toBeGreaterThanOrEqual(spec.height.step * 0.25 - 1e-6);
       }
     } finally {
       view.finalize();
@@ -329,7 +375,7 @@ describe('faceted labels across themes', () => {
       const visit = (item: any, offsetY = 0): void => {
         if (item.mark?.role === 'mark' && item.mark.marktype === 'symbol') points.push(item);
         if (item.mark?.role === 'axis-label') axes.add(item.mark);
-        if (item.mark?.role === 'axis-title' && item.text === 'Revenue' && item.angle === 0) {
+        if (item.mark?.role === 'title-subtitle' && [item.text].flat().join(' ') === 'Revenue') {
           titles.push({ top: offsetY + item.bounds.y1, bottom: offsetY + item.bounds.y2 });
         }
         if (item.mark?.role === 'scope' && item.datum?.Region) {
@@ -376,6 +422,31 @@ describe('faceted labels across themes', () => {
 });
 
 describe('band label pressure decisions', () => {
+  it('fills the shared final label width instead of balancing each label', () => {
+    expect(fitTwoLineLabels([
+      'North American regional service offices', 'South European regional service offices', 'West',
+    ], 10, 23, false, text => text.length)).toEqual({
+      lines: [['North American regional', 'service offices'], ['South European regional', 'service offices'], ['West']],
+      width: 23,
+    });
+    expect(fitTwoLineLabels(['North American regional offices'], 10, 18, false, text => text.length)?.lines)
+      .toEqual([['North American', 'regional offices']]);
+  });
+
+  it('moves one word down to avoid a widow within the final label box', () => {
+    expect(fitTwoLineLabels(['Oranges, Navel, per lb.'], 10, 19, false, text => text.length)?.lines)
+      .toEqual([['Oranges, Navel,', 'per lb.']]);
+    expect(fitTwoLineLabels(['Regional transportation offices'], 10, 23, false, text => text.length)?.lines)
+      .toEqual([['Regional', 'transportation offices']]);
+  });
+
+  it('keeps an unavoidable widow instead of overflowing or adding a third line', () => {
+    expect(fitTwoLineLabels(['North America transportation'], 10, 14, false, text => text.length)?.lines)
+      .toEqual([['North America', 'transportation']]);
+    expect(fitTwoLineLabels(['Starting Balance'], 10, 8, false, text => text.length)?.lines)
+      .toEqual([['Starting', 'Balance']]);
+  });
+
   it.each([44, 49])('keeps a two-line candidate when its first word exceeds %spx', (width) => {
     expect(fitTwoLineLabels(['Starting Balance'], 10, width, true)).toEqual({
       lines: [['Starting', 'Balance']], width,
@@ -393,16 +464,28 @@ describe('band label pressure decisions', () => {
     baseSpan: 240, maxSpan: 360, gutterLimit: 100, baselineLimit: 100, elasticity: 0.5,
   };
 
+  it.each([10, 13, 18])('reserves a quarter of each row between wrapped labels at %spx', (fontSize) => {
+    const result = computeBandLabelLayout({
+      ...yInput, fontSize, step: fontSize * 2,
+      baseSpan: fontSize * 24, maxSpan: fontSize * 40,
+    });
+    expect(result).not.toBeNull();
+    expect(result!.lineHeight).toBe(Math.ceil(fontSize * 1.2));
+    expect(result!.lines.some(row => row.length === 2)).toBe(true);
+    expect(fontSize + result!.lineHeight).toBeLessThanOrEqual(result!.step * 0.75);
+    expect(result!.step * labels.length).toBeLessThanOrEqual(fontSize * 40);
+  });
+
   it('spends modest extra band height to wrap Y labels', () => {
     const result = computeBandLabelLayout(yInput);
     expect(result).not.toBeNull();
     expect(result!.step).toBeGreaterThan(20);
-    expect(result!.step * labels.length).toBeLessThan(360);
+    expect(result!.step * labels.length).toBeLessThanOrEqual(360);
     expect(result!.lines.every((row) => row.length <= 2)).toBe(true);
-    expect(result!.lineHeight + yInput.fontSize + 4).toBeLessThanOrEqual(result!.step);
+    expect(result!.lineHeight + yInput.fontSize).toBeLessThanOrEqual(result!.step * 0.75);
   });
 
-  it.each([240, 300])('declines Y wrapping when the height ceiling cannot fit two lines and their gap (%s)', (maxSpan) => {
+  it.each([240, 300, 348])('declines Y wrapping when the height ceiling cannot fit two lines and their gap (%s)', (maxSpan) => {
     expect(computeBandLabelLayout({ ...yInput, maxSpan })).toBeNull();
   });
 
@@ -419,10 +502,10 @@ describe('band label pressure decisions', () => {
   it('does not charge a Y wrapping proposal for stretching already in the baseline', () => {
     const result = computeBandLabelLayout({
       ...yInput, labels: ['United States Olympic delegation at Paris 2024', ...Array.from({ length: 15 }, (_, index) => `Team ${index}`)],
-      step: 28, baseSpan: 270, maxSpan: 480,
+      step: 30, baseSpan: 270, maxSpan: 480,
     });
     expect(result).not.toBeNull();
-    expect(result!.step).toBe(28);
+    expect(result!.step).toBe(30);
     expect(result!.lines[0]).toHaveLength(2);
   });
 });

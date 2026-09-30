@@ -7,10 +7,70 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { assembleECharts, assembleChartjs } from '../src';
+import { assembleECharts, assembleChartjs, assembleVegaLite } from '../src';
+import { validateChart, validateChartInput } from '../src/validate';
+import { compile } from 'vega-lite';
+import { parse, View } from 'vega';
 
 const CATS = [{ Cat: 'A', Val: 30 }, { Cat: 'B', Val: 90 }, { Cat: 'C', Val: 50 }];
 const CAT_TYPES = { Cat: 'Category', Val: 'Quantity' } as const;
+
+describe('Vega-Lite explicit category sorting', () => {
+  const input = (sort: Record<string, unknown>) => ({
+    data: { values: [
+      { month: 'Mar', month_number: 3, value: 102 },
+      { month: 'Jan', month_number: 1, value: 100 },
+      { month: 'Feb', month_number: 2, value: 101 },
+    ] },
+    semantic_types: { month: 'Month', value: 'Quantity' },
+    chart_spec: {
+      chartType: 'Line Chart',
+      encodings: { x: { field: 'month', type: 'ordinal' as const, ...sort }, y: 'value' },
+    },
+  });
+
+  it.each([
+    { sort: { sortBy: 'month_number' }, expected: ['Jan', 'Feb', 'Mar'] },
+    { sort: { sortBy: 'month_number', sortOrder: 'ascending' }, expected: ['Jan', 'Feb', 'Mar'] },
+    { sort: { sortBy: 'month_number', sortOrder: 'descending' }, expected: ['Mar', 'Feb', 'Jan'] },
+    { sort: { sortOrder: 'ascending' }, expected: ['Jan', 'Feb', 'Mar'] },
+    { sort: { sortOrder: 'descending' }, expected: ['Mar', 'Feb', 'Jan'] },
+    { sort: { sortBy: 'month', sortOrder: 'ascending' }, expected: ['Feb', 'Jan', 'Mar'] },
+    { sort: { sortBy: 'x', sortOrder: 'ascending' }, expected: ['Feb', 'Jan', 'Mar'] },
+    { sort: { sortBy: 'y' }, expected: ['Mar', 'Feb', 'Jan'] },
+    { sort: { sortBy: '["Mar","Jan","Feb"]' }, expected: ['Mar', 'Jan', 'Feb'] },
+    { sort: { sortBy: '["Mar","Jan","Feb"]', sortOrder: 'descending' }, expected: ['Feb', 'Jan', 'Mar'] },
+  ])('renders the requested category order for $sort', async ({ sort, expected }) => {
+    const chart = input(sort);
+    expect(validateChart(chart, 'vegalite').valid).toBe(true);
+    const view = new View(parse(compile(assembleVegaLite(chart)).spec), { renderer: 'none' });
+    try {
+      await view.runAsync();
+      expect(view.scale('x').domain()).toEqual(expected);
+    } finally {
+      view.finalize();
+    }
+  });
+
+  it.each(['missing_field', '{"field":"month_number"}', '[invalid', '[null]', '42', '', 'color', null, 42])('rejects invalid Month sorting: %s', sortBy => {
+    const chart = input({ sortBy, sortOrder: 'ascending' });
+    const result = validateChart(chart, 'vegalite');
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(error => /sortBy/.test(error.message) && /field|channel|array/.test(error.message))).toBe(true);
+    expect(() => validateChartInput(chart, 'vegalite')).toThrow(/sortBy/);
+    expect(() => assembleVegaLite(chart)).toThrow(/sortBy/);
+  });
+
+  it('rejects an unsupported sort direction before rendering', () => {
+    const chart = input({ sortOrder: 'sideways' });
+    expect(() => validateChartInput(chart, 'vegalite')).toThrow(/sortOrder.*ascending.*descending/);
+    expect(() => assembleVegaLite(chart)).toThrow(/sortOrder.*ascending.*descending/);
+  });
+
+  it.each(['echarts', 'chartjs', 'plotly'] as const)('reports unsupported field sorting for %s', backend => {
+    expect(() => validateChartInput(input({ sortBy: 'month_number' }), backend)).toThrow(/sortBy.*vegalite.*channel/);
+  });
+});
 
 function ecBandOrder(spec: any): string[] {
   const cat = [spec.xAxis, spec.yAxis].find((ax) => ax?.type === 'category');

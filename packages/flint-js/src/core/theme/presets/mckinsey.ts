@@ -134,7 +134,7 @@ export const mckinsey: ThemePreset = {
                 "size": "text.100"
             },
             "valueLabel": {
-                "size": "text.200",
+                "size": "text.100",
                 "weight": "semibold",
                 "color": "#051c2c"
             }

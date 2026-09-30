@@ -768,7 +768,11 @@ export function fitTwoLineLabels(labels: string[], fontSize: number, maxWidth: n
             const candidate = [label.slice(0, match.index), label.slice(match.index + match[0].length)];
             if (candidate.some((line) => !line)) continue;
             const candidateWidth = Math.max(...candidate.map(widthOf));
-            if (candidateWidth < bestWidth) {
+            const avoidsWidow = /\s/.test(candidate[1].trim());
+            const bestAvoidsWidow = best && /\s/.test(best[1].trim());
+            if (candidateWidth <= maxWidth
+                ? bestWidth > maxWidth || avoidsWidow || !bestAvoidsWidow
+                : bestWidth > maxWidth && candidateWidth < bestWidth) {
                 best = candidate;
                 bestWidth = candidateWidth;
             }
@@ -820,9 +824,13 @@ export function computeBandLabelLayout(input: {
     const count = labels.length;
     const baseStep = baseSpan / count;
     const preferredWidth = Math.min(Math.max(...demands), gutterLimit);
+    const wrappedLabelBandFraction = 0.75;
+    const minimumYStepForLines = (rows: number) => rows > 1
+        ? Math.ceil((fontSize + (rows - 1) * lineHeight) / wrappedLabelBandFraction)
+        : fontSize + 4;
     const preferredDemands = axis === 'x'
         ? demands.map((width) => width + 6)
-        : widths.map((width) => (width > preferredWidth ? lineHeight * 2 : lineHeight) + 6);
+        : widths.map((width) => width > preferredWidth ? minimumYStepForLines(2) : lineHeight + 6);
     const excess = preferredDemands.reduce((sum, demand) => sum + Math.min(baseStep, Math.max(0, demand - baseStep)), 0) / count;
     const preferredStep = Math.max(step, Math.min(Math.max(...preferredDemands), baseStep) + excess);
     const solved = computeAxisStep(count, 0, baseSpan, {
@@ -831,14 +839,14 @@ export function computeBandLabelLayout(input: {
         elasticity,
         maxStretch: Math.max(1, maxSpan / baseSpan),
     });
-    const minimumYStep = fontSize + (widths.some(width => width > preferredWidth) ? lineHeight : 0) + 4;
+    const minimumYStep = minimumYStepForLines(widths.some(width => width > preferredWidth) ? 2 : 1);
     const proposedStep = Math.min(maxSpan / count, Math.max(step, solved.step, axis === 'y' ? minimumYStep : 0));
     const width = axis === 'x' ? proposedStep - 6 : preferredWidth;
     if (width < fontSize * 4 && widths.some((labelWidth) => labelWidth > width)) return null;
     const fit = fitTwoLineLabels(labels, fontSize, width, true);
     const lines = fit?.lines ?? labels.map((label) => [label]);
     const rows = Math.max(...lines.map((parts) => parts.length));
-    if (axis === 'y' && (rows - 1) * lineHeight + fontSize + 4 > proposedStep) return null;
+    if (axis === 'y' && minimumYStepForLines(rows) > proposedStep) return null;
     const retainedWidth = (text: string, limit: number) => widthOf(text) <= limit
         ? widthOf(text) : Math.max(0, limit - fontSize);
     const loss = (parts: string[][], limit: number) => parts.reduce((sum, row, index) => {
