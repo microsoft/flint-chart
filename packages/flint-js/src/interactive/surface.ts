@@ -21,6 +21,7 @@ function nextChartId(): string {
 
 const RAIL_THICKNESS = 8;
 const RAIL_GAP = 9;
+const RAIL_ROW_GAP = 6;
 const RAIL_TRACK_COLOR = 'rgba(31, 41, 55, 0.035)';
 const RAIL_THUMB_COLOR = 'rgba(31, 41, 55, 0.14)';
 const MIN_HORIZONTAL_RAIL_INSET = 8;
@@ -198,7 +199,7 @@ export function mountInteractiveChartSurface(
     root.dataset.flintChartId = chartId;
     applyStyles(root, {
         display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gridTemplateRows: 'minmax(0, auto) auto',
-        alignItems: 'stretch', rowGap: '6px', minWidth: '0',
+        alignItems: 'stretch', minWidth: '0',
     });
     chart.dataset.flintChart = '';
     // The chart keeps its compiled width; handling any overflow is the host's decision.
@@ -252,6 +253,7 @@ export function mountInteractiveChartSurface(
             if (viewport.channel === 'x') {
                 rail.element.style.gridColumn = '1';
                 rail.element.style.gridRow = '2';
+                root.style.rowGap = `${RAIL_ROW_GAP}px`;
             } else {
                 rail.element.style.gridColumn = '2';
                 rail.element.style.gridRow = '1';
