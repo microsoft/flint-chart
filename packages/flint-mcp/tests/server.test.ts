@@ -226,6 +226,18 @@ describe('MCP server', () => {
     expect(skillText).toContain('bare `ThemeSpec`');
   });
 
+  it('exposes the bundled interaction-author skill as a resource', async () => {
+    const { resources } = await client.listResources();
+    const skill = resources.find((r) => r.uri === 'flint://interaction-skill');
+    expect(skill?.mimeType).toBe('text/markdown');
+    expect(skill?.annotations?.audience).toContain('assistant');
+
+    const read = await client.readResource({ uri: 'flint://interaction-skill' });
+    const skillText = resourceText(read.contents[0]);
+    expect(skillText).toContain('# Flint interaction authoring');
+    expect(skillText).toContain('bare `interaction_spec`');
+  });
+
   it('registers the create_chart_view MCP App tool linked to its UI resource', async () => {
     const { tools } = await client.listTools();
     const view = tools.find((t) => t.name === 'create_chart_view');
@@ -272,6 +284,19 @@ describe('MCP server', () => {
     if (resourceMessage?.content.type === 'resource') {
       expect(resourceMessage.content.resource.uri).toBe('flint://theme-skill');
       expect(resourceText(resourceMessage.content.resource)).toContain('ThemeSpec');
+    }
+  });
+
+  it('exposes a prompt that embeds the interaction-author skill', async () => {
+    const { prompts } = await client.listPrompts();
+    expect(prompts.map((p) => p.name)).toContain('author_flint_interaction');
+
+    const prompt = await client.getPrompt({ name: 'author_flint_interaction' });
+    const resourceMessage = prompt.messages.find((m) => m.content.type === 'resource');
+    expect(resourceMessage?.content.type).toBe('resource');
+    if (resourceMessage?.content.type === 'resource') {
+      expect(resourceMessage.content.resource.uri).toBe('flint://interaction-skill');
+      expect(resourceText(resourceMessage.content.resource)).toContain('interaction_spec');
     }
   });
 

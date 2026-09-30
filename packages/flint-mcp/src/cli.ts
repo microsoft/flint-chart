@@ -47,11 +47,11 @@ Tools:
   list_chart_types, list_themes
 
 Resources:
-  flint://agent-skill, flint://theme-skill, flint://chart-types,
-  ui://flint-chart/chart-view.html
+  flint://agent-skill, flint://theme-skill, flint://interaction-skill,
+  flint://chart-types, ui://flint-chart/chart-view.html
 
 Prompts:
-  author_flint_chart, author_flint_theme
+  author_flint_chart, author_flint_theme, author_flint_interaction
 
 Example MCP client config:
   { "command": "npx", "args": ["-y", "flint-chart-mcp"] }

@@ -28,8 +28,10 @@ export { VERSION };
 
 export const AGENT_SKILL_RESOURCE_URI = 'flint://agent-skill';
 export const THEME_SKILL_RESOURCE_URI = 'flint://theme-skill';
+export const INTERACTION_SKILL_RESOURCE_URI = 'flint://interaction-skill';
 const AGENT_SKILL_ASSET = new URL('../assets/flint-chart-author.SKILL.md', import.meta.url);
 const THEME_SKILL_ASSET = new URL('../assets/flint-theme-author.SKILL.md', import.meta.url);
+const INTERACTION_SKILL_ASSET = new URL('../assets/flint-interaction-author.SKILL.md', import.meta.url);
 
 /** URI linking the chart-view tool to its bundled UI resource. */
 export const CHART_VIEW_RESOURCE_URI = 'ui://flint-chart/chart-view.html';
@@ -47,6 +49,10 @@ function readAgentSkill(): string {
 
 function readThemeSkill(): string {
   return readFileSync(THEME_SKILL_ASSET, 'utf8');
+}
+
+function readInteractionSkill(): string {
+  return readFileSync(INTERACTION_SKILL_ASSET, 'utf8');
 }
 
 /** Read the bundled chart-view HTML, tolerating a not-yet-built asset. */
@@ -151,7 +157,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'asks to customize it. Before authoring chart specs, read the ' +
         'flint://agent-skill resource or use the author_flint_chart prompt. ' +
         'When the user asks to create, translate, or substantially customize a ' +
-        'ThemeSpec, read flint://theme-skill or use author_flint_theme.' +
+        'ThemeSpec, read flint://theme-skill or use author_flint_theme. ' +
+        'When the user asks for behaviour on a chart, names an intent such as ' +
+        'explore or compare, or adds behaviour to a chart that already exists, ' +
+        'read flint://interaction-skill or use author_flint_interaction.' +
         dataAccessNote(options),
     },
   );
@@ -499,6 +508,62 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
               'Use these Flint instructions when creating or reviewing a ThemeSpec. ' +
               'Use list_themes when preset discovery or preset-specific guidance is needed. ' +
               'Return the bare reusable ThemeSpec and do not change chart semantics.',
+          },
+        },
+      ],
+    }),
+  );
+
+  server.registerResource(
+    'interaction-skill',
+    INTERACTION_SKILL_RESOURCE_URI,
+    {
+      title: 'Flint interaction-author skill',
+      description:
+        'Bundled instructions for adding behaviour to a chart: a gesture or an intent mapped to interaction presets, as one valid interaction_spec.',
+      mimeType: 'text/markdown',
+      annotations: { audience: ['assistant'], priority: 1 },
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: 'text/markdown',
+          text: readInteractionSkill(),
+        },
+      ],
+    }),
+  );
+
+  server.registerPrompt(
+    'author_flint_interaction',
+    {
+      title: 'Author Flint interactions',
+      description:
+        'Load the Flint interaction-author skill before adding behaviour to a chart, at authoring time or after the chart exists.',
+    },
+    async () => ({
+      description: 'Use the bundled Flint interaction-author skill to produce a valid interaction_spec.',
+      messages: [
+        {
+          role: 'user' as const,
+          content: {
+            type: 'resource' as const,
+            resource: {
+              uri: INTERACTION_SKILL_RESOURCE_URI,
+              mimeType: 'text/markdown',
+              text: readInteractionSkill(),
+            },
+          },
+        },
+        {
+          role: 'user' as const,
+          content: {
+            type: 'text' as const,
+            text:
+              'Use these Flint instructions when adding behaviour to a chart. ' +
+              'Use list_chart_types to confirm the presets the chart type supports. ' +
+              'Return the bare interaction_spec and do not change the chart spec.',
           },
         },
       ],

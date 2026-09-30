@@ -21,6 +21,13 @@ the entries below describe implemented changes, not the remaining checklist.
 - A reproducible Copilot Canvas plugin build (`npm run build:copilot-plugin`)
   bundles the current chart UI and authoring skill, aligns the plugin version
   with the npm packages, and pins the MCP server to that release.
+- `flint-interaction-author`, a third agent skill beside the chart and theme
+  skills. It maps a named gesture or an intent (explore, compare, analyse) to
+  interaction presets and returns one valid `interaction_spec`, at authoring
+  time or after the chart exists. The MCP server serves it as
+  `flint://interaction-skill` and the prompt `author_flint_interaction`. The
+  chart-author skill keeps a short `interaction_spec` section and points to it.
+  `npm run sync:skills` copies the three skills into the MCP assets.
 - Viewport changes a gesture commits animate by default. A `navigate` or
   `brush-zoom` reset flies home, and a brush zoom tweens into the brushed
   region, over 400 ms on every Vega-Lite chart, not only on projected maps.

@@ -4,6 +4,8 @@
 
 每种行为都来自一个**预设（preset）**：Flint 内置的、有名字的交互，例如 `click-highlight` 或 `navigate`。你列出想要的预设和各自的选项，Flint 挂载图表能够支持的那些，并告诉你哪些无法支持。
 
+> 面向 agent：[interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) 把一个手势或一个意图映射到预设，并返回一个有效的 `interaction_spec`。MCP 服务器以 `flint://interaction-skill` 提供它。
+
 > `interaction_spec` 只影响 Vega-Lite 交互层。装配器和静态后端不会读取它；对这些后端，`validateChart` 会报告该字段被忽略。
 
 ## 结构
@@ -76,9 +78,8 @@
 
 每种图表类型声明它提供的属性：可解析为数据的标记、拖动区域、可导航的坐标轴、可重排的坐标轴、离散图例、离散坐标轴标签、索引轴。每个预设声明它需要的属性。图表类型提供了预设所需的全部属性时，该预设即受支持。
 
-三个地方可以查看结果：
+两个地方可以查看结果：
 
-- [Vega-Lite 图表参考](/documentation/reference-vegalite) 为每种图表类型打印一行 **交互**。
 - MCP 工具 `list_chart_types` 为每种图表类型返回 `interactions`。
 - 交互实验室的 **Coverage** 页签展示每种图表类型对每个预设的支持情况。
 

@@ -13,6 +13,7 @@
     "build:mcp": "npm run build -w packages/flint-mcp",
     "build:copilot-plugin": "npm run build && node scripts/sync-copilot-plugin.mjs",
     "check:copilot-plugin": "node scripts/sync-copilot-plugin.mjs --check",
+    "sync:skills": "node scripts/sync-skills.mjs",
     "typecheck": "npm run build:js && npm run typecheck:js && npm run typecheck:mcp",
     "typecheck:js": "npm run typecheck -w packages/flint-js",
     "typecheck:mcp": "npm run typecheck -w packages/flint-mcp",

@@ -18,7 +18,6 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 import type { ChartTemplateDef, ChartPropertyDef } from '../packages/flint-js/src/core/types';
-import { supportedInteractionPresets } from '../packages/flint-js/src/core/interaction-spec';
 import type { ExcelTemplateDef } from '../packages/flint-js/src/excel/templates/types';
 import { vlTemplateDefs } from '../packages/flint-js/src/vegalite/templates/index';
 import { ecTemplateDefs } from '../packages/flint-js/src/echarts/templates/index';
@@ -310,11 +309,6 @@ function renderChart(def: ChartTemplateDef): string {
     const channels = (def.channels ?? []).map((c) => `\`${c}\``).join(', ') || '_none_';
     lines.push(`**Encoding channels:** ${channels}`);
     lines.push('');
-    if (def.interactionSupport) {
-        const presets = supportedInteractionPresets(def.interactionSupport).map((type) => `\`${type}\``).join(', ') || '_none_';
-        lines.push(`**Interactions:** ${presets}`);
-        lines.push('');
-    }
 
     const props = def.properties ?? [];
     if (props.length === 0) {
@@ -363,11 +357,6 @@ function renderBackend(spec: BackendSpec): string {
     out.push(
         '- **Options** — template-specific `chart_spec.chartProperties` keys, including control type, domain, default, availability, and description.',
     );
-    if (spec.name.toLowerCase().includes('vega')) {
-        out.push(
-            '- **Interactions** — the presets the chart type supports in `interaction_spec`. The data can still remove one at mount: a legend needs a bound discrete legend channel, navigation needs a continuous axis. See the [interaction guide](/documentation/interaction-spec).',
-        );
-    }
     out.push('');
     out.push('Use the chart type name exactly as shown in `chart_spec.chartType`.');
     out.push('');
@@ -410,10 +399,6 @@ function renderChartZh(def: ChartTemplateDef): string {
     lines.push(`### ${icon ? `![](${icon}) ` : ''}${def.chart}`, '');
     const channels = (def.channels ?? []).map((channel) => `\`${channel}\``).join(', ') || '_无_';
     lines.push(`**编码通道：** ${channels}`, '');
-    if (def.interactionSupport) {
-        const presets = supportedInteractionPresets(def.interactionSupport).map((type) => `\`${type}\``).join(', ') || '_无_';
-        lines.push(`**交互：** ${presets}`, '');
-    }
     const props = def.properties ?? [];
     if (props.length === 0) return [...lines, '_无模板专用参数。_', ''].join('\n');
     lines.push('| 参数 | 控件 | 取值范围 | 默认值 | 可用性 | 说明 |', '|---|---|---|---|---|---|');

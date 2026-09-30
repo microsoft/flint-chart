@@ -72,10 +72,12 @@ self-contained HTML bundle served as the
 |---|---|---|
 | `flint://agent-skill` | resource | Bundled Flint authoring instructions for generating valid `ChartAssemblyInput` specs. |
 | `flint://theme-skill` | resource | Bundled instructions for translating a visual identity into a valid reusable `ThemeSpec`. |
+| `flint://interaction-skill` | resource | Bundled instructions for adding behaviour to a chart: a gesture or an intent mapped to presets, as one valid `interaction_spec`. |
 | `flint://chart-types` | resource | Browsable chart-type catalog and encoding channels across backends. |
 | `ui://flint-chart/chart-view.html` | resource | Bundled UI for the `create_chart_view` MCP App (live chart + customization panel). |
 | `author_flint_chart` | prompt | Embeds the bundled skill so prompt-aware clients can load the chart-spec rules before tool calls. |
 | `author_flint_theme` | prompt | Embeds the theme-author skill for creating, translating, refining, or reviewing a `ThemeSpec`. |
+| `author_flint_interaction` | prompt | Embeds the interaction-author skill for adding behaviour to a chart, at authoring time or after the chart exists. |
 
 For best results, have your MCP client include `flint://agent-skill` or run the
 `author_flint_chart` prompt before asking the agent to call `create_chart_view`,
@@ -84,6 +86,11 @@ For best results, have your MCP client include `flint://agent-skill` or run the
 When creating or substantially customizing a visual theme, load
 `flint://theme-skill` or run `author_flint_theme`. Use `list_themes` separately
 to discover built-in presets and retrieve preset-specific guidance.
+
+When the user asks for behaviour on a chart, names an intent such as explore or
+compare, or adds behaviour to a chart that already exists, load
+`flint://interaction-skill` or run `author_flint_interaction`. Use
+`list_chart_types` to confirm the presets a chart type supports.
 
 Data can be provided in two ways:
 

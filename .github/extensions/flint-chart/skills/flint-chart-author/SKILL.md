@@ -17,8 +17,10 @@ or `assembleChartjs` to get a backend spec.
 - **DO** emit `chart_spec` (chart type, channel→field mapping, properties)
   and `semantic_types` (field → semantic type).
 - **DO** add `interaction_spec` when the user asks for behaviour (highlight,
-  legend toggle, pan and zoom, brush). List presets by name; see
-  "Interactions".
+  legend toggle, pan and zoom, brush), asks for an interactive chart, or the
+  session's goal is to explore the data. List presets by name; see
+  "Interactions", and load the `flint-interaction-author` skill for an intent,
+  an interactive chart with nothing named, or a combination.
 - **Reference columns by name.** How `data` itself gets bound depends on
   the situation — a URL, a host-side variable, or embedded rows (see "How
   data gets bound"). Embedding is fine for small tables; just don't
@@ -248,46 +250,38 @@ https://microsoft.github.io/flint-chart/#/documentation/theme-spec
 ## Interactions (`interaction_spec`)
 
 Add `interaction_spec` beside `chart_spec` only when the user asks for
-behaviour: highlight on click, a legend that hides series, pan and zoom, a
-brush, an annotation on click. A static image never needs it.
+behaviour, or when the goal of the session is to explore or analyse the data.
+A static image never needs it.
 
 ```json
 {
-  "chart_spec": { "chartType": "Bar Chart", "encodings": { "x": "country", "y": "gdp", "color": "region" } },
-  "interaction_spec": {
-    "interactions": [
-      { "type": "click-highlight" },
-      { "type": "legend-toggle" },
-      { "type": "navigate", "options": { "axes": "y", "pan": false, "reset": ["double-click", "escape"] } }
-    ]
-  }
+  "chart_spec": { "chartType": "Line Chart", "encodings": { "x": "date", "y": "value", "color": "series" } },
+  "interaction_spec": { "interactions": [ { "type": "inspect-index" }, { "type": "legend-toggle" } ] }
 }
 ```
 
-Rules:
+Every entry is `{ "type": <preset>, "options": { ... } }`. Take the preset
+names for the chart type from `list_chart_types` (`chartTypes[].interactions`);
+never invent one. Options nest under `options`; `id` sits on the entry.
 
-- **Presets only.** Every entry is `{ "type": <preset>, "options": { ... } }`.
-  Take the preset names for the chosen chart type from `list_chart_types`
-  (`chartTypes[].interactions`); a KPI card supports no brush, a pie chart no
-  `navigate`. Never invent a type.
-- **Options nest under `options`.** An option beside `type` is rejected.
-  `id` is optional and sits on the entry, never inside `options`.
-- **`reset`** is a list of `"click-none"`, `"double-click"`, `"escape"` on any
-  preset that keeps state. Leave it out to accept the preset's default.
-- **The data decides too.** `legend-toggle` needs a colour field with a
-  discrete legend; `navigate` needs a continuous axis; `drag-reorder` needs a
-  discrete axis. An entry the chart cannot honour is dropped with a warning
-  and the chart still renders. Run `validate_chart` to read those warnings
-  before you show the chart.
-- **Vega-Lite only.** Other backends ignore the spec.
+| the user says | preset |
+| --- | --- |
+| highlight a mark on click | `click-highlight` |
+| hide a series from the legend | `legend-toggle` |
+| pan and zoom | `navigate` |
+| drag to focus a range | `brush-x`, `brush-y`, `select` |
+| examine values on hover | `inspect`, `inspect-index` |
+| pin a note on click | `click-annotate` |
 
-Common presets: `click-highlight` (focus a mark), `click-group-focus`
-(focus its group, `groupBy`), `legend-toggle`, `navigate` (`axes`, `pan`),
-`brush-x` / `brush-y` / `select` (drag to focus an interval or area),
-`click-annotate`, `inspect` and `inspect-index` (read values on hover),
-`drag-reorder` (reorder categories).
+For an intent (explore, compare, analyse, find outliers, link charts, hand a
+click to the app), for "make it interactive" with nothing named, for a
+combination of presets, or to add behaviour to a chart that already exists,
+load the `flint-interaction-author` skill (`flint://interaction-skill` on the
+MCP server). It maps a request to presets, says which interactions lead in
+each scenario, holds the ownership rules for combinations, and reads the
+warnings.
 
-Full guide:
+Full reference:
 https://microsoft.github.io/flint-chart/#/documentation/interaction-spec
 
 ## Step 1 — pick `chartType`

@@ -4,6 +4,8 @@
 
 Every behaviour comes from a **preset**: a named interaction Flint ships, such as `click-highlight` or `navigate`. You list the presets you want, each with its own options. Flint mounts the ones the chart can honour and tells you about the ones it cannot.
 
+> For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) maps a gesture or an intent to presets and returns one valid `interaction_spec`. The MCP server serves it as `flint://interaction-skill`.
+
 > `interaction_spec` affects the Vega-Lite interactive surface only. The assemblers and the static backends leave it untouched, and `validateChart` reports it as ignored for those backends.
 
 ## Shape
@@ -76,9 +78,8 @@ A gesture resets only the interactions whose list holds it, each by its own id. 
 
 Each chart type declares the properties it offers: marks that resolve to data, a drag region, navigable axes, a reorderable axis, a discrete legend, discrete axis labels, an index axis. Each preset declares the properties it needs. A preset is supported when the chart type offers everything it needs.
 
-Three places show the answer:
+Two places show the answer:
 
-- The [Vega-Lite chart reference](/documentation/reference-vegalite) prints an **Interactions** line per chart type.
 - The MCP tool `list_chart_types` returns `interactions` per chart type.
 - The Interactions lab's **Coverage** tab shows every chart type against every preset.
 
