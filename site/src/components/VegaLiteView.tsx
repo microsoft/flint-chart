@@ -25,7 +25,20 @@ export function VegaLiteView({ spec, renderer = 'canvas', onReady }: VegaLiteVie
     // requested renderer.
     const furniture = readCanvasFurniture(spec);
     const useRenderer = furniture.length ? 'svg' : renderer;
-    embed(host, spec, { actions: false, renderer: useRenderer })
+    embed(host, spec, {
+      actions: false,
+      renderer: useRenderer,
+      patch: vegaSpec => {
+        const enableGuideTooltips = (node: any): void => {
+          for (const guide of [...(node.legends ?? []), ...(node.axes ?? [])]) {
+            if (guide.encode?.labels?.update?.tooltip) guide.encode.labels.interactive = true;
+          }
+          for (const child of node.marks ?? []) enableGuideTooltips(child);
+        };
+        enableGuideTooltips(vegaSpec);
+        return vegaSpec;
+      },
+    })
       .then((result) => {
         embeddedView = result.view;
         if (cancelled) {

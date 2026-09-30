@@ -15,6 +15,7 @@
  */
 
 import type { DesignDecisions, ThemeReport } from '../core/theme/types.js';
+import { format as formatNumber } from 'd3-format';
 import { contrastingInk, parseColor, luminance, mixHex, toHex } from '../core/theme/presence.js';
 import { CONTINUOUS_BAR_STEP_FILL, coverageSizedMarks } from './templates/utils.js';
 import { LOCAL_DODGE_LANE_FILL } from './templates/bar.js';
@@ -278,7 +279,7 @@ export function realizeThemeVegaLite(spec: any, d: DesignDecisions, table: any[]
     applyRedundantChannels(spec, d, say);
     const seriesEndLayout = demoteSeriesEnd(spec, d, table, say);
     applyLegend(spec, config, d, table, say);
-    applyFacetChrome(config, d);
+    applyFacetChrome(spec, config, d);
     applyPanelTitles(spec, d, say);
     const valueLayer = applyDataLabels(spec, d, table, say);
     applySeriesEndLabels(spec, d, valueLayer, table, say, seriesEndLayout);
@@ -641,11 +642,18 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
         // that decision does not restyle the axis, it smears it. So the house
         // size holds up to the size fit allows.
         const fitted = existing.labelFontSize;
-        if (typeof fitted === 'number' && fitted < BASE_LABEL_FONT_SIZE
+        if (typeof fitted === 'number' && (fitted < BASE_LABEL_FONT_SIZE
+            || (channel === 'y' && existing.labelExpr && existing.labelLineHeight))
             && typeof themed.labelFontSize === 'number' && themed.labelFontSize > fitted) {
             say(`axes.${channel}.label.fontSize`,
                 `the axis is crowded — the layout fitted its labels at ${fitted}px and the house's ${themed.labelFontSize}px would not stand in the band`);
             themed.labelFontSize = fitted;
+        }
+
+        if (existing.labelExpr && existing.labelLineHeight && existing.labelLimit > 0) {
+            themed.labelLimit = themed.labelLimit > 0
+                ? Math.min(themed.labelLimit, existing.labelLimit) : existing.labelLimit;
+            themed.labelLineHeight = Math.ceil((themed.labelFontSize ?? fitted) * 1.2);
         }
 
         config[key] = { ...existing, ...themed };
@@ -767,7 +775,7 @@ function applyAxes(spec: any, config: any, d: DesignDecisions, table: any[], say
                     };
                     // Both sides' titles sit on one line, so the room above
                     // the plot is bought once.
-                    if (flatTitleSides.size === 0) {
+                    if (flatTitleSides.size === 0 && !hasTopFacetHeader(spec)) {
                         growPadding(spec, 'top', (axis.title.fontSize ?? 11) + lift);
                     }
                     flatTitleSides.add(side);
@@ -1321,8 +1329,10 @@ function observedDates(
     const parts = dates.map((s) => s.match(CALENDAR_DATE)!);
     const grain = parts.every((p) => p[2] == null) ? 'year'
         : parts.every((p) => p[3] == null) ? 'month' : 'day';
-    const format = grain === 'year' ? '%Y' : grain === 'month' ? '%b %Y' : '%b %-d';
-    const width = (grain === 'year' ? 4 : grain === 'month' ? 8 : 6) * fontSize * 0.6 + 10;
+    const spansYears = parts[0][1] !== parts[parts.length - 1][1];
+    const format = grain === 'year' ? '%Y' : grain === 'month' ? '%b %Y'
+        : spansYears ? '%b %-d, %Y' : '%b %-d';
+    const width = (grain === 'year' ? 4 : grain === 'month' ? 8 : spansYears ? 12 : 6) * fontSize * 0.6 + 10;
 
     let kept = parts;
     if (mode === 'endpoints') {
@@ -3599,12 +3609,8 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
     // also what seaborn does when one legend carries both: each block keeps
     // the variable name as a heading, because the heading is the only thing
     // telling a row of sizes apart from a row of colours.
-    // A key that keeps its title stands a line taller than one that dropped it.
-    // Side by side that leaves the row ragged, so the layout below has to know.
-    let titlesUneven = false;
     if (!l.title) {
         let valueKeys = 0;
-        let baredKeys = 0;
         walk(spec, (node) => {
             for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity'] as const) {
                 const enc = node.encoding?.[channel];
@@ -3615,10 +3621,8 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
                     && enc.type === 'quantitative';
                 if (isValueKey) { valueKeys++; continue; }
                 enc.legend = { ...(enc.legend ?? {}), title: null };
-                baredKeys++;
             }
         });
-        titlesUneven = valueKeys > 0 && baredKeys > 0;
         if (valueKeys === 0) config.legend.title = null;
         else {
             say('legend.title',
@@ -3631,7 +3635,7 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
     // strip the title occupies, and on a multi-row key the two collide. Push
     // the key up off the plot far enough to clear the flat title.
     const yTitleForOffset = d.axes?.y?.title;
-    if (l.orient === 'top' && yTitleForOffset?.show
+    if (l.orient === 'top' && yTitleForOffset?.show && !hasTopFacetHeader(spec)
         && (yTitleForOffset.placement === 'flatAboveAxis' || yTitleForOffset.placement === 'inline')) {
         const clearance = (yTitleForOffset.fontSize ?? 11) + 12;
         config.legend.offset = (config.legend.offset ?? 18) + clearance;
@@ -3725,207 +3729,7 @@ function applyLegend(spec: any, config: any, d: DesignDecisions, table: any[], s
         }
     }
 
-    // Two keys, one row. Laid side by side above the plot a colour key and a
-    // size key eat the block between them, and past a point the second is
-    // pushed hard against the first with nothing to separate them. Vega will
-    // stack them given the word, so the word is given by measurement: they
-    // share a row while they fit across the block, and take one each when they
-    // do not.
-    if (l.orient === 'top' || l.orient === 'bottom') {
-        const widths = keyWidths(spec, table, l.label.fontSize ?? 10);
-        const block = blockWidth(spec, table);
-        const total = widths.reduce((a, b) => a + b, 0);
-        // A row whose keys sit at different depths reads as broken, so an
-        // uneven pair has two ways out: lay the title beside its entries where
-        // the row can afford it, or give each key a row of its own. Doing
-        // neither — which is what happens if the inline title does not fit and
-        // the keys technically still fit side by side — is the one outcome
-        // that leaves the ragged row on the page.
-        const twoKeys = widths.length > 1 && Boolean(block);
-        const titleRoom = titlesUneven
-            ? longestKeyTitle(spec) * (l.label.fontSize ?? 10) * 0.55 + 12
-            : 0;
-        const levelInline = twoKeys && titlesUneven && total + titleRoom <= block!;
-        if (twoKeys && (total > block! || (titlesUneven && !levelInline))) {
-            config.legend.layout = {
-                ...(config.legend.layout ?? {}),
-                [l.orient]: {
-                    ...(config.legend.layout?.[l.orient] ?? {}),
-                    direction: 'vertical',
-                    anchor: 'start',
-                },
-            };
-            say('legend.placement',
-                total > block!
-                    ? `${widths.length} keys want ${Math.round(total)}px across a ${block}px block — they take a row each`
-                    : `${widths.length} keys sit at different depths and the row cannot hold an inline title — they take a row each`);
-
-            // Stacked, each key that still has a title spends a line on it, so
-            // two keys cost four lines above a plot that is only a couple of
-            // hundred pixels tall. The title moves onto the entries' own line
-            // instead — `Population (M)  ○ 200 ○ 600 ○ 1,000` — which reads
-            // the way a journalistic key does and hands the row back to the
-            // chart.
-            config.legend.titleOrient = 'left';
-            say('legend.titleOrient',
-                'stacked keys put their title on the same line as their entries — the row is already paid for');
-        } else if (levelInline) {
-            // They fit on one row, but only one of them kept a title, so that
-            // key is a line deeper than its neighbour and the row hangs
-            // ragged. Laying its title beside its entries levels the two.
-            config.legend.titleOrient = 'left';
-            say('legend.titleOrient',
-                'one key keeps a title and the other does not — its title moves onto the entries\' line so both keys sit at the same depth');
-        }
-    }
-
-    // A single key with many entries laid horizontally is the same overrun seen
-    // one key at a time: the house asked for one row, and one row of fifty names
-    // runs off the side of the canvas. A row has a width — the block the chart
-    // occupies — so the entries are wrapped into as many columns as fit and no
-    // more, and where even a wrapped grid would tower over the plot the count
-    // is capped. Vega-Lite draws a top or bottom legend in a single row unless
-    // told how many columns to fill, so it is told.
-    if (l.orient === 'top' || l.orient === 'bottom') {
-        wrapWideKeys(spec, l, blockWidth(spec, table), table, say);
-    }
     void say;
-}
-
-/**
- * Wrap a high-cardinality horizontal key into a bounded grid.
- *
- * A top or bottom legend flows its entries along a single row until told
- * otherwise. One key with more names than fit across the block overruns the
- * canvas, so the row is broken into as many columns as the block holds; and
- * because a very long list would then grow downward without end, the number
- * of entries drawn is capped to a few rows' worth.
- */
-function wrapWideKeys(
-    spec: any, l: DesignDecisions['legend'], block: number | undefined, table: any[],
-    say: (p: string, m: string) => void,
-): void {
-    if (!block) return;
-    const MAX_ROWS = 4;
-    // A top/bottom legend has the whole chart width to flow across; the base
-    // display is 300px wide, so a narrow plot's key still has at least this
-    // much room before it has to stack into one column.
-    const MIN_HORIZONTAL_LEGEND_BLOCK = 280;
-    // A full categorical palette's worth of names always fits — the point past
-    // which high cardinality has already been folded into "Others (N)".
-    const MIN_LEGEND_ENTRIES = 12;
-    walk(spec, (node) => {
-        for (const channel of ['color', 'fill', 'stroke'] as const) {
-            const enc = node.encoding?.[channel];
-            if (!enc?.field || enc.legend === null || enc.type === 'quantitative') continue;
-            const entries: string[] = Array.isArray(enc.legend?.values)
-                ? enc.legend.values.map(String)
-                : Array.isArray(enc.scale?.domain)
-                    ? enc.scale.domain.map(String)
-                    : orderedValues(table, enc.field).map(String);
-            if (entries.length < 2) continue;
-            const labelFS = enc.legend?.labelFontSize ?? l.label.fontSize ?? 10;
-            const symbolArea = enc.legend?.symbolSize;
-            const symbol = symbolArea ? 2 * Math.sqrt(symbolArea / Math.PI) : 10;
-            // Vega-Lite packs a legend row: each entry takes the width of its
-            // own name, not the width of the longest one. Measuring the row as
-            // `count × widest` therefore charges every short name the price of
-            // the longest, and a four-key Likert scale — one long name and
-            // three short ones — was wrapped to three columns with a third of
-            // the block still empty. (Verified by rendering: forced to one
-            // row, the entries sit tight and the row clears the block.)
-            const widthOf = (e: string) => symbol + 4 + e.length * labelFS * 0.55 + 10;
-            // A top or bottom legend flows across the whole chart, not just the
-            // plot the marks occupy. A five-bar stacked column is ~90px wide
-            // yet its key has the full canvas to spread over, so a narrow plot
-            // must not force the key into one column (and, below, into a cap
-            // that would then hide entries).
-            const usableBlock = Math.max(block, MIN_HORIZONTAL_LEGEND_BLOCK);
-            // The widest run of `n` consecutive entries is what has to clear
-            // the block, since that is the row Vega-Lite will actually draw.
-            const widths = entries.map(widthOf);
-            const rowFits = (n: number) => {
-                for (let i = 0; i < widths.length; i += n) {
-                    let sum = 0;
-                    for (let j = i; j < Math.min(i + n, widths.length); j += 1) sum += widths[j];
-                    if (sum > usableBlock) return false;
-                }
-                return true;
-            };
-            let columns = 1;
-            for (let n = entries.length; n >= 1; n -= 1) {
-                if (rowFits(n)) { columns = n; break; }
-            }
-            if (entries.length <= columns) continue;
-            enc.legend = { ...(enc.legend ?? {}), columns };
-            // A folded key is already the bounded top-K + "Others (N)" list the
-            // overflow pass built to be listable in full; capping it would hide
-            // the very Others row that stands in for the tail. Wrap it into
-            // columns, but never truncate it.
-            const folded = enc.field === OVERFLOW_KEY_FIELD;
-            // The cap bounds a genuine *tower* of names — dozens of entries no
-            // grid can hold. It must never hide the handful of series a normal
-            // key names: on a stacked bar or an area the colour key is the only
-            // thing telling those series apart, so truncating it to "…2 entries"
-            // leaves two bands unidentifiable. Never cap below a full
-            // categorical palette's worth (past which the "Others (N)" fold
-            // would already have engaged upstream).
-            const cap = Math.max(columns * MAX_ROWS, MIN_LEGEND_ENTRIES);
-            if (!folded && entries.length > cap) enc.legend.symbolLimit = cap;
-            say('legend.columns',
-                `${entries.length} keys in one row overrun the ${Math.round(block)}px block — wrapped to ${columns} columns`);
-        }
-    });
-}
-
-/** The longest title still standing on any key, in characters. */
-function longestKeyTitle(spec: any): number {
-    let longest = 0;
-    walk(spec, (node) => {
-        for (const channel of ['color', 'fill', 'stroke', 'size', 'shape', 'opacity'] as const) {
-            const enc = node.encoding?.[channel];
-            if (!enc?.field || enc.legend === null) continue;
-            const title = enc.legend?.title;
-            if (title === null) continue;
-            const text = typeof title === 'string' ? title : String(enc.field);
-            longest = Math.max(longest, text.length);
-        }
-    });
-    return longest;
-}
-
-/**
- * Roughly how wide each key drawn on this chart wants to be.
- *
- * Rough is the point: the question is whether two keys fit on one row, and that
- * is answered by tens of pixels, not by ones. A swatch, a gap, the label, the
- * space to the next entry — summed over the entries the key will show.
- */
-function keyWidths(spec: any, table: any[], fontSize: number): number[] {
-    const seen = new Map<string, number>();
-    walk(spec, (node) => {
-        for (const channel of ['color', 'fill', 'stroke', 'size', 'shape', 'opacity'] as const) {
-            const enc = node.encoding?.[channel];
-            if (!enc?.field || enc.legend === null) continue;
-            // One field is one key. Vega-Lite merges the guides for a field
-            // however many channels and layers carry it — a scatter that fills
-            // and strokes by the same column draws one legend, not two — so
-            // counting them separately would stack a legend against itself.
-            const entries: string[] = enc.legend?.values
-                ? enc.legend.values.map((v: any) => (typeof v === 'number' ? v.toLocaleString('en-US') : String(v)))
-                : Array.isArray(enc.scale?.domain)
-                    ? enc.scale.domain.map(String)
-                    : orderedValues(table, enc.field).map(String);
-            if (!entries.length) continue;
-            // A size key's swatch is as wide as the biggest bubble it shows, and
-            // that is the whole reason it is there.
-            const area = channel === 'size' ? (enc.scale?.range?.[1] ?? 100) : 0;
-            const symbol = area ? 2 * Math.sqrt(area / Math.PI) : 10;
-            const width = entries.reduce((w, e) => w + symbol + 4 + e.length * fontSize * 0.55 + 10, 0);
-            seen.set(enc.field, Math.max(seen.get(enc.field) ?? 0, width));
-        }
-    });
-    return [...seen.values()];
 }
 
 /** A few round numbers spanning what a field holds, largest last. */
@@ -3965,7 +3769,7 @@ function roundSample(table: any[], field: string, count: number): number[] | und
 // Facet chrome
 // ---------------------------------------------------------------------------
 
-function applyFacetChrome(config: any, d: DesignDecisions): void {
+function applyFacetChrome(spec: any, config: any, d: DesignDecisions): void {
     const f = d.facets;
     config.header = {
         ...(config.header ?? {}),
@@ -3976,13 +3780,60 @@ function applyFacetChrome(config: any, d: DesignDecisions): void {
         ...(f.header.show ? {} : { labels: false }),
         ...(f.header.fieldTitle ? {} : { title: null }),
     };
+    const firstRowTitles = new Set<any>();
+    walk(spec, node => {
+        if (!node.facet || !node.spec) return;
+        const wrapped = !!node.facet.field && typeof node.columns === 'number';
+        if (!wrapped && !node.facet.row) return;
+        const spine = config.axisX ?? {};
+        const grid = config.axisY ?? {};
+        let hasSpine = false;
+        walk(node.spec, child => {
+            const axis = child.encoding?.x;
+            if (axis?.field && axis.axis !== null && axis.axis?.domain !== false) hasSpine = true;
+        });
+        const sharedSpine = hasSpine && node.resolve?.axis?.x !== 'independent'
+            && node.resolve?.scale?.x !== 'independent' && spine.domain !== false
+            && spine.domainColor && spine.domainColor !== 'transparent' && (spine.domainWidth ?? 1) > 0;
+        walk(node.spec, child => {
+            const encoding = child.encoding?.y;
+            if (!encoding?.field || encoding.axis === null) return;
+            const axis = encoding.axis ??= {};
+            if (wrapped && node.resolve?.axis?.y !== 'independent' && node.resolve?.scale?.y !== 'independent'
+                && axis.titleAngle === 0 && axis.title !== null && typeof axis.titleY === 'number' && axis.titleY < 0) {
+                const title = axis.title ?? titleOf(encoding);
+                if (typeof title === 'string') {
+                    axis.title = { expr: `parent.data === 0 ? ${JSON.stringify(title)} : ''` };
+                    firstRowTitles.add(axis);
+                }
+            }
+            if (sharedSpine && ['quantitative', 'temporal'].includes(encoding.type)) {
+                const boundary = `datum.index === ${spine.orient === 'top' ? 1 : 0}`;
+                axis.grid = true;
+                axis.gridColor = { condition: { test: boundary, value: spine.domainColor },
+                    value: grid.grid ? grid.gridColor : 'transparent' };
+                axis.gridWidth = { condition: { test: boundary, value: spine.domainWidth ?? 1 },
+                    value: grid.grid ? grid.gridWidth ?? 1 : 0 };
+                axis.gridDash = { condition: { test: boundary, value: [] }, value: grid.gridDash ?? [] };
+            }
+        });
+    });
     // A header is drawn *in* the gap above its panel. A house may set its
     // panels tight — or inherit a tight layout — but the gap still has to hold
     // the name, or the name lands on the panel above it.
     const current = config.facet?.spacing;
-    const base = f.spacing ?? (typeof current === 'number' ? current : undefined);
-    const needed = f.header.show === false ? 0 : Math.round((f.header.fontSize ?? 11) * 1.7);
-    if (base != null && needed > base) {
+    const base = f.spacing ?? (typeof current === 'number' ? current : current?.column) ?? 20;
+    const row = f.spacing ?? (typeof current === 'number' ? current : current?.row) ?? base;
+    let needed = f.header.show === false ? 0 : Math.round((f.header.fontSize ?? 11) * 1.7);
+    walk(spec, node => {
+        const axis = node.encoding?.y?.axis;
+        if (!firstRowTitles.has(axis) && axis?.titleAngle === 0 && axis.title !== null
+            && typeof axis.titleY === 'number' && axis.titleY < 0) {
+            const fontSize = axis.titleFontSize ?? config.axisY?.titleFontSize ?? 11;
+            needed = Math.max(needed, Math.ceil(-axis.titleY + fontSize + 6));
+        }
+    });
+    if (needed > row) {
         config.facet = { ...(config.facet ?? {}), spacing: { row: needed, column: base } };
     } else if (f.spacing != null) {
         config.facet = { ...(config.facet ?? {}), spacing: f.spacing };
@@ -4206,6 +4057,10 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     const primary = units[0];
     const enc = mergedEncoding(primary, body.encoding);
     const measure = enc[measureChannel];
+    if (radial && (measure?.type !== 'quantitative' || enc.radius?.field)) {
+        say('dataLabels', 'category angles or a data-driven radius need their own label geometry — pie-style labels are not applied');
+        return;
+    }
     if (!measure?.field) {
         say('dataLabels', `measure channel \`${measureChannel}\` has no field`);
         return;
@@ -4668,7 +4523,32 @@ function labelOneBody(spec: any, body: any, d: DesignDecisions, table: any[], sa
     // whitespace inside the plot.
     if (!inside && !radial && !cells) {
         if (horizontal) {
-            growPadding(spec, reversed ? 'left' : 'right', (t.fontSize ?? 10) * 3);
+            let reserved = false;
+            if (onMarkBody && !stackedSegments) {
+                const formatValue = formatNumber(d.dataLabels.format ?? '');
+                const labelChars = Math.max(1, ...table.map(row => {
+                    const value = row?.[measure.field];
+                    return typeof value === 'number' && Number.isFinite(value) ? formatValue(value).length : 0;
+                })) + (d.dataLabels.unit ? d.dataLabels.unit.length + 1 : 0);
+                const inset = Math.ceil(labelChars * (t.fontSize ?? 10) * 0.8 + 8 + radius);
+                const host = body.spec?.layer ? body.spec : body;
+                const plotWidth = host.width ?? spec.width;
+                const encodings = [host, ...(host.layer ?? [])]
+                    .map(node => node.encoding?.x).filter(encoding => encoding?.field === measure.field);
+                if (typeof plotWidth === 'number' && plotWidth > inset * (hasNegative ? 2 : 1)
+                    && encodings.length && encodings.every(encoding => encoding.scale?.range == null
+                        && encoding.scale?.rangeMin == null && encoding.scale?.rangeMax == null)) {
+                    for (const encoding of encodings) {
+                        encoding.scale = {
+                            ...(encoding.scale ?? {}),
+                            rangeMin: reversed || hasNegative ? inset : 0,
+                            rangeMax: !reversed || hasNegative ? plotWidth - inset : plotWidth,
+                        };
+                    }
+                    reserved = true;
+                }
+            }
+            if (!reserved) growPadding(spec, reversed ? 'left' : 'right', (t.fontSize ?? 10) * 3);
         } else if (onMarkBody) {
             addMeasureHeadroom(body, measureChannel, measure.field, table);
         }

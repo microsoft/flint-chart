@@ -64,7 +64,7 @@ import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-se
 import { resolveDisplayUnit, titleWithDisplayUnit, toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
-import { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
+import { vlApplyLayoutToSpec, vlApplyTooltips, vlPlanBandLabels, vlWrapLegendText } from './instantiate-spec';
 import { normalizeStaticSeries } from '../core/static-series';
 import { normalizeChartProperties } from '../core/normalize-properties';
 import { groundTheme, resolveChartDefaults, resolveCompileDefaults, resolveGeometry } from '../core/theme/ground';
@@ -647,6 +647,7 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
         geometry: chartGeometry,
     };
 
+    if (chartType !== 'Bar Table') vlPlanBandLabels(instantiateContext, vgObj);
     chartTemplate.instantiate(vgObj, instantiateContext);
 
     // Facet-identity augmentation is presentation-only: the structural series
@@ -859,6 +860,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     } else {
         realizeValueLabelsVegaLite(vgObj, design, values);
     }
+
+    chartTemplate.postProcess?.(vgObj, instantiateContext);
+    vlWrapLegendText(vgObj, instantiateContext);
 
     // ═══════════════════════════════════════════════════════════════════════
     // RESULT
@@ -1281,19 +1285,6 @@ function buildVLEncodings(
                 }
             }
 
-            // Legend sizing for high-cardinality nominal color/group
-            if (encodingObj.type === "nominal" && (channel === 'color' || channel === 'group')) {
-                const actualDomain = [...new Set(data.map(r => r[fieldName]))];
-                // Threshold kept in sync with HIGH_CARDINALITY_LEGEND_MIN in
-                // vegalite/theme.ts: when a theme later folds the key to a short
-                // top-K + Others list, that pass recomputes this shrink against
-                // the folded count so short legends are not squeezed to 8px.
-                if (actualDomain.length >= 16) {
-                    if (!encodingObj.legend) encodingObj.legend = {};
-                    encodingObj.legend.symbolSize = 12;
-                    encodingObj.legend.labelFontSize = 8;
-                }
-            }
         }
 
         // Size channel: set scale based on resolved encoding type

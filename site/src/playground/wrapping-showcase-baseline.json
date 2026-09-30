@@ -1,0 +1,2008 @@
+{
+  "commit": "bad6ebdedc356574b93808caf5041d57f0e0d166",
+  "cases": {
+    "health-axis": {
+      "input": {
+        "data": {
+          "values": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ]
+        },
+        "semantic_types": {
+          "Cause": "Category",
+          "Rate": "Quantity"
+        },
+        "field_display_names": {
+          "Rate": "Deaths per 100,000",
+          "Cause": "Cause"
+        },
+        "chart_spec": {
+          "chartType": "Bar Chart",
+          "title": "Selected causes of death",
+          "subtitle": "United States, 2022; age-adjusted rates",
+          "encodings": {
+            "y": "Cause",
+            "x": "Rate"
+          },
+          "baseSize": {
+            "width": 340,
+            "height": 280
+          }
+        }
+      },
+      "spec": {
+        "mark": "bar",
+        "encoding": {
+          "y": {
+            "field": "Cause",
+            "type": "nominal",
+            "sort": null,
+            "title": "Cause"
+          },
+          "x": {
+            "field": "Rate",
+            "type": "quantitative",
+            "title": "Deaths per 100,000",
+            "scale": {
+              "zero": true
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          }
+        },
+        "config": {
+          "view": {
+            "continuousWidth": 280,
+            "continuousHeight": 280
+          },
+          "axisX": {
+            "labelLimit": 100,
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6
+          },
+          "axisY": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "legend": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "facet": {
+            "spacing": 28
+          }
+        },
+        "height": {
+          "step": 23
+        },
+        "title": {
+          "text": "Selected causes of death",
+          "subtitle": [
+            "United States, 2022; age-adjusted rates"
+          ]
+        },
+        "data": {
+          "values": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ]
+        },
+        "_interactionSemantics": {
+          "fields": [
+            "Rate",
+            "Cause"
+          ],
+          "categoryField": "Cause",
+          "reorderAxis": {
+            "axis": "y",
+            "field": "Cause"
+          },
+          "reorderAxes": [
+            {
+              "axis": "y",
+              "field": "Cause"
+            }
+          ],
+          "selectableMarks": [
+            "bar"
+          ],
+          "renderHoverStyles": {
+            "rect": {
+              "opacity": "contrast"
+            }
+          },
+          "chartType": "Bar Chart",
+          "capabilities": [
+            "elements",
+            "cartesian-region",
+            "navigation",
+            "reorder",
+            "discrete-axis"
+          ],
+          "axisFields": {
+            "x": {
+              "field": "Rate",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Cause",
+              "type": "nominal"
+            }
+          },
+          "sourceRecords": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ],
+          "provenanceFields": [
+            "Cause",
+            "Rate"
+          ],
+          "temporalProvenanceFields": [],
+          "rangeLegendChannels": [],
+          "navigationAxes": [
+            "x"
+          ],
+          "geoNavigation": false,
+          "selectionBoundary": {
+            "color": "#121212",
+            "width": 1.25,
+            "opacity": 0.68,
+            "haloColor": "#ffffff",
+            "haloWidth": 2.5,
+            "haloOpacity": 0.35
+          },
+          "continuousColorFocus": {
+            "mutedFill": "#ececec",
+            "boundaryWidth": 0.8,
+            "boundaryOpacity": 0.42,
+            "haloWidth": 1.25,
+            "haloOpacity": 0.18
+          },
+          "neutralizeContinuousColor": false
+        },
+        "_width": 280,
+        "_height": 280,
+        "_options": [
+          {
+            "key": "cornerRadius",
+            "label": "Corners",
+            "type": "continuous",
+            "min": 0,
+            "max": 15,
+            "step": 1,
+            "defaultValue": 0,
+            "applicable": true,
+            "value": 0
+          },
+          {
+            "key": "independentYAxis",
+            "label": "Independent Y",
+            "type": "binary",
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "xAxisType",
+            "label": "X as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "yAxisType",
+            "label": "Y as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "showValueLabels",
+            "label": "Values",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": true,
+            "value": false
+          }
+        ],
+        "_transform": {
+          "chartType": {
+            "key": "chartType",
+            "label": "Chart type",
+            "length": 2,
+            "index": 0,
+            "ids": [
+              "default",
+              "type:Lollipop Chart"
+            ],
+            "labels": [
+              "Bar Chart",
+              "Lollipop Chart"
+            ]
+          },
+          "arrange": {
+            "key": "arrange",
+            "label": "Arrange",
+            "length": 2,
+            "index": 0,
+            "ids": [
+              "default",
+              "flip:x-y"
+            ],
+            "labels": [
+              "Default",
+              "X ⇄ Y"
+            ]
+          }
+        },
+        "_pivot": {
+          "key": "pivot",
+          "label": "View",
+          "length": 4,
+          "index": 0,
+          "ids": [
+            "default",
+            "flip:x-y",
+            "type:Lollipop Chart",
+            "flip:x-y|type:Lollipop Chart"
+          ],
+          "labels": [
+            "Default",
+            "X ⇄ Y",
+            "θ_→lollipop",
+            "X ⇄ Y · θ_→lollipop"
+          ]
+        }
+      }
+    },
+    "education-axis": {
+      "input": {
+        "data": {
+          "values": [
+            {
+              "Education": "High school diploma",
+              "Earnings": 899
+            },
+            {
+              "Education": "Bachelor's degree",
+              "Earnings": 1493
+            },
+            {
+              "Education": "Master's degree",
+              "Earnings": 1737
+            },
+            {
+              "Education": "Professional degree",
+              "Earnings": 2206
+            },
+            {
+              "Education": "Doctoral degree",
+              "Earnings": 2109
+            }
+          ]
+        },
+        "semantic_types": {
+          "Education": "Category",
+          "Earnings": "Quantity"
+        },
+        "field_display_names": {
+          "Earnings": "Weekly earnings ($)"
+        },
+        "chart_spec": {
+          "chartType": "Bar Chart",
+          "title": "Education and weekly earnings",
+          "subtitle": "United States, 2023; selected education levels",
+          "encodings": {
+            "x": "Education",
+            "y": "Earnings"
+          },
+          "baseSize": {
+            "width": 400,
+            "height": 260
+          }
+        }
+      },
+      "spec": {
+        "mark": "bar",
+        "encoding": {
+          "x": {
+            "field": "Education",
+            "type": "nominal",
+            "sort": null
+          },
+          "y": {
+            "field": "Earnings",
+            "type": "quantitative",
+            "title": "Weekly earnings ($)",
+            "scale": {
+              "zero": true
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          }
+        },
+        "config": {
+          "view": {
+            "continuousWidth": 400,
+            "continuousHeight": 260
+          },
+          "axisX": {
+            "labelLimit": 100,
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "axisY": {
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6
+          },
+          "legend": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "facet": {
+            "spacing": 26
+          }
+        },
+        "width": {
+          "step": 27
+        },
+        "title": {
+          "text": "Education and weekly earnings",
+          "subtitle": [
+            "United States, 2023; selected education levels"
+          ]
+        },
+        "data": {
+          "values": [
+            {
+              "Education": "High school diploma",
+              "Earnings": 899
+            },
+            {
+              "Education": "Bachelor's degree",
+              "Earnings": 1493
+            },
+            {
+              "Education": "Master's degree",
+              "Earnings": 1737
+            },
+            {
+              "Education": "Professional degree",
+              "Earnings": 2206
+            },
+            {
+              "Education": "Doctoral degree",
+              "Earnings": 2109
+            }
+          ]
+        },
+        "_interactionSemantics": {
+          "fields": [
+            "Education",
+            "Earnings"
+          ],
+          "categoryField": "Education",
+          "reorderAxis": {
+            "axis": "x",
+            "field": "Education"
+          },
+          "reorderAxes": [
+            {
+              "axis": "x",
+              "field": "Education"
+            }
+          ],
+          "selectableMarks": [
+            "bar"
+          ],
+          "renderHoverStyles": {
+            "rect": {
+              "opacity": "contrast"
+            }
+          },
+          "chartType": "Bar Chart",
+          "capabilities": [
+            "elements",
+            "cartesian-region",
+            "navigation",
+            "reorder",
+            "discrete-axis"
+          ],
+          "axisFields": {
+            "x": {
+              "field": "Education",
+              "type": "nominal"
+            },
+            "y": {
+              "field": "Earnings",
+              "type": "quantitative"
+            }
+          },
+          "sourceRecords": [
+            {
+              "Education": "High school diploma",
+              "Earnings": 899
+            },
+            {
+              "Education": "Bachelor's degree",
+              "Earnings": 1493
+            },
+            {
+              "Education": "Master's degree",
+              "Earnings": 1737
+            },
+            {
+              "Education": "Professional degree",
+              "Earnings": 2206
+            },
+            {
+              "Education": "Doctoral degree",
+              "Earnings": 2109
+            }
+          ],
+          "provenanceFields": [
+            "Education",
+            "Earnings"
+          ],
+          "temporalProvenanceFields": [],
+          "rangeLegendChannels": [],
+          "navigationAxes": [
+            "y"
+          ],
+          "geoNavigation": false,
+          "selectionBoundary": {
+            "color": "#121212",
+            "width": 1.25,
+            "opacity": 0.68,
+            "haloColor": "#ffffff",
+            "haloWidth": 2.5,
+            "haloOpacity": 0.35
+          },
+          "continuousColorFocus": {
+            "mutedFill": "#ececec",
+            "boundaryWidth": 0.8,
+            "boundaryOpacity": 0.42,
+            "haloWidth": 1.25,
+            "haloOpacity": 0.18
+          },
+          "neutralizeContinuousColor": false
+        },
+        "_width": 400,
+        "_height": 260,
+        "_options": [
+          {
+            "key": "cornerRadius",
+            "label": "Corners",
+            "type": "continuous",
+            "min": 0,
+            "max": 15,
+            "step": 1,
+            "defaultValue": 0,
+            "applicable": true,
+            "value": 0
+          },
+          {
+            "key": "independentYAxis",
+            "label": "Independent Y",
+            "type": "binary",
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "xAxisType",
+            "label": "X as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "yAxisType",
+            "label": "Y as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "showValueLabels",
+            "label": "Values",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": false,
+            "value": false
+          }
+        ],
+        "_transform": {
+          "chartType": {
+            "key": "chartType",
+            "label": "Chart type",
+            "length": 2,
+            "index": 0,
+            "ids": [
+              "default",
+              "type:Lollipop Chart"
+            ],
+            "labels": [
+              "Bar Chart",
+              "Lollipop Chart"
+            ]
+          },
+          "arrange": {
+            "key": "arrange",
+            "label": "Arrange",
+            "length": 2,
+            "index": 0,
+            "ids": [
+              "default",
+              "flip:x-y"
+            ],
+            "labels": [
+              "Default",
+              "X ⇄ Y"
+            ]
+          }
+        },
+        "_pivot": {
+          "key": "pivot",
+          "label": "View",
+          "length": 4,
+          "index": 0,
+          "ids": [
+            "default",
+            "flip:x-y",
+            "type:Lollipop Chart",
+            "flip:x-y|type:Lollipop Chart"
+          ],
+          "labels": [
+            "Default",
+            "X ⇄ Y",
+            "θ_→lollipop",
+            "X ⇄ Y · θ_→lollipop"
+          ]
+        }
+      }
+    },
+    "medal-legend": {
+      "input": {
+        "data": {
+          "values": [
+            {
+              "Team": "United States of America",
+              "Gold": 40,
+              "Silver": 44,
+              "Bronze": 42,
+              "Total": 126
+            },
+            {
+              "Team": "People's Republic of China",
+              "Gold": 40,
+              "Silver": 27,
+              "Bronze": 24,
+              "Total": 91
+            },
+            {
+              "Team": "Islamic Republic of Iran",
+              "Gold": 3,
+              "Silver": 6,
+              "Bronze": 3,
+              "Total": 12
+            },
+            {
+              "Team": "Democratic People's Republic of Korea",
+              "Gold": 0,
+              "Silver": 2,
+              "Bronze": 4,
+              "Total": 6
+            },
+            {
+              "Team": "Refugee Olympic Team",
+              "Gold": 0,
+              "Silver": 0,
+              "Bronze": 1,
+              "Total": 1
+            }
+          ]
+        },
+        "semantic_types": {
+          "Team": "Category",
+          "Gold": "Quantity",
+          "Silver": "Quantity"
+        },
+        "field_display_names": {
+          "Gold": "Gold medals",
+          "Silver": "Silver medals"
+        },
+        "chart_spec": {
+          "chartType": "Scatter Plot",
+          "title": "Paris 2024 medals",
+          "subtitle": "Gold and silver medals; selected delegations",
+          "encodings": {
+            "x": "Gold",
+            "y": "Silver",
+            "color": "Team"
+          },
+          "baseSize": {
+            "width": 320,
+            "height": 270
+          }
+        }
+      },
+      "spec": {
+        "mark": "circle",
+        "encoding": {
+          "x": {
+            "field": "Gold",
+            "type": "quantitative",
+            "title": "Gold medals",
+            "scale": {
+              "zero": true
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "y": {
+            "field": "Silver",
+            "type": "quantitative",
+            "title": "Silver medals",
+            "scale": {
+              "zero": true
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "color": {
+            "field": "Team",
+            "type": "nominal",
+            "sort": null,
+            "scale": {
+              "scheme": "tableau10"
+            }
+          }
+        },
+        "config": {
+          "view": {
+            "continuousWidth": 312,
+            "continuousHeight": 277
+          },
+          "axisX": {
+            "labelLimit": 100,
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6
+          },
+          "axisY": {
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6
+          },
+          "legend": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "facet": {
+            "spacing": 28
+          }
+        },
+        "title": {
+          "text": "Paris 2024 medals",
+          "subtitle": [
+            "Gold and silver medals; selected delegations"
+          ]
+        },
+        "data": {
+          "values": [
+            {
+              "Team": "United States of America",
+              "Gold": 40,
+              "Silver": 44,
+              "Bronze": 42,
+              "Total": 126
+            },
+            {
+              "Team": "People's Republic of China",
+              "Gold": 40,
+              "Silver": 27,
+              "Bronze": 24,
+              "Total": 91
+            },
+            {
+              "Team": "Islamic Republic of Iran",
+              "Gold": 3,
+              "Silver": 6,
+              "Bronze": 3,
+              "Total": 12
+            },
+            {
+              "Team": "Democratic People's Republic of Korea",
+              "Gold": 0,
+              "Silver": 2,
+              "Bronze": 4,
+              "Total": 6
+            },
+            {
+              "Team": "Refugee Olympic Team",
+              "Gold": 0,
+              "Silver": 0,
+              "Bronze": 1,
+              "Total": 1
+            }
+          ]
+        },
+        "_interactionSemantics": {
+          "fields": [
+            "Gold",
+            "Silver",
+            "Team"
+          ],
+          "seriesField": "Team",
+          "legendFields": {
+            "color": "Team"
+          },
+          "selectableMarks": [
+            "circle",
+            "point"
+          ],
+          "renderHoverStyles": {
+            "symbol": {
+              "stroke": "rgba(71, 82, 92, 0.58)",
+              "strokeWidth": 2
+            }
+          },
+          "chartType": "Scatter Plot",
+          "capabilities": [
+            "elements",
+            "cartesian-region",
+            "navigation",
+            "legend",
+            "index"
+          ],
+          "axisFields": {
+            "x": {
+              "field": "Gold",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Silver",
+              "type": "quantitative"
+            }
+          },
+          "sourceRecords": [
+            {
+              "Team": "United States of America",
+              "Gold": 40,
+              "Silver": 44,
+              "Bronze": 42,
+              "Total": 126
+            },
+            {
+              "Team": "People's Republic of China",
+              "Gold": 40,
+              "Silver": 27,
+              "Bronze": 24,
+              "Total": 91
+            },
+            {
+              "Team": "Islamic Republic of Iran",
+              "Gold": 3,
+              "Silver": 6,
+              "Bronze": 3,
+              "Total": 12
+            },
+            {
+              "Team": "Democratic People's Republic of Korea",
+              "Gold": 0,
+              "Silver": 2,
+              "Bronze": 4,
+              "Total": 6
+            },
+            {
+              "Team": "Refugee Olympic Team",
+              "Gold": 0,
+              "Silver": 0,
+              "Bronze": 1,
+              "Total": 1
+            }
+          ],
+          "provenanceFields": [
+            "Gold",
+            "Silver",
+            "Team"
+          ],
+          "temporalProvenanceFields": [],
+          "rangeLegendChannels": [],
+          "navigationAxes": [
+            "x",
+            "y"
+          ],
+          "geoNavigation": false,
+          "reorderAxes": [],
+          "selectionBoundary": {
+            "color": "#121212",
+            "width": 1.25,
+            "opacity": 0.68,
+            "haloColor": "#ffffff",
+            "haloWidth": 2.5,
+            "haloOpacity": 0.35
+          },
+          "continuousColorFocus": {
+            "mutedFill": "#ececec",
+            "boundaryWidth": 0.8,
+            "boundaryOpacity": 0.42,
+            "haloWidth": 1.25,
+            "haloOpacity": 0.18
+          },
+          "neutralizeContinuousColor": false
+        },
+        "_width": 312,
+        "_height": 277,
+        "_options": [
+          {
+            "key": "opacity",
+            "label": "Opacity",
+            "type": "continuous",
+            "min": 0.1,
+            "max": 1,
+            "step": 0.1,
+            "defaultValue": 1,
+            "applicable": true,
+            "value": 1
+          },
+          {
+            "key": "independentYAxis",
+            "label": "Independent Y",
+            "type": "binary",
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "logScale_x",
+            "label": "Log X",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "logScale_y",
+            "label": "Log Y",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "includeZero_x",
+            "label": "Zero X",
+            "type": "binary",
+            "applicable": false,
+            "value": true
+          },
+          {
+            "key": "includeZero_y",
+            "label": "Zero Y",
+            "type": "binary",
+            "applicable": false,
+            "value": true
+          }
+        ],
+        "_transform": {
+          "chartType": {
+            "key": "chartType",
+            "label": "Chart type",
+            "length": 3,
+            "index": 0,
+            "ids": [
+              "default",
+              "type:Strip Plot",
+              "type:Regression"
+            ],
+            "labels": [
+              "Scatter Plot",
+              "Strip Plot",
+              "Regression"
+            ]
+          },
+          "arrange": {
+            "key": "arrange",
+            "label": "Arrange",
+            "length": 4,
+            "index": 0,
+            "ids": [
+              "default",
+              "flip:x-y",
+              "augment:column",
+              "flip:x-y|augment:column"
+            ],
+            "labels": [
+              "Default",
+              "X ⇄ Y",
+              "Color + Columns",
+              "X ⇄ Y · Color + Columns"
+            ]
+          }
+        },
+        "_pivot": {
+          "key": "pivot",
+          "label": "View",
+          "length": 12,
+          "index": 0,
+          "ids": [
+            "default",
+            "flip:x-y",
+            "augment:column",
+            "augment:row",
+            "type:Strip Plot",
+            "type:Regression",
+            "flip:x-y|augment:column",
+            "flip:x-y|augment:row",
+            "flip:x-y|type:Strip Plot",
+            "flip:x-y|type:Regression",
+            "augment:column|type:Regression",
+            "augment:row|type:Regression"
+          ],
+          "labels": [
+            "Default",
+            "X ⇄ Y",
+            "Color + Columns",
+            "Color + Rows",
+            "θ_→jitter",
+            "θ_→trend",
+            "X ⇄ Y · Color + Columns",
+            "X ⇄ Y · Color + Rows",
+            "X ⇄ Y · θ_→jitter",
+            "X ⇄ Y · θ_→trend",
+            "Color + Columns · θ_→trend",
+            "Color + Rows · θ_→trend"
+          ]
+        }
+      }
+    },
+    "heritage-table": {
+      "input": {
+        "data": {
+          "values": [
+            {
+              "Property": "Prehistoric Pile Dwellings around the Alps",
+              "Components": 111,
+              "Source": "https://whc.unesco.org/en/list/1363/"
+            },
+            {
+              "Property": "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+              "Components": 16,
+              "Source": "https://whc.unesco.org/en/list/1424/"
+            },
+            {
+              "Property": "The Great Spa Towns of Europe",
+              "Components": 11,
+              "Source": "https://whc.unesco.org/en/list/1613/"
+            },
+            {
+              "Property": "Wooden Churches of the Slovak part of the Carpathian Mountain Area",
+              "Components": 8,
+              "Source": "https://whc.unesco.org/en/list/1273/"
+            }
+          ]
+        },
+        "semantic_types": {
+          "Property": "Category",
+          "Components": "Quantity"
+        },
+        "chart_spec": {
+          "chartType": "Bar Table",
+          "title": "World Heritage, across multiple sites",
+          "encodings": {
+            "y": "Property",
+            "x": "Components"
+          },
+          "baseSize": {
+            "width": 420,
+            "height": 280
+          }
+        }
+      },
+      "spec": {
+        "spacing": 8,
+        "resolve": {
+          "scale": {
+            "y": "shared"
+          }
+        },
+        "hconcat": [
+          {
+            "data": {
+              "name": "__bt_displayTable"
+            },
+            "width": 189,
+            "height": 280,
+            "title": {
+              "text": "Property",
+              "anchor": "start",
+              "offset": 6,
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "color": "#999"
+            },
+            "mark": {
+              "type": "bar",
+              "height": {
+                "band": 0.842
+              }
+            },
+            "encoding": {
+              "y": {
+                "field": "Property",
+                "type": "nominal",
+                "sort": [
+                  "Prehistoric Pile Dwellings around the Alps",
+                  "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+                  "The Great Spa Towns of Europe",
+                  "Wooden Churches of the Slovak part of the Carpathian Mountain Area"
+                ],
+                "axis": {
+                  "title": null,
+                  "domain": false,
+                  "ticks": false,
+                  "labelFontSize": 13,
+                  "labelAlign": "left",
+                  "labelPadding": 220,
+                  "labelLimit": 220
+                }
+              },
+              "x": {
+                "field": "Components",
+                "type": "quantitative",
+                "axis": null,
+                "scale": {
+                  "nice": false
+                }
+              },
+              "color": {
+                "field": "Components",
+                "type": "quantitative",
+                "legend": null,
+                "scale": {
+                  "range": [
+                    "#cdebd3",
+                    "#41a25f"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "data": {
+              "name": "__bt_displayTable"
+            },
+            "width": 80,
+            "height": 280,
+            "transform": [
+              {
+                "aggregate": [
+                  {
+                    "op": "sum",
+                    "field": "Components",
+                    "as": "__bt_val"
+                  },
+                  {
+                    "op": "min",
+                    "field": "__bt_sort",
+                    "as": "__bt_sort"
+                  },
+                  {
+                    "op": "max",
+                    "field": "__bt_others_num",
+                    "as": "__bt_others_num"
+                  }
+                ],
+                "groupby": [
+                  "Property"
+                ]
+              },
+              {
+                "calculate": "datum[\"__bt_val\"] + ''",
+                "as": "__bt_val_str"
+              }
+            ],
+            "title": {
+              "text": "Components",
+              "anchor": "end",
+              "offset": 6,
+              "limit": 76,
+              "fontSize": 12,
+              "fontWeight": "normal",
+              "color": "#999"
+            },
+            "mark": {
+              "type": "text",
+              "align": "right",
+              "baseline": "middle",
+              "fontSize": 12
+            },
+            "encoding": {
+              "y": {
+                "field": "Property",
+                "type": "nominal",
+                "sort": [
+                  "Prehistoric Pile Dwellings around the Alps",
+                  "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+                  "The Great Spa Towns of Europe",
+                  "Wooden Churches of the Slovak part of the Carpathian Mountain Area"
+                ],
+                "axis": null
+              },
+              "x": {
+                "datum": 1,
+                "axis": null,
+                "scale": {
+                  "type": "linear",
+                  "domain": [
+                    0,
+                    1
+                  ]
+                }
+              },
+              "text": {
+                "field": "__bt_val_str",
+                "type": "nominal"
+              },
+              "color": {
+                "value": "#666"
+              }
+            }
+          }
+        ],
+        "config": {
+          "view": {
+            "continuousWidth": 420,
+            "continuousHeight": 280,
+            "stroke": null
+          },
+          "axisX": {
+            "labelLimit": 100,
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6
+          },
+          "axisY": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "legend": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "facet": {
+            "spacing": 28
+          }
+        },
+        "datasets": {
+          "__bt_displayTable": [
+            {
+              "Property": "Prehistoric Pile Dwellings around the Alps",
+              "Components": 111,
+              "Source": "https://whc.unesco.org/en/list/1363/",
+              "__bt_sort": 0,
+              "__bt_others": false,
+              "__bt_others_num": 0
+            },
+            {
+              "Property": "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+              "Components": 16,
+              "Source": "https://whc.unesco.org/en/list/1424/",
+              "__bt_sort": 1,
+              "__bt_others": false,
+              "__bt_others_num": 0
+            },
+            {
+              "Property": "The Great Spa Towns of Europe",
+              "Components": 11,
+              "Source": "https://whc.unesco.org/en/list/1613/",
+              "__bt_sort": 2,
+              "__bt_others": false,
+              "__bt_others_num": 0
+            },
+            {
+              "Property": "Wooden Churches of the Slovak part of the Carpathian Mountain Area",
+              "Components": 8,
+              "Source": "https://whc.unesco.org/en/list/1273/",
+              "__bt_sort": 3,
+              "__bt_others": false,
+              "__bt_others_num": 0
+            }
+          ]
+        },
+        "height": {
+          "step": 34
+        },
+        "title": {
+          "text": "World Heritage, across multiple sites"
+        },
+        "data": {
+          "values": [
+            {
+              "Property": "Prehistoric Pile Dwellings around the Alps",
+              "Components": 111,
+              "Source": "https://whc.unesco.org/en/list/1363/"
+            },
+            {
+              "Property": "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+              "Components": 16,
+              "Source": "https://whc.unesco.org/en/list/1424/"
+            },
+            {
+              "Property": "The Great Spa Towns of Europe",
+              "Components": 11,
+              "Source": "https://whc.unesco.org/en/list/1613/"
+            },
+            {
+              "Property": "Wooden Churches of the Slovak part of the Carpathian Mountain Area",
+              "Components": 8,
+              "Source": "https://whc.unesco.org/en/list/1273/"
+            }
+          ]
+        },
+        "_interactionSemantics": {
+          "fields": [
+            "Property"
+          ],
+          "categoryField": "Property",
+          "selectableMarks": [
+            "bar"
+          ],
+          "renderHoverStyles": {
+            "rect": {
+              "opacity": "contrast"
+            }
+          },
+          "chartType": "Bar Table",
+          "capabilities": [
+            "elements",
+            "cartesian-region",
+            "reorder",
+            "discrete-axis"
+          ],
+          "axisFields": {
+            "x": {
+              "field": "Components",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Property",
+              "type": "nominal"
+            }
+          },
+          "sourceRecords": [
+            {
+              "Property": "Prehistoric Pile Dwellings around the Alps",
+              "Components": 111,
+              "Source": "https://whc.unesco.org/en/list/1363/"
+            },
+            {
+              "Property": "Wooden Tserkvas of the Carpathian Region in Poland and Ukraine",
+              "Components": 16,
+              "Source": "https://whc.unesco.org/en/list/1424/"
+            },
+            {
+              "Property": "The Great Spa Towns of Europe",
+              "Components": 11,
+              "Source": "https://whc.unesco.org/en/list/1613/"
+            },
+            {
+              "Property": "Wooden Churches of the Slovak part of the Carpathian Mountain Area",
+              "Components": 8,
+              "Source": "https://whc.unesco.org/en/list/1273/"
+            }
+          ],
+          "provenanceFields": [
+            "Property",
+            "Components"
+          ],
+          "temporalProvenanceFields": [],
+          "rangeLegendChannels": [],
+          "navigationAxes": [],
+          "geoNavigation": false,
+          "reorderAxis": {
+            "axis": "y",
+            "field": "Property"
+          },
+          "reorderAxes": [
+            {
+              "axis": "y",
+              "field": "Property"
+            }
+          ],
+          "selectionBoundary": {
+            "color": "#121212",
+            "width": 1.25,
+            "opacity": 0.68,
+            "haloColor": "#ffffff",
+            "haloWidth": 2.5,
+            "haloOpacity": 0.35
+          },
+          "continuousColorFocus": {
+            "mutedFill": "#ececec",
+            "boundaryWidth": 0.8,
+            "boundaryOpacity": 0.42,
+            "haloWidth": 1.25,
+            "haloOpacity": 0.18
+          },
+          "neutralizeContinuousColor": false
+        },
+        "_width": 420,
+        "_height": 280,
+        "_options": [
+          {
+            "key": "maxRows",
+            "label": "Max Rows",
+            "type": "continuous",
+            "min": 5,
+            "max": 100,
+            "step": 1,
+            "defaultValue": 20,
+            "applicable": true,
+            "value": 20
+          },
+          {
+            "key": "showPercent",
+            "label": "% of total",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": true,
+            "value": false
+          },
+          {
+            "key": "independentYAxis",
+            "label": "Independent Y",
+            "type": "binary",
+            "applicable": false,
+            "value": false
+          }
+        ],
+        "_transform": {}
+      }
+    },
+    "health-facets": {
+      "input": {
+        "data": {
+          "values": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2021",
+              "Rate": 64.7
+            },
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2021",
+              "Rate": 41.1
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2021",
+              "Rate": 34.7
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2021",
+              "Rate": 31
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2021",
+              "Rate": 25.4
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2021",
+              "Rate": 13.6
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2021",
+              "Rate": 14.5
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ]
+        },
+        "semantic_types": {
+          "Cause": "Category",
+          "Rate": "Quantity",
+          "Year": "Category"
+        },
+        "field_display_names": {
+          "Rate": "Deaths per 100,000",
+          "Cause": "Cause"
+        },
+        "chart_spec": {
+          "chartType": "Bar Chart",
+          "title": "Two years of health outcomes",
+          "subtitle": "United States, 2021 and 2022; selected age-adjusted death rates",
+          "encodings": {
+            "y": "Cause",
+            "x": "Rate",
+            "column": "Year"
+          },
+          "baseSize": {
+            "width": 420,
+            "height": 280
+          }
+        }
+      },
+      "spec": {
+        "mark": "bar",
+        "encoding": {
+          "y": {
+            "field": "Cause",
+            "type": "nominal",
+            "sort": null,
+            "title": "Cause"
+          },
+          "x": {
+            "field": "Rate",
+            "type": "quantitative",
+            "title": "Deaths per 100,000",
+            "scale": {
+              "zero": true
+            },
+            "axis": {
+              "format": ",.12~g"
+            }
+          },
+          "facet": {
+            "field": "Year",
+            "type": "nominal",
+            "sort": null,
+            "columns": 2
+          }
+        },
+        "config": {
+          "view": {
+            "continuousWidth": 224,
+            "continuousHeight": 280
+          },
+          "axisX": {
+            "labelLimit": 100,
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "labelSeparation": 6,
+            "titleFontWeight": "normal",
+            "titleColor": "#666"
+          },
+          "axisY": {
+            "labelFontSize": 10,
+            "titleFontSize": 11,
+            "titleFontWeight": "normal",
+            "titleColor": "#666"
+          },
+          "legend": {
+            "labelFontSize": 10,
+            "titleFontSize": 11
+          },
+          "headerFacet": {
+            "labelLimit": 244
+          },
+          "facet": {
+            "spacing": 22
+          }
+        },
+        "height": {
+          "step": 28
+        },
+        "title": {
+          "text": "Two years of health outcomes",
+          "subtitle": [
+            "United States, 2021 and 2022; selected age-adjusted death rates"
+          ]
+        },
+        "data": {
+          "values": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2021",
+              "Rate": 64.7
+            },
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2021",
+              "Rate": 41.1
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2021",
+              "Rate": 34.7
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2021",
+              "Rate": 31
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2021",
+              "Rate": 25.4
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2021",
+              "Rate": 13.6
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2021",
+              "Rate": 14.5
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ]
+        },
+        "_interactionSemantics": {
+          "fields": [
+            "Rate",
+            "Cause"
+          ],
+          "categoryField": "Cause",
+          "reorderAxes": [],
+          "selectableMarks": [
+            "bar"
+          ],
+          "renderHoverStyles": {
+            "rect": {
+              "opacity": "contrast"
+            }
+          },
+          "chartType": "Bar Chart",
+          "capabilities": [
+            "elements",
+            "cartesian-region",
+            "discrete-axis"
+          ],
+          "axisFields": {
+            "x": {
+              "field": "Rate",
+              "type": "quantitative"
+            },
+            "y": {
+              "field": "Cause",
+              "type": "nominal"
+            }
+          },
+          "sourceRecords": [
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2021",
+              "Rate": 64.7
+            },
+            {
+              "Cause": "Unintentional injuries",
+              "Year": "2022",
+              "Rate": 64
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2021",
+              "Rate": 41.1
+            },
+            {
+              "Cause": "Cerebrovascular diseases",
+              "Year": "2022",
+              "Rate": 39.5
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2021",
+              "Rate": 34.7
+            },
+            {
+              "Cause": "Chronic lower respiratory diseases",
+              "Year": "2022",
+              "Rate": 34.3
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2021",
+              "Rate": 31
+            },
+            {
+              "Cause": "Alzheimer disease",
+              "Year": "2022",
+              "Rate": 28.9
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2021",
+              "Rate": 25.4
+            },
+            {
+              "Cause": "Diabetes mellitus",
+              "Year": "2022",
+              "Rate": 24.1
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2021",
+              "Rate": 13.6
+            },
+            {
+              "Cause": "Nephritis, nephrotic syndrome and nephrosis",
+              "Year": "2022",
+              "Rate": 13.8
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2021",
+              "Rate": 14.5
+            },
+            {
+              "Cause": "Chronic liver disease and cirrhosis",
+              "Year": "2022",
+              "Rate": 13.8
+            }
+          ],
+          "provenanceFields": [
+            "Cause",
+            "Rate",
+            "Year"
+          ],
+          "temporalProvenanceFields": [],
+          "rangeLegendChannels": [],
+          "navigationAxes": [],
+          "geoNavigation": false,
+          "selectionBoundary": {
+            "color": "#121212",
+            "width": 1.25,
+            "opacity": 0.68,
+            "haloColor": "#ffffff",
+            "haloWidth": 2.5,
+            "haloOpacity": 0.35
+          },
+          "continuousColorFocus": {
+            "mutedFill": "#ececec",
+            "boundaryWidth": 0.8,
+            "boundaryOpacity": 0.42,
+            "haloWidth": 1.25,
+            "haloOpacity": 0.18
+          },
+          "neutralizeContinuousColor": false
+        },
+        "_width": 224,
+        "_height": 280,
+        "_options": [
+          {
+            "key": "cornerRadius",
+            "label": "Corners",
+            "type": "continuous",
+            "min": 0,
+            "max": 15,
+            "step": 1,
+            "defaultValue": 0,
+            "applicable": true,
+            "value": 0
+          },
+          {
+            "key": "independentYAxis",
+            "label": "Independent Y",
+            "type": "binary",
+            "applicable": false,
+            "value": false
+          },
+          {
+            "key": "xAxisType",
+            "label": "X as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "yAxisType",
+            "label": "Y as",
+            "type": "discrete",
+            "options": [
+              {
+                "value": "temporal",
+                "label": "Temporal"
+              },
+              {
+                "value": "nominal",
+                "label": "Discrete"
+              }
+            ],
+            "applicable": false
+          },
+          {
+            "key": "showValueLabels",
+            "label": "Values",
+            "type": "binary",
+            "defaultValue": false,
+            "applicable": true,
+            "value": false
+          }
+        ],
+        "_transform": {
+          "chartType": {
+            "key": "chartType",
+            "label": "Chart type",
+            "length": 2,
+            "index": 0,
+            "ids": [
+              "default",
+              "type:Lollipop Chart"
+            ],
+            "labels": [
+              "Bar Chart",
+              "Lollipop Chart"
+            ]
+          },
+          "arrange": {
+            "key": "arrange",
+            "label": "Arrange",
+            "length": 5,
+            "index": 0,
+            "ids": [
+              "default",
+              "flip:x-y",
+              "series:color",
+              "series:row",
+              "flip:x-y|series:color"
+            ],
+            "labels": [
+              "Default",
+              "X ⇄ Y",
+              "Columns ⇄ Color",
+              "Columns ⇄ Rows",
+              "X ⇄ Y · Columns ⇄ Color"
+            ]
+          }
+        },
+        "_pivot": {
+          "key": "pivot",
+          "label": "View",
+          "length": 12,
+          "index": 0,
+          "ids": [
+            "default",
+            "flip:x-y",
+            "series:color",
+            "series:row",
+            "type:Lollipop Chart",
+            "flip:x-y|series:color",
+            "flip:x-y|series:row",
+            "flip:x-y|type:Lollipop Chart",
+            "series:color|type:Lollipop Chart",
+            "series:row|type:Lollipop Chart",
+            "flip:x-y|series:color|type:Lollipop Chart",
+            "flip:x-y|series:row|type:Lollipop Chart"
+          ],
+          "labels": [
+            "Default",
+            "X ⇄ Y",
+            "Columns ⇄ Color",
+            "Columns ⇄ Rows",
+            "θ_→lollipop",
+            "X ⇄ Y · Columns ⇄ Color",
+            "X ⇄ Y · Columns ⇄ Rows",
+            "X ⇄ Y · θ_→lollipop",
+            "Columns ⇄ Color · θ_→lollipop",
+            "Columns ⇄ Rows · θ_→lollipop",
+            "X ⇄ Y · Columns ⇄ Color · θ_→lollipop",
+            "X ⇄ Y · Columns ⇄ Rows · θ_→lollipop"
+          ]
+        }
+      }
+    }
+  }
+}

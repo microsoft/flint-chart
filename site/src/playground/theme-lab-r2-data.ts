@@ -61,7 +61,7 @@ export const R2_CASES: R2Case[] = [
     { id: 'bar-n30', gen: 'Bar Chart', index: 2, family: 'Bars & ranking', title: 'Orders by product line', probe: '30 bands: label rotation, printed values, band occupancy' },
     { id: 'bar-n100', gen: 'Bar Chart', index: 3, family: 'Bars & ranking', title: 'Sessions by page', subtitle: 'Top 100 pages by traffic', probe: '100 bands, overflow and cutoff — every per-mark rule at its limit' },
     { id: 'bar-horizontal', gen: 'Bar Chart', index: 6, family: 'Bars & ranking', title: 'Downloads by platform', probe: 'horizontal bars: which axis is the index, which the measure' },
-    { id: 'bar-temporal', gen: 'Bar Chart', index: 9, family: 'Bars & ranking', title: 'Monthly shipments', subtitle: 'Units, 2022–2023', probe: 'temporal band axis — tick policy on a bar chart' },
+    { id: 'bar-temporal', gen: 'Bar Chart', index: 9, family: 'Bars & ranking', title: 'Shipments over time', subtitle: 'Units, 2020–2022', probe: 'temporal band axis — tick policy on a bar chart' },
     { id: 'bar-temporal-color', gen: 'Bar Chart', index: 11, family: 'Bars & ranking', title: 'Shipments by region', subtitle: 'Units per month', probe: 'temporal bands with a nominal series on colour' },
     { id: 'bar-grid', gen: 'Bar Chart', index: 16, family: 'Bars & ranking', title: 'Category by tier', probe: 'two discrete positional channels on a bar template' },
     { id: 'stacked-n15', gen: 'Stacked Bar Chart', index: 1, family: 'Bars & ranking', title: 'Spend by department', subtitle: 'Five cost centres across fifteen teams', probe: '15 bands × 5 series: legend, printed values, stack order' },

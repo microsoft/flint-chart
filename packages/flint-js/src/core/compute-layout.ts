@@ -1080,8 +1080,8 @@ export function computeLayout(
     // — and rotate when bands are narrow) rather than staying at the full
     // continuous base font. Otherwise dense date/number bands render oversized
     // labels that feel too large for their band and crowd together.
-    const xHasDiscreteItems = xTotalNominalCount > 0 || xContinuousAsDiscrete > 0;
-    const yHasDiscreteItems = yTotalNominalCount > 0 || yContinuousAsDiscrete > 0;
+    const xHasDiscreteItems = !declaration.binnedAxes?.x && (xTotalNominalCount > 0 || xContinuousAsDiscrete > 0);
+    const yHasDiscreteItems = !declaration.binnedAxes?.y && (yTotalNominalCount > 0 || yContinuousAsDiscrete > 0);
     // Canvas-adaptive fonts: descend the tick ladder from the backend's native
     // base, and derive header/legend sizes. Scaled by the (sub)plot's smaller
     // dimension so small multiples shrink and large single views grow subtly.

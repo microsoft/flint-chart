@@ -2,7 +2,10 @@
   "mcpServers": {
     "flint": {
       "command": "npx",
-      "args": ["--yes", "flint-chart-mcp"],
+      "args": [
+        "--yes",
+        "flint-chart-mcp@1.0.0"
+      ],
       "cwd": "${PLUGIN_ROOT}"
     }
   }

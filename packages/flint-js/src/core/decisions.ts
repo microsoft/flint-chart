@@ -744,6 +744,125 @@ export interface LabelSizingDecision {
     labelAlign?: string;
     /** Label baseline (for rotated labels) */
     labelBaseline?: string;
+    labelValues?: string[];
+    labelLines?: string[][];
+    labelLineHeight?: number;
+}
+
+export function fitTwoLineLabels(labels: string[], fontSize: number, maxWidth: number, ellipsis = false,
+    widthOf: (text: string) => number = (text) => text.length * fontSize * 0.62): {
+    lines: string[][];
+    width: number;
+} | null {
+    const lines: string[][] = [];
+    let width = 0;
+    for (const label of labels) {
+        if (widthOf(label) <= maxWidth) {
+            lines.push([label]);
+            width = Math.max(width, widthOf(label));
+            continue;
+        }
+        let best: string[] | undefined;
+        let bestWidth = Infinity;
+        for (const match of label.matchAll(/\s+/g)) {
+            const candidate = [label.slice(0, match.index), label.slice(match.index + match[0].length)];
+            if (candidate.some((line) => !line)) continue;
+            const candidateWidth = Math.max(...candidate.map(widthOf));
+            if (candidateWidth < bestWidth) {
+                best = candidate;
+                bestWidth = candidateWidth;
+            }
+        }
+        if (!best || bestWidth > maxWidth) {
+            if (!ellipsis) return null;
+            let split: RegExpMatchArray | undefined;
+            for (const match of label.matchAll(/\s+/g)) {
+                if (widthOf(label.slice(0, match.index)) <= maxWidth) split = match;
+            }
+            if (split) {
+                lines.push([label.slice(0, split.index), label.slice(split.index! + split[0].length)]);
+            } else {
+                lines.push(best ?? [label]);
+            }
+            width = Math.max(width, maxWidth);
+            continue;
+        }
+        lines.push(best);
+        width = Math.max(width, bestWidth);
+    }
+    return lines.some((label) => label.length > 1) ? { lines, width } : null;
+}
+
+export function computeBandLabelLayout(input: {
+    labels: string[];
+    axis: 'x' | 'y';
+    fontSize: number;
+    step: number;
+    baseSpan: number;
+    maxSpan: number;
+    gutterLimit: number;
+    baselineLimit: number;
+    elasticity: number;
+}): { step: number; width: number; lines: string[][]; lineHeight: number } | null {
+    const { labels, axis, fontSize, step, baseSpan, maxSpan, gutterLimit, baselineLimit, elasticity } = input;
+    if (!labels.length || baseSpan <= 0 || maxSpan <= 0) return null;
+    const widthOf = (text: string) => text.length * fontSize * 0.62;
+    const lineHeight = Math.ceil(fontSize * 1.2);
+    const widths = labels.map(widthOf);
+    const demands = labels.map((label, index) => {
+        let width = widths[index];
+        for (const match of label.matchAll(/\s+/g)) {
+            if (!match.index || match.index + match[0].length === label.length) continue;
+            width = Math.min(width, Math.max(widthOf(label.slice(0, match.index)), widthOf(label.slice(match.index + match[0].length))));
+        }
+        return width;
+    });
+    const count = labels.length;
+    const baseStep = baseSpan / count;
+    const preferredWidth = Math.min(Math.max(...demands), gutterLimit);
+    const preferredDemands = axis === 'x'
+        ? demands.map((width) => width + 6)
+        : widths.map((width) => (width > preferredWidth ? lineHeight * 2 : lineHeight) + 6);
+    const excess = preferredDemands.reduce((sum, demand) => sum + Math.min(baseStep, Math.max(0, demand - baseStep)), 0) / count;
+    const preferredStep = Math.max(step, Math.min(Math.max(...preferredDemands), baseStep) + excess);
+    const solved = computeAxisStep(count, 0, baseSpan, {
+        defaultStepSize: Math.ceil(preferredStep),
+        minStep: Math.min(step, baseStep),
+        elasticity,
+        maxStretch: Math.max(1, maxSpan / baseSpan),
+    });
+    const minimumYStep = fontSize + (widths.some(width => width > preferredWidth) ? lineHeight : 0) + 4;
+    const proposedStep = Math.min(maxSpan / count, Math.max(step, solved.step, axis === 'y' ? minimumYStep : 0));
+    const width = axis === 'x' ? proposedStep - 6 : preferredWidth;
+    if (width < fontSize * 4 && widths.some((labelWidth) => labelWidth > width)) return null;
+    const fit = fitTwoLineLabels(labels, fontSize, width, true);
+    const lines = fit?.lines ?? labels.map((label) => [label]);
+    const rows = Math.max(...lines.map((parts) => parts.length));
+    if (axis === 'y' && (rows - 1) * lineHeight + fontSize + 4 > proposedStep) return null;
+    const retainedWidth = (text: string, limit: number) => widthOf(text) <= limit
+        ? widthOf(text) : Math.max(0, limit - fontSize);
+    const loss = (parts: string[][], limit: number) => parts.reduce((sum, row, index) => {
+        const retained = row.reduce((total, line) => total + retainedWidth(line, limit), 0)
+            + (row.length - 1) * widthOf(' ');
+        return sum + Math.max(0, 1 - retained / Math.max(1, widths[index]));
+    }, 0) / count;
+    const imbalance = (parts: string[][], limit: number) => {
+        const extents = parts.map((row) => Math.min(limit, Math.max(...row.map(widthOf))));
+        return (Math.max(...extents) - extents.reduce((sum, value) => sum + value, 0) / count) / Math.max(1, gutterLimit);
+    };
+    const baseline = labels.map((label) => [label]);
+    const expansion = Math.max(0, (Math.min(proposedStep * count, baseSpan) - Math.min(step * count, baseSpan)) / baseSpan);
+    const stretch = Math.max(0, proposedStep * count / baseSpan - 1);
+    const baselineStretch = Math.max(0, step * count / baseSpan - 1);
+    const wrappedShare = lines.filter((row) => row.length > 1).length / count;
+    const horizontalCost = loss(lines, width) + 0.18 * expansion + Math.max(0, stretch * stretch - baselineStretch * baselineStretch)
+        + 0.04 * wrappedShare + (axis === 'y' ? 0.15 * imbalance(lines, width) : 0);
+    const baselineCost = loss(baseline, baselineLimit)
+        + (axis === 'x' ? 0.3 : 0.15 * imbalance(baseline, baselineLimit));
+    if (horizontalCost > baselineCost) return null;
+    if (axis === 'x' && !fit && widths.some((labelWidth) => labelWidth > width)) return null;
+    if (axis === 'y' && !fit) return null;
+    return { step: proposedStep, width, lines, lineHeight };
 }
 
 /**

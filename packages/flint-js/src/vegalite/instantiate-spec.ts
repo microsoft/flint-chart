@@ -23,8 +23,429 @@ import type {
 } from '../core/types';
 import { formatSpecToLabelExpr } from './format';
 import { snapToBoundHeuristic } from '../core/field-semantics';
+import { computeBandLabelLayout } from '../core/decisions';
+import { resolveStretchCaps } from '../core/compute-layout';
 
 const DEFAULT_QUANTITATIVE_AXIS_FORMAT = ',.12~g';
+const VEGA_AXIS_LABEL_LIMIT = 180;
+
+interface LegendTextBox {
+    width: number;
+    height: number;
+    fontSize: number;
+    cost: number;
+    entryRows: number;
+    entryLines: number;
+}
+
+function fitLegendText(spec: any, context: InstantiateContext, budget?: { width?: number; height?: number }): LegendTextBox[] {
+    const config = spec.config?.legend ?? {};
+    const boxes: LegendTextBox[] = [];
+    if (config.disable) return boxes;
+    const canvas = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+    const measure = (fontSize: number, font: string, weight: string | number, style: string) => {
+        const cache = new Map<string, number>();
+        return (text: string): number => {
+            if (!canvas) return text.length * fontSize * 0.62;
+            if (!cache.has(text)) {
+                canvas.font = `${style} ${weight} ${fontSize}px ${font}`;
+                cache.set(text, canvas.measureText(text).width);
+            }
+            return cache.get(text)!;
+        };
+    };
+    const sideWidth = (config.labelFontSize ?? context.layout.legendFontSize) * 18;
+    const wrapLines = (text: string, width: number, maxLines: number, widthOf: (text: string) => number): string[] => {
+        if (text.includes('\n')) return text.split('\n');
+        const words = text.split(/\s+/);
+        const lines: string[] = [];
+        let line = '';
+        for (const word of words) {
+            const next = line ? `${line} ${word}` : word;
+            if (line && widthOf(next) > width && lines.length < maxLines - 1) {
+                lines.push(line);
+                line = word;
+            } else {
+                line = next;
+            }
+        }
+        return [...lines, line];
+    };
+    const visit = (node: any, inheritedWidth: number): void => {
+        const block = typeof node.width === 'number' ? node.width
+            : typeof node.width?.step === 'number' && context.layout.xNominalCount
+                ? node.width.step * context.layout.xNominalCount : inheritedWidth;
+        for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity', 'strokeDash', 'strokeWidth']) {
+            const encoding = node.encoding?.[channel];
+            if (!encoding?.field || encoding.legend === null || encoding.legend === false || encoding.scale === null) continue;
+            const legend = encoding.legend ?? {};
+            const settings = { ...config, ...legend };
+            const fontSize = settings.labelFontSize ?? context.layout.legendFontSize;
+            const titleFontSize = settings.titleFontSize ?? context.layout.titleFontSize;
+            const labelWidth = measure(fontSize, settings.labelFont ?? spec.config?.font ?? 'sans-serif',
+                settings.labelFontWeight ?? 'normal', settings.labelFontStyle ?? 'normal');
+            const measureTitle = measure(titleFontSize, settings.titleFont ?? spec.config?.font ?? 'sans-serif',
+                settings.titleFontWeight ?? 'bold', settings.titleFontStyle ?? 'normal');
+            const title = settings.title !== undefined ? settings.title
+                : encoding.title !== undefined ? encoding.title : encoding.aggregate ? undefined : encoding.field;
+            const horizontal = ['top', 'bottom'].includes(settings.orient)
+                && settings.direction !== 'vertical';
+            const inlineTitle = horizontal && ['left', 'right'].includes(settings.titleOrient);
+            const titleWidth = horizontal ? (inlineTitle ? block / 3 : block) : sideWidth;
+            let titleExtent = 0;
+            if (typeof title === 'string' && typeof titleFontSize === 'number'
+                && settings.titleLimit === undefined && settings.titleLineHeight === undefined && !legend.encoding?.title) {
+                const lines = wrapLines(title, titleWidth, 3, measureTitle);
+                legend.titleLimit = 0;
+                if (lines.length > 1) {
+                    legend.title = lines;
+                    legend.titleLineHeight = Math.ceil(titleFontSize * 1.2);
+                }
+            }
+            if (inlineTitle && title && typeof titleFontSize === 'number') {
+                const lines = Array.isArray(legend.title ?? title) ? (legend.title ?? title) : [title];
+                titleExtent = Math.min(settings.titleLimit || Infinity,
+                    Math.max(...lines.map(measureTitle)))
+                    + (settings.titlePadding ?? 10);
+            }
+            const plotHeight = typeof spec.height === 'number' ? spec.height
+                : context.layout.subplotHeight ?? context.canvasSize.height;
+            const titleLines = Array.isArray(legend.title ?? title) ? (legend.title ?? title).length : title ? 1 : 0;
+            const titleHeight = inlineTitle ? 0 : titleLines * Math.ceil(titleFontSize * 1.2) + (titleLines ? settings.titlePadding ?? 10 : 0);
+            const discrete = ['nominal', 'ordinal'].includes(encoding.type);
+            const numericGradient = !discrete && ['color', 'fill', 'stroke', 'opacity'].includes(channel)
+                && settings.type !== 'symbol' && !['quantize', 'quantile', 'threshold', 'bin-ordinal'].includes(encoding.scale?.type);
+            const nativeValues = settings.values ?? encoding.scale?.domain;
+            const nativeCount = Array.isArray(nativeValues) ? nativeValues.length : discrete
+                ? new Set(context.table.map(row => row[encoding.field])).size : 5;
+            const nativeRows = Math.ceil(nativeCount / (settings.columns || (horizontal ? nativeCount : 1)));
+            const nativeSymbol = Math.sqrt(settings.symbolSize ?? (channel === 'size'
+                ? Math.max(...(encoding.scale?.range?.filter?.((value: any) => typeof value === 'number') ?? [400])) : 100)) + 2;
+            const nativeLabelWidth = settings.labelLimit ?? Math.min(sideWidth, Math.max(fontSize * 4,
+                ...((Array.isArray(nativeValues) ? nativeValues : context.table.map(row => row[encoding.field])).map((value: any) => labelWidth(String(value))))));
+            const gradientLength = settings.gradientLength ?? 200;
+            let box: LegendTextBox = {
+                width: titleExtent + (numericGradient ? horizontal ? gradientLength : (settings.gradientThickness ?? 16) + nativeLabelWidth + 6
+                    : (settings.columns || (horizontal ? nativeCount : 1)) * (nativeLabelWidth + nativeSymbol + 4)) + 2 * (settings.padding ?? 0),
+                height: titleHeight + (numericGradient ? horizontal ? (settings.gradientThickness ?? 16) + fontSize * 1.5 : gradientLength
+                    : nativeRows * (Math.max(fontSize * 1.2, nativeSymbol) + (settings.rowPadding ?? 2))) + 2 * (settings.padding ?? 0),
+                fontSize, cost: 0, entryRows: numericGradient ? 1 : nativeRows, entryLines: 1,
+            };
+            if (['nominal', 'ordinal'].includes(encoding.type) && typeof fontSize === 'number'
+                && settings.labelExpr === undefined && settings.labelLimit === undefined
+                && settings.format === undefined && settings.formatType === undefined && !legend.encoding?.labels) {
+                const field = encoding.field;
+                const values = Array.isArray(settings.values) ? settings.values
+                    : Array.isArray(encoding.scale?.domain) ? encoding.scale.domain
+                    : context.table.map(row => row[field]);
+                const labels = [...new Set<string>(values.filter((value: any) => value != null).map(String))];
+                let selectedLines: string[][] | undefined;
+                let selectedLimit = 0;
+                if (labels.length) {
+                    const gap = settings.columnPadding ?? 10;
+                    const symbol = Math.sqrt(settings.symbolSize ?? 100) + (settings.labelOffset ?? 4);
+                    const available = Math.max(1, (budget?.width ?? (horizontal ? block : sideWidth + symbol)) - titleExtent - 2 * (settings.padding ?? 0));
+                    const heightBudget = budget?.height ?? (horizontal ? Math.max(48, plotHeight * 0.4) : plotHeight);
+                    const rowGap = settings.rowPadding ?? 6;
+                    let bestCost = Infinity;
+                    let columns = 1;
+                    const columnCounts = typeof settings.columns === 'number'
+                        ? [settings.columns > 0 ? Math.min(settings.columns, labels.length) : labels.length]
+                        : Array.from({ length: labels.length }, (_, index) => index + 1);
+                    const naturalWidth = Math.max(...labels.map(labelWidth));
+                    const lineHeight = Math.ceil(fontSize * 1.2);
+                    const headingWidth = inlineTitle || !title ? 0 : Math.min(settings.titleLimit || Infinity,
+                        Math.max(...(Array.isArray(legend.title ?? title) ? legend.title ?? title : [title]).map(measureTitle)));
+                    for (const count of columnCounts) {
+                        const limit = count === labels.length ? available - symbol
+                            : (available - gap * (count - 1)) / count - symbol;
+                        if (limit < fontSize * 4 && count > 1) continue;
+                        const startWidth = Math.max(Math.min(naturalWidth, fontSize * 4), Math.min(naturalWidth, limit));
+                        const minWidth = Math.min(startWidth, fontSize * 4);
+                        const steps = startWidth > minWidth ? 24 : 0;
+                        for (let step = 0; step <= steps; step++) {
+                            const textWidth = startWidth - (startWidth - minWidth) * step / Math.max(1, steps);
+                            let lines: string[][] = [];
+                            let height = 0;
+                            for (let maxLines = 3; maxLines >= 1; maxLines--) {
+                                lines = labels.map(label => wrapLines(label, textWidth, maxLines, labelWidth));
+                                const rowLines = Math.max(...lines.map(entry => entry.length));
+                                const heights = lines.map(entry => Math.max(Math.sqrt(settings.symbolSize ?? 100) + 2,
+                                    lineHeight * entry.length));
+                                const rowCount = Math.ceil(labels.length / count);
+                                height = titleHeight + Math.max(0, rowCount - 1) * rowGap + 2 * (settings.padding ?? 0);
+                                for (let row = 0; row < rowCount; row++) {
+                                    height += horizontal && rowLines > 1
+                                        ? Math.max(fontSize + (rowLines - 1) * lineHeight, Math.sqrt(settings.symbolSize ?? 100)) + 4
+                                        : Math.max(...heights.slice(row * count, (row + 1) * count));
+                                }
+                                if (height <= heightBudget) break;
+                            }
+                            const widths = lines.map(entry => Math.max(...entry.map(line => Math.min(textWidth, labelWidth(line)))));
+                            const columnWidths = Array.from({ length: count }, (_, column) => Math.max(...widths
+                                .filter((_, index) => index % count === column)));
+                            const extent = columnWidths.reduce((sum, column) => sum + column + symbol, 0) + gap * (count - 1);
+                            const width = Math.max(extent + titleExtent, headingWidth) + 2 * (settings.padding ?? 0);
+                            const loss = lines.reduce((total, entry, index) => total + entry.reduce((lost, line) =>
+                                lost + (labelWidth(line) > textWidth ? labelWidth(line) - Math.max(0, textWidth - labelWidth('…')) : 0), 0)
+                                / Math.max(1, labelWidth(labels[index])), 0) / labels.length;
+                            const wrappingCost = lines.reduce((sum, entry) => sum
+                                + (entry.length > 1 ? 0.6 : 0) + Math.max(0, entry.length - 2) * 1.4, 0) / labels.length;
+                            const widest = Math.max(...widths, 1);
+                            const imbalance = (widest - widths.reduce((sum, value) => sum + value, 0) / widths.length) / widest;
+                            const overflow = Math.max(0, height / heightBudget - 1) * 10
+                                + Math.max(0, extent / available - 1) * (horizontal ? 10 : 2);
+                            const widthCost = (horizontal ? 0.12 : 1) * width / (available + titleExtent + 2 * (settings.padding ?? 0));
+                            const cost = overflow + widthCost
+                                + wrappingCost + 0.25 * imbalance + 4 * loss + (loss ? 0.25 : 0)
+                                + (horizontal ? 0.6 * height / heightBudget : 0) + 0.005 * count;
+                            if (cost < bestCost) {
+                                bestCost = cost;
+                                columns = count;
+                                selectedLines = lines;
+                                selectedLimit = loss ? textWidth : 0;
+                                box = { width, height, fontSize, cost: cost - overflow - widthCost,
+                                    entryRows: Math.ceil(labels.length / count), entryLines: Math.max(...lines.map(entry => entry.length)) };
+                            }
+                        }
+                    }
+                    if (settings.columns === undefined && (!horizontal || columns < labels.length)) legend.columns = columns;
+                    legend.labelFontSize = fontSize;
+                    legend.labelLimit = selectedLimit;
+                    legend.rowPadding = rowGap;
+                    if (settings.symbolLimit === undefined) legend.symbolLimit = 0;
+                }
+                const fit = selectedLines?.some(lines => lines.length > 1) ? { lines: selectedLines } : null;
+                if (fit) {
+                    const index = `indexof(${JSON.stringify(labels)}, toString(datum.label))`;
+                    legend.labelExpr = `${index} < 0 ? datum.label : ${JSON.stringify(fit.lines)}[${index}]`;
+                    if (settings.clipHeight === undefined && settings.labelBaseline === undefined
+                        && !legend.encoding?.symbols) {
+                        const lineHeight = Math.ceil(fontSize * 1.2);
+                        const maxLines = Math.max(...fit.lines.map(lines => lines.length));
+                        const rowHeight = Math.max(fontSize + (maxLines - 1) * lineHeight, Math.sqrt(settings.symbolSize ?? 100)) + 4;
+                        if (horizontal) legend.clipHeight = rowHeight;
+                        legend.labelBaseline = 'top';
+                        legend.rowPadding = settings.rowPadding ?? 6;
+                        legend.gridAlign = settings.gridAlign ?? (horizontal ? 'all' : 'each');
+                        legend.encoding = {
+                            ...legend.encoding,
+                            labels: { y: { value: 2 }, lineHeight: { value: lineHeight } },
+                            symbols: { y: { value: 2 + fontSize / 2 } },
+                        };
+                    }
+                }
+                legend.encoding = {
+                    ...legend.encoding,
+                    labels: { ...legend.encoding?.labels,
+                        tooltip: { value: { expr: 'datum.value' } },
+                        description: { value: { expr: 'toString(datum.value)' } } },
+                };
+            }
+            if (title && typeof titleFontSize === 'number') {
+                const lines = Array.isArray(legend.title ?? title) ? legend.title ?? title : [title];
+                const measuredTitleWidth = Math.min(settings.titleLimit || Infinity, Math.max(...lines.map(measureTitle)));
+                if (!inlineTitle) box.width = Math.max(box.width, measuredTitleWidth + 2 * (settings.padding ?? 0));
+                else box.height = Math.max(box.height, lines.length * Math.ceil(titleFontSize * 1.2) + 2 * (settings.padding ?? 0));
+            }
+            if (Object.keys(legend).length) encoding.legend = legend;
+            boxes.push(box);
+        }
+        if (node.spec) visit(node.spec, block);
+        for (const key of ['layer', 'concat', 'hconcat', 'vconcat']) {
+            for (const child of node[key] ?? []) visit(child, block);
+        }
+    };
+    visit(spec, spec.config?.view?.continuousWidth ?? context.canvasSize.width);
+    return boxes;
+}
+
+export function vlWrapLegendText(spec: any, context: InstantiateContext): void {
+    if (spec.config?.legend?.disable) return;
+    const layout = context.layout;
+    let plotWidth = layout.subplotWidth ?? context.canvasSize.width;
+    let plotHeight = layout.subplotHeight ?? context.canvasSize.height;
+    const dimensions = (node: any): void => {
+        const width = typeof node.width === 'number' ? node.width
+            : typeof node.width?.step === 'number' ? node.width.step * layout.xNominalCount : undefined;
+        const height = typeof node.height === 'number' ? node.height
+            : typeof node.height?.step === 'number' ? node.height.step * layout.yNominalCount : undefined;
+        if (width > 0) plotWidth = width;
+        if (height > 0) plotHeight = height;
+        if (node.spec) dimensions(node.spec);
+        for (const child of node.layer ?? []) dimensions(child);
+        const children = node.vconcat ?? node.hconcat ?? node.concat;
+        if (children) {
+            const plot = children.find((child: any) => child.facet || child.encoding?.x?.field || child.encoding?.y?.field || child.layer);
+            if (plot) dimensions(plot);
+        }
+    };
+    dimensions(spec);
+    plotWidth = plotWidth * (layout.facet?.columns ?? 1) + Math.max(0, (layout.facet?.columns ?? 1) - 1) * (layout.effectiveFacetGap ?? 10);
+    plotHeight = plotHeight * (layout.facet?.rows ?? 1) + Math.max(0, (layout.facet?.rows ?? 1) - 1) * (layout.effectiveFacetGap ?? 10);
+    const config = spec.config?.legend ?? {};
+    type Candidate = LegendTextBox & { orient: string; legend: any; preference: number };
+    const groups: Array<{ channel: string; encoding: any; refs: any[]; candidates: Candidate[] }> = [];
+    const keys = new Map<string, number>();
+    const collect = (node: any): void => {
+        for (const channel of ['color', 'fill', 'stroke', 'shape', 'size', 'opacity', 'strokeDash', 'strokeWidth']) {
+            const encoding = node.encoding?.[channel];
+            if (!encoding?.field || encoding.legend === null || encoding.legend === false || encoding.scale === null) continue;
+            const key = JSON.stringify([encoding.field, encoding.type, channel === 'size' ? 'size' : 'ink', encoding.scale, encoding.legend, encoding.title]);
+            const found = keys.get(key);
+            if (found !== undefined) groups[found].refs.push(encoding);
+            else {
+                keys.set(key, groups.length);
+                groups.push({ channel, encoding, refs: [encoding], candidates: [] });
+            }
+        }
+        if (node.spec) collect(node.spec);
+        for (const key of ['layer', 'concat', 'hconcat', 'vconcat']) for (const child of node[key] ?? []) collect(child);
+    };
+    collect(spec);
+    if (!groups.length) return;
+    const sideBudget = (config.labelFontSize ?? layout.legendFontSize) * 24 + 14;
+    const horizontalBudget = Math.max(48, plotHeight * 0.4);
+    for (const group of groups) {
+        const preferred = group.encoding.legend?.orient ?? config.orient ?? 'right';
+        const authored = context.encodings?.[group.channel] as any;
+        const fixed = authored?.legend?.orient !== undefined
+            || (!context.encodings && (group.encoding.legend?.orient !== undefined || config.orient !== undefined))
+            || !['left', 'right', 'top', 'bottom'].includes(preferred);
+        const fixedTitle = authored?.legend?.titleOrient !== undefined
+            || (!context.encodings && (group.encoding.legend?.titleOrient !== undefined || config.titleOrient !== undefined));
+        const orients = fixed ? [preferred] : [...new Set([preferred, 'right', 'bottom', 'top', 'left'])];
+        for (const orient of orients) {
+            const horizontal = orient === 'top' || orient === 'bottom';
+            for (const fraction of groups.length > 1 ? [1, 0.5] : [1]) {
+                for (const inline of orient === 'bottom' && !fixedTitle && !group.encoding.legend?.encoding?.title ? [false, true] : [false]) {
+                    const encoding = structuredClone(group.encoding);
+                    encoding.legend = { ...(encoding.legend ?? {}) };
+                    if (orient !== preferred) {
+                        encoding.legend.orient = orient;
+                        if (encoding.legend.direction === undefined) encoding.legend.direction = horizontal ? 'horizontal' : 'vertical';
+                        if (encoding.legend.titleOrient === undefined) encoding.legend.titleOrient = 'top';
+                    }
+                    if (inline) encoding.legend.titleOrient = 'left';
+                    const probe = { width: plotWidth, height: plotHeight,
+                        config: { ...spec.config, legend: { ...config, orient } }, encoding: { [group.channel]: encoding } };
+                    const box = fitLegendText(probe, context, {
+                        width: horizontal ? plotWidth * fraction : sideBudget,
+                        height: horizontal ? horizontalBudget : plotHeight * fraction,
+                    })[0];
+                    if (inline && (box.entryRows !== 1 || box.entryLines !== 1 || box.width > plotWidth * fraction
+                        || (Array.isArray(encoding.legend.title) && encoding.legend.title.length > 1))) continue;
+                    const preference = orient === preferred ? 0 : orient === 'left' ? 0.45 : 0.25;
+                    group.candidates.push({ ...box, orient, legend: encoding.legend, preference });
+                }
+            }
+        }
+        const fittingSide = group.candidates.some(candidate => ['left', 'right'].includes(candidate.orient)
+            && candidate.width <= sideBudget && candidate.height <= plotHeight);
+        if (!fixed && fittingSide) {
+            group.candidates = group.candidates.filter(candidate => !['top', 'bottom'].includes(candidate.orient)
+                || (candidate.entryRows <= 2 && candidate.entryLines <= 2));
+        }
+    }
+    const footprint = (choices: Candidate[]) => {
+        const edges = [...new Set(choices.map(choice => choice.orient))].map(orient => {
+            const entries = choices.filter(choice => choice.orient === orient);
+            const horizontal = orient === 'top' || orient === 'bottom';
+            const widthBudget = horizontal ? plotWidth : sideBudget;
+            const heightBudget = horizontal ? horizontalBudget : plotHeight;
+            const gap = config.layout?.[orient]?.margin ?? config.layout?.margin ?? 8;
+            const fixedDirection = config.layout?.[orient]?.direction;
+            const alternatives = (fixedDirection ? [fixedDirection] : ['vertical', 'horizontal']).map(direction => {
+                const width = direction === 'vertical' ? Math.max(...entries.map(entry => entry.width))
+                    : entries.reduce((sum, entry) => sum + entry.width, 0) + gap * (entries.length - 1);
+                const height = direction === 'horizontal' ? Math.max(...entries.map(entry => entry.height))
+                    : entries.reduce((sum, entry) => sum + entry.height, 0) + gap * (entries.length - 1);
+                const overflow = Math.max(0, width / widthBudget - 1) + Math.max(0, height / heightBudget - 1);
+                return { orient, direction, width, height, widthBudget, heightBudget, overflow,
+                    cost: Math.max(0, height / heightBudget - 1) * 20
+                        + Math.max(0, width / widthBudget - 1) * (horizontal ? 20 : 4)
+                        + 0.15 * (horizontal ? height / heightBudget : width / widthBudget) };
+            });
+            return alternatives.sort((first, second) => first.cost - second.cost)[0];
+        });
+        const cost = edges.reduce((sum, edge) => sum + edge.cost, 0)
+            + choices.reduce((sum, choice) => sum + choice.cost + choice.preference, 0)
+            + Math.max(0, edges.length - 1) * 0.1;
+        return { cost, edges };
+    };
+    let plans: Array<{ choices: Candidate[]; cost: number }> = [{ choices: [], cost: 0 }];
+    for (const group of groups) {
+        plans = plans.flatMap(plan => group.candidates.map(candidate => {
+            const choices = [...plan.choices, candidate];
+            return { choices, cost: footprint(choices).cost };
+        })).sort((first, second) => first.cost - second.cost).slice(0, 32);
+    }
+    const chosen = plans[0].choices;
+    const result = footprint(chosen);
+    for (let index = 0; index < groups.length; index++) {
+        for (const encoding of groups[index].refs) encoding.legend = structuredClone(chosen[index].legend);
+    }
+    spec.config ??= {};
+    spec.config.legend ??= {};
+    for (const edge of result.edges) {
+        if (chosen.filter(choice => choice.orient === edge.orient).length < 2) continue;
+        spec.config.legend.layout ??= {};
+        spec.config.legend.layout[edge.orient] = { ...(spec.config.legend.layout[edge.orient] ?? {}),
+            direction: edge.direction, anchor: spec.config.legend.layout[edge.orient]?.anchor ?? 'start' };
+    }
+    spec._legendLayout = {
+        plotWidth, plotHeight,
+        legends: chosen.map((choice, index) => ({ field: groups[index].encoding.field, orient: choice.orient,
+            width: choice.width, height: choice.height, fontSize: choice.fontSize })),
+        overflow: result.edges.filter(edge => edge.overflow > 0).map(({ orient, width, height, widthBudget, heightBudget }) =>
+            ({ orient, width, height, widthBudget, heightBudget })),
+    };
+}
+
+export function vlPlanBandLabels(context: InstantiateContext, template: any): void {
+    const { layout, canvasSize, channelSemantics } = context;
+    const options = context.assembleOptions ?? {};
+    const caps = resolveStretchCaps(options);
+    for (const channel of ['x', 'y'] as const) {
+        const semantics = channelSemantics[channel];
+        const discrete = channel === 'x' ? layout.xNominalCount > 0 : layout.yNominalCount > 0;
+        if (!discrete || !semantics?.field || !['nominal', 'ordinal'].includes(semantics.type)) continue;
+        const targets = [context.resolvedEncodings[channel], template.encoding?.[channel],
+            ...(template.layer ?? []).map((layer: any) => layer.encoding?.[channel])].filter(Boolean);
+        if (targets.some((encoding) => encoding.axis === null || encoding.axis === false
+            || encoding.axis?.labelExpr !== undefined || encoding.axis?.labelAngle !== undefined
+            || encoding.axis?.labelLimit !== undefined || encoding.axis?.format !== undefined)) continue;
+        const labels = [...new Set(context.table.map((row) => row[semantics.field!])
+            .filter((value) => value != null).map(String))];
+        if (!labels.length || labels.every((label) => label.trim() !== '' && Number.isFinite(Number(label)))) continue;
+        const sizing = channel === 'x' ? layout.xLabel : layout.yLabel;
+        const step = channel === 'x' ? layout.xStep : layout.yStep;
+        const panels = channel === 'x' ? layout.facet?.columns ?? 1 : layout.facet?.rows ?? 1;
+        const fixed = channel === 'x' ? options.facetFixedPadding?.width ?? 0 : options.facetFixedPadding?.height ?? 0;
+        const canvasSpan = channel === 'x' ? canvasSize.width : canvasSize.height;
+        const subplotSpan = channel === 'x' ? layout.subplotWidth : layout.subplotHeight;
+        const maxSpan = (canvasSpan * caps[channel] - fixed) / panels - layout.effectiveFacetGap;
+        const baseSpan = Math.min(subplotSpan, (canvasSpan - fixed) / panels - layout.effectiveFacetGap);
+        const fit = computeBandLabelLayout({
+            labels, axis: channel, fontSize: sizing.fontSize, step,
+            baseSpan, maxSpan, gutterLimit: Math.max(VEGA_AXIS_LABEL_LIMIT, Math.min(canvasSize.width, layout.subplotWidth) / 4),
+            baselineLimit: sizing.labelLimit,
+            elasticity: options.elasticity ?? 0.5,
+        });
+        if (!fit) continue;
+        if (channel === 'x') layout.xStep = fit.step;
+        else layout.yStep = fit.step;
+        Object.assign(sizing, {
+            labelAngle: 0,
+            labelAlign: channel === 'x' ? 'center' : 'right',
+            labelBaseline: channel === 'x' ? 'top' : 'middle',
+            labelLimit: Math.ceil(fit.width) + 2,
+            labelValues: labels,
+            labelLines: fit.lines,
+            labelLineHeight: fit.lineHeight,
+        });
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Public API: instantiateSpec
@@ -57,7 +478,7 @@ export function vlApplyLayoutToSpec(
     context: InstantiateContext,
     warnings: ChartWarning[],
 ): void {
-    const { channelSemantics, layout, canvasSize } = context;
+    const { channelSemantics, layout } = context;
 
     const xIsDiscrete = layout.xNominalCount > 0;
     const yIsDiscrete = layout.yNominalCount > 0;
@@ -233,6 +654,28 @@ export function vlApplyLayoutToSpec(
         labelFontSize: layout.yLabel.fontSize,
         titleFontSize: layout.titleFontSize,
     };
+    for (const channel of ['x', 'y'] as const) {
+        const sizing = channel === 'x' ? layout.xLabel : layout.yLabel;
+        if (!sizing.labelLines || !sizing.labelValues) continue;
+        const targets = collectEncodingTargets(channel);
+        if (targets.some((encoding) => encoding.axis === null || encoding.axis === false
+            || encoding.axis?.labelExpr !== undefined || encoding.axis?.labelAngle !== undefined
+            || encoding.axis?.labelLimit !== undefined || encoding.axis?.format !== undefined)) continue;
+        const config = channel === 'x' ? axisXConfig : axisYConfig;
+        const labelIndex = `indexof(${JSON.stringify(sizing.labelValues)}, toString(datum.value))`;
+        Object.assign(config, {
+            labelAngle: sizing.labelAngle,
+            labelAlign: sizing.labelAlign,
+            labelBaseline: sizing.labelBaseline,
+            labelLimit: sizing.labelLimit,
+            labelLineHeight: sizing.labelLineHeight,
+            labelExpr: `${labelIndex} < 0 ? datum.label : ${JSON.stringify(sizing.labelLines)}[${labelIndex}]`,
+        });
+        if (channel === 'y') {
+            const offsets = sizing.labelLines.map(lines => -(lines.length - 1) * (sizing.labelLineHeight ?? sizing.fontSize + 2) / 2);
+            config.labelOffset = { expr: `${labelIndex} < 0 ? 0 : ${JSON.stringify(offsets)}[${labelIndex}]` };
+        }
+    }
     // Vega drops a tick label only once its box *overlaps* its neighbour's, so
     // two numbers whose boxes merely abut both survive and are read as one:
     // `20,000` beside `30,000` prints `20,00030,000`. Numbers need a
@@ -257,29 +700,30 @@ export function vlApplyLayoutToSpec(
     };
 
     // --- Step-based sizing for discrete axes ---
-    if (xIsDiscrete && typeof vgObj.width !== 'number') {
-        vgObj.width = layout.xStepUnit === 'group'
+    const plotSpec = vgObj.facet && vgObj.spec ? vgObj.spec : vgObj;
+    if (xIsDiscrete && typeof plotSpec.width !== 'number') {
+        plotSpec.width = layout.xStepUnit === 'group'
             ? { step: layout.xStep, for: 'position' }
             : { step: layout.xStep };
     }
-    if (yIsDiscrete && typeof vgObj.height !== 'number') {
-        vgObj.height = layout.yStepUnit === 'group'
+    if (yIsDiscrete && typeof plotSpec.height !== 'number') {
+        plotSpec.height = layout.yStepUnit === 'group'
             ? { step: layout.yStep, for: 'position' }
             : { step: layout.yStep };
     }
 
     // Sync hardcoded template width/height to config.view
-    if (typeof vgObj.width === 'number') {
-        vgObj.config.view.continuousWidth = vgObj.width;
-    } else if (vgObj.width && typeof vgObj.width === 'object' && 'step' in vgObj.width) {
-        vgObj.width = layout.xStepUnit === 'group'
+    if (typeof plotSpec.width === 'number') {
+        vgObj.config.view.continuousWidth = plotSpec.width;
+    } else if (plotSpec.width && typeof plotSpec.width === 'object' && 'step' in plotSpec.width) {
+        plotSpec.width = layout.xStepUnit === 'group'
             ? { step: layout.xStep, for: 'position' }
             : { step: layout.xStep };
     }
-    if (typeof vgObj.height === 'number') {
-        vgObj.config.view.continuousHeight = vgObj.height;
-    } else if (vgObj.height && typeof vgObj.height === 'object' && 'step' in vgObj.height) {
-        vgObj.height = layout.yStepUnit === 'group'
+    if (typeof plotSpec.height === 'number') {
+        vgObj.config.view.continuousHeight = plotSpec.height;
+    } else if (plotSpec.height && typeof plotSpec.height === 'object' && 'step' in plotSpec.height) {
+        plotSpec.height = layout.yStepUnit === 'group'
             ? { step: layout.yStep, for: 'position' }
             : { step: layout.yStep };
     }
@@ -353,104 +797,6 @@ export function vlApplyLayoutToSpec(
                 if (!yEnc.axis) yEnc.axis = {};
                 yEnc.axis.title = null;
             }
-        }
-    }
-
-    // --- Dual-legend repositioning ---
-    // When multiple channels produce legends (e.g. color + size, color + opacity),
-    // Vega-Lite stacks them all on the right, which eats into the plot area on a
-    // 400×300 canvas.  Detect this and move the categorical (nominal/ordinal)
-    // legend to the bottom with horizontal orientation, keeping the quantitative
-    // legend compact on the right — BUT only when the total chart height is too
-    // short to fit both stacked on the right comfortably.
-    const legendChannels = (['color', 'size', 'shape', 'opacity', 'strokeDash', 'strokeWidth'] as const)
-        .filter(ch => {
-            const targets = collectEncodingTargets(ch);
-            return targets.some(enc => enc.field && enc.legend !== null);
-        });
-
-    if (legendChannels.length >= 2) {
-        // Separate categorical vs quantitative legend channels
-        const categoricalChs: string[] = [];
-        const quantitativeChs: string[] = [];
-        for (const ch of legendChannels) {
-            const targets = collectEncodingTargets(ch);
-            const isQuant = targets.some(enc => enc.type === 'quantitative' || enc.type === 'temporal');
-            if (isQuant) {
-                quantitativeChs.push(ch);
-            } else {
-                categoricalChs.push(ch);
-            }
-        }
-
-        // Move categorical legends to bottom, keep quantitative ones on right
-        // — but only if the total chart height can't comfortably fit both.
-        if (categoricalChs.length > 0 && quantitativeChs.length > 0) {
-            // Estimate total right-side legend height:
-            //   Quantitative legend ≈ 100px (gradient + title + labels)
-            //   Categorical legend ≈ title(20px) + entries × 20px each
-            const QUANT_LEGEND_HEIGHT = 100;
-            const CAT_TITLE_HEIGHT = 20;
-            const CAT_ENTRY_HEIGHT = 20;
-
-            // Estimate domain sizes for categorical legends
-            let totalCatEntries = 0;
-            for (const ch of categoricalChs) {
-                const targets = collectEncodingTargets(ch);
-                for (const enc of targets) {
-                    if (!enc.field) continue;
-                    const domainSize = new Set(context.table.map((r: any) => r[enc.field])).size;
-                    totalCatEntries += domainSize;
-                }
-            }
-            const estCatHeight = CAT_TITLE_HEIGHT * categoricalChs.length + totalCatEntries * CAT_ENTRY_HEIGHT;
-            const estTotalLegendHeight = QUANT_LEGEND_HEIGHT + estCatHeight + 20; // 20px gap between legends
-
-            // Total chart height = subplot height × facet rows + overhead
-            const totalChartHeight = layout.subplotHeight * (layout.facet?.rows ?? 1)
-                + (layout.facet?.rows ?? 1) * 10; // approx facet spacing
-
-            const fitsOnRight = totalChartHeight >= estTotalLegendHeight;
-
-            if (!fitsOnRight) {
-                for (const ch of categoricalChs) {
-                    const targets = collectEncodingTargets(ch);
-                    for (const enc of targets) {
-                        if (!enc.field) continue;
-                        if (!enc.legend) enc.legend = {};
-                        enc.legend.orient = 'bottom';
-                        enc.legend.direction = 'horizontal';
-
-                        // Responsive columns: estimate how many legend entries fit
-                        // per row based on the available canvas width.
-                        // Each entry ≈ symbol(16) + label + padding.  Estimate label
-                        // width from the longest domain value, then derive columns.
-                        const domainValues = [...new Set(context.table.map((r: any) => r[enc.field]))];
-                        const domainSize = domainValues.length;
-                        const maxLabelLen = Math.max(
-                            ...domainValues.map((v: any) => String(v ?? '').length), 3,
-                        );
-                        // VL legend: symbol (~15px) + label (~5px/char at 11px proportional font) + gap (~8px)
-                        const entryWidth = 15 + maxLabelLen * 5 + 8;
-                        // Available width: VL's bottom legend spans the full SVG width,
-                        // which includes the plot area plus the right-side quantitative
-                        // legend (~130px).  Use that total for column estimation.
-                        const rightLegendWidth = 130;
-                        const availableWidth = canvasSize.width + rightLegendWidth;
-                        const columnsByWidth = Math.max(1, Math.floor(availableWidth / entryWidth));
-                        enc.legend.columns = Math.min(columnsByWidth, domainSize);
-
-                        // For very high cardinality, cap visible symbols to keep
-                        // the bottom legend from growing too tall.
-                        const maxRows = 4;
-                        const maxVisible = columnsByWidth * maxRows;
-                        if (domainSize > maxVisible) {
-                            enc.legend.symbolLimit = maxVisible;
-                        }
-                    }
-                }
-            }
-            // else: chart is tall enough — leave both legends on the right (VL default)
         }
     }
 

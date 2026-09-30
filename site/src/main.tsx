@@ -24,6 +24,8 @@ import { ThemeLabR2 } from './playground/ThemeLabR2';
 import { ThemeLabReal } from './playground/ThemeLabReal';
 import { BandStretchingLab } from './playground/BandStretchingLab';
 import { LabelExperimentLab } from './playground/LabelExperimentLab';
+import { AxisLabelLab } from './playground/AxisLabelLab';
+import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { ClickFocusLab, SpecTestCasesLab } from './playground/ClickFocusLab';
 import { InteractionCoverageLab } from './playground/InteractionCoverageLab';
@@ -86,6 +88,12 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="theme-lab-real" element={<ThemeLabReal />} />
           <Route path="band-stretching" element={<BandStretchingLab />} />
           <Route path="label-experiment" element={<LabelExperimentLab />} />
+          <Route path="axis-label" element={<AxisLabelLab />} />
+          <Route path="release-examples">
+            <Route index element={<Navigate to="1.0.0" replace />} />
+            <Route path="1.0.0" element={<ReleaseExamples100 />} />
+          </Route>
+          <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
           <Route path="spec-test-cases" element={<SpecTestCasesLab />} />

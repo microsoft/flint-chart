@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { describe, it, expect } from 'vitest';
+import { compile as compileVegaLite } from 'vega-lite';
+import { parse, View } from 'vega';
 import { assembleVegaLite } from '../src';
+import { TEST_GENERATORS } from '../src/test-data';
 import { markTypeOf } from '../src/vegalite/theme';
 import { THEME_PRESETS, DEFAULT_THEME_ICON, listThemePresets, resolveThemeSpec } from '../src/core/theme/presets';
 import type { ThemeSpec } from '../src/core/theme/types';
@@ -391,6 +394,45 @@ describe('theme chartDefaults', () => {
     it('drops an option the chart type does not declare, and says so', () => {
         const spec = build(theme({ chartDefaults: { '*': { notAnOption: 3 } } }));
         expect(JSON.stringify(spec._theme?.report ?? [])).toContain('notAnOption');
+    });
+});
+
+describe('faceted rose theme labels', () => {
+    it.each(['nyt', 'mckinsey', 'swiss'])('preserves data-driven radii and categorical angles (%s)', async (themeSpec) => {
+        const fixture = TEST_GENERATORS['Rose Chart']()[6];
+        const spec: any = assembleVegaLite({
+            data: { values: fixture.data },
+            semantic_types: { Direction: 'Category', Speed: 'Quantity', Year: 'Year' },
+            chart_spec: {
+                chartType: 'Rose Chart', chartProperties: fixture.chartProperties,
+                encodings: { x: 'Direction', y: 'Speed', column: 'Year' },
+            },
+            theme_spec: themeSpec,
+        });
+        const view = new View(parse(compileVegaLite(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const arcs: any[] = [];
+            const texts: any[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.marktype === 'arc') arcs.push(item);
+                if (item.mark?.marktype === 'text') texts.push(item.text);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(arcs).toHaveLength(fixture.data.length);
+            for (const arc of arcs) {
+                expect(Number.isFinite(arc.outerRadius)).toBe(true);
+                expect(arc.outerRadius).toBeGreaterThan(0);
+                expect(Number.isFinite(arc.startAngle)).toBe(true);
+                expect(Number.isFinite(arc.endAngle)).toBe(true);
+                expect(arc.endAngle - arc.startAngle).toBeCloseTo(Math.PI / 4);
+            }
+            expect(new Set(arcs.map(arc => arc.outerRadius)).size).toBeGreaterThan(1);
+            expect(texts.map(String)).not.toContain('NaN');
+        } finally {
+            view.finalize();
+        }
     });
 });
 

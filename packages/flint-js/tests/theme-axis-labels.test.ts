@@ -3,7 +3,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { compile } from 'vega-lite';
+import { parse, View } from 'vega';
 import { assembleVegaLite } from '../src';
+import { TEST_GENERATORS } from '../src/test-data';
 
 /**
  * Vega drops a tick label only once its box *overlaps* its neighbour's. Two
@@ -61,6 +63,137 @@ function bars(theme?: string): any {
     return out.spec ?? out;
 }
 
+describe('pyramid outside-value clearance', () => {
+    it.each(['nature', 'mckinsey', 'datawrapper'])('keeps labels apart and both halves comparable (%s)', async (theme) => {
+        for (const fixtureIndex of [3, 6]) {
+            const fixture = TEST_GENERATORS['Pyramid Chart']()[fixtureIndex];
+            const categoryField = fixture.encodingMap.y!.fieldID!;
+            const valueField = fixture.encodingMap.x!.fieldID!;
+            const seriesField = fixture.encodingMap.color!.fieldID!;
+            const categories = new Set(fixture.data.map(row => String(row[categoryField])));
+            const firstSeries = fixture.data[0][seriesField];
+            const spec: any = assembleVegaLite({
+                data: { values: fixture.data },
+                semantic_types: { [categoryField]: 'Category', [valueField]: 'Quantity', [seriesField]: 'Category' },
+                chart_spec: {
+                    chartType: 'Pyramid Chart',
+                    encodings: { x: valueField, y: categoryField, color: seriesField },
+                },
+                theme_spec: theme,
+            });
+            const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+            try {
+                await view.runAsync();
+                const axes: any[] = [];
+                const labels: any[] = [];
+                const bars: any[] = [];
+                const visit = (item: any, offset = { x: 0, y: 0 }): void => {
+                    if (item.opacity !== 0 && item.bounds) {
+                        const box = {
+                            text: item.text, x1: offset.x + item.bounds.x1, x2: offset.x + item.bounds.x2,
+                            y1: offset.y + item.bounds.y1, y2: offset.y + item.bounds.y2,
+                        };
+                        if (item.mark?.role === 'axis-label' && categories.has(String(item.text))) axes.push(box);
+                        if (item.mark?.role === 'mark' && item.mark?.marktype === 'text') labels.push(box);
+                        if (item.mark?.role === 'mark' && item.mark?.marktype === 'rect') {
+                            bars.push({ width: item.width, value: item.datum[valueField],
+                                zero: offset.x + item.x + (item.datum[seriesField] === firstSeries ? item.width : 0) });
+                        }
+                    }
+                    const childOffset = item.mark?.marktype === 'group'
+                        ? { x: offset.x + (item.x ?? 0), y: offset.y + (item.y ?? 0) } : offset;
+                    for (const child of item.items ?? []) visit(child, childOffset);
+                };
+                visit((view.scenegraph() as any).root);
+                expect(axes).toHaveLength(categories.size);
+                expect(labels).toHaveLength(fixture.data.length);
+                expect(bars).toHaveLength(fixture.data.length);
+                const ratio = bars[0].width / bars[0].value;
+                expect(ratio).toBeGreaterThan(0);
+                for (const bar of bars) {
+                    expect(bar.width).toBeGreaterThan(0);
+                    expect(bar.width / bar.value).toBeCloseTo(ratio, 8);
+                    expect(Math.abs(bar.zero - bars[0].zero)).toBeLessThanOrEqual(theme === 'datawrapper' ? 4 : 2);
+                }
+                for (const axis of axes) {
+                    for (const label of labels) {
+                        const sameRow = Math.min(axis.y2, label.y2) > Math.max(axis.y1, label.y1);
+                        if (sameRow) expect(label.x1 - axis.x2, `${theme}: ${axis.text} / ${label.text}`).toBeGreaterThanOrEqual(4);
+                    }
+                }
+            } finally {
+                view.finalize();
+            }
+        }
+    });
+});
+
+describe('Pop axis label clearance', () => {
+    it('leaves room beside its heavy axis rules without changing Swiss', () => {
+        const pop = bars('pop');
+        const swiss = bars('swiss');
+        for (const channel of ['axisX', 'axisY']) {
+            const axis = pop.config[channel];
+            expect(axis.domainWidth).toBe(4.5);
+            expect(axis.labelPadding + Math.max(0, axis.tickSize + (axis.tickOffset ?? 0))).toBe(7);
+            expect(swiss.config[channel].labelPadding).toBe(channel === 'axisX' ? 2 : 0);
+        }
+    });
+});
+
+describe('histogram bin-boundary labels', () => {
+    const histogram = (binCount: number): any => assembleVegaLite({
+        data: { values: Array.from({ length: 36 }, (_, index) => ({ Duration: 1.517 + index * 0.09857 })) },
+        semantic_types: { Duration: 'Quantity' },
+        chart_spec: {
+            chartType: 'Histogram', baseSize: { width: 300, height: 300 },
+            encodings: { x: { field: 'Duration' } },
+            chartProperties: { binCount },
+        },
+    });
+
+    it.each([0, 5, 20])('fits numeric ticks instead of raw observations (maxbins %s)', async (binCount) => {
+        const spec = histogram(binCount);
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const labels: any[] = [];
+            const bars: any[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.role === 'axis-label' && item.opacity !== 0) labels.push(item);
+                if (item.mark?.role === 'mark' && item.mark?.marktype === 'rect') bars.push(item);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(labels.length).toBeGreaterThan(4);
+            expect(labels.every(label => (label.angle ?? 0) === 0)).toBe(true);
+            expect(bars.length).toBeGreaterThan(1);
+            expect(bars.length).toBeLessThanOrEqual(binCount || 10);
+            if (!binCount) expect(bars).toHaveLength(7);
+        } finally {
+            view.finalize();
+        }
+    });
+
+    it('allows a native tick-angle override after assembly', async () => {
+        const spec = histogram(0);
+        spec.encoding.x.axis = { labelAngle: -45 };
+        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const angles: number[] = [];
+            const visit = (item: any): void => {
+                if (item.mark?.role === 'axis-label') angles.push(((item.angle ?? 0) + 360) % 360);
+                for (const child of item.items ?? []) visit(child);
+            };
+            visit((view.scenegraph() as any).root);
+            expect(angles).toContain(315);
+        } finally {
+            view.finalize();
+        }
+    });
+});
+
 describe('two tick numbers may not read as one', () => {
     it('holds numeric axis labels apart by about a character', () => {
         const spec = scatter('swiss');
@@ -113,6 +246,55 @@ describe('an axis is ticked at observations only where they are a step', () => {
         const spec = out.spec ?? out;
         const enc = spec.encoding?.x ?? spec.layer?.[0]?.encoding?.x;
         expect(enc.axis?.values).toEqual([2012, 2016, 2020, 2024]);
+    });
+});
+
+describe('temporal axis year context', () => {
+    it.each(['datawrapper', 'powerbi'])('keeps years visible across a multi-year date axis (%s)', async (theme) => {
+        for (const width of [300, 640]) {
+            const values = TEST_GENERATORS['Bar Chart']()[9].data;
+            const spec: any = assembleVegaLite({
+                data: { values },
+                semantic_types: { Date: 'Date', Value: 'Quantity' },
+                chart_spec: {
+                    chartType: 'Bar Chart', encodings: { x: 'Date', y: 'Value' },
+                    baseSize: { width, height: 300 },
+                },
+                theme_spec: theme,
+            });
+            const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+            try {
+                await view.runAsync();
+                const labels: any[] = [];
+                const visit = (item: any): void => {
+                    if (item.mark?.role === 'axis-label' && item.opacity !== 0
+                        && /[A-Za-z]/.test(String(item.text))) labels.push(item);
+                    for (const child of item.items ?? []) visit(child);
+                };
+                visit((view.scenegraph() as any).root);
+                expect(labels.length).toBeGreaterThanOrEqual(2);
+                expect(labels.every(label => /202[0-2]/.test(label.text))).toBe(true);
+                expect(labels.some(label => /2020/.test(label.text))).toBe(true);
+                expect(labels.some(label => /2022/.test(label.text))).toBe(true);
+                for (let index = 1; index < labels.length; index++) {
+                    expect(labels[index].bounds.x1 - labels[index - 1].bounds.x2).toBeGreaterThanOrEqual(0);
+                }
+            } finally {
+                view.finalize();
+            }
+        }
+    });
+
+    it('keeps single-year dates compact', () => {
+        const spec: any = assembleVegaLite({
+            data: { values: [{ date: '2022-03-01', value: 10 }, { date: '2022-09-01', value: 20 }] },
+            semantic_types: { date: 'Date', value: 'Quantity' },
+            chart_spec: { chartType: 'Bar Chart', encodings: { x: 'date', y: 'value' } },
+            theme_spec: 'datawrapper',
+        });
+        const plot = spec.vconcat?.[0] ?? spec;
+        const encoding = plot.encoding ?? plot.layer[0].encoding;
+        expect(encoding.x.axis.format).toBe('%b %-d');
     });
 });
 

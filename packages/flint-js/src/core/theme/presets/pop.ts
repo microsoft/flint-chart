@@ -62,8 +62,8 @@ export const pop: ThemePreset = {
         },
         structure: {
             axis: {
-                categorical: { line: 'emphasised', lineWeight: 3, ticks: 'omit' },
-                measure: { line: 'emphasised', lineWeight: 3, ticks: 'full', tickLength: 'long' },
+                categorical: { line: 'emphasised', lineWeight: 3, ticks: 'omit', labelGap: 7 },
+                measure: { line: 'emphasised', lineWeight: 3, ticks: 'full', tickLength: 'long', labelGap: 7 },
             },
             grid: { measure: 'quiet', category: 'hairline', style: 'solid', weight: 1, zero: 'emphasised' },
             baseline: 'emphasised',

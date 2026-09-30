@@ -22,6 +22,7 @@ const pages: NavEntry[] = [
       { to: 'labs', label: 'Overview' },
       { to: 'overflow-viewport', label: 'Overflow viewport' },
       { to: 'band-stretching', label: 'Band stretching' },
+      { to: 'axis-label', label: 'Axis labels' },
     ],
   },
   {
@@ -48,6 +49,12 @@ const pages: NavEntry[] = [
       { to: 'theme-lab-real', label: 'Real-world evaluation' },
       { to: 'label-experiment', label: 'Label experiment' },
       { to: 'style-references', label: 'Style references' },
+    ],
+  },
+  {
+    group: 'Release examples',
+    children: [
+      { to: 'release-examples/1.0.0', label: '1.0.0' },
     ],
   },
   {

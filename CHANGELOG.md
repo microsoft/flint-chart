@@ -11,8 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Target release: **1.0.0** for `flint-chart`, `flint-chart-mcp`, and the Copilot
+Canvas plugin. This release has not been published.
+Planned work is tracked in the [1.0 working plan](.github/release-notes/1.0.0-todo.md);
+the entries below describe implemented changes, not the remaining checklist.
+
 ### Added
 
+- A reproducible Copilot Canvas plugin build (`npm run build:copilot-plugin`)
+  bundles the current chart UI and authoring skill, aligns the plugin version
+  with the npm packages, and pins the MCP server to that release.
 - Viewport changes a gesture commits animate by default. A `navigate` or
   `brush-zoom` reset flies home, and a brush zoom tweens into the brushed
   region, over 400 ms on every Vega-Lite chart, not only on projected maps.

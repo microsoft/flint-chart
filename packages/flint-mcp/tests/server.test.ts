@@ -299,6 +299,40 @@ describe('MCP server', () => {
     expect(bundledSkill).toBe(repoSkill);
   });
 
+  it('keeps the Copilot plugin version and MCP dependency aligned with the package', () => {
+    const pluginRoot = new URL('../../../.github/extensions/flint-chart/', import.meta.url);
+    const manifest = JSON.parse(readFileSync(new URL('.plugin/plugin.json', pluginRoot), 'utf8'));
+    const mcp = JSON.parse(readFileSync(new URL('.mcp.json', pluginRoot), 'utf8'));
+    const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+
+    expect(manifest).toMatchObject({
+      name: 'flint-chart',
+      version,
+      skills: './skills/',
+      mcpServers: './.mcp.json',
+    });
+    expect(mcp.mcpServers.flint).toEqual({
+      command: 'npx',
+      args: ['--yes', `flint-chart-mcp@${version}`],
+      cwd: '${PLUGIN_ROOT}',
+    });
+  });
+
+  it('bundles the current authoring skill with native Canvas guidance', () => {
+    const repoSkill = readFileSync(
+      new URL('../../../agent-skills/flint-chart-author/SKILL.md', import.meta.url),
+      'utf8',
+    );
+    const canvasSkill = readFileSync(
+      new URL('../../../.github/extensions/flint-chart/skills/flint-chart-author/SKILL.md', import.meta.url),
+      'utf8',
+    );
+
+    expect(canvasSkill.startsWith(`${repoSkill.trimEnd()}\n\n## Copilot CLI chart canvas\n`)).toBe(true);
+    expect(canvasSkill).toContain('prefer it over `create_chart_view`');
+    expect(canvasSkill).toContain('resolved inline `data.values`');
+  });
+
   it('reads a local data.url file and inlines its rows', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'flint-mcp-server-data-'));
     const dataServer = createServer();

@@ -133,8 +133,8 @@ export const pieChartDef: ChartTemplateDef = {
 
         spec.mark = setMarkProp(spec.mark, 'outerRadius', radius);
         // Set explicit width/height — overrides config.view defaults
-        spec.width = canvasW;
-        spec.height = canvasH;
+        spec.width = Math.min(canvasW, canvasH);
+        spec.height = Math.min(canvasW, canvasH);
     },
     properties: [
         { key: "innerRadius", label: "Donut", type: "continuous", min: 0, max: 100, step: 5, defaultValue: 0 },

@@ -1,0 +1,18 @@
+.axis-label-lab { max-width: 1280px; margin: 0 auto; padding: 12px 0 48px; }
+.axis-label-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.axis-label-heading h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: 0; }
+.axis-label-heading p { margin: 0; font-size: 12px; color: #61676d; }
+.axis-label-heading a { color: #176a92; }
+.axis-label-heading label { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.axis-label-heading select { padding: 5px 8px; border: 1px solid #d4d8dc; border-radius: 4px; background: #fff; color: inherit; }
+.axis-label-case { border-top: 1px solid #d4d8dc; padding: 14px 0 20px; }
+.axis-label-case h2, .axis-label-case h3 { margin: 0 0 12px; font-size: 14px; letter-spacing: 0; }
+.axis-label-comparison { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.axis-label-comparison figure { min-width: 0; margin: 0; }
+.axis-label-comparison figcaption { margin-bottom: 8px; font-size: 12px; color: #61676d; }
+.axis-label-chart { background: #fff; }
+.axis-label-source { font-size: 12px; color: #61676d; }
+.axis-label-horizontal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.axis-label-themes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .axis-label-themes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .axis-label-comparison { grid-template-columns: minmax(0, 1fr); } }

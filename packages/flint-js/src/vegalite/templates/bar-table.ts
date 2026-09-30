@@ -3,6 +3,7 @@
 
 import { ChartTemplateDef, ChartPropertyDef, ChannelSemantics } from '../../core/types';
 import { getRegistryEntry } from '../../core/type-registry';
+import { fitTwoLineLabels } from '../../core/decisions';
 import { resolveDisplayUnit, titleWithDisplayUnit, type FormatSpec } from '../../core/field-semantics';
 import {
     fieldsFromEncodingChannels,
@@ -865,6 +866,61 @@ export const barTableDef: ChartTemplateDef = {
             if (column) spec.encoding.column = column;
             if (row) spec.encoding.row = row;
         }
+    },
+    postProcess: (spec, context) => {
+        const field = context.channelSemantics.y?.field;
+        if (!field) return;
+        const table: Record<string, any>[] = spec.datasets?.__bt_displayTable ?? context.table;
+        const labels = [...new Set(table.map(row => row[field]).filter(value => value != null).map(String))];
+        const facetFields = ['row', 'column'].map(channel => context.channelSemantics[channel]?.field).filter(Boolean) as string[];
+        const scopes = new Map<string, Set<string>>();
+        for (const row of table) {
+            const key = JSON.stringify(facetFields.map(facet => row[facet]));
+            const categories = scopes.get(key) ?? new Set<string>();
+            categories.add(String(row[field]));
+            scopes.set(key, categories);
+        }
+        const rowCount = Math.max(1, ...[...scopes.values()].map(categories => categories.size));
+        const canvas = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+        const visit = (node: any): void => {
+            const axis = node.encoding?.y?.axis;
+            if (axis && typeof axis.labelPadding === 'number' && axis.labelPadding > 0) {
+                const settings = { ...spec.config?.axis, ...spec.config?.axisY, ...axis };
+                const fontSize = settings.labelFontSize ?? 13;
+                const limit = Math.min(axis.labelPadding, settings.labelLimit > 0 ? settings.labelLimit : axis.labelPadding);
+                const lineHeight = Math.ceil(fontSize * 1.2);
+                const cache = new Map<string, number>();
+                const widthOf = (text: string): number => {
+                    if (!canvas) return text.length * fontSize * 0.62;
+                    if (!cache.has(text)) {
+                        canvas.font = `${settings.labelFontStyle ?? 'normal'} ${settings.labelFontWeight ?? 'normal'} ${fontSize}px ${settings.labelFont ?? spec.config?.font ?? 'sans-serif'}`;
+                        cache.set(text, canvas.measureText(text).width);
+                    }
+                    return cache.get(text)!;
+                };
+                const fit = typeof node.height === 'number' && node.height / rowCount >= fontSize + lineHeight + 4
+                    ? fitTwoLineLabels(labels, fontSize, limit, true, widthOf) : null;
+                if (fit) {
+                    const index = `indexof(${JSON.stringify(labels)}, toString(datum.value))`;
+                    const offsets = fit.lines.map(lines => -(lines.length - 1) * lineHeight / 2);
+                    Object.assign(axis, {
+                        labelExpr: `${index} < 0 ? datum.label : ${JSON.stringify(fit.lines)}[${index}]`,
+                        labelLineHeight: lineHeight,
+                        labelBaseline: 'middle',
+                        labelOffset: { expr: `${index} < 0 ? 0 : ${JSON.stringify(offsets)}[${index}]` },
+                    });
+                }
+                axis.encoding = { ...axis.encoding, labels: { ...axis.encoding?.labels,
+                    tooltip: { value: { expr: 'datum.value' } },
+                    description: { value: { expr: 'toString(datum.value)' } },
+                } };
+            }
+            if (node.spec) visit(node.spec);
+            for (const key of ['hconcat', 'vconcat', 'concat', 'layer']) {
+                for (const child of node[key] ?? []) visit(child);
+            }
+        };
+        visit(spec);
     },
     properties: [
         { key: 'maxRows', label: 'Max Rows', type: 'continuous', min: 5, max: 100, step: 1, defaultValue: 20 },
