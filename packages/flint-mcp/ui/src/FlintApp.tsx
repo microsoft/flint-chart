@@ -21,6 +21,7 @@ import { expressionInterpreter } from 'vega-interpreter';
 
 import { renderFlintSvg, withAppPreviewDefaults, type FlintRenderResult } from './render';
 import { chartIconFor } from './chart-icons';
+import { selectionContextText } from './selection-context';
 import {
   buildPanelModel,
   setProperty,
@@ -916,6 +917,7 @@ export function FlintAppInner(props: {
               ? interactive
                 ? (
                   <InteractiveChart
+                    app={app}
                     input={previewInput}
                     onWarnings={setSurfaceWarnings}
                     onError={setSurfaceError}
@@ -954,10 +956,12 @@ export function FlintAppInner(props: {
 
 /** The live chart when the input carries interaction_spec: the preview input, mounted through the interactive surface. */
 function InteractiveChart({
+  app,
   input,
   onWarnings,
   onError,
 }: {
+  app: App;
   input: ChartAssemblyInput;
   onWarnings: (warnings: readonly ChartWarning[]) => void;
   onError: (message: string | null) => void;
@@ -982,6 +986,14 @@ function InteractiveChart({
     void surface.warnings.then((list) => {
       if (live) onWarnings(list);
     });
+    // Each committed selection replaces the model context, so the next user
+    // message sees what is selected now, or that nothing is.
+    surface.onSelection((selection) => {
+      void app.updateModelContext({
+        content: [{ type: 'text', text: selectionContextText(selection, input) }],
+        structuredContent: { selection },
+      }).catch((err) => console.warn('The host declined the selection context', err));
+    });
     void surface.ready
       .then(() => {
         if (live) onError(null);
@@ -993,7 +1005,7 @@ function InteractiveChart({
       live = false;
       surface.destroy();
     };
-  }, [input, onWarnings, onError]);
+  }, [app, input, onWarnings, onError]);
   return <div className="chart-svg chart-interactive" ref={mountRef} />;
 }
 

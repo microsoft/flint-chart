@@ -2,6 +2,7 @@ import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core
 import type { InteractionContext, InteractionDef } from './interactions';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 import type { AssistedTargetingOptions } from '../core/interaction-spec';
+import type { ChartSelection } from './selection';
 
 export type {
     AssistedTargetingOptions,
@@ -83,6 +84,8 @@ export interface InteractiveChartSurface {
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
+    /** Calls back with every committed selection on this chart; returns the unsubscribe. */
+    onSelection(callback: (selection: ChartSelection) => void): () => void;
     refresh(): void;
     destroy(): void;
 }

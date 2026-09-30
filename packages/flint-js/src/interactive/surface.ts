@@ -8,6 +8,8 @@ import type {
     ViewportState,
 } from './types';
 import { isExternalInteraction } from './interactions';
+import type { FlintInteractionEventDetail } from './interactions';
+import { isSelectionEvent, toChartSelection } from './selection';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
 let generatedChartId = 0;
@@ -311,6 +313,14 @@ export function mountInteractiveChartSurface(
         clearUpdate: async (id) => {
             await ready;
             if (!destroyed) await renderer?.clearUpdate?.(id);
+        },
+        onSelection: (callback) => {
+            const listener = (nativeEvent: Event): void => {
+                const detail = (nativeEvent as CustomEvent<FlintInteractionEventDetail>).detail;
+                if (isSelectionEvent(detail)) callback(toChartSelection(detail, input));
+            };
+            root.addEventListener('flint-interaction', listener);
+            return () => root.removeEventListener('flint-interaction', listener);
         },
         refresh: () => {
             if (!destroyed) renderer?.refresh?.();

@@ -1,10 +1,9 @@
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import type {
-  FlintInteractionEventDetail,
+  ChartSelection,
   InteractionDef,
   InteractiveChartSurface,
-  SemanticElement,
   UpdateTarget,
 } from 'flint-chart/interactive';
 import {
@@ -196,12 +195,6 @@ function buildDashboardCharts(
   ];
 }
 
-function observationIds(elements: readonly SemanticElement[]): string[] {
-  return [...new Set(elements.flatMap((element) =>
-    element.records?.flatMap(recordObservationIds) ?? []))]
-    .filter((id) => id !== 'undefined');
-}
-
 function linkedTargets(chartId: string, observationIds: readonly string[]): UpdateTarget[] {
   const selected = new Set(observationIds);
   const selectedRows = gapminderRows.filter((row) => selected.has(row.Observation));
@@ -213,11 +206,9 @@ function linkedTargets(chartId: string, observationIds: readonly string[]): Upda
 function DashboardPanel({
   chart,
   registerSurface,
-  routeEvent,
 }: {
   chart: DashboardChart;
   registerSurface: (id: string, surface: InteractiveChartSurface | null) => void;
-  routeEvent: (detail: FlintInteractionEventDetail) => void;
 }) {
   const interactions = useMemo(() => [
     chart.interaction,
@@ -250,7 +241,6 @@ function DashboardPanel({
         interactions={interactions}
         chartId={`dashboard-${chart.id}`}
         onSurface={handleSurface}
-        onSemanticEvent={routeEvent}
       />
     </article>
   );
@@ -268,11 +258,6 @@ export function InteractionDashboardLab() {
     [deferredMetric, deferredYear],
   );
 
-  const registerSurface = useCallback((id: string, surface: InteractiveChartSurface | null) => {
-    if (surface) surfaces.current.set(id, surface);
-    else surfaces.current.delete(id);
-  }, []);
-
   const dispatchSelection = useCallback((ids: string[], excludeId?: string) => {
     for (const [id, surface] of surfaces.current) {
       if (id === excludeId) continue;
@@ -280,13 +265,24 @@ export function InteractionDashboardLab() {
     }
   }, []);
 
-  const routeEvent = useCallback((detail: FlintInteractionEventDetail) => {
-    if (detail.event.phase !== 'commit') return;
-    const ids = observationIds(detail.event.target?.elements ?? []);
-    const source = dashboardCharts.find((chart) => `dashboard-${chart.id}` === detail.chartId);
-    dispatchSelection(ids, source?.id);
+  const routeSelection = useCallback((sourceId: string, selection: ChartSelection) => {
+    const ids = [...new Set(selection.rows.flatMap(recordObservationIds))]
+      .filter((id) => id !== 'undefined');
+    dispatchSelection(ids, sourceId);
     setSelection(ids.length > 0 ? { ids } : null);
-  }, [dashboardCharts, dispatchSelection]);
+  }, [dispatchSelection]);
+
+  const unsubscribes = useRef(new Map<string, () => void>());
+  const registerSurface = useCallback((id: string, surface: InteractiveChartSurface | null) => {
+    unsubscribes.current.get(id)?.();
+    unsubscribes.current.delete(id);
+    if (!surface) {
+      surfaces.current.delete(id);
+      return;
+    }
+    surfaces.current.set(id, surface);
+    unsubscribes.current.set(id, surface.onSelection((selection) => routeSelection(id, selection)));
+  }, [routeSelection]);
 
   const clearSelection = useCallback(() => {
     dispatchSelection([]);
@@ -370,7 +366,6 @@ export function InteractionDashboardLab() {
             key={chart.id}
             chart={chart}
             registerSurface={registerSurface}
-            routeEvent={routeEvent}
           />
         ))}
         {dashboardCharts.slice(2).map((chart) => (
@@ -378,7 +373,6 @@ export function InteractionDashboardLab() {
             key={chart.id}
             chart={chart}
             registerSurface={registerSurface}
-            routeEvent={routeEvent}
           />
         ))}
       </div>

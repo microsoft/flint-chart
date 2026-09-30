@@ -21,6 +21,8 @@ export type {
     ViewportGeometry,
     ViewportState,
 } from './types';
+export type { ChartSelection, ChartSelectionRange } from './selection';
+export { isSelectionEvent, toChartSelection } from './selection';
 export type {
     GestureGuideController,
     GestureGuideOptions,

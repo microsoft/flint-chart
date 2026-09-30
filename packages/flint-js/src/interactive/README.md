@@ -97,7 +97,8 @@ The surface API is intentionally small:
 
 | API | Purpose |
 |---|---|
-| `flint-interaction` event | Receive resolved canvas actions |
+| `onSelection(callback)` | Receive the rows and the brushed range of every committed gesture |
+| `flint-interaction` event | Receive every resolved canvas action, previews included |
 | `applyUpdate(update)` | Apply precomputed retained chart state by ID |
 | `setUpdates(updates)` | Replace the retained update collection |
 | `clearUpdate(id)` | Remove one retained update |
@@ -111,15 +112,15 @@ canvas interaction. Acceptance is explicit: each destination registers an extern
 interaction, and the application chooses destinations by dispatching its semantic payload.
 
 ```ts
-dashboard.addEventListener('flint-interaction', (nativeEvent) => {
-    const detail = (nativeEvent as CustomEvent<FlintInteractionEventDetail>).detail;
-    const selection = deriveSelection(detail.event);
-
-    for (const [chartId, surface] of dashboardSurfaces) {
-        if (chartId === detail.chartId) continue;
-        void surface.dispatch('linked-selection', { selection });
-    }
-});
+for (const [sourceId, source] of dashboardSurfaces) {
+    source.onSelection((selection) => {
+        const keys = selection.rows.map((row) => row.Observation);
+        for (const [chartId, surface] of dashboardSurfaces) {
+            if (chartId === sourceId) continue;
+            void surface.dispatch('linked-selection', { keys });
+        }
+    });
+}
 ```
 
 Charts do not automatically consume events from neighboring charts. The dashboard,
