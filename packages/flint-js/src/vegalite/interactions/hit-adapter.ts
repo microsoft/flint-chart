@@ -46,6 +46,18 @@ export interface SelectionRect {
     y2: number;
 }
 
+export function shapeReadingBounds(item: any, bounds: SelectionRect): SelectionRect {
+    if (item.mark?.marktype !== 'shape') return bounds;
+    const strokePadding = item.stroke && item.opacity !== 0 && item.strokeOpacity !== 0
+        ? Number(item.strokeWidth ?? 1) : 0;
+    return {
+        x1: Math.round((bounds.x1 + strokePadding) * 1e6) / 1e6,
+        y1: Math.round((bounds.y1 + strokePadding) * 1e6) / 1e6,
+        x2: Math.round((bounds.x2 - strokePadding) * 1e6) / 1e6,
+        y2: Math.round((bounds.y2 - strokePadding) * 1e6) / 1e6,
+    };
+}
+
 export interface LegendHitIdentity extends LegendTargetValue {
     value: unknown;
     visualBounds?: SelectionRect;

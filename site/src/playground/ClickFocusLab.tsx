@@ -592,7 +592,7 @@ function realFacetedCases(): InteractionCase[] {
   ];
 }
 
-const interactionCases: InteractionCase[] = [
+export const interactionCases: InteractionCase[] = [
   ...representativeCases(),
   multiLegendCase('shape'),
   multiLegendCase('size'),

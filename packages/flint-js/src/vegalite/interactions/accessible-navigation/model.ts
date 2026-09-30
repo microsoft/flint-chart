@@ -6,6 +6,7 @@ import {
     INTERACTION_ROLE,
     legendTarget,
     renderHit,
+    shapeReadingBounds,
     type LegendHitIdentity,
 } from '../hit-adapter';
 
@@ -59,8 +60,10 @@ export interface AccessibleNode {
     readonly content: string;
     /** Plot-space bounds, the space `sceneItems` uses. */
     readonly bounds?: AccessibleBounds;
+    readonly readingBounds?: AccessibleBounds;
     /** A point-like element gets a round focus ring. */
     readonly shape?: 'rect' | 'point';
+    readingDirection?: 'horizontal' | 'vertical';
     children: AccessibleNode[];
     parent?: AccessibleNode;
     /** The scene item behind a label, legend entry, or mark. */
@@ -92,6 +95,7 @@ const EMPTY_BOUNDS: AccessibleBounds = { x1: 0, y1: 0, x2: 0, y2: 0 };
 
 interface MarkEntry extends AccessibleMarkRef {
     readonly bounds: AccessibleBounds;
+    readonly readingBounds: AccessibleBounds;
     /** A path vertex's full extent, the area's baseline included. */
     readonly extent: AccessibleBounds;
     /** Every vertex of a path shares one key, so the path is one mark: a violin, not its points. */
@@ -521,6 +525,12 @@ function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
                     y1: item.y + offsetY - 3, y2: item.y + offsetY + 3,
                 }
                 : bounds;
+            const readingBounds = (vertex || marktype === 'symbol') && Number.isFinite(item.x) && Number.isFinite(item.y)
+                ? {
+                    x1: item.x + offsetX, x2: item.x + offsetX,
+                    y1: item.y + offsetY, y2: item.y + offsetY,
+                }
+                : shapeReadingBounds(item, markBounds);
             const extent = vertex
                 ? unionBounds(markBounds, typeof item.x2 === 'number' || typeof item.y2 === 'number'
                     ? {
@@ -531,7 +541,7 @@ function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
                 : bounds;
             facts.marks.push({
                 item: vertex ? { ...item, bounds: markBounds } : item,
-                hit, key, bounds: markBounds, extent, scope: context.scope, path,
+                hit, key, bounds: markBounds, readingBounds, extent, scope: context.scope, path,
                 pathIndex: index, rank: markRank(marktype),
             });
             return;
@@ -576,7 +586,7 @@ function representativeMarks(marks: readonly MarkEntry[]): MarkEntry[] {
         const pathLength = (pathOwner?.path?.items ?? []).length;
         if (vertices.length > 1 && vertices.length >= pathLength) {
             const bounds = boundsOf(vertices.map((vertex) => vertex.extent))!;
-            result.push({ ...pathOwner!, item: { ...pathOwner!.item, bounds }, bounds, extent: bounds, wholePath: true, vertices });
+            result.push({ ...pathOwner!, item: { ...pathOwner!.item, bounds }, bounds, readingBounds: bounds, extent: bounds, wholePath: true, vertices });
         } else if (vertices.length > 1) {
             // Tied values on one path (an ECDF step, a repeated x) share a key but are separate points.
             const others = group.filter((candidate) => !candidate.path);
@@ -682,7 +692,7 @@ function nodeOf(
     localId: string,
     type: string,
     content: string,
-    extra: Partial<Pick<AccessibleNode, 'bounds' | 'shape' | 'children' | 'item' | 'members' | 'axis' | 'legend'>> = {},
+    extra: Partial<Pick<AccessibleNode, 'bounds' | 'readingBounds' | 'shape' | 'children' | 'item' | 'members' | 'axis' | 'legend' | 'readingDirection'>> = {},
 ): AccessibleNode {
     return { id: localId, localId, kind, type, content, children: [], members: [], ...extra };
 }
@@ -692,38 +702,55 @@ function cloneNode(node: AccessibleNode): AccessibleNode {
     return { ...node, parent: undefined, children: node.children.map(cloneNode) };
 }
 
-function finalize(node: AccessibleNode, parent?: AccessibleNode): void {
+function chartReadingDirection(input: AccessibleTreeInput): 'horizontal' | 'vertical' {
+    const axes = input.axisFields ?? {};
+    if (axes.y && axes.y.type !== 'quantitative' && (!axes.x || axes.x.type === 'quantitative')) return 'vertical';
+    if (['Bar Table', 'Sparkline', 'Gantt Chart', 'Bullet Chart', 'Pyramid Chart'].includes(input.chartType)) return 'vertical';
+    return 'horizontal';
+}
+
+function compareReadingBounds(
+    left: Pick<AccessibleNode, 'bounds' | 'readingBounds'>,
+    right: Pick<AccessibleNode, 'bounds' | 'readingBounds'>,
+    vertical: boolean,
+): number {
+    const leftBounds = left.readingBounds ?? left.bounds;
+    const rightBounds = right.readingBounds ?? right.bounds;
+    if (!leftBounds || !rightBounds) return Number(!leftBounds) - Number(!rightBounds);
+    return vertical
+        ? leftBounds.y1 - rightBounds.y1 || leftBounds.x1 - rightBounds.x1
+        : leftBounds.x1 - rightBounds.x1 || leftBounds.y1 - rightBounds.y1;
+}
+
+function finalize(node: AccessibleNode, direction: 'horizontal' | 'vertical', parent?: AccessibleNode): void {
     node.parent = parent;
     node.id = parent ? `${parent.id}/${node.localId}` : node.localId;
+    node.readingDirection ??= node.kind === 'axis' && node.axis
+        ? node.axis.channel === 'y' ? 'vertical' : 'horizontal'
+        : node.kind === 'legend'
+            ? isVerticalList(node.children.filter((child) => child.kind === 'legend-item')) ? 'vertical' : 'horizontal'
+            : direction;
+    const vertical = node.readingDirection === 'vertical';
+    node.children.sort((left, right) => compareReadingBounds(left, right, vertical));
     const seen = new Map<string, number>();
     for (const child of node.children) {
         const count = seen.get(child.localId) ?? 0;
         seen.set(child.localId, count + 1);
         if (count > 0) child.localId = `${child.localId}#${count}`;
-        finalize(child, node);
+        finalize(child, direction, node);
     }
 }
 
-/** Reading order: angle round a pie, down a horizontal bar chart, otherwise left to right. */
 function sortReadingOrder(marks: readonly MarkEntry[], input: AccessibleTreeInput): MarkEntry[] {
-    const axes = input.axisFields ?? {};
-    const yFirst = isDiscreteType(axes.y?.type) && !isDiscreteType(axes.x?.type);
-    return [...marks].sort((left, right) => {
-        if (left.item.mark?.marktype === 'arc' && right.item.mark?.marktype === 'arc') {
-            return (left.item.startAngle ?? 0) - (right.item.startAngle ?? 0);
-        }
-        const a = center(left.bounds);
-        const b = center(right.bounds);
-        const primary = yFirst ? a.y - b.y : a.x - b.x;
-        if (Math.abs(primary) > 0.5) return primary;
-        return yFirst ? a.x - b.x : a.y - b.y;
-    });
+    const yFirst = chartReadingDirection(input) === 'vertical';
+    return [...marks].sort((left, right) => compareReadingBounds(left, right, yFirst));
 }
 
 function markNode(mark: MarkEntry, context: BuildContext): AccessibleNode {
     const marktype = mark.item.mark?.marktype;
     return nodeOf('mark', `mark:${mark.key}`, context.noun(marktype, mark.wholePath)[0], markContent(mark, context), {
         bounds: mark.bounds,
+        readingBounds: mark.readingBounds,
         shape: (mark.path && !mark.wholePath) || marktype === 'symbol' ? 'point' : 'rect',
         item: mark.item,
         members: [mark],
@@ -770,6 +797,7 @@ function panelChildren(marks: readonly MarkEntry[], context: BuildContext): Acce
         return nodeOf('series', `series:${label}`, path?.marktype === 'area' ? 'Area series' : 'Line series',
             `${label}. ${countPhrase(members.length, noun)}${measureRange(members, context.input, context.label)}`, {
                 bounds: boundsOf(members.map((mark) => mark.bounds)),
+                readingBounds: boundsOf(members.map((mark) => mark.readingBounds)),
                 members,
                 children: members.map((mark) => markNode(mark, context)),
             });
@@ -863,6 +891,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
             panelNodes.set(scope, nodeOf('panel', `panel:${label}`, 'Panel',
                 `${label}. ${nounSummary(members, context)}${measureRange(members, input, context.label)}`, {
                     bounds: record?.bounds ?? boundsOf(members.map((mark) => mark.bounds)),
+                    readingBounds: boundsOf(members.map((mark) => mark.readingBounds)),
                     members,
                     children: panelChildren(members, context),
                 }));
@@ -898,7 +927,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
             : field?.type === 'temporal' || scaleType === 'time' || scaleType === 'utc' ? 'Time'
             : 'Numeric';
         const labels = [...axis.labels].sort((left, right) =>
-            channel === 'x' ? center(left.bounds).x - center(right.bounds).x : left.index - right.index);
+            channel === 'x' ? left.bounds.x1 - right.bounds.x1 : left.bounds.y1 - right.bounds.y1);
         const title = axis.title?.text ?? field?.field ?? '';
         const scopeTitle = axesPerChannel(channel) > 1 && axis.scope ? facts.scopes.get(axis.scope)?.title?.text : undefined;
         const axisType = `${channel.toUpperCase()} axis`;
@@ -1094,6 +1123,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
                     bounds: boundsOf([headerTitle?.bounds, ...headerChildren.map((header) => header.bounds)]),
                     item: headerTitle?.item,
                     children: headerChildren,
+                    readingDirection: kind === 'row' ? 'vertical' : 'horizontal',
                 }));
         }
         // A wrapped facet titles each cell instead of drawing header rows.
@@ -1144,6 +1174,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
             + (panelled ? ` in ${dataChildren.length} panels` : seriesCount > 1 ? ` in ${seriesCount} series` : '')
             + measureRange(marks, input, context.label), {
                 bounds: boundsOf(marks.map((mark) => mark.bounds)),
+                readingBounds: boundsOf(marks.map((mark) => mark.readingBounds)),
                 children: dataChildren,
             }));
     }
@@ -1168,7 +1199,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         marks.length > 0 ? `${nounSummary(marks, context)}${panelled ? ` in ${panelNodes.size} panels` : ''}` : 'No data marks',
     ].filter(Boolean).join('. ');
     const root = nodeOf('chart', 'chart', 'Chart', rootContent, { bounds: facts.rootBounds, children });
-    finalize(root);
+    finalize(root, chartReadingDirection(input));
     return root;
 }
 
@@ -1211,8 +1242,9 @@ export function describeAccessibleNode(node: AccessibleNode): AccessibleElementD
 
 export const ACCESSIBLE_NAVIGATION_HELP = [
     'Chart navigation keys.',
-    'Left and right arrows: previous and next element.',
-    'Up and down arrows: the mark above or below, or previous and next in a list.',
+    'Left and right: previous and next sibling in horizontal order.',
+    'Up and down: previous and next sibling in vertical order.',
+    'Both arrow pairs visit every sibling, including overlapping items, and stop at the ends.',
     'Enter: go into the focused element. Escape or Backspace: go back out.',
     'Home and End: first and last element. Page Up and Page Down: jump ten elements.',
     'Space: activate the focused mark, legend item, or axis label.',
@@ -1220,7 +1252,7 @@ export const ACCESSIBLE_NAVIGATION_HELP = [
 ].join(' ');
 
 export type AccessibleCommand =
-    | 'next' | 'previous' | 'up' | 'down' | 'first' | 'last' | 'page-next' | 'page-previous'
+    | 'next' | 'previous' | 'left' | 'right' | 'up' | 'down' | 'first' | 'last' | 'page-next' | 'page-previous'
     | 'enter' | 'exit' | 'activate' | 'help' | 'repeat'
     | 'jump-title' | 'jump-x' | 'jump-y' | 'jump-legend' | 'jump-headers' | 'jump-data';
 
@@ -1229,8 +1261,8 @@ export function accessibleCommandForKey(event: {
 }): AccessibleCommand | undefined {
     if (event.altKey || event.ctrlKey || event.metaKey) return undefined;
     switch (event.key) {
-        case 'ArrowRight': return 'next';
-        case 'ArrowLeft': return 'previous';
+        case 'ArrowRight': return 'right';
+        case 'ArrowLeft': return 'left';
         case 'ArrowDown': return 'down';
         case 'ArrowUp': return 'up';
         case 'Home': return 'first';
@@ -1268,28 +1300,6 @@ export interface AccessibleMove {
 
 const ACTIVATABLE: ReadonlySet<AccessibleNodeKind> = new Set(['mark', 'legend-item', 'axis-label']);
 
-function nearestInDirection(
-    candidates: readonly AccessibleNode[],
-    from: AccessibleBounds,
-    direction: 'up' | 'down',
-): AccessibleNode | undefined {
-    const origin = center(from);
-    let best: { node: AccessibleNode; score: number } | undefined;
-    for (const candidate of candidates) {
-        if (!candidate.bounds) continue;
-        const point = center(candidate.bounds);
-        const along = direction === 'down' ? point.y - origin.y : origin.y - point.y;
-        if (along <= 0.5) continue;
-        const across = Math.abs(point.x - origin.x);
-        // A mark in the same column wins over a nearer one beside it; nothing past 45° counts as above or below.
-        const overlaps = candidate.bounds.x1 <= from.x2 + 0.5 && candidate.bounds.x2 >= from.x1 - 0.5;
-        if (!overlaps && across > along) continue;
-        const score = (overlaps ? 0 : 1e6) + along + across * 3;
-        if (!best || score < best.score) best = { node: candidate, score };
-    }
-    return best?.node;
-}
-
 function isVerticalList(nodes: readonly AccessibleNode[]): boolean {
     const centers = nodes.filter((node) => node.bounds).map((node) => center(node.bounds!));
     if (centers.length < 2) return false;
@@ -1299,57 +1309,16 @@ function isVerticalList(nodes: readonly AccessibleNode[]): boolean {
 }
 
 /**
- * A cheap fingerprint of what the tree is built from: every scene item's place,
- * size, text, and data key. Hover and emphasis restyle marks without changing
- * it, so a walk can skip rebuilding the tree until the chart really changes.
- */
-const GEOMETRY_CHANNELS = ['x', 'y', 'x2', 'y2', 'width', 'height', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius', 'size'] as const;
-
-export function accessibleSceneSignature(root: any): string {
-    let hash = 0x811c9dc5;
-    let count = 0;
-    const mix = (value: number): void => {
-        hash = Math.imul(hash ^ (value | 0), 0x01000193);
-    };
-    const mixText = (text: string): void => {
-        for (let index = 0; index < text.length; index += 1) mix(text.charCodeAt(index));
-    };
-    const stack: any[] = root ? [root] : [];
-    while (stack.length > 0) {
-        const item = stack.pop();
-        count += 1;
-        // Geometry, not bounds: bounds grow with a hover's wider stroke.
-        for (const channel of GEOMETRY_CHANNELS) {
-            const value = item[channel];
-            if (typeof value === 'number' && Number.isFinite(value)) mix(Math.round(value * 64));
-        }
-        if (typeof item.path === 'string') mix(item.path.length);
-        if (item.text !== undefined) mixText(String(item.text));
-        const key = item.datum?.[INTERACTION_KEY];
-        if (typeof key === 'string') mixText(key);
-        const children = item.items;
-        if (Array.isArray(children)) {
-            mix(children.length);
-            for (let index = children.length - 1; index >= 0; index -= 1) stack.push(children[index]);
-        }
-    }
-    return `${count}:${hash >>> 0}`;
-}
-
-/**
  * The reader's position in the tree and the moves the keys make. It rebuilds
  * the tree on request and finds the same element again by id, so a re-render
- * (a hidden series, a resize) keeps the reader where they were. Given a scene
- * signature, it rebuilds only when the signature changes.
+ * (a hidden series, a resize) keeps the reader where they were. Geometry and
+ * keys alone cannot detect changed values, tooltip text, or cohort membership.
  */
 export class AccessibleNavigator {
     private rootNode: AccessibleNode;
     private currentNode: AccessibleNode;
     private byId = new Map<string, AccessibleNode>();
-    private builtFrom: string | undefined;
-
-    constructor(private readonly build: () => AccessibleNode, private readonly signature?: () => string) {
-        this.builtFrom = signature?.();
+    constructor(private readonly build: () => AccessibleNode) {
         this.rootNode = build();
         this.currentNode = this.rootNode;
         this.reindex();
@@ -1368,14 +1337,7 @@ export class AccessibleNavigator {
     }
 
     /** Rebuild the tree, keeping the reader's place. True when it was rebuilt. */
-    refresh(force = false): boolean {
-        if (this.signature && !force) {
-            const signature = this.signature();
-            if (signature === this.builtFrom) return false;
-            this.builtFrom = signature;
-        } else if (this.signature) {
-            this.builtFrom = this.signature();
-        }
+    refresh(): boolean {
         const previous = this.currentNode;
         this.rootNode = this.build();
         this.reindex();
@@ -1402,11 +1364,13 @@ export class AccessibleNavigator {
         return { node, moved: true };
     }
 
-    private sibling(offset: number, clamp = false): AccessibleMove {
+    private sibling(offset: number, clamp = false, direction?: 'horizontal' | 'vertical'): AccessibleMove {
         const node = this.currentNode;
         const parent = node.parent;
         if (!parent) return { node, moved: false, message: 'Top of the chart. Press Enter to explore.' };
-        const siblings = parent.children;
+        const siblings = direction
+            ? [...parent.children].sort((left, right) => compareReadingBounds(left, right, direction === 'vertical'))
+            : parent.children;
         const index = siblings.indexOf(node);
         const target = clamp ? Math.max(0, Math.min(siblings.length - 1, index + offset)) : index + offset;
         if (target === index || target < 0 || target >= siblings.length) {
@@ -1418,25 +1382,9 @@ export class AccessibleNavigator {
         return this.go(siblings[target], '');
     }
 
-    private vertical(direction: 'up' | 'down'): AccessibleMove {
-        const node = this.currentNode;
-        const parent = node.parent;
-        if (!parent) return { node, moved: false, message: 'Top of the chart. Press Enter to explore.' };
-        if (node.kind === 'mark' && node.bounds) {
-            // On a series, up and down switch to the series above or below; elsewhere marks move in space.
-            const pool = parent.kind === 'series' && parent.parent
-                ? parent.parent.children.flatMap((child) =>
-                    child === parent ? [] : child.kind === 'series' ? child.children : [child])
-                : parent.children;
-            const target = nearestInDirection(
-                pool.filter((candidate) => candidate !== node && candidate.kind === 'mark'), node.bounds, direction);
-            return this.go(target, `No mark ${direction === 'up' ? 'above' : 'below'}.`);
-        }
-        if (parent.kind !== 'chart' && node.bounds && isVerticalList(parent.children)) {
-            const target = nearestInDirection(parent.children.filter((candidate) => candidate !== node), node.bounds, direction);
-            return this.go(target, `${direction === 'up' ? 'Top' : 'Bottom'} of ${parent.type.toLowerCase()}.`);
-        }
-        return this.sibling(direction === 'up' ? -1 : 1);
+    private directional(direction: 'left' | 'right' | 'up' | 'down'): AccessibleMove {
+        const vertical = direction === 'up' || direction === 'down';
+        return this.sibling(direction === 'left' || direction === 'up' ? -1 : 1, false, vertical ? 'vertical' : 'horizontal');
     }
 
     private jump(match: (node: AccessibleNode) => boolean, missing: string): AccessibleMove {
@@ -1453,8 +1401,7 @@ export class AccessibleNavigator {
         switch (command) {
             case 'next': return this.sibling(1);
             case 'previous': return this.sibling(-1);
-            case 'down': return this.vertical('down');
-            case 'up': return this.vertical('up');
+            case 'left': case 'right': case 'down': case 'up': return this.directional(command);
             case 'first': return this.sibling(-Infinity, true);
             case 'last': return this.sibling(Infinity, true);
             case 'page-next': return this.sibling(10, true);
@@ -1470,7 +1417,12 @@ export class AccessibleNavigator {
                     : { node, moved: false, message: `${node.type} cannot be activated.` };
             case 'exit':
                 return node.parent ? this.go(node.parent, '') : { node, moved: false, exited: true };
-            case 'help': return { node, moved: false, message: ACCESSIBLE_NAVIGATION_HELP };
+            case 'help': return {
+                node, moved: false,
+                message: `${(node.parent ?? node).readingDirection === 'vertical'
+                    ? 'Default reading order is top to bottom.'
+                    : 'Default reading order is left to right.'} ${ACCESSIBLE_NAVIGATION_HELP}`,
+            };
             case 'repeat': return { node, moved: false, message: describeAccessibleNode(node).text };
             case 'jump-title':
                 return this.jump((candidate) => candidate.kind === 'title' || candidate.kind === 'subtitle', 'This chart has no title.');

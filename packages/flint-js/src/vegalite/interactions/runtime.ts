@@ -55,7 +55,6 @@ import {
     normalizeVegaElementEvent,
     nearestInteractiveSceneItem,
     nearestSceneItem,
-    nextItemInDirection,
     pathHoverPresentationKey,
     polarFrameFromItems,
     polarGuideSegment,
@@ -66,6 +65,7 @@ import {
     renderHit,
     rendererPlotOrigin,
     sceneItems,
+    shapeReadingBounds,
     type RendererCoordinateSpace,
     type LegendHitIdentity,
     type SpatialDirection,
@@ -88,7 +88,7 @@ import { createReorderResetControls } from './presentation/reorder-reset-control
 import { createViewportResetControl } from './presentation/viewport-reset-control';
 import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
 import { createDataOverlay } from './presentation/data-overlay';
-import { accessibleSceneSignature, buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
+import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
 import { mountAccessibleNavigation } from './accessible-navigation/controller';
 import {
     HIDDEN_STORE,
@@ -444,7 +444,7 @@ function keyboardRepresentativeRank(item: any): [number, number] {
     return [markRank, width * height];
 }
 
-export function keyboardTargetItems(scene: readonly any[]): any[] {
+export function keyboardTargetItems(scene: readonly any[], direction: SpatialDirection = 'right'): any[] {
     const itemsByKey = new Map<string, any>();
     for (const item of scene) {
         const key = renderHit(item)?.datum[INTERACTION_KEY];
@@ -460,8 +460,34 @@ export function keyboardTargetItems(scene: readonly any[]): any[] {
             itemsByKey.set(key, item);
         }
     }
-    return [...itemsByKey.values()].sort((left, right) =>
-        (left.bounds.x1 - right.bounds.x1) || (left.bounds.y1 - right.bounds.y1));
+    const position = (item: any): { x: number; y: number } => {
+        if (item.mark?.marktype === 'symbol' && Number.isFinite(item.x) && Number.isFinite(item.y)) {
+            return { x: item.x, y: item.y };
+        }
+        if ((item.mark?.marktype === 'rect' || item.mark?.marktype === 'bar')
+            && Number.isFinite(item.x) && Number.isFinite(item.y)
+            && Number.isFinite(item.width) && Number.isFinite(item.height)) {
+            return { x: item.x + Math.min(0, item.width), y: item.y + Math.min(0, item.height) };
+        }
+        const bounds = shapeReadingBounds(item, item.bounds);
+        return { x: bounds.x1, y: bounds.y1 };
+    };
+    const vertical = direction === 'up' || direction === 'down';
+    return [...itemsByKey.values()].sort((left, right) => {
+        const leftPosition = position(left);
+        const rightPosition = position(right);
+        return vertical
+            ? leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x
+            : leftPosition.x - rightPosition.x || leftPosition.y - rightPosition.y;
+    });
+}
+
+export function nextKeyboardTarget(scene: readonly any[], activeKey: string | undefined, direction: SpatialDirection): any | undefined {
+    const items = keyboardTargetItems(scene, direction);
+    const forward = direction === 'right' || direction === 'down';
+    const index = activeKey === undefined ? -1
+        : items.findIndex((item) => renderHit(item)?.datum[INTERACTION_KEY] === activeKey);
+    return index < 0 ? items[forward ? 0 : items.length - 1] : items[index + (forward ? 1 : -1)];
 }
 
 export function enrichTargetWithSourceProvenance(
@@ -630,7 +656,8 @@ export function mountVegaInteractions(
         const renderer = container.querySelector('canvas, svg') as HTMLElement | null;
         const rect = (renderer ?? container).getBoundingClientRect();
         const [viewOriginX, viewOriginY] = view.origin();
-        const svg = renderer instanceof SVGSVGElement ? renderer : undefined;
+        const svgConstructor = container.ownerDocument.defaultView?.SVGSVGElement;
+        const svg = svgConstructor && renderer instanceof svgConstructor ? renderer : undefined;
         // SVG autosize/padding can make View#origin differ from the renderer's
         // final plot translation. The rendered root-frame CTM is authoritative.
         const rootFrame = svg?.querySelector<SVGGraphicsElement>('.mark-group.role-frame.root');
@@ -2464,7 +2491,6 @@ export function mountVegaInteractions(
         container.addEventListener('keydown', resetKeyDown);
     }
 
-    // One tab stop enters the chart; arrows move to the nearest target in that direction.
     let activeKeyboardKey: string | undefined;
     const keyboardTargets = (): any[] => keyboardTargetItems(sceneItems(view));
     const keyboardFocus = (item: any) => {
@@ -2485,22 +2511,7 @@ export function mountVegaInteractions(
         affordances: { mark: {} },
     };
     const moveKeyboardTarget = (direction: SpatialDirection): void => {
-        const items = keyboardTargets();
-        if (items.length === 0) return;
-        const movementAxis = direction === 'left' || direction === 'right' ? 'x' : 'y';
-        const movementType = plan.axisFields?.[movementAxis]?.type;
-        const discreteAxis = movementType === 'nominal' || movementType === 'ordinal'
-            ? movementAxis
-            : undefined;
-        const current = activeKeyboardKey === undefined
-            ? undefined
-            : items.find((item) => renderHit(item)?.datum[INTERACTION_KEY] === activeKeyboardKey);
-        const next = current
-            ? nextItemInDirection(items, {
-                x: (current.bounds.x1 + current.bounds.x2) / 2,
-                y: (current.bounds.y1 + current.bounds.y2) / 2,
-            }, direction, discreteAxis)
-            : direction === 'right' || direction === 'down' ? items[0] : items[items.length - 1];
+        const next = nextKeyboardTarget(sceneItems(view), activeKeyboardKey, direction);
         if (!next) return;
         const active = keyboardFocus(next);
         if (!active) return;
@@ -2642,7 +2653,6 @@ export function mountVegaInteractions(
         ? mountAccessibleNavigation({
             container,
             settings: accessibleInteraction.eventSource.accessibleNavigation,
-            sceneSignature: () => accessibleSceneSignature(view.scenegraph()?.root),
             buildTree: () => buildAccessibleTree({
                 root: view.scenegraph()?.root,
                 chartType,

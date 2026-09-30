@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { parse, View } from 'vega';
 import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, lassoSelect, legendToggle, linkedBrush, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import type { ClickHighlightOptions } from '../src/interactive/interactions';
 import { affordanceCursor, affordsTarget, resolveInteractionAffordance } from '../src/interactive/affordances';
@@ -86,6 +87,7 @@ import {
     domainForPlotGeometry,
     supersedeRetainedViewports,
     keyboardTargetItems,
+    nextKeyboardTarget,
     mergeRetainedPreview,
     nearestReorderHit,
     resolveAssistDistance,
@@ -102,7 +104,6 @@ import {
 } from '../src/vegalite/interactions/presentation/drag-reorder-overlay';
 import { areaSpotlightOpacity, hoverContrastOpacity } from '../src/vegalite/interactions/presentation/focus-overlay';
 import {
-    targetFeedbackDetailsPosition,
     targetFeedbackEntries,
     targetFeedbackPoint,
 } from '../src/vegalite/interactions/presentation/target-feedback-overlay';
@@ -2699,7 +2700,7 @@ describe('assisted, keyboard, and lasso acquisition', () => {
     });
 });
 
-describe('keyboard spatial navigation', () => {
+describe('keyboard target navigation', () => {
     const at = (key: string, x: number, y: number) => ({
         mark: { marktype: 'symbol' },
         datum: { [INTERACTION_KEY]: key },
@@ -2714,6 +2715,98 @@ describe('keyboard spatial navigation', () => {
     ];
     const from = { x: 50, y: 50 };
     const keyOf = (item: any) => item?.datum[INTERACTION_KEY];
+
+    it.each([
+        ['right', 'left', ['left', 'above', 'centre', 'below', 'right']],
+        ['down', 'up', ['above', 'left', 'centre', 'right', 'below']],
+    ] as const)('traverses all marks with %s and reverses with %s', (forward, backward, expected) => {
+        let active: string | undefined;
+        for (const key of expected) {
+            active = keyOf(nextKeyboardTarget(grid, active, forward));
+            expect(active).toBe(key);
+        }
+        expect(nextKeyboardTarget(grid, active, forward)).toBeUndefined();
+        for (const key of [...expected].reverse().slice(1)) {
+            active = keyOf(nextKeyboardTarget(grid, active, backward));
+            expect(active).toBe(key);
+        }
+        expect(nextKeyboardTarget(grid, active, backward)).toBeUndefined();
+        expect(keyOf(nextKeyboardTarget(grid, undefined, backward))).toBe(expected.at(-1));
+        expect(keyOf(nextKeyboardTarget(grid, 'removed', forward))).toBe(expected[0]);
+    });
+
+    it.each([
+        ['right', 'left', 'symbol'], ['down', 'up', 'symbol'],
+        ['right', 'left', 'rect'], ['down', 'up', 'rect'],
+        ['right', 'left', 'shape'], ['down', 'up', 'shape'],
+    ] as const)('keeps coincident marks reachable with %s/%s for %s through emphasis rebuilds', (direction, backward, marktype) => {
+        const items = ['first', 'second', 'third'].map((key) => ({
+            ...at(key, 50, 50), mark: { marktype }, x: 50, y: 50, width: 6, height: 6,
+            stroke: '#000', strokeWidth: 0,
+        }));
+        let active: string | undefined;
+        const rebuild = () => items.map((candidate) => ({
+            ...candidate,
+            strokeWidth: keyOf(candidate) === active ? 7 : 0,
+            bounds: keyOf(candidate) === active
+                ? { x1: 40, y1: 40, x2: 60, y2: 60 } : { ...candidate.bounds },
+        }));
+        for (const item of items) {
+            active = keyOf(nextKeyboardTarget(rebuild(), active, direction));
+            expect(active).toBe(keyOf(item));
+        }
+        expect(nextKeyboardTarget(rebuild(), active, direction)).toBeUndefined();
+        for (const item of [...items].reverse().slice(1)) {
+            active = keyOf(nextKeyboardTarget(rebuild(), active, backward));
+            expect(active).toBe(keyOf(item));
+        }
+        expect(nextKeyboardTarget(rebuild(), active, backward)).toBeUndefined();
+    });
+
+    it.each([['right', 'left'], ['down', 'up']] as const)(
+        'keeps projected shapes ordered through real Vega emphasis with %s/%s',
+        async (forward, backward) => {
+            const keys = ['first', 'second', 'third'];
+            const view = new View(parse({
+                signals: [{ name: 'active', value: null }],
+                projections: [{ name: 'projection', type: 'mercator', scale: 30, translate: [100, 100] }],
+                data: [{ name: 'regions', values: keys.map((key, index) => ({
+                    [INTERACTION_KEY]: key, type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [index, -index] },
+                })) }],
+                marks: [{
+                    type: 'shape', from: { data: 'regions' },
+                    transform: [{ type: 'geoshape', projection: 'projection' }],
+                    encode: { update: {
+                        fill: { value: '#ccc' }, stroke: { value: '#000' },
+                        strokeWidth: { signal: `datum.${INTERACTION_KEY} === active ? 7 : 0.3` },
+                    } },
+                }],
+            }), { renderer: 'none' });
+            try {
+                await view.runAsync();
+                const original = sceneItems(view).map((item) => ({ ...item.bounds }));
+                let active: string | undefined;
+                for (const expected of keys) {
+                    active = keyOf(nextKeyboardTarget(sceneItems(view), active, forward));
+                    expect(active).toBe(expected);
+                    await view.signal('active', active).runAsync();
+                    const items = sceneItems(view);
+                    expect(items[keys.indexOf(expected)].bounds.y1).toBeLessThan(original[keys.indexOf(expected)].y1);
+                    expect(keyboardTargetItems(items, forward).map(keyOf)).toEqual(keys);
+                }
+                expect(nextKeyboardTarget(sceneItems(view), active, forward)).toBeUndefined();
+                for (const expected of [...keys].reverse().slice(1)) {
+                    active = keyOf(nextKeyboardTarget(sceneItems(view), active, backward));
+                    expect(active).toBe(expected);
+                    await view.signal('active', active).runAsync();
+                }
+                expect(nextKeyboardTarget(sceneItems(view), active, backward)).toBeUndefined();
+            } finally {
+                view.finalize();
+            }
+        },
+    );
 
     it('moves to the neighbour on the axis the arrow names', () => {
         expect(keyOf(nextItemInDirection(grid, from, 'right'))).toBe('right');
@@ -2873,19 +2966,6 @@ describe('legend, inspect, zoom, and touch presets', () => {
             x: 100 + 50 * Math.sin(Math.PI / 4),
             y: 100 - 50 * Math.cos(Math.PI / 4),
         });
-    });
-
-    it('places target details away from the target and flips at viewport edges', () => {
-        expect(targetFeedbackDetailsPosition(
-            { x: 100, y: 80 },
-            { width: 120, height: 50 },
-            { width: 400, height: 300 },
-        )).toEqual({ left: 114, top: 94 });
-        expect(targetFeedbackDetailsPosition(
-            { x: 390, y: 290 },
-            { width: 120, height: 50 },
-            { width: 400, height: 300 },
-        )).toEqual({ left: 256, top: 226 });
     });
 
     const context = { chartType: 'Line Chart', selected: [] };

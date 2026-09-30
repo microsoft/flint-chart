@@ -1,4 +1,5 @@
 import type { SemanticTarget } from '../../../core/interaction-contracts';
+import { createFloatingPanel } from '../../../interactive/floating-panel';
 import type { TargetFeedbackOptions } from '../../../interactive/types';
 import { withoutSemanticInteractionField } from '../compile';
 import { clientRectToLayoutRect, type RendererCoordinateSpace } from '../hit-adapter';
@@ -27,22 +28,6 @@ export function targetFeedbackPoint(item: any): { x: number; y: number } | null 
     };
 }
 
-export function targetFeedbackDetailsPosition(
-    anchor: { x: number; y: number },
-    size: { width: number; height: number },
-    viewport: { width: number; height: number },
-): { left: number; top: number } {
-    const gap = 14;
-    const margin = 8;
-    const left = anchor.x + gap + size.width <= viewport.width - margin
-        ? anchor.x + gap
-        : Math.max(margin, anchor.x - gap - size.width);
-    const top = anchor.y + gap + size.height <= viewport.height - margin
-        ? anchor.y + gap
-        : Math.max(margin, anchor.y - gap - size.height);
-    return { left, top };
-}
-
 export function targetFeedbackEntries(
     item: any,
     fallback: Record<string, unknown>,
@@ -54,6 +39,8 @@ export function targetFeedbackEntries(
     return Object.entries(value as Record<string, unknown>);
 }
 
+const activeFeedback = new WeakMap<Document, () => void>();
+
 export function createTargetFeedbackOverlay(options: {
     container: HTMLElement;
     feedback: TargetFeedbackOptions;
@@ -61,6 +48,7 @@ export function createTargetFeedbackOverlay(options: {
     containerLayoutSize(): { width: number; height: number };
 }): TargetFeedbackOverlayController {
     const { container, feedback, coordinateSpace, containerLayoutSize } = options;
+    const document = container.ownerDocument;
     const layer = document.createElement('div');
     const indicator = document.createElement('div');
     const details = document.createElement('div');
@@ -83,10 +71,18 @@ export function createTargetFeedbackOverlay(options: {
         font: '11px sans-serif', boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
     });
     layer.append(indicator);
+    const floatingDetails = createFloatingPanel({
+        element: details,
+        container,
+        anchor: () => indicator.getBoundingClientRect(),
+        gap: 14,
+        maxWidth: 480,
+    });
 
     const clear = (): void => {
         layer.remove();
-        details.remove();
+        floatingDetails.hide();
+        if (activeFeedback.get(document) === clear) activeFeedback.delete(document);
     };
     const render = (item: any, target: SemanticTarget | null, source: 'assisted' | 'keyboard'): void => {
         const element = target?.elements[0];
@@ -95,10 +91,9 @@ export function createTargetFeedbackOverlay(options: {
             clear();
             return;
         }
-        document.querySelectorAll<HTMLElement>('[data-flint-target-feedback], [data-flint-target-details]')
-            .forEach((node) => {
-                if (node !== layer && node !== details) node.remove();
-            });
+        const previous = activeFeedback.get(document);
+        if (previous !== clear) previous?.();
+        activeFeedback.set(document, clear);
         if (!layer.isConnected) container.append(layer);
         if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
         const space = coordinateSpace();
@@ -110,18 +105,15 @@ export function createTargetFeedbackOverlay(options: {
         const scaleY = rendererLayout.height / space.logicalHeight;
         const centerX = rendererLayout.left + (point.x + space.originX) * scaleX;
         const centerY = rendererLayout.top + (point.y + space.originY) * scaleY;
-        const clientX = containerRect.left + centerX;
-        const clientY = containerRect.top + centerY;
-        indicator.style.display = feedback.indicator === false ? 'none' : 'block';
+        indicator.style.visibility = feedback.indicator === false ? 'hidden' : 'visible';
         indicator.style.left = `${centerX}px`;
         indicator.style.top = `${centerY}px`;
         indicator.style.borderStyle = source === 'keyboard' ? 'solid' : 'dashed';
 
         const detailsOptions = typeof feedback.details === 'object' ? feedback.details : {};
         const showDetails = feedback.details !== false;
-        details.style.display = showDetails ? 'block' : 'none';
         if (!showDetails) {
-            details.remove();
+            floatingDetails.hide();
             return;
         }
         const entries = targetFeedbackEntries(item, element.value)
@@ -132,7 +124,7 @@ export function createTargetFeedbackOverlay(options: {
             const label = document.createElement('span');
             const content = document.createElement('span');
             Object.assign(row.style, {
-                display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: '4px', alignItems: 'baseline',
+                display: 'grid', gridTemplateColumns: 'minmax(0, max-content) minmax(0, 1fr)', columnGap: '4px', alignItems: 'baseline',
                 padding: '2px 0',
             });
             Object.assign(label.style, { color: '#808080', maxWidth: '150px', textAlign: 'right' });
@@ -144,15 +136,7 @@ export function createTargetFeedbackOverlay(options: {
             row.append(label, content);
             return row;
         }));
-        if (!details.isConnected) document.body.append(details);
-        const detailsRect = details.getBoundingClientRect();
-        const position = targetFeedbackDetailsPosition(
-            { x: clientX, y: clientY },
-            { width: detailsRect.width, height: detailsRect.height },
-            { width: window.innerWidth, height: window.innerHeight },
-        );
-        details.style.left = `${position.left + window.scrollX}px`;
-        details.style.top = `${position.top + window.scrollY}px`;
+        floatingDetails.show();
     };
 
     return { render, clear, destroy: clear };

@@ -54,8 +54,8 @@ Each step is read as `<type> <i> of <n>. <content>.`:
 
 | Key | Command |
 | --- | --- |
-| Right / Left | Next / previous sibling |
-| Down / Up | On a mark: the nearest mark below / above (on a line chart, the next series at that point). In a vertical list (a vertical legend, a y axis): next / previous. |
+| Right / Left | Next / previous sibling in horizontal order, stopping at the ends |
+| Down / Up | Next / previous sibling in vertical order, stopping at the ends |
 | Enter | Go into the focused element. On a leaf that can be activated, activate it. |
 | Escape, Backspace | Go back out. On the chart itself, leave the walk. |
 | Home / End | First / last sibling |
@@ -107,8 +107,7 @@ The split is deliberate:
   turns a node into a `SemanticTarget`, and dispatches preview, cancel, and
   activation events through the same path pointer interactions use.
 
-Only `buildAccessibleTree` and `accessibleSceneSignature` read the Vega
-scenegraph. The navigator, the readings (`describeAccessibleNode`), the key
+Only `buildAccessibleTree` reads the Vega scenegraph. The navigator, the readings (`describeAccessibleNode`), the key
 map, and the controller are renderer-neutral.
 
 ## 3. The tree
@@ -196,10 +195,31 @@ fields (the chart's own display names), capped at `maxFields`.
 `AccessibleMove`: the node, whether it moved, an optional message, and flags for
 activation and exit.
 
-- Left and right move among siblings and stop at the ends with a message.
-- Up and down on a mark pick the nearest mark in that direction by geometry. On
-  a line chart the pool is the other series, so up and down move between lines
-  at the same x. In a vertical list they step through the list.
+- Each parent declares a `readingDirection`. Horizontal levels sort siblings by
+  their left bounding edge, then top edge; vertical levels sort by top edge,
+  then left edge. Exact ties retain stable input order. This includes the chart
+  overview, rather than imposing a fixed title/axes/legend/data sequence.
+- Ordering uses `readingBounds`, separate from the painted focus-ring bounds:
+  symbols use their encoded positions, and series use the union of those stable
+  positions. Focus stroke/size changes therefore cannot reorder aligned series
+  on the next keypress. Coincident boxes remain distinct stops in stable order.
+  Map shapes remove Vega's stroke padding and round to a millionth of a pixel,
+  using the same bounds helper as flat keyboard targeting. Highlighting a region
+  therefore does not change its canonical position, numbering, or traversal order.
+- Both arrow pairs traverse the same complete sibling set. Left/Right sorts by
+  left edge then top edge; Up/Down sorts by top edge then left edge. Exact ties
+  preserve canonical order, and both pairs stop at their respective boundaries.
+  Alternate sorting never mutates the canonical list or ids. Enter/Escape changes
+  levels; numbering, entry, Home/End and Page Up/Down use default canonical order;
+  Tab leaves the chart.
+- The chart defaults to horizontal reading, including scatter and radial charts.
+  A categorical/time Y with a quantitative X reads vertically, as do Bar Table,
+  Sparkline, Gantt, Bullet, and Pyramid. Axes use their own orientation, legends
+  their entry arrangement, and row/column headers their orientation. A label's
+  data children return to the chart's reading direction.
+- There is no nearest-neighbor search or cross-series jump. On a line's points,
+  either pair stays within that series; Escape returns to the series list.
+  H help describes both orderings and identifies the default reading direction.
 - Jumps (T, X, Y, L, F, D) go to the first child of the chart of that kind.
 - `refresh()` rebuilds the tree and finds the cursor again by id, walking up the
   old ancestry until an id still exists. So hiding a series keeps the reader on
@@ -261,20 +281,29 @@ resolves after they have rendered. The controller then refreshes and announces.
 | `legend-toggle` | Space on a legend item hides or shows it; the walk re-reads the item. |
 | `click-highlight` | Space on a mark highlights its cohort. |
 | Escape-reset presets | Escape on the chart node leaves the walk and resets. |
-| `keyboardTargeting` | Ignored while accessible navigation is mounted; both would claim the arrows. |
+| `keyboardTargeting` | Ignored while accessible navigation is mounted; both would claim the arrows. Alone, it uses complete horizontal/vertical orders over a flat set of targetable chart marks, without hierarchy. Enter/Space activates; Escape clears the target. |
 | Viewport presets | The tree is rebuilt from the scene after each render, so it follows the viewport. |
 
 ## 7. Refresh and cost
 
 The walk refreshes before every key, on resize, and after activation, because
 the chart may have changed underneath it (a legend toggle, a viewport change,
-new data). Rebuilding is linear in the marks and takes up to ~90 ms on a
-6,000-point chart, so the navigator is given a **scene signature**: a hash of
-every scene item's geometry (`x`, `y`, `x2`, `y2`, `width`, `height`, angles,
-radii, `size`), text, path length, and interaction key. It deliberately
-ignores bounds and style, which hover emphasis changes. The tree is rebuilt
-only when the signature changes. Computing the signature on that chart takes
-~3 ms.
+new data). Each refresh rebuilds the tree and retains the cursor by stable id.
+The former geometry/text/key fingerprint skipped semantic changes: values,
+tooltip text, and cohort membership can change without moving marks or changing
+their keys. It has been removed rather than risking stale readings.
+
+Rebuilding takes up to ~90 ms on the previously measured 6,000-point chart;
+correctness currently takes priority over that optimisation. A future cache
+must invalidate for every semantic input, for example through a data revision
+covering every update path, not just a geometric fingerprint.
+
+Activation awaits the click handler and render before reading the new state.
+Both synchronous exceptions and rejected promises announce "Could not activate
+this element." and log the original error with an accessible-navigation prefix.
+A `false` result, synchronous or asynchronous, repeats the current reading
+without claiming success. Navigation, blur, exit, another command or activation,
+and destruction invalidate pending announcements; late failures are still logged.
 
 ## 8. Settings
 
@@ -292,15 +321,17 @@ only when the signature changes. Computing the signature on that chart takes
   checks: every Vega-Lite chart type has a tree with unique ids, a type and
   content on every node, and one member per mark; no reading contains
   `undefined`, `NaN`, `Untitled`, or a raw overflow placeholder; the key map;
-  moves, edges, and spatial up/down; the cursor surviving a rebuild; and the
+  moves, edges, and complete horizontal/vertical orders; the cursor surviving a rebuild; and the
   regressions in the readings (number precision, ECDF ties, overflow
   placeholders, full dates, facet panels, aggregated legend fields, stroke-dash
-  series, signature-gated rebuilds).
-- The DOM controller has no automated test in the repository, because the
-  test environment is Node without a DOM. It was verified with a jsdom sweep
-  across all 36 Vega-Lite chart types (one tab stop, focus never leaves the
-  layer, exactly one proxy, valid readings after each of ~50 keys, activation
-  with `legend-toggle` and `click-highlight`).
+  series, and changes to values, tooltip text, and membership with unchanged
+  geometry and keys).
+- `node --test scripts/test-accessible-navigation.mjs` runs the DOM controller in
+  headless Chrome using the repository's existing Puppeteer tooling. It covers
+  successful asynchronous activation, synchronous exceptions, rejected promises,
+  synchronous/asynchronous no-action results, and late success/failure after
+  navigation, blur, help, superseding activation, and destruction. Install
+  Chrome/Chromium or set `CHROME_PATH`; no dev server is required.
 
 ## 10. Limits
 
@@ -340,7 +371,7 @@ navigation on Plotly therefore needs, in order:
      records, so the targets agree with Vega-Lite's.
 3. **Reuse** of the renderer-neutral parts unchanged: `AccessibleNavigator`,
    `describeAccessibleNode`, the key map, and the controller. The controller
-   needs only `buildTree`, `sceneSignature`, a coordinate space, and the
+   needs only `buildTree`, a coordinate space, and the
    present / clear / activate callbacks.
 
 The one refactor this implies is moving the navigator, readings, and key map

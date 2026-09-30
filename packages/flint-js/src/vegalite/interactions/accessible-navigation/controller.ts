@@ -1,4 +1,5 @@
 import type { AccessibleElementDescription } from '../../../interactive/language/events';
+import { createFloatingPanel } from '../../../interactive/floating-panel';
 import type { AccessibleNavigationSettings } from '../../../interactive/triggers';
 import { clientRectToLayoutRect, type RendererCoordinateSpace } from '../hit-adapter';
 import {
@@ -12,8 +13,6 @@ export interface AccessibleNavigationControllerOptions {
     container: HTMLElement;
     settings: AccessibleNavigationSettings;
     buildTree(): AccessibleNode;
-    /** A fingerprint of the rendered scene; the tree is rebuilt only when it changes. */
-    sceneSignature?(): string;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
     /** The reader focused an element: emphasise its data and report it. */
@@ -50,7 +49,8 @@ const VISUALLY_HIDDEN: Partial<CSSStyleDeclaration> = {
  */
 export function mountAccessibleNavigation(options: AccessibleNavigationControllerOptions): AccessibleNavigationController {
     const { container, settings } = options;
-    const navigator = new AccessibleNavigator(options.buildTree, options.sceneSignature);
+    const document = container.ownerDocument;
+    const navigator = new AccessibleNavigator(options.buildTree);
     const layer = document.createElement('div');
     const caption = document.createElement('div');
     const live = document.createElement('div');
@@ -72,12 +72,22 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     live.setAttribute('role', 'status');
     live.setAttribute('aria-live', 'polite');
     Object.assign(live.style, VISUALLY_HIDDEN);
-    layer.append(caption, live);
+    layer.append(live);
     if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
     container.append(layer);
 
     let proxy: HTMLElement | undefined;
     let active = false;
+    let activation = 0;
+    let destroyed = false;
+    const floatingCaption = createFloatingPanel({
+        element: caption,
+        container,
+        anchor: () => proxy?.getBoundingClientRect() ?? container.getBoundingClientRect(),
+        maxWidth: 280,
+    });
+    caption.style.pointerEvents = 'auto';
+    caption.addEventListener('pointerdown', (event) => event.preventDefault());
 
     const layoutRect = (node: AccessibleNode): { left: number; top: number; width: number; height: number } | undefined => {
         const bounds = node.bounds;
@@ -126,7 +136,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
 
     const renderCaption = (node: AccessibleNode, description: AccessibleElementDescription): void => {
         if (!settings.caption || !active) {
-            caption.style.display = 'none';
+            floatingCaption.hide();
             return;
         }
         const heading = document.createElement('div');
@@ -140,23 +150,10 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         const hint = document.createElement('div');
         Object.assign(hint.style, { color: '#59636e', marginTop: '2px', fontSize: '11px' });
         hint.textContent = node.children.length > 0
-            ? `Enter: ${node.children.length} inside · Esc: back · H: help`
+            ? `Arrows: move · Enter: ${node.children.length} inside · Esc: back · H: help`
             : 'Arrows: move · Esc: back · H: help';
         caption.replaceChildren(heading, body, hint);
-        caption.style.display = 'block';
-        const rect = layoutRect(node);
-        const size = options.containerLayoutSize();
-        const captionWidth = caption.offsetWidth || 240;
-        const captionHeight = caption.offsetHeight || 48;
-        const gap = 8;
-        let left = rect ? rect.left : 0;
-        let top = rect ? rect.top + rect.height + gap : 0;
-        if (node.kind === 'chart' || (rect && top + captionHeight > size.height && rect.top - gap - captionHeight >= 0)) {
-            top = node.kind === 'chart' ? size.height + gap : rect!.top - gap - captionHeight;
-        }
-        left = Math.max(0, Math.min(left, Math.max(0, size.width - captionWidth)));
-        caption.style.left = `${left}px`;
-        caption.style.top = `${top}px`;
+        floatingCaption.show();
     };
 
     const announce = (message: string): void => {
@@ -181,7 +178,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         next.setAttribute('aria-label', description.text);
         styleProxy(next, node);
         const previous = proxy;
-        layer.insertBefore(next, caption);
+        layer.insertBefore(next, live);
         proxy = next;
         if (focusElement) next.focus({ preventScroll: true });
         previous?.remove();
@@ -201,11 +198,12 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     };
 
     const setActive = (value: boolean): void => {
+        if (!value) activation += 1;
         if (active === value) return;
         active = value;
         if (proxy) styleProxy(proxy, navigator.current);
         if (!active) {
-            caption.style.display = 'none';
+            floatingCaption.hide();
             options.clear();
         }
     };
@@ -218,27 +216,26 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         setActive(true);
         reveal(navigator.current, update(navigator.current));
     };
-    let activation = 0;
-    const activate = (node: AccessibleNode): void => {
-        const result = options.activate(node);
-        if (result === false) {
-            // With no click preset to run, activation reads the element again.
-            announce(describeAccessibleNode(node).text);
-            return;
-        }
+    const activate = async (node: AccessibleNode): Promise<void> => {
         const ticket = ++activation;
         const type = describeAccessibleNode(node).type.toLowerCase();
-        void Promise.resolve(result).then(() => {
-            if (ticket !== activation || !proxy) return;
+        const isCurrent = (): boolean => !destroyed && active && ticket === activation
+            && navigator.current.id === node.id;
+        try {
+            const activated = await options.activate(node);
+            if (!isCurrent()) return;
             // The click may have hidden a series or changed a selection: read the element as it is now.
             navigator.refresh();
             const current = navigator.current;
             const description = update(current);
-            if (active) renderCaption(current, description);
-            announce(current.id === node.id ? `Activated. ${description.content.replace(/([^.!?])$/, '$1.')}` : `Activated ${type}.`);
-        }, () => {
-            if (ticket === activation) announce(`Activated ${type}.`);
-        });
+            renderCaption(current, description);
+            announce(!activated ? description.text
+                : current.id === node.id ? `Activated. ${description.content.replace(/([^.!?])$/, '$1.')}`
+                : `Activated ${type}.`);
+        } catch (error) {
+            console.error('Flint accessible-navigation activation failed:', error);
+            if (isCurrent()) announce('Could not activate this element.');
+        }
     };
     const onFocusOut = (event: FocusEvent): void => {
         if (event.relatedTarget instanceof Node && layer.contains(event.relatedTarget)) return;
@@ -247,6 +244,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     const onKeyDown = (event: KeyboardEvent): void => {
         const command = accessibleCommandForKey(event);
         if (!command) return;
+        activation += 1;
         navigator.refresh();
         const move = navigator.run(command);
         if (move.exited) {
@@ -263,7 +261,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
             live.textContent = '';
             show(move.node, true);
         } else if (move.activate) {
-            activate(move.node);
+            void activate(move.node);
         } else {
             // A key that moves nowhere still restores the ring and caption after an exit.
             if (!wasActive) show(move.node, true);
@@ -278,6 +276,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     return {
         current: () => navigator.current,
         refresh() {
+            if (destroyed) return;
             navigator.refresh();
             if (!proxy) return;
             const node = navigator.current;
@@ -285,9 +284,13 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
             if (active) renderCaption(node, description);
         },
         destroy() {
+            destroyed = true;
+            activation += 1;
+            proxy = undefined;
             layer.removeEventListener('focusin', onFocusIn);
             layer.removeEventListener('focusout', onFocusOut);
             layer.removeEventListener('keydown', onKeyDown);
+            floatingCaption.destroy();
             layer.remove();
         },
     };

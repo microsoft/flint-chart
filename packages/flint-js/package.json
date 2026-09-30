@@ -189,6 +189,7 @@
     "js-yaml": "^4.2.0"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.4",
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0"
   }

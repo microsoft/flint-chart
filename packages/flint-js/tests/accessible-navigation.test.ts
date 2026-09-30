@@ -11,12 +11,12 @@ import { INTERACTION_PRESETS } from '../src/interactive/spec/registry';
 import { toCanvasInteractionEvent } from '../src/interactive/canvas-interaction';
 import { associateSemanticElementRenderKeys } from '../src/core/interaction-semantics';
 import { addVegaLiteInteractions, injectVegaInteractionStore } from '../src/vegalite/interactions/compile';
+import { INTERACTION_KEY } from '../src/vegalite/interactions/hit-adapter';
 import {
     ACCESSIBLE_NAVIGATION_HELP,
     AccessibleNavigator,
     accessibleCommandForKey,
     accessibleNodes,
-    accessibleSceneSignature,
     buildAccessibleTree,
     describeAccessibleNode,
     formatNumber,
@@ -55,7 +55,7 @@ function testCaseInput(testCase: TestCase): ChartAssemblyInput {
     } as ChartAssemblyInput;
 }
 
-async function accessibleTree(input: ChartAssemblyInput): Promise<{ root: AccessibleNode; view: View }> {
+async function accessibleTree(input: ChartAssemblyInput): Promise<{ root: AccessibleNode; view: View; buildTree(): AccessibleNode }> {
     const spec = assembleVegaLite(input) as Record<string, any>;
     const plan = addVegaLiteInteractions(spec, [accessibleNavigation()], true);
     if (!plan) throw new Error(`No interaction plan for ${input.chart_spec.chartType}`);
@@ -63,7 +63,7 @@ async function accessibleTree(input: ChartAssemblyInput): Promise<{ root: Access
     injectVegaInteractionStore(compiled, plan);
     const view = new View(parse(compiled), { renderer: 'none' });
     await view.runAsync();
-    const root = buildAccessibleTree({
+    const buildTree = () => buildAccessibleTree({
         root: (view.scenegraph() as any).root,
         chartType: input.chart_spec.chartType,
         axisFields: plan.axisFields,
@@ -80,7 +80,7 @@ async function accessibleTree(input: ChartAssemblyInput): Promise<{ root: Access
             }
         },
     });
-    return { root, view };
+    return { root: buildTree(), view, buildTree };
 }
 
 const child = (node: AccessibleNode, kind: string, index = 0): AccessibleNode => {
@@ -88,6 +88,48 @@ const child = (node: AccessibleNode, kind: string, index = 0): AccessibleNode =>
     if (!found) throw new Error(`No ${kind} under ${node.id}`);
     return found;
 };
+
+function expectCanonicalTraversal(root: AccessibleNode): void {
+    const navigator = new AccessibleNavigator(() => root);
+    for (const parent of accessibleNodes(root).filter((node) => node.children.length > 0)) {
+        expect(parent.readingDirection, parent.id).toMatch(/^(horizontal|vertical)$/);
+        const vertical = parent.readingDirection === 'vertical';
+        const forward = accessibleCommandForKey({ key: vertical ? 'ArrowDown' : 'ArrowRight' })!;
+        const backward = accessibleCommandForKey({ key: vertical ? 'ArrowUp' : 'ArrowLeft' })!;
+        navigator.focus(parent.id);
+        expect(navigator.run('enter').node.id, parent.id).toBe(parent.children[0].id);
+        for (const sibling of parent.children.slice(1)) expect(navigator.run(forward).node.id, parent.id).toBe(sibling.id);
+        expect(navigator.run(forward).moved, parent.id).toBe(false);
+        for (const sibling of parent.children.slice(0, -1).reverse()) expect(navigator.run(backward).node.id, parent.id).toBe(sibling.id);
+        expect(navigator.run(backward).moved, parent.id).toBe(false);
+        const starts = parent.children.map((node) => {
+            const bounds = node.readingBounds ?? node.bounds!;
+            return vertical ? bounds.y1 : bounds.x1;
+        });
+        expect(starts, parent.id).toEqual([...starts].sort((left, right) => left - right));
+        expect(navigator.run('exit').node.id, parent.id).toBe(parent.id);
+        const canonicalIds = parent.children.map((node) => node.id);
+        for (const direction of ['horizontal', 'vertical'] as const) {
+            const ordered = [...parent.children].sort((left, right) => {
+                const leftBounds = left.readingBounds ?? left.bounds!;
+                const rightBounds = right.readingBounds ?? right.bounds!;
+                return direction === 'vertical'
+                    ? leftBounds.y1 - rightBounds.y1 || leftBounds.x1 - rightBounds.x1
+                    : leftBounds.x1 - rightBounds.x1 || leftBounds.y1 - rightBounds.y1;
+            });
+            navigator.focus(ordered[0].id);
+            for (const sibling of ordered.slice(1)) {
+                expect(navigator.run(direction === 'vertical' ? 'down' : 'right').node.id, parent.id).toBe(sibling.id);
+            }
+            expect(navigator.run(direction === 'vertical' ? 'down' : 'right').moved, parent.id).toBe(false);
+            for (const sibling of ordered.slice(0, -1).reverse()) {
+                expect(navigator.run(direction === 'vertical' ? 'up' : 'left').node.id, parent.id).toBe(sibling.id);
+            }
+            expect(navigator.run(direction === 'vertical' ? 'up' : 'left').moved, parent.id).toBe(false);
+            expect(parent.children.map((node) => node.id)).toEqual(canonicalIds);
+        }
+    }
+}
 
 const stackedBar: ChartAssemblyInput = {
     data: {
@@ -211,27 +253,28 @@ describe('accessible-navigation preset', () => {
 describe('accessible navigation tree', () => {
     it('describes a stacked bar chart: title, both axes, the legend, and every bar', async () => {
         const { root, view } = await accessibleTree(stackedBar);
-        expect(root.children.map((node) => node.kind)).toEqual(['title', 'axis', 'axis', 'legend', 'data']);
+        expect(root.children.map((node) => node.type)).toEqual(['Y axis', 'Title', 'X axis', 'Data', 'Color legend']);
         expect(describeAccessibleNode(root).text).toBe(
             'Stacked Bar Chart: Sales by country. X axis Country; Y axis Sales; color legend Source. 6 bars. '
             + 'Press Enter to explore 5 parts, or H for help.',
         );
-        expect(describeAccessibleNode(child(root, 'title')).text).toBe('Title 1 of 5. Sales by country.');
+        expect(describeAccessibleNode(child(root, 'title')).text).toBe('Title 2 of 5. Sales by country.');
 
-        const xAxis = child(root, 'axis');
+        const xAxis = root.children.find((node) => node.axis?.channel === 'x')!;
         expect(xAxis.content).toBe('Country. Categorical, 3 labels, from US to Japan');
-        expect(xAxis.children.map((node) => node.kind)).toEqual(['axis-title', 'axis-label', 'axis-label', 'axis-label']);
-        const us = xAxis.children[1];
-        expect(describeAccessibleNode(us).text).toBe('X axis label 2 of 4. US. 2 bars.');
+        expect(xAxis.children.filter((node) => node.kind === 'axis-title')).toHaveLength(1);
+        expect(xAxis.children.filter((node) => node.kind === 'axis-label')).toHaveLength(3);
+        const us = xAxis.children.find((node) => node.axis?.value === 'US')!;
+        expect(describeAccessibleNode(us).text).toMatch(/^X axis label \d of 4\. US\. 2 bars\.$/);
         // Reading order runs top to bottom within a stack.
         expect(us.children.map((node) => node.content)).toEqual([
             'Country: US, Sales: 200, Source: Coal',
             'Country: US, Sales: 120, Source: Solar',
         ]);
 
-        const yAxis = child(root, 'axis', 1);
+        const yAxis = root.children.find((node) => node.axis?.channel === 'y')!;
         expect(yAxis.type).toBe('Y axis');
-        expect(yAxis.content).toMatch(/^Sales\. Numeric, \d+ labels, from 0 to /);
+        expect(yAxis.content).toMatch(/^Sales\. Numeric, \d+ labels, from \S+ to 0$/);
         expect(yAxis.children.slice(1).every((node) => node.children.length === 0)).toBe(true);
 
         const legend = child(root, 'legend');
@@ -289,6 +332,7 @@ describe('accessible navigation tree', () => {
             if (!testCase) continue;
             covered += 1;
             const { root, view } = await accessibleTree(testCaseInput(testCase));
+            expectCanonicalTraversal(root);
             const nodes = accessibleNodes(root);
             expect(root.children.length, chartType).toBeGreaterThan(0);
             expect(new Set(nodes.map((node) => node.id)).size, chartType).toBe(nodes.length);
@@ -315,8 +359,28 @@ describe('accessible navigation tree', () => {
 });
 
 describe('AccessibleNavigator', () => {
+    it.each(['horizontal', 'vertical'] as const)('uses a complete %s primary traversal at every level', async (direction) => {
+        const { root, view } = await accessibleTree({
+            data: { values: [{ Group: 'Alpha', Value: 100 }, { Group: 'Beta', Value: 2 }, { Group: 'Gamma', Value: 40 }] },
+            semantic_types: { Group: 'Category', Value: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: direction === 'vertical'
+                    ? { x: { field: 'Value' }, y: { field: 'Group' } }
+                    : { x: { field: 'Group' }, y: { field: 'Value' } },
+            },
+        });
+        try {
+            expect(root.readingDirection).toBe(direction);
+            expectCanonicalTraversal(root);
+        } finally {
+            view.finalize();
+        }
+    });
+
     it('maps keys to commands and leaves modified keys to the page', () => {
-        expect(accessibleCommandForKey({ key: 'ArrowRight' })).toBe('next');
+        expect(accessibleCommandForKey({ key: 'ArrowRight' })).toBe('right');
+        expect(accessibleCommandForKey({ key: 'ArrowLeft' })).toBe('left');
         expect(accessibleCommandForKey({ key: 'Enter' })).toBe('enter');
         expect(accessibleCommandForKey({ key: ' ' })).toBe('activate');
         expect(accessibleCommandForKey({ key: 'Backspace' })).toBe('exit');
@@ -330,17 +394,18 @@ describe('AccessibleNavigator', () => {
         const { root, view } = await accessibleTree(stackedBar);
         const navigator = new AccessibleNavigator(() => root);
         expect(navigator.run('previous')).toMatchObject({ moved: false, message: 'Top of the chart. Press Enter to explore.' });
-        expect(navigator.run('enter').node.kind).toBe('title');
+        expect(navigator.run('enter').node.type).toBe('Y axis');
         expect(navigator.run('previous')).toMatchObject({ moved: false, message: 'Start of the chart.' });
-        expect(navigator.run('last').node.kind).toBe('data');
+        expect(navigator.run('last').node.kind).toBe('legend');
         expect(navigator.run('next')).toMatchObject({ moved: false, message: 'End of the chart.' });
+        navigator.run('jump-data');
         expect(navigator.run('enter').node.type).toBe('Bar');
         expect(navigator.run('last').node).toBe(child(root, 'data').children[5]);
         expect(navigator.run('activate')).toMatchObject({ moved: false, activate: true });
         expect(navigator.run('exit').node.kind).toBe('data');
         expect(navigator.run('exit').node.kind).toBe('chart');
         expect(navigator.run('exit')).toMatchObject({ exited: true });
-        expect(navigator.run('help').message).toBe(ACCESSIBLE_NAVIGATION_HELP);
+        expect(navigator.run('help').message).toContain(ACCESSIBLE_NAVIGATION_HELP);
         expect(navigator.run('jump-legend').node.kind).toBe('legend');
         expect(navigator.run('jump-y').node.type).toBe('Y axis');
         expect(navigator.run('jump-x').node.type).toBe('X axis');
@@ -349,28 +414,54 @@ describe('AccessibleNavigator', () => {
         view.finalize();
     });
 
-    it('moves up and down through a stack, and across series on a line', async () => {
+    it('uses vertical order without leaving the current sibling set', async () => {
         const bars = await accessibleTree(stackedBar);
-        const navigator = new AccessibleNavigator(() => bars.root);
-        navigator.run('jump-data');
-        const top = navigator.run('enter').node;
-        expect(navigator.run('up')).toMatchObject({ moved: false, message: 'No mark above.' });
-        const below = navigator.run('down');
-        expect(below.moved).toBe(true);
-        expect(below.node.content.split(',')[0]).toBe(top.content.split(',')[0]);
-        expect(navigator.run('down')).toMatchObject({ moved: false, message: 'No mark below.' });
+        expectCanonicalTraversal(bars.root);
         bars.view.finalize();
 
         const lines = await accessibleTree(twoLines);
         const walk = new AccessibleNavigator(() => lines.root);
-        walk.run('jump-data');
-        walk.run('enter');
-        const first = walk.run('enter').node;
-        const switched = walk.run(first.content.includes('Eggs') ? 'down' : 'up');
-        expect(switched.moved).toBe(true);
-        expect(switched.node.parent).not.toBe(first.parent);
-        expect(switched.node.content.split(',')[0]).toBe(first.content.split(',')[0]);
+        const eggs = child(lines.root, 'data').children.find((node) => node.content.startsWith('Food: Eggs'))!;
+        const ordered = [...eggs.children].sort((left, right) => left.readingBounds!.y1 - right.readingBounds!.y1);
+        expect(ordered.map((node) => node.id)).not.toEqual(eggs.children.map((node) => node.id));
+        walk.focus(ordered[0].id);
+        for (const point of ordered.slice(1)) {
+            const move = walk.run('down');
+            expect(move.node.id).toBe(point.id);
+            expect(move.node.parent).toBe(eggs);
+        }
+        expect(walk.run('down').moved).toBe(false);
         lines.view.finalize();
+    });
+
+    it('moves to the adjacent horizontal bar regardless of its length', async () => {
+        const groups = ['Laptop', 'Phone', 'Tablet', 'Desktop', 'Monitor', 'Keyboard', 'Mouse', 'Headphones', 'Speaker', 'Camera'];
+        const values = [890, 870, 460, 180, 406, 950, 300, 420, 100, 880];
+        const { root, view } = await accessibleTree({
+            data: { values: groups.map((Group, index) => ({ Group, X: values[index] })) },
+            semantic_types: { Group: 'Category', X: 'Quantity' },
+            chart_spec: {
+                chartType: 'Bar Chart',
+                encodings: { x: { field: 'X' }, y: { field: 'Group' } },
+                baseSize: { width: 600, height: 400 },
+            },
+            options: { addTooltips: true },
+        });
+        try {
+            const marks = child(root, 'data').children;
+            const navigator = new AccessibleNavigator(() => root);
+            navigator.focus(marks[4].id);
+            expect(navigator.current.content).toContain('Group: Monitor');
+            expect(navigator.run('up').node.id).toBe(marks[3].id);
+            expect(navigator.run('down').node.id).toBe(marks[4].id);
+            navigator.focus(marks[0].id);
+            for (const mark of marks.slice(1)) expect(navigator.run('down').node.id).toBe(mark.id);
+            expect(navigator.run('down').moved).toBe(false);
+            for (const mark of marks.slice(0, -1).reverse()) expect(navigator.run('up').node.id).toBe(mark.id);
+            expect(navigator.run('up').moved).toBe(false);
+        } finally {
+            view.finalize();
+        }
     });
 
     it('keeps the reader in place across a rebuild', async () => {
@@ -386,6 +477,114 @@ describe('AccessibleNavigator', () => {
         expect(navigator.current.id).toBe(item.id);
         expect(navigator.current).not.toBe(item);
         view.finalize();
+    });
+
+    it.each([false, true])('keeps map traversal and numbering stable through Vega emphasis (identical: %s)', async (identical) => {
+        const keys = ['first', 'second', 'third'];
+        const view = new View(parse({
+            signals: [{ name: 'active', value: null }],
+            projections: [{ name: 'projection', type: 'mercator', scale: 30, translate: [100, 100] }],
+            data: [{ name: 'regions', values: keys.map((key, index) => ({
+                [INTERACTION_KEY]: key, type: 'Feature',
+                geometry: { type: 'Point', coordinates: identical ? [0, 0] : [index, -index] },
+            })) }],
+            marks: [{
+                type: 'shape', from: { data: 'regions' },
+                transform: [{ type: 'geoshape', projection: 'projection' }],
+                encode: { update: {
+                    fill: { value: '#ccc' }, stroke: { value: '#000' },
+                    strokeWidth: { signal: `datum.${INTERACTION_KEY} === active ? 7 : 0.3` },
+                } },
+            }],
+        }), { renderer: 'none' });
+        try {
+            await view.runAsync();
+            const buildTree = () => buildAccessibleTree({ root: (view.scenegraph() as any).root, chartType: 'Choropleth' });
+            const navigator = new AccessibleNavigator(buildTree);
+            const original = child(navigator.root, 'data').children;
+            expect(original).toHaveLength(3);
+            const originalDescriptions = original.map(describeAccessibleNode);
+            const emphasizeAndRefresh = async () => {
+                await view.signal('active', navigator.current.members[0].key).runAsync();
+                navigator.refresh();
+                const rebuilt = child(navigator.root, 'data').children;
+                expect(rebuilt.map((node) => node.id)).toEqual(original.map((node) => node.id));
+                expect(rebuilt.map(describeAccessibleNode)).toEqual(originalDescriptions);
+                expect(rebuilt.map((node) => node.readingBounds)).toEqual(original.map((node) => node.readingBounds));
+            };
+            for (const [forward, backward] of [['right', 'left'], ['down', 'up']] as const) {
+                navigator.focus(original[0].id);
+                for (const expected of original) {
+                    expect(navigator.current.id).toBe(expected.id);
+                    await emphasizeAndRefresh();
+                    navigator.run(forward);
+                }
+                expect(navigator.run(forward).moved).toBe(false);
+                for (const expected of [...original].reverse()) {
+                    expect(navigator.current.id).toBe(expected.id);
+                    await emphasizeAndRefresh();
+                    navigator.run(backward);
+                }
+                expect(navigator.run(backward).moved).toBe(false);
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
+    it.each([false, true])('keeps aligned bump series reachable while emphasis changes their stroke bounds (identical: %s)', async (identical) => {
+        const input = testCaseInput(namedCase('Bump Chart', 'Olympic'));
+        if (identical) input.data = { values: (input.data.values ?? []).map((row) => ({ ...row, Rank: 2 })) };
+        const { root, view, buildTree } = await accessibleTree(input);
+        try {
+            const series = child(root, 'data').children;
+            expect(series).toHaveLength(4);
+            if (identical) expect(series.every((node) => JSON.stringify(node.readingBounds) === JSON.stringify(series[0].readingBounds))).toBe(true);
+            const original = series.flatMap((node) => node.members).map((member) => ({
+                item: member.item,
+                bounds: { ...member.item.bounds },
+                strokeWidth: member.item.strokeWidth,
+            }));
+            const navigator = new AccessibleNavigator(buildTree);
+            navigator.run('jump-data');
+            navigator.run('enter');
+            const emphasizeAndRefresh = () => {
+                for (const snapshot of original) {
+                    Object.assign(snapshot.item.bounds, snapshot.bounds);
+                    snapshot.item.strokeWidth = snapshot.strokeWidth;
+                }
+                for (const member of navigator.current.members) {
+                    member.item.strokeWidth = (member.item.strokeWidth ?? 0) + 2;
+                    member.item.bounds.expand(1);
+                }
+                navigator.refresh();
+                expect(child(navigator.root, 'data').children.map((node) => node.id)).toEqual(series.map((node) => node.id));
+            };
+            for (const vertical of [false, true]) {
+                const ordered = [...series].sort((left, right) => {
+                    const leftBounds = left.readingBounds!;
+                    const rightBounds = right.readingBounds!;
+                    return vertical
+                        ? leftBounds.y1 - rightBounds.y1 || leftBounds.x1 - rightBounds.x1
+                        : leftBounds.x1 - rightBounds.x1 || leftBounds.y1 - rightBounds.y1;
+                });
+                navigator.focus(ordered[0].id);
+                for (const expected of ordered) {
+                    expect(navigator.current.id).toBe(expected.id);
+                    emphasizeAndRefresh();
+                    navigator.run(vertical ? 'down' : 'right');
+                }
+                expect(navigator.run(vertical ? 'down' : 'right').moved).toBe(false);
+                for (const expected of [...ordered].reverse()) {
+                    expect(navigator.current.id).toBe(expected.id);
+                    emphasizeAndRefresh();
+                    navigator.run(vertical ? 'up' : 'left');
+                }
+                expect(navigator.run(vertical ? 'up' : 'left').moved).toBe(false);
+            }
+        } finally {
+            view.finalize();
+        }
     });
 });
 
@@ -464,26 +663,52 @@ describe('accessible navigation readings', () => {
         view.finalize();
     });
 
-    it('rebuilds only when the rendered scene changes', async () => {
-        const first = await accessibleTree(stackedBar);
-        const again = await accessibleTree(stackedBar);
-        const signature = accessibleSceneSignature((first.view.scenegraph() as any).root);
-        expect(accessibleSceneSignature((again.view.scenegraph() as any).root)).toBe(signature);
-        const fewer = await accessibleTree({ ...stackedBar, data: { values: (stackedBar.data as any).values.slice(0, 4) } } as ChartAssemblyInput);
-        expect(accessibleSceneSignature((fewer.view.scenegraph() as any).root)).not.toBe(signature);
+    it.each(['datum', 'tooltip'] as const)('refreshes changed %s readings with unchanged geometry and keys', async (source) => {
+        const { view, buildTree } = await accessibleTree(stackedBar);
+        try {
+            const navigator = new AccessibleNavigator(buildTree);
+            navigator.run('jump-data');
+            const before = navigator.run('enter').node;
+            const item = before.members[0].item;
+            const key = item.datum.__flint_interaction_key;
+            const bounds = { ...before.bounds };
+            if (source === 'datum') {
+                item.tooltip = null;
+                item.datum.Sales = 400;
+            } else {
+                item.tooltip = { ...item.tooltip, Sales: '400' };
+            }
 
-        let builds = 0;
-        let current = signature;
-        const navigator = new AccessibleNavigator(() => {
-            builds += 1;
-            return first.root;
-        }, () => current);
-        expect(navigator.refresh()).toBe(false);
-        expect(builds).toBe(1);
-        current = 'changed';
-        expect(navigator.refresh()).toBe(true);
-        expect(builds).toBe(2);
-        for (const { view } of [first, again, fewer]) view.finalize();
+            expect(navigator.refresh()).toBe(true);
+            expect(navigator.current.id).toBe(before.id);
+            expect(navigator.current.bounds).toEqual(bounds);
+            expect(item.datum.__flint_interaction_key).toBe(key);
+            expect(navigator.current.content).toContain('Sales: 400');
+            expect(navigator.current.content).not.toBe(before.content);
+        } finally {
+            view.finalize();
+        }
+    });
+
+    it('refreshes legend membership even when mark keys and geometry do not change', async () => {
+        const { root, view, buildTree } = await accessibleTree(stackedBar);
+        try {
+            const navigator = new AccessibleNavigator(buildTree);
+            const coal = child(root, 'legend').children.find((node) => node.legend?.value === 'Coal')!;
+            navigator.focus(coal.id);
+            expect(navigator.current.members).toHaveLength(3);
+            const item = coal.members[0].item;
+            item.datum.Source = 'Solar';
+
+            navigator.refresh();
+            expect(navigator.current.id).toBe(coal.id);
+            expect(navigator.current.members).toHaveLength(2);
+            expect(navigator.current.content).toContain('2 bars');
+            const solar = child(navigator.root, 'legend').children.find((node) => node.legend?.value === 'Solar')!;
+            expect(solar.members).toHaveLength(4);
+        } finally {
+            view.finalize();
+        }
     });
 });
 
