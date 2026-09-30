@@ -733,6 +733,10 @@ Right and Left move between siblings; Up and Down move to the mark above or belo
 
 Each step focuses a transparent proxy element laid over the rendered element: its accessible name is the announcement, it draws the focus ring, and the visible caption repeats it. The preset emphasises the data the element stands for (a bar, a series, a legend cohort, a category, a panel) as a preview update and emits `focus-element` with `event.description`: the element `kind`, its spoken `type` ("Bar"), its `content` ("Country: US, Sales: 200"), its position, and the full `text`. It claims no pointer trigger, so it composes with every other preset.
 
+After Space runs a click preset, the walk re-reads the element once the chart has re-rendered and announces its new state ("Activated. Source: Coal. No bars."). The tree is rebuilt only when the rendered scene changes (a fingerprint of item geometry, text, and data keys), so hover emphasis does not cost a rebuild per key.
+
+The chart is a single tab stop. When a preset also resets on Escape, the container stays focusable for a pointer press but leaves the tab order (`tabindex="-1"`); the walk's own proxy is the stop. `keyboardTargeting` is ignored while accessible navigation is mounted, since both would claim the arrow keys. Escape on the chart itself leaves the walk without consuming the key, so an Escape reset still runs. The design, its limits, and the Plotly plan are in [`docs/design-accessible-navigation.md`](../../../../docs/design-accessible-navigation.md).
+
 ## Update Language
 
 Presets and applications produce one renderer-neutral `ChartUpdate` format. There is no

@@ -30,7 +30,7 @@ Every behaviour comes from a **preset**: a named interaction Flint ships, such a
 | `interactions[].id` | Optional. Names the interaction when a chart uses the same preset twice, and names it in the `flint-interaction` event. |
 | `interactions[].options` | The preset's own options, always nested under `options`. Never put an option beside `type`. |
 | `assistedTargeting` | Optional. Pointer acquisition that snaps to a nearby mark. `false` requires direct hits; an object sets `maxDistance`, `indicator`, `details`. |
-| `keyboardTargeting` | Optional. Lets a reader move between marks with the keyboard. For a full semantic walk of the chart, add the `accessible-navigation` preset instead. |
+| `keyboardTargeting` | Optional. Lets a reader move between marks with the keyboard. For a full semantic walk of the chart, add the `accessible-navigation` preset instead; the two are not combined, and `keyboardTargeting` is ignored when the preset is present. |
 
 An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "type": "click-highlight" }` is the smallest form.
 

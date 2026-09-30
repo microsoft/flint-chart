@@ -30,7 +30,7 @@
 | `interactions[].id` | 可选。同一图表两次使用同一预设时用来区分，也是 `flint-interaction` 事件中的名字。 |
 | `interactions[].options` | 预设自己的选项，始终嵌套在 `options` 下，不要与 `type` 并列。 |
 | `assistedTargeting` | 可选。指针吸附到附近的标记；`false` 要求精确命中，对象可设置 `maxDistance`、`indicator`、`details`。 |
-| `keyboardTargeting` | 可选。允许读者用键盘在标记间移动。 |
+| `keyboardTargeting` | 可选。允许读者用键盘在标记间移动。若需完整的语义遍历，请改用 `accessible-navigation` 预设；该预设存在时 `keyboardTargeting` 会被忽略。 |
 
 条目没有字符串简写：单独的 `"click-highlight"` 会被拒绝，`{ "type": "click-highlight" }` 是最小形式。
 

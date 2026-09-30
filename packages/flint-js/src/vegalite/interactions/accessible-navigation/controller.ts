@@ -12,14 +12,19 @@ export interface AccessibleNavigationControllerOptions {
     container: HTMLElement;
     settings: AccessibleNavigationSettings;
     buildTree(): AccessibleNode;
+    /** A fingerprint of the rendered scene; the tree is rebuilt only when it changes. */
+    sceneSignature?(): string;
     coordinateSpace(): RendererCoordinateSpace;
     containerLayoutSize(): { width: number; height: number };
     /** The reader focused an element: emphasise its data and report it. */
     present(node: AccessibleNode, description: AccessibleElementDescription): void;
     /** The reader left the chart, or stepped back to it as a whole. */
     clear(): void;
-    /** Space or Enter on a mark, legend entry, or axis label: what a click would do. False when nothing listens. */
-    activate(node: AccessibleNode): boolean;
+    /**
+     * Space or Enter on a mark, legend entry, or axis label: what a click would do. False when
+     * nothing listens; otherwise true, or a promise that settles once the chart has re-rendered.
+     */
+    activate(node: AccessibleNode): boolean | Promise<boolean>;
 }
 
 export interface AccessibleNavigationController {
@@ -45,7 +50,7 @@ const VISUALLY_HIDDEN: Partial<CSSStyleDeclaration> = {
  */
 export function mountAccessibleNavigation(options: AccessibleNavigationControllerOptions): AccessibleNavigationController {
     const { container, settings } = options;
-    const navigator = new AccessibleNavigator(options.buildTree);
+    const navigator = new AccessibleNavigator(options.buildTree, options.sceneSignature);
     const layer = document.createElement('div');
     const caption = document.createElement('div');
     const live = document.createElement('div');
@@ -159,6 +164,13 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         live.textContent = live.textContent === message ? `${message}\u00a0` : message;
     };
 
+    const reveal = (node: AccessibleNode, description: AccessibleElementDescription): void => {
+        if (!active) return;
+        renderCaption(node, description);
+        if (node.kind === 'chart') options.clear();
+        else options.present(node, description);
+    };
+
     const show = (node: AccessibleNode, focusElement: boolean): void => {
         const description = describeAccessibleNode(node);
         layer.setAttribute('aria-label', describeAccessibleNode(navigator.root).text);
@@ -173,11 +185,19 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
         proxy = next;
         if (focusElement) next.focus({ preventScroll: true });
         previous?.remove();
-        if (active) {
-            renderCaption(node, description);
-            if (node.kind === 'chart') options.clear();
-            else options.present(node, description);
+        reveal(node, description);
+    };
+
+    /** Bring the focused proxy up to date without replacing it, so nothing is spoken twice. */
+    const update = (node: AccessibleNode): AccessibleElementDescription => {
+        const description = describeAccessibleNode(node);
+        layer.setAttribute('aria-label', describeAccessibleNode(navigator.root).text);
+        if (proxy) {
+            proxy.dataset.flintAccessibleFocus = node.kind;
+            proxy.setAttribute('aria-label', description.text);
+            styleProxy(proxy, node);
         }
+        return description;
     };
 
     const setActive = (value: boolean): void => {
@@ -191,12 +211,34 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
     };
 
     const onFocusIn = (event: FocusEvent): void => {
-        if (event.target !== proxy) return;
-        if (!active) {
-            navigator.refresh();
-            setActive(true);
-            show(navigator.current, true);
+        if (event.target !== proxy || active) return;
+        // Tabbing in lands on the existing proxy: refresh it in place rather than
+        // moving focus again, which would make a screen reader announce twice.
+        navigator.refresh();
+        setActive(true);
+        reveal(navigator.current, update(navigator.current));
+    };
+    let activation = 0;
+    const activate = (node: AccessibleNode): void => {
+        const result = options.activate(node);
+        if (result === false) {
+            // With no click preset to run, activation reads the element again.
+            announce(describeAccessibleNode(node).text);
+            return;
         }
+        const ticket = ++activation;
+        const type = describeAccessibleNode(node).type.toLowerCase();
+        void Promise.resolve(result).then(() => {
+            if (ticket !== activation || !proxy) return;
+            // The click may have hidden a series or changed a selection: read the element as it is now.
+            navigator.refresh();
+            const current = navigator.current;
+            const description = update(current);
+            if (active) renderCaption(current, description);
+            announce(current.id === node.id ? `Activated. ${description.content.replace(/([^.!?])$/, '$1.')}` : `Activated ${type}.`);
+        }, () => {
+            if (ticket === activation) announce(`Activated ${type}.`);
+        });
     };
     const onFocusOut = (event: FocusEvent): void => {
         if (event.relatedTarget instanceof Node && layer.contains(event.relatedTarget)) return;
@@ -221,10 +263,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
             live.textContent = '';
             show(move.node, true);
         } else if (move.activate) {
-            // With no click preset to run, activation reads the element again.
-            announce(options.activate(move.node)
-                ? `Activated ${describeAccessibleNode(move.node).type.toLowerCase()}.`
-                : describeAccessibleNode(move.node).text);
+            activate(move.node);
         } else {
             // A key that moves nowhere still restores the ring and caption after an exit.
             if (!wasActive) show(move.node, true);
@@ -242,10 +281,7 @@ export function mountAccessibleNavigation(options: AccessibleNavigationControlle
             navigator.refresh();
             if (!proxy) return;
             const node = navigator.current;
-            styleProxy(proxy, node);
-            const description = describeAccessibleNode(node);
-            proxy.setAttribute('aria-label', description.text);
-            layer.setAttribute('aria-label', describeAccessibleNode(navigator.root).text);
+            const description = update(node);
             if (active) renderCaption(node, description);
         },
         destroy() {

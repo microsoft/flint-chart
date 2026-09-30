@@ -16,8 +16,10 @@ import {
     AccessibleNavigator,
     accessibleCommandForKey,
     accessibleNodes,
+    accessibleSceneSignature,
     buildAccessibleTree,
     describeAccessibleNode,
+    formatNumber,
     markNoun,
     type AccessibleNode,
 } from '../src/vegalite/interactions/accessible-navigation/model';
@@ -294,6 +296,7 @@ describe('accessible navigation tree', () => {
                 const description = describeAccessibleNode(node);
                 expect(description.type, `${chartType} ${node.id}`).not.toBe('');
                 expect(description.content.trim(), `${chartType} ${node.id}`).not.toBe('');
+                expect(description.text, `${chartType} ${node.id}`).not.toMatch(/undefined|NaN|\[object|Untitled|items omitted/);
                 expect(description.text, `${chartType} ${node.id}`).toContain(node.content.split('.')[0]);
                 expect(node.bounds, `${chartType} ${node.id}`).toBeDefined();
             }
@@ -383,6 +386,104 @@ describe('AccessibleNavigator', () => {
         expect(navigator.current.id).toBe(item.id);
         expect(navigator.current).not.toBe(item);
         view.finalize();
+    });
+});
+
+function namedCase(chartType: string, title: string): TestCase {
+    const found = Object.values(TEST_GENERATORS).flatMap((generate) => generate())
+        .find((candidate) => candidate.chartType === chartType && candidate.title.includes(title));
+    if (!found) throw new Error(`No test case ${chartType} :: ${title}`);
+    return found;
+}
+
+describe('accessible navigation readings', () => {
+    it('reads small and long numbers at a spoken precision', () => {
+        expect(formatNumber(1234.5678)).toBe('1,234.57');
+        expect(formatNumber(0.0049)).toBe('0.0049');
+        expect(formatNumber(0.00769231)).toBe('0.00769');
+        expect(formatNumber(8.919391822062482e-7)).toBe('8.92e-7');
+        expect(formatNumber(0)).toBe('0');
+    });
+
+    it('reads tied values on one path as separate points, not as extra lines', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('ECDF Plot', '')));
+        const data = child(root, 'data');
+        const series = data.children.filter((node) => node.kind === 'series');
+        for (const node of series) expect(node.members.length, node.content).toBeGreaterThan(2);
+        expect(accessibleNodes(root).some((node) => /\b\d+ lines\b/.test(node.content))).toBe(false);
+        view.finalize();
+    });
+
+    it('reads an overflow placeholder as a count, not as a legend item', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('Scatter Plot', 'color(N,50)')));
+        const legend = child(root, 'legend');
+        expect(legend.content).toMatch(/, and \d+ more not shown$/);
+        const placeholder = legend.children.find((node) => /more items not shown/.test(node.content));
+        expect(placeholder).toBeDefined();
+        expect(placeholder!.members).toHaveLength(0);
+        expect(describeAccessibleNode(placeholder!).text).not.toContain('..');
+        view.finalize();
+    });
+
+    it('reads a time axis with full dates', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('Line Chart', 'T×Q (30 pts)')));
+        const axis = root.children.find((node) => node.kind === 'axis' && node.axis?.channel === 'x')!;
+        expect(axis.content).toMatch(/from January 2020 to [A-Z][a-z]+ \d{4}/);
+        const labels = axis.children.filter((node) => node.kind === 'axis-label').map((node) => node.content);
+        expect(new Set(labels).size).toBe(labels.length);
+        expect(labels).toEqual(expect.arrayContaining(['January 2020', 'July 2020', 'January 2021']));
+        expect(labels.every((label) => /\d{4}/.test(label))).toBe(true);
+        view.finalize();
+    });
+
+    it('keeps the marks of each facet panel apart when their keys agree', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('Radar Chart', 'Faceted')));
+        const panels = child(root, 'data').children.filter((node) => node.kind === 'panel');
+        expect(panels.length).toBeGreaterThan(1);
+        const readings = panels.map((panel) => panel.children.map((mark) => mark.content).join(' | '));
+        for (const panel of panels) expect(panel.children.every((node) => node.kind === 'mark'), panel.content).toBe(true);
+        expect(new Set(readings).size).toBe(panels.length);
+        view.finalize();
+    });
+
+    it('matches legend values to aggregated marks, and says nothing of labels that are not categories', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('Calendar Heatmap', 'Daily Activity')));
+        const items = child(root, 'legend').children.filter((node) => node.kind === 'legend-item');
+        expect(items.some((node) => node.members.length > 0)).toBe(true);
+        const monthLabels = root.children.find((node) => node.kind === 'axis' && node.axis?.channel === 'x')!
+            .children.filter((node) => node.kind === 'axis-label');
+        for (const label of monthLabels) expect(label.content).not.toMatch(/\. No /);
+        view.finalize();
+    });
+
+    it('names a series drawn apart only by stroke dash', async () => {
+        const { root, view } = await accessibleTree(testCaseInput(namedCase('Line Chart', 'Forecast — single series')));
+        const series = child(root, 'data').children.filter((node) => node.kind === 'series');
+        expect(series.map((node) => node.content.split('.')[0])).toEqual(['Type: actual', 'Type: forecast']);
+        expect(root.content).toContain('stroke dash legend');
+        view.finalize();
+    });
+
+    it('rebuilds only when the rendered scene changes', async () => {
+        const first = await accessibleTree(stackedBar);
+        const again = await accessibleTree(stackedBar);
+        const signature = accessibleSceneSignature((first.view.scenegraph() as any).root);
+        expect(accessibleSceneSignature((again.view.scenegraph() as any).root)).toBe(signature);
+        const fewer = await accessibleTree({ ...stackedBar, data: { values: (stackedBar.data as any).values.slice(0, 4) } } as ChartAssemblyInput);
+        expect(accessibleSceneSignature((fewer.view.scenegraph() as any).root)).not.toBe(signature);
+
+        let builds = 0;
+        let current = signature;
+        const navigator = new AccessibleNavigator(() => {
+            builds += 1;
+            return first.root;
+        }, () => current);
+        expect(navigator.refresh()).toBe(false);
+        expect(builds).toBe(1);
+        current = 'changed';
+        expect(navigator.refresh()).toBe(true);
+        expect(builds).toBe(2);
+        for (const { view } of [first, again, fewer]) view.finalize();
     });
 });
 

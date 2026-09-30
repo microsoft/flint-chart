@@ -229,12 +229,29 @@ function sameValue(left: unknown, right: unknown): boolean {
 }
 
 const NUMBER_FORMAT = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+// Below 1 a fixed number of decimals would read a density of 0.0049 as 0.
+const SMALL_NUMBER_FORMAT = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 3 });
+
+export function formatNumber(value: number): string {
+    if (!Number.isFinite(value)) return String(value);
+    if (Math.abs(value) >= 1 || value === 0) return NUMBER_FORMAT.format(value);
+    if (Math.abs(value) < 1e-4) return value.toExponential(2).replace(/\.?0+e/, 'e');
+    return SMALL_NUMBER_FORMAT.format(value);
+}
+
+/** A tooltip string that is a bare number printed to full precision, such as "0.0333333333333". */
+function tidyNumericText(text: string): string {
+    if (!/^[−-]?[\d,]*\.\d{5,}$/.test(text) && !/^[−-]?\d\.\d{3,}e[−+-]?\d+$/i.test(text)) return text;
+    const value = Number(text.replace(/,/g, '').replace('−', '-'));
+    if (!Number.isFinite(value)) return text;
+    return formatNumber(value).replace(/^-/, text.startsWith('−') ? '−' : '-');
+}
 
 function formatValue(value: unknown, temporal = false): string {
     if (value instanceof Date) return value.toISOString().slice(0, 10);
     if (typeof value === 'number') {
         if (temporal && Number.isFinite(value)) return new Date(value).toISOString().slice(0, 10);
-        return Number.isFinite(value) ? NUMBER_FORMAT.format(value) : String(value);
+        return formatNumber(value);
     }
     if (value === null || value === undefined) return 'none';
     if (typeof value === 'object') return '';
@@ -295,6 +312,50 @@ function countPhrase(count: number, noun: [string, string]): string {
 function listPhrase(values: readonly string[], limit = 5): string {
     const shown = values.slice(0, limit).join(', ');
     return values.length > limit ? `${shown}, and ${values.length - limit} more` : shown;
+}
+
+/** The count in the placeholder an overflowing axis or legend draws in place of the categories it drops. */
+function omittedCount(text: string): number | undefined {
+    const match = /^(?:\.\.\.|…)\s*(\d+) items omitted$/.exec(text.trim());
+    return match ? Number(match[1]) : undefined;
+}
+
+function tickDate(value: unknown): Date | undefined {
+    const date = value instanceof Date ? value : typeof value === 'number' ? new Date(value) : undefined;
+    return date && Number.isFinite(date.getTime()) ? date : undefined;
+}
+
+/**
+ * A time axis abbreviates its ticks ("2020", "Apr", "Jul"), so the same label
+ * repeats each year. Each tick reads as its full date, at the precision the
+ * ticks share: a year, a month, a day, or an hour.
+ */
+function fullDateLabels<T extends { value: unknown }>(labels: readonly T[], utc: boolean): Map<T, string> {
+    const dated = labels
+        .map((label) => ({ label, date: tickDate(label.value) }))
+        .filter((entry): entry is { label: T; date: Date } => !!entry.date);
+    const result = new Map<T, string>();
+    if (dated.length === 0) return result;
+    const part = (date: Date, unit: 'month' | 'date' | 'hours' | 'minutes' | 'seconds'): number => {
+        switch (unit) {
+            case 'month': return utc ? date.getUTCMonth() : date.getMonth();
+            case 'date': return utc ? date.getUTCDate() : date.getDate();
+            case 'hours': return utc ? date.getUTCHours() : date.getHours();
+            case 'minutes': return utc ? date.getUTCMinutes() : date.getMinutes();
+            default: return utc ? date.getUTCSeconds() : date.getSeconds();
+        }
+    };
+    const all = (test: (date: Date) => boolean) => dated.every(({ date }) => test(date));
+    const midnight = all((date) => part(date, 'hours') === 0 && part(date, 'minutes') === 0 && part(date, 'seconds') === 0);
+    const options: Intl.DateTimeFormatOptions = midnight && all((date) => part(date, 'date') === 1)
+        ? all((date) => part(date, 'month') === 0) ? { year: 'numeric' } : { year: 'numeric', month: 'long' }
+        : midnight ? { year: 'numeric', month: 'long', day: 'numeric' }
+        : all((date) => part(date, 'minutes') === 0 && part(date, 'seconds') === 0)
+            ? { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric' }
+            : { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+    const format = new Intl.DateTimeFormat('en-US', { ...options, ...(utc ? { timeZone: 'UTC' } : {}) });
+    for (const { label, date } of dated) result.set(label, format.format(date));
+    return result;
 }
 
 function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
@@ -494,11 +555,15 @@ function collectScene(root: any, input: AccessibleTreeInput): SceneFacts {
 
 /** One representative per key: a symbol over the line vertex it sits on, the larger of two rects. */
 function representativeMarks(marks: readonly MarkEntry[]): MarkEntry[] {
+    // Keys need not name the facet field, so equal keys in two panels are two marks.
+    const scopeIds = new Map<unknown, number>();
     const byKey = new Map<string, MarkEntry[]>();
     for (const mark of marks) {
-        const group = byKey.get(mark.key);
+        if (!scopeIds.has(mark.scope)) scopeIds.set(mark.scope, scopeIds.size);
+        const id = `${scopeIds.get(mark.scope)}\u0000${mark.key}`;
+        const group = byKey.get(id);
         if (group) group.push(mark);
-        else byKey.set(mark.key, [mark]);
+        else byKey.set(id, [mark]);
     }
     const result: MarkEntry[] = [];
     for (const group of byKey.values()) {
@@ -508,9 +573,22 @@ function representativeMarks(marks: readonly MarkEntry[]): MarkEntry[] {
                 : current);
         const pathOwner = group.find((candidate) => candidate.path);
         const vertices = pathOwner ? group.filter((candidate) => candidate.path === pathOwner.path) : [];
-        if (vertices.length > 1) {
+        const pathLength = (pathOwner?.path?.items ?? []).length;
+        if (vertices.length > 1 && vertices.length >= pathLength) {
             const bounds = boundsOf(vertices.map((vertex) => vertex.extent))!;
             result.push({ ...pathOwner!, item: { ...pathOwner!.item, bounds }, bounds, extent: bounds, wholePath: true, vertices });
+        } else if (vertices.length > 1) {
+            // Tied values on one path (an ECDF step, a repeated x) share a key but are separate points.
+            const others = group.filter((candidate) => !candidate.path);
+            for (const vertex of vertices) {
+                const at = center(vertex.bounds);
+                const over = others.reduce<MarkEntry | undefined>((nearest, candidate) => {
+                    const distance = Math.hypot(center(candidate.bounds).x - at.x, center(candidate.bounds).y - at.y);
+                    return distance < 4 && (!nearest || distance < Math.hypot(center(nearest.bounds).x - at.x, center(nearest.bounds).y - at.y))
+                        ? candidate : nearest;
+                }, undefined);
+                result.push({ ...(over ?? vertex), pathOwner: vertex });
+            }
         } else {
             result.push(pathOwner ? { ...best, pathOwner } : best);
         }
@@ -533,7 +611,7 @@ function fieldEntries(mark: AccessibleMarkRef, context: BuildContext): [string, 
     if (tooltip && typeof tooltip === 'object' && !Array.isArray(tooltip)) {
         for (const [field, value] of Object.entries(tooltip as Record<string, unknown>)) {
             if (isInternalField(field)) continue;
-            const text = formatValue(value);
+            const text = typeof value === 'string' ? tidyNumericText(value.trim()) : formatValue(value);
             if (text) entries.push([field, text]);
         }
     }
@@ -659,6 +737,13 @@ function seriesLabel(marks: readonly MarkEntry[], context: BuildContext, index: 
         const value = datum[field];
         if (value !== undefined && value !== null && value !== '') return `${context.label(field)}: ${formatValue(value)}`;
     }
+    // A series drawn apart by an unkeyed channel, such as a stroke dash: name it by the
+    // text field that holds one value along it.
+    const axisFields = new Set(Object.values(context.input.axisFields ?? {}).map((axis) => axis.field));
+    for (const [field, value] of Object.entries(datum)) {
+        if (isInternalField(field) || axisFields.has(field) || typeof value !== 'string' || value === '') continue;
+        if (marks.every((mark) => (mark.hit.datum ?? {})[field] === value)) return `${context.label(field)}: ${value}`;
+    }
     return `Series ${index + 1}`;
 }
 
@@ -710,6 +795,18 @@ function scopeLabel(scope: ScopeRecord | undefined, index: number): string {
             && ((typeof value === 'string' && value !== '') || typeof value === 'number' || value instanceof Date));
     if (facetFields.length > 0) return facetFields.map(([field, value]) => `${field}: ${formatValue(value)}`).join(', ');
     return scope?.title?.text ?? `View ${index + 1}`;
+}
+
+/** The field marks carry for `field`: itself, or its aggregate, such as `sum_Activity`. */
+function markField(marks: readonly MarkEntry[], field: string): string {
+    const datum = marks.find((mark) => mark.hit.datum && field in mark.hit.datum)?.hit.datum;
+    if (datum) return field;
+    const aggregate = new RegExp(`^[a-z0-9]+_${field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+    for (const mark of marks) {
+        const alias = Object.keys(mark.hit.datum ?? {}).find((key) => aggregate.test(key));
+        if (alias) return alias;
+    }
+    return field;
 }
 
 function membersWhere(marks: readonly MarkEntry[], predicate: (datum: Record<string, unknown>) => boolean): MarkEntry[] {
@@ -805,21 +902,52 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         const title = axis.title?.text ?? field?.field ?? '';
         const scopeTitle = axesPerChannel(channel) > 1 && axis.scope ? facts.scopes.get(axis.scope)?.title?.text : undefined;
         const axisType = `${channel.toUpperCase()} axis`;
-        const range = labels.length === 0 ? 'no labels'
-            : labels.length === 1 ? `1 label: ${labels[0].text}`
-            : `${labels.length} labels, from ${labels[0].text} to ${labels[labels.length - 1].text}`;
+        const shown = labels.filter((label) => omittedCount(label.text) === undefined);
+        const omitted = labels.reduce((total, label) => total + (omittedCount(label.text) ?? 0), 0);
+        const temporalAxis = field?.type === 'temporal' || scaleType === 'time' || scaleType === 'utc';
+        const fullDates = temporalAxis ? fullDateLabels(shown, scaleType === 'utc') : undefined;
+        const spoken = (label: typeof labels[number]): string => {
+            const full = fullDates?.get(label);
+            if (!full || full.toLowerCase() === label.text.toLowerCase()) return label.text;
+            // A year tick among month ticks reads "January 2020", not "2020 (January 2020)".
+            const words = full.toLowerCase().split(/[\s,]+/);
+            return words.includes(label.text.toLowerCase()) ? full : `${label.text} (${full})`;
+        };
+        const endText = (label: typeof labels[number]): string => fullDates?.get(label) ?? label.text;
+        const range = (shown.length === 0 ? 'no labels'
+            : shown.length === 1 ? `1 label: ${endText(shown[0])}`
+            : `${shown.length} labels, from ${endText(shown[0])} to ${endText(shown[shown.length - 1])}`)
+            + (omitted > 0 ? `, and ${omitted} more not shown` : '');
         const axisChildren: AccessibleNode[] = [];
         if (axis.title) {
             axisChildren.push(nodeOf('axis-title', 'title', `${axisType} title`, axis.title.text, {
                 bounds: axis.title.bounds, item: axis.title.item,
             }));
         }
+        const labelField = discrete && field ? markField(marks, field.field) : undefined;
+        const labelMembers = new Map(labels.map((label) => [label, labelField && omittedCount(label.text) === undefined
+            ? sortReadingOrder(membersWhere(marks, (datum) => sameValue(datum[labelField], label.value)), input)
+            : []]));
+        // When no label matches any mark, the labels are not categories of the data (a calendar's
+        // month names over week columns), so an empty label says nothing rather than "No cells".
+        const labelsMatch = [...labelMembers.values()].some((members) => members.length > 0);
         for (const label of labels) {
-            const members = discrete && field
-                ? sortReadingOrder(membersWhere(marks, (datum) => sameValue(datum[field.field], label.value)), input)
-                : [];
+            const hidden = omittedCount(label.text);
+            if (hidden !== undefined) {
+                axisChildren.push(nodeOf('axis-label', `label:${label.text}`, `${axisType} label`,
+                    `${hidden} more ${hidden === 1 ? 'value' : 'values'} not shown`, {
+                        bounds: label.bounds,
+                        item: label.item,
+                        axis: { channel, scale: axis.scale, field: field?.field, value: label.value, discrete: false },
+                    }));
+                continue;
+            }
+            const members = labelMembers.get(label) ?? [];
+            const summary = members.length > 0 ? `. ${nounSummary(members, context)}`
+                : labelsMatch ? `. No ${context.noun(marks[0].item.mark?.marktype, marks[0].wholePath)[1].toLowerCase()}`
+                : '';
             axisChildren.push(nodeOf('axis-label', `label:${label.text}`, `${axisType} label`,
-                members.length > 0 ? `${label.text}. ${nounSummary(members, context)}` : label.text, {
+                `${spoken(label)}${summary}`, {
                     bounds: label.bounds,
                     item: label.item,
                     members,
@@ -842,7 +970,7 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
 
     facts.legends.forEach((legend, legendIndex) => {
         const legendType = legend.channel === 'color' ? 'Color legend'
-            : legend.channel ? `${capitalize(legend.channel)} legend`
+            : legend.channel ? `${capitalize(legend.channel.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase())} legend`
             : 'Legend';
         const entries = [...legend.entries.values()].sort((left, right) => left.index - right.index);
         const field = legend.channel ? input.legendFields?.[legend.channel] : undefined;
@@ -853,15 +981,28 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
                 bounds: legend.title.bounds, item: legend.title.item,
             }));
         }
+        const itemDrafts: {
+            entry: typeof entries[number];
+            identity?: ReturnType<typeof legendTarget>;
+            members: MarkEntry[];
+            text: string;
+            placeholder?: boolean;
+        }[] = [];
         for (const entry of entries) {
+            const hidden = omittedCount(entry.text);
+            if (hidden !== undefined) {
+                itemDrafts.push({ entry, members: [], text: `${hidden} more ${hidden === 1 ? 'item' : 'items'} not shown`, placeholder: true });
+                continue;
+            }
             const identity = entry.labelItem
                 ? legendTarget(entry.labelItem, input.legendFields, input.rangeLegendChannels) ?? undefined
                 : undefined;
             const identityField = identity?.field ?? field;
+            const dataField = identityField ? markField(marks, identityField) : undefined;
             const domain = identity?.domain;
-            const members = identityField
+            const members = dataField
                 ? sortReadingOrder(membersWhere(marks, (datum) => {
-                    const value = datum[identityField];
+                    const value = datum[dataField];
                     if (domain?.kind === 'interval') {
                         const numeric = Number(comparableValue(value));
                         return Number.isFinite(numeric)
@@ -880,8 +1021,19 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
                 : domain.start !== undefined && domain.end !== undefined
                     ? `, covering ${formatValue(domain.start)} to ${formatValue(domain.end)}`
                     : '';
+            itemDrafts.push({ entry, identity, members, text: `${prefix}${entry.text}${rangeText}` });
+        }
+        // As with axis labels: if no item matches any mark, membership is unknown, not empty.
+        const itemsMatch = itemDrafts.some((draft) => draft.members.length > 0);
+        for (const { entry, identity, members, text, placeholder } of itemDrafts) {
+            if (placeholder) {
+                legendChildren.push(nodeOf('legend-item', `item:${entry.text}`, 'Legend item', text, { bounds: entry.bounds, item: entry.labelItem }));
+                continue;
+            }
             legendChildren.push(nodeOf('legend-item', `item:${entry.text}`, legend.gradient ? 'Legend value' : 'Legend item',
-                `${prefix}${entry.text}${rangeText}${members.length > 0 ? `. ${nounSummary(members, context)}` : ''}`, {
+                `${text}${members.length > 0 ? `. ${nounSummary(members, context)}`
+                    : itemsMatch ? `. No ${context.noun(marks[0].item.mark?.marktype, marks[0].wholePath)[1].toLowerCase()}`
+                    : ''}`, {
                     bounds: entry.bounds,
                     item: entry.labelItem,
                     members,
@@ -889,14 +1041,16 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
                     ...(identity ? { legend: identity } : {}),
                 }));
         }
-        const values = entries.map((entry) => entry.text);
-        const summary = legend.gradient
+        const values = entries.map((entry) => entry.text).filter((text) => omittedCount(text) === undefined);
+        const omitted = entries.reduce((total, entry) => total + (omittedCount(entry.text) ?? 0), 0);
+        const summary = (legend.gradient
             ? values.length > 1 ? `Scale from ${values[0]} to ${values[values.length - 1]}` : `${values.length} values`
-            : `${values.length} ${values.length === 1 ? 'item' : 'items'}: ${listPhrase(values)}`;
-        const named = legend.title?.text ?? spokenField ?? 'Untitled';
-        legendSummaries.push(`${legendType.toLowerCase()} ${named}`);
+            : `${values.length} ${values.length === 1 ? 'item' : 'items'}: ${listPhrase(values)}`)
+            + (omitted > 0 ? `, and ${omitted} more not shown` : '');
+        const named = legend.title?.text ?? spokenField;
+        legendSummaries.push(named ? `${legendType.toLowerCase()} ${named}` : legendType.toLowerCase());
         if (sections.includes('legends')) {
-            children.push(nodeOf('legend', `legend:${legendIndex}`, legendType, `${named}. ${summary}`, {
+            children.push(nodeOf('legend', `legend:${legendIndex}`, legendType, named ? `${named}. ${summary}` : summary, {
                 bounds: legend.bounds,
                 item: legend.item,
                 children: legendChildren,
@@ -1029,14 +1183,20 @@ export function accessibleNodes(root: AccessibleNode): AccessibleNode[] {
     return result;
 }
 
+/** Close a sentence without doubling its stop or cutting an ellipsis short. */
+function sentence(text: string): string {
+    const trimmed = text.trim();
+    return /[.!?…:]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
 export function describeAccessibleNode(node: AccessibleNode): AccessibleElementDescription {
     const siblings = node.parent?.children;
     const position = siblings ? { index: siblings.indexOf(node) + 1, count: siblings.length } : undefined;
     const path: string[] = [];
     for (let cursor: AccessibleNode | undefined = node; cursor; cursor = cursor.parent) path.unshift(cursor.type);
     const text = node.kind === 'chart'
-        ? `${node.content}. Press Enter to explore ${node.children.length} parts, or H for help.`
-        : `${node.type}${position && position.count > 1 ? ` ${position.index} of ${position.count}` : ''}. ${node.content}.`;
+        ? `${sentence(node.content)} Press Enter to explore ${node.children.length} parts, or H for help.`
+        : `${node.type}${position && position.count > 1 ? ` ${position.index} of ${position.count}` : ''}. ${sentence(node.content)}`;
     return {
         kind: node.kind,
         type: node.type,
@@ -1044,7 +1204,8 @@ export function describeAccessibleNode(node: AccessibleNode): AccessibleElementD
         ...(position ? { position } : {}),
         childCount: node.children.length,
         path,
-        text: text.replace(/\.(\s*\.)+/g, '.'),
+        // A label that ends in a stop ("Inc.") must not read as "Inc.. 3 bars".
+        text: text.replace(/(^|[^.])\.\.(?!\.)/g, '$1.').replace(/\.\s+\.(?!\.)/g, '.'),
     };
 }
 
@@ -1138,16 +1299,57 @@ function isVerticalList(nodes: readonly AccessibleNode[]): boolean {
 }
 
 /**
+ * A cheap fingerprint of what the tree is built from: every scene item's place,
+ * size, text, and data key. Hover and emphasis restyle marks without changing
+ * it, so a walk can skip rebuilding the tree until the chart really changes.
+ */
+const GEOMETRY_CHANNELS = ['x', 'y', 'x2', 'y2', 'width', 'height', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius', 'size'] as const;
+
+export function accessibleSceneSignature(root: any): string {
+    let hash = 0x811c9dc5;
+    let count = 0;
+    const mix = (value: number): void => {
+        hash = Math.imul(hash ^ (value | 0), 0x01000193);
+    };
+    const mixText = (text: string): void => {
+        for (let index = 0; index < text.length; index += 1) mix(text.charCodeAt(index));
+    };
+    const stack: any[] = root ? [root] : [];
+    while (stack.length > 0) {
+        const item = stack.pop();
+        count += 1;
+        // Geometry, not bounds: bounds grow with a hover's wider stroke.
+        for (const channel of GEOMETRY_CHANNELS) {
+            const value = item[channel];
+            if (typeof value === 'number' && Number.isFinite(value)) mix(Math.round(value * 64));
+        }
+        if (typeof item.path === 'string') mix(item.path.length);
+        if (item.text !== undefined) mixText(String(item.text));
+        const key = item.datum?.[INTERACTION_KEY];
+        if (typeof key === 'string') mixText(key);
+        const children = item.items;
+        if (Array.isArray(children)) {
+            mix(children.length);
+            for (let index = children.length - 1; index >= 0; index -= 1) stack.push(children[index]);
+        }
+    }
+    return `${count}:${hash >>> 0}`;
+}
+
+/**
  * The reader's position in the tree and the moves the keys make. It rebuilds
  * the tree on request and finds the same element again by id, so a re-render
- * (a hidden series, a resize) keeps the reader where they were.
+ * (a hidden series, a resize) keeps the reader where they were. Given a scene
+ * signature, it rebuilds only when the signature changes.
  */
 export class AccessibleNavigator {
     private rootNode: AccessibleNode;
     private currentNode: AccessibleNode;
     private byId = new Map<string, AccessibleNode>();
+    private builtFrom: string | undefined;
 
-    constructor(private readonly build: () => AccessibleNode) {
+    constructor(private readonly build: () => AccessibleNode, private readonly signature?: () => string) {
+        this.builtFrom = signature?.();
         this.rootNode = build();
         this.currentNode = this.rootNode;
         this.reindex();
@@ -1165,7 +1367,15 @@ export class AccessibleNavigator {
         this.byId = new Map(accessibleNodes(this.rootNode).map((node) => [node.id, node]));
     }
 
-    refresh(): void {
+    /** Rebuild the tree, keeping the reader's place. True when it was rebuilt. */
+    refresh(force = false): boolean {
+        if (this.signature && !force) {
+            const signature = this.signature();
+            if (signature === this.builtFrom) return false;
+            this.builtFrom = signature;
+        } else if (this.signature) {
+            this.builtFrom = this.signature();
+        }
         const previous = this.currentNode;
         this.rootNode = this.build();
         this.reindex();
@@ -1173,10 +1383,11 @@ export class AccessibleNavigator {
             const found = this.byId.get(cursor.id);
             if (found) {
                 this.currentNode = found;
-                return;
+                return true;
             }
         }
         this.currentNode = this.rootNode;
+        return true;
     }
 
     focus(id: string): AccessibleNode | undefined {

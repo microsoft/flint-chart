@@ -1535,14 +1535,15 @@ function drawsPointCloud(spec: any): boolean {
 function applyRadarMarks(spec: any, d: DesignDecisions): void {
     const plot = d.surface.plot ?? d.surface.canvas;
     walk(spec, (node) => {
-        if (node.name === 'radar-grid-spokes' || node.name === 'radar-grid-rings') {
+        const name = typeof node.name === 'string' ? node.name.replace(/--panel-\d+$/, '') : undefined;
+        if (name === 'radar-grid-spokes' || name === 'radar-grid-rings') {
             const mark = normalizeMark(node.mark);
-            const ring = node.name === 'radar-grid-rings';
+            const ring = name === 'radar-grid-rings';
             mark.stroke = mixHex(plot, d.text.secondary, ring ? 0.18 : 0.24);
             mark.strokeWidth = Math.min(1, Number(mark.strokeWidth) || 1);
             node.mark = mark;
         }
-        if (node.name === 'radar-secondary-vertices') {
+        if (name === 'radar-secondary-vertices') {
             const mark = normalizeMark(node.mark);
             mark.size = d.marks.point?.secondarySize ?? 25;
             node.mark = mark;

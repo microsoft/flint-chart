@@ -88,7 +88,7 @@ import { createReorderResetControls } from './presentation/reorder-reset-control
 import { createViewportResetControl } from './presentation/viewport-reset-control';
 import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
 import { createDataOverlay } from './presentation/data-overlay';
-import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
+import { accessibleSceneSignature, buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
 import { mountAccessibleNavigation } from './accessible-navigation/controller';
 import {
     HIDDEN_STORE,
@@ -2453,8 +2453,13 @@ export function mountVegaInteractions(
     const focusOnPointer = (): void => {
         if (!container.contains(document.activeElement)) container.focus({ preventScroll: true });
     };
+    // Accessible navigation brings its own tab stop into the chart, and owns the arrow keys there.
+    const accessibleNavigationRequested = !!resolve
+        && canvasInteractions.some((interaction) => interaction.eventSource.accessibleNavigation);
     if (escapeResets) {
-        if (container.tabIndex < 0) container.tabIndex = 0;
+        // With accessible navigation the container stays focusable for a pointer press, but out of
+        // the tab order, so the chart is one tab stop rather than an unlabeled one and then the walk.
+        if (container.tabIndex < 0) container.tabIndex = accessibleNavigationRequested ? -1 : 0;
         container.addEventListener('pointerdown', focusOnPointer, true);
         container.addEventListener('keydown', resetKeyDown);
     }
@@ -2551,7 +2556,7 @@ export function mountVegaInteractions(
             default:
         }
     };
-    const keyboardEnabled = keyboardTargeting && !!resolve;
+    const keyboardEnabled = keyboardTargeting && !!resolve && !accessibleNavigationRequested;
     const keyboardFocusOut = (event: FocusEvent): void => {
         if (event.relatedTarget instanceof Node && container.contains(event.relatedTarget)) return;
         activeKeyboardKey = undefined;
@@ -2637,6 +2642,7 @@ export function mountVegaInteractions(
         ? mountAccessibleNavigation({
             container,
             settings: accessibleInteraction.eventSource.accessibleNavigation,
+            sceneSignature: () => accessibleSceneSignature(view.scenegraph()?.root),
             buildTree: () => buildAccessibleTree({
                 root: view.scenegraph()?.root,
                 chartType,
@@ -2688,8 +2694,9 @@ export function mountVegaInteractions(
                 const receivers = legend ? legendClickInteractions
                     : node.kind === 'axis-label' ? node.axis?.discrete ? axisClickInteractions : []
                     : markClickInteractions;
-                for (const interaction of receivers) void dispatch(interaction, event, legend, 'activate-element');
-                return receivers.length > 0;
+                if (receivers.length === 0) return false;
+                return Promise.all(receivers.map((interaction) => dispatch(interaction, event, legend, 'activate-element')))
+                    .then(() => true);
             },
         })
         : undefined;

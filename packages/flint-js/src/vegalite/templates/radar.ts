@@ -360,9 +360,14 @@ export const radarChartDef: ChartTemplateDef = {
         const minSubplot = 200;
         const subplotSize = Math.max(minSubplot, size);
 
+        let subplotIndex = 0;
         const buildSubplot = (rows: any[], title?: string) => {
             const layers = buildRadarLayers(rows, axisField, valueField, groupField, layerOpts);
             if (layers.length === 0) return null;
+            // Vega-Lite binds same-named layers across concat views to one
+            // dataset, so every panel would draw the last panel's vertices.
+            const suffix = `--panel-${subplotIndex++}`;
+            for (const layer of layers) if (layer.name) layer.name += suffix;
             return {
                 width: subplotSize, height: subplotSize,
                 layer: layers,

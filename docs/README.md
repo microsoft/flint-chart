@@ -10,7 +10,9 @@
 > [design-semantics.md](design-semantics.md). For the axis layout
 > compression models, see
 > [design-stretch-model.md](design-stretch-model.md). For the interaction
-> model, see [design-interactions.md](design-interactions.md).
+> model, see [design-interactions.md](design-interactions.md). For the
+> keyboard and screen-reader walk of a chart, see
+> [design-accessible-navigation.md](design-accessible-navigation.md).
 
 ---
 
