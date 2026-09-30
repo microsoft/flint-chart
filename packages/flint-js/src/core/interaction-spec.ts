@@ -33,6 +33,7 @@ export const INTERACTION_PRESET_TYPES = [
     'inspect-index',
     'navigate',
     'drag-reorder',
+    'accessible-navigation',
 ] as const;
 
 export type InteractionPresetType = (typeof INTERACTION_PRESET_TYPES)[number];
@@ -118,6 +119,7 @@ export const INTERACTION_PRESET_REQUIREMENTS: Readonly<Record<InteractionPresetT
     'inspect-index': ['index'],
     'navigate': ['navigation'],
     'drag-reorder': ['reorder'],
+    'accessible-navigation': ['elements'],
 };
 
 /** The capabilities a chart type declares, before the assembler confirms the data-dependent ones. */

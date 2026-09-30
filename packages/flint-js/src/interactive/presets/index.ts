@@ -16,3 +16,4 @@ export { createNavigateInteraction } from './navigate';
 export { createDragReorderInteraction } from './drag-reorder';
 export { createLinkedBrushInteraction } from './linked-brush';
 export { createHoverGroupFocusInteraction } from './hover-group-highlight';
+export { createAccessibleNavigationInteraction } from './accessible-navigation';

@@ -88,6 +88,8 @@ import { createReorderResetControls } from './presentation/reorder-reset-control
 import { createViewportResetControl } from './presentation/viewport-reset-control';
 import { createInspectGuideOverlay } from './presentation/inspect-guide-overlay';
 import { createDataOverlay } from './presentation/data-overlay';
+import { buildAccessibleTree, type AccessibleNode } from './accessible-navigation/model';
+import { mountAccessibleNavigation } from './accessible-navigation/controller';
 import {
     HIDDEN_STORE,
     LEGEND_HIDDEN_STORE,
@@ -2562,6 +2564,136 @@ export function mountVegaInteractions(
         container.addEventListener('focusout', keyboardFocusOut);
     }
 
+    // Accessible navigation: a semantic keyboard walk of titles, axes, legends, headers, and marks.
+    const accessibleInteraction = resolve
+        ? canvasInteractions.find((interaction) => interaction.eventSource.accessibleNavigation)
+        : undefined;
+    const accessibleTarget = (node: AccessibleNode): SemanticTarget => {
+        const hits = node.members.map((member) => member.hit);
+        const regionTarget = (visual: SemanticTarget['visual']): SemanticTarget => {
+            const resolved = hits.length > 0 ? resolveTarget('rectangle', 'region', hits) : null;
+            return { visual, elements: resolved?.elements ?? [] };
+        };
+        const itemText = (value: Record<string, unknown>): SemanticTarget['elements'] => [{ value }];
+        switch (node.kind) {
+            case 'mark': {
+                const member = node.members[0];
+                const resolved = member ? resolveTarget('click', 'mark', [member.hit]) : null;
+                return resolved ?? {
+                    visual: { kind: 'mark', role: 'mark' },
+                    elements: member
+                        ? [associateSemanticElementRenderKeys({ value: member.hit.datum }, [member.hit.datum[INTERACTION_KEY] as string])]
+                        : [],
+                };
+            }
+            case 'legend-item': {
+                if (!node.legend) return regionTarget({ kind: 'legend', role: 'legend-item' });
+                const value: LegendTargetValue = {
+                    ...(node.legend.channel ? { channel: node.legend.channel } : {}),
+                    ...(node.legend.field ? { field: node.legend.field } : {}),
+                    domain: node.legend.domain,
+                };
+                return resolvedLegendInteractionTarget(value, resolveTarget('click', 'legend-item', [], value));
+            }
+            case 'axis-label': {
+                const axisTarget = node.axis?.discrete && node.item ? resolveAxisTarget(node.item) : null;
+                if (axisTarget) return axisTarget;
+                if (node.members.length > 0) return regionTarget({ kind: 'axis', role: 'axis-label' });
+                return {
+                    visual: { kind: 'axis', role: 'axis-label' },
+                    elements: itemText({ axis: node.axis?.channel, field: node.axis?.field, value: node.axis?.value, label: node.content }),
+                };
+            }
+            case 'series': return regionTarget({ kind: 'path', role: 'series' });
+            case 'panel': return regionTarget({ kind: 'region', role: 'panel' });
+            case 'header':
+                return node.members.length > 0
+                    ? regionTarget({ kind: 'header', role: 'facet-header' })
+                    : { visual: { kind: 'header', role: 'view-title' }, elements: itemText({ text: node.content }) };
+            case 'axis':
+            case 'axis-title':
+                return {
+                    visual: { kind: 'axis', role: node.kind },
+                    elements: itemText({ axis: node.axis?.channel, field: node.axis?.field, text: node.content }),
+                };
+            case 'legend':
+            case 'legend-title':
+                return { visual: { kind: 'legend', role: node.kind }, elements: itemText({ text: node.content }) };
+            case 'title':
+            case 'subtitle':
+                return { visual: { kind: 'title', role: node.kind }, elements: itemText({ text: node.content }) };
+            case 'headers':
+                return { visual: { kind: 'header', role: 'headers' }, elements: itemText({ text: node.content }) };
+            case 'chart':
+                return { visual: { kind: 'chart', role: 'chart' }, elements: itemText({ chartType, text: node.content }) };
+            default:
+                return { visual: { kind: 'region', role: node.kind }, elements: itemText({ text: node.content }) };
+        }
+    };
+    const accessiblePoint = (node: AccessibleNode) => node.bounds
+        ? { x: (node.bounds.x1 + node.bounds.x2) / 2, y: (node.bounds.y1 + node.bounds.y2) / 2 }
+        : undefined;
+    const accessibleNavigation = accessibleInteraction?.eventSource.accessibleNavigation
+        ? mountAccessibleNavigation({
+            container,
+            settings: accessibleInteraction.eventSource.accessibleNavigation,
+            buildTree: () => buildAccessibleTree({
+                root: view.scenegraph()?.root,
+                chartType,
+                axisFields: plan.axisFields,
+                legendFields: plan.legendFields,
+                rangeLegendChannels: plan.rangeLegendChannels,
+                seriesField: plan.seriesField,
+                fields: plan.fields,
+                temporalFields: plan.temporalProvenanceFields,
+                scaleType: (name) => {
+                    try {
+                        return view.scale(name)?.type;
+                    } catch {
+                        return undefined;
+                    }
+                },
+                settings: accessibleInteraction.eventSource.accessibleNavigation,
+            }),
+            coordinateSpace,
+            containerLayoutSize,
+            present(node, description) {
+                const target = accessibleTarget(node);
+                void dispatch(accessibleInteraction, {
+                    type: 'semantic', source: 'element', phase: 'preview', target,
+                    point: accessiblePoint(node), description,
+                });
+                const keys = target.elements.flatMap(semanticElementRenderKeys);
+                if (node.kind === 'legend-item' && node.legend) void setHover(keys, node.legend);
+                else if (node.kind === 'axis-label' && node.axis?.discrete) {
+                    void setHover(keys, null, { scale: node.axis.scale, value: node.axis.value });
+                } else if (node.kind === 'mark' && (node.item?.mark?.marktype === 'line' || node.item?.mark?.marktype === 'area')) {
+                    // A point on a line shows the whole line it belongs to, not just the segment it starts.
+                    const pathKeys = (node.item.mark.items ?? [])
+                        .map((item: any) => item?.datum?.[INTERACTION_KEY])
+                        .filter((key: unknown): key is string => typeof key === 'string')
+                        .map((key: string) => `${key}${PATH_KEY_SUFFIX}`);
+                    void setHover([...keys, ...pathKeys]);
+                } else void setHover(keys);
+            },
+            clear() {
+                void dispatch(accessibleInteraction, { type: 'semantic', source: 'element', phase: 'cancel', target: null });
+                void setHover([]);
+            },
+            activate(node) {
+                const target = accessibleTarget(node);
+                const point = accessiblePoint(node);
+                const event = { type: 'semantic', source: 'element', phase: 'commit', target, point } as const;
+                const legend = node.kind === 'legend-item' ? node.legend ?? null : null;
+                const receivers = legend ? legendClickInteractions
+                    : node.kind === 'axis-label' ? node.axis?.discrete ? axisClickInteractions : []
+                    : markClickInteractions;
+                for (const interaction of receivers) void dispatch(interaction, event, legend, 'activate-element');
+                return receivers.length > 0;
+            },
+        })
+        : undefined;
+
     // Overlays project scenegraph geometry into screen pixels, so every one of
     // them is re-projected whenever the rendered size changes.
     const syncOverlays = (): void => {
@@ -2571,6 +2703,7 @@ export function mountVegaInteractions(
         dataOverlay.sync();
         regionGesture?.sync();
         reorderResetControls.layout();
+        accessibleNavigation?.refresh();
     };
     let observedRenderer: Element | undefined;
     // A drag-resize fires per frame, so repeated observations collapse into one pass.
@@ -2647,6 +2780,7 @@ export function mountVegaInteractions(
         }
         focusOverlay.destroy();
         targetFeedbackOverlay.destroy();
+        accessibleNavigation?.destroy();
         legendRangeOverlay.destroy();
         for (const overlay of annotationOverlays.values()) overlay.destroy();
         annotationOverlays.clear();

@@ -57,6 +57,7 @@
 | `legend-toggle` | 点击图例项以隐藏或恢复其系列。 | 离散图例 | 无 |
 | `axis-highlight` | 点击离散坐标轴标签以强调该类别。 | 离散坐标轴 | click-none, escape |
 | `drag-reorder` | 拖动离散坐标轴标签以改变类别顺序。 | 可重排坐标轴 | 无 |
+| `accessible-navigation` | 用 Tab 进入图表，再用键盘依次浏览标题、坐标轴及其标签、图例及其条目、分面标题、系列与标记。每一步都会说明元素是什么、代表什么，并强调其对应的数据（`emphasis`、`caption`、`sections`、`maxFields`）。 | 元素 | 无 |
 
 选项名与 `flint-chart/interactive` 中对应工厂函数接受的选项一致；TypeScript 调用方可用该入口的 `InteractionPresetSpec` 获得逐类型的精确形状。
 

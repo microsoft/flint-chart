@@ -41,6 +41,7 @@ export type {
 } from './affordances';
 export { DRAW_CURSOR, affordanceCursor, affordsTarget, resolveInteractionAffordance } from './affordances';
 export type {
+    AccessibleNavigationOptions,
     AnnotationCandidate,
     AnnotationConnection,
     AnnotationSpec,
@@ -100,6 +101,7 @@ export type {
     UpdateTarget,
 } from './interactions';
 export type {
+    AccessibleElementDescription,
     CanvasInteractionAction,
     CanvasInteractionEvent,
     DomainCoordinate,
@@ -119,9 +121,16 @@ export type {
     SemanticTargetSelector,
 } from './language/updates';
 export { matchesSemanticTargetSelector } from './language/updates';
-export { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, linkedBrush, longPress, navigate, select } from './interactions';
-export type { InspectIndexShow, InteractionEventSource } from './triggers';
+export { accessibleNavigation, axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, linkedBrush, longPress, navigate, select } from './interactions';
+export type {
+    AccessibleNavigationSection,
+    AccessibleNavigationSettings,
+    InspectIndexShow,
+    InteractionEventSource,
+} from './triggers';
 export {
+    ACCESSIBLE_NAVIGATION_SECTIONS,
+    accessibleNavigationTrigger,
     axisBrushTrigger,
     angularBrushTrigger,
     dragTrigger,

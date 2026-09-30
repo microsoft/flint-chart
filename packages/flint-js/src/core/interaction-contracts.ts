@@ -41,7 +41,7 @@ export interface LegendTargetValue extends Record<string, unknown> {
 /** A semantic subject: its visual role plus represented values and provenance. */
 export interface SemanticTarget {
     visual: {
-        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend' | 'axis';
+        kind: 'mark' | 'path' | 'region' | 'widget' | 'handle' | 'legend' | 'axis' | 'chart' | 'title' | 'header';
         role: string;
     };
     elements: readonly SemanticElement[];

@@ -1,5 +1,6 @@
 import type { InteractionPresetType } from '../../core/interaction-spec';
 import type {
+    AccessibleNavigationOptions,
     AngularBrushOptions,
     AxisHighlightOptions,
     BrushOptions,
@@ -47,6 +48,7 @@ export interface InteractionPresetOptions {
     'inspect-index': InspectIndexOptions;
     'navigate': NavigateOptions;
     'drag-reorder': DragReorderOptions;
+    'accessible-navigation': AccessibleNavigationOptions;
 }
 
 /**

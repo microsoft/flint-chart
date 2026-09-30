@@ -50,11 +50,34 @@ export interface NavigationInteractionEvent {
     modifiers?: InteractionModifiers;
 }
 
+/**
+ * What accessible navigation says about the element it focused: the kind of
+ * element and the content it stands for, as structured fields and as one
+ * sentence a screen reader speaks.
+ */
+export interface AccessibleElementDescription {
+    /** The structural kind: `chart`, `title`, `axis-label`, `legend-item`, `mark`, … */
+    kind: string;
+    /** The element type as spoken, such as "Bar", "X axis label", or "Legend item". */
+    type: string;
+    /** What the element represents, such as "Country: US, Sales: 200". */
+    content: string;
+    /** 1-based position among its siblings. */
+    position?: { index: number; count: number };
+    /** How many elements one level down. */
+    childCount: number;
+    /** Element types from the chart root down to this element. */
+    path: readonly string[];
+    /** The full announcement. */
+    text: string;
+}
+
 export interface SemanticInteractionEvent {
     type: 'semantic';
     source: 'element' | 'region';
     phase: InteractionPhase;
     target: SemanticTarget | null;
+    description?: AccessibleElementDescription;
     point?: PlotPoint;
     region?: PlotRect | PlotPolygon | PlotAngularSector;
     axis?: RegionAxis;
@@ -151,4 +174,6 @@ export interface CanvasInteractionEvent {
     target: SemanticTarget | null;
     dropTarget?: SemanticTarget | null;
     modifiers?: InteractionModifiers;
+    /** Set on `focus-element` from accessible navigation: what the focused element is and represents. */
+    description?: AccessibleElementDescription;
 }

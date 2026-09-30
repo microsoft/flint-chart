@@ -272,6 +272,7 @@ never invent one. Options nest under `options`; `id` sits on the entry.
 | drag to focus a range | `brush-x`, `brush-y`, `select` |
 | examine values on hover | `inspect`, `inspect-index` |
 | pin a note on click | `click-annotate` |
+| make it keyboard or screen-reader accessible | `accessible-navigation` |
 
 For an intent (explore, compare, analyse, find outliers, link charts, hand a
 click to the app), for "make it interactive" with nothing named, for a

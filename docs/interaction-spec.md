@@ -30,7 +30,7 @@ Every behaviour comes from a **preset**: a named interaction Flint ships, such a
 | `interactions[].id` | Optional. Names the interaction when a chart uses the same preset twice, and names it in the `flint-interaction` event. |
 | `interactions[].options` | The preset's own options, always nested under `options`. Never put an option beside `type`. |
 | `assistedTargeting` | Optional. Pointer acquisition that snaps to a nearby mark. `false` requires direct hits; an object sets `maxDistance`, `indicator`, `details`. |
-| `keyboardTargeting` | Optional. Lets a reader move between marks with the keyboard. |
+| `keyboardTargeting` | Optional. Lets a reader move between marks with the keyboard. For a full semantic walk of the chart, add the `accessible-navigation` preset instead. |
 
 An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "type": "click-highlight" }` is the smallest form.
 
@@ -57,6 +57,7 @@ An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "typ
 | `legend-toggle` | Clicks a legend item to hide or restore its series. | discrete legend | none |
 | `axis-highlight` | Clicks a discrete axis label to emphasise its category. | discrete axis | click-none, escape |
 | `drag-reorder` | Drags a discrete axis label to change the category order. | reorderable axis | none |
+| `accessible-navigation` | Tabs into the chart and walks titles, axes and their labels, legends and their items, facet headers, series, and marks with the keyboard. Each step names the element and what it represents, and emphasises its data (`emphasis`, `caption`, `sections`, `maxFields`). | elements | none |
 
 The option names are the ones the matching factory in `flint-chart/interactive` accepts. `InteractionPresetSpec` in that entry gives the precise shape per type for TypeScript callers.
 

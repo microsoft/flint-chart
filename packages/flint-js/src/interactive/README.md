@@ -715,6 +715,24 @@ buildInteractiveChart(container, input, {
 
 `axisHighlight()` treats native categorical axis ticks as semantic controls. The compiler maps each Vega scale back to its authored field, and the runtime associates a tick with represented mark keys. Quantitative and temporal ticks remain inert until a nearest-value or interval policy is specified.
 
+### Accessible navigation
+
+`accessibleNavigation()` (`{ "type": "accessible-navigation" }` in a spec) turns the whole chart into one keyboard stop that walks its semantic structure, not only its marks. The Vega-Lite runtime reads a tree from the rendered scenegraph (`vegalite/interactions/accessible-navigation/model.ts`):
+
+```
+Chart
+├─ Title, Subtitle
+├─ X axis / Y axis ── axis title, tick labels ── (categorical label) its marks
+├─ Legend ── legend title, items ── its marks
+├─ Column headers / Row headers / Facet headers ── header ── its panels
+├─ Data ── panels ── series (a line or an area) ── marks
+└─ Text labels
+```
+
+Right and Left move between siblings; Up and Down move to the mark above or below (across series on a line chart) or through a vertical list; Enter goes in, Escape or Backspace goes out; Home, End, Page Up, and Page Down jump; T, X, Y, L, F, and D jump to the title, the axes, the legend, the headers, and the data; H reads the key map. Space on a mark, legend item, or axis label runs the configured click presets with `activate-element`, so `legend-toggle` and `click-highlight` answer the keyboard too.
+
+Each step focuses a transparent proxy element laid over the rendered element: its accessible name is the announcement, it draws the focus ring, and the visible caption repeats it. The preset emphasises the data the element stands for (a bar, a series, a legend cohort, a category, a panel) as a preview update and emits `focus-element` with `event.description`: the element `kind`, its spoken `type` ("Bar"), its `content` ("Country: US, Sales: 200"), its position, and the full `text`. It claims no pointer trigger, so it composes with every other preset.
+
 ## Update Language
 
 Presets and applications produce one renderer-neutral `ChartUpdate` format. There is no

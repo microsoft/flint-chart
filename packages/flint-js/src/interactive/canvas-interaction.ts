@@ -83,5 +83,6 @@ export function toCanvasInteractionEvent(
         },
         target: event.target,
         modifiers: event.modifiers,
+        ...(event.description ? { description: event.description } : {}),
     };
 }

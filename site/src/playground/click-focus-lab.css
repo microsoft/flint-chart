@@ -352,6 +352,12 @@
   font-size: 9px;
 }
 
+.cf-probe-event-announcement {
+  flex-basis: 100%;
+  color: #1f2328;
+  font-weight: 500;
+}
+
 .cf-probe-event-geometry {
   color: #68737c;
   font-variant-numeric: tabular-nums;

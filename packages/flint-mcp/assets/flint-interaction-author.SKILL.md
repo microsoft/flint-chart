@@ -100,6 +100,7 @@ Every option here is the factory's own; `interactions.ts` has the full list.
 | `context-activate` | Right-clicks or long-presses; the host receives a context target. | A context menu in the app. | | | elements | none |
 | `long-press` | Holds a mark; it activates. | Touch-first activation. | | `holdMs`, `dimOpacity` | elements | click-none, escape |
 | `double-activate` | Double-clicks a mark; it activates. | Open the record behind a mark. | | `dimOpacity` | elements | click-none, escape |
+| `accessible-navigation` | Tabs into the chart and walks titles, axes and labels, legends, facet headers, series, and marks with the keyboard; each step says what the element is and what it represents, and emphasises its data. | Keyboard and screen-reader access to the whole chart. | | `emphasis`, `caption`, `sections` (`titles`, `axes`, `legends`, `headers`, `data`, `labels`), `maxFields`, `dimOpacity` | elements | none |
 
 "Needs" is what the chart type must offer; `list_chart_types` has already
 applied it. The data can still remove an entry at mount: see the data
@@ -120,6 +121,7 @@ the data pick the preset inside the row.
 | filter | Show fewer items, on a condition. | `legend-toggle`, `click-highlight` on axes and legends, `click-group-focus`, `axis-highlight`, `hover-group-focus`, `linked-brush` | a legend or axis-label click; a click or a hover on a group; a drag mirrored on another chart |
 | annotate | Add something at an item: a note the chart pins, or a menu the app opens. | `click-annotate`, `context-activate` | a click; a right-click or a hold |
 | activate | Mark an item with a stronger trigger than a click, and tell the host. | `long-press`, `double-activate` | a hold; a double-click |
+| access | Reach every part of the chart without a pointer, and hear what each part is. | `accessible-navigation` | Tab, the arrow keys, Enter, Escape |
 
 ## Interactions by scenario
 
@@ -162,6 +164,11 @@ practice:
 
 `click-highlight` yields a legend or an axis click on its own, with an `info`
 warning. Set `targets` to keep the spec silent.
+
+`accessible-navigation` takes no pointer trigger, so it sits beside any other
+entry. Space on a focused mark, legend item, or axis label runs the click
+presets on the list, so `legend-toggle` and `click-highlight` also answer the
+keyboard.
 
 Data conditions the chart type cannot promise; an entry that fails one is
 dropped at mount with a warning:

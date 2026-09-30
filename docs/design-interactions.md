@@ -244,7 +244,7 @@ capabilities without which it does nothing:
 
 | Presets | Require |
 |---|---|
-| `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `context-activate`, `long-press`, `double-activate`, `inspect` | `elements` |
+| `click-highlight`, `click-group-focus`, `hover-group-focus`, `click-annotate`, `context-activate`, `long-press`, `double-activate`, `inspect`, `accessible-navigation` | `elements` |
 | `select`, `lasso-select`, `brush-x`, `brush-y`, `linked-brush` | `elements`, `cartesian-region` |
 | `brush-angle` | `elements`, `angular-region` |
 | `navigate`, `brush-zoom` | `navigation` |

@@ -9,7 +9,7 @@ import type { InteractionEventSource, NavigationResetGesture } from './triggers'
 export type { NavigationResetGesture } from './triggers';
 import { NAVIGATION_RESET, NO_RESET, SELECTION_RESET, normalizeResetGestures, type InteractionResetGesture } from './reset';
 import type { InteractionPresetType } from '../core/interaction-spec';
-import type { InspectIndexShow, InspectMode } from './triggers';
+import type { AccessibleNavigationSection, InspectIndexShow, InspectMode } from './triggers';
 import type { InspectGuideOptions, RegionGuideOptions } from './guides';
 import type { InteractionAffordanceTarget, InteractionAffordances } from './affordances';
 import type {
@@ -37,6 +37,7 @@ import {
     createDragReorderInteraction,
     createLinkedBrushInteraction,
     createHoverGroupFocusInteraction,
+    createAccessibleNavigationInteraction,
 } from './presets';
 import type { CanvasInteractionEvent } from './language/events';
 export type {
@@ -309,6 +310,19 @@ export interface NavigateOptions {
     resetTransition?: NavigationTransition;
 }
 
+export interface AccessibleNavigationOptions {
+    id?: string;
+    /** Dim the marks outside the focused element, as a click highlight does. Defaults to true. */
+    emphasis?: boolean;
+    dimOpacity?: number;
+    /** Show a visible caption naming the focused element and its content. Defaults to true. */
+    caption?: boolean;
+    /** The chart parts the walk reaches, in reading order. Defaults to every section. */
+    sections?: readonly AccessibleNavigationSection[];
+    /** The most data fields read out for one mark. Defaults to 8. */
+    maxFields?: number;
+}
+
 export interface DragReorderOptions {
     id?: string;
     /** The order is a setting, so nothing resets it unless this list says so. */
@@ -420,6 +434,15 @@ export function navigate(options: NavigateOptions = {}): CanvasInteractionDef {
 
 export function dragReorder(options: DragReorderOptions = {}): CanvasInteractionDef {
     return asPreset('drag-reorder', withReset(createDragReorderInteraction(options), options.reset, NO_RESET));
+}
+
+/**
+ * Walk the whole chart from the keyboard: titles, axes and their labels, legends
+ * and their entries, facet headers, series, and every mark. Each step says what
+ * the element is and what it represents, and emphasises the data behind it.
+ */
+export function accessibleNavigation(options: AccessibleNavigationOptions = {}): CanvasInteractionDef {
+    return asPreset('accessible-navigation', createAccessibleNavigationInteraction(options));
 }
 
 export function normalizeInteractions(

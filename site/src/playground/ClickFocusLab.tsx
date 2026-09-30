@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import { Accessibility, AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import {
   assembleVegaLite,
   type ChartAssemblyInput,
@@ -17,6 +17,7 @@ import {
   type TestCase,
 } from 'flint-chart/test-data';
 import {
+  accessibleNavigation,
   buildInteractiveChart,
   brushAngle,
   brushX,
@@ -57,7 +58,7 @@ export type InteractionMode = 'click-highlight' | 'click-group-focus' | 'annotat
   | 'navigate' | 'drag-reorder'
   | 'lasso' | 'inspect' | 'inspect-index'
   | 'long-press' | 'double-activate' | 'legend-toggle' | 'brush-zoom'
-  | 'keyboard-focus' | 'select-context';
+  | 'keyboard-focus' | 'select-context' | 'accessible-navigation';
 type ProbeStatus = 'loading' | 'ready' | 'unsupported' | 'error';
 /** Where a card's interactions come from: factory calls in code, or `interaction_spec` JSON. */
 export type InteractionSource = 'code' | 'spec';
@@ -90,6 +91,7 @@ const unitInteractionModes = [
   { value: 'double-activate', label: 'Double click', icon: MousePointerClick },
   { value: 'legend-toggle', label: 'Legend toggle', icon: EyeOff },
   { value: 'brush-zoom', label: 'Brush zoom', icon: ZoomIn },
+  { value: 'accessible-navigation', label: 'Accessible navigation', icon: Accessibility },
 ] as const;
 
 const compositionInteractionModes = [
@@ -132,6 +134,7 @@ function modeInteractions(
     case 'long-press': return [longPress()];
     case 'double-activate': return [doubleActivate()];
     case 'brush-zoom': return [brushZoom()];
+    case 'accessible-navigation': return [accessibleNavigation()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
   }
 }
@@ -200,6 +203,7 @@ function modeSpec(
     case 'long-press': return { interactions: [entry('long-press')] };
     case 'double-activate': return { interactions: [entry('double-activate')] };
     case 'brush-zoom': return { interactions: [entry('brush-zoom')] };
+    case 'accessible-navigation': return { interactions: [entry('accessible-navigation')] };
     default: return {
       interactions: [entry('navigate', {
         axes: navigationAxes ?? 'available',
@@ -1022,6 +1026,8 @@ export function CaseCard({
     ? item.expectation
     : mode === 'annotate'
       ? 'Click a mark to inspect its compiler-inferred nearby position and connector.'
+    : mode === 'accessible-navigation'
+      ? 'Tab into the chart, then use the arrows, Enter, and Escape to walk its titles, axes, legends, headers, and marks.'
     : item.expectation;
   const semanticTarget = lastInteraction?.event.target;
   const semanticItems = semanticTarget?.elements ?? [];
@@ -1127,6 +1133,11 @@ export function CaseCard({
                   {semanticTarget?.visual.kind === 'legend'
                     ? ` · ${semanticRecords} record${semanticRecords === 1 ? '' : 's'}`
                     : ''}
+                </span>
+              )}
+              {lastInteraction.event.description && (
+                <span className="cf-probe-event-announcement" data-testid="accessible-announcement">
+                  {lastInteraction.event.description.text}
                 </span>
               )}
               {lastInteraction.event.dropTarget?.elements[0] && (
@@ -1238,6 +1249,7 @@ export function ClickFocusLab({ source = 'code' }: { source?: InteractionSource 
           <li><strong>Pan & zoom:</strong> Drag continuous axes to pan; use the wheel, trackpad, or a two-finger pinch to zoom.</li>
           <li><strong>Context menu:</strong> Select marks or open a mark menu, then let the host application provide contextual actions.</li>
           <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
+          <li><strong>Accessible navigation:</strong> Tab into a chart and walk titles, axes, legends, headers, series, and marks; each step names the element and what it represents.</li>
         </ul>
         <div className="cf-summary">
           <span><strong>{visibleCases.length}</strong> test cases</span>

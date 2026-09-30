@@ -1,5 +1,6 @@
 import { INTERACTION_PRESET_REQUIREMENTS, INTERACTION_PRESET_TYPES, type InteractionCapability, type InteractionPresetType } from '../../core/interaction-spec';
 import {
+    accessibleNavigation,
     axisHighlight,
     brushAngle,
     brushX,
@@ -40,7 +41,8 @@ export type InteractionGestureFamily =
     | 'inspect'
     | 'context'
     | 'long-press'
-    | 'double';
+    | 'double'
+    | 'keyboard';
 
 export interface InteractionPresetDefinition<T extends InteractionPresetType = InteractionPresetType> {
     readonly type: T;
@@ -243,6 +245,15 @@ export const INTERACTION_PRESETS: { readonly [T in InteractionPresetType]: Inter
         supportedReset: ANY_RESET,
         defaultReset: NO_RESET,
         create: dragReorder,
+    },
+    'accessible-navigation': {
+        type: 'accessible-navigation',
+        label: 'Accessible navigation',
+        description: 'Tab into the chart and walk its titles, axes, legends, headers, series, and marks with the keyboard; each step announces what the element is and what it represents.',
+        gesture: 'keyboard',
+        supportedReset: NEVER,
+        defaultReset: NEVER,
+        create: accessibleNavigation,
     },
 };
 
