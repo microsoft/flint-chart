@@ -101,6 +101,13 @@ const TEMPLATE_LOOKUP: Record<
     plotly: plGetTemplateDef,
 };
 
+const FIELD_SORT: Record<ValidationBackend, boolean> = {
+    vegalite: true,
+    echarts: false,
+    chartjs: false,
+    plotly: false,
+};
+
 /**
  * Validate the shape of a {@link ChartAssemblyInput} before it reaches an
  * assembler: data presence, row shape and caps, `chartType`, encodings against the
@@ -181,10 +188,9 @@ function validateEncodings(
     for (const [channel, encoding] of entries) {
         for (const entry of Array.isArray(encoding) ? encoding : [encoding]) {
             if (!isRecord(entry)) continue;
-            const sort = resolveEncodingSort(entry, channel, encodings, dataFields);
-            if (sort?.kind === 'field' && backend && backend !== 'vegalite') {
-                throw new Error(`chart_spec.encodings.${channel}.sortBy: raw field-name sorting is supported by vegalite; for ${backend}, bind the sort field to a supported measure channel and sort by that channel.`);
-            }
+            resolveEncodingSort(entry, channel, encodings, dataFields, {
+                fieldSort: backend ? FIELD_SORT[backend] : true,
+            });
         }
         for (const field of encodingFields(encoding)) {
             if (!dataFields.has(field)) {

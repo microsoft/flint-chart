@@ -63,7 +63,7 @@ import { applyEncodingOverrides } from '../core/encoding-overrides';
 import { applyAggregation } from '../core/aggregate';
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { ecGetTemplateDef } from './templates';
-import { resolveChannelSemantics, convertTemporalData } from '../core/resolve-semantics';
+import { resolveChannelSemantics, convertTemporalData, repairEncodingSorts } from '../core/resolve-semantics';
 import { toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
@@ -142,8 +142,10 @@ export function assembleECharts(input: ChartAssemblyInput): any {
     // PRE-PHASE: Static Series Normalization
     // ═══════════════════════════════════════════════════════════════════════
     const rawData = input.data.values ?? [];
+    const sortRepair = repairEncodingSorts(input.chart_spec.encodings, rawData, { fieldSort: false });
+    warnings.push(...sortRepair.warnings);
     const normalized = normalizeStaticSeries(
-        input.chart_spec.encodings, rawData, semanticTypes, chartType,
+        sortRepair.encodings, rawData, semanticTypes, chartType,
     );
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;

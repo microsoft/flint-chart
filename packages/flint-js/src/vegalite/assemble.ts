@@ -60,7 +60,7 @@ import { planBandDodge, resolveDodge } from '../core/band-dodge';
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
-import { resolveChannelSemantics, convertTemporalData, resolveEncodingSort } from '../core/resolve-semantics';
+import { resolveChannelSemantics, convertTemporalData, inspectEncodingSort, repairEncodingSorts } from '../core/resolve-semantics';
 import { resolveDisplayUnit, titleWithDisplayUnit, toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
 import { computeLayout, computeChannelBudgets, computeMinSubplotDimensions, deriveStretchCaps, resolveBaseSize, resolveFacetColumnsOption } from '../core/compute-layout';
@@ -193,8 +193,10 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
     // ═══════════════════════════════════════════════════════════════════════
     // Detect array-valued encodings (static series), validate, and fold data.
     const rawData = input.data.values ?? [];
+    const sortRepair = repairEncodingSorts(input.chart_spec.encodings, rawData);
+    warnings.push(...sortRepair.warnings);
     const normalized = normalizeStaticSeries(
-        input.chart_spec.encodings, rawData, semanticTypes, chartType,
+        sortRepair.encodings, rawData, semanticTypes, chartType,
     );
     let data = normalized.data;
     const staticSeries = normalized.staticSeries;
@@ -1331,7 +1333,7 @@ function buildVLEncodings(
             });
         };
 
-        const explicitSort = resolveEncodingSort(encoding, channel, encodings, dataFields);
+        const explicitSort = inspectEncodingSort(encoding, channel, encodings, dataFields).sort;
         if (encoding.sortBy !== undefined || encoding.sortOrder !== undefined) {
             if (encoding.sortBy === undefined) {
                 if (encoding.sortOrder) {

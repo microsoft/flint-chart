@@ -23,6 +23,7 @@
 
 import type {
     ChartEncoding,
+    ChartWarning,
     ChannelSemantics,
     SemanticResult,
 } from './types';
@@ -47,39 +48,163 @@ import {
     type SemanticAnnotation,
 } from './field-semantics';
 
-export function resolveEncodingSort(
+export type EncodingSort =
+    | { kind: 'channel'; channel: 'x' | 'y' | 'color' }
+    | { kind: 'field'; field: string }
+    | { kind: 'values'; values: (string | number | boolean)[] };
+
+export interface EncodingSortIssue {
+    property: 'sortBy' | 'sortOrder';
+    value: unknown;
+    /** Message reported by strict validation. */
+    error: string;
+    /** Message reported when assembly repairs the hint. */
+    warning: string;
+}
+
+export interface EncodingSortInspection {
+    sort?: EncodingSort;
+    /** The `sortBy` that remains usable after invalid parts are removed. */
+    sortBy?: string;
+    sortOrder?: 'ascending' | 'descending';
+    issues: EncodingSortIssue[];
+}
+
+export interface EncodingSortOptions {
+    /** Whether the caller can sort categories by a raw data field. Default: true. */
+    fieldSort?: boolean;
+}
+
+const isCategoryValue = (value: unknown): value is string | number | boolean =>
+    typeof value === 'string' || typeof value === 'boolean'
+    || (typeof value === 'number' && Number.isFinite(value));
+
+/** Apply the sort-hint rules without throwing; strict and lenient callers share this. */
+export function inspectEncodingSort(
     encoding: { sortBy?: unknown; sortOrder?: unknown },
     channel: string,
     encodings: Record<string, unknown>,
     dataFields: ReadonlySet<string>,
-): { kind: 'channel'; channel: 'x' | 'y' | 'color' } | { kind: 'field'; field: string }
-    | { kind: 'values'; values: (string | number | boolean)[] } | undefined {
-    if (encoding.sortOrder !== undefined && encoding.sortOrder !== 'ascending' && encoding.sortOrder !== 'descending') {
-        throw new Error(`encodings.${channel}.sortOrder must be "ascending" or "descending".`);
+    options: EncodingSortOptions = {},
+): EncodingSortInspection {
+    const issues: EncodingSortIssue[] = [];
+    const describe = (property: 'sortBy' | 'sortOrder', value: unknown) =>
+        `encodings.${channel}.${property} ${typeof value === 'string' ? `"${value}"` : JSON.stringify(value)}`;
+    let sortOrder: EncodingSortInspection['sortOrder'];
+    if (encoding.sortOrder === 'ascending' || encoding.sortOrder === 'descending') {
+        sortOrder = encoding.sortOrder;
+    } else if (encoding.sortOrder !== undefined) {
+        issues.push({
+            property: 'sortOrder',
+            value: encoding.sortOrder,
+            error: `encodings.${channel}.sortOrder must be "ascending" or "descending".`,
+            warning: `${describe('sortOrder', encoding.sortOrder)} must be "ascending" or "descending"; ignoring it.`,
+        });
     }
     const sortBy = encoding.sortBy;
-    if (sortBy === undefined) return;
-    const invalid = () => new Error(`encodings.${channel}.sortBy must name an existing data field, a mapped channel (x, y, color), or a JSON category-order array; received ${JSON.stringify(sortBy)}.`);
-    if (typeof sortBy !== 'string' || !sortBy.trim()) throw invalid();
+    if (sortBy === undefined) return { sortOrder, issues };
+    // A rejected sortBy also drops its sortOrder, so the chart keeps its default order.
+    const reject = (error: string, reason: string): EncodingSortInspection => {
+        issues.push({
+            property: 'sortBy',
+            value: sortBy,
+            error,
+            warning: `${describe('sortBy', sortBy)} ${reason}; using default order.`,
+        });
+        return { issues };
+    };
+    const invalid = `encodings.${channel}.sortBy must name an existing data field, a mapped channel (x, y, color), or a JSON category-order array; received ${JSON.stringify(sortBy)}.`;
+    if (typeof sortBy !== 'string' || !sortBy.trim()) {
+        return reject(invalid, 'is not a data field, mapped channel, or JSON category array');
+    }
     if (sortBy === 'x' || sortBy === 'y' || sortBy === 'color') {
         const binding = encodings[sortBy];
         const targets = Array.isArray(binding) ? binding : [binding];
         if (!targets.some(target => typeof target === 'string' ? target.length > 0
             : target && typeof target === 'object' && (typeof target.field === 'string' || target.aggregate === 'count'))) {
-            throw new Error(`encodings.${channel}.sortBy: channel "${sortBy}" must be mapped to a field or count aggregation.`);
+            return reject(
+                `encodings.${channel}.sortBy: channel "${sortBy}" must be mapped to a field or count aggregation.`,
+                'names a channel that is not mapped',
+            );
         }
-        return { kind: 'channel', channel: sortBy };
+        return { sort: { kind: 'channel', channel: sortBy }, sortBy, sortOrder, issues };
     }
-    if (dataFields.has(sortBy)) return { kind: 'field', field: sortBy };
+    if (dataFields.has(sortBy)) {
+        if (options.fieldSort === false) {
+            return reject(
+                `chart_spec.encodings.${channel}.sortBy: raw field-name sorting is not supported by this backend; bind the sort field to a supported measure channel and sort by that channel.`,
+                'sorts by a raw data field, which this backend does not support',
+            );
+        }
+        return { sort: { kind: 'field', field: sortBy }, sortBy, sortOrder, issues };
+    }
     let values: unknown;
     try {
         values = JSON.parse(sortBy);
     } catch {
-        throw invalid();
+        return reject(invalid, 'is not a data field');
     }
-    if (!Array.isArray(values) || !values.every(value => typeof value === 'string'
-        || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value)))) throw invalid();
-    return { kind: 'values', values };
+    if (!Array.isArray(values)) return reject(invalid, 'is not a data field or JSON category array');
+    const valid = values.filter(isCategoryValue);
+    if (valid.length === 0 && values.length > 0) return reject(invalid, 'contains no valid category values');
+    if (valid.length < values.length) {
+        const dropped = values.length - valid.length;
+        issues.push({
+            property: 'sortBy',
+            value: sortBy,
+            error: invalid,
+            warning: `${describe('sortBy', sortBy)} contains ${dropped} invalid category value${dropped === 1 ? '' : 's'}; ignoring ${dropped === 1 ? 'it' : 'them'}.`,
+        });
+        return { sort: { kind: 'values', values: valid }, sortBy: JSON.stringify(valid), sortOrder, issues };
+    }
+    return { sort: { kind: 'values', values: valid }, sortBy, sortOrder, issues };
+}
+
+/** Strict sort resolution for validation: throws the first rule violation. */
+export function resolveEncodingSort(
+    encoding: { sortBy?: unknown; sortOrder?: unknown },
+    channel: string,
+    encodings: Record<string, unknown>,
+    dataFields: ReadonlySet<string>,
+    options: EncodingSortOptions = {},
+): EncodingSort | undefined {
+    const inspection = inspectEncodingSort(encoding, channel, encodings, dataFields, options);
+    if (inspection.issues.length > 0) throw new Error(inspection.issues[0].error);
+    return inspection.sort;
+}
+
+/**
+ * Lenient sort resolution for assembly: removes unusable sort hints so the
+ * chart renders in its default order, and reports each repair as a warning.
+ */
+export function repairEncodingSorts<T>(
+    encodings: Record<string, T>,
+    data: readonly unknown[],
+    options: EncodingSortOptions = {},
+): { encodings: Record<string, T>; warnings: ChartWarning[] } {
+    const warnings: ChartWarning[] = [];
+    if (!encodings || typeof encodings !== 'object') return { encodings, warnings };
+    const dataFields = new Set(data.flatMap(row => row && typeof row === 'object' ? Object.keys(row) : []));
+    const repair = (channel: string, entry: unknown): unknown => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
+        const encoding = entry as Record<string, unknown>;
+        const { sortBy, sortOrder, issues } = inspectEncodingSort(encoding, channel, encodings, dataFields, options);
+        if (issues.length === 0) return entry;
+        for (const issue of issues) {
+            warnings.push({ severity: 'warning', code: 'invalid_sort', message: issue.warning, channel });
+        }
+        const next = { ...encoding };
+        delete next.sortBy;
+        delete next.sortOrder;
+        if (sortBy !== undefined) next.sortBy = sortBy;
+        if (sortOrder !== undefined) next.sortOrder = sortOrder;
+        return next;
+    };
+    const repaired = Object.fromEntries(Object.entries(encodings).map(([channel, value]) => [
+        channel,
+        Array.isArray(value) ? value.map(entry => repair(channel, entry)) : repair(channel, value),
+    ])) as Record<string, T>;
+    return { encodings: repaired, warnings };
 }
 
 // ---------------------------------------------------------------------------

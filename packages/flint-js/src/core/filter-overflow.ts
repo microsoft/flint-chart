@@ -35,7 +35,7 @@ import type {
 } from './types';
 import type { ChartWarning } from './types';
 import { inferVisCategory } from './semantic-types';
-import { resolveEncodingSort } from './resolve-semantics';
+import { inspectEncodingSort } from './resolve-semantics';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -242,9 +242,7 @@ function defaultOverflowOrder(
 
     // Determine sort intent from user encodings
     const encoding = encodings[channel];
-    const sortBy = encoding?.sortBy;
-    const sortOrder = encoding?.sortOrder;
-    const explicitSort = resolveEncodingSort(encoding ?? {}, channel, encodings,
+    const { sort: explicitSort, sortBy, sortOrder } = inspectEncodingSort(encoding ?? {}, channel, encodings,
         new Set(data.flatMap(row => Object.keys(row))));
     if (explicitSort?.kind === 'field') {
         const minimums = new Map<any, any>();
