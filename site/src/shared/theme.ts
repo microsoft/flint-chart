@@ -26,3 +26,12 @@ export const siteTheme = {
 export const CONTENT_MAX_WIDTH = 1180;
 
 export const GITHUB_REPO = 'https://github.com/microsoft/flint-chart';
+
+/** Community Discord invite. */
+export const DISCORD_INVITE = 'https://discord.gg/hnm4Y8YX8';
+
+/** Landing-page section id for the WeChat QR block. */
+export const WECHAT_SECTION_ID = 'wechat';
+
+/** sessionStorage key used to scroll to a landing section after navigating home. */
+export const LANDING_SCROLL_TO_KEY = 'flint-landing-scroll-to';

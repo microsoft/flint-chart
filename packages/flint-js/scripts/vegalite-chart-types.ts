@@ -1,0 +1,147 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+import type { ChartPropertyVariant, ChartTemplateDef, EncodingActionDef } from '../src/core/types';
+import { vlAllTemplateDefs } from '../src/vegalite/templates';
+
+type PropertyDomain = ChartPropertyVariant | EncodingActionDef['control'];
+const dynamicKeys = new Set(['chartType', 'pivot', 'arrange']);
+
+// Discrete metadata values are untyped in the registry. Validate that boundary
+// rather than silently emitting a wider type when a new value shape is added.
+function literalType(value: unknown, context: string, ancestors = new Set<unknown>()): string {
+    if (value === undefined) return 'undefined';
+    if (value === null) return 'null';
+    if (typeof value === 'string') return JSON.stringify(value);
+    if (typeof value === 'boolean') return String(value);
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+    if (Array.isArray(value)) {
+        if (ancestors.has(value)) throw new Error(`${context}: cyclic enum array`);
+        ancestors.add(value);
+        const items: readonly unknown[] = value;
+        const types: string[] = [];
+        for (let i = 0; i < items.length; i++) {
+            if (!Object.prototype.hasOwnProperty.call(items, i)) throw new Error(`${context}: sparse enum array`);
+            types.push(literalType(items[i], `${context}[${i}]`, ancestors));
+        }
+        ancestors.delete(value);
+        return `[${types.join(', ')}]`;
+    }
+    throw new Error(`${context}: unsupported enum value (${typeof value})`);
+}
+
+export function propertyType(domain: PropertyDomain, context: string): string {
+    switch (domain.type) {
+        case 'binary':
+        case 'continuous': {
+            const type = domain.type === 'binary' ? 'boolean' : 'number';
+            if ('defaultValue' in domain && domain.defaultValue !== undefined) {
+                if (typeof domain.defaultValue !== type ||
+                    (type === 'number' && !Number.isFinite(domain.defaultValue))) {
+                    throw new Error(`${context}: invalid ${domain.type} default`);
+                }
+            }
+            return `${type} | undefined`;
+        }
+        case 'discrete': {
+            if (!Array.isArray(domain.options) || domain.options.length === 0) {
+                throw new Error(`${context}: discrete options must be nonempty`);
+            }
+            const values = new Set<string>(['undefined']);
+            for (const option of domain.options) {
+                if (!option || !Object.prototype.hasOwnProperty.call(option, 'value')) {
+                    throw new Error(`${context}: enum option must declare a value`);
+                }
+                values.add(literalType(option.value, context));
+            }
+            if ('defaultValue' in domain) {
+                values.add(literalType(domain.defaultValue, `${context} default`));
+            }
+            return [...values].sort().join(' | ');
+        }
+        default:
+            throw new Error(`${context}: unsupported property metadata`);
+    }
+}
+
+export function generateVegaLiteChartTypes(
+    definitions: readonly ChartTemplateDef[] = vlAllTemplateDefs,
+): string {
+    if (definitions.length === 0) throw new Error('Vega-Lite registry is empty');
+    const charts = new Map<string, Map<string, string>>();
+    for (const definition of definitions) {
+        if (!definition.chart || charts.has(definition.chart)) {
+            throw new Error(`Invalid or duplicate chart name: ${definition.chart}`);
+        }
+        const properties = new Map<string, string>();
+        const add = (key: string, type: string): void => {
+            if (!key || properties.has(key)) {
+                throw new Error(`${definition.chart}: invalid or duplicate property ${key}`);
+            }
+            properties.set(key, type);
+        };
+        for (const property of definition.properties ?? []) {
+            if (!dynamicKeys.has(property.key)) {
+                add(property.key, propertyType(property, `${definition.chart}.${property.key}`));
+            }
+        }
+        for (const action of definition.encodingActions ?? []) {
+            if (!dynamicKeys.has(action.key)) {
+                add(action.key, propertyType(action.control, `${definition.chart}.${action.key}`));
+            }
+        }
+        // assembleVegaLite exposes facetColumns dynamically for column facets.
+        if (definition.channels.includes('column')) add('facetColumns', 'number | undefined');
+        // resolveValueLabelChoice accepts this legacy caller input, not a second UI control.
+        if (properties.has('showValueLabels')) add('showTextLabels', 'boolean | undefined');
+        charts.set(definition.chart, properties);
+    }
+
+    const names = [...charts.keys()].sort();
+    const lines = [
+        '// Copyright (c) Microsoft Corporation.',
+        '// Licensed under the MIT License.',
+        '',
+        '// Generated by npm run gen:chart-types. Do not edit by hand.',
+        "import type { ChartAssemblyInput } from '../core/types';",
+        '',
+        '/** Registered Vega-Lite template names. */',
+        'export type VegaLiteChartType =',
+        ...names.map((name, i) => `    | ${JSON.stringify(name)}${i === names.length - 1 ? ';' : ''}`),
+        '',
+        '/** Static property domains; runtime applicability still depends on data and encodings. */',
+        'export interface VegaLiteChartPropertiesMap {',
+    ];
+    for (const name of names) {
+        const properties = charts.get(name)!;
+        if (properties.size === 0) {
+            lines.push(`    ${JSON.stringify(name)}: never;`);
+            continue;
+        }
+        lines.push(`    ${JSON.stringify(name)}: {`);
+        for (const key of [...properties.keys()].sort()) {
+            if (key === 'facetColumns') {
+                lines.push('        /** Column facet layout; availability is data dependent. */');
+            }
+            if (key === 'showTextLabels') {
+                lines.push('        /** @deprecated Use showValueLabels. Legacy true requests labels; false means auto. */');
+            }
+            lines.push(`        ${JSON.stringify(key)}?: ${properties.get(key)};`);
+        }
+        lines.push('    };');
+    }
+    lines.push(
+        '}',
+        '',
+        '/** Opt-in authoring union. All other native chart_spec fields are preserved. */',
+        'export type VegaLiteChartSpec = {',
+        '    [C in VegaLiteChartType]:',
+        "        Omit<ChartAssemblyInput['chart_spec'], 'chartType' | 'chartProperties'> & {",
+        '            chartType: C;',
+        '            chartProperties?: VegaLiteChartPropertiesMap[C];',
+        '        };',
+        '}[VegaLiteChartType];',
+        '',
+    );
+    return lines.join('\n');
+}

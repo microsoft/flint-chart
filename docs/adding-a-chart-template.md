@@ -91,6 +91,34 @@ In `packages/flint-js/src/<backend>/templates/index.ts`:
 
 Vega-Lite also runs `withInjectedProperties()` to attach shared facet and log-scale properties across templates. Follow existing entries in that file when your chart needs the same hooks.
 
+### Regenerate Vega-Lite authoring types
+
+After changing Vega-Lite registry names, channels, properties, or encoding-action
+controls, run from the repository root:
+
+```bash
+npm run gen:chart-types -w packages/flint-js
+npm run check:chart-types -w packages/flint-js
+npm run typecheck:js
+npm run test -w packages/flint-js -- tests/vegalite-chart-types.test.ts
+npm run build:js
+npm run test:types -w packages/flint-js
+```
+
+Check in `packages/flint-js/src/vegalite/chart-types.generated.ts`; do not edit it
+by hand. The generator in `packages/flint-js/scripts/vegalite-chart-types.ts`
+reads the source registry (including injected properties), not `dist`. Builds
+regenerate before declaration emission. CI checks drift **before** any build can
+rewrite the output, then runs source and built-package TypeScript fixtures.
+The built-package check uses public package entrypoints without path aliases,
+with `skipLibCheck: false` and `exactOptionalPropertyTypes: true`.
+
+New metadata/value shapes need explicit generator support and tests; unsupported
+shapes fail generation rather than producing loose types. Keep the two
+assembler-backed supplements (`facetColumns` and deprecated `showTextLabels`)
+aligned with `vegalite/assemble.ts`. Do not infer static domains from runtime
+applicability callbacks or dynamic pivot/arrangement IDs.
+
 ---
 
 # §4 Add test data and gallery coverage

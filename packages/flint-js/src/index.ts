@@ -52,6 +52,7 @@ export * from './core';
 
 // Vega-Lite backend: assembleVegaLite, templates, spec instantiation
 export * from './vegalite';
+export type { VegaLiteChartType, VegaLiteChartPropertiesMap, VegaLiteChartSpec } from './vegalite/chart-types.generated';
 
 // ECharts backend: assembleECharts, templates, spec instantiation
 export * from './echarts';

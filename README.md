@@ -5,6 +5,8 @@
 [![arXiv: 2607.20775](https://img.shields.io/badge/arXiv-2607.20775-b31b1b.svg)](https://arxiv.org/abs/2607.20775)
 [![CI](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml/badge.svg)](https://github.com/microsoft/flint-chart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Discord](https://img.shields.io/badge/discord-chat-green?logo=discord)](https://discord.gg/hnm4Y8YX8)
+[![WeChat](https://img.shields.io/badge/wechat-group-07C160?logo=wechat&logoColor=white)](#wechat)
 
 **Please visit:** [**Flint Project Site**](https://microsoft.github.io/flint-chart/) | [**Visual Themes**](https://microsoft.github.io/flint-chart/#/themes) | [**MCP Server Guide**](https://microsoft.github.io/flint-chart/#/mcp) | [**中文主页**](https://microsoft.github.io/flint-chart/#/zh)
 
@@ -297,6 +299,19 @@ Flint is built by [Microsoft Research](https://www.microsoft.com/en-us/research/
 in collaboration with the [IDEAS Lab](https://ideas-lab.net/), Renmin University
 of China. We welcome you to join us — see [Contributing](#contributing) to get involved.
 
+## Community
+
+Chat with the team and other users:
+
+- **Discord** — [join the server](https://discord.gg/hnm4Y8YX8)
+- **WeChat** — scan the QR code to join the user group
+
+<a id="wechat"></a>
+
+<p align="center">
+  <img src="docs/figs/QR-code.png" alt="Flint WeChat user group QR code" width="240">
+</p>
+
 A research paper describing Flint is coming soon.
 
 ## Trademarks
@@ -311,3 +326,4 @@ or logos is subject to those third parties' policies.
 ## License
 
 [MIT](LICENSE) © Microsoft Corporation
+

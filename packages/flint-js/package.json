@@ -118,8 +118,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "npm run gen:chart-types && tsup",
+    "dev": "npm run gen:chart-types && tsup --watch",
+    "gen:chart-types": "node scripts/gen-vegalite-chart-types.mjs",
+    "check:chart-types": "node scripts/gen-vegalite-chart-types.mjs --check",
+    "test:types": "tsc --noEmit -p tsconfig.package-test.json",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -127,7 +130,7 @@
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run clean && npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "npm run clean && npm run typecheck && npm run test && npm run build && npm run test:types",
     "release": "npm publish --access public"
   },
   "peerDependencies": {

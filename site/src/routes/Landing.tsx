@@ -19,8 +19,10 @@ import {
   getSupportedBackends,
   type PreviewBackend,
 } from '../shared/supported-backends';
-import { GITHUB_REPO, siteTheme } from '../shared/theme';
+import { GITHUB_REPO, LANDING_SCROLL_TO_KEY, WECHAT_SECTION_ID, siteTheme } from '../shared/theme';
+import { scrollToHeading } from '../shared/scroll-to-heading';
 import flintLogo from '../assets/flint-logo.svg';
+import wechatQr from '../../../docs/figs/QR-code.png';
 
 /**
  * Front page: flat "paper" look inspired by Microsoft data-formulator. A
@@ -30,6 +32,21 @@ import flintLogo from '../assets/flint-logo.svg';
 export function Landing() {
   const { t } = useTranslation();
   const features = useMemo(() => getFeatures(t), [t]);
+
+  useEffect(() => {
+    let pending: string | null = null;
+    try {
+      pending = sessionStorage.getItem(LANDING_SCROLL_TO_KEY);
+      if (pending) sessionStorage.removeItem(LANDING_SCROLL_TO_KEY);
+    } catch {
+      // Privacy modes may block storage.
+    }
+    if (pending !== WECHAT_SECTION_ID) return;
+    const timer = window.setTimeout(() => {
+      scrollToHeading(WECHAT_SECTION_ID);
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   return (
     <div style={pageStyle}>
@@ -290,7 +307,7 @@ export function Landing() {
         </section>
 
         {/* ---- Closing CTA -------------------------------------------- */}
-        <section style={{ ...sectionStyle, paddingTop: 56, paddingBottom: 88, textAlign: 'center' }}>
+        <section style={{ ...sectionStyle, paddingTop: 56, paddingBottom: 32, textAlign: 'center' }}>
           <h2 style={{ fontSize: 26, margin: '0 0 14px', fontWeight: 500 }}>
             {t('landing.closingTitle')}
           </h2>
@@ -330,6 +347,25 @@ export function Landing() {
               }}
             />
           </p>
+        </section>
+
+        {/* ---- WeChat community -------------------------------------- */}
+        <section
+          id={WECHAT_SECTION_ID}
+          style={{ ...sectionStyle, paddingTop: 20, paddingBottom: 72, textAlign: 'center' }}
+        >
+          <h2 style={{ fontSize: 22, margin: '0 0 10px', fontWeight: 500 }}>
+            {t('landing.wechatTitle')}
+          </h2>
+          <p style={{ margin: '0 0 24px', color: siteTheme.text, fontSize: 15, lineHeight: 1.6 }}>
+            {t('landing.wechatBody')}
+          </p>
+          <img
+            src={wechatQr}
+            alt={t('landing.wechatAlt')}
+            width={220}
+            style={{ display: 'block', margin: '0 auto', maxWidth: '100%', height: 'auto' }}
+          />
         </section>
       </main>
       <MicrosoftDisclosures />
