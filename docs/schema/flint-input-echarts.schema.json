@@ -1,0 +1,2176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/microsoft/flint-chart/docs/schema/flint-input-echarts",
+  "title": "flint-input-echarts",
+  "description": "Flint ChartAssemblyInput — ECharts backend (all chart types).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference URI (allows standalone .json files to declare their schema)."
+    },
+    "data": {
+      "description": "Data source — provide inline rows via `values`, or a local file path via `url`.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "description": "Inline data rows (array of row objects)"
+            }
+          },
+          "required": [
+            "values"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Local file path to JSON/CSV/TSV data"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "semantic_types": {
+      "type": "object",
+      "description": "Per-column semantic type annotations (field name → semantic type string or SemanticAnnotation object).",
+      "additionalProperties": {
+        "$ref": "#/$defs/SemanticTypeValue"
+      }
+    },
+    "chart_spec": {
+      "type": "object",
+      "description": "Chart specification — describes what to draw.",
+      "properties": {
+        "chartType": {
+          "type": "string",
+          "enum": [
+            "Area Chart",
+            "Bar Chart",
+            "Boxplot",
+            "Bullet Chart",
+            "Bump Chart",
+            "Calendar Heatmap",
+            "Candlestick Chart",
+            "Connected Scatter Plot",
+            "Density Plot",
+            "ECDF Plot",
+            "Funnel Chart",
+            "Gantt Chart",
+            "Gauge Chart",
+            "Grouped Bar Chart",
+            "Heatmap",
+            "Histogram",
+            "Line Chart",
+            "Lollipop Chart",
+            "Network Graph",
+            "Parallel Coordinates",
+            "Pie Chart",
+            "Pyramid Chart",
+            "Radar Chart",
+            "Range Area Chart",
+            "Ranged Dot Plot",
+            "Regression",
+            "Rose Chart",
+            "Sankey Diagram",
+            "Scatter Plot",
+            "Slope Chart",
+            "Stacked Bar Chart",
+            "Streamgraph",
+            "Strip Plot",
+            "Sunburst Chart",
+            "Tree",
+            "Treemap",
+            "Waterfall Chart"
+          ],
+          "description": "Chart template name"
+        },
+        "encodings": {
+          "type": "object",
+          "description": "Channel → encoding map. Valid channels depend on chartType.",
+          "additionalProperties": {
+            "$ref": "#/$defs/RawEncodingValue"
+          }
+        },
+        "baseSize": {
+          "$ref": "#/$defs/Size",
+          "description": "Base (target) chart size in pixels (default: 400×320)"
+        },
+        "canvasSize": {
+          "$ref": "#/$defs/Size",
+          "description": "Hard ceiling on rendered size in pixels (optional)"
+        },
+        "chartProperties": {
+          "type": "object",
+          "description": "Template-specific configurable properties. Valid properties depend on chartType.",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "chartType",
+        "encodings"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Scatter Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "size",
+                    "opacity",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Scatter Plot"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "opacity": {
+                    "type": "number",
+                    "description": "Opacity",
+                    "minimum": 0.1,
+                    "maximum": 1,
+                    "multipleOf": 0.05,
+                    "default": 1
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Regression"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "size",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Regression"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "regressionMethod": {
+                    "description": "Method",
+                    "enum": [
+                      "linear",
+                      "log",
+                      "exp",
+                      "pow",
+                      "quad",
+                      "poly"
+                    ],
+                    "default": "linear"
+                  },
+                  "polyOrder": {
+                    "type": "number",
+                    "description": "Poly Order",
+                    "minimum": 2,
+                    "maximum": 10,
+                    "multipleOf": 1,
+                    "default": 3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Connected Scatter Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "order",
+                    "color",
+                    "detail",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Connected Scatter Plot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Ranged Dot Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Ranged Dot Plot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Boxplot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "opacity",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Boxplot"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "whiskerMethod": {
+                    "description": "Whiskers",
+                    "enum": [
+                      "iqr",
+                      "minmax"
+                    ],
+                    "default": "iqr"
+                  },
+                  "showOutliers": {
+                    "type": "boolean",
+                    "description": "Outliers",
+                    "default": true
+                  },
+                  "dodge": {
+                    "description": "Dodge",
+                    "enum": [
+                      "auto",
+                      "local",
+                      "global"
+                    ],
+                    "default": "auto"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Strip Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "size",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Strip Plot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Bar Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "opacity",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Bar Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "cornerRadius": {
+                    "type": "number",
+                    "description": "Corners",
+                    "minimum": 0,
+                    "maximum": 15,
+                    "multipleOf": 1,
+                    "default": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Grouped Bar Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "group",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Grouped Bar Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "dodge": {
+                    "description": "Dodge",
+                    "enum": [
+                      "auto",
+                      "local",
+                      "global"
+                    ],
+                    "default": "auto"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Stacked Bar Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Stacked Bar Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "stackMode": {
+                    "description": "Stack",
+                    "enum": [
+                      null,
+                      "normalize"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Lollipop Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Lollipop Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "dotSize": {
+                    "type": "number",
+                    "description": "Dot Size",
+                    "minimum": 20,
+                    "maximum": 300,
+                    "multipleOf": 10,
+                    "default": 80
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Pyramid Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Pyramid Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Heatmap"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Heatmap"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Calendar Heatmap"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "color"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Calendar Heatmap"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Line Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "opacity",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Line Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "interpolate": {
+                    "description": "Curve",
+                    "enum": [
+                      null,
+                      "linear",
+                      "monotone",
+                      "step",
+                      "step-before",
+                      "step-after",
+                      "basis",
+                      "cardinal",
+                      "catmull-rom"
+                    ]
+                  },
+                  "showPoints": {
+                    "type": "boolean",
+                    "description": "Points",
+                    "default": false
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Bump Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "detail",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Bump Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Slope Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "detail",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Slope Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Area Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "opacity",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Area Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "interpolate": {
+                    "description": "Curve",
+                    "enum": [
+                      null,
+                      "linear",
+                      "monotone",
+                      "step",
+                      "step-before",
+                      "step-after",
+                      "basis",
+                      "cardinal",
+                      "catmull-rom"
+                    ]
+                  },
+                  "opacity": {
+                    "type": "number",
+                    "description": "Opacity",
+                    "minimum": 0.1,
+                    "maximum": 1,
+                    "multipleOf": 0.05,
+                    "default": 0.7
+                  },
+                  "stackMode": {
+                    "description": "Stack",
+                    "enum": [
+                      null,
+                      "normalize",
+                      "center",
+                      "layered"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Streamgraph"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Streamgraph"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Range Area Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "y2",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Range Area Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Pie Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "size",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Pie Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "innerRadius": {
+                    "type": "number",
+                    "description": "Donut",
+                    "minimum": 0,
+                    "maximum": 60,
+                    "multipleOf": 5,
+                    "default": 0
+                  },
+                  "cornerRadius": {
+                    "type": "number",
+                    "description": "Corners",
+                    "minimum": 0,
+                    "maximum": 10,
+                    "multipleOf": 1,
+                    "default": 0
+                  },
+                  "sortSlices": {
+                    "description": "Sort slices",
+                    "enum": [
+                      "none",
+                      "descending",
+                      "ascending"
+                    ],
+                    "default": "none"
+                  },
+                  "labelType": {
+                    "description": "Labels",
+                    "enum": [
+                      "categoryPercent",
+                      "category",
+                      "value",
+                      "percent",
+                      "none"
+                    ],
+                    "default": "categoryPercent"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Funnel Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "y",
+                    "size"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Funnel Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "sort": {
+                    "description": "Sort",
+                    "enum": [
+                      "descending",
+                      "ascending",
+                      "none"
+                    ]
+                  },
+                  "orient": {
+                    "description": "Orient",
+                    "enum": [
+                      "vertical",
+                      "horizontal"
+                    ]
+                  },
+                  "gap": {
+                    "type": "number",
+                    "description": "Gap",
+                    "minimum": 0,
+                    "maximum": 20,
+                    "multipleOf": 1,
+                    "default": 2
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Treemap"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "color",
+                    "size",
+                    "detail"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Treemap"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "breadcrumb": {
+                    "description": "Breadcrumb",
+                    "enum": [
+                      true,
+                      false
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Sunburst Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "color",
+                    "size",
+                    "detail",
+                    "group"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Sunburst Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "innerRadius": {
+                    "type": "number",
+                    "description": "Inner R",
+                    "minimum": 0,
+                    "maximum": 80,
+                    "multipleOf": 5,
+                    "default": 0
+                  },
+                  "labelRotate": {
+                    "description": "Labels",
+                    "enum": [
+                      "radial",
+                      "tangential",
+                      0
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Tree"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "color",
+                    "detail",
+                    "size"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Tree"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "orient": {
+                    "description": "Orient",
+                    "enum": [
+                      "LR",
+                      "TB"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Histogram"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Histogram"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "binCount": {
+                    "type": "number",
+                    "description": "Max Bins",
+                    "minimum": 5,
+                    "maximum": 50,
+                    "multipleOf": 1,
+                    "default": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Density Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Density Plot"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "bandwidth": {
+                    "type": "number",
+                    "description": "Bandwidth",
+                    "minimum": 0.05,
+                    "maximum": 2,
+                    "multipleOf": 0.05,
+                    "default": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "ECDF Plot"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "color",
+                    "detail",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for ECDF Plot"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "showPoints": {
+                    "type": "boolean",
+                    "description": "Points",
+                    "default": false
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Parallel Coordinates"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "color",
+                    "detail"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Parallel Coordinates"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Candlestick Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Candlestick Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "showMA": {
+                    "type": "boolean",
+                    "description": "Moving average",
+                    "default": false
+                  },
+                  "maWindow": {
+                    "type": "number",
+                    "description": "Average window",
+                    "minimum": 3,
+                    "maximum": 30,
+                    "multipleOf": 1,
+                    "default": 5
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Waterfall Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Waterfall Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Gantt Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "y",
+                    "x",
+                    "x2",
+                    "color",
+                    "detail",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Gantt Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "taskHeight": {
+                    "type": "number",
+                    "description": "Task height",
+                    "minimum": 40,
+                    "maximum": 90,
+                    "multipleOf": 5,
+                    "default": 70
+                  },
+                  "cornerRadius": {
+                    "type": "number",
+                    "description": "Corners",
+                    "minimum": 0,
+                    "maximum": 8,
+                    "multipleOf": 1,
+                    "default": 2
+                  },
+                  "intervalLabels": {
+                    "type": "boolean",
+                    "description": "Labels",
+                    "default": false
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Bullet Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "y",
+                    "x",
+                    "goal",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Bullet Chart"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Radar Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Radar Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "shape": {
+                    "description": "Grid",
+                    "enum": [
+                      null,
+                      "circle"
+                    ]
+                  },
+                  "filled": {
+                    "description": "Fill",
+                    "enum": [
+                      true,
+                      false
+                    ]
+                  },
+                  "fillOpacity": {
+                    "type": "number",
+                    "description": "Opacity",
+                    "minimum": 0.05,
+                    "maximum": 0.8,
+                    "multipleOf": 0.05,
+                    "default": 0.3
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Rose Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "color",
+                    "column",
+                    "row"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Rose Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "alignment": {
+                    "description": "Alignment",
+                    "enum": [
+                      "left",
+                      "center"
+                    ]
+                  },
+                  "sortSlices": {
+                    "description": "Sort slices",
+                    "enum": [
+                      "none",
+                      "descending",
+                      "ascending"
+                    ],
+                    "default": "none"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Gauge Chart"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "size",
+                    "column"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Gauge Chart"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "min": {
+                    "type": "number",
+                    "description": "Min",
+                    "minimum": 0,
+                    "maximum": 1000,
+                    "multipleOf": 10,
+                    "default": 0
+                  },
+                  "max": {
+                    "type": "number",
+                    "description": "Max",
+                    "minimum": 0,
+                    "maximum": 10000,
+                    "multipleOf": 100,
+                    "default": 100
+                  },
+                  "showProgress": {
+                    "description": "Progress",
+                    "enum": [
+                      true,
+                      false
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Sankey Diagram"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "size"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Sankey Diagram"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "orient": {
+                    "description": "Orient",
+                    "enum": [
+                      "horizontal",
+                      "vertical"
+                    ]
+                  },
+                  "nodeWidth": {
+                    "type": "number",
+                    "description": "Node Width",
+                    "minimum": 5,
+                    "maximum": 40,
+                    "multipleOf": 5,
+                    "default": 20
+                  },
+                  "nodeGap": {
+                    "type": "number",
+                    "description": "Node Gap",
+                    "minimum": 2,
+                    "maximum": 30,
+                    "multipleOf": 2,
+                    "default": 10
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "chartType": {
+                "const": "Network Graph"
+              }
+            },
+            "required": [
+              "chartType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encodings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "x",
+                    "y",
+                    "size"
+                  ]
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/RawEncodingValue"
+                },
+                "description": "Valid channels for Network Graph"
+              },
+              "chartProperties": {
+                "type": "object",
+                "properties": {
+                  "layout": {
+                    "description": "Layout",
+                    "enum": [
+                      "circular",
+                      "force"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "options": {
+      "$ref": "#/$defs/AssembleOptions"
+    },
+    "field_display_names": {
+      "type": "object",
+      "description": "Field name → display label (used as axis titles and legend headers)",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "data",
+    "chart_spec"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "ChartEncoding": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field (column) name from the data"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "quantitative",
+            "nominal",
+            "ordinal",
+            "temporal"
+          ],
+          "description": "Encoding type override"
+        },
+        "aggregate": {
+          "type": "string",
+          "enum": [
+            "count",
+            "sum",
+            "average",
+            "mean"
+          ],
+          "description": "Aggregation function"
+        },
+        "sortOrder": {
+          "type": "string",
+          "enum": [
+            "ascending",
+            "descending"
+          ],
+          "description": "Sort order for this channel"
+        },
+        "sortBy": {
+          "type": "string",
+          "description": "Field name to sort by"
+        },
+        "scheme": {
+          "type": "string",
+          "description": "Color scheme name (color channel)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RawEncodingValue": {
+      "description": "A channel encoding: an object, a bare field-name string shorthand, or an array (static series).",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ChartEncoding"
+        },
+        {
+          "type": "string",
+          "description": "Shorthand for { field: <string> }"
+        },
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ChartEncoding"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": "Static series array (multiple fields on the same channel)"
+        }
+      ]
+    },
+    "SemanticAnnotation": {
+      "type": "object",
+      "properties": {
+        "semanticType": {
+          "type": "string",
+          "description": "Semantic type string (e.g. \"Amount\", \"Country\", \"Year\")"
+        },
+        "intrinsicDomain": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Intrinsic domain [min, max] for bounded/scaled types"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit or currency code (e.g. \"USD\", \"°C\", \"kg\")"
+        },
+        "sortOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicit ordinal ordering"
+        }
+      },
+      "required": [
+        "semanticType"
+      ],
+      "additionalProperties": false
+    },
+    "SemanticTypeValue": {
+      "description": "A semantic type: either a string name or a SemanticAnnotation object.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DateTime",
+            "Date",
+            "Time",
+            "Timestamp",
+            "Year",
+            "Quarter",
+            "Month",
+            "Week",
+            "Day",
+            "Hour",
+            "YearMonth",
+            "YearQuarter",
+            "YearWeek",
+            "Decade",
+            "Duration",
+            "Amount",
+            "Price",
+            "Quantity",
+            "Temperature",
+            "Percentage",
+            "Profit",
+            "PercentageChange",
+            "Sentiment",
+            "Correlation",
+            "Count",
+            "Number",
+            "Rank",
+            "Score",
+            "ID",
+            "Latitude",
+            "Longitude",
+            "Country",
+            "State",
+            "City",
+            "Region",
+            "Address",
+            "ZipCode",
+            "Category",
+            "Name",
+            "Status",
+            "Boolean",
+            "Direction",
+            "Range",
+            "Unknown"
+          ],
+          "description": "Registered semantic type name"
+        },
+        {
+          "type": "string",
+          "description": "Custom/unregistered semantic type name"
+        },
+        {
+          "$ref": "#/$defs/SemanticAnnotation"
+        }
+      ]
+    },
+    "Size": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Width in pixels"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Height in pixels"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "AssembleOptions": {
+      "type": "object",
+      "description": "Layout tuning parameters. All optional with sensible defaults.",
+      "properties": {
+        "addTooltips": {
+          "type": "boolean",
+          "description": "Add tooltips (default: false)",
+          "default": false
+        },
+        "stepPadding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Inter-category padding fraction (default: 0.1)",
+          "default": 0.1
+        },
+        "elasticity": {
+          "type": "number",
+          "description": "Power-law exponent for discrete axis stretch (default: 0.5)",
+          "default": 0.5
+        },
+        "maxStretch": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Maximum stretch multiplier (default: 2)",
+          "default": 2
+        },
+        "maxStretchX": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Per-dimension X stretch cap"
+        },
+        "maxStretchY": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Per-dimension Y stretch cap"
+        },
+        "facetElasticity": {
+          "type": "number",
+          "description": "Facet subplot stretch exponent (default: 0.3)",
+          "default": 0.3
+        },
+        "minStep": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Min px per discrete axis item (default: 6)",
+          "default": 6
+        },
+        "maxColorValues": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Max distinct color values before truncation (default: 24)",
+          "default": 24
+        },
+        "minSubplotSize": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Min facet subplot size in px (default: 60)",
+          "default": 60
+        },
+        "facetFixedPadding": {
+          "$ref": "#/$defs/Size",
+          "description": "Fixed overhead in px for axis labels/titles/legend"
+        },
+        "facetGap": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Gap between facet panels in px"
+        },
+        "facetColumns": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Explicit facet column count (overrides auto-wrap)"
+        },
+        "defaultBandSize": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Base px per discrete category at 300px baseline (default: 20)",
+          "default": 20
+        },
+        "maxBandSize": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Max px per discrete category (sparse expansion ceiling)"
+        },
+        "baseLabelFontSize": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Base tick label font size (default: 10)",
+          "default": 10
+        },
+        "baseTitleFontSize": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Base header/title font size (default: 11)",
+          "default": 11
+        },
+        "maintainContinuousAxisRatio": {
+          "type": "boolean",
+          "description": "Lock continuous axes aspect ratio (default: false)",
+          "default": false
+        },
+        "continuousMarkCrossSection": {
+          "description": "Gas-pressure tuning for continuous axes",
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "elasticity": {
+                  "type": "number"
+                },
+                "maxStretch": {
+                  "type": "number"
+                },
+                "seriesCountAxis": {
+                  "type": "string",
+                  "enum": [
+                    "x",
+                    "y",
+                    "auto"
+                  ]
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            }
+          ]
+        },
+        "facetAspectRatioResistance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Resistance to AR distortion when faceting (0–1)"
+        },
+        "autoFacetWrap": {
+          "type": "boolean",
+          "description": "Auto-wrap column-only facets (default: true)",
+          "default": true
+        },
+        "targetBandAR": {
+          "type": "number",
+          "description": "Target aspect ratio for a single band (0 = no correction)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
