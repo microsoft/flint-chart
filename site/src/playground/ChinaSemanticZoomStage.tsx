@@ -116,7 +116,7 @@ export function ChinaSemanticZoomStage() {
       backend: 'vegalite',
       renderer: 'canvas',
       interactions: [navigate({
-        domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
+        domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
         // A click on empty map, not a double-click, flies home.
         reset: ['click-none'],
         resetTransition: { duration: FLY_MS },

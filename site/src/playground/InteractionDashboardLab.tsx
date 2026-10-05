@@ -1,7 +1,7 @@
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import type {
-  ChartSelection,
+  ChartChange,
   InteractionDef,
   InteractiveChartSurface,
   UpdateTarget,
@@ -265,8 +265,11 @@ export function InteractionDashboardLab() {
     }
   }, []);
 
-  const routeSelection = useCallback((sourceId: string, selection: ChartSelection) => {
-    const ids = [...new Set(selection.rows.flatMap(recordObservationIds))]
+  // A gesture in one chart routes to the others. The routed writes are host
+  // calls with no interaction id, so they do not route again.
+  const routeSelection = useCallback((sourceId: string, change: ChartChange) => {
+    if (change.phase !== 'commit' || !change.interactionId || change.action?.endsWith('-viewport')) return;
+    const ids = [...new Set((change.target?.elements ?? []).map((element) => element.value).flatMap(recordObservationIds))]
       .filter((id) => id !== 'undefined');
     dispatchSelection(ids, sourceId);
     setSelection(ids.length > 0 ? { ids } : null);
@@ -281,7 +284,7 @@ export function InteractionDashboardLab() {
       return;
     }
     surfaces.current.set(id, surface);
-    unsubscribes.current.set(id, surface.onSelection((selection) => routeSelection(id, selection)));
+    unsubscribes.current.set(id, surface.onChange((change) => routeSelection(id, change)));
   }, [routeSelection]);
 
   const clearSelection = useCallback(() => {

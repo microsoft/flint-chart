@@ -60,6 +60,7 @@
 
 .it-workspace-outbound {
   grid-template-columns: minmax(0, 1.28fr) minmax(250px, 0.72fr);
+  min-height: 430px;
 }
 
 .it-workspace-external .it-chart-panel,
@@ -76,7 +77,7 @@
   background: transparent;
 }
 
-.it-workspace-outbound .it-detail-panel { padding: 22px; }
+.it-workspace-outbound .it-detail-panel { padding: 22px; contain: size; overflow-y: auto; }
 
 .it-component-title {
   margin: 0;
@@ -459,6 +460,10 @@
   margin: 0;
 }
 
+.it-metrics + .it-definition-list {
+  margin-top: 16px;
+}
+
 .it-definition-list div {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr);
@@ -488,6 +493,21 @@
 .it-change.positive { color: #176f58; }
 .it-change.negative { color: #a03f35; }
 
+.it-panel-part + .it-panel-part {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #d7dde1;
+}
+
+.it-panel-part-label {
+  margin: 0 0 8px;
+  color: #77828a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 760px) {
   .it-example-header {
     display: block;
@@ -508,6 +528,7 @@
   }
 
   .it-workspace-outbound .it-detail-panel {
+    contain: none;
     border-left: 0;
     border-top: 1px solid #e9edef;
   }
