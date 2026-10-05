@@ -1434,16 +1434,20 @@ export function regionHits(
         y1: Math.min(a.y, b.y), y2: Math.max(a.y, b.y),
     };
     return sceneItems(view)
-        .filter((item) => item.interactionGeometry
-            ? geometryIntersectsRect(item.interactionGeometry, rect, contain)
-            : item.mark?.marktype === 'arc'
-                ? arcIntersectsRect(item, rect, contain)
-                : contain
-                    ? item.bounds.x1 >= rect.x1 && item.bounds.x2 <= rect.x2
-                        && item.bounds.y1 >= rect.y1 && item.bounds.y2 <= rect.y2
-                    : boundsIntersectRect(item.bounds, rect))
+        .filter((item) => itemIntersectsRect(item, rect, contain))
         .map(renderHit)
         .filter((hit): hit is RenderHit => hit !== null);
+}
+
+/** Whether a scene item's geometry, arc, or bounds meet a plot rectangle. */
+function itemIntersectsRect(item: any, rect: SelectionRect, contain = false): boolean {
+    if (item.interactionGeometry) return geometryIntersectsRect(item.interactionGeometry, rect, contain);
+    if (item.mark?.marktype === 'arc') return arcIntersectsRect(item, rect, contain);
+    if (contain) {
+        return item.bounds.x1 >= rect.x1 && item.bounds.x2 <= rect.x2
+            && item.bounds.y1 >= rect.y1 && item.bounds.y2 <= rect.y2;
+    }
+    return boundsIntersectRect(item.bounds, rect);
 }
 
 /** Marks captured by a freeform lasso path. */

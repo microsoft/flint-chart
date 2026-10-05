@@ -42,6 +42,10 @@ import {
 import type { CanvasInteractionEvent } from './language/events';
 export type {
     ChartUpdatePresenter,
+    ChartCategoryWindow,
+    ChartHiddenValue,
+    ChartState,
+    ChartStateEntry,
     InteractionContext,
     NavigationDomainGuard,
     NavigationRequest,
