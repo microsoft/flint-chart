@@ -97,13 +97,62 @@ The surface API is intentionally small:
 
 | API | Purpose |
 |---|---|
-| `onSelection(callback)` | Receive the rows and the brushed range of every committed gesture |
-| `flint-interaction` event | Receive every resolved canvas action, previews included |
+| `getState()` | Read what the chart shows now: emphasized marks, hidden series, viewport, rail windows |
+| `onChange(callback)` | Hear every change to that state after the render: a gesture frame, a commit, a cancel, a host call |
+| `flint-interaction` event | Receive every resolved canvas action before the chart reacts to it |
 | `applyUpdate(update)` | Apply precomputed retained chart state by ID |
 | `setUpdates(updates)` | Replace the retained update collection |
 | `clearUpdate(id)` | Remove one retained update |
 | `dispatch(interactionId, payload)` | Invoke an external handler and report its update result |
 | `destroy()` | Remove listeners, renderer state, and DOM |
+
+## Read the chart
+
+The chart owns its state. A host reads it instead of replaying the gestures, so an agent's
+`applyUpdate`, a reset, a legend toggle and a user's brush all land in one place.
+
+`getState()` returns a `ChartState`:
+
+| Field | Holds |
+|---|---|
+| `selected` | The marks the chart emphasizes or focuses now, previews included |
+| `entries` | The same marks per update id, with `layer: 'retained' \| 'preview'` |
+| `hidden` | The legend values a toggle hides, as `{ channel, value }` |
+| `viewport` | The domain the plot shows after a pan or zoom, with level and focus on a map |
+| `windows` | The category rail windows, as `{ start, count, total }` per channel |
+
+Each element's `value` is the mark in field terms: a bar's category and measure, a legend item's
+channel and value, a histogram bar's field and range. The host owns the rows, so it queries them
+from the value and the geometry; the chart hands over no copy of the data.
+
+`onChange(callback)` fires after every render with a `ChartChange`: `phase` (`preview` while a
+gesture runs, `commit` for a committed change or a host call, `cancel` when a gesture ends with
+none), the interaction id and action, the gesture's own `target` and `geometry`, and the `state`
+after the change. A preview that did not change its target or domain fires once.
+
+A panel that follows the chart shows the gesture live and otherwise shows what the chart shows:
+
+```ts
+const valuesOf = (elements: readonly SemanticElement[]) => elements.map((element) => element.value);
+surface.onChange(({ phase, target, state }) => {
+    const hit = valuesOf(target?.elements ?? []);
+    panel.show(phase === 'preview' && hit.length > 0 ? hit : valuesOf(state.selected));
+});
+```
+
+A hover with `hover-group-focus` reports the hovered point in `target` and the whole series in
+`state.selected`, so the panel can show the point beside the series mean. An `inspect-index`
+hover reports one mark per series in `target` and the index value in `geometry.domain`. Flint
+computes no statistics; the host knows what its rows mean.
+
+A model context reads only committed changes:
+
+```ts
+surface.onChange(({ phase, state }) => {
+    if (phase !== 'commit') return;
+    sendContext({ selected: valuesOf(state.selected), hidden: state.hidden, viewport: state.viewport });
+});
+```
 
 ## Cross-chart routing
 
@@ -113,8 +162,9 @@ interaction, and the application chooses destinations by dispatching its semanti
 
 ```ts
 for (const [sourceId, source] of dashboardSurfaces) {
-    source.onSelection((selection) => {
-        const keys = selection.rows.map((row) => row.Observation);
+    source.onChange(({ phase, state }) => {
+        if (phase !== 'commit') return;
+        const keys = state.selected.map((element) => element.value.Observation);
         for (const [chartId, surface] of dashboardSurfaces) {
             if (chartId === sourceId) continue;
             void surface.dispatch('linked-selection', { keys });
