@@ -1,6 +1,10 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { assembleECharts, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
+import { buildInteractiveChart } from 'flint-chart/interactive';
 import { genEChartsSlopeTests } from 'flint-chart/test-data';
+import { compile } from 'vega-lite';
+import { parse, View } from 'vega';
+import { expressionInterpreter } from 'vega-interpreter';
 import { EChartsView } from '../components/EChartsView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { VegaLiteView } from '../components/VegaLiteView';
@@ -185,6 +189,94 @@ function SlopeGym() {
   );
 }
 
+function TemporalAxisGym() {
+  const host = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<{ passed: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!host.current) return;
+    const container = host.current;
+    let cancelled = false;
+    let surface: ReturnType<typeof buildInteractiveChart> | undefined;
+    let reference: View | undefined;
+    const run = async () => {
+      const spending = [
+        1.59, 1.64, 1.85, 1.78, 2.06, 2.27, 2.35, 2.44, 2.47, 2.55, 2.52, 2.73,
+        2.71, 2.68, 2.85, 3.34, 3.10, 3.02, 3.08, 3.23, 3.32, 3.37, 3.19, 3.31,
+        3.27, 3.27, 3.50, 3.80, 4.10, 4.55, 4.92, 5.37,
+      ];
+      const input: ChartAssemblyInput = {
+        data: { values: spending.map((Spending, index) => ({
+          Month: `${2024 + Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`,
+          Spending,
+        })) },
+        semantic_types: { Month: 'YearMonth', Spending: 'Quantity' },
+        field_display_names: { Spending: 'Spending ($ billions)' },
+        chart_spec: {
+          chartType: 'Line Chart',
+          title: 'Data center construction spending has more than tripled since 2024',
+          subtitle: 'United States, monthly construction spending on data centers, 2024 to 2026, billions of dollars',
+          encodings: { x: 'Month', y: 'Spending' },
+          baseSize: { width: 430, height: 270 },
+        },
+      };
+      reference = new View(parse(compile(assembleVegaLite(input) as any).spec), { renderer: 'none' });
+      await reference.runAsync();
+      if (cancelled) return;
+      const expected: string[] = [];
+      const labelKey = (item: any): string | null => item?.datum?.value instanceof Date
+        && item.text && item.opacity !== 0
+        ? `${Number(item.datum.value)}:${item.text}` : null;
+      const visit = (node: any): void => {
+        if (node?.role === 'axis-label') {
+          for (const item of node.items ?? []) {
+            const key = labelKey(item);
+            if (key) expected.push(key);
+          }
+        }
+        for (const item of node?.items ?? []) visit(item);
+      };
+      visit((reference.scenegraph() as any).root);
+      reference.finalize();
+      reference = undefined;
+      surface = buildInteractiveChart(container, input, {
+        backend: 'vegalite', renderer: 'svg', expressionInterpreter,
+      });
+      await surface.ready;
+      if (cancelled) return;
+      const actual = Array.from(container.querySelectorAll('.role-axis-label text'),
+        node => labelKey((node as any).__data__)).filter((key): key is string => key !== null);
+      const passed = expected.length > 0 && JSON.stringify(actual) === JSON.stringify(expected);
+      setResult({ passed, text: passed
+        ? `Pass: ${actual.length} time labels match static Vega`
+        : `Fail: ${actual.length} interactive / ${expected.length} static time labels` });
+    };
+    void run().catch(error => {
+      if (!cancelled) setResult({ passed: false, text: `Fail: ${String(error)}` });
+    });
+    return () => {
+      cancelled = true;
+      reference?.finalize();
+      surface?.destroy();
+      container.replaceChildren();
+    };
+  }, []);
+
+  return (
+    <section style={{ width: 'min(100%, 1080px)' }}>
+      <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>Temporal axis interpreter</h2>
+      <article style={{ ...cardStyle, maxWidth: 510 }} data-case="temporal-axis-interpreter">
+        <ScaleToFit height={360} minHeight={220} adaptiveHeight>
+          <div ref={host} />
+        </ScaleToFit>
+        <div role="status" style={{ marginTop: 6, fontSize: 12, color: result ? (result.passed ? '#16794b' : '#b42318') : siteTheme.textMuted }}>
+          {result?.text ?? 'Checking time labels...'}
+        </div>
+      </article>
+    </section>
+  );
+}
+
 export function DebugGym() {
   return (
     <div className="dev-page" style={{ gap: 12 }}>
@@ -200,6 +292,7 @@ export function DebugGym() {
         <CasePanel typed={false} />
       </div>
       <SlopeGym />
+      <TemporalAxisGym />
     </div>
   );
 }

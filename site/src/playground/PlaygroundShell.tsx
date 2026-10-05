@@ -62,7 +62,6 @@ const pages: NavEntry[] = [
     children: [
       { to: 'mcp-ui', label: 'MCP UI test' },
       { to: 'debug-gym', label: 'Debug gym' },
-      { to: 'year-legend', label: 'Year legend' },
       { to: 'interaction-coverage', label: 'Interaction coverage' },
     ],
   },

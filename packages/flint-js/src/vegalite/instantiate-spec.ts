@@ -1385,7 +1385,7 @@ const TEMPORAL_LEVELS = [
 ] as const;
 
 interface TemporalTickPlan {
-    values: number[];
+    values: string[];
     labelExpr: string;
     labelOverlap: false;
     labelFlush: false;
@@ -1612,7 +1612,7 @@ function planTemporalTicks({
     }
     const labels = Object.fromEntries(selected.map(tick => [tick.value, true]));
     return {
-        values: ticks.map(tick => tick.value),
+        values: ticks.map(tick => new Date(tick.value).toISOString()),
         labelExpr: `(${JSON.stringify(labels)})[toString(toNumber(datum.value))] ? ${formatter}(datum.value, ${pattern}) : ''`,
         labelOverlap: false,
         labelFlush: false,

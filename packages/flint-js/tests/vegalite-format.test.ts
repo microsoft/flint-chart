@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
+import { expressionInterpreter } from 'vega-interpreter';
 import { assembleVegaLite } from '../src/vegalite/assemble';
 import { formatSpecToLabelExpr, formatSpecToVegaExpr } from '../src/vegalite/format';
 import { vlApplyLayoutToSpec } from '../src/vegalite/instantiate-spec';
@@ -20,8 +21,11 @@ describe('Vega-Lite semantic formatting', () => {
         },
     };
 
-    async function temporalAxis(spec: any): Promise<{ labels: any[]; gridlines: any[]; ticks: any[] }> {
-        const view = new View(parse(compile(spec).spec), { renderer: 'none' });
+    async function temporalAxis(spec: any, interpreted = false): Promise<{ labels: any[]; gridlines: any[]; ticks: any[] }> {
+        const view = new View(parse(compile(spec).spec, undefined, { ast: interpreted }), {
+            renderer: 'none',
+            ...(interpreted ? { expr: expressionInterpreter } : {}),
+        });
         try {
             await view.runAsync();
             const axis = { labels: [] as any[], gridlines: [] as any[], ticks: [] as any[] };
@@ -44,6 +48,45 @@ describe('Vega-Lite semantic formatting', () => {
     async function temporalLabels(spec: any): Promise<any[]> {
         return (await temporalAxis(spec)).labels;
     }
+
+    it.each(['Date', 'DateTime', 'YearMonth'])('preserves %s axis labels and tick positions under the expression interpreter', async semanticType => {
+        const spending = [
+            1.59, 1.64, 1.85, 1.78, 2.06, 2.27, 2.35, 2.44, 2.47, 2.55, 2.52, 2.73,
+            2.71, 2.68, 2.85, 3.34, 3.10, 3.02, 3.08, 3.23, 3.32, 3.37, 3.19, 3.31,
+            3.27, 3.27, 3.50, 3.80, 4.10, 4.55, 4.92, 5.37,
+        ];
+        for (const channel of ['x', 'y'] as const) {
+            for (const utc of [false, true]) {
+                for (const theme of [undefined, 'datawrapper']) {
+                    const spec = assembleVegaLite({
+                        data: { values: spending.map((Spending, index) => ({
+                            Month: `${2024 + Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}-01T00:00:00Z`,
+                            Spending,
+                        })) },
+                        semantic_types: { Month: semanticType, Spending: 'Quantity' },
+                        theme_spec: theme,
+                        chart_spec: {
+                            chartType: 'Scatter Plot',
+                            encodings: {
+                                [channel]: { field: 'Month', ...(utc ? { scale: { type: 'utc' } } : {}) },
+                                [channel === 'x' ? 'y' : 'x']: { field: 'Spending' },
+                            },
+                            baseSize: { width: 430, height: 270 },
+                        },
+                    });
+                    const standard = await temporalAxis(spec);
+                    const interpreted = await temporalAxis(spec, true);
+                    expect(standard.labels.length).toBeGreaterThan(0);
+                    expect(interpreted.labels.map(item => [Number(item.datum.value), item.text]))
+                        .toEqual(standard.labels.map(item => [Number(item.datum.value), item.text]));
+                    for (const role of ['ticks', 'gridlines'] as const) {
+                        expect(interpreted[role].map(item => Number(item.datum.value)))
+                            .toEqual(standard[role].map(item => Number(item.datum.value)));
+                    }
+                }
+            }
+        }
+    });
 
     function leapDayAxis(axis: Record<string, unknown> = {}): any {
         const spec = {
@@ -150,7 +193,7 @@ describe('Vega-Lite semantic formatting', () => {
         expect(labels.filter(label => String(label.text).includes('2024'))).toHaveLength(1);
         expect(labels.length).toBeGreaterThan(2);
         for (const items of [gridlines, ticks]) {
-            expect(items.map(item => Number(item.datum.value))).toEqual(spec.encoding.x.axis.values);
+            expect(items.map(item => Number(item.datum.value))).toEqual(spec.encoding.x.axis.values.map((value: string) => +new Date(value)));
         }
         for (let index = 1; index < labels.length; index++) {
             expect(labels[index].bounds.x1 - labels[index - 1].bounds.x2).toBeGreaterThanOrEqual(0);
@@ -253,7 +296,7 @@ describe('Vega-Lite semantic formatting', () => {
             expect(labels[0].text).toBe('Dec 5');
             expect(labels.filter(label => label.text !== '2025').every(label => /^[A-Z][a-z]{2} \d{1,2}$/.test(label.text))).toBe(true);
             for (const items of [gridlines, ticks]) {
-                expect(items.map(item => Number(item.datum.value))).toEqual(spec.encoding[channel].axis.values);
+                expect(items.map(item => Number(item.datum.value))).toEqual(spec.encoding[channel].axis.values.map((value: string) => +new Date(value)));
             }
             for (let index = 1; index < labels.length; index++) {
                 const previous = labels[index - 1].bounds;

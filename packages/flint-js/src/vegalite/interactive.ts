@@ -1,5 +1,6 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import { createFloatingPanel } from '../interactive/floating-panel';
 import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
@@ -35,7 +36,42 @@ export function mountedInteractionList(
 import { INTERACTION_STORES } from './interactions/stores';
 import { compile } from 'vega-lite';
 import { Error as VegaError, parse, View } from 'vega';
-import { Handler } from 'vega-tooltip';
+import { createDefaultStyle, DEFAULT_OPTIONS, Handler } from 'vega-tooltip';
+
+let tooltipSerial = 0;
+
+function createTooltip(container: HTMLElement) {
+    if (container.ownerDocument === document) {
+        const handler = new Handler();
+        return { call: handler.call, destroy: () => undefined };
+    }
+    const owner = container.ownerDocument;
+    const element = owner.createElement('div');
+    element.id = `flint-vega-tooltip-${++tooltipSerial}`;
+    element.classList.add('vg-tooltip', 'light-theme');
+    const style = owner.createElement('style');
+    style.textContent = createDefaultStyle(element.id);
+    owner.head.append(style);
+    let cursor = { x: 0, y: 0 };
+    const panel = createFloatingPanel({
+        element, container, gap: DEFAULT_OPTIONS.offsetY,
+        anchor: () => new DOMRect(cursor.x + DEFAULT_OPTIONS.offsetX, cursor.y, 0, 0),
+    });
+    const call: Handler['call'] = (_handler, event, _item, value) => {
+        if (value == null || value === '') {
+            element.classList.remove('visible');
+            panel.hide();
+            return;
+        }
+        element.innerHTML = DEFAULT_OPTIONS.formatTooltip(
+            value, DEFAULT_OPTIONS.sanitize, DEFAULT_OPTIONS.maxDepth, DEFAULT_OPTIONS.baseURL,
+        );
+        cursor = { x: event.clientX, y: event.clientY };
+        element.classList.add('visible');
+        panel.show();
+    };
+    return { call, destroy() { panel.destroy(); style.remove(); } };
+}
 
 export interface VegaInteractiveRendererOptions {
     renderer?: 'canvas' | 'svg';
@@ -150,7 +186,7 @@ export function createVegaInteractiveRenderer(
                 } as any,
             );
             view.logLevel(VegaError);
-            const tooltip = new Handler();
+            const tooltip = createTooltip(container);
             view.tooltip((handler, event, item, value) => {
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
@@ -253,6 +289,7 @@ export function createVegaInteractiveRenderer(
                     if (updateTimer !== undefined) window.clearTimeout(updateTimer);
                     interactionController?.destroy();
                     view.finalize();
+                    tooltip.destroy();
                     container.replaceChildren();
                 },
             };

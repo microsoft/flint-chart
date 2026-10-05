@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft, Pause, Play, RotateCcw, SkipForward } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft, Pause, Play, RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import { accessibleNavigation, buildInteractiveChart } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
@@ -77,6 +77,11 @@ const demos: Demo[] = [
   },
 ];
 
+const chartStarts = demos.map((_, index) => demos.slice(0, index)
+  .reduce((total, chart) => total + chart.steps.length + 1, 0));
+const lastStep = chartStarts[demos.length - 1] + demos[demos.length - 1].steps.length;
+const playbackInterval = 1500;
+
 function KeyDisplay({ value, active }: { value: string; active: boolean }) {
   const Icon = { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Enter: CornerDownLeft }[value];
   return <kbd data-key={value} className={active ? 'is-pressed' : undefined} aria-label={value} aria-current={active ? 'true' : undefined}>{Icon ? <Icon size={20} aria-hidden="true" /> : value === 'Escape' ? 'Esc' : value}</kbd>;
@@ -90,12 +95,11 @@ export function AccessibilityShowcase() {
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState(false);
-  const [started, setStarted] = useState(false);
   const [index, setIndex] = useState(-1);
-  const [speed, setSpeed] = useState(1);
+  const [seekTarget, setSeekTarget] = useState<number | null>(null);
   const [activeKey, setActiveKey] = useState('');
   const [pressSerial, setPressSerial] = useState(0);
-  const [transitioning, setTransitioning] = useState<false | 'intro' | 'example'>(false);
+  const position = seekTarget ?? chartStarts[selected] + index + 1;
   const demoKeys = new Set([
     'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight',
     ...demo.steps.map(([key]) => key),
@@ -134,21 +138,11 @@ export function AccessibilityShowcase() {
   const selectExample = (next: number) => {
     if (next === selected) return;
     hostRef.current?.querySelector<HTMLElement>('[data-flint-accessible-focus]')?.blur();
-    setTransitioning('example');
     setStatus('loading');
     setIndex(-1);
     setActiveKey('');
     setSelected(next);
   };
-
-  useEffect(() => {
-    if (!transitioning) return;
-    if (status === 'error') { setTransitioning(false); return; }
-    if (status !== 'ready') return;
-    if (transitioning === 'intro' && !playing) return;
-    const timer = window.setTimeout(() => setTransitioning(false), transitioning === 'intro' ? 2000 : 1400);
-    return () => window.clearTimeout(timer);
-  }, [transitioning, selected, status, playing]);
 
   const sendKey = (key: string) => {
     const proxy = hostRef.current?.querySelector<HTMLElement>('[data-flint-accessible-focus]');
@@ -163,8 +157,26 @@ export function AccessibilityShowcase() {
     setIndex(-1);
     setActiveKey('');
   };
+  const seek = (target: number) => {
+    setPlaying(false);
+    setSeekTarget(target);
+    const chartIndex = chartStarts.reduce((current, start, exampleIndex) => start <= target ? exampleIndex : current, 0);
+    selectExample(chartIndex);
+  };
+
+  useEffect(() => {
+    if (seekTarget === null || status !== 'ready') return;
+    const targetIndex = seekTarget - chartStarts[selected] - 1;
+    reset();
+    for (let step = 0; step <= targetIndex; step += 1) sendKey(demo.steps[step][0]);
+    setIndex(targetIndex);
+    setActiveKey(targetIndex >= 0 ? demo.steps[targetIndex][0] : '');
+    setPressSerial(previous => previous + 1);
+    setSeekTarget(null);
+  }, [seekTarget, status, demo, selected]);
+
   const advance = () => {
-    if (status !== 'ready' || transitioning) return;
+    if (status !== 'ready' || seekTarget !== null) return;
     if (index < 0) reset();
     const next = index + 1;
     if (next >= demo.steps.length) {
@@ -179,10 +191,10 @@ export function AccessibilityShowcase() {
   };
 
   useEffect(() => {
-    if (!playing || status !== 'ready' || transitioning) return;
-    const timer = window.setTimeout(advance, (index < 0 ? 1000 : 1500) / speed);
+    if (!playing || status !== 'ready' || seekTarget !== null) return;
+    const timer = window.setTimeout(advance, index < 0 ? 3000 : playbackInterval);
     return () => window.clearTimeout(timer);
-  }, [playing, index, speed, status, demo, selected, transitioning]);
+  }, [playing, index, status, demo, selected, seekTarget]);
 
   useEffect(() => {
     const pause = () => { if (document.hidden) setPlaying(false); };
@@ -191,11 +203,7 @@ export function AccessibilityShowcase() {
   }, []);
 
   const togglePlayback = () => {
-    if (!playing && (!started || (selected === demos.length - 1 && index + 1 >= demo.steps.length))) {
-      setStarted(true);
-      reset();
-      setTransitioning('intro');
-    }
+    if (!playing && position === lastStep) seek(0);
     setPlaying(!playing);
   };
 
@@ -211,31 +219,30 @@ export function AccessibilityShowcase() {
     <div className="accessibility-actions">
       <div className="accessibility-controls">
         <button type="button" className="accessibility-play" onClick={togglePlayback} disabled={status !== 'ready' && !playing} title={playing ? 'Pause' : 'Play'} aria-label={playing ? 'Pause walkthrough' : 'Play walkthrough'}>
-          {playing ? <Pause size={18} /> : <Play size={18} />}<span>{playing ? 'Pause' : 'Play'}</span>
+          {playing ? <Pause size={15} /> : <Play size={15} />}
         </button>
-        <button type="button" onClick={() => { setPlaying(false); setStarted(false); if (selected === 0) { setTransitioning(false); reset(); } else selectExample(0); }} disabled={status !== 'ready'} title="Restart all examples" aria-label="Restart walkthrough"><RotateCcw size={18} /></button>
-        <button type="button" onClick={() => { setPlaying(false); advance(); }} disabled={status !== 'ready' || !!transitioning || (selected === demos.length - 1 && index + 1 >= demo.steps.length)} title="Next key" aria-label="Next key"><SkipForward size={18} /></button>
-        <label>Speed <select value={speed} onChange={(event) => setSpeed(Number(event.target.value))} aria-label="Playback speed">
-          {[0.5, 1, 1.5, 2].map(value => <option key={value} value={value}>{value}x</option>)}
-        </select></label>
+        <button type="button" onClick={() => seek(0)} disabled={!stageDocument} title="Reset walkthrough" aria-label="Reset walkthrough"><RotateCcw size={15} /></button>
       </div>
-      <div className="accessibility-tabs" role="group" aria-label="Chart examples">
-        {demos.map((example, exampleIndex) => <button key={example.id} type="button" aria-pressed={selected === exampleIndex} onClick={() => { setPlaying(false); setStarted(false); selectExample(exampleIndex); }}>{example.label}</button>)}
+      <div className="accessibility-timeline">
+        <input type="range" min={0} max={lastStep} step={1} value={position}
+          aria-label="Walkthrough step" aria-valuetext={`${demo.label}, ${Math.max(0, position - chartStarts[selected])} of ${demo.steps.length} steps`}
+          disabled={!stageDocument} onChange={event => seek(Number(event.target.value))}
+          style={{ '--progress': `${position / lastStep * 100}%` } as React.CSSProperties} />
+        <div className="accessibility-timeline-markers" aria-hidden="true">
+          {demos.map((example, exampleIndex) => <span key={example.id} title={example.label}
+            className={selected === exampleIndex ? 'is-current' : undefined}
+            style={{ left: `${chartStarts[exampleIndex] / lastStep * 100}%` }}>
+            {['Scatter', 'Pyramid', 'Line', 'Radar'][exampleIndex]}
+          </span>)}
+        </div>
       </div>
     </div>
-    <progress className="accessibility-progress" aria-label="Walkthrough progress" value={index + 1} max={demo.steps.length} />
     <div className="accessibility-player">
-      {transitioning && <div key={`${demo.id}-${transitioning}`} className="accessibility-transition" role="status">
-        {transitioning === 'intro' ? <>
-          <h3>Flint Accessibility Demo</h3>
-          <p>Example {selected + 1}: {demo.title}</p>
-        </> : <>
-          <span>Next chart</span>
-          <h3>{demo.label}</h3>
-          <p>{demo.title}</p>
-        </>}
+      {index < 0 && <div className="accessibility-intro" role="status">
+        <span>Flint Interactive Accessibility Demonstration</span>
+        <h3>({demo.label}) {demo.title}</h3>
       </div>}
-      <div className={`accessibility-scene${transitioning ? ' is-transitioning' : ''}`} aria-hidden={transitioning ? true : undefined}>
+      <div className={`accessibility-scene${index < 0 ? ' is-intro' : ''}`} aria-hidden={index < 0 ? true : undefined}>
         <div className="accessibility-key-display">
           <div className="accessibility-keyboard" role="group" aria-label="Walkthrough keys">
             {visibleKeys.map(key => <KeyDisplay key={`${key}-${key === activeKey ? pressSerial : 'idle'}`} value={key} active={key === activeKey} />)}

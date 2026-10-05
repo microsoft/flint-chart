@@ -169,6 +169,85 @@ test('accessible navigation activation in a real DOM', async (t) => {
         assert.ok(result.caption.right <= result.width && result.caption.bottom <= result.height);
     });
 
+    await t.test('parent-realm renderer keeps hover tooltips in the chart iframe', async () => {
+        await page.goto('about:blank');
+        await page.addScriptTag({ content: bundle.outputFiles[0].text });
+        const point = await page.evaluate(async () => {
+            const frame = document.createElement('iframe');
+            frame.style.cssText = 'width:640px;height:560px;border:0;margin:80px 100px';
+            frame.srcdoc = '<html><head><style>body{margin:0}svg{display:block}</style></head><body></body></html>';
+            await new Promise((resolve) => {
+                frame.onload = resolve;
+                document.body.append(frame);
+            });
+            const owner = frame.contentDocument;
+            const host = owner.createElement('div');
+            host.style.cssText = 'position:relative;width:max-content;margin:32px;transform:scale(.75);transform-origin:top left';
+            owner.body.append(host);
+            const surface = window.accessibleController.buildInteractiveChart(host, {
+                data: { values: [{ Country: 'France', Value: 4 }, { Country: 'Japan', Value: 7 }] },
+                semantic_types: { Country: 'Category', Value: 'Quantity' },
+                chart_spec: {
+                    chartType: 'Bar Chart', encodings: { x: 'Country', y: 'Value' },
+                    baseSize: { width: 400, height: 260 },
+                },
+            }, {
+                backend: 'vegalite', renderer: 'svg',
+                expressionInterpreter: window.accessibleController.expressionInterpreter,
+            });
+            await surface.ready;
+            const mark = [...owner.querySelectorAll('.mark-rect path')].find((node) => node.__data__?.tooltip);
+            if (!mark) throw new Error('Missing tooltip-bearing bar mark.');
+            const bounds = mark.getBoundingClientRect();
+            const frameBounds = frame.getBoundingClientRect();
+            window.tooltipProbe = { frame, surface, point: {
+                x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2,
+            } };
+            return { x: frameBounds.left + window.tooltipProbe.point.x,
+                y: frameBounds.top + window.tooltipProbe.point.y };
+        });
+        await page.mouse.move(point.x, point.y);
+        try {
+            await page.waitForFunction(() => {
+                const tooltip = window.tooltipProbe.frame.contentDocument.querySelector('.vg-tooltip.visible');
+                return tooltip?.style.visibility === 'visible';
+            }, { timeout: 2000 });
+        } catch (error) {
+            t.diagnostic(JSON.stringify(await page.evaluate((point) => ({
+                point, viewport: { width: innerWidth, height: innerHeight },
+                hit: document.elementFromPoint(point.x, point.y)?.tagName,
+                parent: document.querySelector('.vg-tooltip')?.outerHTML,
+                child: window.tooltipProbe.frame.contentDocument.querySelector('.vg-tooltip')?.outerHTML,
+                childHit: window.tooltipProbe.frame.contentDocument.elementFromPoint(
+                    window.tooltipProbe.point.x, window.tooltipProbe.point.y,
+                )?.outerHTML,
+            }), point)));
+            throw error;
+        }
+        const result = await page.evaluate(() => {
+            const { frame, point, surface } = window.tooltipProbe;
+            const tooltip = frame.contentDocument.querySelector('.vg-tooltip.visible');
+            const bounds = tooltip.getBoundingClientRect();
+            const result = {
+                text: tooltip.textContent, x: bounds.left, y: bounds.top,
+                right: bounds.right, bottom: bounds.bottom,
+                width: frame.clientWidth, height: frame.clientHeight, point,
+                parentTooltip: !!document.querySelector('.vg-tooltip.visible'),
+            };
+            surface.destroy();
+            result.remainingTooltips = frame.contentDocument.querySelectorAll('.vg-tooltip').length;
+            frame.remove();
+            return result;
+        });
+        assert.match(result.text, /France/);
+        assert.equal(result.parentTooltip, false);
+        assert.ok(Math.abs(result.x - result.point.x) <= 20, JSON.stringify(result));
+        assert.ok(Math.abs(result.y - result.point.y) <= 20, JSON.stringify(result));
+        assert.ok(result.x >= 0 && result.y >= 0);
+        assert.ok(result.right <= result.width && result.bottom <= result.height);
+        assert.equal(result.remainingTooltips, 0);
+    });
+
     for (const fallback of [false, true]) {
         await t.test(`caption escapes clipping and follows its anchor (${fallback ? 'body fallback' : 'top layer'})`, async () => {
             await setup('false');
