@@ -43,7 +43,7 @@ import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
 import type { ChartHiddenValue, ChartStateEntry } from '../../core/interaction-contracts';
-import type { ChartUpdateApplyOptions } from '../../interactive/types';
+import type { ChartChange, ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
@@ -340,6 +340,10 @@ export function mergeRetainedPreview(
 
 export interface VegaInteractionController {
     getInteractionContext(): import('../../interactive/interactions').InteractionContext;
+    /** Hears every change to what the chart shows, with the state after it. */
+    onChange(listener: (change: ChartChange) => void): () => void;
+    /** Reports a change the renderer made outside the controller, such as a rail scroll. */
+    reportChange(change: Omit<ChartChange, 'state'>): void;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
@@ -635,6 +639,30 @@ export function mountVegaInteractions(
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
     const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
+    const changeListeners = new Set<(change: ChartChange) => void>();
+    let lastPreviewKey: string | undefined;
+    let hoverCueActive = false;
+    // A pointer move on the same mark is not a change. Two previews with one
+    // interaction, one target and one domain report once.
+    const notifyChange = (change: Omit<ChartChange, 'state'>): void => {
+        if (change.phase === 'preview') {
+            const key = JSON.stringify([
+                change.interactionId,
+                change.action,
+                change.target?.elements.map((element) => [semanticElementRenderKeys(element), element.value]) ?? null,
+                change.geometry?.domain ?? null,
+            ]);
+            if (key === lastPreviewKey) return;
+            lastPreviewKey = key;
+        } else {
+            lastPreviewKey = undefined;
+        }
+        if (changeListeners.size === 0) return;
+        const state = context();
+        for (const listener of changeListeners) listener({ ...change, state });
+    };
+    const changePhase = (phase: 'start' | 'preview' | 'commit' | 'cancel'): ChartChange['phase'] =>
+        phase === 'start' ? 'preview' : phase;
     const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
     const hiddenKeys = new Set<string>();
     const retainedLegendTargets = new Map<string, SemanticTarget>();
@@ -1324,6 +1352,7 @@ export function mountVegaInteractions(
             if (!landed?.ops.every((op) => op.op === 'set-viewport' && Object.keys(op.value).length === 0)) return;
             retainedUpdates.delete(interaction.id);
             await renderUpdates();
+            notifyChange({ phase: 'commit', interactionId: interaction.id, geometry: { domain: currentViewport() } });
         });
         return true;
     };
@@ -1402,6 +1431,8 @@ export function mountVegaInteractions(
      * rectangle, and on a multi-level map the level and the focus region.
      */
     const currentViewport = (): DomainGeometry | undefined => {
+        // A chart that cannot navigate always shows its whole domain, so it has no viewport to report.
+        if (!plan.geoNavigation && Object.keys(plan.navigationAxes ?? {}).length === 0) return undefined;
         const space = coordinateSpace();
         const domain = domainForGeometry({
             kind: 'rect',
@@ -1425,7 +1456,9 @@ export function mountVegaInteractions(
             { type: 'navigation', phase, operation, axes: 'xy' },
             navigationInteraction.eventSource,
         );
-        emitCanvasInteractionEvent(navigationInteraction, withViewportState(base));
+        const frame = withViewportState(base);
+        emitCanvasInteractionEvent(navigationInteraction, frame);
+        notifyChange({ phase, interactionId: navigationInteraction.id, action: frame.action, geometry: frame.geometry });
     };
     const dispatch = async (
         interaction: CanvasInteractionDef,
@@ -1449,6 +1482,13 @@ export function mountVegaInteractions(
             ? interaction.navigationTransition
             : undefined;
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection, transition ? { transition } : undefined);
+        notifyChange({
+            phase: changePhase(event.phase),
+            interactionId: interaction.id,
+            action: canvasEvent.action,
+            target: canvasEvent.target,
+            geometry: canvasEvent.geometry,
+        });
     };
     let navigationDispatch = Promise.resolve();
     // Navigation frames queue behind the render they trigger. While one is in
@@ -1484,7 +1524,14 @@ export function mountVegaInteractions(
             await applyInteractionUpdate(interaction, event.phase, request, null, transition ? { transition } : undefined);
             if (transition) return;
             // The event reports the viewport that resulted from the gesture.
-            emitCanvasInteractionEvent(interaction, withViewportState(base));
+            const moved = withViewportState(base);
+            emitCanvasInteractionEvent(interaction, moved);
+            notifyChange({
+                phase: changePhase(event.phase),
+                interactionId: interaction.id,
+                action: moved.action,
+                geometry: moved.geometry,
+            });
         };
         const drain = async (): Promise<void> => {
             if (navigationDraining) return;
@@ -1610,6 +1657,10 @@ export function mountVegaInteractions(
         lastHoverTarget = null;
         lastHoverPoint = null;
         void setHover([]);
+        if (hoverCueActive) {
+            hoverCueActive = false;
+            notifyChange({ phase: 'cancel', action: 'hover-element', target: null });
+        }
         if (hoverInteractions.length > 0 && hoverActive) {
             hoverActive = false;
             for (const interaction of hoverInteractions) {
@@ -1744,11 +1795,23 @@ export function mountVegaInteractions(
                 ? op.targets.flatMap((target) => 'select' in target ? [] : target.elements)
                 : []) ?? [];
         });
-        for (const interaction of markHoverInteractions.filter((candidate) =>
-            markHoverPresentationInteractions.includes(candidate))) {
+        const hoverDispatched = markHoverInteractions.filter((candidate) =>
+            markHoverPresentationInteractions.includes(candidate));
+        for (const interaction of hoverDispatched) {
             void dispatch(interaction, {
                 type: 'semantic', source: 'element', phase: 'preview', target: resolved, point,
                 modifiers: normalized.event.modifiers,
+            });
+        }
+        // A click preset's hover cue is a visible reaction with no handler, so it reports as a preview too.
+        if (hoverDispatched.length === 0 && presentationElements.length > 0) {
+            hoverCueActive = true;
+            notifyChange({
+                phase: 'preview',
+                interactionId: markHoverPresentationInteractions[0]?.id,
+                action: 'hover-element',
+                target: resolved,
+                geometry: { plot: { kind: 'point', point } },
             });
         }
         void setHover(presentationElements
@@ -2076,7 +2139,7 @@ export function mountVegaInteractions(
         }
         if (!changed) return;
         selectedLegend = null;
-        void renderUpdates();
+        void renderUpdates().then(() => notifyChange({ phase: 'commit' }));
     };
     const resetOnClick = (event: MouseEvent, item: any): void => {
         if (suppressClick || isInteractiveControlTarget(event.target)) return;
@@ -2873,7 +2936,9 @@ export function mountVegaInteractions(
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
     const clearUpdate = async (id: string): Promise<void> => {
-        if (retainedUpdates.delete(id)) await renderUpdates();
+        if (!retainedUpdates.delete(id)) return;
+        await renderUpdates();
+        notifyChange({ phase: 'commit' });
     };
     const replaceUpdates = async (
         nextUpdates: readonly ChartUpdate[],
@@ -2886,11 +2951,21 @@ export function mountVegaInteractions(
             results.push(resolved.result);
         }
         await renderUpdates();
+        notifyChange({ phase: 'commit' });
         return results;
     };
     return {
         getInteractionContext: context,
-        applyUpdate: (update, options) => storeUpdate(update, retainedUpdates, null, options),
+        onChange: (listener) => {
+            changeListeners.add(listener);
+            return () => changeListeners.delete(listener);
+        },
+        reportChange: notifyChange,
+        applyUpdate: async (update, options) => {
+            const result = await storeUpdate(update, retainedUpdates, null, options);
+            notifyChange({ phase: 'commit' });
+            return result;
+        },
         setUpdates: replaceUpdates,
         clearUpdate,
         refresh: () => {

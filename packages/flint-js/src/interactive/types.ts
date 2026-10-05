@@ -1,8 +1,8 @@
 import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
-import type { InteractionContext, InteractionDef } from './interactions';
+import type { ChartState, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
+import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 import type { AssistedTargetingOptions } from '../core/interaction-spec';
-import type { ChartSelection } from './selection';
 
 export type {
     AssistedTargetingOptions,
@@ -30,6 +30,22 @@ export interface ChartUpdateApplyOptions {
     transition?: ChartUpdateTransition;
 }
 
+export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
+
+/** One change to what the chart shows, reported after the render with the state it produced. */
+export interface ChartChange {
+    /** `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none. */
+    phase: ChartChangePhase;
+    /** The interaction behind the change; absent for a host call or a reset. */
+    interactionId?: string;
+    action?: CanvasInteractionAction;
+    /** The gesture's own hit: the hovered point, or the marks at an inspected index. */
+    target?: SemanticTarget | null;
+    /** The gesture's geometry: a brushed range, an index value, or the viewport after a move. */
+    geometry?: CanvasInteractionEvent['geometry'];
+    state: ChartState;
+}
+
 export interface InteractiveRenderer {
     viewports: CategoryViewport[];
     /** Admission warnings from the mount: spec interactions the chart could not honour. */
@@ -37,6 +53,8 @@ export interface InteractiveRenderer {
     setViewports(starts: ViewportState): void | Promise<void>;
     getViewportGeometry?(channel: ViewportChannel): ViewportGeometry | undefined;
     getInteractionContext?(): InteractionContext;
+    getState?(): ChartState;
+    onChange?(listener: (change: ChartChange) => void): () => void;
     resize?(size: { width: number; height: number }): void | Promise<void>;
     /** Re-project overlays after the host rescales the chart in a way CSS cannot report. */
     refresh?(): void;
@@ -84,8 +102,10 @@ export interface InteractiveChartSurface {
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
-    /** Calls back with every committed selection on this chart; returns the unsubscribe. */
-    onSelection(callback: (selection: ChartSelection) => void): () => void;
+    /** What the chart shows now, previews included; undefined before the mount or after destroy. */
+    getState(): ChartState | undefined;
+    /** Hears every change to what the chart shows, after the render; returns the unsubscribe. */
+    onChange(callback: (change: ChartChange) => void): () => void;
     refresh(): void;
     destroy(): void;
 }

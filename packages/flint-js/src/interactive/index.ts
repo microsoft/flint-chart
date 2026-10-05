@@ -9,6 +9,8 @@ export type {
     TargetDetailsOptions,
     TargetFeedbackOptions,
     BuildInteractiveChartOptions,
+    ChartChange,
+    ChartChangePhase,
     ChartUpdateApplyOptions,
     ChartUpdateTransition,
     ChartUpdateComposition,
@@ -21,8 +23,12 @@ export type {
     ViewportGeometry,
     ViewportState,
 } from './types';
-export type { ChartSelection, ChartSelectionRange } from './selection';
-export { isSelectionEvent, toChartSelection } from './selection';
+export type {
+    ChartCategoryWindow,
+    ChartHiddenValue,
+    ChartState,
+    ChartStateEntry,
+} from '../core/interaction-contracts';
 export type {
     GestureGuideController,
     GestureGuideOptions,
