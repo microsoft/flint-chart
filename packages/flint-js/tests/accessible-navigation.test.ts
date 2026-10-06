@@ -294,6 +294,33 @@ describe('accessible navigation tree', () => {
         view.finalize();
     });
 
+    it('walks a vertical legend from its title with both arrow pairs despite different painted left bounds', async () => {
+        const { root, view, buildTree } = await accessibleTree(stackedBar);
+        try {
+            const legend = child(root, 'legend');
+            expect(legend.readingDirection).toBe('vertical');
+            expect(new Set(legend.children.map((node) => node.bounds!.x1)).size).toBeGreaterThan(1);
+            expect(new Set(legend.children.map((node) => node.readingBounds!.x1)).size).toBe(1);
+            for (const [forward, backward] of [['right', 'left'], ['down', 'up']] as const) {
+                const navigator = new AccessibleNavigator(buildTree);
+                navigator.focus(legend.id);
+                expect(navigator.run('enter').node.id).toBe(legend.children[0].id);
+                for (const sibling of legend.children.slice(1)) {
+                    navigator.refresh();
+                    expect(navigator.run(forward).node.id).toBe(sibling.id);
+                }
+                expect(navigator.run(forward).moved).toBe(false);
+                for (const sibling of legend.children.slice(0, -1).reverse()) {
+                    navigator.refresh();
+                    expect(navigator.run(backward).node.id).toBe(sibling.id);
+                }
+                expect(navigator.run(backward).moved).toBe(false);
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
     it('groups points on lines into series and names them the way the legend does', async () => {
         const { root, view } = await accessibleTree(twoLines);
         const data = child(root, 'data');

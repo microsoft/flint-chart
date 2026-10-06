@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
   buildInteractiveChart,
@@ -199,8 +200,29 @@ function chartInput(): ChartAssemblyInput {
 }
 
 const CHART_INPUT = chartInput();
+const READOUT_CHART_INPUT: ChartAssemblyInput = {
+  ...CHART_INPUT,
+  theme_spec: {
+    extends: 'datawrapper',
+    layout: { targetWidth: 640 },
+    geometry: { point: { size: 90 } },
+    type: {
+      minSize: 10,
+      headline: { size: 14 },
+      axisLabel: { size: 10 },
+      axisTitle: { size: 11 },
+      keyLabel: { size: 10 },
+      annotation: { size: 10 },
+    },
+  },
+  chart_spec: {
+    ...CHART_INPUT.chart_spec,
+    baseSize: { width: 640, height: 360 },
+    canvasSize: { width: 640, height: 360 },
+  },
+};
 
-export function ClimatePhaseStage() {
+export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 540, showReadout = false }: { compact?: boolean; height?: number; showReadout?: boolean } = {}) {
   const [selectedCity, setSelectedCity] = useState('Seattle');
   const [activePhase, setActivePhase] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -276,7 +298,7 @@ export function ClimatePhaseStage() {
     };
 
     mount.addEventListener('flint-interaction', handleInteraction);
-    const surface = buildInteractiveChart(mount, CHART_INPUT, {
+    const surface = buildInteractiveChart(mount, showReadout ? READOUT_CHART_INPUT : CHART_INPUT, {
       backend: 'vegalite',
       renderer: 'svg',
       interactions: [MARK_CLICK, LEGEND_CLICK, dragInteraction, playbackInteraction],
@@ -294,7 +316,7 @@ export function ClimatePhaseStage() {
       surfaceRef.current = null;
       surface.destroy();
     };
-  }, [dragInteraction, playbackInteraction]);
+  }, [showReadout, dragInteraction, playbackInteraction]);
 
   useEffect(() => {
     if (!isPlaying) return undefined;
@@ -329,25 +351,28 @@ export function ClimatePhaseStage() {
     };
   }, [isPlaying]);
 
+  const selected = CLIMATE_CITIES.find(city => city.name === selectedCity) ?? CLIMATE_CITIES[0];
+  const frame = frameAt(selected, activePhase);
+
   return (
-    <div className="ic-flint-dimpvis-shell climate-phase-shell">
-      <div className="ic-stage-meta">
+    <div className={`ic-flint-dimpvis-shell climate-phase-shell${showReadout ? ' climate-phase-with-readout' : ''}`}>
+      {!compact && <div className="ic-stage-meta">
         <strong>One year hidden in a scatterplot</strong>
         <span>
           Select a city, then drag its closed climate loop. Crossing December into January wraps
           every city through the same interpolated point in the annual cycle.
         </span>
-      </div>
-      <div className="ic-toolbar">
+      </div>}
+      {!showReadout && <div className="ic-toolbar">
         <span className="ic-pill" data-active="true">City: {selectedCity}</span>
         <span className="ic-pill" data-active="true">Month: {monthLabel(activePhase)}</span>
-      </div>
+      </div>}
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+        <ScaleToFit height={height} minHeight={showReadout ? 0 : compact ? 300 : 400} adaptiveHeight padding={showReadout ? 0 : 8}>
           <div className="ic-flint-dimpvis-mount" ref={mountRef} />
         </ScaleToFit>
       </div>
-      <div className="ic-toolbar climate-phase-footer">
+      {!showReadout && <div className="ic-toolbar climate-phase-footer">
         <button
           type="button"
           className="ic-pill"
@@ -364,7 +389,23 @@ export function ClimatePhaseStage() {
         >
           NASA POWER · MERRA-2 · 1991–2020
         </a>
-      </div>
+      </div>}
+      {showReadout && <aside className="climate-phase-readout" aria-label="Selected city climate">
+        <div className="climate-phase-readout-header">
+          <h3>{selectedCity}</h3>
+          <button type="button" className="cf-demo-play"
+            title={isPlaying ? 'Pause' : `Play ${selectedCity}`}
+            aria-label={isPlaying ? 'Pause' : `Play ${selectedCity}`} aria-pressed={isPlaying}
+            onClick={() => setIsPlaying(playing => !playing)}>
+            {isPlaying ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+          </button>
+        </div>
+        <dl>
+          <dt>Date</dt><dd>{monthLabel(activePhase)}</dd>
+          <dt>Temperature</dt><dd>{frame.temperature.toFixed(1)} <span className="climate-phase-unit">°C</span></dd>
+          <dt>Precipitation</dt><dd>{frame.precipitation.toFixed(1)} <span className="climate-phase-unit">mm/day</span></dd>
+        </dl>
+      </aside>}
     </div>
   );
 }

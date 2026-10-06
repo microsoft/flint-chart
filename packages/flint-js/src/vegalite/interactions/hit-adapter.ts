@@ -230,23 +230,24 @@ export function sceneItems(view: any): any[] {
     return result;
 }
 
-export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame {
+export function facetPlotFrameAt(view: any, point: PlotPoint, fallback: PlotFrame): PlotFrame | undefined {
     const frames: PlotFrame[] = [];
+    const containsPoint = (frame: PlotFrame): boolean => point.x >= frame.x && point.x <= frame.x + frame.width
+        && point.y >= frame.y && point.y <= frame.y + frame.height;
     const visit = (item: any, offsetX: number, offsetY: number): void => {
         if (!item) return;
         const isGroup = item.mark?.marktype === 'group';
         const x = offsetX + (isGroup && typeof item.x === 'number' ? item.x : 0);
         const y = offsetY + (isGroup && typeof item.y === 'number' ? item.y : 0);
         if (isGroup && (item.mark?.role === 'cell' || item.mark?.name === 'cell')
-            && typeof item.width === 'number' && typeof item.height === 'number'
-            && point.x >= x && point.x <= x + item.width
-            && point.y >= y && point.y <= y + item.height) {
+            && typeof item.width === 'number' && typeof item.height === 'number') {
             frames.push({ x, y, width: item.width, height: item.height });
         }
         if (Array.isArray(item.items)) item.items.forEach((child: any) => visit(child, x, y));
     };
     visit(view.scenegraph()?.root, 0, 0);
-    return frames.sort((left, right) => left.width * left.height - right.width * right.height)[0] ?? fallback;
+    if (frames.length) return frames.filter(containsPoint).sort((left, right) => left.width * left.height - right.width * right.height)[0];
+    return containsPoint(fallback) ? fallback : undefined;
 }
 
 /** Bounding plot frame of all Vega facet cells, or the root plot for a unit chart. */

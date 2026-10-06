@@ -302,7 +302,7 @@ function mainInput(large: boolean): ChartAssemblyInput {
   return {
     data: { values: snapshotRows(1980) },
     semantic_types: SEMANTIC_TYPES,
-    theme_spec: 'swiss',
+    theme_spec: 'powerbi-light',
     options: { addTooltips: false },
     chart_spec: {
       chartType: 'Scatter Plot',

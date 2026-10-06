@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   InteractionDef,
+  FlintInteractionEventDetail,
   InteractiveChartSurface,
 } from 'flint-chart/interactive';
-import { externalInteraction } from 'flint-chart/interactive';
+import { clickGroupFocus, externalInteraction } from 'flint-chart/interactive';
+import { ScaleToFit } from '../components/ScaleToFit';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import {
   countriesFixture,
@@ -20,6 +22,7 @@ import './interaction-transport.css';
 interface MatchPayload {
   label: string;
   match?: Record<string, unknown>;
+  annotation?: string;
 }
 
 type ControlOption = MatchPayload;
@@ -31,6 +34,7 @@ interface ExternalDemo {
   description: string;
   controlLabel: string;
   options: ControlOption[];
+  defaultSelection?: ControlOption;
 }
 
 function selectorKey(match: Record<string, unknown>): Record<string, unknown> {
@@ -54,6 +58,7 @@ function ExternalControlContent({
       type="button"
       key={option.label}
       className={`${className}${activeLabel === option.label ? ' active' : ''}`}
+      aria-pressed={demo.id === 'continent-filter' ? activeLabel === option.label : undefined}
       onClick={() => onSelect(option)}
     >
       {content}
@@ -72,6 +77,29 @@ function ExternalControlContent({
     );
   }
 
+  if (demo.id === 'country-table') {
+    const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    return (
+      <div className="it-country-table-scroll">
+        <table className="it-country-table" aria-label="Gapminder country statistics, 2007">
+          <thead><tr><th scope="col">Country</th><th scope="col">GDP/person</th><th scope="col">Life (yr)</th></tr></thead>
+          <tbody>{(demo.fixture.input.data.values ?? []).map(row => {
+            const country = String(row.Country);
+            return <tr key={country} className={activeLabel === country ? 'active' : undefined}
+              onClick={() => onSelect({
+                label: country, match: { Country: country },
+                annotation: `${country}\nGDP/person: ${currency.format(Number(row['GDP per capita ($)']))}\nLife expectancy: ${Number(row['Life expectancy']).toFixed(1)} years`,
+              })}>
+              <td><button type="button" aria-pressed={activeLabel === country}>{country}</button></td>
+              <td>{currency.format(Number(row['GDP per capita ($)']))}</td>
+              <td>{Number(row['Life expectancy']).toFixed(1)}</td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    );
+  }
+
   if (demo.id === 'country-finder') {
     return (
       <div className="it-article-fragment">
@@ -83,32 +111,32 @@ function ExternalControlContent({
   }
 
   if (demo.id === 'continent-filter') {
-    const continentCopy: Record<string, { heading: string; text: string }> = {
-      Africa: {
-        heading: 'A young, fast-growing region',
-        text: 'Health outcomes have improved substantially, while income levels still vary sharply across the continent.',
-      },
-      Americas: {
-        heading: 'Wide differences across neighboring economies',
-        text: 'The region spans high-income countries and emerging markets, with life expectancy clustering more closely than income.',
-      },
-      Asia: {
-        heading: 'Scale and development move together unevenly',
-        text: 'Asia contains both the largest populations and some of the widest gaps in income and longevity in this snapshot.',
-      },
-      Europe: {
-        heading: 'High longevity across varied incomes',
-        text: 'European countries occupy the upper end of life expectancy, even as GDP per capita remains meaningfully dispersed.',
-      },
+    const continent = demo.options.find(option => option.label === activeLabel && option.match)?.label;
+    const countryLabels: Record<string, string> = {
+      Africa: 'African countries',
+      Americas: 'countries in the Americas',
+      Asia: 'Asian countries',
+      Europe: 'European countries',
+      Oceania: 'countries in Oceania',
     };
-    const selected = activeLabel ? continentCopy[activeLabel] : null;
+    const countryLabel = continent ? countryLabels[continent] : 'countries across all continents';
+    const rows = (demo.fixture.input.data.values ?? []).filter(row => !continent || row.Continent === continent);
+    const population = rows.reduce((total, row) => total + Number(row['Population (M)']) * 1_000_000, 0);
+    const meanLifeExpectancy = rows.reduce((total, row) => total + Number(row['Life expectancy']), 0) / rows.length;
+    const incomes = rows.map(row => Number(row['GDP per capita ($)'])).sort((first, second) => first - second);
+    const middle = Math.floor(incomes.length / 2);
+    const medianIncome = incomes.length % 2 ? incomes[middle] : (incomes[middle - 1] + incomes[middle]) / 2;
+    const populationLabel = new Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'long', maximumFractionDigits: 1 }).format(population);
+    const incomeLabel = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(medianIncome);
     return (
       <div className="it-tab-module">
-        <div className="it-tabs" role="tablist" aria-label="Continent">
+        <div className="it-tabs" role="group" aria-label="Continent">
           {demo.options.map((option) => control(option, 'it-tab'))}
         </div>
         <div className="it-tab-copy" aria-live="polite">
-          {selected ? <><strong>{selected.heading}</strong><p>{selected.text}</p></> : <p>Select a continent to explore its position in the global income and health distribution.</p>}
+          <strong>{continent ?? 'All continents'}, 2007</strong>
+          <p>The average life expectancy of {rows.length} {countryLabel} is {meanLifeExpectancy.toFixed(1)} years.
+            {' '}Their total population is {populationLabel}, and median GDP per capita is {incomeLabel}.</p>
         </div>
       </div>
     );
@@ -216,9 +244,14 @@ const demos: ExternalDemo[] = [
   },
 ];
 
-function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
+function ExternalDemoRow({ demo, compact = false, bidirectional = false }: {
+  demo: ExternalDemo;
+  compact?: boolean;
+  bidirectional?: boolean;
+}) {
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
-  const [lastPayload, setLastPayload] = useState<MatchPayload | null>(null);
+  const payloadRef = useRef<MatchPayload | null>(demo.defaultSelection ?? null);
+  const [lastPayload, setLastPayload] = useState<MatchPayload | null>(payloadRef.current);
   const interactionId = `${demo.id}-control`;
   const interactions = useMemo<InteractionDef[]>(() => [externalInteraction<MatchPayload>({
     id: interactionId,
@@ -229,53 +262,100 @@ function ExternalDemoRow({ demo }: { demo: ExternalDemo }) {
             op: 'set-style',
             targets: [{ select: { key: selectorKey(payload.match) } }],
             value: { state: 'emphasized', mutedOpacity: 0.25 },
-          }]
+          }, ...(payload.annotation ? [{
+            op: 'set-annotation' as const,
+            target: { select: { key: selectorKey(payload.match) } },
+            value: { text: payload.annotation },
+          }] : [])]
         : [{ op: 'set-style', targets: [], value: { state: 'normal' } }],
     }),
-  })], [interactionId]);
+  }), ...(bidirectional ? [clickGroupFocus({ groupBy: 'Continent' })] : [])], [interactionId, bidirectional]);
   const handleSurface = useCallback((surface: InteractiveChartSurface | null) => {
     surfaceRef.current = surface;
-  }, []);
-  const dispatch = (payload: MatchPayload) => {
+    if (surface) void surface.ready.then(async () => {
+      if (surfaceRef.current === surface && payloadRef.current) {
+        await surface.dispatch(interactionId, payloadRef.current);
+      }
+    });
+  }, [interactionId]);
+  const handleSemanticEvent = useCallback((detail: FlintInteractionEventDetail) => {
+    if (!bidirectional || detail.event.phase === 'start' || detail.event.phase === 'cancel') return;
+    const continent = detail.event.target?.elements[0]?.value.Continent;
+    const payload = typeof continent === 'string' ? { label: continent, match: { Continent: continent } } : { label: 'All' };
+    payloadRef.current = payload;
+    setLastPayload(payload);
+    void surfaceRef.current?.clearUpdate(interactionId);
+  }, [bidirectional, interactionId]);
+  const dispatch = async (payload: MatchPayload) => {
+    payloadRef.current = payload;
     setLastPayload(payload);
     const surface = surfaceRef.current;
     if (!surface) return;
-    void surface.dispatch(interactionId, payload);
+    await surface.ready;
+    if (bidirectional) await surface.setUpdates([]);
+    await surface.dispatch(interactionId, payload);
   };
 
   return (
-    <article className="it-example">
-      <header className="it-example-header">
+    <article className={`it-example${compact ? ' ig-continent-cohort' : ''}`}>
+      {!compact && <header className="it-example-header">
         <div>
           <h2>{demo.title}</h2>
           <p>{demo.description}</p>
         </div>
-      </header>
+      </header>}
       <div className="it-workspace it-workspace-external">
         <section className="it-control-panel" aria-label={demo.controlLabel}>
           <h3 className="it-component-title">{demo.controlLabel}</h3>
           <div className="it-control-content">
             <ExternalControlContent demo={demo} activeLabel={lastPayload?.label} onSelect={dispatch} />
           </div>
-          <button
+          {!compact && <button
             type="button"
             className="it-reset"
             onClick={() => dispatch({ label: 'Reset' })}
           >
             Clear selection
-          </button>
+          </button>}
         </section>
-        <section className="it-chart-panel">
+        <section className="it-chart-panel" aria-label={demo.fixture.title}>
+          {compact ? <ScaleToFit height={380} minHeight={280} adaptiveHeight padding={8}>
+            <InteractionDemoChart
+              fixture={demo.fixture}
+              interactions={interactions}
+              chartId={`article-${demo.id}`}
+              onSurface={handleSurface}
+              onSemanticEvent={handleSemanticEvent}
+            />
+          </ScaleToFit> :
           <InteractionDemoChart
             fixture={demo.fixture}
             interactions={interactions}
             chartId={`external-${demo.id}`}
             onSurface={handleSurface}
-          />
+          />}
         </section>
       </div>
     </article>
   );
+}
+
+const continentCohortDemo: ExternalDemo = {
+  ...demos.find(demo => demo.id === 'continent-filter')!,
+  defaultSelection: { label: 'Asia', match: { Continent: 'Asia' } },
+  options: [{ label: 'All' }, ...['Africa', 'Americas', 'Asia', 'Europe', 'Oceania'].map(Continent => ({ label: Continent, match: { Continent } }))],
+};
+
+export function ContinentCohortStage() {
+  return <ExternalDemoRow demo={continentCohortDemo} compact bidirectional />;
+}
+
+export function CountryTableStage() {
+  return <ExternalDemoRow demo={{
+    id: 'country-table', fixture: countriesFixture, title: 'Country table selection',
+    description: 'Country statistics linked to income and life expectancy.',
+    controlLabel: 'Gapminder countries, 2007', options: [],
+  }} compact />;
 }
 
 export function ExternalToChartLab() {

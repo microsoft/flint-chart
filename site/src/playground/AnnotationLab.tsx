@@ -10,7 +10,7 @@ import {
   type ChartUpdateResult,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
-import { annotationCases, type InteractionCase } from './ClickFocusLab';
+import { annotationCases, type InteractionCase } from './InteractionGallery';
 import { ThemePicker } from './ThemePicker';
 import './click-focus-lab.css';
 import './annotation-lab.css';

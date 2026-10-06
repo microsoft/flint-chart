@@ -656,6 +656,26 @@ describe('Vega-Lite semantic interactions', () => {
             .toEqual({ signal: '__flint_reorder_y_domain' });
     });
 
+    it('keeps calendar month Heatmap columns fixed while allowing city row reordering', () => {
+        const spec = assembleVegaLite({
+            chart_spec: {
+                chartType: 'Heatmap',
+                encodings: { x: 'Month', y: 'City', color: 'Temperature' },
+            },
+            semantic_types: { Month: 'Month', City: 'Category', Temperature: 'Temperature' },
+            data: { values: [
+                { Month: 'Jan', City: 'Seattle', Temperature: 5 },
+                { Month: 'Feb', City: 'Seattle', Temperature: 6 },
+                { Month: 'Jan', City: 'Cairo', Temperature: 14 },
+                { Month: 'Feb', City: 'Cairo', Temperature: 15 },
+            ] },
+        }) as any;
+        const plan = addVegaLiteInteractions(spec, [dragReorder()])!;
+        expect(plan.reorderAxes).toEqual([
+            { axis: 'y', field: 'City', scale: '', signal: '' },
+        ]);
+    });
+
     it.each(['Boxplot', 'Line Chart'])('declares authored nominal axes as reorderable for %s', (chartType) => {
         const spec = assembleVegaLite({
             chart_spec: {
@@ -3976,10 +3996,31 @@ describe('Vega-Lite semantic interactions', () => {
 
         const femaleFrame = frameFor(female);
         const maleFrame = frameFor(male);
+        expect(femaleFrame).toBeDefined();
+        expect(maleFrame).toBeDefined();
         expect(femaleFrame).not.toEqual(fallback);
         expect(maleFrame).not.toEqual(fallback);
-        expect(femaleFrame.y).not.toBe(maleFrame.y);
-        expect(femaleFrame.height).toBe(maleFrame.height);
+        expect(femaleFrame!.y).not.toBe(maleFrame!.y);
+        expect(femaleFrame!.height).toBe(maleFrame!.height);
+        const broadFallback = { x: -10_000, y: -10_000, width: 20_000, height: 20_000 };
+        const topFrame = femaleFrame!.y < maleFrame!.y ? femaleFrame! : maleFrame!;
+        const bottomFrame = topFrame === femaleFrame ? maleFrame! : femaleFrame!;
+        expect(facetPlotFrameAt(view, {
+            x: topFrame.x + topFrame.width / 2,
+            y: (topFrame.y + topFrame.height + bottomFrame.y) / 2,
+        }, broadFallback)).toBeUndefined();
+        expect(facetPlotFrameAt(view, {
+            x: Math.max(femaleFrame!.x + femaleFrame!.width, maleFrame!.x + maleFrame!.width) + 20,
+            y: femaleFrame!.y + femaleFrame!.height / 2,
+        }, broadFallback)).toBeUndefined();
+    });
+
+    it('only resolves the fallback plot frame for points inside a unit chart', () => {
+        const view = { scenegraph: () => ({ root: { items: [] } }) };
+        const frame = { x: 0, y: 0, width: 200, height: 100 };
+        expect(facetPlotFrameAt(view, { x: 100, y: 50 }, frame)).toEqual(frame);
+        expect(facetPlotFrameAt(view, { x: 210, y: 50 }, frame)).toBeUndefined();
+        expect(facetPlotFrameAt(view, { x: 100, y: -10 }, frame)).toBeUndefined();
     });
 
     it('does not instrument marks declared as decorative', () => {

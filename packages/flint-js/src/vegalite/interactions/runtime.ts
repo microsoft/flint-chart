@@ -2183,6 +2183,11 @@ export function mountVegaInteractions(
             setAffordanceCursor('legend-item', false);
             return;
         }
+        const editingCursor = regionGesture?.cursorAt(point);
+        if (editingCursor) {
+            container.style.cursor = editingCursor;
+            return;
+        }
         const hit = normalized.event.hits[0];
         const reorderEligible = !!hit && !!elementDragInteraction
             && eligibleReorderAxesForHit(

@@ -19,6 +19,7 @@
     "echarts": "^6.0.0",
     "flint-chart": "*",
     "i18next": "^26.3.6",
+    "json-stringify-pretty-compact": "^4.0.0",
     "katex": "^0.17.0",
     "lucide-react": "^1.27.0",
     "plotly.js-dist-min": "^2.35.2",

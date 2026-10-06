@@ -1,0 +1,122 @@
+# Programming interactions
+
+Use the lower-level Flint API to create bespoke interactions that map semantic events to update operators, or connect a chart with external tables, widgets, and application state. For predefined behaviors expressed as JSON, see [Declarative interactions](interaction-spec.md).
+
+The compiler resolves raw triggers into **semantic events** that identify chart elements and data, and renders **update operators** on the canvas. You choose the triggers and define the response in a `handle` function, without reverse-engineering rendering logic or manipulating renderer-specific data.
+
+> The examples below use the Vega-Lite interactive surface (`backend: 'vegalite'`), not a static chart assembler.
+
+## Mount an interactive chart
+
+Import the API from `flint-chart/interactive` and pass a backend and interaction definitions to `buildInteractiveChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`.
+
+You can use preset factories in code:
+
+```ts
+import { buildInteractiveChart, clickHighlight } from 'flint-chart/interactive';
+
+const surface = buildInteractiveChart(container, input, {
+  backend: 'vegalite',
+  interactions: [clickHighlight({ dimOpacity: 0.2 })],
+});
+await surface.ready;
+```
+
+A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. Every interaction must have a unique `id`, including when both approaches are used on one chart. A code definition the chart cannot honour throws; an unsupported spec entry is dropped with a warning.
+
+## Define a bespoke canvas interaction
+
+This example uses a country chart whose data includes a `Country` field. Clicking a mark highlights its data and labels it with the country name.
+
+```ts
+import {
+  buildInteractiveChart,
+  type CanvasInteractionDef,
+} from 'flint-chart/interactive';
+
+const countryDetails: CanvasInteractionDef = {
+  id: 'country-details',
+  eventSource: { type: 'element', gesture: 'click' },
+  affordances: { mark: { cursor: 'activate', hover: 'target' } },
+  reset: ['click-none', 'escape'],
+  handle(event) {
+    if (event.action !== 'click-element'
+        || event.phase === 'start' || event.phase === 'cancel') return null;
+    const target = event.target;
+    const country = target?.elements[0]?.value.Country;
+    if (!target || typeof country !== 'string') return null;
+    return {
+      id: 'country-details',
+      ops: [
+        {
+          op: 'set-style',
+          targets: [target],
+          value: { state: 'emphasized', mutedOpacity: 0.25 },
+        },
+        { op: 'set-annotation', target, value: { text: country } },
+      ],
+    };
+  },
+};
+
+const surface = buildInteractiveChart(container, input, {
+  backend: 'vegalite',
+  interactions: [countryDetails],
+});
+await surface.ready;
+```
+
+- `eventSource` declares the raw trigger to listen to.
+- `affordances` declares which chart elements accept that trigger and their cursor/hover feedback.
+- `handle(event, context)` receives the resolved semantic event and returns `{ id, ops }`, or `null` when no update is needed.
+- `reset` declares gestures that clear this interaction's retained updates.
+
+Other event sources include hover, region selection, inspection, and navigation. See [Interaction Design](design-interactions.md#22-event-sources) for the event-source model.
+
+## Respond to external controls
+
+An `externalInteraction` has no canvas trigger. The application sends a payload through `surface.dispatch(id, payload)`; the handler maps it to update operators. In this example, selecting a table row highlights and annotates the corresponding country.
+
+```ts
+import {
+  buildInteractiveChart,
+  externalInteraction,
+} from 'flint-chart/interactive';
+
+const countrySelection = externalInteraction<{ Country: string }>({
+  id: 'country-table',
+  handle: ({ Country }) => {
+    const target = { select: { key: { Country } } };
+    return {
+      id: 'country-table',
+      ops: [
+        {
+          op: 'set-style',
+          targets: [target],
+          value: { state: 'emphasized', mutedOpacity: 0.25 },
+        },
+        { op: 'set-annotation', target, value: { text: Country } },
+      ],
+    };
+  },
+});
+
+const surface = buildInteractiveChart(container, input, {
+  backend: 'vegalite',
+  interactions: [countrySelection],
+});
+await surface.ready;
+await surface.dispatch('country-table', { Country: 'Japan' });
+```
+
+Call `dispatch` from the table's row-selection handler. Targets use semantic data keys, not SVG paths or renderer-specific mark indices. The named field must be present in the chart's semantic data.
+
+## Update operators and host responses
+
+`set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
+
+The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`.
+
+## Lifecycle and cleanup
+
+Await `surface.ready` before dispatching application events. Use `surface.clearUpdate(id)` to remove an interaction's retained updates and `surface.destroy()` when unmounting the chart. Host-dispatched updates are not cleared by canvas reset gestures; the application owns their reset behavior.

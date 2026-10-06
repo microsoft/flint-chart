@@ -1,3 +1,11 @@
+.bespoke-public-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px), linear-gradient(0deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 .bespoke-page {
   gap: 26px;
 }
@@ -111,5 +119,85 @@
   font-size: 10px;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+}
+
+.bespoke-public-page {
+  width: 100%;
+  max-width: 1008px;
+  margin: 0 auto;
+  padding: 62px 24px 72px;
+  box-sizing: border-box;
+}
+
+.bespoke-public-page > .bespoke-heading,
+.bespoke-public-page > .bespoke-grid {
+  width: 100%;
+  max-width: 832px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.bespoke-public-page .bespoke-heading h1 {
+  margin: 0 0 24px;
+  font-size: 36px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.bespoke-public-page .bespoke-heading p {
+  max-width: none;
+  margin: 0 0 32px;
+  color: #1f2328;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.bespoke-public-page .bespoke-grid { gap: 0; }
+
+.bespoke-public-page .bespoke-case {
+  padding: 28px 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.bespoke-public-page .bespoke-case + .bespoke-case { border-top: 1px solid #d8dee4; }
+.bespoke-public-page .bespoke-case:first-child { padding-top: 0; }
+
+.bespoke-public-page .bespoke-case-header {
+  min-height: 0;
+  padding: 0 0 18px;
+  border-bottom: 0;
+}
+
+.bespoke-public-page .bespoke-case-header h2 {
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.bespoke-public-page .bespoke-case-header p {
+  max-width: none;
+  margin: 8px 0 0;
+  color: #40474e;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.bespoke-public-page .bespoke-pattern,
+.bespoke-public-page .bespoke-status { display: none; }
+
+.bespoke-public-page .bespoke-case .ic-flint-dimpvis-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+@media (max-width: 640px) {
+  .bespoke-public-page { padding: 36px 24px 48px; }
 }
 

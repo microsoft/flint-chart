@@ -46,7 +46,7 @@ const CLICK_REGION: CanvasInteractionDef = {
   },
 };
 
-export function MapSemanticZoomStage() {
+export function MapSemanticZoomStage({ compact = false }: { compact?: boolean } = {}) {
   const [level, setLevel] = useState<Level>('state');
   const [lonSpan, setLonSpan] = useState<number | undefined>(undefined);
   const [focusState, setFocusState] = useState<string | undefined>(undefined);
@@ -129,7 +129,7 @@ export function MapSemanticZoomStage() {
 
   return (
     <div className="ic-flint-dimpvis-shell map-semantic-zoom-shell">
-      <div className="ic-stage-meta">
+      {!compact && <div className="ic-stage-meta">
         <strong>Semantic zoom on a two-level US choropleth</strong>
         <span>
           Wheel or pinch to zoom, drag to pan. One chart holds a state layer and a
@@ -138,7 +138,7 @@ export function MapSemanticZoomStage() {
           or a click on empty map flies back. The host only reads the level, the visible box, and the state under the
           centre from each event.
         </span>
-      </div>
+      </div>}
       <div className="ic-toolbar">
         <span className="ic-pill" data-active="true">Level: {levelLabel}</span>
         <span className="ic-pill" data-active={lonSpan !== undefined}>
@@ -147,7 +147,7 @@ export function MapSemanticZoomStage() {
         <button type="button" className="ic-pill" onClick={reset}>Reset</button>
       </div>
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={800} minHeight={320} adaptiveHeight padding={8}>
+        <ScaleToFit height={compact ? 300 : 800} minHeight={compact ? 300 : 320} adaptiveHeight={!compact} padding={8}>
           <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
         </ScaleToFit>
       </div>

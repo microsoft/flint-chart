@@ -28,8 +28,8 @@ const pages: NavEntry[] = [
   {
     group: 'Interactions',
     children: [
-      { to: 'click-focus', label: 'Test cases' },
-      { to: 'spec-test-cases', label: 'Spec test cases' },
+      { to: 'click-focus', label: 'Click focus (original)' },
+      { to: '/interactions', label: 'Interaction gallery' },
       { to: 'interaction-coverage', label: 'Coverage' },
       { to: 'interaction-conflicts', label: 'Conflict cases' },
       { to: 'bespoke-interaction', label: 'Advanced prototypes' },

@@ -74,7 +74,7 @@ export function RetailDrilldownStage() {
       row.MonthIndex >= windowRange.start && row.MonthIndex < windowRange.end
     ));
     const layer = document.createElement('div');
-    layer.className = 'retail-drilldown-layer';
+    layer.className = 'retail-drilldown-layer retail-drilldown-layer-pending';
     layer.style.visibility = 'hidden';
     mount.append(layer);
     const surface = buildInteractiveChart(layer, chartInput(rows), {
@@ -94,6 +94,7 @@ export function RetailDrilldownStage() {
           return;
         }
         const previous = activeSurfaceRef.current;
+        layer.classList.remove('retail-drilldown-layer-pending');
         layer.style.visibility = 'visible';
         activeSurfaceRef.current = { layer, surface };
         committed = true;
@@ -149,7 +150,7 @@ export function RetailDrilldownStage() {
   return (
     <div className="ic-flint-dimpvis-shell retail-drilldown-stage">
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+        <ScaleToFit height={540} adaptiveHeight>
           <div ref={mountRef} className="ic-flint-dimpvis-mount retail-drilldown-mount" />
         </ScaleToFit>
       </div>

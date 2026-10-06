@@ -1,4 +1,6 @@
 import type { ChartAssemblyInput } from 'flint-chart';
+import { csvParseRows } from 'd3-dsv';
+import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
 
 export interface InteractionDemoFixture {
   id: string;
@@ -51,19 +53,18 @@ export const salesFixture = fixture(
   { x: 'Region', y: 'Sales ($K)', group: 'Segment' },
 );
 
-const countryRows = [
-  ['Norway', 'Europe', 64800, 82.3, 5.4], ['Germany', 'Europe', 50900, 81.0, 83.2],
-  ['United States', 'Americas', 62600, 78.6, 331.9], ['Brazil', 'Americas', 15600, 75.7, 214.3],
-  ['Chile', 'Americas', 25200, 80.0, 19.5], ['China', 'Asia', 16800, 76.7, 1412],
-  ['Japan', 'Asia', 39300, 84.2, 125.7], ['India', 'Asia', 7400, 67.2, 1408],
-  ['Nigeria', 'Africa', 5300, 54.3, 218.5], ['Ethiopia', 'Africa', 2000, 66.2, 123.4],
-  ['South Africa', 'Africa', 13000, 63.9, 59.9], ['Australia', 'Oceania', 58900, 83.2, 26.0],
-].map(([Country, Continent, GDP, Life, Population]) => ({
-  Country, Continent, 'GDP per capita ($)': GDP, 'Life expectancy': Life, 'Population (M)': Population,
-}));
+const countryRows = csvParseRows(gapminderCsv).slice(1)
+  .filter(([, year]) => year === '2007')
+  .map(([Country, , population, Continent, lifeExpectancy, gdpPerCapita]) => ({
+    Country,
+    Continent,
+    'GDP per capita ($)': Number(gdpPerCapita),
+    'Life expectancy': Number(lifeExpectancy),
+    'Population (M)': Number(population) / 1_000_000,
+  }));
 
 export const countriesFixture = fixture(
-  'countries', 'Income and life expectancy', 'Gapminder / World Bank-style 2021 snapshot',
+  'countries', 'Income and life expectancy, 2007', 'Gapminder, 2007 (142 countries)',
   'Scatter Plot', countryRows,
   { Country: 'Country', Continent: 'Category', 'GDP per capita ($)': 'Quantity', 'Life expectancy': 'Quantity', 'Population (M)': 'Quantity' },
   { x: 'GDP per capita ($)', y: 'Life expectancy', color: 'Continent', size: 'Population (M)', detail: 'Country' },

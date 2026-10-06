@@ -5,7 +5,7 @@ import type { ChartAssemblyInput } from 'flint-chart';
 import { accessibleNavigation, buildInteractiveChart } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { interactionCases } from './ClickFocusLab';
+import { interactionCases } from './InteractionGallery';
 
 type Demo = { id: string; label: string; title: string; input: ChartAssemblyInput; steps: [key: string, action: string][] };
 const stageDocumentHtml = '<!doctype html><html lang="en"><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fff}body{font-family:Segoe UI,sans-serif}svg{display:block}</style></head><body></body></html>';

@@ -1286,7 +1286,7 @@ function tagWithUnit(
     // `10%` but `420 ppm` — a symbol sits against the number, a word does not.
     const quoted = JSON.stringify(/^[A-Za-z]/.test(unit) ? ` ${unit}` : unit);
     const tagged = PREFIX_UNITS.has(unit)
-        ? `${quoted} + ${label}`
+        ? `(indexof(${label}, ${quoted}) === 0 ? ${label} : ${quoted} + ${label})`
         : `${label} + ${quoted}`;
     if (where === 'everyTick') return tagged;
     const at = where === 'firstTick' ? 'datum.index === 0'

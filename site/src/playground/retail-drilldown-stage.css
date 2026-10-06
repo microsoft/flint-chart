@@ -1,11 +1,26 @@
 .retail-drilldown-mount {
+  position: relative;
   display: grid;
-  width: max-content;
-  min-height: 520px;
+  width: 900px;
+  height: 560px;
   overscroll-behavior: contain;
 }
 
-/* Layers stack in one grid cell so the mount follows the chart while a swap is pending. */
-.retail-drilldown-layer {
+.retail-drilldown-mount > .retail-drilldown-layer {
   grid-area: 1 / 1;
+  place-self: center;
+  min-width: 0;
+  width: max-content;
+}
+
+.retail-drilldown-layer svg.marks {
+  display: block;
+}
+
+.retail-drilldown-layer-pending {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  pointer-events: none;
 }

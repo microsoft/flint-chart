@@ -9,20 +9,44 @@
   -webkit-user-select: none;
 }
 
-.ydi-stage__hint {
-  color: #66707a;
-  font-size: 10px;
+.ydi-stage__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 184px;
+  align-items: start;
+  gap: 20px;
 }
 
-.ydi-stage__footer {
-  display: flex;
+.ydi-stage__workspace > .ic-flint-dimpvis-panel,
+.ydi-stage__controls { min-width: 0; }
+
+.ydi-stage__controls { font-size: 13px; line-height: 1.5; }
+.ydi-stage__guidance { margin: 0 0 16px; }
+.ydi-stage__hint { margin: 12px 0 0; color: #66707a; font-size: 12px; }
+.ydi-stage__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ydi-stage__actions button {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0 4px;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid #d8dee4;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f2328;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
 }
-
-.ydi-stage .ic-pill:disabled {
+.ydi-stage__actions .ydi-stage__compare { background: #0067b8; border-color: #0067b8; color: #fff; }
+.ydi-stage__compare:hover:not(:disabled) { background: #005a9e; }
+.ydi-stage__reset:hover { background: #f6f8fa; }
+.ydi-stage__actions button:focus-visible { outline: 2px solid #0067b8; outline-offset: 2px; }
+.ydi-stage__actions button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .ydi-stage__workspace { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 }

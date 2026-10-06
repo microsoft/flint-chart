@@ -28,7 +28,8 @@ import { AxisLabelLab } from './playground/AxisLabelLab';
 import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
-import { ClickFocusLab, SpecTestCasesLab } from './playground/ClickFocusLab';
+import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
+import { ClickFocusLab } from './playground/ClickFocusLab';
 import { InteractionCoverageLab } from './playground/InteractionCoverageLab';
 import { InteractionConflictsLab } from './playground/InteractionConflictsLab';
 import { AnnotationLab } from './playground/AnnotationLab';
@@ -63,6 +64,10 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route index element={<Landing />} />
         <Route path="gallery/excel" element={<ExcelGallery />} />
         <Route path="gallery/:backend?" element={<ChartWall />} />
+        <Route path="interactions" element={<FlintInteractive />} />
+        <Route path="interactions/gallery" element={<InteractionGallery />} />
+        <Route path="interactions/bespoke" element={<BespokeInteractionLab publicPage />} />
+        <Route path="interactions/:mode" element={<InteractionGallery />} />
         {/* Keep old /wall links working; /gallery is canonical. */}
         <Route path="wall" element={<WallRedirect />} />
         <Route path="wall/:backend" element={<WallRedirect />} />
@@ -98,15 +103,14 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />
           <Route path="click-focus" element={<ClickFocusLab />} />
-          <Route path="spec-test-cases" element={<SpecTestCasesLab />} />
           <Route path="annotation-lab" element={<AnnotationLab />} />
           <Route path="interaction-coverage" element={<InteractionCoverageLab />} />
           <Route path="interaction-conflicts" element={<InteractionConflictsLab />} />
-          <Route path="pan-zoom" element={<Navigate to="../click-focus" replace />} />
+          <Route path="pan-zoom" element={<Navigate to={localePath('/interactions/navigate', locale)} replace />} />
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />
           <Route path="chart-to-external" element={<ChartToExternalLab />} />
-          <Route path="bespoke-interaction" element={<BespokeInteractionLab />} />
+          <Route path="bespoke-interaction" element={<Navigate to={localePath('/interactions/bespoke', locale)} replace />} />
           <Route path="interactive-data-report" element={<InteractiveDataReportLab />} />
           <Route path="interaction-candidates" element={<InteractionCandidates />} />
           <Route path="style-references/:house?" element={<StyleReferences />} />

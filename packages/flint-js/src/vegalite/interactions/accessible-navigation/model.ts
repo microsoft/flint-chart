@@ -1079,10 +1079,14 @@ export function buildAccessibleTree(input: AccessibleTreeInput): AccessibleNode 
         const named = legend.title?.text ?? spokenField;
         legendSummaries.push(named ? `${legendType.toLowerCase()} ${named}` : legendType.toLowerCase());
         if (sections.includes('legends')) {
+            const vertical = isVerticalList(legendChildren.filter((node) => node.kind === 'legend-item'));
             children.push(nodeOf('legend', `legend:${legendIndex}`, legendType, named ? `${named}. ${summary}` : summary, {
                 bounds: legend.bounds,
                 item: legend.item,
-                children: legendChildren,
+                children: vertical ? legendChildren.map((node) => ({
+                    ...node,
+                    readingBounds: node.bounds ? { ...node.bounds, x1: legend.bounds.x1 } : undefined,
+                })) : legendChildren,
             }));
         }
     });

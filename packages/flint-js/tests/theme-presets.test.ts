@@ -717,6 +717,25 @@ describe('theme annotation.unitsInAxisTitle', () => {
         const spec = withUnit(theme({ annotation: { axisTitles: 'always' } }));
         expect(yTitle(spec)).not.toBe('Sales (kg)');
     });
+
+    it.each(['lastTick', 'everyTick'] as const)('does not duplicate formatted currency with %s units', async (unit) => {
+        const spec = assembleVegaLite({
+            data: { values: DATA },
+            semantic_types: { Year: 'Year', Sales: { semanticType: 'Price', unit: 'USD' } },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'Year', y: 'Sales' } },
+            theme_spec: { extends: 'datawrapper', annotation: { unit } },
+        } as any) as any;
+        const view = new View(parse(compileVegaLite(spec).spec), { renderer: 'none' });
+        try {
+            const svg = await view.toSVG();
+            const labels = [...svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)]
+                .map((match) => match[1]).filter((label) => label.includes('$'));
+            expect(labels.length).toBeGreaterThan(0);
+            expect(labels.every((label) => /^\$\d/.test(label))).toBe(true);
+        } finally {
+            view.finalize();
+        }
+    });
 });
 
 describe('theme annotation.pointEmphasis', () => {

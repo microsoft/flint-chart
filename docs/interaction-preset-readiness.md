@@ -1,7 +1,7 @@
 # Vega-Lite interaction preset readiness
 
 This report records the browser sweep exposed on the consolidated test page at
-`#/playground/click-focus`. The page selects one representative case for every
+`#/interactions`. The example pages select one representative case for every
 Vega-Lite chart template, adds a second Bar Chart case for horizontal orientation,
 and includes two multi-legend Scatter Plot stress cases. Each card reports its
 actual mount status, and the sticky semantic inspector shows the latest resolved

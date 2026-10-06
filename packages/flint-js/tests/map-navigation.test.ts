@@ -243,6 +243,35 @@ describe('geo navigation controller', () => {
         view.finalize();
     });
 
+    it.each([
+        { visibleFraction: 1, factor: 0.5 },
+        { visibleFraction: 0.02, factor: 2 },
+    ])('keeps the projection pinned when zoom exceeds the $visibleFraction visible-fraction limit', async ({ visibleFraction, factor }) => {
+        const { view, controller } = await mountedWorldMap();
+        const guard = { ...GUARD, overscrollFraction: 0.15 };
+        try {
+            const initial = controller.resolve({
+                type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy',
+                factor: 1 / visibleFraction, anchor: { x: 0.5, y: 0.5 },
+            }, guard)!;
+            controller.apply(initial);
+            await view.runAsync();
+            const extent = structuredClone(view.signal(GEO_EXTENT_SIGNAL)) as GeoExtent;
+            for (const anchor of [{ x: 0.1, y: 0.1 }, { x: 0.9, y: 0.9 }, { x: 0.1, y: 0.9 }]) {
+                const update = controller.resolve({
+                    type: 'navigation', phase: 'commit', operation: 'zoom', axes: 'xy',
+                    factor, anchor,
+                }, guard)!;
+                controller.apply(update);
+                await view.runAsync();
+                const current = view.signal(GEO_EXTENT_SIGNAL) as GeoExtent;
+                current.flat().forEach((value, index) => expect(value).toBeCloseTo(extent.flat()[index], 6));
+            }
+        } finally {
+            view.finalize();
+        }
+    });
+
     it('fits an external longitude and latitude box into the plot', async () => {
         const { view, controller, width, height } = await mountedWorldMap();
         const initialScale = view.signal(GEO_PROJECTION_SIGNAL).scale();

@@ -1,12 +1,16 @@
-# Using interactions
+# Declarative interactions
+
+Use `interaction_spec` to make a Flint chart interactive with preset behaviors, without writing a custom handler.
+
+For bespoke interaction logic or external application controls, see [Programming interactions](interaction-api.md).
+
+> Interactions run on the Vega-Lite interactive surface. Static assemblers do not execute them; `validateChart` reports `interaction_spec` as ignored for static backends.
 
 `interaction_spec` sits beside `chart_spec` and `theme_spec` in a `ChartAssemblyInput`. The chart spec says **what the chart means**. The theme spec says **how it looks**. The interaction spec says **how it behaves** when a reader clicks, hovers, drags, or presses a key.
 
-Every behaviour comes from a **preset**: a named interaction Flint ships, such as `click-highlight` or `navigate`. You list the presets you want, each with its own options. Flint mounts the ones the chart can honour and tells you about the ones it cannot.
+Choose presets such as `click-highlight` or `navigate`, each with its own options. No custom handler is required: Flint mounts the presets the chart can honour and reports the ones it cannot.
 
 > For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) maps a gesture or an intent to presets and returns one valid `interaction_spec`. The MCP server serves it as `flint://interaction-skill`.
-
-> `interaction_spec` affects the Vega-Lite interactive surface only. The assemblers and the static backends leave it untouched, and `validateChart` reports it as ignored for those backends.
 
 ## Shape
 
@@ -127,22 +131,7 @@ Where to read the warnings:
 
 A malformed entry is an error, not a drop: an unknown `type`, an option outside `options`, an `id` inside `options`, a missing required option such as `groupBy`, an unknown or unsupported `reset` gesture, or a duplicate `id`.
 
-## Code and spec, one definition
-
-A spec entry and a factory call are two spellings of one interaction:
-
-```ts
-import { buildInteractiveChart, clickHighlight } from 'flint-chart/interactive';
-
-// From the spec
-buildInteractiveChart(container, { ...input, interaction_spec: { interactions: [{ type: 'click-highlight', options: { dimOpacity: 0.2 } }] } });
-
-// From code
-buildInteractiveChart(container, input, { interactions: [clickHighlight({ dimOpacity: 0.2 })] });
-```
-
-Both may appear on one chart; the spec entries mount first. An `id` used by both is an error. A code definition the chart cannot honour throws, because a developer sees the exception; a spec entry is dropped, because an agent reads warnings.
-
 ## Where it runs
 
 `buildInteractiveChart()` reads `interaction_spec` from the input. The MCP tool `create_chart_view` mounts the same surface, so an agent can ask for behaviour in the same JSON that asks for the chart. The site's editor and gallery mount from the spec too.
+

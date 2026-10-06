@@ -44,9 +44,15 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
       },
       {
         slug: 'interaction-spec',
-        title: 'Using interactions',
+        title: 'Declarative interactions',
         description: 'List interaction presets in interaction_spec, set their reset gestures, and read what each chart type supports.',
         file: '../../../docs/interaction-spec.md',
+      },
+      {
+        slug: 'interaction-api',
+        title: 'Programming interactions',
+        description: 'Define bespoke semantic-event handlers and connect external controls using the lower-level interaction API.',
+        file: '../../../docs/interaction-api.md',
       },
       {
         slug: 'setup-flint-mcp',

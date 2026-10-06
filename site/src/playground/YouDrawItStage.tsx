@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeftRight, RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
   buildInteractiveChart,
@@ -277,28 +278,32 @@ export function YouDrawItStage() {
           then the real values appear and the chart scores your guess.
         </span>
       </div>
-      <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
-          <div className="ic-flint-dimpvis-mount" ref={mountRef} />
-        </ScaleToFit>
-      </div>
-      <div className="ydi-stage__footer">
-        <div className="ic-toolbar">
-          <button
-            type="button"
-            className="ic-pill"
-            data-active={phase === 'complete'}
-            disabled={phase !== 'complete'}
-            onClick={finishDrawing}
-          >
-            Finish drawing
-          </button>
-          <button type="button" className="ic-pill" onClick={reset}>Reset</button>
+      <div className="ydi-stage__workspace">
+        <div className="ic-flint-dimpvis-panel">
+          <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+            <div className="ic-flint-dimpvis-mount" ref={mountRef} />
+          </ScaleToFit>
         </div>
-        <span className="ydi-stage__hint">
-          {progress ? `${progress} — ` : ''}
-          {phase === 'revealed' && score ? describeScore(score).detail : phaseHint(phase, path)}
-        </span>
+        <aside className="ydi-stage__controls" aria-label="Prediction and comparison">
+          <p className="ydi-stage__guidance">Draw your prediction of the share of U.S. electricity generated from coal after {DRAW_START_YEAR}, then compare it with the actual data.</p>
+          <div className="ydi-stage__actions">
+            <button
+              type="button"
+              className="ydi-stage__compare"
+              disabled={phase !== 'complete'}
+              onClick={finishDrawing}
+            >
+              <ArrowLeftRight size={14} aria-hidden="true" />Compare
+            </button>
+            <button type="button" className="ydi-stage__reset" onClick={reset}>
+              <RotateCcw size={14} aria-hidden="true" />Reset
+            </button>
+          </div>
+          <p className="ydi-stage__hint" role="status">
+            {progress ? `${progress} — ` : ''}
+            {phase === 'revealed' && score ? describeScore(score).detail : phaseHint(phase, path)}
+          </p>
+        </aside>
       </div>
     </div>
   );

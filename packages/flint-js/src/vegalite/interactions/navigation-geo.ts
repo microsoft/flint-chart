@@ -603,7 +603,9 @@ export function createVegaGeoNavigationController(
                 // A projection zooms uniformly, so both axes scale about the
                 // anchor even when the gesture names one axis.
                 const anchor: Point = [event.anchor.x * width, event.anchor.y * height];
-                const factor = event.factor;
+                const visibleFraction = width / (current[1][0] - current[0][0]);
+                const factor = Math.max(visibleFraction / guard.maxVisibleFraction,
+                    Math.min(visibleFraction / guard.minVisibleFraction, event.factor));
                 const scaled = (value: number, about: number): number => about + (value - about) * factor;
                 proposed = [
                     [scaled(current[0][0], anchor[0]), scaled(current[0][1], anchor[1])],

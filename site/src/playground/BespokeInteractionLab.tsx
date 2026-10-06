@@ -8,16 +8,18 @@ import { YouDrawItStage } from './YouDrawItStage';
 import { MapSemanticZoomStage } from './MapSemanticZoomStage';
 import { ChinaSemanticZoomStage } from './ChinaSemanticZoomStage';
 import { RetailDrilldownStage } from './RetailDrilldownStage';
+import { SiteShell } from '../components/SiteShell';
 import './bespoke-interaction-lab.css';
 
-export function BespokeInteractionLab() {
-  return (
-    <div className="dev-page bespoke-page">
-      <header className="dev-page-heading bespoke-heading">
-        <h1>Advanced interaction prototypes</h1>
+export function BespokeInteractionLab({ publicPage = false }: { publicPage?: boolean }) {
+  const content = (
+    <div className={publicPage ? 'bespoke-page bespoke-public-page' : 'dev-page bespoke-page'}>
+      <header className={publicPage ? 'bespoke-heading' : 'dev-page-heading bespoke-heading'}>
+        <h1>{publicPage ? 'Bespoke Interactions' : 'Advanced interaction prototypes'}</h1>
         <p>
-          Experiments in direct manipulation, data-space gestures, and interaction techniques
-          that go beyond dashboard controls.
+          {publicPage
+            ? 'Custom interactions built with Flint: direct manipulation, data-space gestures, and connected chart updates.'
+            : 'Experiments in direct manipulation, data-space gestures, and interaction techniques that go beyond dashboard controls.'}
         </p>
       </header>
 
@@ -193,4 +195,7 @@ export function BespokeInteractionLab() {
       </div>
     </div>
   );
+  return publicPage
+    ? <SiteShell><main className="bespoke-public-scroll">{content}</main></SiteShell>
+    : content;
 }

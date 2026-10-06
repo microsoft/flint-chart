@@ -60,6 +60,7 @@ import { planBandDodge, resolveDodge } from '../core/band-dodge';
 import { applyPivot, applyTransform, type PivotSurface, type TransformSurface } from '../core/pivot';
 import { vlGetTemplateDef } from './templates';
 import { inferVisCategory, computeZeroDecision } from '../core/semantic-types';
+import { getRegistryEntry } from '../core/type-registry';
 import { resolveChannelSemantics, convertTemporalData, inspectEncodingSort, repairEncodingSorts } from '../core/resolve-semantics';
 import { resolveDisplayUnit, titleWithDisplayUnit, toTypeString, type SemanticAnnotation } from '../core/field-semantics';
 import { filterOverflow } from '../core/filter-overflow';
@@ -951,7 +952,9 @@ export function assembleVegaLite(input: ChartAssemblyInput): any {
             return type === 'quantitative' || type === 'temporal';
         });
     const reorderAxes = [...explicitReorderAxes, ...defaultReorderAxes]
-        .filter((candidate, index, candidates) => candidates.findIndex(
+        .filter((candidate, index, candidates) =>
+            getRegistryEntry(channelSemantics[candidate.axis]?.semanticAnnotation?.semanticType ?? '').t1 !== 'DateGranule'
+            && candidates.findIndex(
             (axis) => axis.axis === candidate.axis && axis.field === candidate.field,
         ) === index);
     const discreteLegend = Object.keys(legendFields ?? {})

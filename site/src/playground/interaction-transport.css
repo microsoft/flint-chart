@@ -157,6 +157,16 @@
   background: #edf7f3;
 }
 
+.it-country-table-scroll { max-height: 280px; overflow: auto; }
+.it-country-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.it-country-table th, .it-country-table td { padding: 7px 4px; border-bottom: 1px solid #e5e9eb; text-align: right; font-variant-numeric: tabular-nums; }
+.it-country-table th { position: sticky; top: 0; background: #fff; color: #66707a; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.it-country-table th:first-child, .it-country-table td:first-child { text-align: left; }
+.it-country-table tbody tr { cursor: pointer; }
+.it-country-table tbody tr:hover, .it-country-table tbody tr.active { color: #0f5b47; background: #edf7f3; }
+.it-country-table button { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
+.it-country-table button:focus-visible { outline: 2px solid #0067b8; outline-offset: 2px; }
+
 .it-article-fragment,
 .it-comparison-copy {
   color: #4e5961;

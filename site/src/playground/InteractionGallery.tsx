@@ -1,6 +1,9 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Accessibility, AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import stringify from 'json-stringify-pretty-compact';
+import { csvParseRows } from 'd3-dsv';
+import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
+import { Accessibility, AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, Pause, Play, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
 import {
   assembleVegaLite,
   type ChartAssemblyInput,
@@ -39,13 +42,12 @@ import {
   navigate,
   select as rectangleSelect,
   type FlintInteractionEventDetail,
-  type CanvasInteractionAction,
+  type InteractiveChartSurface,
   type InspectIndexShow,
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
-import stringify from 'json-stringify-pretty-compact';
-import { CodeBlock } from '../components/CodeBlock';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { CodeBlock } from '../components/CodeBlock';
 import { SiteRange } from '../components/SiteRange';
 import foodPrices from '../data/cpi-food-prices.json';
 import { BACKENDS } from '../shared/supported-backends';
@@ -72,7 +74,7 @@ export interface NavigationGuard {
   overscrollFraction: number;
 }
 
-const unitInteractionModes = [
+export const unitInteractionModes = [
   { value: 'click-highlight', label: 'Click highlight', icon: MousePointerClick },
   { value: 'click-group-focus', label: 'Click group focus', icon: Layers3 },
   { value: 'hover-group-focus', label: 'Hover group focus', icon: Target },
@@ -97,7 +99,7 @@ const unitInteractionModes = [
   { value: 'accessible-navigation', label: 'Accessible navigation', icon: Accessibility },
 ] as const;
 
-const compositionInteractionModes = [
+export const compositionInteractionModes = [
   { value: 'keyboard-focus', label: 'Focus + keyboard', icon: Keyboard },
   { value: 'select-context', label: 'Select + context', icon: Menu },
 ] as const;
@@ -140,33 +142,6 @@ function modeInteractions(
     case 'accessible-navigation': return [accessibleNavigation()];
     default: return [navigate({ axes: navigationAxes ?? 'available', domainGuard: navigationGuard })];
   }
-}
-
-/** Colours a JSON document by token: keys, preset type names, other strings, numbers. */
-function highlightJson(value: unknown): ReactNode[] {
-  const text = JSON.stringify(value, null, 2);
-  const tokens = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?)|\b(true|false|null)\b/g;
-  const nodes: ReactNode[] = [];
-  let last = 0;
-  let previousKey = '';
-  let match: RegExpExecArray | null;
-  while ((match = tokens.exec(text)) !== null) {
-    if (match.index > last) nodes.push(text.slice(last, match.index));
-    const [whole, string, colon, number, literal] = match;
-    if (string && colon) {
-      previousKey = string.slice(1, -1);
-      nodes.push(<span key={match.index} className="cf-json-key">{string}</span>, colon);
-    } else if (string) {
-      nodes.push(<span key={match.index} className={previousKey === 'type' ? 'cf-json-type' : 'cf-json-string'}>{string}</span>);
-      previousKey = '';
-    } else {
-      nodes.push(<span key={match.index} className="cf-json-number">{number ?? literal}</span>);
-      previousKey = '';
-    }
-    last = match.index + whole.length;
-  }
-  if (last < text.length) nodes.push(text.slice(last));
-  return nodes;
 }
 
 /**
@@ -470,6 +445,17 @@ function indexInspectCases(): InteractionCase[] {
 }
 
 function realFacetedCases(): InteractionCase[] {
+  const linkedCountryRows = csvParseRows(gapminderCsv).slice(1)
+    .filter(([, year]) => year === '1952' || year === '2007')
+    .map(([Country, year, population, Continent, lifeExpectancy, gdpPerCapita]) => ({
+      Observation: `${Country}-${year}`,
+      Country,
+      Continent,
+      Year: Number(year),
+      Population: Number(population),
+      'GDP per capita': Number(gdpPerCapita),
+      'Life expectancy': Number(lifeExpectancy),
+    }));
   const electricityMix = genStackedBarTests().find((test) =>
     test.tags?.includes('real') && test.title.includes('Electricity generation mix'));
   const titanic = genGroupedBarTests().find((test) =>
@@ -521,7 +507,7 @@ function realFacetedCases(): InteractionCase[] {
           chartProperties: { facetColumns: 2, logScale_x: true },
           baseSize: SIZE,
         },
-        data: { values: gapminderRows.filter(({ Year }) => Year === 1952 || Year === 2007) },
+        data: { values: linkedCountryRows },
       },
     },
     {
@@ -794,10 +780,13 @@ function InteractiveChart({
   navigationAxes,
   groupBy,
   indexInspection,
+  interactionOverrides,
   spec,
   resetVersion,
+  preview = false,
   onStatus,
   onSemanticEvent,
+  onSurface,
 }: {
   input: ChartAssemblyInput;
   mode: InteractionMode;
@@ -806,15 +795,19 @@ function InteractiveChart({
   navigationAxes?: 'x' | 'y' | 'xy';
   groupBy?: string | readonly string[];
   indexInspection?: InteractionCase['indexInspection'];
+  interactionOverrides?: MountedInteraction[];
   /** When set, the chart mounts from this spec and the code-side options stay empty. */
   spec?: InteractionSpec;
   resetVersion: number;
+  preview?: boolean;
   onStatus: (status: ProbeStatus, message?: string, warnings?: readonly ChartWarning[]) => void;
   onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
+  onSurface?: (surface: InteractiveChartSurface | null) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef(onStatus);
   const semanticEventRef = useRef(onSemanticEvent);
+  const onSurfaceRef = useRef(onSurface);
   const surfaceRef = useRef<ReturnType<typeof buildInteractiveChart> | null>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const selectionRef = useRef<FlintInteractionEventDetail['event']['target']>(null);
@@ -824,6 +817,7 @@ function InteractiveChart({
   const [comment, setComment] = useState<string | null>(null);
   statusRef.current = onStatus;
   semanticEventRef.current = onSemanticEvent;
+  onSurfaceRef.current = onSurface;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -845,7 +839,8 @@ function InteractiveChart({
     };
     // Capture runs before the chart's own handler, so the menu opens at the pointer.
     const captureContextPoint = (event: MouseEvent) => {
-      pointerRef.current = { x: event.clientX, y: event.clientY };
+      const bounds = container.getBoundingClientRect();
+      pointerRef.current = { x: event.clientX - (preview ? bounds.left : 0), y: event.clientY - (preview ? bounds.top : 0) };
     };
     container.addEventListener('contextmenu', captureContextPoint, true);
     container.addEventListener('flint-interaction', handleInteraction);
@@ -854,6 +849,7 @@ function InteractiveChart({
       container.removeEventListener('contextmenu', captureContextPoint, true);
       container.removeEventListener('flint-interaction', handleInteraction);
       surfaceRef.current = null;
+      onSurfaceRef.current?.(null);
       selectionRef.current = null;
       setContextMenu(null);
       setComment(null);
@@ -871,7 +867,7 @@ function InteractiveChart({
         : buildInteractiveChart(container, themedInput, {
           backend: 'vegalite',
           renderer: 'svg',
-          interactions: modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection),
+          interactions: interactionOverrides ?? modeInteractions(mode, navigationAxes, navigationGuard, groupBy, indexInspection),
           expressionInterpreter,
           ariaLabel: input.chart_spec.title,
           keyboardTargeting: mode === 'keyboard-focus',
@@ -882,6 +878,7 @@ function InteractiveChart({
       return detach;
     }
     surfaceRef.current = surface;
+    onSurfaceRef.current?.(surface);
     void surface.ready.then(async () => {
       // A spec entry the chart cannot honour is dropped and reported, not thrown.
       const warnings = spec ? await surface.warnings : [];
@@ -898,7 +895,7 @@ function InteractiveChart({
       detach();
       surface.destroy();
     };
-  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, spec, themeId]);
+  }, [groupBy, input, mode, navigationAxes, navigationGuard, resetVersion, spec, themeId, preview, interactionOverrides]);
 
   const menuTarget = contextMenu?.detail.event.target ?? null;
   const menuElement = menuTarget?.elements[0];
@@ -969,7 +966,7 @@ function InteractiveChart({
           </button>
           <button type="button" role="menuitem" onClick={clearComment}>Clear</button>
         </div>,
-        document.body,
+        preview && containerRef.current ? containerRef.current : document.body,
       )}
       {comment && <p className="cf-context-note">{comment}</p>}
     </>
@@ -983,9 +980,13 @@ export function CaseCard({
   navigationGuard,
   resetVersion,
   source = 'code',
-  showSpec = true,
-  showSpecPanel = true,
+  autoplay = false,
+  playback = false,
+  keyboardControls = false,
+  selectionControls = false,
+  preview = false,
   onProbe,
+  onSurface,
 }: {
   item: InteractionCase;
   mode: InteractionMode;
@@ -993,34 +994,251 @@ export function CaseCard({
   navigationGuard: NavigationGuard;
   resetVersion: number;
   source?: InteractionSource;
-  /** Show the JSON panel under the chart on the spec tab. */
-  showSpec?: boolean;
-  showSpecPanel?: boolean;
+  autoplay?: boolean;
+  playback?: boolean;
+  keyboardControls?: boolean;
+  selectionControls?: boolean;
+  preview?: boolean;
   /** Reports the card's status so the page can tally ready and dropped cards. */
   onProbe?: (id: string, status: ProbeStatus) => void;
+  onSurface?: (surface: InteractiveChartSurface | null) => void;
 }) {
   const [status, setStatus] = useState<ProbeStatus>('loading');
   const [statusMessage, setStatusMessage] = useState('Compiling');
   const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
-  const [copied, setCopied] = useState(false);
-  // Each card folds its own JSON; the page switch sets the default for all of them.
-  const [specOpen, setSpecOpen] = useState(showSpec);
-  useEffect(() => { setSpecOpen(showSpec); }, [showSpec]);
+  const cardRef = useRef<HTMLElement>(null);
+  const [demoActive, setDemoActive] = useState(false);
+  const [demoVisible, setDemoVisible] = useState(!preview);
+  const [demoPointer, setDemoPointer] = useState({ x: 20, y: 20, pressed: false, travel: 0 });
+  const [demoKey, setDemoKey] = useState('');
+  const [selectionType, setSelectionType] = useState<'rectangle' | 'lasso' | 'x' | 'y'>('rectangle');
+  const selectionInteractions = useMemo<MountedInteraction[] | undefined>(() => {
+    if (!selectionControls) return undefined;
+    if (selectionType === 'lasso') return [linkedBrush({ groupBy: item.groupBy ?? 'Country', brush: 'lasso' })];
+    if (selectionType === 'rectangle') {
+      const rectangle = linkedBrush({ groupBy: item.groupBy ?? 'Country' });
+      return [{ ...rectangle, eventSource: { ...rectangle.eventSource, mode: 'stateful' } }];
+    }
+    const axisBrush = selectionType === 'x' ? brushX({ mode: 'stateful' }) : brushY({ mode: 'stateful' });
+    return [{
+      ...axisBrush,
+      handle(event) {
+        if (event.action !== `brush-${selectionType}` || event.phase === 'start' || event.phase === 'cancel') return null;
+        const countries = [...new Set((event.target?.elements ?? [])
+          .map(element => element.value.Country)
+          .filter((country): country is string => typeof country === 'string'))];
+        return {
+          id: axisBrush.id,
+          ops: [{
+            op: 'set-style',
+            targets: countries.map(Country => ({ select: { key: { Country } } })),
+            value: { state: countries.length ? 'emphasized' : 'normal', mutedOpacity: 0.25 },
+          }],
+        };
+      },
+    }];
+  }, [selectionControls, selectionType, item.groupBy]);
+  useEffect(() => {
+    if (!preview || !cardRef.current) return;
+    const observer = new IntersectionObserver(([entry]) => setDemoVisible(entry.isIntersecting), {
+      root: cardRef.current.closest('.ig-scroll'), threshold: 0.1,
+    });
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [preview]);
+  useEffect(() => {
+    if (!preview || !autoplay) return;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setDemoActive(!motion.matches);
+    update();
+    motion.addEventListener('change', update);
+    return () => motion.removeEventListener('change', update);
+  }, [preview, autoplay]);
+  useEffect(() => {
+    if (!(autoplay || playback) || !demoActive || !demoVisible || status !== 'ready') return;
+    const card = cardRef.current;
+    if (!card) return;
+    if (mode === 'accessible-navigation') {
+      const proxy = card.querySelector<HTMLElement>('[data-flint-accessible-focus]');
+      for (let depth = 0; proxy && proxy.dataset.flintAccessibleFocus !== 'chart' && depth < 12; depth += 1) {
+        proxy.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      }
+    }
+    let step = 0;
+    let activeDrag: { svg: SVGSVGElement; clientX: number; clientY: number } | undefined;
+    const timers = new Set<number>();
+    const schedule = (callback: () => void, delay: number) => {
+      const timer = window.setTimeout(() => { timers.delete(timer); callback(); }, delay);
+      timers.add(timer);
+    };
+    const movePointer = (clientX: number, clientY: number, pressed = false, travel = 0) => {
+      if (!preview) return;
+      const bounds = card.getBoundingClientRect();
+      setDemoPointer({ x: clientX - bounds.left - card.clientLeft,
+        y: clientY - bounds.top - card.clientTop, pressed, travel });
+    };
+    const sendEvent = (target: Element, type: string, clientX: number, clientY: number) => {
+      const options = { bubbles: true, cancelable: true, view: window, button: 0,
+        buttons: type === 'pointerup' || type === 'click' ? 0 : 1, clientX, clientY };
+      target.dispatchEvent(type.startsWith('pointer')
+        ? new PointerEvent(type, { ...options, pointerId: 1001, pointerType: 'mouse', isPrimary: true })
+        : new MouseEvent(type, options));
+    };
+    const playStep = () => {
+      const svg = card.querySelector<SVGSVGElement>('.cf-stage svg.marks');
+      const marks = [...card.querySelectorAll<SVGGraphicsElement>('.cf-stage .mark-rect path[aria-label], .cf-stage .mark-symbol path[aria-label], .cf-stage .mark-line path[aria-label], .cf-stage .mark-arc path[aria-label]')]
+        .filter(mark => { const bounds = mark.getBoundingClientRect(); return bounds.width > 0 && bounds.height > 0; });
+      if (!svg || marks.length === 0) return;
+      setDemoKey('');
+      if (mode === 'keyboard-focus' || mode === 'accessible-navigation') {
+        const keys = mode === 'accessible-navigation'
+          ? ['Enter', 'ArrowRight', 'ArrowRight', 'Enter', 'ArrowDown', 'ArrowDown', 'ArrowDown', 'Escape', 'Escape']
+          : ['ArrowRight', 'ArrowRight', 'Enter', 'ArrowRight', 'ArrowLeft', 'Escape'];
+        const key = keys[step++ % keys.length];
+        const target = mode === 'accessible-navigation'
+          ? card.querySelector('.cf-stage [role="application"]') ?? card.querySelector('.cf-stage [tabindex="0"]')
+          : svg;
+        setDemoKey(key);
+        target?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+        return;
+      }
+      if (mode === 'select' || mode === 'select-context' || mode === 'linked-brush' || mode === 'lasso'
+        || mode.startsWith('brush-') || mode === 'navigate' || mode === 'drag-reorder') {
+        const bounds = marks.map(mark => mark.getBoundingClientRect());
+        const left = Math.min(...bounds.map(bounds => bounds.left));
+        const top = Math.min(...bounds.map(bounds => bounds.top));
+        const width = Math.max(...bounds.map(bounds => bounds.right)) - left;
+        const height = Math.max(...bounds.map(bounds => bounds.bottom)) - top;
+        const cycle = step++;
+        const stateful = mode.endsWith('-stateful');
+        const phase = stateful ? cycle % 3 : 0;
+        const startFraction = phase === 1 ? 0.4 : phase === 2 ? 0.78 : 0.12;
+        const endFraction = phase === 1 ? 0.5 : phase === 2 ? 0.6 : 0.68;
+        const offset = stateful ? 0 : cycle % 3 * 0.06;
+        let startX = left + width * (startFraction + offset);
+        let startY = top + height * 0.25;
+        let endX = left + width * (endFraction + offset);
+        let endY = top + height * 0.7;
+        let dragTarget: Element = svg;
+        if (mode.startsWith('brush-x')) startY = endY = top + height / 2;
+        if (mode.startsWith('brush-y')) {
+          startX = endX = left + width / 2;
+          startY = top + height * startFraction;
+          endY = top + height * endFraction;
+        }
+        if (mode === 'navigate') {
+          startX = left + width * 0.5;
+          startY = top + height * 0.5;
+          endX = left + width * (cycle % 2 ? 0.4 : 0.6);
+          endY = top + height * 0.55;
+        }
+        if (mode === 'drag-reorder') {
+          const start = bounds[cycle % bounds.length];
+          const end = bounds[(cycle + 2) % bounds.length];
+          startX = start.left + start.width / 2;
+          startY = start.top + start.height / 2;
+          endX = end.left + end.width / 2;
+          endY = end.top + end.height / 2;
+          dragTarget = marks[cycle % marks.length];
+        }
+        const pointAt = (fraction: number) => {
+          if (mode === 'lasso') {
+            const angle = fraction * Math.PI * 2;
+            return { x: left + width * (0.45 + Math.cos(angle) * 0.25),
+              y: top + height * (0.45 + Math.sin(angle) * 0.25) };
+          }
+          if (mode.startsWith('brush-angle')) {
+            const radius = Math.min(width, height) * 0.38;
+            const startAngle = phase === 1 ? 0 : phase === 2 ? Math.PI / 4 : -Math.PI / 4;
+            const endAngle = phase === 1 ? Math.PI / 4 : phase === 2 ? Math.PI / 2 : Math.PI / 4;
+            const angle = startAngle + (endAngle - startAngle) * fraction;
+            return { x: left + width / 2 + Math.cos(angle) * radius,
+              y: top + height / 2 + Math.sin(angle) * radius };
+          }
+          return { x: startX + (endX - startX) * fraction, y: startY + (endY - startY) * fraction };
+        };
+        const start = pointAt(0);
+        const end = pointAt(1);
+        startX = start.x;
+        startY = start.y;
+        movePointer(startX, startY, false, 350);
+        schedule(() => {
+          activeDrag = { svg, clientX: startX, clientY: startY };
+          movePointer(startX, startY, true);
+          sendEvent(dragTarget, 'pointerdown', startX, startY);
+        }, 400);
+        for (let frame = 1; frame <= 24; frame++) schedule(() => {
+          const { x: clientX, y: clientY } = pointAt(frame / 24);
+          activeDrag = { svg, clientX, clientY };
+          movePointer(clientX, clientY, true);
+          sendEvent(svg, 'pointermove', clientX, clientY);
+        }, 400 + frame * 40);
+        schedule(() => {
+          movePointer(end.x, end.y);
+          sendEvent(svg, 'pointerup', end.x, end.y);
+          activeDrag = undefined;
+          if (mode === 'brush-zoom') schedule(() => svg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })), 400);
+          if (mode === 'navigate') svg.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true,
+            clientX: end.x, clientY: end.y, deltaY: cycle % 2 ? 120 : -120 }));
+          if (mode === 'select-context') {
+            const target = marks.find(mark => {
+              const bounds = mark.getBoundingClientRect();
+              return bounds.left >= start.x && bounds.right <= end.x && bounds.top >= start.y && bounds.bottom <= end.y;
+            }) ?? marks[0];
+            const bounds = target.getBoundingClientRect();
+            movePointer(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+            sendEvent(target, 'contextmenu', bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+          }
+        }, 1400);
+      } else if (mode === 'inspect' || mode === 'inspect-index') {
+        const bounds = svg.getBoundingClientRect();
+        const reverse = step++ % 2;
+        for (let frame = 0; frame <= 24; frame++) schedule(() => {
+          const fraction = reverse ? 1 - frame / 24 : frame / 24;
+          const clientX = bounds.left + bounds.width * (0.2 + fraction * 0.6);
+          const clientY = bounds.top + bounds.height * (0.35 + fraction * 0.25);
+          movePointer(clientX, clientY);
+          sendEvent(svg, 'pointermove', clientX, clientY);
+        }, frame * 40);
+      } else {
+        const targets = mode === 'legend-toggle'
+          ? [...card.querySelectorAll<SVGGraphicsElement>('.role-legend-symbol path')]
+          : marks;
+        const mark = targets[step++ % targets.length];
+        if (!mark) return;
+        const bounds = mark.getBoundingClientRect();
+        const matrix = mark.getScreenCTM();
+        const point = mark instanceof SVGPathElement && mark.closest('.mark-line') && matrix
+          ? mark.getPointAtLength(mark.getTotalLength() * (0.2 + (step % 4) * 0.2)).matrixTransform(matrix)
+          : { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+        movePointer(point.x, point.y, false, 350);
+        schedule(() => {
+          movePointer(point.x, point.y, mode !== 'hover-group-focus');
+          sendEvent(mark, mode === 'hover-group-focus' ? 'mousemove' : mode === 'double-activate' ? 'dblclick'
+            : mode === 'long-press' ? 'pointerdown' : 'click', point.x, point.y);
+        }, 400);
+        schedule(() => {
+          movePointer(point.x, point.y);
+          if (mode === 'long-press') sendEvent(mark, 'pointerup', point.x, point.y);
+        }, mode === 'long-press' ? 1300 : 580);
+      }
+    };
+    schedule(playStep, 400);
+    const interval = window.setInterval(playStep, 2200);
+    return () => {
+      window.clearInterval(interval);
+      timers.forEach(timer => window.clearTimeout(timer));
+      if (activeDrag?.svg.isConnected) sendEvent(activeDrag.svg, 'pointerup', activeDrag.clientX, activeDrag.clientY);
+    };
+  }, [autoplay, playback, demoActive, demoVisible, status, mode, preview]);
   useEffect(() => { onProbe?.(item.id, status); }, [item.id, onProbe, status]);
   // Memoised, so a re-render does not remount the chart through a fresh spec object.
   const spec = useMemo(
-    () => source === 'spec'
+    () => source === 'spec' && !selectionControls
       ? modeSpec(mode, item.navigationAxes, navigationGuard, item.groupBy, item.indexInspection)
       : undefined,
-    [source, mode, item, navigationGuard],
+    [source, mode, item, navigationGuard, selectionControls],
   );
-  const copySpec = () => {
-    if (!spec) return;
-    void navigator.clipboard?.writeText(JSON.stringify(spec, null, 2)).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1200);
-    });
-  };
   const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
   const title = item.title || item.input.chart_spec.title || item.input.chart_spec.chartType;
   const availableNavigationAxes = navigationAxesByCase.get(item.id);
@@ -1040,9 +1258,42 @@ export function CaseCard({
   const resolved = semanticItems.length > 0;
   const geometry = lastInteraction ? summarizeGeometry(lastInteraction.event) : undefined;
   const responded = resolved || lastInteraction?.event.action.endsWith('-viewport');
+  const playControl = (autoplay || playback) && <button type="button" className="cf-demo-play" aria-label={demoActive ? 'Pause demo' : 'Play demo'}
+    title={demoActive ? 'Pause demo' : 'Play demo'} disabled={status !== 'ready'}
+    onClick={() => setDemoActive(!demoActive)}>
+    {demoActive ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+  </button>;
+  const navigationKeys = [
+    { key: 'Escape', label: 'Escape: back' },
+    { key: 'Enter', label: 'Enter: open selected item', Icon: CornerDownLeft },
+    { key: 'ArrowUp', label: 'Up arrow: previous item', Icon: ArrowUp },
+    { key: 'ArrowLeft', label: 'Left arrow: previous item', Icon: ArrowLeft },
+    { key: 'ArrowDown', label: 'Down arrow: next item', Icon: ArrowDown },
+    { key: 'ArrowRight', label: 'Right arrow: next item', Icon: ArrowRight },
+  ];
+  const sendNavigationKey = (key: string) => {
+    setDemoActive(false);
+    setDemoKey(key);
+    const proxy = cardRef.current?.querySelector<HTMLElement>('[data-flint-accessible-focus]');
+    proxy?.focus({ preventScroll: true });
+    proxy?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  };
   return (
-    <article className={`cf-probe${item.wide ? ' cf-probe-wide' : ''}${item.spacious ? ' cf-probe-spacious' : ''}`}>
-      <header className="cf-probe-header">
+    <article ref={cardRef} role={preview ? 'img' : undefined} aria-label={preview ? `${title} interaction preview` : undefined}
+      data-preview-mode={preview ? mode : undefined} data-preview-status={preview ? status : undefined}
+      className={`cf-probe${keyboardControls ? ' cf-probe-with-keyboard' : ''}${selectionControls ? ' cf-probe-with-selection' : ''}${preview ? ' cf-probe-preview' : ''}${item.wide ? ' cf-probe-wide' : ''}${item.spacious ? ' cf-probe-spacious' : ''}`}
+      onMouseEnter={() => { if (autoplay && !preview && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) setDemoActive(true); }}
+      onMouseLeave={() => { if (!preview && !playback) setDemoActive(false); }}
+      onFocusCapture={() => { if (autoplay && !preview && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) setDemoActive(true); }}
+      onBlurCapture={event => { if (!preview && !playback && !event.currentTarget.contains(event.relatedTarget as Node | null)) setDemoActive(false); }}
+      onPointerDownCapture={event => {
+        if ((autoplay || playback) && !preview && event.isTrusted && !(event.target as Element).closest('.cf-demo-play')) setDemoActive(false);
+      }}
+      onKeyDownCapture={event => {
+        if ((autoplay || playback) && !preview && event.isTrusted && !(event.target as Element).closest('.cf-demo-play')) setDemoActive(false);
+        if (keyboardControls && (event.target as Element).closest('.cf-stage') && navigationKeys.some(({ key }) => key === event.key)) setDemoKey(event.key);
+      }}>
+      {!preview && <header className="cf-probe-header">
         <div>
           <h2>{title}</h2>
           <p>{description}</p>
@@ -1052,7 +1303,15 @@ export function CaseCard({
             ? navigationAxes?.join(' + ') || 'Ready'
             : status === 'ready' ? 'Ready' : status}
         </span>
-      </header>
+        {!keyboardControls && playControl}
+      </header>}
+      {preview && demoActive && demoVisible && status === 'ready' && <span aria-hidden="true"
+        className={`cf-demo-pointer${demoPointer.pressed ? ' cf-demo-pointer-pressed' : ''}`}
+        style={{ transform: `translate(${demoPointer.x}px, ${demoPointer.y}px)`,
+          transition: demoPointer.travel ? `transform ${demoPointer.travel}ms ease-in-out` : 'none' }}>
+        <MousePointer2 size={19} fill="white" strokeWidth={1.8} />
+        {demoKey && <kbd className="cf-demo-key">{demoKey}</kbd>}
+      </span>}
       {spec && status === 'unsupported' && warnings.length > 0 && (
         <div className="cf-spec-warning" role="status">
           <AlertTriangle size={13} strokeWidth={2} aria-hidden="true" />
@@ -1072,11 +1331,11 @@ export function CaseCard({
           <ul><li><span className="cf-spec-code">rejected</span>{statusMessage}</li></ul>
         </div>
       )}
-      <div className="cf-stage">
+      <div className="cf-stage" ref={node => { node?.toggleAttribute('inert', preview); }}>
         <ScaleToFit
           height={item.stageHeight ?? 420}
-          minHeight={item.spacious ? 420 : 300}
-          adaptiveHeight
+          minHeight={selectionControls ? 0 : preview ? item.stageHeight ?? 300 : item.spacious ? 420 : 300}
+          adaptiveHeight={!preview}
           maxScale={item.stageScale ?? 1}
           padding={8}
         >
@@ -1088,53 +1347,51 @@ export function CaseCard({
             navigationAxes={item.navigationAxes}
             groupBy={item.groupBy}
             indexInspection={item.indexInspection}
+            interactionOverrides={selectionInteractions}
             spec={spec}
             resetVersion={resetVersion}
+            preview={preview}
             onStatus={(nextStatus, message, nextWarnings) => {
               setStatus(nextStatus);
               setStatusMessage(message ?? (nextStatus === 'ready' ? 'Interactive surface ready' : 'Compiling'));
               setWarnings(nextWarnings ?? []);
             }}
             onSemanticEvent={setLastInteraction}
+            onSurface={onSurface}
           />
         </ScaleToFit>
       </div>
-      {spec && showSpecPanel && (
-        <div className={`cf-spec-panel${specOpen ? ' cf-spec-panel-open' : ''}`}>
-          <div className="cf-spec-panel-bar">
-            <button
-              type="button"
-              className="cf-spec-panel-toggle"
-              aria-expanded={specOpen}
-              onClick={() => setSpecOpen((open) => !open)}
-            >
-              {specOpen
-                ? <ChevronDown size={12} strokeWidth={2} aria-hidden="true" />
-                : <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />}
-              <Braces size={12} strokeWidth={2} aria-hidden="true" />
-              interaction_spec
-              <span className="cf-spec-panel-count">
-                {spec.interactions.length} {spec.interactions.length === 1 ? 'entry' : 'entries'}
-              </span>
-            </button>
-            <button type="button" className="cf-spec-panel-copy" onClick={copySpec} aria-label="Copy interaction_spec JSON">
-              {copied ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-          </div>
-          {specOpen && <pre className="cf-json">{highlightJson(spec)}</pre>}
+      {selectionControls && <aside className="cf-selection-panel" aria-label="Selection controls">
+        <div className="cf-keyboard-heading"><h3>Selection</h3></div>
+        <div className="cf-selection-options" role="group" aria-label="Selection type">
+          {([
+            { value: 'rectangle', label: 'Rect', Icon: Scan },
+            { value: 'lasso', label: 'Lasso', Icon: Lasso },
+            { value: 'x', label: 'X brushing', Icon: MoveHorizontal },
+            { value: 'y', label: 'Y brushing', Icon: MoveVertical },
+          ] as const).map(({ value, label, Icon }) => <label key={value} className="cf-selection-option">
+            <input type="radio" name={`selection-${item.id}`} value={value} checked={selectionType === value}
+              disabled={status !== 'ready'} onChange={() => setSelectionType(value)} />
+            <Icon size={16} aria-hidden="true" /><span>{label}</span>
+          </label>)}
         </div>
-      )}
-      <footer className={`cf-probe-event ${responded ? 'cf-probe-event-resolved' : 'cf-probe-event-warning'}`}>
+      </aside>}
+      {keyboardControls && <aside className="cf-keyboard-panel" aria-label="Chart keyboard navigator">
+        <div className="cf-keyboard-heading"><h3>Navigator</h3>{playControl}</div>
+        <div className="cf-keyboard-keys" role="group" aria-label="Navigation keys">
+          {navigationKeys.map(({ key, label, Icon }) => <button key={key} type="button" data-key={key}
+            data-active={demoKey === key} title={label} aria-label={label} disabled={status !== 'ready'}
+            onClick={() => sendNavigationKey(key)}>
+            {Icon ? <Icon size={18} aria-hidden="true" /> : 'Esc'}
+          </button>)}
+        </div>
+      </aside>}
+      {!preview && <footer className={`cf-probe-event ${responded ? 'cf-probe-event-resolved' : 'cf-probe-event-warning'}`}>
         {lastInteraction ? (
           <>
-            <div className="cf-probe-result-row">
-              <strong className="cf-probe-result-label">Event:</strong>
-              <div className="cf-probe-event-summary">
+            <div className="cf-probe-event-summary">
               <strong>{lastInteraction.event.action}</strong>
-              <span>Target: {semanticTarget
-                ? `${semanticTarget.visual.kind}${semanticTarget.visual.role !== semanticTarget.visual.kind ? ` (${semanticTarget.visual.role})` : ''}`
-                : lastInteraction.event.action.endsWith('-viewport') ? 'viewport' : 'none'}</span>
+              <span>{semanticTarget ? `${semanticTarget.visual.kind} · ${semanticTarget.visual.role}` : 'No semantic target'}</span>
               {geometry && <span className="cf-probe-event-geometry">{geometry}</span>}
               {!lastInteraction.event.action.endsWith('-viewport') && (
                 <span className="cf-probe-event-count">
@@ -1152,34 +1409,32 @@ export function CaseCard({
               {lastInteraction.event.dropTarget?.elements[0] && (
                 <span className="cf-probe-event-value">Drop: {summarizeElement(lastInteraction.event.dropTarget.elements[0])}</span>
               )}
-              </div>
             </div>
-              <div className="cf-probe-event-data cf-probe-result-row">
-                <strong className="cf-probe-result-label">Semantics:</strong>
-                {semanticItems.length > 0 ? <ul className="cf-probe-event-items">
+            {semanticItems.length > 0 && (
+              <div className="cf-probe-event-data">
+                <ul className="cf-probe-event-items">
                   {semanticItems.map((element, index) => (
                     <li key={`${index}-${JSON.stringify(element.value)}`}>
                       <SemanticElementRows element={element} />
                     </li>
                   ))}
-                </ul> : <span>No resolved data</span>}
+                </ul>
               </div>
+            )}
           </>
         ) : (
           <span>{status === 'unsupported' || status === 'error' ? statusMessage : 'Interact to inspect semantic resolution'}</span>
         )}
-      </footer>
+      </footer>}
     </article>
   );
 }
 
-export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMode, embedded = false, behaviors, eventActions, eventDescriptions }: {
+export function InteractionGallery({ source: initialSource = 'spec', mode: selectedMode, embedded = false, description }: {
   source?: InteractionSource;
   mode?: InteractionMode;
   embedded?: boolean;
-  behaviors?: readonly { trigger: string; update: string }[];
-  eventActions?: readonly CanvasInteractionAction[];
-  eventDescriptions?: Partial<Record<CanvasInteractionAction, string>>;
+  description?: string;
 } = {}) {
   const [source, setSource] = useState<InteractionSource>(initialSource);
   const [localMode, setMode] = useState<InteractionMode>('click-highlight');
@@ -1191,7 +1446,6 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     overscrollFraction: 0,
   });
   const [resetVersion, setResetVersion] = useState(0);
-  const [showSpec, setShowSpec] = useState(true);
   const [probes, setProbes] = useState<Record<string, ProbeStatus>>({});
   const onProbe = useCallback((id: string, status: ProbeStatus) => {
     setProbes((current) => current[id] === status ? current : { ...current, [id]: status });
@@ -1219,31 +1473,10 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     return counts;
   }, { ready: 0, unsupported: 0, error: 0, loading: 0 } as Record<ProbeStatus, number>);
   const specPattern = modeSpec(mode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>' });
-  const formatProperties = (value: object, indentation: number) => Object.entries(value).map(([key, property]) => {
-    const padding = ' '.repeat(indentation);
-    const prefix = `${padding}${JSON.stringify(key)}: `;
-    const formatted = stringify(property, { indent: 2, maxLength: 88 - prefix.length });
-    return `${prefix}${formatted.split('\n').join(`\n${padding}`)}`;
-  }).join(',\n');
-  const specCode = [
-    '{',
-    '  "interaction_spec": {',
-    Object.entries(specPattern).map(([key, value]) => key === 'interactions'
-      ? [
-        '    "interactions": [',
-        specPattern.interactions.map(entry => `      {\n${formatProperties(entry, 8)}\n      }`).join(',\n'),
-        '    ]',
-      ].join('\n')
-      : formatProperties({ [key]: value }, 4)).join(',\n'),
-    '  }',
-    '}',
-  ].join('\n');
   const factoryNames = specPattern.interactions.map(entry =>
     entry.type.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase()));
   const functionalCode = [
-    `import { buildInteractiveChart, ${factoryNames.join(', ')} }`,
-    "  from 'flint-chart/interactive';",
-    "import type { FlintInteractionEventDetail } from 'flint-chart/interactive';",
+    `import { buildInteractiveChart, ${factoryNames.join(', ')} } from 'flint-chart/interactive';`,
     '',
     'const chart = buildInteractiveChart(container, chartInput, {',
     "  backend: 'vegalite',",
@@ -1257,12 +1490,6 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     }),
     '  ],',
     ...(specPattern.keyboardTargeting ? ['  keyboardTargeting: true,'] : []),
-    '});',
-    '',
-    '//capture event',
-    "container.addEventListener('flint-interaction', (event) => {",
-    '  const { detail } = event as CustomEvent<FlintInteractionEventDetail>;',
-    '  console.log(detail.event.action, detail.event);',
     '});',
   ].join('\n');
 
@@ -1289,35 +1516,25 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
           </Fragment>
         ))}
       </div>}
-      <header className={`dev-page-heading cf-heading${embedded ? ' cf-heading-with-code' : ''}`}>
-        <div>
-        {embedded ? <>
-          <div className="cf-heading-title">
-            <h1>{[...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)?.label}</h1>
+      <header className="dev-page-heading cf-heading">
+        <div className="cf-heading-title">
+          <h1>{embedded ? [...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)?.label : 'Interaction gallery'}</h1>
+          <div className="cf-source-toggle" role="group" aria-label="Interaction authoring">
+            {(['spec', 'code'] as const).map((value) => (
+              <button key={value} type="button" aria-pressed={source === value}
+                onClick={() => {
+                  if (source === value) return;
+                  setProbes({});
+                  setSource(value);
+                }}>
+                {value === 'code' ? 'Functional' : 'Spec'}
+              </button>
+            ))}
           </div>
-          {behaviors && <section className="cf-interaction-detail" aria-label="Trigger and chart update">
-            <ul>{behaviors.map(behavior => <li key={behavior.trigger}>
-              <strong>{behavior.trigger}</strong> &rarr; {behavior.update}
-            </li>)}</ul>
-          </section>}
-          {eventActions && <section className="cf-interaction-detail" aria-label="Emitted Events">
-            <h2>Emitted Events</h2>
-            <ul>{eventActions.map(action => <li key={action}>
-              <code>{action}</code> {eventDescriptions?.[action]}
-            </li>)}</ul>
-            <p>Listen for <code>flint-interaction</code> on the chart container. Read the action and its data from <code>event.detail.event</code>.</p>
-          </section>}
-        </> : <>
-        <h1>{source === 'spec' ? 'Interaction gallery, from a spec' : 'Interaction gallery'}</h1>
-        {source === 'spec' ? (
-          <p>
-            The same cases as Test cases, but every chart mounts from <code>interaction_spec</code> instead
-            of factory calls. Open <em>interaction_spec</em> on a card to read the JSON it used. A card marked
-            unsupported still rendered; the message under its header names the entry the chart dropped.
-          </p>
-        ) : (
-          <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
-        )}
+        </div>
+        {description && <p className="cf-description">{description}</p>}
+        {!embedded && <>
+        <p>Choose an interaction mode, then try it across the compatible chart cases:</p>
         <ul className="cf-interaction-list">
           <li><strong>Click highlight:</strong> Click a mark, legend entry, or categorical axis label to focus its cohort.</li>
           <li><strong>Click group focus:</strong> Click a mark to focus related marks in the same category or series.</li>
@@ -1334,7 +1551,8 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
           <li><strong>Assisted and keyboard:</strong> Move to a target to see a shared indicator and compact semantic details.</li>
           <li><strong>Accessible navigation:</strong> Tab into a chart and walk titles, axes, legends, headers, series, and marks; each step names the element and what it represents.</li>
         </ul>
-        <div className="cf-summary">
+        </>}
+        {!embedded && <div className="cf-summary">
           <span><strong>{visibleCases.length}</strong> test cases</span>
           <span className={tally.ready === visibleCases.length ? 'cf-summary-ok' : undefined}>
             <strong>{tally.ready}</strong> ready
@@ -1346,14 +1564,7 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
           )}
           {tally.error > 0 && <span className="cf-summary-error"><strong>{tally.error}</strong> errors</span>}
           {tally.loading > 0 && <span><strong>{tally.loading}</strong> loading</span>}
-          {source === 'spec' && (
-            <label className="cf-spec-toggle">
-              <input type="checkbox" checked={showSpec} onChange={(event) => setShowSpec(event.target.checked)} />
-              Expand interaction_spec on every card
-            </label>
-          )}
-        </div>
-        </>}
+        </div>}
         <div className="cf-theme-picker">
           <ThemePicker themeId={themeId} onTheme={setThemeId} />
         </div>
@@ -1388,24 +1599,13 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
             </button>
           </div>
         )}
-        </div>
-        {embedded && <section className="cf-preset-code" aria-label="Preset code">
-          <div className="cf-preset-code-toolbar">
-            <div className="cf-source-toggle" role="group" aria-label="Interaction source">
-              {(['spec', 'code'] as const).map(value => <button key={value} type="button"
-                aria-pressed={source === value} onClick={() => setSource(value)}>
-                {value === 'spec' ? 'Spec (JSON)' : 'Functional'}
-              </button>)}
-            </div>
-          </div>
-          <div className="cf-gallery-spec" aria-label={source === 'spec' ? 'Interaction spec pattern' : 'Functional interaction code'}>
-            <CodeBlock variant="light" language={source === 'spec' ? 'json' : 'typescript'}
-              customStyle={{ margin: 0, padding: 10, fontSize: 11, lineHeight: 1.4, maxHeight: 320, overflow: 'auto' }}>
-              {source === 'spec' ? specCode : functionalCode}
-            </CodeBlock>
-          </div>
-        </section>}
       </header>
+      <div className="cf-gallery-spec" aria-label={source === 'spec' ? 'Interaction spec pattern' : 'Functional interaction code'}>
+        <CodeBlock language={source === 'spec' ? 'json' : 'typescript'}
+          customStyle={{ margin: 0, padding: 12, fontSize: 12, maxHeight: 240, overflow: 'auto' }}>
+          {source === 'spec' ? stringify({ interaction_spec: specPattern }, { indent: 2, maxLength: 160 }) : functionalCode}
+        </CodeBlock>
+      </div>
       <div className={mode === 'navigate' ? 'cf-grid cf-grid-wide' : 'cf-grid'}>
         {visibleCases.map((item) => (
           <CaseCard
@@ -1416,8 +1616,6 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
             navigationGuard={navigationGuard}
             resetVersion={resetVersion}
             source={source}
-            showSpec={!embedded && showSpec}
-            showSpecPanel={!embedded}
             onProbe={onProbe}
           />
         ))}
@@ -1426,7 +1624,3 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
   );
 }
 
-/** The Test cases gallery driven by `interaction_spec`: one design, checked from the JSON side. */
-export function SpecTestCasesLab() {
-  return <ClickFocusLab source="spec" />;
-}
