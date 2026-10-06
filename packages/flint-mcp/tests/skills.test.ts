@@ -25,7 +25,7 @@ describe('agent skills', () => {
     }
     expect([...named].sort()).toEqual([...presets].sort());
 
-    const table = interactionSkill.slice(interactionSkill.indexOf('## Interaction Preset map'), interactionSkill.indexOf('## Presets by intent'));
+    const table = interactionSkill.slice(interactionSkill.indexOf('### Preset map'), interactionSkill.indexOf('### When the request names no gesture'));
     const listed = [...table.matchAll(/^\| `([a-z-]+)`(?:, `([a-z-]+)`)? \|/gm)].flatMap((m) => [m[1], m[2]].filter(Boolean));
     expect(listed.sort()).toEqual([...presets].sort());
   });

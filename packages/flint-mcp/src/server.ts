@@ -159,8 +159,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'When the user asks to create, translate, or substantially customize a ' +
         'ThemeSpec, read flint://theme-skill or use author_flint_theme. ' +
         'When the user asks for behaviour on a chart, names an intent such as ' +
-        'explore or compare, or adds behaviour to a chart that already exists, ' +
-        'read flint://interaction-skill or use author_flint_interaction.' +
+        'explore or compare, adds behaviour to a chart that already exists, ' +
+        'changes or reads a mounted chart from code or as an agent, links charts, ' +
+        'or needs an interaction no preset gives, read flint://interaction-skill ' +
+        'or use author_flint_interaction.' +
         dataAccessNote(options),
     },
   );
@@ -520,7 +522,7 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Flint interaction-author skill',
       description:
-        'Bundled instructions for adding behaviour to a chart: a gesture or an intent mapped to interaction presets, as one valid interaction_spec.',
+        'Bundled instructions for behaviour on a chart: how an interaction works, presets as one valid interaction_spec, the ChartUpdate an application or an agent applies to a mounted chart, reading the chart state, linking charts, and bespoke interactions.',
       mimeType: 'text/markdown',
       annotations: { audience: ['assistant'], priority: 1 },
     },
@@ -540,10 +542,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
     {
       title: 'Author Flint interactions',
       description:
-        'Load the Flint interaction-author skill before adding behaviour to a chart, at authoring time or after the chart exists.',
+        'Load the Flint interaction-author skill before adding behaviour to a chart, changing or reading a mounted chart from outside, linking charts, or building a bespoke interaction.',
     },
     async () => ({
-      description: 'Use the bundled Flint interaction-author skill to produce a valid interaction_spec.',
+      description: 'Use the bundled Flint interaction-author skill to produce a valid interaction_spec, a ChartUpdate, or code against flint-chart/interactive.',
       messages: [
         {
           role: 'user' as const,
@@ -561,9 +563,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           content: {
             type: 'text' as const,
             text:
-              'Use these Flint instructions when adding behaviour to a chart. ' +
-              'Use list_chart_types to confirm the presets the chart type supports. ' +
-              'Return the bare interaction_spec and do not change the chart spec.',
+              'Use these Flint instructions for behaviour on a chart. ' +
+              'For presets, use list_chart_types to confirm the ones the chart type supports, ' +
+              'and return the bare interaction_spec without changing the chart spec. ' +
+              'For a mounted chart, return one ChartUpdate; for code, write against flint-chart/interactive.',
           },
         },
       ],

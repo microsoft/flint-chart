@@ -9,10 +9,11 @@ portable chart and theme specifications.
 - [flint-theme-author/SKILL.md](flint-theme-author/SKILL.md) translates brand
     guidelines, websites, slide decks, and publication references into reusable
     custom `ThemeSpec` JSON.
-- [flint-interaction-author/SKILL.md](flint-interaction-author/SKILL.md) maps
-    a named gesture or an intent (explore, compare, analyse) to interaction
-    presets and returns one valid `interaction_spec`, at authoring time or after
-    the chart exists.
+- [flint-interaction-author/SKILL.md](flint-interaction-author/SKILL.md) covers
+    behaviour on a chart: how an interaction works, the presets and one valid
+    `interaction_spec`, the `ChartUpdate` an application or an agent applies to
+    a mounted chart, reading the chart state, linking charts, and bespoke
+    interactions built from a trigger and a handler.
 
 ## How agents should use flint-chart
 
