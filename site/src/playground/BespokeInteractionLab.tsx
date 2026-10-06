@@ -167,8 +167,9 @@ export function BespokeInteractionLab({ publicPage = false }: { publicPage?: boo
               <h2>Timebox on daily city temperatures</h2>
               <p>
                 Drag a box over a date interval and temperature band; cities match only when every daily
-                mean in that interval stays within the band. 12 cities, 365 daily values each, in 2023;
-                the lines show samples every five days, while the constraint uses all daily values.
+                displayed sample in that interval stays within the band. The retained box can be moved
+                and resized. 12 cities in 2023, sampled every five days from 365 daily values per city;
+                the constraint uses the same samples as the visible lines.
                 {' '}<a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/" target="_blank" rel="noreferrer">NASA POWER</a>
                 {' '}/ MERRA-2 gridded reanalysis at city coordinates, in Celsius and local solar time;
                 not station observations or all-day temperature bounds.

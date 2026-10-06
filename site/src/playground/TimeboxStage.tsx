@@ -35,9 +35,10 @@ function loadWeatherData(): Promise<PreparedTimeboxData> {
     .then(async response => {
       if (!response.ok) throw new Error(`Weather data request failed (${response.status})`);
       const data = await response.json() as WeatherData;
-      return prepareTimeboxData(data.cities.flatMap(city => data.dates.map((date, index) => ({
-        series: city.name, date, value: city.temperature[index],
-      }))), { indexValues: false });
+      return prepareTimeboxData(data.cities.flatMap(city => data.dates.flatMap((date, index) =>
+        index % 5 === 0 || index === data.dates.length - 1
+          ? [{ series: city.name, date, value: city.temperature[index] }]
+          : [])), { indexValues: false });
     })
     .catch(error => {
       weatherData = undefined;
@@ -47,13 +48,8 @@ function loadWeatherData(): Promise<PreparedTimeboxData> {
 }
 
 function chartInput(prepared: PreparedTimeboxData): ChartAssemblyInput {
-  const shownDates = new Set(prepared.series[0].points
-    .filter((_, index, points) => index % 5 === 0 || index === points.length - 1)
-    .map(point => point.dateMs));
   return {
-    data: { values: prepared.rows
-      .filter(row => shownDates.has(Date.parse(row.Date)))
-      .map(({ Series, Date, Value }) => ({ Series, Date, Value })) },
+    data: { values: prepared.rows.map(({ Series, Date, Value }) => ({ Series, Date, Value })) },
     semantic_types: {
       Date: 'Date',
       Series: 'Category',
@@ -158,7 +154,7 @@ export function TimeboxStage() {
 
   const timeboxInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: TIMEBOX_INTERACTION_ID,
-    eventSource: rectangleTrigger('contain'),
+    eventSource: { ...rectangleTrigger('contain'), mode: 'stateful' },
     reset: ['click-none'],
     onReset() {
       scheduleRef.current?.(null);
@@ -186,7 +182,7 @@ export function TimeboxStage() {
       updates: [styleUpdate(prepared)],
       assistedTargeting: false,
       keyboardTargeting: false,
-      ariaLabel: 'Daily mean temperatures in Celsius for 12 cities in 2023, sampled every five days with daily timebox filtering',
+      ariaLabel: 'Daily mean temperatures in Celsius for 12 cities in 2023, with an editable timebox over five-day samples',
       chartId: 'timebox-stage',
     });
     surfaceRef.current = surface;
@@ -247,6 +243,7 @@ export function TimeboxStage() {
   }, [prepared, timeboxInteraction]);
 
   const reset = () => {
+    void surfaceRef.current?.clearUpdate(TIMEBOX_INTERACTION_ID);
     scheduleRef.current?.(null);
   };
 
@@ -272,8 +269,8 @@ export function TimeboxStage() {
         {selection ? <>
           <strong>{retainedSymbols.length} of {totalCount} cities match</strong>
           <span>{retainedSymbols.length ? retainedSymbols.join(', ') : 'No matching cities.'}</span>
-          <span>{windowSampleCount.toLocaleString()} daily means checked in the selected interval.</span>
-        </> : prepared && <span>{totalCount} cities, {prepared.series[0].points.length} daily means per city.</span>}
+          <span>{windowSampleCount.toLocaleString()} displayed samples checked in the selected interval.</span>
+        </> : prepared && <span>{totalCount} cities, {prepared.series[0].points.length} displayed samples per city.</span>}
       </div>
     </div>
   );
