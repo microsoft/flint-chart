@@ -50,7 +50,7 @@ An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "typ
 | `long-press` | Holds a mark to activate it. | elements | click-none, escape |
 | `double-activate` | Double-clicks a mark to activate it. | elements | click-none, escape |
 | `inspect` | Moves over the plot to read the nearest mark's values. | elements | none |
-| `inspect-index` | Moves over the plot to read every series at one x position (`seriesBy` for a single series). | index axis | escape |
+| `inspect-index` | Moves over the plot to read every series at one x position (`seriesBy` for a single series, `displayValue` for value-guide labels). | index axis | escape |
 | `select` | Drags a rectangle to emphasise the marks inside. | elements, cartesian region | click-none, escape |
 | `lasso-select` | Draws a freehand region to emphasise the marks inside. | elements, cartesian region | click-none, escape |
 | `brush-x`, `brush-y` | Drags an interval along one axis; on a polar chart the x brush is an angular sector. | elements, cartesian region | click-none, escape |
@@ -64,6 +64,12 @@ An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "typ
 | `accessible-navigation` | Tabs into the chart and walks titles, axes and their labels, legends and their items, facet headers, series, and marks with the keyboard. Each step names the element and what it represents, and emphasises its data (`emphasis`, `caption`, `sections`, `maxFields`). | elements | none |
 
 The option names are the ones the matching factory in `flint-chart/interactive` accepts. `InteractionPresetSpec` in that entry gives the precise shape per type for TypeScript callers.
+
+For `inspect-index`, set `options.displayValue: true` to label the value guides inside the
+plot, rather than on the axis. Labels reflect the current interpolated scale value; labels
+and value guides inherit the rendered series colour. Nearby labels stagger along their
+guides to avoid overlap. Labels are off by default. Setting `guide: false` hides both the
+guides and their labels.
 
 A viewport a gesture commits, and a reset, animate over 400 ms. `"transition": { "duration": 0 }` on `brush-zoom`, or `"resetTransition": { "duration": 0 }` on either preset, jumps instead. Panning and wheel zooming follow the pointer and never animate.
 

@@ -199,25 +199,36 @@
     }
   },
   "themes": {
-    "title": "Explore themes",
-    "concept": "A Flint theme formally defines a coherent visual identity for an entire chart library.",
+    "title": "Visual Themes",
+    "concept": "In Flint, a visual theme specification controls color, typography, spacing, and the placement of axes, legends, labels, and annotations. It defines a reusable rendering policy across chart types, so a line chart, a heatmap, and a bar chart can share a consistent visual style without sharing the same layout. The compiler dynamically adapts that policy to each chart’s data, semantic structure, and canvas size, preserving the theme’s visual identity while accommodating what the chart needs to show.",
     "principles": {
       "layout": {
-        "title": "Layout",
-        "body": "Controls spacing, density, and the placement of axes, legends, labels, and annotations."
+        "title": "Layout policy",
+        "body": "<code>layout</code>, <code>facets</code>, <code>labels</code>, and <code>legend</code> specify density, spacing, and placement rules rather than fixed coordinates."
       },
       "semantics": {
-        "title": "Semantic presentation",
-        "body": "Uses field roles, order, groups, and hierarchy to determine contrast, emphasis, and series identity."
+        "title": "Semantic rules",
+        "body": "<code>variants</code> adapt presentation to semantic conditions, such as a chart’s role, density, or shape. Rules can target the measure or category rather than a fixed physical axis."
       },
       "identity": {
-        "title": "Visual system",
-        "body": "Defines typography, color, surfaces, line weight, corners, and mark shapes as one recognizable system."
+        "title": "Visual identity",
+        "body": "<code>ink</code>, <code>type</code>, <code>structure</code>, and <code>marks</code> define colors, typography, axes, grids, and mark treatments as a consistent visual system."
       }
     },
+    "howItWorks": {
+      "title": "How It Works",
+      "intro": "A theme specifies a chart’s visual identity and presentation behavior: colors, typography, mark styling, spacing, and where axes, legends, labels, and annotations can appear. These rules are grouped into specification blocks:",
+      "applyTitle": "Applying a Theme",
+      "apply": "Pass a preset ID as <code>theme_spec</code> alongside <code>chart_spec</code> in the compiler input. For example, add the following to your chart input to select the Economist theme. Use the same preset ID across chart inputs to keep their visual style consistent.",
+      "mcpReuse": "In Flint-MCP, you can ask the agent to create a new theme, then ask it to use that theme for subsequent charts in the same conversation. The agent can reuse the generated <code>theme_spec</code> in each chart request, so you only need to describe the style once.",
+      "customizeTitle": "Customizing a Theme",
+      "customize": "To customize colors, typography, or layout, provide a custom theme object or extend a preset with overrides. See the <docs>Visual Themes documentation</docs> for available fields, inheritance rules, and examples, or use <lab>Theme Lab</lab> to create and preview a new theme.",
+      "compiler": "The compiler resolves these policies against each chart’s fields, semantic roles, data shape, and available space. It adapts layout, labels, legends, and visual emphasis rather than copying fixed coordinates. Themes change presentation, not the fields, aggregation, filtering, or sorting that define the chart’s meaning.",
+      "availability": "Theme specifications currently apply to Vega-Lite output."
+    },
     "generalization": "The compiler applies the theme’s layout behavior, semantic presentation, and visual identity across chart types, data shapes, and canvas sizes.",
-    "docsPointer": "See <docs>Using themes</docs> for how to apply and customize themes.",
-    "themeLabCta": "Feeling creative? Create a theme in <lab>Theme Lab</lab>",
+    "docsPointer": "Documentation: Visual Themes",
+    "themeLabCta": "Feeling Creative? Create a new theme in the lab!",
     "flintDefault": "Flint default",
     "switchAria": "Theme",
     "layoutToggle": {

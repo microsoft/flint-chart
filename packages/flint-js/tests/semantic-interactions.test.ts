@@ -404,6 +404,7 @@ describe('Vega-Lite semantic interactions', () => {
 
     it('interpolates a smooth continuous value-axis rule between line observations', () => {
         const segment = {
+            stroke: '#e45756',
             bounds: { x1: 10, x2: 90, y1: 20, y2: 80 },
             datum: { [INTERACTION_KEY]: 'alpha', Index: 0, Series: 'Alpha' },
             endDatum: { [INTERACTION_KEY]: 'alpha', Index: 10, Series: 'Alpha' },
@@ -419,6 +420,7 @@ describe('Vega-Lite semantic interactions', () => {
 
         expect(acquisition.coordinate).toBe(50);
         expect(acquisition.valueCoordinates).toEqual([50]);
+        expect(acquisition.valueColors).toEqual(['#e45756']);
         expect(indexInspectAcquisition(
             [segment], { x: 90, y: 20 }, 'x', { show: 'all', seriesBy: 'Series' }, true,
         )).toMatchObject({ coordinate: 90, valueCoordinates: [20], hits: [expect.any(Object)] });

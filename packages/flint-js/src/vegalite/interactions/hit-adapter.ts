@@ -1279,6 +1279,7 @@ export interface IndexInspectAcquisition {
     hits: RenderHit[];
     coordinate: number;
     valueCoordinates: number[];
+    valueColors?: (string | undefined)[];
 }
 
 export function indexInspectAcquisition(
@@ -1360,9 +1361,11 @@ export function indexInspectAcquisition(
         candidates = candidates.filter((item) => item.interactionGeometry);
     }
     const finalKeys = new Set(hits.map((hit) => hit.datum[INTERACTION_KEY]));
-    const valueCoordinates = candidates.flatMap((item) => {
+    const valueGuides = candidates.flatMap((item) => {
         const hit = renderHit(item);
         if (!hit || !finalKeys.has(hit.datum[INTERACTION_KEY])) return [];
+        const ink = item.mark?.marktype === 'line' ? item.stroke : item.fill ?? item.stroke;
+        const color = typeof ink === 'string' && ink !== 'none' ? ink : undefined;
         const points = item.interactionGeometry?.points as readonly PlotPoint[] | undefined;
         if (item.interactionGeometry?.kind === 'segment' && points && points.length >= 2) {
             const start = points[0];
@@ -1371,17 +1374,19 @@ export function indexInspectAcquisition(
             const alongEnd = axis === 'x' ? end.x : end.y;
             if (coordinate < Math.min(alongStart, alongEnd) || coordinate > Math.max(alongStart, alongEnd)) return [];
             const ratio = alongEnd === alongStart ? 0 : (coordinate - alongStart) / (alongEnd - alongStart);
-            return [axis === 'x'
+            return [{ color, coordinate: axis === 'x'
                 ? start.y + ratio * (end.y - start.y)
-                : start.x + ratio * (end.x - start.x)];
+                : start.x + ratio * (end.x - start.x) }];
         }
         if (!item.bounds) return [];
-        return [axis === 'x'
+        return [{ color, coordinate: axis === 'x'
             ? (item.bounds.y1 + item.bounds.y2) / 2
-            : (item.bounds.x1 + item.bounds.x2) / 2];
-    }).filter((value, index, values) => Number.isFinite(value)
-        && values.findIndex((candidate) => Math.abs(candidate - value) < 0.5) === index);
-    return { hits, coordinate, valueCoordinates };
+            : (item.bounds.x1 + item.bounds.x2) / 2 }];
+    }).filter((guide, index, guides) => Number.isFinite(guide.coordinate)
+        && guides.findIndex((candidate) => Math.abs(candidate.coordinate - guide.coordinate) < 0.5) === index);
+    const valueCoordinates = valueGuides.map((guide) => guide.coordinate);
+    const valueColors = valueGuides.map((guide) => guide.color);
+    return { hits, coordinate, valueCoordinates, ...(valueColors.some(Boolean) ? { valueColors } : {}) };
 }
 
 export function indexInspectHits(

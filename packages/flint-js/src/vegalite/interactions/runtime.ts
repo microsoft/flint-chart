@@ -1805,6 +1805,10 @@ export function mountVegaInteractions(
         const modes = inspectModes(interaction);
         return modes[inspectModeIndices.get(interaction.id) ?? 0] ?? modes[0];
     };
+    const inspectValueFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+    const inspectDateFormatter = new Intl.DateTimeFormat(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
+    });
     const inspectHandler = (event: MouseEvent): void => {
         if (inspectInteractions.length === 0) return;
         const point = localPoint(event as unknown as PointerEvent);
@@ -1873,11 +1877,30 @@ export function mountVegaInteractions(
                 const guidePoint = indexPolicy!.axis === 'x'
                     ? { x: indexAcquisition.coordinate, y: point.y }
                     : { x: point.x, y: indexAcquisition.coordinate };
+                const valueAxis = indexPolicy!.axis === 'x' ? 'y' : 'x';
+                const valueField = plan.axisFields?.[valueAxis];
+                const valueScaleName = indexPolicy!.displayValue && valueField
+                    ? Object.entries(plan.axisTargets ?? {}).find(([, target]) =>
+                        target.axis === valueAxis && target.field === valueField.field)?.[0]
+                        ?? plan.overlayScales?.[valueAxis]
+                    : undefined;
+                const valueScale = valueScaleName ? view.scale(valueScaleName) : undefined;
+                const valueLabels = indexPolicy!.displayValue && valueScale?.invert
+                    ? indexAcquisition.valueCoordinates.map((coordinate, index) => {
+                        const value = valueScale.invert(coordinate);
+                        const text = value instanceof Date ? inspectDateFormatter.format(value)
+                            : typeof value === 'number' && Number.isFinite(value)
+                            ? inspectValueFormatter.format(value)
+                            : '';
+                        return { text, color: indexAcquisition.valueColors?.[index] };
+                    })
+                    : undefined;
                 inspectGuideOverlay.renderAxes(guidePoint, indexPolicy!.axis, guide.style);
                 inspectGuideOverlay.renderValueRules(
                     indexAcquisition.valueCoordinates,
                     indexPolicy!.axis,
                     guide.style,
+                    valueLabels,
                 );
                 guideRendered = true;
             } else if (guide.visible && polarFrame) {

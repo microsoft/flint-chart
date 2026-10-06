@@ -17,6 +17,7 @@ export function createInspectIndexInteraction(options: InspectIndexOptions = {})
         id,
         eventSource: inspectIndexTrigger(
             axis, show, options.seriesBy, options.selector, options.guide, options.tolerance,
+            options.displayValue,
         ),
         affordances,
     };

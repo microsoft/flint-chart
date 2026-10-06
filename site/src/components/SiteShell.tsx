@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { useLocale } from '../i18n/LocaleContext';
 import { stripLocale } from '../i18n/paths';
@@ -59,17 +60,25 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
         flexShrink: 0,
       }}
     >
-      <BrandLink />
+      <BrandLink active={logical === '/'} />
 
       <nav className="site-nav-scroll" style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
-        <NavLink to="/" active={logical === '/'}>
-          {t('nav.about')}
-        </NavLink>
         <NavLink to="/mcp" active={logical.startsWith('/mcp')}>
           {t('nav.mcp')}
         </NavLink>
         <NavLink to="/themes" active={logical.startsWith('/themes')}>
           {t('nav.themes')}
+        </NavLink>
+        <NavLink to="/interactions" active={logical === '/interactions'}>
+          {t('nav.interactions')}
+          <Star
+            size={12}
+            fill="#e5b23c"
+            color="#b8860b"
+            aria-hidden="true"
+            focusable="false"
+            style={{ marginLeft: 4, verticalAlign: '-1px' }}
+          />
         </NavLink>
         <NavMenu
           logicalPath={logical}
@@ -82,9 +91,6 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
             { to: '/interactions/bespoke', label: t('nav.bespokeInteractions') },
           ]}
         />
-        <NavLink to="/interactions" active={logical === '/interactions'}>
-          {t('nav.interactions')}
-        </NavLink>
         <NavLink
           to="/documentation"
           active={logical.startsWith('/documentation') || logical.startsWith('/tutorials')}
@@ -308,17 +314,22 @@ function NavLink({ to, active, children }: { to: string; active: boolean; childr
   );
 }
 
-function BrandLink() {
+function BrandLink({ active }: { active: boolean }) {
   const [hovered, setHovered] = useState(false);
   return (
     <LocaleLink
       to="/"
+      aria-current={active ? 'page' : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
         ...brandStyle,
         color: hovered ? siteTheme.accent : siteTheme.text,
-        transition: 'color 120ms ease',
+        textDecorationLine: active || hovered ? 'underline' : 'none',
+        textDecorationThickness: 2,
+        textUnderlineOffset: 6,
+        textDecorationColor: active ? siteTheme.text : 'rgba(0, 0, 0, 0.22)',
+        transition: 'color 120ms ease, text-decoration-color 120ms ease',
       }}
     >
       flint-chart

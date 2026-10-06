@@ -32,6 +32,7 @@ export interface InteractionEventSource {
         readonly axis: 'x' | 'y';
         readonly show: InspectIndexShow;
         readonly seriesBy?: string;
+        readonly displayValue?: boolean;
     };
     /** Nearest-mark acquisition radius for hover gestures, in renderer pixels. */
     readonly targetTolerance?: number;
@@ -213,10 +214,11 @@ export function inspectIndexTrigger(
     selector?: SemanticTargetSelector,
     guide?: InspectGuideOptions | false,
     tolerance?: number,
+    displayValue = false,
 ): InteractionEventSource {
     return {
         ...inspectTrigger(axis, selector, tolerance, guide),
-        inspectIndex: { axis, show, ...(seriesBy ? { seriesBy } : {}) },
+        inspectIndex: { axis, show, ...(seriesBy ? { seriesBy } : {}), ...(displayValue ? { displayValue } : {}) },
     };
 }
 

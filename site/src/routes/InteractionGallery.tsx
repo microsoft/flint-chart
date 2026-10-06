@@ -13,10 +13,9 @@ import { ClimatePhaseStage } from '../playground/ClimatePhaseStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
 import { FreeformExplodedDetailStage } from '../playground/ExplodedDetailStage';
-import { weatherFixture } from '../playground/interaction-demo-data';
 import { ContinentCohortStage, CountryTableStage } from '../playground/ExternalToChartLab';
 import {
-  CaseCard, compositionInteractionModes, interactionCases, unitInteractionModes, type InteractionCase, type InteractionMode,
+  CaseCard, compositionInteractionModes, interactionCases, unitInteractionModes, type InteractionMode,
 } from '../playground/InteractionGallery';
 
 const sections = [
@@ -155,26 +154,42 @@ const supportedGroups = [
     modes: ['accessible-navigation', 'keyboard-focus', 'select-context'] },
 ] as const satisfies readonly { label: string; icon: typeof Move; description: string; modes: readonly InteractionMode[] }[];
 
-const temperatureHeatmapCase: InteractionCase = {
-  id: 'Heatmap-temperature-city-months',
-  chartType: 'Heatmap',
-  title: weatherFixture.title,
-  expectation: 'Drag city rows to reorder them; months remain in calendar order.',
+const countryElectricityMix = {
+  France: { Nuclear: 65.195, Renewables: 26.89, Fossil: 7.915 },
+  Germany: { Nuclear: 1.425, Renewables: 54.685, Fossil: 43.89 },
+  'United States': { Nuclear: 18.215, Renewables: 22.679, Fossil: 59.106 },
+  China: { Nuclear: 4.597, Renewables: 30.606, Fossil: 64.797 },
+  Brazil: { Nuclear: 2.048, Renewables: 88.995, Fossil: 8.958 },
+  Canada: { Nuclear: 13.787, Renewables: 65.397, Fossil: 20.816 },
+  'United Kingdom': { Nuclear: 13.879, Renewables: 46.378, Fossil: 39.743 },
+  India: { Nuclear: 2.513, Renewables: 19.287, Fossil: 78.201 },
+  Japan: { Nuclear: 7.694, Renewables: 22.137, Fossil: 70.169 },
+  Australia: { Nuclear: 0, Renewables: 34.81, Fossil: 65.19 },
+};
+const electricityMixCase = interactionCases.find(item => item.id === 'Stacked Bar Chart-Electricity generation mix by country, 2023');
+const electricityReorderCase = electricityMixCase && {
+  ...electricityMixCase,
+  id: `${electricityMixCase.id}-ten-countries`,
   input: {
-    ...weatherFixture.input,
-    semantic_types: { City: 'Category', Month: 'Month', 'Temperature (C)': 'Temperature' },
+    ...electricityMixCase.input,
+    semantic_types: {
+      ...electricityMixCase.input.semantic_types,
+      Share: { semanticType: 'Quantity' as const, intrinsicDomain: [0, 100] as [number, number] },
+    },
+    data: {
+      values: Object.entries(countryElectricityMix).flatMap(([Country, sources]) =>
+        Object.entries(sources).map(([Source, Share]) => ({ Country, Source, Share }))),
+    },
     chart_spec: {
-      ...weatherFixture.input.chart_spec,
-      chartType: 'Heatmap',
-      encodings: {
-        x: 'Month',
-        y: 'City',
-        color: 'Temperature (C)',
-      },
-      baseSize: { width: 480, height: 160 },
+      ...electricityMixCase.input.chart_spec,
+      title: 'Electricity generation mix by country, 2023',
+      baseSize: { width: 600, height: 260 },
     },
   },
 };
+
+const inspectIndexCase = interactionCases.find(item => item.id === 'inspect-index-line-two-all');
+const nutritionRadarCase = interactionCases.find(item => item.chartType === 'Radar Chart');
 
 const curatedExamples = [
   { label: 'Linked brush', mode: 'linked-brush', implementation: 'Preset',
@@ -183,12 +198,22 @@ const curatedExamples = [
     item: interactionCases.find(item => item.id === 'Scatter Plot-Gapminder-faceted-years') },
   { label: 'Inspect', mode: 'inspect-index', implementation: 'Preset',
     interactionLabel: 'Shared-axis inspection', icon: Ruler,
-    caption: 'Moving along the time axis reads egg and bread prices at the same month, with a value guide for each series.',
-    item: interactionCases.find(item => item.id === 'inspect-index-line-two-all') },
+    caption: 'Moving along the time axis reads egg and bread prices at the same month, with a labeled value guide for each series.',
+    item: inspectIndexCase && {
+      ...inspectIndexCase,
+      input: {
+        ...inspectIndexCase.input,
+        chart_spec: {
+          ...inspectIndexCase.input.chart_spec,
+          title: 'U.S. average egg and bread prices, 2015-2025',
+        },
+      },
+      indexInspection: { ...inspectIndexCase.indexInspection, displayValue: true },
+    } },
   { label: 'Reorder', mode: 'drag-reorder', implementation: 'Preset',
-    interactionLabel: 'City reordering', icon: GripVertical,
-    caption: 'Dragging a city row rearranges the temperature heatmap; months stay in calendar order and values remain unchanged.',
-    item: temperatureHeatmapCase },
+    interactionLabel: 'Country reordering', icon: GripVertical,
+    caption: 'Dragging a country bar reorders ten electricity-generation mixes (OWID/Ember, 2023); the source shares remain unchanged.',
+    item: electricityReorderCase },
   { label: 'Cohorts', mode: 'continent-cohort', implementation: 'Preset-level app integration', item: undefined,
     interactionLabel: 'Bidirectional selection', icon: ArrowLeftRight,
     caption: 'The continent selector highlights its countries; selecting a country updates the continent summary.' },
@@ -201,7 +226,16 @@ const curatedExamples = [
   { label: 'Keyboard', mode: 'accessible-navigation', implementation: 'Preset',
     interactionLabel: 'Accessible keyboard navigation', icon: Keyboard,
     caption: 'Move focus through chart elements and read their labels and values without a mouse.',
-    item: interactionCases.find(item => item.chartType === 'Radar Chart') },
+    item: nutritionRadarCase && {
+      ...nutritionRadarCase,
+      input: {
+        ...nutritionRadarCase.input,
+        chart_spec: {
+          ...nutritionRadarCase.input.chart_spec,
+          title: 'Nutritional profiles: almonds, Greek yogurt, and oats',
+        },
+      },
+    } },
   { label: 'Zoom', mode: 'semantic-zoom', implementation: 'Custom API', item: undefined,
     interactionLabel: 'Semantic zoom', icon: ZoomIn,
     caption: 'Wheel zoom changes the time window and redraws the bars, axes, and value labels.' },
@@ -251,8 +285,18 @@ function InteractionExamples({ selected, onSelect }: {
           : active.mode === 'you-draw-it' ? <YouDrawItStage />
           : active.mode === 'freeform-detail' ? <FreeformExplodedDetailStage />
           : active.item && <CaseCard
-            item={{ ...active.item, stageHeight: active.mode === 'drag-reorder' ? 300 : 380, stageScale: 1, wide: false, spacious: false }}
-            mode={active.mode} source="spec" themeId={undefined}
+            item={{
+              ...active.item,
+              input: {
+                ...active.item.input,
+                chart_spec: {
+                  ...active.item.input.chart_spec,
+                  title: active.item.input.chart_spec.title ?? active.item.title ?? active.item.chartType,
+                },
+              },
+              stageHeight: 380, stageScale: 1, wide: false, spacious: false,
+            }}
+            mode={active.mode} source="spec" themeId={active.mode === 'inspect-index' ? 'powerbi-light' : undefined}
             navigationGuard={{ minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 }}
             resetVersion={0} playback={active.mode === 'accessible-navigation'}
             selectionControls={active.mode === 'linked-brush'}

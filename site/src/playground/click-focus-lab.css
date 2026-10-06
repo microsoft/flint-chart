@@ -79,7 +79,7 @@
 .ig-example-workspace { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 16px; margin-top: 16px; }
 .ig-curated-example { min-width: 0; margin: 0; }
 .ig-curated-example .cf-probe { width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box; border-radius: 4px; grid-template-rows: auto; }
-.ig-curated-example[data-example-mode="drag-reorder"] .cf-probe { max-width: 600px; }
+.ig-curated-example[data-example-mode="drag-reorder"] .cf-probe { max-width: 832px; }
 .ig-curated-example[data-example-mode="accessible-navigation"] .cf-probe { max-width: 720px; }
 .ig-curated-example .cf-probe-header, .ig-curated-example .cf-probe-event { display: none; }
 .ig-curated-example[data-example-mode="accessible-navigation"] .cf-probe { position: relative; }
@@ -135,6 +135,9 @@
 .ig-curated-example .climate-phase-footer, .ig-curated-example .climate-phase-footer .ic-pill { font-size: 12px; }
 .ig-continent-cohort { --it-ink: #20262b; --it-muted: #4b525a; --it-line: #d7dde1; --it-soft: #f4f6f7; --it-accent: #176f58; --it-warm: #a14f2a; }
 .ig-continent-cohort .it-workspace { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); min-height: 300px; }
+.ig-curated-example[data-example-mode="continent-cohort"] .it-workspace { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); }
+.ig-curated-example[data-example-mode="continent-cohort"] .it-chart-panel { order: -1; border: 0; }
+.ig-curated-example[data-example-mode="continent-cohort"] .it-control-panel { border-left: 1px solid #e9edef; }
 .ig-continent-cohort .it-control-panel { padding: 18px; }
 .ig-continent-cohort .it-chart-panel { min-width: 0; padding: 0; }
 .ig-continent-cohort .it-chart-mount { width: max-content; max-width: none; }
@@ -153,6 +156,8 @@
   .cf-selection-panel .cf-keyboard-heading { margin-bottom: 4px; }
   .cf-selection-options { display: flex; flex-wrap: wrap; gap: 8px 12px; }
   .ig-continent-cohort .it-workspace { grid-template-columns: minmax(0, 1fr); }
+  .ig-curated-example[data-example-mode="continent-cohort"] .it-workspace { grid-template-columns: minmax(0, 1fr); }
+  .ig-curated-example[data-example-mode="continent-cohort"] .it-control-panel { border-left: 0; border-top: 1px solid #e9edef; }
   .ig-curated-example .climate-phase-with-readout { grid-template-columns: minmax(0, 1fr); }
   .climate-phase-readout { grid-column: 1; grid-row: auto; margin: 0; padding: 12px; }
   .climate-phase-readout-header { margin-bottom: 12px; }

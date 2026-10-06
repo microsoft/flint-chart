@@ -259,6 +259,8 @@ export interface InspectIndexOptions {
     show?: InspectIndexShow;
     /** Record field identifying a series; single-series policies switch through the legend. */
     seriesBy?: string;
+    /** Show compact series-colored labels on value guides inside the plot. Defaults to false. */
+    displayValue?: boolean;
     guide?: InspectGuideOptions | false;
     selector?: SemanticTargetSelector;
     /** Releases a locked series. Defaults to ['escape']. */

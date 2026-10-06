@@ -472,6 +472,7 @@ inspectIndex({
     axis: 'x',
     seriesBy: 'Series',
     show: 'all',
+    displayValue: true,
 });
 
 brushX({
@@ -495,6 +496,10 @@ returns every series in that slice. `show: 'single'` starts with the first serie
 `show: { series: value }` starts with a preferred series. In either single-series mode, clicking
 a legend item switches tracking to that series; marks remain inert and available to other interactions.
 The tracked series remains highlighted in its authored colour. Hovering another legend item previews it.
+Set `displayValue: true` to show compact labels on the value guides inside the plot, using the
+current interpolated scale values. Labels and value guides inherit the rendered series colour,
+and nearby labels stagger along their guides without moving the reference lines.
+This is off by default; `guide: false` also hides the labels.
 Both single-series policies require the `seriesBy` field. Aggregates such as averages remain custom-handler logic;
 the preset does not transform records. Directional predicates on the lower-level
 `inspectTrigger()` can support bespoke interactions such as threshold quadrants.

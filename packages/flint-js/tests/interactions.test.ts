@@ -107,7 +107,7 @@ import {
     targetFeedbackEntries,
     targetFeedbackPoint,
 } from '../src/vegalite/interactions/presentation/target-feedback-overlay';
-import { inspectGuideLine } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
+import { inspectGuideLine, inspectGuideValueLabelPosition } from '../src/vegalite/interactions/presentation/inspect-guide-overlay';
 import {
     annotationFacingEdges,
     annotationLeaderPorts,
@@ -2572,6 +2572,47 @@ describe('assisted, keyboard, and lasso acquisition', () => {
         });
     });
 
+    it('places a value label on the horizontal guide inside the plot', () => {
+        expect(inspectGuideValueLabelPosition('x', { x: 60, y: 80 },
+            { width: 26, height: 16 }, { width: 300, height: 180 }))
+            .toEqual({ left: 66, top: 72 });
+    });
+
+    it('places a value label on the vertical guide inside the plot', () => {
+        expect(inspectGuideValueLabelPosition('y', { x: 80, y: 150 },
+            { width: 26, height: 16 }, { width: 300, height: 180 }))
+            .toEqual({ left: 67, top: 128 });
+    });
+
+    it('keeps guide value labels within the chart container', () => {
+        expect(inspectGuideValueLabelPosition('x', { x: 0, y: 0 },
+            { width: 26, height: 16 }, { width: 300, height: 180 }))
+            .toEqual({ left: 6, top: 0 });
+        expect(inspectGuideValueLabelPosition('y', { x: 300, y: 180 },
+            { width: 26, height: 16 }, { width: 300, height: 180 }))
+            .toEqual({ left: 274, top: 158 });
+    });
+
+    it('keeps value labels inside the plot rather than over axis ticks', () => {
+        expect(inspectGuideValueLabelPosition('x', { x: 50, y: 30 },
+            { width: 26, height: 16 }, { left: 50, top: 30, width: 200, height: 120 }))
+            .toEqual({ left: 56, top: 30 });
+    });
+
+    it('staggers nearby value labels along their horizontal guides', () => {
+        expect(inspectGuideValueLabelPosition('x', { x: 60, y: 85 },
+            { width: 26, height: 16 }, { width: 300, height: 180 },
+            [{ left: 66, top: 72, width: 26, height: 16 }]))
+            .toEqual({ left: 96, top: 77 });
+    });
+
+    it('staggers nearby value labels along their vertical guides', () => {
+        expect(inspectGuideValueLabelPosition('y', { x: 85, y: 150 },
+            { width: 26, height: 16 }, { width: 300, height: 180 },
+            [{ left: 67, top: 128, width: 26, height: 16 }]))
+            .toEqual({ left: 72, top: 108 });
+    });
+
     it('derives a shared faceted plot boundary from scenegraph cells', () => {
         const cell = (x: number, width: number, height: number) => ({
             mark: { marktype: 'group', role: 'cell' }, x, y: 0, width, height, items: [],
@@ -3232,6 +3273,8 @@ describe('legend, inspect, zoom, and touch presets', () => {
             eventSource: { inspectIndex: { axis: 'x', show: 'all' } },
         });
         expect(inspectIndex().handle).toBeUndefined();
+        expect(inspectIndex({ displayValue: true }).eventSource.inspectIndex)
+            .toEqual({ axis: 'x', show: 'all', displayValue: true });
         const single = inspectIndex({ axis: 'y', show: 'single', seriesBy: 'Series', tolerance: 0.03 });
         expect(single.eventSource.inspectIndex).toEqual({ axis: 'y', show: 'single', seriesBy: 'Series' });
         expect(single.eventSource.inspectTolerance).toBe(0.03);

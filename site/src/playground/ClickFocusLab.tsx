@@ -230,6 +230,7 @@ export interface InteractionCase {
     show?: InspectIndexShow;
     seriesBy?: string;
     tolerance?: number;
+    displayValue?: boolean;
   };
   navigationAxes?: 'x' | 'y' | 'xy';
   chartType: string;
@@ -362,7 +363,7 @@ function indexInspectCases(): InteractionCase[] {
     chartType: 'Line Chart',
     expectation,
     ...(seriesBy ? { groupBy: seriesBy } : {}),
-    indexInspection: { axis: 'x', show, ...(seriesBy ? { seriesBy } : {}) },
+    indexInspection: { axis: 'x', show, displayValue: true, ...(seriesBy ? { seriesBy } : {}) },
     input: {
       data: { values },
       semantic_types: { Index: indexType, Value: 'Currency', Series: 'Category' },
@@ -394,7 +395,7 @@ function indexInspectCases(): InteractionCase[] {
     chartType: 'Scatter Plot',
     expectation,
     ...(seriesBy ? { groupBy: seriesBy } : {}),
-    indexInspection: { axis: 'x', show, ...(seriesBy ? { seriesBy } : {}), tolerance: 0.025 },
+    indexInspection: { axis: 'x', show, displayValue: true, ...(seriesBy ? { seriesBy } : {}), tolerance: 0.025 },
     input: {
       data: { values },
       semantic_types: semanticTypes,
@@ -1218,7 +1219,7 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     counts[status] += 1;
     return counts;
   }, { ready: 0, unsupported: 0, error: 0, loading: 0 } as Record<ProbeStatus, number>);
-  const specPattern = modeSpec(mode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>' });
+  const specPattern = modeSpec(mode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>', displayValue: true });
   const formatProperties = (value: object, indentation: number) => Object.entries(value).map(([key, property]) => {
     const padding = ' '.repeat(indentation);
     const prefix = `${padding}${JSON.stringify(key)}: `;
