@@ -230,7 +230,8 @@ export function guardGeoExtent(
 ): GeoExtent {
     const guardAxis = (origin: number, extentSize: number, plotSize: number): [number, number] => {
         const visible: [number, number] = [(0 - origin) / extentSize, (plotSize - origin) / extentSize];
-        const [start, end] = guardNavigationDomain(visible, [0, 1], 'linear', guard).map(Number);
+        const axisGuard = extentSize <= plotSize * (1 + 1e-10) ? { ...guard, overscrollFraction: 0 } : guard;
+        const [start, end] = guardNavigationDomain(visible, [0, 1], 'linear', axisGuard).map(Number);
         const guardedSize = plotSize / (end - start);
         // `-start * size` yields -0 at the frame edge; keep the origin a plain 0.
         const guardedOrigin = -start * guardedSize || 0;

@@ -225,7 +225,7 @@ export function IndexChartStage() {
         </span>
       </div>
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+        <ScaleToFit height={540} adaptiveHeight padding={8}>
           <div className="index-chart-stack">
             <div ref={mountRef} className="ic-flint-dimpvis-mount index-chart-mount" />
             <svg
@@ -250,9 +250,6 @@ export function IndexChartStage() {
             </svg>
           </div>
         </ScaleToFit>
-      </div>
-      <div className="index-chart-footer">
-        <span className="ic-pill" data-active="true">Reference: {formatMonth(derived.activeDate)}</span>
       </div>
     </div>
   );

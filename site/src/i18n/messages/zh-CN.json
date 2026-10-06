@@ -82,11 +82,28 @@
     },
     "groups": {
       "quick-start": "快速开始",
+      "interaction": "交互",
       "introduction": "语言设计",
       "reference": "图表指南",
       "extending": "开发"
     },
     "entries": {
+      "interaction-spec": {
+        "title": "声明式规范",
+        "description": "在 interaction_spec 中配置可复用的交互预设，无需编写处理函数。"
+      },
+      "interaction-api": {
+        "title": "编程 API",
+        "description": "使用预设工厂，或通过函数式交互 API 编写自定义处理函数。"
+      },
+      "interaction-introduction": {
+        "title": "简介",
+        "description": "了解预设、语义事件和图表更新如何连接图表与应用。"
+      },
+      "interaction-components": {
+        "title": "组件",
+        "description": "监听语义事件，通过图表更新 API 连接应用状态和控件。"
+      },
       "getting-started": {
         "title": "入门指南",
         "description": "安装 Flint，并用简单的 DataSpec 与 ChartSpec 制作第一张图。"

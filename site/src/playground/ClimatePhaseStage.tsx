@@ -363,12 +363,8 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
           every city through the same interpolated point in the annual cycle.
         </span>
       </div>}
-      {!showReadout && <div className="ic-toolbar">
-        <span className="ic-pill" data-active="true">City: {selectedCity}</span>
-        <span className="ic-pill" data-active="true">Month: {monthLabel(activePhase)}</span>
-      </div>}
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={height} minHeight={showReadout ? 0 : compact ? 300 : 400} adaptiveHeight padding={showReadout ? 0 : 8}>
+        <ScaleToFit height={height} adaptiveHeight padding={showReadout ? 0 : 8}>
           <div className="ic-flint-dimpvis-mount" ref={mountRef} />
         </ScaleToFit>
       </div>
@@ -382,13 +378,6 @@ export function ClimatePhaseStage({ compact = false, height = compact ? 300 : 54
         >
           {isPlaying ? 'Pause' : `▶ Play ${selectedCity}`}
         </button>
-        <a
-          href="https://power.larc.nasa.gov/docs/services/api/temporal/climatology/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          NASA POWER · MERRA-2 · 1991–2020
-        </a>
       </div>}
       {showReadout && <aside className="climate-phase-readout" aria-label="Selected city climate">
         <div className="climate-phase-readout-header">

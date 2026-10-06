@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, Table2, UserRound, ZoomIn } from 'lucide-react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { CanvasInteractionAction } from 'flint-chart/interactive';
 import { CodeBlock } from '../components/CodeBlock';
 import { MicrosoftDisclosures, SiteNavBar, SiteShell } from '../components/SiteShell';
@@ -9,6 +9,7 @@ import { useLocale } from '../i18n/LocaleContext';
 import { siteTheme } from '../shared/theme';
 import '../playground/playground.css';
 import { ClickFocusLab } from '../playground/ClickFocusLab';
+import { ThemePicker } from '../playground/ThemePicker';
 import { ClimatePhaseStage } from '../playground/ClimatePhaseStage';
 import { RetailDrilldownStage } from '../playground/RetailDrilldownStage';
 import { YouDrawItStage } from '../playground/YouDrawItStage';
@@ -18,10 +19,6 @@ import {
   CaseCard, compositionInteractionModes, interactionCases, unitInteractionModes, type InteractionMode,
 } from '../playground/InteractionGallery';
 
-const sections = [
-  { label: 'Interactions', modes: unitInteractionModes },
-  { label: 'Combinations', modes: compositionInteractionModes },
-];
 function MechanismArrows() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(720);
@@ -153,6 +150,12 @@ const supportedGroups = [
   { label: 'Keyboard & context', icon: Keyboard, description: 'Navigate chart elements accessibly and combine selection with host actions.',
     modes: ['accessible-navigation', 'keyboard-focus', 'select-context'] },
 ] as const satisfies readonly { label: string; icon: typeof Move; description: string; modes: readonly InteractionMode[] }[];
+
+const sections = supportedGroups.map(group => ({
+  label: group.label,
+  modes: group.modes.flatMap(value =>
+    [...unitInteractionModes, ...compositionInteractionModes].filter(item => item.value === value)),
+}));
 
 const countryElectricityMix = {
   France: { Nuclear: 65.195, Renewables: 26.89, Fossil: 7.915 },
@@ -312,9 +315,7 @@ function InteractionExamples({ selected, onSelect }: {
 
 const behaviors: Record<InteractionMode, readonly { trigger: string; update: string }[]> = {
   'click-highlight': [
-    { trigger: 'Click a mark', update: 'Highlight its data and dim unrelated marks.' },
-    { trigger: 'Click a legend entry', update: 'Highlight its series or group and dim other groups.' },
-    { trigger: 'Click a categorical axis label', update: 'Highlight marks in that category and dim other categories.' },
+    { trigger: 'Click a mark, a legend entry, or a discrete axis label', update: 'Highlight matching data and dim unrelated marks.' },
   ],
   'click-group-focus': [{ trigger: 'Click a mark', update: 'Highlight all marks sharing its configured group and dim unrelated marks.' }],
   'hover-group-focus': [{ trigger: 'Hover over a mark', update: 'Temporarily emphasize its group without changing the retained selection.' }],
@@ -360,8 +361,7 @@ const behaviors: Record<InteractionMode, readonly { trigger: string; update: str
   'accessible-navigation': [{ trigger: 'Focus the chart and press arrow keys, Enter, or Escape', update: 'Move between chart elements, update the focus indicator, and announce the focused content.' }],
   'keyboard-focus': [
     { trigger: 'Click a mark', update: 'Highlight its data and dim unrelated marks.' },
-    { trigger: 'Press arrow keys while the chart is focused', update: 'Move the focus indicator between marks.' },
-    { trigger: 'Press Enter on a focused mark', update: 'Activate and highlight that mark.' },
+    { trigger: 'Use arrow keys while the chart is focused, then press Enter', update: 'Move between marks and activate the focused mark.' },
   ],
   'select-context': [
     { trigger: 'Drag a rectangle across the plot', update: 'Highlight enclosed marks and dim marks outside the rectangle.' },
@@ -598,25 +598,30 @@ await chart.ready;`}</CodeBlock>
 
 export function InteractionGallery() {
   const { mode } = useParams();
+  const { pathname } = useLocation();
   const { lp } = useLocale();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [themeId, setThemeId] = useState<string | undefined>(undefined);
   const selected = [...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)
     ?? (!mode ? unitInteractionModes[0] : undefined);
   useEffect(() => { scrollRef.current?.scrollTo(0, 0); }, [mode]);
 
   if (!selected) return <Navigate to={lp('/interactions')} replace />;
+  if (mode && !pathname.includes('/interactions/gallery/')) {
+    return <Navigate to={lp(`/interactions/gallery/${mode}`)} replace />;
+  }
 
   return (
     <SiteShell>
-      <div className="ig-scroll dev-shell" ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <div className="ig-scroll dev-shell" ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', fontFamily: siteTheme.fontSans }}>
         <div className="ig-layout">
           <nav className="cf-action-rail ig-action-rail" aria-label="Interaction navigation">
             {sections.map((section, index) => (
               <Fragment key={section.label}>
                 {index > 0 && <div className="cf-action-divider" role="separator" />}
                 {section.modes.map(({ value, label, icon: Icon }) => (
-                  <LocaleLink key={value} to={`/interactions/${value}`} className={selected?.value === value ? 'active' : undefined}
+                  <LocaleLink key={value} to={`/interactions/gallery/${value}`} className={selected?.value === value ? 'active' : undefined}
                     aria-current={selected?.value === value ? 'page' : undefined}>
                     <Icon size={15} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>
                   </LocaleLink>
@@ -625,15 +630,25 @@ export function InteractionGallery() {
             ))}
           </nav>
           <main className="ig-content">
+            <header className="ig-gallery-header">
+              <div className="ig-gallery-title-row">
+                <h1>Interaction Gallery</h1>
+                <ThemePicker themeId={themeId} onTheme={setThemeId} />
+              </div>
+              <p>This gallery showcases {unitInteractionModes.length + compositionInteractionModes.length} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
+              <p>You can use these presets directly in a declarative specification or through the functional API in your application. To create bespoke interactions, refer to the <LocaleLink to="/interactions/bespoke" className="site-text-link">Bespoke Interactions page</LocaleLink>.</p>
+            </header>
             <nav className="ig-mobile-nav" aria-label="Interaction navigation">
               <select aria-label="Interaction" value={selected.value}
-                onChange={event => navigate(lp(`/interactions/${event.target.value}`))}>
+                onChange={event => navigate(lp(`/interactions/gallery/${event.target.value}`))}>
                 {sections.map(section => <optgroup key={section.label} label={section.label}>
                   {section.modes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
                 </optgroup>)}
               </select>
             </nav>
             <ClickFocusLab key={selected.value} source="spec" mode={selected.value} embedded
+              headingLevel={2}
+              themeId={themeId} showThemePicker={false}
               behaviors={behaviors[selected.value]}
               eventActions={eventActions[selected.value]} eventDescriptions={eventDescriptions} />
           </main>

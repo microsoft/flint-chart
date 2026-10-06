@@ -4,6 +4,7 @@ import type { ThemeSpec } from 'flint-chart';
 import type { PreviewCase } from '../shared/preview-cases';
 import { BACKENDS } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
+import { CodeBlock } from './CodeBlock';
 import { ScaleToFit } from './ScaleToFit';
 import { VegaLiteView } from './VegaLiteView';
 
@@ -89,7 +90,9 @@ export function ThemeChartModal({
           </section>
           <section className="theme-chart-modal-spec">
             <strong>{t('themeLab.flintSpec')}</strong>
-            <pre>{specText}</pre>
+            <div className="theme-chart-modal-code">
+              <CodeBlock language="json" variant="light" customStyle={{ margin: 0, borderRadius: 0, fontSize: 12, background: 'transparent' }}>{specText}</CodeBlock>
+            </div>
           </section>
         </div>
       </div>
@@ -113,6 +116,6 @@ const modalStyles = `
   .theme-chart-modal-preview pre { color: ${siteTheme.error}; white-space: pre-wrap; }
   .theme-chart-modal-spec { min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; border-left: 1px solid ${siteTheme.border}; background: ${siteTheme.surface}; }
   .theme-chart-modal-spec > strong { padding: 10px 14px; border-bottom: 1px solid ${siteTheme.border}; color: ${siteTheme.textMuted}; font-size: 12px; }
-  .theme-chart-modal-spec pre { flex: 1; margin: 0; padding: 16px; overflow: auto; color: ${siteTheme.text}; font-family: ${siteTheme.fontMono}; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .theme-chart-modal-code { flex: 1; min-height: 0; overflow: auto; }
   @media (max-width: 900px) { .theme-chart-modal { height: min(900px, 94vh); } .theme-chart-modal-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(300px, 1.15fr) minmax(240px, 0.85fr); overflow: auto; } .theme-chart-modal-spec { border-left: 0; border-top: 1px solid ${siteTheme.border}; } }
 `;

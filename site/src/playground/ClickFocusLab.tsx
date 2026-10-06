@@ -1,6 +1,7 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Accessibility, AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
+import { Accessibility, AlertTriangle, Braces, Check, ChevronDown, ChevronRight, Copy, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, LoaderCircle, Maximize2, Menu, MessageSquareText, MousePointerClick, Move, MoveHorizontal, MoveVertical, RotateCcw, Ruler, Scan, Target, Timer, X, ZoomIn } from 'lucide-react';
+import { LocaleLink } from '../i18n/LocaleLink';
 import {
   assembleVegaLite,
   type ChartAssemblyInput,
@@ -49,6 +50,7 @@ import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteRange } from '../components/SiteRange';
 import foodPrices from '../data/cpi-food-prices.json';
 import { BACKENDS } from '../shared/supported-backends';
+import { siteTheme } from '../shared/theme';
 import { representativeCasesByChartType, testCaseToAssemblyInput } from '../shared/test-case-utils';
 import { ThemePicker } from './ThemePicker';
 import { navigationDemoCases } from './navigation-demo-data';
@@ -256,6 +258,7 @@ function representative(generator: () => TestCase[]): TestCase {
 function interactionCase(testCase: TestCase, suffix = ''): InteractionCase {
   return {
     id: `${testCase.chartType}-${testCase.title}${suffix}`,
+    title: testCase.title,
     chartType: testCase.chartType,
     input: testCaseToAssemblyInput(testCase, SIZE) as ChartAssemblyInput,
     expectation: testCase.description || 'Interact with the chart and inspect the resolved semantic target below.',
@@ -977,6 +980,100 @@ function InteractiveChart({
   );
 }
 
+function InteractionChartModal({ item, mode, themeId, navigationGuard, resetVersion, source, title, description, onClose }: {
+  item: InteractionCase;
+  mode: InteractionMode;
+  themeId: string | undefined;
+  navigationGuard: NavigationGuard;
+  resetVersion: number;
+  source: InteractionSource;
+  title: string;
+  description: string;
+  onClose: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const [codeSource, setCodeSource] = useState(source);
+  const [copied, setCopied] = useState(false);
+  const [message, setMessage] = useState('');
+  const [copyError, setCopyError] = useState(false);
+  const spec = useMemo(() => modeSpec(mode, item.navigationAxes, navigationGuard, item.groupBy, item.indexInspection), [mode, item, navigationGuard]);
+  const input = themeId ? { ...item.input, theme_spec: themeId } : item.input;
+  const factories = spec.interactions.map(entry => entry.type.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase()));
+  const code = codeSource === 'spec'
+    ? JSON.stringify({ ...input, interaction_spec: spec }, null, 2)
+    : [
+      `import { buildInteractiveChart${factories.length ? `, ${[...new Set(factories)].join(', ')}` : ''} } from 'flint-chart/interactive';`,
+      '',
+      `const chartInput = ${JSON.stringify(input, null, 2)};`,
+      '',
+      "const chart = buildInteractiveChart(container, chartInput, {",
+      "  backend: 'vegalite',",
+      '  interactions: [',
+      ...spec.interactions.map((entry, index) => `    ${factories[index]}(${entry.options ? JSON.stringify(entry.options, null, 2).replace(/\n/g, '\n    ') : ''}),`),
+      '  ],',
+      ...(spec.keyboardTargeting ? ['  keyboardTargeting: true,'] : []),
+      '});',
+      '',
+      'await chart.ready;',
+    ].join('\n');
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
+    };
+  }, []);
+
+  return createPortal(
+    <dialog ref={dialogRef} className="cf-chart-modal" aria-labelledby={titleId} style={{ fontFamily: siteTheme.fontSans }}
+      onCancel={event => { event.preventDefault(); onClose(); }}
+      onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <header>
+        <div><h2 id={titleId}>{title}</h2><p>{description}</p></div>
+        <button type="button" className="cf-modal-icon" onClick={onClose} aria-label="Close chart" title="Close chart"><X size={18} aria-hidden="true" /></button>
+      </header>
+      <div className="cf-chart-modal-body">
+        <section className="cf-chart-modal-preview" aria-label="Interactive chart">
+          <div>
+            <ScaleToFit fill height={650} padding={20} maxScale={1.9}>
+              <InteractiveChart input={item.input} mode={mode} themeId={themeId} navigationGuard={navigationGuard}
+                navigationAxes={item.navigationAxes} groupBy={item.groupBy} indexInspection={item.indexInspection}
+                spec={codeSource === 'spec' ? spec : undefined} resetVersion={resetVersion}
+                onStatus={(status, message) => setMessage(status === 'error' || status === 'unsupported' ? message ?? status : '')}
+                onSemanticEvent={detail => setMessage(detail.event.action)} />
+            </ScaleToFit>
+          </div>
+          {message && <small className="cf-chart-modal-status" title={message}>{message}</small>}
+        </section>
+        <section className="cf-chart-modal-spec" aria-label="Chart code">
+          <div className="cf-chart-modal-toolbar">
+            <div className="cf-source-toggle" role="group" aria-label="Code format">
+              <button type="button" aria-pressed={codeSource === 'spec'} onClick={() => { setCodeSource('spec'); setCopied(false); setCopyError(false); }}>Spec (JSON)</button>
+              <button type="button" aria-pressed={codeSource === 'code'} onClick={() => { setCodeSource('code'); setCopied(false); setCopyError(false); }}>Functional</button>
+            </div>
+            <button type="button" className="cf-modal-icon" aria-label={copied ? 'Code copied' : 'Copy code'} title={copied ? 'Code copied' : 'Copy code'} onClick={async () => {
+              try { await navigator.clipboard.writeText(code); setCopied(true); setCopyError(false); }
+              catch { setCopyError(true); }
+            }}>{copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}</button>
+          </div>
+          {copyError && <p role="alert">Unable to copy code. Check clipboard permissions.</p>}
+          <div className="cf-chart-modal-code">
+            <CodeBlock language={codeSource === 'spec' ? 'json' : 'typescript'} variant="light" customStyle={{ margin: 0, borderRadius: 0, fontSize: 12, background: 'transparent' }}>{code}</CodeBlock>
+          </div>
+        </section>
+      </div>
+    </dialog>, document.body,
+  );
+}
+
 export function CaseCard({
   item,
   mode,
@@ -1003,6 +1100,7 @@ export function CaseCard({
   const [status, setStatus] = useState<ProbeStatus>('loading');
   const [statusMessage, setStatusMessage] = useState('Compiling');
   const [warnings, setWarnings] = useState<readonly ChartWarning[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   // Each card folds its own JSON; the page switch sets the default for all of them.
   const [specOpen, setSpecOpen] = useState(showSpec);
@@ -1024,10 +1122,6 @@ export function CaseCard({
   };
   const [lastInteraction, setLastInteraction] = useState<FlintInteractionEventDetail | null>(null);
   const title = item.title || item.input.chart_spec.title || item.input.chart_spec.chartType;
-  const availableNavigationAxes = navigationAxesByCase.get(item.id);
-  const navigationAxes = item.navigationAxes === 'xy'
-    ? ['x', 'y']
-    : item.navigationAxes ? [item.navigationAxes] : availableNavigationAxes;
   const description = mode === 'navigate'
     ? item.expectation
     : mode === 'annotate'
@@ -1048,11 +1142,12 @@ export function CaseCard({
           <h2>{title}</h2>
           <p>{description}</p>
         </div>
-        <span className={`cf-status cf-status-${status}`} title={statusMessage}>
-          {status === 'ready' && mode === 'navigate'
-            ? navigationAxes?.join(' + ') || 'Ready'
-            : status === 'ready' ? 'Ready' : status}
-        </span>
+        <div className="cf-probe-header-actions">
+          {(status === 'error' || status === 'unsupported') && <span className={`cf-status cf-status-${status}`} title={statusMessage}>{status}</span>}
+          {status === 'loading'
+            ? <button type="button" className="cf-modal-icon" disabled aria-busy="true" aria-label="Loading chart" title="Loading chart"><LoaderCircle size={15} className="cf-chart-loading" aria-hidden="true" /></button>
+            : <button type="button" className="cf-modal-icon" aria-label={`Open chart: ${title}`} title="Open chart and code" onClick={() => setModalOpen(true)}><Maximize2 size={15} aria-hidden="true" /></button>}
+        </div>
       </header>
       {spec && status === 'unsupported' && warnings.length > 0 && (
         <div className="cf-spec-warning" role="status">
@@ -1170,14 +1265,19 @@ export function CaseCard({
           <span>{status === 'unsupported' || status === 'error' ? statusMessage : 'Interact to inspect semantic resolution'}</span>
         )}
       </footer>
+      {modalOpen && <InteractionChartModal item={item} mode={mode} themeId={themeId} navigationGuard={navigationGuard}
+        resetVersion={resetVersion} source={source} title={title} description={description} onClose={() => setModalOpen(false)} />}
     </article>
   );
 }
 
-export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMode, embedded = false, behaviors, eventActions, eventDescriptions }: {
+export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMode, embedded = false, headingLevel = 1, themeId: externalThemeId, showThemePicker = true, behaviors, eventActions, eventDescriptions }: {
   source?: InteractionSource;
   mode?: InteractionMode;
   embedded?: boolean;
+  headingLevel?: 1 | 2;
+  themeId?: string;
+  showThemePicker?: boolean;
   behaviors?: readonly { trigger: string; update: string }[];
   eventActions?: readonly CanvasInteractionAction[];
   eventDescriptions?: Partial<Record<CanvasInteractionAction, string>>;
@@ -1185,7 +1285,16 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
   const [source, setSource] = useState<InteractionSource>(initialSource);
   const [localMode, setMode] = useState<InteractionMode>('click-highlight');
   const mode = selectedMode ?? localMode;
-  const [themeId, setThemeId] = useState<string | undefined>(undefined);
+  const Heading = headingLevel === 2 ? 'h2' : 'h1';
+  const behaviorDescriptions = behaviors?.map(behavior => {
+    const verb = behavior.trigger.startsWith('Press and hold ') ? 'Press and hold' : behavior.trigger.split(' ')[0];
+    return {
+      trigger: behavior.trigger,
+      content: <><strong>{verb}</strong>{`${behavior.trigger.slice(verb.length)} to ${behavior.update.charAt(0).toLowerCase()}${behavior.update.slice(1)}`}</>,
+    };
+  });
+  const [localThemeId, setThemeId] = useState<string | undefined>(undefined);
+  const themeId = showThemePicker ? localThemeId : externalThemeId;
   const [navigationGuard, setNavigationGuard] = useState<NavigationGuard>({
     minVisibleFraction: 0.02,
     maxVisibleFraction: 1,
@@ -1294,19 +1403,20 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
         <div>
         {embedded ? <>
           <div className="cf-heading-title">
-            <h1>{[...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)?.label}</h1>
+            <Heading>{[...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)?.label}</Heading>
           </div>
-          {behaviors && <section className="cf-interaction-detail" aria-label="Trigger and chart update">
-            <ul>{behaviors.map(behavior => <li key={behavior.trigger}>
-              <strong>{behavior.trigger}</strong> &rarr; {behavior.update}
-            </li>)}</ul>
+          {behaviorDescriptions && <section className="cf-interaction-detail cf-preset-description" aria-label="Available interactions">
+            {behaviorDescriptions.length === 1 ? <p>{behaviorDescriptions[0].content}</p>
+              : <ul>{behaviorDescriptions.map(description => <li key={description.trigger}>{description.content}</li>)}</ul>}
           </section>}
-          {eventActions && <section className="cf-interaction-detail" aria-label="Emitted Events">
-            <h2>Emitted Events</h2>
+          {eventActions && <section className="cf-interaction-detail cf-emitted-events" aria-label="Emitted Events">
+            <div className="cf-emitted-events-heading">
+              <h2>Emitted Events</h2>
+            </div>
             <ul>{eventActions.map(action => <li key={action}>
               <code>{action}</code> {eventDescriptions?.[action]}
             </li>)}</ul>
-            <p>Listen for <code>flint-interaction</code> on the chart container. Read the action and its data from <code>event.detail.event</code>.</p>
+            <p className="cf-events-doc-link">See <LocaleLink to="/documentation/interaction-components" className="site-text-link">Interaction components</LocaleLink> for how to read and handle Flint events.</p>
           </section>}
         </> : <>
         <h1>{source === 'spec' ? 'Interaction gallery, from a spec' : 'Interaction gallery'}</h1>
@@ -1355,9 +1465,9 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
           )}
         </div>
         </>}
-        <div className="cf-theme-picker">
+        {showThemePicker && <div className="cf-theme-picker">
           <ThemePicker themeId={themeId} onTheme={setThemeId} />
-        </div>
+        </div>}
         {mode === 'navigate' && (
           <div className="cf-navigation-controls" aria-label="Navigation guards">
             <label>
