@@ -49,6 +49,10 @@ export interface Sentence {
   text: string;
   /** Renderer-neutral update JSON, applied together as one retained ChartUpdate. */
   ops: ChartUpdateOp[];
+  /** A slide that is not a sentence of the text: the article's title. */
+  kind?: 'title';
+  /** A second line under a title slide, such as the byline. */
+  detail?: string;
 }
 
 /** Plain text between sentences, or a bound sentence. */
@@ -59,6 +63,12 @@ export type Paragraph = ReportPart[];
 export interface Message {
   from: 'user' | 'agent';
   paragraphs: Paragraph[];
+}
+
+/** One plain-text chat message: paragraphs as strings, bound to nothing. */
+export interface ChatMessage {
+  from: 'user' | 'agent';
+  text: string[];
 }
 
 /** The update op an interaction preset produces, and the kind of op a sentence carries. */
@@ -77,6 +87,8 @@ export interface SectionSpec {
   id: string;
   title: string;
   lede: string;
+  /** Author and date line under the lede; the article section has a default. */
+  byline?: string;
   fixture: InteractionDemoFixture;
   presets: Preset[];
   paragraphs: Paragraph[];
@@ -114,6 +126,9 @@ export const emphasis = (...match: Selector[]): ChartUpdateOp =>
 /** Attaches a note to one data key. The key must resolve to exactly one element. */
 export const note = (match: Selector, text: string): ChartUpdateOp =>
   ({ op: 'set-annotation', target: { select: { key: match } }, value: { text } });
+/** A note anchored to the point mark of the key, where a line chart draws its points. */
+export const pointNote = (match: Selector, text: string): ChartUpdateOp =>
+  ({ op: 'set-annotation', target: { select: { key: match } }, value: { text, subject: { kind: 'mark' } } });
 /** Sets the visible domain on x, y, or both. */
 export const view = (range: { x?: Domain; y?: Domain }): ChartUpdateOp => ({
   op: 'set-viewport',
@@ -123,8 +138,8 @@ export const view = (range: { x?: Domain; y?: Domain }): ChartUpdateOp => ({
 /** Restores the full domain on the axes given. */
 export const fullView = (axes: ViewportAxes): ChartUpdateOp => ({ op: 'set-viewport', axes, value: {} });
 
-/** A sentence: its text and the ops it carries. */
 export const sentence = (id: string, text: string, ...ops: ChartUpdateOp[]): Sentence => ({ id, text, ops });
+export const titleSlide = (id: string, text: string, ...ops: ChartUpdateOp[]): Sentence => ({ id, text, ops, kind: 'title' });
 
 export const preset = (op: PresetOp, label: string, icon: LucideIcon, def: CanvasInteractionDef): Preset =>
   ({ op, label, icon, def });

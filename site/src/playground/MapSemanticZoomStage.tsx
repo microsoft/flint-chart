@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ChartAssemblyInput } from 'flint-chart';
 import {
   buildInteractiveChart,
   clickTrigger,
@@ -36,6 +37,25 @@ const CLICK_ID = 'map-semantic-zoom-click';
 /** Milliseconds a fly into a state, or back home, takes. */
 const FLY_MS = 700;
 
+/** A two-level US table for the stage, with the credit the footer shows. */
+export type MapDataset = {
+  input: () => ChartAssemblyInput;
+  measure: string;
+  source: string;
+  ariaLabel: string;
+  chartId: string;
+  /** Hide the chips, the Reset button, and the data credit; a double-click flies home. */
+  bare?: boolean;
+};
+
+const MOBILITY_DATASET: MapDataset = {
+  input: chartInput,
+  measure: mobility.measure,
+  source: mobility.source,
+  ariaLabel: 'US map of childhood income gain by place',
+  chartId: 'map-semantic-zoom',
+};
+
 const CLICK_REGION: CanvasInteractionDef = {
   id: CLICK_ID,
   eventSource: clickTrigger,
@@ -45,7 +65,10 @@ const CLICK_REGION: CanvasInteractionDef = {
   },
 };
 
-export function MapSemanticZoomStage({ compact = false }: { compact?: boolean } = {}) {
+export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATASET }: { compact?: boolean; dataset?: MapDataset } = {}) {
+  const [level, setLevel] = useState<Level>('state');
+  const [lonSpan, setLonSpan] = useState<number | undefined>(undefined);
+  const [focusState, setFocusState] = useState<string | undefined>(undefined);
   const mountRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const levelRef = useRef<Level>('state');
@@ -81,23 +104,23 @@ export function MapSemanticZoomStage({ compact = false }: { compact?: boolean } 
     const mount = mountRef.current;
     if (!mount) return undefined;
     mount.addEventListener('flint-interaction', handleInteraction);
-    const surface = buildInteractiveChart(mount, chartInput(), {
+    const surface = buildInteractiveChart(mount, dataset.input(), {
       backend: 'vegalite',
       // Thousands of county shapes redraw on every pan/zoom frame; canvas
       // avoids the per-path SVG DOM churn.
       renderer: 'canvas',
       interactions: [
         navigate({
-          domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0.15 },
-          // A click on empty map, not a double-click, flies home.
-          reset: ['click-none'],
+          domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
+          // A click on empty map flies home; the bare stage keeps the double-click.
+          reset: dataset.bare ? ['double-click'] : ['click-none'],
           resetTransition: { duration: FLY_MS },
         }),
         CLICK_REGION,
       ],
       expressionInterpreter,
-      ariaLabel: 'US map of childhood income gain by place',
-      chartId: 'map-semantic-zoom',
+      ariaLabel: dataset.ariaLabel,
+      chartId: dataset.chartId,
     });
     surfaceRef.current = surface;
     void surface.ready.catch((error) => {
@@ -108,7 +131,7 @@ export function MapSemanticZoomStage({ compact = false }: { compact?: boolean } 
       surfaceRef.current = null;
       surface.destroy();
     };
-  }, [handleInteraction]);
+  }, [handleInteraction, dataset]);
 
   const reset = () => flyTo({});
 
@@ -124,14 +147,23 @@ export function MapSemanticZoomStage({ compact = false }: { compact?: boolean } 
           centre from each event.
         </span>
       </div>}
-      <div className="ic-toolbar">
+      {!dataset.bare && <div className="ic-toolbar">
+        <span className="ic-pill" data-active="true">Level: {levelLabel}</span>
+        <span className="ic-pill" data-active={lonSpan !== undefined}>
+          {lonSpan !== undefined ? `Visible: ${lonSpan.toFixed(1)}° of longitude` : 'Visible: full frame'}
+        </span>
         <button type="button" className="ic-pill" onClick={reset}>Reset</button>
-      </div>
+      </div>}
       <div className="ic-flint-dimpvis-panel">
         <ScaleToFit height={compact ? 300 : 800} adaptiveHeight={!compact} padding={8}>
           <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
         </ScaleToFit>
       </div>
+      {!dataset.bare && <div className="map-semantic-zoom-credit">
+        <strong>Data</strong>
+        <span>{dataset.measure}</span>
+        <span>{dataset.source}</span>
+      </div>}
     </div>
   );
 }

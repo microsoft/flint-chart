@@ -267,9 +267,65 @@ export interface NavigationRequest {
 
 export type NavigationUpdate = Extract<ChartUpdateOp, { op: 'set-viewport' }>;
 
-export interface InteractionContext {
+export type DomainCoordinate =
+    | { kind: 'value'; value: unknown }
+    | { kind: 'interval'; start: unknown; end: unknown };
+
+export interface DomainPoint {
+    x?: unknown;
+    y?: unknown;
+}
+
+export interface DomainGeometry {
+    x?: DomainCoordinate;
+    y?: DomainCoordinate;
+    points?: readonly DomainPoint[];
+    /** The detail level a multi-level projected chart draws for this viewport. */
+    level?: string;
+    /**
+     * On a multi-level projected chart, the coarsest-level region under the
+     * plot centre: its feature id and properties plus the joined row fields.
+     */
+    focus?: Record<string, unknown>;
+}
+
+/** The marks one retained or preview update emphasizes. */
+export interface ChartStateEntry {
+    readonly layer: 'retained' | 'preview';
+    readonly elements: readonly SemanticElement[];
+}
+
+/** A legend value a toggle hides. */
+export interface ChartHiddenValue {
+    readonly channel: string;
+    readonly value: unknown;
+}
+
+/** The slice of a category axis a rail shows. */
+export interface ChartCategoryWindow {
+    readonly start: number;
+    readonly count: number;
+    readonly total: number;
+}
+
+/** What the chart shows now, in semantic terms. A host reads it; a preset reads its superset. */
+export interface ChartState {
     readonly chartType: string;
+    /** The marks the chart emphasizes or focuses now, previews included. */
     readonly selected: readonly SemanticElement[];
+    /** The emphasized marks of each update, by update id; `selected` is their union. */
+    readonly entries?: ReadonlyMap<string, ChartStateEntry>;
+    /** The legend values a toggle hides now. */
+    readonly hidden?: readonly ChartHiddenValue[];
+    /** The domain the plot shows now, when the chart navigates. */
+    readonly viewport?: DomainGeometry;
+    /** The category window of each rail. */
+    readonly windows?: Partial<Record<'x' | 'y', ChartCategoryWindow>>;
+    readonly categoryOrder?: readonly unknown[];
+}
+
+export interface InteractionContext extends ChartState {
+    /** Every drawn mark; the scene is scanned on first read. */
     readonly available?: readonly SemanticElement[];
     readonly resolveGroupValue?: (element: SemanticElement) => unknown;
     readonly resolveNavigation?: (
@@ -280,7 +336,6 @@ export interface InteractionContext {
     readonly seriesField?: string;
     readonly legendDomains?: Readonly<Record<string, readonly unknown[]>>;
     readonly categoryAxis?: 'x' | 'y';
-    readonly categoryOrder?: readonly unknown[];
     readonly reorderAxes?: readonly {
         axis: 'x' | 'y';
         field: string;

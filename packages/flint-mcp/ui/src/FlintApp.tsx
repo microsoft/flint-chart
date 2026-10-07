@@ -21,7 +21,7 @@ import { expressionInterpreter } from 'vega-interpreter';
 
 import { renderFlintSvg, withAppPreviewDefaults, type FlintRenderResult } from './render';
 import { chartIconFor } from './chart-icons';
-import { selectionContextText } from './selection-context';
+import { chartContext } from './chart-context';
 import {
   buildPanelModel,
   setProperty,
@@ -986,13 +986,15 @@ function InteractiveChart({
     void surface.warnings.then((list) => {
       if (live) onWarnings(list);
     });
-    // Each committed selection replaces the model context, so the next user
-    // message sees what is selected now, or that nothing is.
-    surface.onSelection((selection) => {
+    // Each committed change replaces the model context, so the next user
+    // message sees what the chart shows now. A preview is too frequent for it.
+    surface.onChange(({ phase, state, action, geometry }) => {
+      if (phase !== 'commit') return;
+      const context = chartContext(state, input, { action, geometry });
       void app.updateModelContext({
-        content: [{ type: 'text', text: selectionContextText(selection, input) }],
-        structuredContent: { selection },
-      }).catch((err) => console.warn('The host declined the selection context', err));
+        content: [{ type: 'text', text: context.text }],
+        structuredContent: context.data,
+      }).catch((err) => console.warn('The host declined the chart context', err));
     });
     void surface.ready
       .then(() => {

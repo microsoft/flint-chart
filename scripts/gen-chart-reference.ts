@@ -14,6 +14,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import ts from 'typescript';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -577,3 +578,127 @@ for (const [locale, directory] of [['en', DOCS_DIR], ['zh-CN', ZH_DOCS_DIR]] as 
 writeFileSync(resolve(ZH_DOCS_DIR, 'reference-plotly.md'), renderPlotlyZh(), 'utf8');
 // eslint-disable-next-line no-console
 console.log(`Wrote zh-CN/reference-plotly.md (${Object.values(plTemplateDefs).flat().length} chart types)`);
+
+/** The option table of the interaction-author skill: every option each preset accepts, read from the factory option types. */
+function renderPresetOptionsTable(): string {
+    const interactiveDir = resolve(__dirname, '../packages/flint-js/src/interactive');
+    const parse = (file: string): ts.SourceFile => {
+        const path = resolve(interactiveDir, file);
+        return ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true);
+    };
+    const optionsSource = parse('interactions.ts');
+    const specSource = parse('spec/types.ts');
+
+    const declarations = new Map<string, ts.InterfaceDeclaration | ts.TypeAliasDeclaration>();
+    optionsSource.forEachChild((node) => {
+        if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) declarations.set(node.name.text, node);
+    });
+
+    const ALIASES: Record<string, string> = {
+        'InteractionResetGesture[]': 'ResetGesture[]',
+        'NavigationResetGesture[]': 'ResetGesture[]',
+        'ClickHighlightTarget[]': "('mark' | 'legend' | 'discreteAxis')[]",
+        'AccessibleNavigationSection[]': "('titles' | 'axes' | 'legends' | 'headers' | 'data' | 'labels')[]",
+        'GroupBy': 'string | string[]',
+        'InspectMode': "'x' | 'y' | 'xy', with an optional comparison such as 'x>' or 'x<=;y>='",
+        'InspectMode[]': 'InspectMode[]',
+        'InspectIndexShow': "'all' | 'single' | { series: value }",
+        "NavigationAxes | 'available'": "'x' | 'y' | 'xy' | 'available'",
+        'NavigationTransition': '{ duration: ms }',
+        'RegionGuideOptions | false': '{ visible?, style?: { fill?, fillOpacity?, stroke?, strokeOpacity?, strokeWidth? } } | false',
+        'InspectGuideOptions | false': '{ visible?, style?: { color?, opacity?, width?, fillOpacity?, haloColor?, haloOpacity?, haloWidth? } } | false',
+        'SemanticTargetSelector': '{ select: { key } }',
+        'Partial<NavigationDomainGuard>': '{ minVisibleFraction?, maxVisibleFraction?, overscrollFraction? }',
+    };
+    const typeText = (node: ts.TypeNode): string => {
+        const text = node.getText(optionsSource).replace(/\breadonly /g, '').replace(/\s+/g, ' ');
+        return ALIASES[text] ?? text;
+    };
+    const noteOf = (member: ts.PropertySignature): string => {
+        const comments = ts.getJSDocCommentsAndTags(member)
+            .filter((doc): doc is ts.JSDoc => ts.isJSDoc(doc))
+            .map((doc) => (typeof doc.comment === 'string' ? doc.comment : doc.comment?.map((part) => part.text).join('') ?? ''));
+        return comments.join(' ').replace(/\s+/g, ' ').trim();
+    };
+
+    interface OptionRow { name: string; type: string; required: boolean; note: string }
+    const membersOf = (node: ts.Node, omit: ReadonlySet<string>): OptionRow[] => {
+        if (ts.isInterfaceDeclaration(node)) {
+            const inherited = (node.heritageClauses ?? []).flatMap((clause) =>
+                clause.types.flatMap((type) => membersOf(type, omit)));
+            const own = node.members.filter(ts.isPropertySignature).map((member) => ({
+                name: (member.name as ts.Identifier).text,
+                type: member.type ? typeText(member.type) : 'unknown',
+                required: !member.questionToken,
+                note: noteOf(member),
+            }));
+            const byName = new Map(inherited.map((row) => [row.name, row]));
+            for (const row of own) byName.set(row.name, row);
+            return [...byName.values()].filter((row) => !omit.has(row.name) && row.name !== 'id');
+        }
+        if (ts.isTypeAliasDeclaration(node)) return membersOf(node.type, omit);
+        if (ts.isIntersectionTypeNode(node)) {
+            const byName = new Map<string, OptionRow>();
+            for (const part of node.types) for (const row of membersOf(part, omit)) byName.set(row.name, row);
+            return [...byName.values()];
+        }
+        if (ts.isTypeLiteralNode(node)) {
+            return node.members.filter(ts.isPropertySignature).map((member) => ({
+                name: (member.name as ts.Identifier).text,
+                type: member.type ? typeText(member.type) : 'unknown',
+                required: !member.questionToken,
+                note: noteOf(member),
+            })).filter((row) => !omit.has(row.name) && row.name !== 'id');
+        }
+        if (ts.isTypeReferenceNode(node) || ts.isExpressionWithTypeArguments(node)) {
+            const name = ts.isTypeReferenceNode(node) ? node.typeName.getText(optionsSource) : node.expression.getText(optionsSource);
+            const declaration = declarations.get(name);
+            if (!declaration) throw new Error(`gen:reference: unknown option type ${name}`);
+            return membersOf(declaration, omit);
+        }
+        throw new Error(`gen:reference: cannot read option members from ${ts.SyntaxKind[node.kind]}`);
+    };
+
+    const presetOptions = specSource.statements.find((statement): statement is ts.InterfaceDeclaration =>
+        ts.isInterfaceDeclaration(statement) && statement.name.text === 'InteractionPresetOptions');
+    if (!presetOptions) throw new Error('gen:reference: InteractionPresetOptions not found');
+
+    const rows: string[] = [];
+    for (const member of presetOptions.members.filter(ts.isPropertySignature)) {
+        const preset = ts.isStringLiteral(member.name) ? member.name.text : (member.name as ts.Identifier).text;
+        let typeNode = member.type!;
+        const omit = new Set<string>();
+        if (ts.isTypeReferenceNode(typeNode) && typeNode.typeName.getText(specSource) === 'Omit' && typeNode.typeArguments) {
+            const [base, keys] = typeNode.typeArguments;
+            const literals = ts.isUnionTypeNode(keys) ? keys.types : [keys];
+            for (const literal of literals) if (ts.isLiteralTypeNode(literal) && ts.isStringLiteral(literal.literal)) omit.add(literal.literal.text);
+            typeNode = base;
+        }
+        const name = ts.isTypeReferenceNode(typeNode) ? typeNode.typeName.getText(specSource) : null;
+        const declaration = name ? declarations.get(name) : undefined;
+        if (!declaration) throw new Error(`gen:reference: no option type for preset ${preset}`);
+        const options = membersOf(declaration, omit);
+        if (options.length === 0) {
+            rows.push(`| \`${preset}\` | — | | |`);
+            continue;
+        }
+        options.forEach((option, index) => {
+            const cell = (text: string) => text.replace(/\|/g, '\\|');
+            rows.push(`| ${index === 0 ? `\`${preset}\`` : ''} | \`${option.name}\`${option.required ? ' (required)' : ''} | \`${cell(option.type)}\` | ${cell(option.note)} |`);
+        });
+    }
+    return ['| Preset | Option | Type | Notes |', '| --- | --- | --- | --- |', ...rows].join('\n');
+}
+
+{
+    const path = resolve(__dirname, '../agent-skills/flint-interaction-author/SKILL.md');
+    const doc = readFileSync(path, 'utf8');
+    const start = '<!-- preset-options:start -->';
+    const end = '<!-- preset-options:end -->';
+    const from = doc.indexOf(start);
+    const to = doc.indexOf(end);
+    if (from < 0 || to < 0) throw new Error(`${path}: preset option markers not found`);
+    writeFileSync(path, `${doc.slice(0, from + start.length)}\n${renderPresetOptionsTable()}\n${doc.slice(to)}`, 'utf8');
+    // eslint-disable-next-line no-console
+    console.log('Wrote the preset option table into agent-skills/flint-interaction-author/SKILL.md');
+}

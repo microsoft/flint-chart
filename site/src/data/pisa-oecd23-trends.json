@@ -1,0 +1,4023 @@
+{
+ "meta": {
+  "title": "Free fallin'",
+  "subtitle": "OECD-23 countries, average PISA test scores",
+  "source": "OECD, PISA 2025 Results (Volume I), Table I.D.1 (Overview of performance trends), https://stat.link/urv65o. Underlying tables I.B1.2a.36, I.B1.2a.37 and I.B1.2a.38.",
+  "fileVersion": "Version 1 - Last updated: 08-Sep-2026",
+  "definition": "OECD-23: the arithmetic mean of the 23 OECD countries with comparable reading results in every PISA round from 2000 to 2025. Science starts in 2006 and mathematics in 2003, the first rounds with a comparable scale.",
+  "countries": [
+   "Australia",
+   "Belgium",
+   "Canada",
+   "Czechia",
+   "Denmark",
+   "Finland",
+   "France",
+   "Germany",
+   "Greece",
+   "Hungary",
+   "Iceland",
+   "Ireland",
+   "Italy",
+   "Japan",
+   "Korea",
+   "Latvia",
+   "Mexico",
+   "New Zealand",
+   "Norway",
+   "Poland",
+   "Portugal",
+   "Sweden",
+   "Switzerland"
+  ],
+  "significantNote": "Significant is true when the country mean differs from its PISA 2025 mean at the 5% level (a filled dot in the OECD figure)."
+ },
+ "average": [
+  {
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 502.7
+  },
+  {
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 505.7
+  },
+  {
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 504.7
+  },
+  {
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 497.0
+  },
+  {
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 493.5
+  },
+  {
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 490.9
+  },
+  {
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 485.9
+  },
+  {
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 499.5
+  },
+  {
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 497.4
+  },
+  {
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 495.5
+  },
+  {
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 499.4
+  },
+  {
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 501.4
+  },
+  {
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 497.2
+  },
+  {
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 492.8
+  },
+  {
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 481.9
+  },
+  {
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 465.8
+  },
+  {
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 502.1
+  },
+  {
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 501.1
+  },
+  {
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 501.7
+  },
+  {
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 498.7
+  },
+  {
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 495.5
+  },
+  {
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 496.4
+  },
+  {
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 480.3
+  },
+  {
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 469.4
+  }
+ ],
+ "countries": [
+  {
+   "Country": "Australia",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 526.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 527.3,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 521.5,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 510.0,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 503.0,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 507.0,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 509.1,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 528.3,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 525.4,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 512.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 514.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 511.8,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 502.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 502.6,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 498.1,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 490.9,
+   "Significant": false
+  },
+  {
+   "Country": "Australia",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 524.3,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 519.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 514.3,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 504.2,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 493.9,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 491.4,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 487.1,
+   "Significant": true
+  },
+  {
+   "Country": "Australia",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 477.5,
+   "Significant": false
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 510.4,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 506.6,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 504.9,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 502.0,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 498.8,
+   "Significant": false
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 490.6,
+   "Significant": false
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 489.7,
+   "Significant": false
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 507.1,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 507.0,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 500.9,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 505.9,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 508.6,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 498.5,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 492.9,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 478.9,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 466.3,
+   "Significant": false
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 529.3,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 520.3,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 515.3,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 514.5,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 507.0,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 508.1,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 489.5,
+   "Significant": true
+  },
+  {
+   "Country": "Belgium",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 479.7,
+   "Significant": false
+  },
+  {
+   "Country": "Canada",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 534.5,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 528.7,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 525.4,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 527.7,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 518.0,
+   "Significant": false
+  },
+  {
+   "Country": "Canada",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 515.0,
+   "Significant": false
+  },
+  {
+   "Country": "Canada",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 510.1,
+   "Significant": false
+  },
+  {
+   "Country": "Canada",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 534.3,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 527.9,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 527.0,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 524.2,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 523.1,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 526.7,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 520.1,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 507.1,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 489.8,
+   "Significant": false
+  },
+  {
+   "Country": "Canada",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 532.5,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 527.0,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 526.8,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 518.1,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 515.6,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 512.0,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 496.9,
+   "Significant": true
+  },
+  {
+   "Country": "Canada",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 485.3,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 512.9,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 500.5,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 508.3,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 492.8,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 496.8,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 497.7,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 490.3,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 491.6,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 488.5,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 482.7,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 478.2,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 492.9,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 487.3,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 490.2,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 488.6,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 468.4,
+   "Significant": false
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 516.5,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 509.9,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 492.8,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 499.0,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 492.3,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 499.5,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 487.0,
+   "Significant": true
+  },
+  {
+   "Country": "Czechia",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 477.1,
+   "Significant": false
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 495.9,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 499.3,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 498.5,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 501.9,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 492.6,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 493.8,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 477.5,
+   "Significant": false
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 496.9,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 492.3,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 494.5,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 494.9,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 496.1,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 499.8,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 501.1,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 488.8,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 460.0,
+   "Significant": false
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 514.3,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 513.0,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 503.3,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 500.0,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 511.1,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 509.4,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 489.3,
+   "Significant": true
+  },
+  {
+   "Country": "Denmark",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 470.6,
+   "Significant": false
+  },
+  {
+   "Country": "Finland",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 563.3,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 554.1,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 545.4,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 530.7,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 521.9,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 511.0,
+   "Significant": false
+  },
+  {
+   "Country": "Finland",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 504.4,
+   "Significant": false
+  },
+  {
+   "Country": "Finland",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 546.5,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 543.5,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 546.9,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 535.9,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 524.0,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 526.4,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 520.1,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 490.2,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 474.3,
+   "Significant": false
+  },
+  {
+   "Country": "Finland",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 544.3,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 548.4,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 540.5,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 518.8,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 511.1,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 507.3,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 484.1,
+   "Significant": true
+  },
+  {
+   "Country": "Finland",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 468.7,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 495.2,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 498.2,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 499.0,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 495.0,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 493.0,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 487.2,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 483.4,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 504.7,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 496.2,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 487.7,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 495.6,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 505.5,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 499.3,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 492.6,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 473.9,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 456.3,
+   "Significant": false
+  },
+  {
+   "Country": "France",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 510.8,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 495.5,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 496.8,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 495.0,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 492.9,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 495.4,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 473.9,
+   "Significant": true
+  },
+  {
+   "Country": "France",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 457.7,
+   "Significant": false
+  },
+  {
+   "Country": "Germany",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 515.6,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 520.4,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 524.1,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 509.1,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 503.0,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 492.4,
+   "Significant": false
+  },
+  {
+   "Country": "Germany",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 485.5,
+   "Significant": false
+  },
+  {
+   "Country": "Germany",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 484.0,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 491.4,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 494.9,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 497.3,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 507.7,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 509.1,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 498.3,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 479.8,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 465.3,
+   "Significant": false
+  },
+  {
+   "Country": "Germany",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 503.0,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 503.8,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 512.8,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 513.5,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 506.0,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 500.0,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 474.8,
+   "Significant": true
+  },
+  {
+   "Country": "Germany",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 463.8,
+   "Significant": false
+  },
+  {
+   "Country": "Greece",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 473.4,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 470.1,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 466.7,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 454.8,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 451.6,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 440.8,
+   "Significant": false
+  },
+  {
+   "Country": "Greece",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 434.3,
+   "Significant": false
+  },
+  {
+   "Country": "Greece",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 473.8,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 472.3,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 459.7,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 482.8,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 477.2,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 467.0,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 457.4,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 438.4,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 422.7,
+   "Significant": false
+  },
+  {
+   "Country": "Greece",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 444.9,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 459.2,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 466.1,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 453.0,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 453.6,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 451.4,
+   "Significant": true
+  },
+  {
+   "Country": "Greece",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 430.1,
+   "Significant": false
+  },
+  {
+   "Country": "Greece",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 423.9,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 503.9,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 502.6,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 494.3,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 476.7,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 480.9,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 485.9,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 479.9,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 480.0,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 481.9,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 482.4,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 494.2,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 488.5,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 469.5,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 476.0,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 473.0,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 452.3,
+   "Significant": false
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 490.0,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 490.9,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 490.2,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 477.0,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 476.8,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 481.1,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 472.8,
+   "Significant": true
+  },
+  {
+   "Country": "Hungary",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 459.5,
+   "Significant": false
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 490.8,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 495.6,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 478.2,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 473.2,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 475.0,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 447.0,
+   "Significant": false
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 441.4,
+   "Significant": false
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 506.9,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 491.7,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 484.4,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 500.3,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 482.5,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 481.5,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 474.0,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 435.9,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 422.3,
+   "Significant": false
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 515.1,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 505.5,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 506.7,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 492.8,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 488.0,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 495.2,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 458.9,
+   "Significant": true
+  },
+  {
+   "Country": "Iceland",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 449.7,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 508.3,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 508.0,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 522.0,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 502.6,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 496.1,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 503.8,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 499.6,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 526.7,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 515.5,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 517.3,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 495.6,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 523.2,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 520.8,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 518.1,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 516.0,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 500.4,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 502.8,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 501.5,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 487.1,
+   "Significant": false
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 501.5,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 503.7,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 499.6,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 491.6,
+   "Significant": true
+  },
+  {
+   "Country": "Ireland",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 479.9,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 475.4,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 488.8,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 493.5,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 480.5,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 468.0,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 477.5,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 483.0,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 487.5,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 475.7,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 468.5,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 486.1,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 489.8,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 484.8,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 476.3,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 481.6,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 474.3,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 465.7,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 461.7,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 482.9,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 485.3,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 489.7,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 486.6,
+   "Significant": true
+  },
+  {
+   "Country": "Italy",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 471.3,
+   "Significant": false
+  },
+  {
+   "Country": "Italy",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 467.8,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 531.4,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 539.4,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 546.7,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 538.4,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 529.1,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 546.6,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 537.6,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 522.2,
+   "Significant": true
+  },
+  {
+   "Country": "Japan",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 498.1,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 498.0,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 519.9,
+   "Significant": true
+  },
+  {
+   "Country": "Japan",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 538.1,
+   "Significant": true
+  },
+  {
+   "Country": "Japan",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 516.0,
+   "Significant": true
+  },
+  {
+   "Country": "Japan",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 503.9,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 515.9,
+   "Significant": true
+  },
+  {
+   "Country": "Japan",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 502.7,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 534.1,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 523.1,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 529.0,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 536.4,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 532.4,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 527.0,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 535.6,
+   "Significant": false
+  },
+  {
+   "Country": "Japan",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 525.4,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 522.1,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 538.0,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 537.8,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 515.8,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 519.0,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 527.8,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 526.1,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 524.8,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 534.1,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 556.0,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 539.3,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 535.8,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 517.4,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 514.1,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 515.4,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 500.6,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 542.2,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 547.5,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 546.2,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 553.8,
+   "Significant": true
+  },
+  {
+   "Country": "Korea",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 524.1,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 525.9,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 527.3,
+   "Significant": false
+  },
+  {
+   "Country": "Korea",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 522.3,
+   "Significant": false
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 489.5,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 493.9,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 502.2,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 490.2,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 487.3,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 493.8,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 468.4,
+   "Significant": false
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 458.1,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 490.6,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 479.5,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 484.0,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 488.7,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 487.8,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 478.7,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 474.6,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 429.7,
+   "Significant": false
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 483.4,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 486.2,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 482.0,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 490.6,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 482.3,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 496.1,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 483.2,
+   "Significant": true
+  },
+  {
+   "Country": "Latvia",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 460.5,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 409.7,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 415.9,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 414.9,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 415.7,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 419.2,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 409.9,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 413.6,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 422.0,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 399.7,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 410.5,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 425.3,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 423.6,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 423.3,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 420.5,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 415.4,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 407.9,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 385.2,
+   "Significant": false
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 405.7,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 418.5,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 413.3,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 408.0,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 408.8,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 395.0,
+   "Significant": true
+  },
+  {
+   "Country": "Mexico",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 387.6,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 530.4,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 532.0,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 515.6,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 513.3,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 508.5,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 504.1,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 509.4,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 528.8,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 521.6,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 521.0,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 520.9,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 512.2,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 509.3,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 505.7,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 500.9,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 497.0,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 523.5,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 522.0,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 519.3,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 499.7,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 495.2,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 494.5,
+   "Significant": true
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 479.1,
+   "Significant": false
+  },
+  {
+   "Country": "New Zealand",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 479.6,
+   "Significant": false
+  },
+  {
+   "Country": "Norway",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 486.5,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 499.9,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 494.5,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 498.5,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 490.4,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 478.2,
+   "Significant": false
+  },
+  {
+   "Country": "Norway",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 470.2,
+   "Significant": false
+  },
+  {
+   "Country": "Norway",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 505.3,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 499.7,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 484.3,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 503.2,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 503.9,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 513.2,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 499.5,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 476.5,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 452.8,
+   "Significant": false
+  },
+  {
+   "Country": "Norway",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 495.2,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 489.8,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 498.0,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 489.4,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 501.7,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 501.0,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 468.4,
+   "Significant": true
+  },
+  {
+   "Country": "Norway",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 451.8,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 497.8,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 508.1,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 525.8,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 501.4,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 511.0,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 499.2,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 495.1,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 479.1,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 496.6,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 507.6,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 500.5,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 518.2,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 505.7,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 511.9,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 488.7,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 481.5,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 490.2,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 495.4,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 494.8,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 517.5,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 504.5,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 515.6,
+   "Significant": true
+  },
+  {
+   "Country": "Poland",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 489.0,
+   "Significant": false
+  },
+  {
+   "Country": "Poland",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 484.1,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 474.3,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 492.9,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 489.3,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 501.1,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 491.7,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 484.4,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 481.7,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 470.2,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 477.6,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 472.3,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 489.3,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 487.8,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 498.1,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 491.8,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 476.6,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 462.0,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 466.0,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 466.2,
+   "Significant": false
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 486.9,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 487.1,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 491.6,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 492.5,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 471.9,
+   "Significant": true
+  },
+  {
+   "Country": "Portugal",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 459.9,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 503.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 495.1,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 484.8,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 493.4,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 499.4,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 493.5,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 485.1,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 516.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 514.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 507.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 497.4,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 483.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 500.2,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 505.8,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 487.0,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 466.4,
+   "Significant": false
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 509.0,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 502.4,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 494.2,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 478.3,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 493.9,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 502.4,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 481.8,
+   "Significant": true
+  },
+  {
+   "Country": "Sweden",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 464.3,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2006,
+   "Subject": "Science",
+   "Score": 511.5,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2009,
+   "Subject": "Science",
+   "Score": 516.6,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2012,
+   "Subject": "Science",
+   "Score": 515.3,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2015,
+   "Subject": "Science",
+   "Score": 505.5,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2018,
+   "Subject": "Science",
+   "Score": 495.3,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2022,
+   "Subject": "Science",
+   "Score": 502.5,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2025,
+   "Subject": "Science",
+   "Score": 501.2,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2000,
+   "Subject": "Reading",
+   "Score": 494.4,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2003,
+   "Subject": "Reading",
+   "Score": 499.1,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2006,
+   "Subject": "Reading",
+   "Score": 499.3,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2009,
+   "Subject": "Reading",
+   "Score": 500.5,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2012,
+   "Subject": "Reading",
+   "Score": 509.0,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2015,
+   "Subject": "Reading",
+   "Score": 492.2,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2018,
+   "Subject": "Reading",
+   "Score": 483.9,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2022,
+   "Subject": "Reading",
+   "Score": 483.3,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2025,
+   "Subject": "Reading",
+   "Score": 470.1,
+   "Significant": false
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2003,
+   "Subject": "Mathematics",
+   "Score": 526.6,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2006,
+   "Subject": "Mathematics",
+   "Score": 529.7,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2009,
+   "Subject": "Mathematics",
+   "Score": 534.0,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2012,
+   "Subject": "Mathematics",
+   "Score": 530.9,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2015,
+   "Subject": "Mathematics",
+   "Score": 521.3,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2018,
+   "Subject": "Mathematics",
+   "Score": 515.3,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2022,
+   "Subject": "Mathematics",
+   "Score": 508.0,
+   "Significant": true
+  },
+  {
+   "Country": "Switzerland",
+   "Year": 2025,
+   "Subject": "Mathematics",
+   "Score": 499.1,
+   "Significant": false
+  }
+ ]
+}

@@ -1,0 +1,7133 @@
+{
+ "source": "American Time Use Survey, U.S. Bureau of Labor Statistics (2025), via Our World in Data; averages 2010-2024",
+ "values": [
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Alone",
+   "Hours": 3.68
+  },
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Friends",
+   "Hours": 1.54
+  },
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Children",
+   "Hours": 0.34
+  },
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Family",
+   "Hours": 4.29
+  },
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "All people",
+   "Age": 15,
+   "Who": "Co-workers",
+   "Hours": 0.16
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Alone",
+   "Hours": 3.91
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Friends",
+   "Hours": 1.43
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Children",
+   "Hours": 0.41
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Family",
+   "Hours": 4.09
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "All people",
+   "Age": 16,
+   "Who": "Co-workers",
+   "Hours": 0.44
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Alone",
+   "Hours": 4.1
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Friends",
+   "Hours": 1.79
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Children",
+   "Hours": 0.42
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Family",
+   "Hours": 3.7
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Partner",
+   "Hours": 0.02
+  },
+  {
+   "Group": "All people",
+   "Age": 17,
+   "Who": "Co-workers",
+   "Hours": 0.76
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Alone",
+   "Hours": 4.54
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Friends",
+   "Hours": 1.95
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Children",
+   "Hours": 0.46
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Family",
+   "Hours": 3.75
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Partner",
+   "Hours": 0.09
+  },
+  {
+   "Group": "All people",
+   "Age": 18,
+   "Who": "Co-workers",
+   "Hours": 1.31
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Alone",
+   "Hours": 5.09
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Friends",
+   "Hours": 1.8
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Children",
+   "Hours": 0.44
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Family",
+   "Hours": 3.02
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Partner",
+   "Hours": 0.31
+  },
+  {
+   "Group": "All people",
+   "Age": 19,
+   "Who": "Co-workers",
+   "Hours": 2.08
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Alone",
+   "Hours": 5.14
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Friends",
+   "Hours": 1.76
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Children",
+   "Hours": 0.72
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Family",
+   "Hours": 2.94
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Partner",
+   "Hours": 0.38
+  },
+  {
+   "Group": "All people",
+   "Age": 20,
+   "Who": "Co-workers",
+   "Hours": 2.27
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Alone",
+   "Hours": 4.98
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Friends",
+   "Hours": 1.83
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Children",
+   "Hours": 0.97
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Family",
+   "Hours": 2.56
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Partner",
+   "Hours": 0.83
+  },
+  {
+   "Group": "All people",
+   "Age": 21,
+   "Who": "Co-workers",
+   "Hours": 2.48
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Alone",
+   "Hours": 5.34
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Friends",
+   "Hours": 1.43
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Children",
+   "Hours": 1.02
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Family",
+   "Hours": 2.23
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Partner",
+   "Hours": 0.83
+  },
+  {
+   "Group": "All people",
+   "Age": 22,
+   "Who": "Co-workers",
+   "Hours": 2.68
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Alone",
+   "Hours": 4.93
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Friends",
+   "Hours": 1.5
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Children",
+   "Hours": 1.37
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Family",
+   "Hours": 2.05
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Partner",
+   "Hours": 1.36
+  },
+  {
+   "Group": "All people",
+   "Age": 23,
+   "Who": "Co-workers",
+   "Hours": 3.11
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Alone",
+   "Hours": 4.82
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Friends",
+   "Hours": 1.43
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Children",
+   "Hours": 1.46
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Family",
+   "Hours": 1.79
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Partner",
+   "Hours": 1.67
+  },
+  {
+   "Group": "All people",
+   "Age": 24,
+   "Who": "Co-workers",
+   "Hours": 3.26
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Alone",
+   "Hours": 5.17
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Friends",
+   "Hours": 1.08
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Children",
+   "Hours": 1.71
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Family",
+   "Hours": 1.56
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Partner",
+   "Hours": 1.91
+  },
+  {
+   "Group": "All people",
+   "Age": 25,
+   "Who": "Co-workers",
+   "Hours": 3.07
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Alone",
+   "Hours": 5.13
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Friends",
+   "Hours": 1.16
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Children",
+   "Hours": 1.8
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Family",
+   "Hours": 1.44
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Partner",
+   "Hours": 2.31
+  },
+  {
+   "Group": "All people",
+   "Age": 26,
+   "Who": "Co-workers",
+   "Hours": 3.19
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Alone",
+   "Hours": 4.8
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Friends",
+   "Hours": 1.09
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Children",
+   "Hours": 2.29
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Family",
+   "Hours": 1.37
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Partner",
+   "Hours": 2.57
+  },
+  {
+   "Group": "All people",
+   "Age": 27,
+   "Who": "Co-workers",
+   "Hours": 3.25
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Alone",
+   "Hours": 4.83
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Friends",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Children",
+   "Hours": 2.77
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Family",
+   "Hours": 1.21
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Partner",
+   "Hours": 2.79
+  },
+  {
+   "Group": "All people",
+   "Age": 28,
+   "Who": "Co-workers",
+   "Hours": 3.19
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Alone",
+   "Hours": 4.83
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Friends",
+   "Hours": 0.89
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Children",
+   "Hours": 2.95
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Family",
+   "Hours": 1.31
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Partner",
+   "Hours": 2.87
+  },
+  {
+   "Group": "All people",
+   "Age": 29,
+   "Who": "Co-workers",
+   "Hours": 3.06
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Alone",
+   "Hours": 4.72
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Friends",
+   "Hours": 0.76
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Children",
+   "Hours": 3.11
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Family",
+   "Hours": 1.06
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Partner",
+   "Hours": 2.99
+  },
+  {
+   "Group": "All people",
+   "Age": 30,
+   "Who": "Co-workers",
+   "Hours": 3.29
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Alone",
+   "Hours": 4.78
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Friends",
+   "Hours": 0.79
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Children",
+   "Hours": 3.49
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Family",
+   "Hours": 1.13
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Partner",
+   "Hours": 3.38
+  },
+  {
+   "Group": "All people",
+   "Age": 31,
+   "Who": "Co-workers",
+   "Hours": 2.9
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Alone",
+   "Hours": 4.79
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Friends",
+   "Hours": 0.72
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Children",
+   "Hours": 3.62
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Family",
+   "Hours": 0.98
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Partner",
+   "Hours": 3.25
+  },
+  {
+   "Group": "All people",
+   "Age": 32,
+   "Who": "Co-workers",
+   "Hours": 3.1
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Alone",
+   "Hours": 4.57
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Friends",
+   "Hours": 0.74
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Children",
+   "Hours": 4.16
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Family",
+   "Hours": 1
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Partner",
+   "Hours": 3.4
+  },
+  {
+   "Group": "All people",
+   "Age": 33,
+   "Who": "Co-workers",
+   "Hours": 2.79
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Alone",
+   "Hours": 4.74
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Children",
+   "Hours": 4.12
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Family",
+   "Hours": 1.07
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Partner",
+   "Hours": 3.36
+  },
+  {
+   "Group": "All people",
+   "Age": 34,
+   "Who": "Co-workers",
+   "Hours": 2.9
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Alone",
+   "Hours": 4.72
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Children",
+   "Hours": 4.2
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Partner",
+   "Hours": 3.45
+  },
+  {
+   "Group": "All people",
+   "Age": 35,
+   "Who": "Co-workers",
+   "Hours": 2.95
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Alone",
+   "Hours": 4.95
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Children",
+   "Hours": 4.1
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Family",
+   "Hours": 1
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Partner",
+   "Hours": 3.23
+  },
+  {
+   "Group": "All people",
+   "Age": 36,
+   "Who": "Co-workers",
+   "Hours": 2.76
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Alone",
+   "Hours": 4.84
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Friends",
+   "Hours": 0.63
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Children",
+   "Hours": 4.09
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Family",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Partner",
+   "Hours": 3.39
+  },
+  {
+   "Group": "All people",
+   "Age": 37,
+   "Who": "Co-workers",
+   "Hours": 2.89
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Alone",
+   "Hours": 4.83
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Children",
+   "Hours": 4.17
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Family",
+   "Hours": 0.91
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Partner",
+   "Hours": 3.33
+  },
+  {
+   "Group": "All people",
+   "Age": 38,
+   "Who": "Co-workers",
+   "Hours": 2.97
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Alone",
+   "Hours": 5.01
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Children",
+   "Hours": 4.3
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Partner",
+   "Hours": 3.58
+  },
+  {
+   "Group": "All people",
+   "Age": 39,
+   "Who": "Co-workers",
+   "Hours": 2.72
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Alone",
+   "Hours": 5.17
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Children",
+   "Hours": 3.9
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Family",
+   "Hours": 0.8
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Partner",
+   "Hours": 3.29
+  },
+  {
+   "Group": "All people",
+   "Age": 40,
+   "Who": "Co-workers",
+   "Hours": 2.88
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Alone",
+   "Hours": 5.27
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Children",
+   "Hours": 3.99
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Family",
+   "Hours": 0.89
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Partner",
+   "Hours": 3.24
+  },
+  {
+   "Group": "All people",
+   "Age": 41,
+   "Who": "Co-workers",
+   "Hours": 2.79
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Alone",
+   "Hours": 5.32
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Children",
+   "Hours": 3.66
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Partner",
+   "Hours": 3.18
+  },
+  {
+   "Group": "All people",
+   "Age": 42,
+   "Who": "Co-workers",
+   "Hours": 2.96
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Alone",
+   "Hours": 5.62
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Children",
+   "Hours": 3.61
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Family",
+   "Hours": 0.87
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Partner",
+   "Hours": 3.18
+  },
+  {
+   "Group": "All people",
+   "Age": 43,
+   "Who": "Co-workers",
+   "Hours": 2.61
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Alone",
+   "Hours": 5.62
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Children",
+   "Hours": 3.54
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Family",
+   "Hours": 0.84
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Partner",
+   "Hours": 3.26
+  },
+  {
+   "Group": "All people",
+   "Age": 44,
+   "Who": "Co-workers",
+   "Hours": 2.7
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Alone",
+   "Hours": 5.47
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Children",
+   "Hours": 3.41
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Family",
+   "Hours": 0.89
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Partner",
+   "Hours": 3.06
+  },
+  {
+   "Group": "All people",
+   "Age": 45,
+   "Who": "Co-workers",
+   "Hours": 2.89
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Alone",
+   "Hours": 5.89
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Children",
+   "Hours": 3.07
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Partner",
+   "Hours": 3.2
+  },
+  {
+   "Group": "All people",
+   "Age": 46,
+   "Who": "Co-workers",
+   "Hours": 2.55
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Alone",
+   "Hours": 5.98
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Children",
+   "Hours": 2.82
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Family",
+   "Hours": 0.89
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Partner",
+   "Hours": 3
+  },
+  {
+   "Group": "All people",
+   "Age": 47,
+   "Who": "Co-workers",
+   "Hours": 2.68
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Alone",
+   "Hours": 5.85
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Children",
+   "Hours": 2.57
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Family",
+   "Hours": 0.93
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Partner",
+   "Hours": 3.25
+  },
+  {
+   "Group": "All people",
+   "Age": 48,
+   "Who": "Co-workers",
+   "Hours": 2.71
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Alone",
+   "Hours": 6.03
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Children",
+   "Hours": 2.3
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Partner",
+   "Hours": 3.11
+  },
+  {
+   "Group": "All people",
+   "Age": 49,
+   "Who": "Co-workers",
+   "Hours": 2.93
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Alone",
+   "Hours": 6.56
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Friends",
+   "Hours": 0.41
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Children",
+   "Hours": 2.24
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Family",
+   "Hours": 1.04
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Partner",
+   "Hours": 2.9
+  },
+  {
+   "Group": "All people",
+   "Age": 50,
+   "Who": "Co-workers",
+   "Hours": 2.52
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Alone",
+   "Hours": 6.33
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Children",
+   "Hours": 2.07
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Family",
+   "Hours": 1.01
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Partner",
+   "Hours": 3.1
+  },
+  {
+   "Group": "All people",
+   "Age": 51,
+   "Who": "Co-workers",
+   "Hours": 2.72
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Alone",
+   "Hours": 6.53
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Children",
+   "Hours": 1.73
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Partner",
+   "Hours": 3.17
+  },
+  {
+   "Group": "All people",
+   "Age": 52,
+   "Who": "Co-workers",
+   "Hours": 2.78
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Alone",
+   "Hours": 6.58
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Children",
+   "Hours": 1.73
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Family",
+   "Hours": 0.93
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Partner",
+   "Hours": 3.08
+  },
+  {
+   "Group": "All people",
+   "Age": 53,
+   "Who": "Co-workers",
+   "Hours": 2.63
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Alone",
+   "Hours": 6.52
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Children",
+   "Hours": 1.48
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Partner",
+   "Hours": 2.98
+  },
+  {
+   "Group": "All people",
+   "Age": 54,
+   "Who": "Co-workers",
+   "Hours": 2.8
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Alone",
+   "Hours": 6.75
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Children",
+   "Hours": 1.43
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Family",
+   "Hours": 1.01
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Partner",
+   "Hours": 3.11
+  },
+  {
+   "Group": "All people",
+   "Age": 55,
+   "Who": "Co-workers",
+   "Hours": 2.43
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Alone",
+   "Hours": 6.67
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Children",
+   "Hours": 1.29
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Family",
+   "Hours": 1.09
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Partner",
+   "Hours": 3.33
+  },
+  {
+   "Group": "All people",
+   "Age": 56,
+   "Who": "Co-workers",
+   "Hours": 2.43
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Alone",
+   "Hours": 6.93
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Children",
+   "Hours": 1.25
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Family",
+   "Hours": 0.95
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Partner",
+   "Hours": 3.07
+  },
+  {
+   "Group": "All people",
+   "Age": 57,
+   "Who": "Co-workers",
+   "Hours": 2.5
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Alone",
+   "Hours": 7.03
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Children",
+   "Hours": 1.08
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Family",
+   "Hours": 1.11
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Partner",
+   "Hours": 3.06
+  },
+  {
+   "Group": "All people",
+   "Age": 58,
+   "Who": "Co-workers",
+   "Hours": 2.21
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Alone",
+   "Hours": 7.12
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Friends",
+   "Hours": 0.43
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Children",
+   "Hours": 1.13
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Family",
+   "Hours": 1.04
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Partner",
+   "Hours": 3.36
+  },
+  {
+   "Group": "All people",
+   "Age": 59,
+   "Who": "Co-workers",
+   "Hours": 2.17
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Alone",
+   "Hours": 7.2
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Children",
+   "Hours": 1.04
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Partner",
+   "Hours": 3.33
+  },
+  {
+   "Group": "All people",
+   "Age": 60,
+   "Who": "Co-workers",
+   "Hours": 2.04
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Alone",
+   "Hours": 7.01
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Children",
+   "Hours": 1.1
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Family",
+   "Hours": 0.99
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Partner",
+   "Hours": 3.52
+  },
+  {
+   "Group": "All people",
+   "Age": 61,
+   "Who": "Co-workers",
+   "Hours": 2.04
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Alone",
+   "Hours": 7.35
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Children",
+   "Hours": 1.01
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Family",
+   "Hours": 0.98
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Partner",
+   "Hours": 3.69
+  },
+  {
+   "Group": "All people",
+   "Age": 62,
+   "Who": "Co-workers",
+   "Hours": 1.46
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Alone",
+   "Hours": 7.48
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Children",
+   "Hours": 0.94
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Partner",
+   "Hours": 3.58
+  },
+  {
+   "Group": "All people",
+   "Age": 63,
+   "Who": "Co-workers",
+   "Hours": 1.39
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Alone",
+   "Hours": 7.56
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Children",
+   "Hours": 0.91
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Family",
+   "Hours": 0.97
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Partner",
+   "Hours": 3.75
+  },
+  {
+   "Group": "All people",
+   "Age": 64,
+   "Who": "Co-workers",
+   "Hours": 1.33
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Alone",
+   "Hours": 7.64
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Children",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Family",
+   "Hours": 1.08
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Partner",
+   "Hours": 3.94
+  },
+  {
+   "Group": "All people",
+   "Age": 65,
+   "Who": "Co-workers",
+   "Hours": 0.99
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Alone",
+   "Hours": 7.39
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Children",
+   "Hours": 0.96
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Family",
+   "Hours": 1.12
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Partner",
+   "Hours": 4.18
+  },
+  {
+   "Group": "All people",
+   "Age": 66,
+   "Who": "Co-workers",
+   "Hours": 0.81
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Alone",
+   "Hours": 7.43
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Children",
+   "Hours": 0.94
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Family",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Partner",
+   "Hours": 4.32
+  },
+  {
+   "Group": "All people",
+   "Age": 67,
+   "Who": "Co-workers",
+   "Hours": 0.64
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Alone",
+   "Hours": 7.59
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Friends",
+   "Hours": 0.6
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Children",
+   "Hours": 0.86
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Partner",
+   "Hours": 4.22
+  },
+  {
+   "Group": "All people",
+   "Age": 68,
+   "Who": "Co-workers",
+   "Hours": 0.64
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Alone",
+   "Hours": 7.54
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Friends",
+   "Hours": 0.57
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Children",
+   "Hours": 1.03
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Partner",
+   "Hours": 4.5
+  },
+  {
+   "Group": "All people",
+   "Age": 69,
+   "Who": "Co-workers",
+   "Hours": 0.43
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Alone",
+   "Hours": 7.7
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Friends",
+   "Hours": 0.63
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Children",
+   "Hours": 0.87
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Partner",
+   "Hours": 4.2
+  },
+  {
+   "Group": "All people",
+   "Age": 70,
+   "Who": "Co-workers",
+   "Hours": 0.44
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Alone",
+   "Hours": 7.68
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Children",
+   "Hours": 0.94
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Family",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Partner",
+   "Hours": 4.42
+  },
+  {
+   "Group": "All people",
+   "Age": 71,
+   "Who": "Co-workers",
+   "Hours": 0.32
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Alone",
+   "Hours": 7.98
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Children",
+   "Hours": 0.74
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Family",
+   "Hours": 0.92
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Partner",
+   "Hours": 4.31
+  },
+  {
+   "Group": "All people",
+   "Age": 72,
+   "Who": "Co-workers",
+   "Hours": 0.3
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Alone",
+   "Hours": 7.89
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Children",
+   "Hours": 0.88
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Family",
+   "Hours": 0.85
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Partner",
+   "Hours": 4.35
+  },
+  {
+   "Group": "All people",
+   "Age": 73,
+   "Who": "Co-workers",
+   "Hours": 0.31
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Alone",
+   "Hours": 7.8
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Children",
+   "Hours": 0.8
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Partner",
+   "Hours": 4.29
+  },
+  {
+   "Group": "All people",
+   "Age": 74,
+   "Who": "Co-workers",
+   "Hours": 0.25
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Alone",
+   "Hours": 7.79
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Children",
+   "Hours": 0.83
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Family",
+   "Hours": 0.86
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Partner",
+   "Hours": 4.25
+  },
+  {
+   "Group": "All people",
+   "Age": 75,
+   "Who": "Co-workers",
+   "Hours": 0.27
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Alone",
+   "Hours": 7.64
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Children",
+   "Hours": 0.72
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Partner",
+   "Hours": 4.54
+  },
+  {
+   "Group": "All people",
+   "Age": 76,
+   "Who": "Co-workers",
+   "Hours": 0.26
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Alone",
+   "Hours": 7.72
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Children",
+   "Hours": 0.8
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Family",
+   "Hours": 1.04
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Partner",
+   "Hours": 4.46
+  },
+  {
+   "Group": "All people",
+   "Age": 77,
+   "Who": "Co-workers",
+   "Hours": 0.16
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Alone",
+   "Hours": 7.83
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Children",
+   "Hours": 0.69
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Partner",
+   "Hours": 4.34
+  },
+  {
+   "Group": "All people",
+   "Age": 78,
+   "Who": "Co-workers",
+   "Hours": 0.06
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Alone",
+   "Hours": 8.04
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Friends",
+   "Hours": 0.63
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Children",
+   "Hours": 0.62
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Partner",
+   "Hours": 4.17
+  },
+  {
+   "Group": "All people",
+   "Age": 79,
+   "Who": "Co-workers",
+   "Hours": 0.09
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Alone",
+   "Hours": 7.98
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Children",
+   "Hours": 0.69
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Partner",
+   "Hours": 3.84
+  },
+  {
+   "Group": "All people",
+   "Age": 80,
+   "Who": "Co-workers",
+   "Hours": 0.1
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Alone",
+   "Hours": 3.91
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Friends",
+   "Hours": 1.58
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Children",
+   "Hours": 0.25
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Family",
+   "Hours": 4.11
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "Men",
+   "Age": 15,
+   "Who": "Co-workers",
+   "Hours": 0.2
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Alone",
+   "Hours": 4.18
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Friends",
+   "Hours": 1.44
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Children",
+   "Hours": 0.33
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Family",
+   "Hours": 3.88
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "Men",
+   "Age": 16,
+   "Who": "Co-workers",
+   "Hours": 0.47
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Alone",
+   "Hours": 4.62
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Friends",
+   "Hours": 1.9
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Children",
+   "Hours": 0.24
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Family",
+   "Hours": 3.22
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "Men",
+   "Age": 17,
+   "Who": "Co-workers",
+   "Hours": 0.86
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Alone",
+   "Hours": 5.09
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Friends",
+   "Hours": 1.88
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Children",
+   "Hours": 0.32
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Family",
+   "Hours": 3.21
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Partner",
+   "Hours": 0.09
+  },
+  {
+   "Group": "Men",
+   "Age": 18,
+   "Who": "Co-workers",
+   "Hours": 1.52
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Alone",
+   "Hours": 5.63
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Friends",
+   "Hours": 2.06
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Children",
+   "Hours": 0.19
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Family",
+   "Hours": 2.54
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Partner",
+   "Hours": 0.31
+  },
+  {
+   "Group": "Men",
+   "Age": 19,
+   "Who": "Co-workers",
+   "Hours": 2.15
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Alone",
+   "Hours": 5.66
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Friends",
+   "Hours": 1.8
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Children",
+   "Hours": 0.36
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Family",
+   "Hours": 2.63
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Partner",
+   "Hours": 0.24
+  },
+  {
+   "Group": "Men",
+   "Age": 20,
+   "Who": "Co-workers",
+   "Hours": 2.57
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Alone",
+   "Hours": 5.5
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Friends",
+   "Hours": 2.31
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Children",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Family",
+   "Hours": 2.12
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Partner",
+   "Hours": 0.62
+  },
+  {
+   "Group": "Men",
+   "Age": 21,
+   "Who": "Co-workers",
+   "Hours": 2.75
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Alone",
+   "Hours": 6.01
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Friends",
+   "Hours": 1.67
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Children",
+   "Hours": 0.53
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Family",
+   "Hours": 1.97
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Partner",
+   "Hours": 0.62
+  },
+  {
+   "Group": "Men",
+   "Age": 22,
+   "Who": "Co-workers",
+   "Hours": 2.81
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Alone",
+   "Hours": 5.49
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Friends",
+   "Hours": 1.74
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Children",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Family",
+   "Hours": 1.93
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Partner",
+   "Hours": 1.27
+  },
+  {
+   "Group": "Men",
+   "Age": 23,
+   "Who": "Co-workers",
+   "Hours": 3.13
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Alone",
+   "Hours": 5.35
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Friends",
+   "Hours": 1.79
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Children",
+   "Hours": 0.63
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Family",
+   "Hours": 1.68
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Partner",
+   "Hours": 1.39
+  },
+  {
+   "Group": "Men",
+   "Age": 24,
+   "Who": "Co-workers",
+   "Hours": 3.74
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Alone",
+   "Hours": 5.79
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Friends",
+   "Hours": 1.32
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Children",
+   "Hours": 1.01
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Family",
+   "Hours": 1.49
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Partner",
+   "Hours": 1.74
+  },
+  {
+   "Group": "Men",
+   "Age": 25,
+   "Who": "Co-workers",
+   "Hours": 3.57
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Alone",
+   "Hours": 5.82
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Friends",
+   "Hours": 1.3
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Children",
+   "Hours": 0.97
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Family",
+   "Hours": 1.34
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Partner",
+   "Hours": 2.01
+  },
+  {
+   "Group": "Men",
+   "Age": 26,
+   "Who": "Co-workers",
+   "Hours": 3.63
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Alone",
+   "Hours": 5.44
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Friends",
+   "Hours": 1.24
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Children",
+   "Hours": 1.48
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Family",
+   "Hours": 1.26
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Partner",
+   "Hours": 2.35
+  },
+  {
+   "Group": "Men",
+   "Age": 27,
+   "Who": "Co-workers",
+   "Hours": 3.58
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Alone",
+   "Hours": 5.47
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Friends",
+   "Hours": 1.09
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Children",
+   "Hours": 1.64
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Family",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Partner",
+   "Hours": 2.63
+  },
+  {
+   "Group": "Men",
+   "Age": 28,
+   "Who": "Co-workers",
+   "Hours": 3.9
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Alone",
+   "Hours": 5.49
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Friends",
+   "Hours": 1.04
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Children",
+   "Hours": 1.66
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Partner",
+   "Hours": 2.8
+  },
+  {
+   "Group": "Men",
+   "Age": 29,
+   "Who": "Co-workers",
+   "Hours": 3.76
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Alone",
+   "Hours": 5.29
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Friends",
+   "Hours": 0.9
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Children",
+   "Hours": 1.68
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Partner",
+   "Hours": 2.92
+  },
+  {
+   "Group": "Men",
+   "Age": 30,
+   "Who": "Co-workers",
+   "Hours": 4.13
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Alone",
+   "Hours": 5.41
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Friends",
+   "Hours": 0.87
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Children",
+   "Hours": 2.41
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Partner",
+   "Hours": 3.4
+  },
+  {
+   "Group": "Men",
+   "Age": 31,
+   "Who": "Co-workers",
+   "Hours": 3.48
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Alone",
+   "Hours": 5.45
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Friends",
+   "Hours": 0.87
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Children",
+   "Hours": 2.31
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Family",
+   "Hours": 0.81
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Partner",
+   "Hours": 3.26
+  },
+  {
+   "Group": "Men",
+   "Age": 32,
+   "Who": "Co-workers",
+   "Hours": 3.77
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Alone",
+   "Hours": 5.02
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Friends",
+   "Hours": 0.83
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Children",
+   "Hours": 3.14
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Family",
+   "Hours": 0.93
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Partner",
+   "Hours": 3.55
+  },
+  {
+   "Group": "Men",
+   "Age": 33,
+   "Who": "Co-workers",
+   "Hours": 3.39
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Alone",
+   "Hours": 5.32
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Friends",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Children",
+   "Hours": 2.85
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Family",
+   "Hours": 1.06
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Partner",
+   "Hours": 3.27
+  },
+  {
+   "Group": "Men",
+   "Age": 34,
+   "Who": "Co-workers",
+   "Hours": 3.77
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Alone",
+   "Hours": 5.23
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Friends",
+   "Hours": 0.62
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Children",
+   "Hours": 3.18
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Family",
+   "Hours": 0.73
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Partner",
+   "Hours": 3.66
+  },
+  {
+   "Group": "Men",
+   "Age": 35,
+   "Who": "Co-workers",
+   "Hours": 3.53
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Alone",
+   "Hours": 5.4
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Friends",
+   "Hours": 0.74
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Children",
+   "Hours": 3.02
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Family",
+   "Hours": 0.86
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Partner",
+   "Hours": 3.18
+  },
+  {
+   "Group": "Men",
+   "Age": 36,
+   "Who": "Co-workers",
+   "Hours": 3.48
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Alone",
+   "Hours": 5.23
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Friends",
+   "Hours": 0.73
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Children",
+   "Hours": 3.13
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Family",
+   "Hours": 0.73
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Partner",
+   "Hours": 3.6
+  },
+  {
+   "Group": "Men",
+   "Age": 37,
+   "Who": "Co-workers",
+   "Hours": 3.61
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Alone",
+   "Hours": 5.35
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Friends",
+   "Hours": 0.71
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Children",
+   "Hours": 3.33
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Family",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Partner",
+   "Hours": 3.48
+  },
+  {
+   "Group": "Men",
+   "Age": 38,
+   "Who": "Co-workers",
+   "Hours": 3.59
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Alone",
+   "Hours": 5.51
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Children",
+   "Hours": 3.51
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Family",
+   "Hours": 0.81
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Partner",
+   "Hours": 3.91
+  },
+  {
+   "Group": "Men",
+   "Age": 39,
+   "Who": "Co-workers",
+   "Hours": 3.07
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Alone",
+   "Hours": 5.5
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Children",
+   "Hours": 3.12
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Family",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Partner",
+   "Hours": 3.48
+  },
+  {
+   "Group": "Men",
+   "Age": 40,
+   "Who": "Co-workers",
+   "Hours": 3.56
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Alone",
+   "Hours": 5.48
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Friends",
+   "Hours": 0.42
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Children",
+   "Hours": 3.23
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Family",
+   "Hours": 0.91
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Partner",
+   "Hours": 3.42
+  },
+  {
+   "Group": "Men",
+   "Age": 41,
+   "Who": "Co-workers",
+   "Hours": 3.4
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Alone",
+   "Hours": 5.53
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Friends",
+   "Hours": 0.63
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Children",
+   "Hours": 3.03
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Family",
+   "Hours": 0.68
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Partner",
+   "Hours": 3.53
+  },
+  {
+   "Group": "Men",
+   "Age": 42,
+   "Who": "Co-workers",
+   "Hours": 3.32
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Alone",
+   "Hours": 6.13
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Children",
+   "Hours": 2.85
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Family",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Partner",
+   "Hours": 3.13
+  },
+  {
+   "Group": "Men",
+   "Age": 43,
+   "Who": "Co-workers",
+   "Hours": 3.08
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Alone",
+   "Hours": 6.03
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Children",
+   "Hours": 2.97
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Family",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Partner",
+   "Hours": 3.55
+  },
+  {
+   "Group": "Men",
+   "Age": 44,
+   "Who": "Co-workers",
+   "Hours": 3.06
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Alone",
+   "Hours": 5.44
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Children",
+   "Hours": 3.02
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Family",
+   "Hours": 0.77
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Partner",
+   "Hours": 3.32
+  },
+  {
+   "Group": "Men",
+   "Age": 45,
+   "Who": "Co-workers",
+   "Hours": 3.62
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Alone",
+   "Hours": 6.38
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Friends",
+   "Hours": 0.57
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Children",
+   "Hours": 2.58
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Partner",
+   "Hours": 3.24
+  },
+  {
+   "Group": "Men",
+   "Age": 46,
+   "Who": "Co-workers",
+   "Hours": 3.02
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Alone",
+   "Hours": 6.19
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Children",
+   "Hours": 2.31
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Family",
+   "Hours": 0.71
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Partner",
+   "Hours": 3.35
+  },
+  {
+   "Group": "Men",
+   "Age": 47,
+   "Who": "Co-workers",
+   "Hours": 3.07
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Alone",
+   "Hours": 6.06
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Friends",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Children",
+   "Hours": 2.28
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Family",
+   "Hours": 0.8
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Partner",
+   "Hours": 3.45
+  },
+  {
+   "Group": "Men",
+   "Age": 48,
+   "Who": "Co-workers",
+   "Hours": 3.15
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Alone",
+   "Hours": 6.33
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Friends",
+   "Hours": 0.68
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Children",
+   "Hours": 2.11
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Partner",
+   "Hours": 3.15
+  },
+  {
+   "Group": "Men",
+   "Age": 49,
+   "Who": "Co-workers",
+   "Hours": 3.06
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Alone",
+   "Hours": 7.13
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Friends",
+   "Hours": 0.39
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Children",
+   "Hours": 1.88
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Family",
+   "Hours": 0.83
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Partner",
+   "Hours": 2.82
+  },
+  {
+   "Group": "Men",
+   "Age": 50,
+   "Who": "Co-workers",
+   "Hours": 2.72
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Alone",
+   "Hours": 6.65
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Children",
+   "Hours": 1.85
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Family",
+   "Hours": 0.85
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Partner",
+   "Hours": 3.23
+  },
+  {
+   "Group": "Men",
+   "Age": 51,
+   "Who": "Co-workers",
+   "Hours": 2.95
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Alone",
+   "Hours": 6.9
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Children",
+   "Hours": 1.38
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Family",
+   "Hours": 0.84
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Partner",
+   "Hours": 3.29
+  },
+  {
+   "Group": "Men",
+   "Age": 52,
+   "Who": "Co-workers",
+   "Hours": 3.18
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Alone",
+   "Hours": 6.91
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Friends",
+   "Hours": 0.37
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Children",
+   "Hours": 1.54
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Family",
+   "Hours": 0.75
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Partner",
+   "Hours": 3.15
+  },
+  {
+   "Group": "Men",
+   "Age": 53,
+   "Who": "Co-workers",
+   "Hours": 2.95
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Alone",
+   "Hours": 6.96
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Children",
+   "Hours": 1.26
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Family",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Partner",
+   "Hours": 3.01
+  },
+  {
+   "Group": "Men",
+   "Age": 54,
+   "Who": "Co-workers",
+   "Hours": 3.11
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Alone",
+   "Hours": 7.05
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Children",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Family",
+   "Hours": 0.81
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Partner",
+   "Hours": 3.23
+  },
+  {
+   "Group": "Men",
+   "Age": 55,
+   "Who": "Co-workers",
+   "Hours": 2.78
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Alone",
+   "Hours": 6.99
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Children",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Family",
+   "Hours": 0.8
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Partner",
+   "Hours": 3.43
+  },
+  {
+   "Group": "Men",
+   "Age": 56,
+   "Who": "Co-workers",
+   "Hours": 2.53
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Alone",
+   "Hours": 7.08
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Friends",
+   "Hours": 0.43
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Children",
+   "Hours": 0.93
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Family",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Partner",
+   "Hours": 3.17
+  },
+  {
+   "Group": "Men",
+   "Age": 57,
+   "Who": "Co-workers",
+   "Hours": 3.08
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Alone",
+   "Hours": 7.27
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Friends",
+   "Hours": 0.58
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Children",
+   "Hours": 0.84
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Family",
+   "Hours": 0.79
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Partner",
+   "Hours": 3.37
+  },
+  {
+   "Group": "Men",
+   "Age": 58,
+   "Who": "Co-workers",
+   "Hours": 2.54
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Alone",
+   "Hours": 7.41
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Friends",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Children",
+   "Hours": 0.99
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Family",
+   "Hours": 0.92
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Partner",
+   "Hours": 3.49
+  },
+  {
+   "Group": "Men",
+   "Age": 59,
+   "Who": "Co-workers",
+   "Hours": 2.25
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Alone",
+   "Hours": 7.39
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Children",
+   "Hours": 0.9
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Family",
+   "Hours": 0.86
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Partner",
+   "Hours": 3.59
+  },
+  {
+   "Group": "Men",
+   "Age": 60,
+   "Who": "Co-workers",
+   "Hours": 2.24
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Alone",
+   "Hours": 6.97
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Children",
+   "Hours": 0.98
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Family",
+   "Hours": 0.84
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Partner",
+   "Hours": 3.7
+  },
+  {
+   "Group": "Men",
+   "Age": 61,
+   "Who": "Co-workers",
+   "Hours": 2.42
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Alone",
+   "Hours": 7.85
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Friends",
+   "Hours": 0.43
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Children",
+   "Hours": 0.72
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Family",
+   "Hours": 0.77
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Partner",
+   "Hours": 3.83
+  },
+  {
+   "Group": "Men",
+   "Age": 62,
+   "Who": "Co-workers",
+   "Hours": 1.58
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Alone",
+   "Hours": 7.83
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Children",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Family",
+   "Hours": 0.91
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Partner",
+   "Hours": 3.7
+  },
+  {
+   "Group": "Men",
+   "Age": 63,
+   "Who": "Co-workers",
+   "Hours": 1.55
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Alone",
+   "Hours": 7.81
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Friends",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Children",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Family",
+   "Hours": 0.72
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Partner",
+   "Hours": 3.93
+  },
+  {
+   "Group": "Men",
+   "Age": 64,
+   "Who": "Co-workers",
+   "Hours": 1.51
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Alone",
+   "Hours": 7.94
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Children",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Family",
+   "Hours": 0.8
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Partner",
+   "Hours": 4.08
+  },
+  {
+   "Group": "Men",
+   "Age": 65,
+   "Who": "Co-workers",
+   "Hours": 1.26
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Alone",
+   "Hours": 7.5
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Children",
+   "Hours": 0.73
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Family",
+   "Hours": 0.89
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Partner",
+   "Hours": 4.53
+  },
+  {
+   "Group": "Men",
+   "Age": 66,
+   "Who": "Co-workers",
+   "Hours": 1.03
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Alone",
+   "Hours": 7.69
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Children",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Family",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Partner",
+   "Hours": 4.59
+  },
+  {
+   "Group": "Men",
+   "Age": 67,
+   "Who": "Co-workers",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Alone",
+   "Hours": 7.34
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Children",
+   "Hours": 0.73
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Family",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Partner",
+   "Hours": 4.92
+  },
+  {
+   "Group": "Men",
+   "Age": 68,
+   "Who": "Co-workers",
+   "Hours": 0.82
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Alone",
+   "Hours": 7.67
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Children",
+   "Hours": 0.81
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Family",
+   "Hours": 0.78
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Partner",
+   "Hours": 4.87
+  },
+  {
+   "Group": "Men",
+   "Age": 69,
+   "Who": "Co-workers",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Alone",
+   "Hours": 7.72
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Friends",
+   "Hours": 0.66
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Children",
+   "Hours": 0.76
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Family",
+   "Hours": 0.67
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Partner",
+   "Hours": 4.75
+  },
+  {
+   "Group": "Men",
+   "Age": 70,
+   "Who": "Co-workers",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Alone",
+   "Hours": 7.66
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Children",
+   "Hours": 0.74
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Family",
+   "Hours": 0.69
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Partner",
+   "Hours": 5.08
+  },
+  {
+   "Group": "Men",
+   "Age": 71,
+   "Who": "Co-workers",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Alone",
+   "Hours": 7.75
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Children",
+   "Hours": 0.5
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Family",
+   "Hours": 0.77
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Partner",
+   "Hours": 5.1
+  },
+  {
+   "Group": "Men",
+   "Age": 72,
+   "Who": "Co-workers",
+   "Hours": 0.46
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Alone",
+   "Hours": 7.49
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Friends",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Children",
+   "Hours": 0.8
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Family",
+   "Hours": 0.72
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Partner",
+   "Hours": 5.28
+  },
+  {
+   "Group": "Men",
+   "Age": 73,
+   "Who": "Co-workers",
+   "Hours": 0.41
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Alone",
+   "Hours": 7.57
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Friends",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Children",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Family",
+   "Hours": 0.63
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Partner",
+   "Hours": 5.24
+  },
+  {
+   "Group": "Men",
+   "Age": 74,
+   "Who": "Co-workers",
+   "Hours": 0.31
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Alone",
+   "Hours": 7.09
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Children",
+   "Hours": 0.64
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Family",
+   "Hours": 0.68
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Partner",
+   "Hours": 5.43
+  },
+  {
+   "Group": "Men",
+   "Age": 75,
+   "Who": "Co-workers",
+   "Hours": 0.32
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Alone",
+   "Hours": 7.11
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Friends",
+   "Hours": 0.37
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Children",
+   "Hours": 0.58
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Family",
+   "Hours": 0.69
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Partner",
+   "Hours": 5.77
+  },
+  {
+   "Group": "Men",
+   "Age": 76,
+   "Who": "Co-workers",
+   "Hours": 0.3
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Alone",
+   "Hours": 7
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Friends",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Children",
+   "Hours": 0.67
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Partner",
+   "Hours": 5.71
+  },
+  {
+   "Group": "Men",
+   "Age": 77,
+   "Who": "Co-workers",
+   "Hours": 0.26
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Alone",
+   "Hours": 7.17
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Friends",
+   "Hours": 0.46
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Children",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Family",
+   "Hours": 0.66
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Partner",
+   "Hours": 5.65
+  },
+  {
+   "Group": "Men",
+   "Age": 78,
+   "Who": "Co-workers",
+   "Hours": 0.06
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Alone",
+   "Hours": 7.59
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Children",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Family",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Partner",
+   "Hours": 5.45
+  },
+  {
+   "Group": "Men",
+   "Age": 79,
+   "Who": "Co-workers",
+   "Hours": 0.15
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Alone",
+   "Hours": 7.34
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Children",
+   "Hours": 0.43
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Family",
+   "Hours": 0.74
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Partner",
+   "Hours": 5.24
+  },
+  {
+   "Group": "Men",
+   "Age": 80,
+   "Who": "Co-workers",
+   "Hours": 0.1
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Alone",
+   "Hours": 3.46
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Friends",
+   "Hours": 1.5
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Children",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Family",
+   "Hours": 4.45
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "Women",
+   "Age": 15,
+   "Who": "Co-workers",
+   "Hours": 0.12
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Alone",
+   "Hours": 3.59
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Friends",
+   "Hours": 1.43
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Children",
+   "Hours": 0.5
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Family",
+   "Hours": 4.33
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Partner",
+   "Hours": 0
+  },
+  {
+   "Group": "Women",
+   "Age": 16,
+   "Who": "Co-workers",
+   "Hours": 0.42
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Alone",
+   "Hours": 3.56
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Friends",
+   "Hours": 1.67
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Children",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Family",
+   "Hours": 4.21
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Partner",
+   "Hours": 0.03
+  },
+  {
+   "Group": "Women",
+   "Age": 17,
+   "Who": "Co-workers",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Alone",
+   "Hours": 3.98
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Friends",
+   "Hours": 2.03
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Children",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Family",
+   "Hours": 4.29
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Partner",
+   "Hours": 0.1
+  },
+  {
+   "Group": "Women",
+   "Age": 18,
+   "Who": "Co-workers",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Alone",
+   "Hours": 4.58
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Friends",
+   "Hours": 1.56
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Children",
+   "Hours": 0.67
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Family",
+   "Hours": 3.47
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Partner",
+   "Hours": 0.31
+  },
+  {
+   "Group": "Women",
+   "Age": 19,
+   "Who": "Co-workers",
+   "Hours": 2.02
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Alone",
+   "Hours": 4.5
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Friends",
+   "Hours": 1.72
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Children",
+   "Hours": 1.17
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Family",
+   "Hours": 3.33
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Partner",
+   "Hours": 0.57
+  },
+  {
+   "Group": "Women",
+   "Age": 20,
+   "Who": "Co-workers",
+   "Hours": 1.9
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Alone",
+   "Hours": 4.49
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Friends",
+   "Hours": 1.4
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Children",
+   "Hours": 1.41
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Family",
+   "Hours": 2.97
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Partner",
+   "Hours": 1.02
+  },
+  {
+   "Group": "Women",
+   "Age": 21,
+   "Who": "Co-workers",
+   "Hours": 2.22
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Alone",
+   "Hours": 4.65
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Friends",
+   "Hours": 1.2
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Children",
+   "Hours": 1.51
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Family",
+   "Hours": 2.49
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Partner",
+   "Hours": 1.04
+  },
+  {
+   "Group": "Women",
+   "Age": 22,
+   "Who": "Co-workers",
+   "Hours": 2.55
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Alone",
+   "Hours": 4.43
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Friends",
+   "Hours": 1.29
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Children",
+   "Hours": 1.98
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Family",
+   "Hours": 2.15
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Partner",
+   "Hours": 1.44
+  },
+  {
+   "Group": "Women",
+   "Age": 23,
+   "Who": "Co-workers",
+   "Hours": 3.1
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Alone",
+   "Hours": 4.29
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Friends",
+   "Hours": 1.06
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Children",
+   "Hours": 2.29
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Family",
+   "Hours": 1.9
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Partner",
+   "Hours": 1.95
+  },
+  {
+   "Group": "Women",
+   "Age": 24,
+   "Who": "Co-workers",
+   "Hours": 2.79
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Alone",
+   "Hours": 4.53
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Friends",
+   "Hours": 0.83
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Children",
+   "Hours": 2.43
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Family",
+   "Hours": 1.64
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Partner",
+   "Hours": 2.07
+  },
+  {
+   "Group": "Women",
+   "Age": 25,
+   "Who": "Co-workers",
+   "Hours": 2.56
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Alone",
+   "Hours": 4.46
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Friends",
+   "Hours": 1.02
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Children",
+   "Hours": 2.62
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Family",
+   "Hours": 1.53
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Partner",
+   "Hours": 2.59
+  },
+  {
+   "Group": "Women",
+   "Age": 26,
+   "Who": "Co-workers",
+   "Hours": 2.76
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Alone",
+   "Hours": 4.17
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Friends",
+   "Hours": 0.94
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Children",
+   "Hours": 3.09
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Family",
+   "Hours": 1.48
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Partner",
+   "Hours": 2.78
+  },
+  {
+   "Group": "Women",
+   "Age": 27,
+   "Who": "Co-workers",
+   "Hours": 2.93
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Alone",
+   "Hours": 4.19
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Friends",
+   "Hours": 0.75
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Children",
+   "Hours": 3.9
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Family",
+   "Hours": 1.36
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Partner",
+   "Hours": 2.95
+  },
+  {
+   "Group": "Women",
+   "Age": 28,
+   "Who": "Co-workers",
+   "Hours": 2.47
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Alone",
+   "Hours": 4.16
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Friends",
+   "Hours": 0.74
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Children",
+   "Hours": 4.24
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Family",
+   "Hours": 1.57
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Partner",
+   "Hours": 2.93
+  },
+  {
+   "Group": "Women",
+   "Age": 29,
+   "Who": "Co-workers",
+   "Hours": 2.37
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Alone",
+   "Hours": 4.15
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Friends",
+   "Hours": 0.63
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Children",
+   "Hours": 4.52
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Family",
+   "Hours": 1.16
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Partner",
+   "Hours": 3.07
+  },
+  {
+   "Group": "Women",
+   "Age": 30,
+   "Who": "Co-workers",
+   "Hours": 2.45
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Alone",
+   "Hours": 4.17
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Friends",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Children",
+   "Hours": 4.55
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Family",
+   "Hours": 1.2
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Partner",
+   "Hours": 3.37
+  },
+  {
+   "Group": "Women",
+   "Age": 31,
+   "Who": "Co-workers",
+   "Hours": 2.33
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Alone",
+   "Hours": 4.09
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Children",
+   "Hours": 4.97
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Family",
+   "Hours": 1.16
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Partner",
+   "Hours": 3.24
+  },
+  {
+   "Group": "Women",
+   "Age": 32,
+   "Who": "Co-workers",
+   "Hours": 2.41
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Alone",
+   "Hours": 4.14
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Friends",
+   "Hours": 0.64
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Children",
+   "Hours": 5.12
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Family",
+   "Hours": 1.06
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Partner",
+   "Hours": 3.27
+  },
+  {
+   "Group": "Women",
+   "Age": 33,
+   "Who": "Co-workers",
+   "Hours": 2.21
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Alone",
+   "Hours": 4.19
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Children",
+   "Hours": 5.33
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Family",
+   "Hours": 1.08
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Partner",
+   "Hours": 3.44
+  },
+  {
+   "Group": "Women",
+   "Age": 34,
+   "Who": "Co-workers",
+   "Hours": 2.08
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Alone",
+   "Hours": 4.23
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Children",
+   "Hours": 5.2
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Family",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Partner",
+   "Hours": 3.25
+  },
+  {
+   "Group": "Women",
+   "Age": 35,
+   "Who": "Co-workers",
+   "Hours": 2.38
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Alone",
+   "Hours": 4.55
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Children",
+   "Hours": 5.07
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Family",
+   "Hours": 1.12
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Partner",
+   "Hours": 3.27
+  },
+  {
+   "Group": "Women",
+   "Age": 36,
+   "Who": "Co-workers",
+   "Hours": 2.11
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Alone",
+   "Hours": 4.47
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Children",
+   "Hours": 5
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Family",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Partner",
+   "Hours": 3.19
+  },
+  {
+   "Group": "Women",
+   "Age": 37,
+   "Who": "Co-workers",
+   "Hours": 2.21
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Alone",
+   "Hours": 4.33
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Children",
+   "Hours": 4.97
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Family",
+   "Hours": 1.06
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Partner",
+   "Hours": 3.2
+  },
+  {
+   "Group": "Women",
+   "Age": 38,
+   "Who": "Co-workers",
+   "Hours": 2.38
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Alone",
+   "Hours": 4.45
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Children",
+   "Hours": 5.16
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Family",
+   "Hours": 0.99
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Partner",
+   "Hours": 3.21
+  },
+  {
+   "Group": "Women",
+   "Age": 39,
+   "Who": "Co-workers",
+   "Hours": 2.33
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Alone",
+   "Hours": 4.85
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Children",
+   "Hours": 4.68
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Family",
+   "Hours": 0.89
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Partner",
+   "Hours": 3.09
+  },
+  {
+   "Group": "Women",
+   "Age": 40,
+   "Who": "Co-workers",
+   "Hours": 2.19
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Alone",
+   "Hours": 5.07
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Children",
+   "Hours": 4.68
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Family",
+   "Hours": 0.86
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Partner",
+   "Hours": 3.08
+  },
+  {
+   "Group": "Women",
+   "Age": 41,
+   "Who": "Co-workers",
+   "Hours": 2.24
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Alone",
+   "Hours": 5.11
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Children",
+   "Hours": 4.3
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Family",
+   "Hours": 0.9
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Partner",
+   "Hours": 2.83
+  },
+  {
+   "Group": "Women",
+   "Age": 42,
+   "Who": "Co-workers",
+   "Hours": 2.6
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Alone",
+   "Hours": 5.13
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Children",
+   "Hours": 4.33
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Family",
+   "Hours": 0.97
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Partner",
+   "Hours": 3.23
+  },
+  {
+   "Group": "Women",
+   "Age": 43,
+   "Who": "Co-workers",
+   "Hours": 2.16
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Alone",
+   "Hours": 5.21
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Children",
+   "Hours": 4.09
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Family",
+   "Hours": 1.02
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Partner",
+   "Hours": 2.97
+  },
+  {
+   "Group": "Women",
+   "Age": 44,
+   "Who": "Co-workers",
+   "Hours": 2.34
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Alone",
+   "Hours": 5.5
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Friends",
+   "Hours": 0.53
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Children",
+   "Hours": 3.8
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Family",
+   "Hours": 1
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Partner",
+   "Hours": 2.81
+  },
+  {
+   "Group": "Women",
+   "Age": 45,
+   "Who": "Co-workers",
+   "Hours": 2.17
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Alone",
+   "Hours": 5.43
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Children",
+   "Hours": 3.54
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Family",
+   "Hours": 1
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Partner",
+   "Hours": 3.17
+  },
+  {
+   "Group": "Women",
+   "Age": 46,
+   "Who": "Co-workers",
+   "Hours": 2.11
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Alone",
+   "Hours": 5.77
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Children",
+   "Hours": 3.32
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Family",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Partner",
+   "Hours": 2.65
+  },
+  {
+   "Group": "Women",
+   "Age": 47,
+   "Who": "Co-workers",
+   "Hours": 2.3
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Alone",
+   "Hours": 5.64
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Children",
+   "Hours": 2.87
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Family",
+   "Hours": 1.06
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Partner",
+   "Hours": 3.05
+  },
+  {
+   "Group": "Women",
+   "Age": 48,
+   "Who": "Co-workers",
+   "Hours": 2.26
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Alone",
+   "Hours": 5.76
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Children",
+   "Hours": 2.47
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Family",
+   "Hours": 1
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Partner",
+   "Hours": 3.08
+  },
+  {
+   "Group": "Women",
+   "Age": 49,
+   "Who": "Co-workers",
+   "Hours": 2.82
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Alone",
+   "Hours": 6
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Friends",
+   "Hours": 0.44
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Children",
+   "Hours": 2.59
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Family",
+   "Hours": 1.24
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Partner",
+   "Hours": 2.99
+  },
+  {
+   "Group": "Women",
+   "Age": 50,
+   "Who": "Co-workers",
+   "Hours": 2.33
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Alone",
+   "Hours": 6.02
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Children",
+   "Hours": 2.27
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Family",
+   "Hours": 1.17
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Partner",
+   "Hours": 2.98
+  },
+  {
+   "Group": "Women",
+   "Age": 51,
+   "Who": "Co-workers",
+   "Hours": 2.51
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Alone",
+   "Hours": 6.2
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Friends",
+   "Hours": 0.45
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Children",
+   "Hours": 2.05
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Family",
+   "Hours": 1.25
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Partner",
+   "Hours": 3.07
+  },
+  {
+   "Group": "Women",
+   "Age": 52,
+   "Who": "Co-workers",
+   "Hours": 2.42
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Alone",
+   "Hours": 6.28
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Friends",
+   "Hours": 0.54
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Children",
+   "Hours": 1.91
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Family",
+   "Hours": 1.09
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Partner",
+   "Hours": 3.01
+  },
+  {
+   "Group": "Women",
+   "Age": 53,
+   "Who": "Co-workers",
+   "Hours": 2.34
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Alone",
+   "Hours": 6.07
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Friends",
+   "Hours": 0.56
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Children",
+   "Hours": 1.71
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Family",
+   "Hours": 1.16
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Partner",
+   "Hours": 2.94
+  },
+  {
+   "Group": "Women",
+   "Age": 54,
+   "Who": "Co-workers",
+   "Hours": 2.49
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Alone",
+   "Hours": 6.47
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Children",
+   "Hours": 1.73
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Family",
+   "Hours": 1.2
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Partner",
+   "Hours": 3
+  },
+  {
+   "Group": "Women",
+   "Age": 55,
+   "Who": "Co-workers",
+   "Hours": 2.1
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Alone",
+   "Hours": 6.36
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Friends",
+   "Hours": 0.64
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Children",
+   "Hours": 1.48
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Family",
+   "Hours": 1.38
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Partner",
+   "Hours": 3.23
+  },
+  {
+   "Group": "Women",
+   "Age": 56,
+   "Who": "Co-workers",
+   "Hours": 2.34
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Alone",
+   "Hours": 6.78
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Friends",
+   "Hours": 0.5
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Children",
+   "Hours": 1.56
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Family",
+   "Hours": 1.25
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Partner",
+   "Hours": 2.97
+  },
+  {
+   "Group": "Women",
+   "Age": 57,
+   "Who": "Co-workers",
+   "Hours": 1.94
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Alone",
+   "Hours": 6.8
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Children",
+   "Hours": 1.3
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Family",
+   "Hours": 1.39
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Partner",
+   "Hours": 2.78
+  },
+  {
+   "Group": "Women",
+   "Age": 58,
+   "Who": "Co-workers",
+   "Hours": 1.91
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Alone",
+   "Hours": 6.84
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Friends",
+   "Hours": 0.39
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Children",
+   "Hours": 1.26
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Family",
+   "Hours": 1.15
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Partner",
+   "Hours": 3.24
+  },
+  {
+   "Group": "Women",
+   "Age": 59,
+   "Who": "Co-workers",
+   "Hours": 2.09
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Alone",
+   "Hours": 7.02
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Children",
+   "Hours": 1.19
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Family",
+   "Hours": 1.24
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Partner",
+   "Hours": 3.09
+  },
+  {
+   "Group": "Women",
+   "Age": 60,
+   "Who": "Co-workers",
+   "Hours": 1.86
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Alone",
+   "Hours": 7.05
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Children",
+   "Hours": 1.22
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Family",
+   "Hours": 1.14
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Partner",
+   "Hours": 3.34
+  },
+  {
+   "Group": "Women",
+   "Age": 61,
+   "Who": "Co-workers",
+   "Hours": 1.67
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Alone",
+   "Hours": 6.91
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Children",
+   "Hours": 1.27
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Family",
+   "Hours": 1.16
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Partner",
+   "Hours": 3.58
+  },
+  {
+   "Group": "Women",
+   "Age": 62,
+   "Who": "Co-workers",
+   "Hours": 1.36
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Alone",
+   "Hours": 7.17
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Friends",
+   "Hours": 0.47
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Children",
+   "Hours": 1.16
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Family",
+   "Hours": 1.17
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Partner",
+   "Hours": 3.48
+  },
+  {
+   "Group": "Women",
+   "Age": 63,
+   "Who": "Co-workers",
+   "Hours": 1.26
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Alone",
+   "Hours": 7.33
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Children",
+   "Hours": 1.14
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Family",
+   "Hours": 1.2
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Partner",
+   "Hours": 3.59
+  },
+  {
+   "Group": "Women",
+   "Age": 64,
+   "Who": "Co-workers",
+   "Hours": 1.17
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Alone",
+   "Hours": 7.37
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Friends",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Children",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Family",
+   "Hours": 1.33
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Partner",
+   "Hours": 3.82
+  },
+  {
+   "Group": "Women",
+   "Age": 65,
+   "Who": "Co-workers",
+   "Hours": 0.75
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Alone",
+   "Hours": 7.3
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Friends",
+   "Hours": 0.51
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Children",
+   "Hours": 1.15
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Family",
+   "Hours": 1.31
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Partner",
+   "Hours": 3.9
+  },
+  {
+   "Group": "Women",
+   "Age": 66,
+   "Who": "Co-workers",
+   "Hours": 0.63
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Alone",
+   "Hours": 7.2
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Children",
+   "Hours": 1.11
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Family",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Partner",
+   "Hours": 4.08
+  },
+  {
+   "Group": "Women",
+   "Age": 67,
+   "Who": "Co-workers",
+   "Hours": 0.58
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Alone",
+   "Hours": 7.81
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Friends",
+   "Hours": 0.67
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Children",
+   "Hours": 0.97
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Family",
+   "Hours": 1.08
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Partner",
+   "Hours": 3.59
+  },
+  {
+   "Group": "Women",
+   "Age": 68,
+   "Who": "Co-workers",
+   "Hours": 0.49
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Alone",
+   "Hours": 7.41
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Children",
+   "Hours": 1.23
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Family",
+   "Hours": 1.12
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Partner",
+   "Hours": 4.15
+  },
+  {
+   "Group": "Women",
+   "Age": 69,
+   "Who": "Co-workers",
+   "Hours": 0.41
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Alone",
+   "Hours": 7.68
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Friends",
+   "Hours": 0.61
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Children",
+   "Hours": 0.98
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Family",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Partner",
+   "Hours": 3.69
+  },
+  {
+   "Group": "Women",
+   "Age": 70,
+   "Who": "Co-workers",
+   "Hours": 0.35
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Alone",
+   "Hours": 7.69
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Children",
+   "Hours": 1.1
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Family",
+   "Hours": 1.11
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Partner",
+   "Hours": 3.86
+  },
+  {
+   "Group": "Women",
+   "Age": 71,
+   "Who": "Co-workers",
+   "Hours": 0.18
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Alone",
+   "Hours": 8.17
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Friends",
+   "Hours": 0.64
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Children",
+   "Hours": 0.93
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Partner",
+   "Hours": 3.66
+  },
+  {
+   "Group": "Women",
+   "Age": 72,
+   "Who": "Co-workers",
+   "Hours": 0.17
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Alone",
+   "Hours": 8.23
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Children",
+   "Hours": 0.95
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Family",
+   "Hours": 0.96
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Partner",
+   "Hours": 3.56
+  },
+  {
+   "Group": "Women",
+   "Age": 73,
+   "Who": "Co-workers",
+   "Hours": 0.22
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Alone",
+   "Hours": 7.99
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Friends",
+   "Hours": 0.59
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Children",
+   "Hours": 1.07
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Family",
+   "Hours": 1.12
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Partner",
+   "Hours": 3.5
+  },
+  {
+   "Group": "Women",
+   "Age": 74,
+   "Who": "Co-workers",
+   "Hours": 0.2
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Alone",
+   "Hours": 8.32
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Friends",
+   "Hours": 0.52
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Children",
+   "Hours": 0.97
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Family",
+   "Hours": 0.99
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Partner",
+   "Hours": 3.36
+  },
+  {
+   "Group": "Women",
+   "Age": 75,
+   "Who": "Co-workers",
+   "Hours": 0.23
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Alone",
+   "Hours": 8.01
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Friends",
+   "Hours": 0.65
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Children",
+   "Hours": 0.81
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Family",
+   "Hours": 0.85
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Partner",
+   "Hours": 3.66
+  },
+  {
+   "Group": "Women",
+   "Age": 76,
+   "Who": "Co-workers",
+   "Hours": 0.24
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Alone",
+   "Hours": 8.29
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Friends",
+   "Hours": 0.48
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Children",
+   "Hours": 0.9
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Family",
+   "Hours": 1.14
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Partner",
+   "Hours": 3.46
+  },
+  {
+   "Group": "Women",
+   "Age": 77,
+   "Who": "Co-workers",
+   "Hours": 0.08
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Alone",
+   "Hours": 8.35
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Friends",
+   "Hours": 0.67
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Children",
+   "Hours": 0.83
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Family",
+   "Hours": 1.19
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Partner",
+   "Hours": 3.3
+  },
+  {
+   "Group": "Women",
+   "Age": 78,
+   "Who": "Co-workers",
+   "Hours": 0.05
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Alone",
+   "Hours": 8.42
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Friends",
+   "Hours": 0.7
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Children",
+   "Hours": 0.77
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Family",
+   "Hours": 1.05
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Partner",
+   "Hours": 3.06
+  },
+  {
+   "Group": "Women",
+   "Age": 79,
+   "Who": "Co-workers",
+   "Hours": 0.05
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Alone",
+   "Hours": 8.45
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Friends",
+   "Hours": 0.55
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Children",
+   "Hours": 0.89
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Family",
+   "Hours": 1.12
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Partner",
+   "Hours": 2.82
+  },
+  {
+   "Group": "Women",
+   "Age": 80,
+   "Who": "Co-workers",
+   "Hours": 0.1
+  }
+ ]
+}

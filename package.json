@@ -28,7 +28,7 @@
     "clean": "npm run clean -w packages/flint-js && npm run clean -w packages/flint-mcp",
     "site": "npm run dev -w site",
     "site:build": "npm run build -w site",
-    "gen:reference": "esbuild scripts/gen-chart-reference.ts --bundle --platform=node --format=esm --outfile=scripts/.gen-chart-reference.mjs && node scripts/.gen-chart-reference.mjs && rm -f scripts/.gen-chart-reference.mjs",
+    "gen:reference": "esbuild scripts/gen-chart-reference.ts --bundle --platform=node --format=esm --external:typescript --outfile=scripts/.gen-chart-reference.mjs && node scripts/.gen-chart-reference.mjs && rm -f scripts/.gen-chart-reference.mjs",
     "presite": "npm run gen:reference",
     "presite:build": "npm run gen:reference",
     "postinstall": "node scripts/link-site-react.mjs"

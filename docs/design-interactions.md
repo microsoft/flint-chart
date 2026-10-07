@@ -106,9 +106,21 @@ kind of change.
 ## §2.4 The surface
 
 `buildInteractiveChart(container, input, options)` returns an `InteractiveChartSurface`:
-`ready`, `warnings`, `applyUpdate`, `setUpdates`, `clearUpdate`, `dispatch`, `refresh`,
-`destroy`. The container emits a `flint-interaction` DOM event for every semantic event, with
-the interaction id and the resolved target, so a host can listen without knowing the preset.
+`ready`, `warnings`, `applyUpdate`, `setUpdates`, `clearUpdate`, `dispatch`, `getState`,
+`onChange`, `refresh`, `destroy`. The container emits a `flint-interaction` DOM event for every
+semantic event, with the interaction id and the resolved target, so a host can listen without
+knowing the preset.
+
+The chart also owns its state, and a host reads it instead of replaying the gestures.
+`getState()` returns a `ChartState`: the emphasized marks (`selected`, previews included, and
+`entries` to tell each update's share apart), the hidden legend values, the shown viewport, and
+the rail windows. Each mark's `value` is its meaning in field terms: a bar's category and
+measure, a legend item's channel and value, a histogram bar's field and range. `onChange(callback)`
+fires after each render with a `ChartChange`: the phase (`preview` while a gesture runs, `commit`
+for a committed change or a host call, `cancel` when a gesture ends with none), the gesture's own
+hit and geometry, and the state after the change. The DOM event is the raw gesture record, fired
+before the chart reacts; `onChange` is what the chart shows, fired after. The rows stay with the
+host: it queries its own data from the values and the geometry, and the chart hands over no copy.
 
 # §3 The specification
 
@@ -338,12 +350,16 @@ Which fact is decided where:
 | what is admitted, and the warnings | the compile step, through admission |
 | how a hit becomes rows | the dictionary, at runtime |
 | which gesture resets what | the dispatcher, from each definition's list |
+| what the chart shows now | the runtime's state, read through the surface |
 
 # §8 Hosts and discovery
 
 - **`buildInteractiveChart()`** reads `interaction_spec` from the input and merges it with code
   definitions. The MCP `create_chart_view`, the site editor, and the site gallery mount through
   it whenever the input carries interaction entries; a static render otherwise.
+- **`getState()` and `onChange()`** give a host the chart as context. The MCP view sends the
+  state to the model after each committed change; an application panel follows a hover or a
+  brush live through the previews.
 - **`validateChart()`** runs the resolver and admission against the assembled semantics and
   returns the same warnings the mount would, before anything renders. A malformed spec is an
   `invalid_interaction_spec` error. The MCP `validate_chart` returns the same list.

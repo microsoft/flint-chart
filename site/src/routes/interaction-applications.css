@@ -1,0 +1,41 @@
+.ia-page { max-width: 1104px; }
+
+.ia-page > .bespoke-heading,
+.ia-page > .bespoke-grid { max-width: 1040px; }
+
+.ia-page > .bespoke-heading p { max-width: 832px; }
+
+.ia-page .bespoke-case {
+  --it-ink: #20262b;
+  --it-muted: #68737c;
+  --it-line: #d7dde1;
+  --it-soft: #f4f6f7;
+  --it-accent: #176f58;
+  --it-warm: #a14f2a;
+}
+
+.ia-page .bespoke-case-header p { max-width: 832px; }
+
+.ia-page .bespoke-case-header .ia-source {
+  margin: 8px 0 0;
+  color: #68737c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ia-page .bespoke-case-header .ia-source a { color: #176a92; }
+
+/* The case header names the demo; the embedded section's own header would repeat it. */
+.ia-page .bespoke-case .it-example-header { display: none; }
+
+.ia-page .it-workspace-outbound { grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr); }
+.ia-page .idr-article { grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr); }
+
+/* The two linked charts share the width in the chart's favour. */
+.ia-page .app-demo-pair { grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); }
+@media (max-width: 760px) { .ia-page .app-demo-pair { grid-template-columns: minmax(0, 1fr); } }
+
+/* The draw stage fills the case width, with the same card rule as the other demos. */
+.ia-page .pisa-draw { width: 100%; }
+.ia-page .pisa-draw__chart { border-color: #d4d8dc; border-radius: 4px; }
+.ia-page .pisa-draw__label { border-radius: 4px; }
