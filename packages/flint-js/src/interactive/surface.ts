@@ -240,9 +240,26 @@ export function mountInteractiveChartSurface(
                 ...warnings.map((warning) => `  - ${warning.code}: ${warning.message}`),
             ].join('\n'));
         }
-        if ((options.updates?.length ?? 0) > 0) {
+        const initialUpdates = options.updates ?? [];
+        if (initialUpdates.length > 0) {
             if (!mounted.setUpdates) throw new Error('This interactive backend does not support chart updates.');
-            await mounted.setUpdates(options.updates ?? []);
+            const results = await mounted.setUpdates(initialUpdates);
+            results.forEach((result, index) => {
+                if (result.status === 'applied') return;
+                const parts = [
+                    result.unresolvedTargets.length > 0
+                        ? `${result.unresolvedTargets.length} target${result.unresolvedTargets.length === 1 ? '' : 's'} matched nothing`
+                        : '',
+                    result.unsupportedOps.length > 0 ? `unsupported: ${result.unsupportedOps.join(', ')}` : '',
+                ].filter(Boolean);
+                const warning: ChartWarning = {
+                    severity: 'warning',
+                    code: result.status === 'unsupported' ? 'unsupported_update' : 'partially_applied_update',
+                    message: `Update "${initialUpdates[index]?.id}" was ${result.status.replace('-', ' ')}: ${parts.join('; ')}.`,
+                };
+                warnings.push(warning);
+                console.warn(`[flint-chart] ${chartId}: ${warning.code}: ${warning.message}`);
+            });
         }
         for (const viewport of mounted.viewports) {
             state[viewport.channel] = 0;

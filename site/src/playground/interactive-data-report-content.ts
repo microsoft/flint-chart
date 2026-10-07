@@ -4,7 +4,6 @@ import {
   clickHighlight,
   doubleActivate,
   hoverGroupFocus,
-  inspect,
   inspectIndex,
   longPress,
   navigate,
@@ -240,8 +239,8 @@ export const SELECTION_CHAT: SectionSpec & { question: string; interactions: rea
   fixture: dataCentersFixture,
   presets: [],
   paragraphs: [],
-  question: 'Show me an interactive line chart with this data that I can brush and inspect.',
-  interactions: [brushX({ id: 'brush', mode: 'stateful' }), inspect({ id: 'inspect' })],
+  question: 'Show me an interactive line chart with this data.',
+  interactions: [brushX({ id: 'brush', mode: 'stateful' })],
 };
 
 /** The agent's chart: point selection only, so a drag is a rectangle and never a pan. */

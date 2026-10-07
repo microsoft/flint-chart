@@ -18,10 +18,12 @@ import { listChartTypes, listThemes } from './tools/list.js';
 import {
   buildAssemblyInputShape,
   toAssemblyInput,
+  updatesShape,
   SUPPORTED_BACKENDS,
   type SupportedBackend,
   type AssemblyInputArgs,
 } from './tools/schemas.js';
+import { validateChartUpdates, type ChartUpdate } from 'flint-chart';
 
 import { VERSION } from './version.js';
 export { VERSION };
@@ -160,7 +162,8 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'ThemeSpec, read flint://theme-skill or use author_flint_theme. ' +
         'When the user asks for behaviour on a chart, names an intent such as ' +
         'explore or compare, adds behaviour to a chart that already exists, ' +
-        'changes or reads a mounted chart from code or as an agent, links charts, ' +
+        'changes or reads a mounted chart from code or as an agent, passes ' +
+        'updates to a tool, links charts, ' +
         'or needs an interaction no preset gives, read flint://interaction-skill ' +
         'or use author_flint_interaction.' +
         dataAccessNote(options),
@@ -258,13 +261,22 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
       description:
         'Validate a Flint chart spec for a backend without rendering. Reports ' +
         'whether it is valid, all warnings/errors, and the computed layout size. ' +
-        'With an interaction_spec it also reports the entries the chart would drop.',
-      inputSchema: { ...assemblyInputShape, backend: backendEnum },
+        'With an interaction_spec it also reports the entries the chart would drop, ' +
+        'and with updates it rejects a malformed layer.',
+      inputSchema: { ...assemblyInputShape, ...updatesShape, backend: backendEnum },
     },
     async (args: any) => {
       try {
         const input = toAssemblyInput(args as AssemblyInputArgs);
-        return jsonResult(validateChart(input, args.backend as RenderBackend, dataSourceOptions));
+        const result = validateChart(input, args.backend as RenderBackend, dataSourceOptions);
+        const updateErrors = args.updates === undefined ? [] : validateChartUpdates(args.updates);
+        if (updateErrors.length === 0) return jsonResult(result);
+        return jsonResult({
+          ...result,
+          valid: false,
+          warnings: [...result.warnings, ...updateErrors],
+          errors: [...result.errors, ...updateErrors],
+        });
       } catch (err) {
         return errorResult(err);
       }
@@ -330,8 +342,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
         'properties, sort) built from Flint\'s option model. Rendering and edits ' +
         'happen entirely in the host UI (Vega-Lite); no data leaves the host. ' +
         'Use this whenever the user wants to see a chart, not just when they ask ' +
-        'to tweak it; fall back to render_chart only for a static image.',
-      inputSchema: { ...assemblyInputShape },
+        'to tweak it; fall back to render_chart only for a static image. ' +
+        'Pass updates to open the chart in a state (emphasis, a note, a range), ' +
+        'and call it again with new updates to change an open chart.',
+      inputSchema: { ...assemblyInputShape, ...updatesShape },
       _meta: { ui: { resourceUri: CHART_VIEW_RESOURCE_URI } },
     },
     async (args: any) => {
@@ -344,13 +358,19 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           toAssemblyInput(args as AssemblyInputArgs),
           dataSourceOptions,
         );
+        const updates = args.updates as ChartUpdate[] | undefined;
+        const updateErrors = updates === undefined ? [] : validateChartUpdates(updates);
+        if (updateErrors.length > 0) {
+          return { content: [{ type: 'text' as const, text: updateErrors[0].message }], isError: true };
+        }
         const summary = validateChart(input, 'vegalite', dataSourceOptions);
         const size = summary.computedSize
           ? `${summary.computedSize.width}×${summary.computedSize.height}px`
           : 'auto size';
         const note = summary.valid
           ? `Interactive chart view ready: ${summary.chartType} (${size})` +
-            (summary.warnings.length ? `, ${summary.warnings.length} warning(s)` : '')
+            (summary.warnings.length ? `, ${summary.warnings.length} warning(s)` : '') +
+            (updates?.length ? `, ${updates.length} update layer(s)` : '')
           : `Chart spec has errors: ${summary.errors.map((e) => e.message).join('; ')}`;
         return {
           content: [{ type: 'text' as const, text: note }],
@@ -358,7 +378,10 @@ export function createServer(options: CreateServerOptions = {}): McpServer {
           // the UI; the UI primarily reads the tool arguments via ontoolinput.
           // Data is pre-resolved to inline values so the client-side renderer
           // never sees an unreadable local data.url.
-          structuredContent: { input: input as unknown as Record<string, unknown> },
+          structuredContent: {
+            input: input as unknown as Record<string, unknown>,
+            ...(updates ? { updates } : {}),
+          },
           ...(summary.valid ? {} : { isError: true }),
         };
       } catch (err) {

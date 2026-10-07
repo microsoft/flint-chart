@@ -34,6 +34,8 @@
 
 条目没有字符串简写：单独的 `"click-highlight"` 会被拒绝，`{ "type": "click-highlight" }` 是最小形式。
 
+状态不属于 spec。图表当前显示的内容（强调、注释、视口、顺序）以 `ChartUpdate` 的形式通过交互层（`applyUpdate`、`setUpdates`）或 `buildInteractiveChart()` 的 `updates` 选项施加。MCP 工具以输入旁边的 `updates` 参数接收同样的列表。
+
 ## 预设一览
 
 | 类型 | 读者的操作 | 需要图表提供 | 默认重置 |

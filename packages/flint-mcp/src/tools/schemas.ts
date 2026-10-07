@@ -2,7 +2,12 @@
 // Licensed under the MIT License.
 
 import { z } from 'zod';
-import { INTERACTION_PRESET_TYPES, type ChartAssemblyInput, type InteractionPresetType } from 'flint-chart';
+import {
+  CHART_UPDATE_OPS,
+  INTERACTION_PRESET_TYPES,
+  type ChartAssemblyInput,
+  type InteractionPresetType,
+} from 'flint-chart';
 
 /** The three backends this server can compile, validate, and render. */
 export const SUPPORTED_BACKENDS = ['vegalite', 'echarts', 'chartjs'] as const;
@@ -144,6 +149,28 @@ export function buildAssemblyInputShape(disableFileReference = false) {
 
 /** Default flat tool parameter shape (local file references allowed). */
 export const assemblyInputShape = buildAssemblyInputShape(false);
+
+/** The `updates` argument: ChartUpdate layers the view applies at open, beside the chart input. */
+export const updatesShape = {
+  updates: z
+    .array(
+      z.object({
+        id: z.string().describe('The layer this update holds. A later call with the same id replaces it.'),
+        ops: z
+          .array(
+            z
+              .object({ op: z.enum(CHART_UPDATE_OPS) })
+              .passthrough()
+              .describe('One ChartUpdate op; the shape per op is in flint://interaction-skill, "Change the chart".'),
+          )
+          .describe('The ops of this layer, applied in order.'),
+      }),
+    )
+    .optional()
+    .describe(
+      'ChartUpdate layers the chart shows at open: state, where interaction_spec is behaviour. Read flint://interaction-skill ("Change the chart") before you write one. To change an open chart, call create_chart_view again with new layers.',
+    ),
+};
 
 export type AssemblyInputArgs = {
   data: { values?: unknown[]; url?: string };

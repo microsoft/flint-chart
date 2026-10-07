@@ -965,6 +965,19 @@ export function mountVegaInteractions(
         return resolved;
     };
 
+    const overlayProjects = (spec: ChartOverlaySpec | null): boolean => {
+        if (spec === null) return true;
+        const channels: ('x' | 'y' | 'x2' | 'y2')[] = spec.mark === 'rule' || spec.mark === 'rect' ? ['x', 'y', 'x2', 'y2'] : ['x', 'y'];
+        const xScale = view.scale(plan.overlayScales?.x ?? '');
+        const yScale = view.scale(plan.overlayScales?.y ?? '');
+        if (typeof xScale !== 'function' || typeof yScale !== 'function') return false;
+        return channels.every((channel) => {
+            const encoding = spec.encodings[channel];
+            const scale = channel.startsWith('x') ? xScale : yScale;
+            return !!encoding && spec.data.values.every((row) => Number.isFinite(scale(row[encoding.field])));
+        });
+    };
+
     const resolveUpdate = (
         update: ChartUpdate,
     ): { update: ChartUpdate; result: ChartUpdateResult } => {
@@ -1000,7 +1013,7 @@ export function mountVegaInteractions(
                 if (supported.unsupported) unsupportedOps.push(op.op);
                 if (supported.op) ops.push(supported.op);
             } else if (op.op === 'set-overlay') {
-                if (!plan.overlayScales?.x || !plan.overlayScales?.y) unsupportedOps.push(op.op);
+                if (!plan.overlayScales?.x || !plan.overlayScales?.y || !overlayProjects(op.value)) unsupportedOps.push(op.op);
                 else ops.push(op);
             } else if (op.op === 'set-freeform-overlay' && op.value !== null) {
                 const body: (typeof op.value.body)[number][] = [];

@@ -14,7 +14,7 @@ import type { App, McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useApp } from '@modelcontextprotocol/ext-apps/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { ChartAssemblyInput, ChartOption, ChartWarning } from 'flint-chart';
+import type { ChartAssemblyInput, ChartOption, ChartUpdate, ChartWarning } from 'flint-chart';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { buildInteractiveChart } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
@@ -732,9 +732,10 @@ function OptionsBar(props: {
 export function FlintAppInner(props: {
   app: App;
   input: ChartAssemblyInput;
+  updates?: readonly ChartUpdate[];
   hostContext?: McpUiHostContext;
 }) {
-  const { app, input, hostContext } = props;
+  const { app, input, updates = NO_UPDATES, hostContext } = props;
   const [current, setCurrent] = useState<ChartAssemblyInput>(input);
   const [render, setRender] = useState<FlintRenderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -880,7 +881,7 @@ export function FlintAppInner(props: {
     }
   }, [app, render]);
 
-  const interactive = (current.interaction_spec?.interactions?.length ?? 0) > 0;
+  const interactive = (current.interaction_spec?.interactions?.length ?? 0) > 0 || updates.length > 0;
   const previewInput = useMemo(
     () => withAppPreviewDefaults(current, chartWidth ? { width: chartWidth } : undefined),
     [current, chartWidth],
@@ -919,6 +920,7 @@ export function FlintAppInner(props: {
                   <InteractiveChart
                     app={app}
                     input={previewInput}
+                    updates={updates}
                     onWarnings={setSurfaceWarnings}
                     onError={setSurfaceError}
                   />
@@ -954,15 +956,17 @@ export function FlintAppInner(props: {
   );
 }
 
-/** The live chart when the input carries interaction_spec: the preview input, mounted through the interactive surface. */
+/** The live chart when the call carries interaction_spec or updates: the preview input, mounted through the interactive surface. */
 function InteractiveChart({
   app,
   input,
+  updates,
   onWarnings,
   onError,
 }: {
   app: App;
   input: ChartAssemblyInput;
+  updates: readonly ChartUpdate[];
   onWarnings: (warnings: readonly ChartWarning[]) => void;
   onError: (message: string | null) => void;
 }) {
@@ -978,6 +982,7 @@ function InteractiveChart({
         renderer: 'svg',
         expressionInterpreter,
         chartId: 'flint-chart-view',
+        updates,
       });
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err));
@@ -1007,12 +1012,15 @@ function InteractiveChart({
       live = false;
       surface.destroy();
     };
-  }, [app, input, onWarnings, onError]);
+  }, [app, input, updates, onWarnings, onError]);
   return <div className="chart-svg chart-interactive" ref={mountRef} />;
 }
 
+const NO_UPDATES: readonly ChartUpdate[] = [];
+
 export function FlintApp() {
   const [input, setInput] = useState<ChartAssemblyInput | null>(null);
+  const [updates, setUpdates] = useState<readonly ChartUpdate[]>(NO_UPDATES);
   const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
 
   const { app, error } = useApp({
@@ -1025,15 +1033,17 @@ export function FlintApp() {
       app.onhostcontextchanged = (params) =>
         setHostContext((prev) => ({ ...prev, ...params }));
       app.ontoolinput = (params) => {
-        const args = params?.arguments as ChartAssemblyInput | undefined;
+        const args = params?.arguments as (ChartAssemblyInput & { updates?: ChartUpdate[] }) | undefined;
+        if (Array.isArray(args?.updates)) setUpdates(args.updates);
         // Only accept raw tool args that already carry inline rows. A
         // local `data.url` cannot be read in the browser, so for those we
         // wait for the server-resolved input delivered via ontoolresult.
         if (args?.chart_spec && Array.isArray(args.data?.values)) setInput(args);
       };
       app.ontoolresult = (result) => {
-        const structured = (result as { structuredContent?: { input?: ChartAssemblyInput } })
+        const structured = (result as { structuredContent?: { input?: ChartAssemblyInput; updates?: ChartUpdate[] } })
           .structuredContent;
+        if (Array.isArray(structured?.updates)) setUpdates(structured.updates);
         // The server pre-resolves data (local data.url → inline values), so
         // structuredContent.input is authoritative. Prefer it whenever it
         // carries rows the current input lacks.
@@ -1062,5 +1072,5 @@ export function FlintApp() {
   if (!app) return <div className="status">Connecting…</div>;
   if (!input) return <div className="status">Waiting for chart data…</div>;
 
-  return <FlintAppInner app={app} input={input} hostContext={hostContext} />;
+  return <FlintAppInner app={app} input={input} updates={updates} hostContext={hostContext} />;
 }

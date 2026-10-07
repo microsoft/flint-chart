@@ -38,6 +38,8 @@ Choose presets such as `click-highlight` or `navigate`, each with its own option
 
 An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "type": "click-highlight" }` is the smallest form.
 
+State is not part of the spec. What the chart shows now, an emphasis, a note, a viewport, an order, arrives as a `ChartUpdate` through the surface (`applyUpdate`, `setUpdates`) or as the `updates` option of `buildInteractiveChart()`. The MCP tools take the same list as an `updates` argument beside the input.
+
 ## The presets
 
 | Type | What the reader does | Needs from the chart | Default reset |

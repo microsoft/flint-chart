@@ -244,6 +244,16 @@ export type ChartUpdateOp =
         value: { rows: readonly Record<string, unknown>[] };
     };
 
+export const CHART_UPDATE_OPS = [
+    'set-style',
+    'set-annotation',
+    'set-viewport',
+    'set-order',
+    'set-overlay',
+    'set-freeform-overlay',
+    'set-data',
+] as const satisfies readonly ChartUpdateOp['op'][];
+
 export interface ChartUpdate {
     id: string;
     ops: readonly ChartUpdateOp[];

@@ -215,6 +215,7 @@ export {
     type TargetDetailsOptions,
     type TargetFeedbackOptions,
 } from './interaction-spec';
+export { CHART_UPDATE_OPS, type ChartUpdate, type ChartUpdateOp } from './interaction-contracts';
 
 // ThemeSpec: public visual-system vocabulary and chart-specific grounding
 export {

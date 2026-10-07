@@ -179,6 +179,40 @@ describe('MCP server', () => {
     expect(dropped[0].message).toContain('"legend-toggle" requires a discrete legend; Bar Chart has none');
   });
 
+  it('validate_chart and create_chart_view take updates beside the input, and reject a malformed layer', async () => {
+    const base = {
+      data: { values: [{ region: 'East', revenue: 120 }, { region: 'West', revenue: 90 }] },
+      semantic_types: { revenue: 'Quantity' },
+      chart_spec: { chartType: 'Bar Chart', encodings: { x: 'region', y: 'revenue' } },
+    };
+    const layer = { id: 'agent', ops: [{ op: 'set-style', targets: [{ select: { key: { region: 'East' } } }], value: { state: 'emphasized' } }] };
+    const ok: any = await client.callTool({ name: 'validate_chart', arguments: { ...base, backend: 'vegalite', updates: [layer] } });
+    expect(JSON.parse(ok.content[0].text).valid).toBe(true);
+    const bad: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: { ...base, backend: 'vegalite', updates: [layer, { id: 'agent', ops: [] }] },
+    });
+    expect(bad.isError).toBeFalsy();
+    const payload = JSON.parse(bad.content[0].text);
+    expect(payload.valid).toBe(false);
+    expect(payload.errors[0]).toMatchObject({ code: 'invalid_updates' });
+    expect(payload.errors[0].message).toContain('updates[1]: duplicate id "agent"');
+    // An unknown op name never reaches the handler: the schema enum rejects it.
+    const unknownOp: any = await client.callTool({
+      name: 'validate_chart',
+      arguments: { ...base, backend: 'vegalite', updates: [{ id: 'agent', ops: [{ op: 'highlight' }] }] },
+    });
+    expect(unknownOp.isError).toBe(true);
+    expect(unknownOp.content[0].text).toContain('set-style');
+    const view: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [layer] } });
+    expect(view.isError).toBeFalsy();
+    expect(view.content[0].text).toContain('1 update layer(s)');
+    expect(view.structuredContent.updates).toEqual([layer]);
+    const viewBad: any = await client.callTool({ name: 'create_chart_view', arguments: { ...base, updates: [{ id: '', ops: [] }] } });
+    expect(viewBad.isError).toBe(true);
+    expect(viewBad.content[0].text).toBe('updates[0]: "id" must be a non-empty string.');
+  });
+
   it('render_chart surfaces assembly errors as isError', async () => {
     const res: any = await client.callTool({
       name: 'render_chart',

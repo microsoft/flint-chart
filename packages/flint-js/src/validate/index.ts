@@ -23,6 +23,7 @@ import type {
     ChartTemplateDef,
     ChartWarning,
 } from '../core/types';
+import { CHART_UPDATE_OPS } from '../core/interaction-contracts';
 import { isRegistered } from '../core/type-registry';
 import { toTypeString } from '../core/field-semantics';
 import { resolveEncodingSort } from '../core/resolve-semantics';
@@ -343,6 +344,36 @@ export function validateInteractionSpec(
         const message = err instanceof Error ? err.message : String(err);
         return [{ severity: 'error', code: 'invalid_interaction_spec', message }];
     }
+}
+
+/** Shape check of a ChartUpdate list from JSON; targets and op support are checked at mount. */
+export function validateChartUpdates(updates: unknown, label = 'updates'): ChartWarning[] {
+    const fail = (message: string): ChartWarning[] => [{ severity: 'error', code: 'invalid_updates', message }];
+    if (!Array.isArray(updates)) return fail(`${label} must be an array of { id, ops }.`);
+    const owners = new Map<string, number>();
+    for (const [index, update] of updates.entries()) {
+        const entry = `${label}[${index}]`;
+        if (!update || typeof update !== 'object' || Array.isArray(update)) {
+            return fail(`${entry}: expected an object with "id" and "ops".`);
+        }
+        const { id, ops } = update as { id?: unknown; ops?: unknown };
+        if (typeof id !== 'string' || id.length === 0) return fail(`${entry}: "id" must be a non-empty string.`);
+        if (!Array.isArray(ops)) return fail(`${entry} (${id}): "ops" must be an array.`);
+        for (const [opIndex, op] of ops.entries()) {
+            const name = (op as { op?: unknown } | null)?.op;
+            if (typeof name !== 'string' || !(CHART_UPDATE_OPS as readonly string[]).includes(name)) {
+                return fail(
+                    `${entry} (${id}).ops[${opIndex}]: unknown op "${String(name)}". Known ops: ${CHART_UPDATE_OPS.join(', ')}.`,
+                );
+            }
+        }
+        const owner = owners.get(id);
+        if (owner !== undefined) {
+            return fail(`${entry}: duplicate id "${id}" (also used by ${label}[${owner}]). One id holds one layer.`);
+        }
+        owners.set(id, index);
+    }
+    return [];
 }
 
 /**
