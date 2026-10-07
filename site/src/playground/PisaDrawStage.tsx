@@ -8,6 +8,7 @@ import {
   type ChartUpdate,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { ScaleToFit } from '../components/ScaleToFit';
 import pisa from '../data/pisa-oecd23-trends.json';
 import { dateToYear, extendPath, type DrawnPath } from './you-draw-it-model';
 import {
@@ -294,7 +295,9 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
   return (
     <div className="pisa-draw">
       <div className="pisa-draw__chart">
-        <div className="pisa-draw__mount" ref={mountRef} />
+        <ScaleToFit height={420} minHeight={300} maxScale={0.85} adaptiveHeight>
+          <div className="pisa-draw__mount" ref={mountRef} />
+        </ScaleToFit>
         <div className="pisa-draw__footer">
           <button type="button" className="ic-pill" onClick={reset}>Reset</button>
           <span className="pisa-draw__hint">{hint}</span>

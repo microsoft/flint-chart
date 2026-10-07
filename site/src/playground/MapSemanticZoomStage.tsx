@@ -10,7 +10,8 @@ import {
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { COUNTY_ENTER_SPAN, chartInput, isLevel, type Level } from './map-semantic-zoom-input';
+import mobility from '../data/county-mobility.json';
+import { COUNTY_ENTER_SPAN, chartInput, isLevel, longitudeSpan, type Level } from './map-semantic-zoom-input';
 import './interaction-candidates.css';
 import './map-semantic-zoom-stage.css';
 
@@ -83,7 +84,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
 
   const handleInteraction = useCallback((event: Event) => {
     const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
-    const { phase, action, geometry, target } = detail.event;
+    const { phase, action, operation, geometry, target } = detail.event;
     if (phase === 'start' || phase === 'cancel') return;
     if (detail.interactionId === CLICK_ID) {
       // A state at the overview level flies in; a county click is a plain
@@ -97,7 +98,14 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
     if (!action.endsWith('-viewport')) return;
     // Every navigation event reports the level the chart settled on; the swap
     // itself already happened inside the chart.
-    if (isLevel(geometry.domain?.level)) levelRef.current = geometry.domain.level;
+    if (isLevel(geometry.domain?.level)) {
+      levelRef.current = geometry.domain.level;
+      setLevel(geometry.domain.level);
+    }
+    const home = operation === 'reset' && phase === 'commit';
+    setLonSpan(home ? undefined : longitudeSpan(geometry.domain));
+    const place = geometry.domain?.focus?.Place;
+    setFocusState(!home && typeof place === 'string' ? place : undefined);
   }, [flyTo]);
 
   useEffect(() => {
@@ -134,6 +142,10 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
   }, [handleInteraction, dataset]);
 
   const reset = () => flyTo({});
+
+  const levelLabel = level === 'county'
+    ? `Counties${focusState ? ` - ${focusState}` : ''}`
+    : 'States';
 
   return (
     <div className="ic-flint-dimpvis-shell map-semantic-zoom-shell">

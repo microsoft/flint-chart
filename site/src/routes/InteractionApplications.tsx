@@ -5,6 +5,7 @@ import { WorldCupScorersDemo } from '../playground/WorldCupScorersDemo';
 import { PisaDrawStage } from '../playground/PisaDrawStage';
 import { TIME_USE, SELECTION_CHAT } from '../playground/interactive-data-report-content';
 import { BespokeFrame } from '../playground/release-examples/application-demos-extensions';
+import { DemoChartFitContext, type DemoChartFit } from '../playground/InteractionDemoChart';
 import { ConnectedModelsDemo } from '../playground/release-examples/application-demos-connected';
 import { SetWindowDemo } from '../playground/release-examples/application-demos-inbound';
 import { SiteShell } from '../components/SiteShell';
@@ -17,6 +18,9 @@ type Source = { label: string; url: string };
 
 const PISA_INK = { Science: '#5b8fd6', Mathematics: '#f2a89b', Reading: '#e3120b' } as const;
 
+/** Charts on this page sit in an 832px reading column, so they render a little under their designed size. */
+const CHART_FIT: DemoChartFit = { height: 420, minHeight: 240, maxScale: 0.85 };
+
 function Credit({ source }: { source: Source }) {
   return <p className="ia-source">Source: <a href={source.url} target="_blank" rel="noreferrer">{source.label}</a>.</p>;
 }
@@ -24,6 +28,7 @@ function Credit({ source }: { source: Source }) {
 export function InteractionApplications() {
   return (
     <SiteShell>
+      <DemoChartFitContext.Provider value={CHART_FIT}>
       <main className="bespoke-public-scroll">
         <div className="bespoke-page bespoke-public-page ia-page">
           <header className="bespoke-heading">
@@ -173,6 +178,7 @@ export function InteractionApplications() {
           </div>
         </div>
       </main>
+      </DemoChartFitContext.Provider>
     </SiteShell>
   );
 }

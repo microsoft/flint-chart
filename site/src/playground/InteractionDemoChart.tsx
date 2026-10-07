@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 import type {
   ChartChange,
   ChartUpdate,
@@ -8,7 +8,19 @@ import type {
 } from 'flint-chart/interactive';
 import { buildInteractiveChart } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
+import { ScaleToFit } from '../components/ScaleToFit';
 import type { InteractionDemoFixture } from './interaction-demo-data';
+
+export interface DemoChartFit {
+  /** Largest box height in px. */
+  height: number;
+  minHeight?: number;
+  /** Largest scale applied to the chart's designed size. */
+  maxScale: number;
+}
+
+/** When provided, every demo chart below shrinks to fit its panel instead of rendering at its designed size. */
+export const DemoChartFitContext = createContext<DemoChartFit | null>(null);
 
 interface InteractionDemoChartProps {
   fixture: InteractionDemoFixture;
@@ -33,6 +45,7 @@ export function InteractionDemoChart({
   onChange,
 }: InteractionDemoChartProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const fit = useContext(DemoChartFitContext);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -63,5 +76,11 @@ export function InteractionDemoChart({
     };
   }, [chartId, fixture, interactions, onChange, onSemanticEvent, onSurface, updates]);
 
-  return <div className="it-chart-mount" ref={mountRef} />;
+  const mount = <div className="it-chart-mount" ref={mountRef} />;
+  if (!fit) return mount;
+  return (
+    <ScaleToFit height={fit.height} minHeight={fit.minHeight} maxScale={fit.maxScale} adaptiveHeight>
+      {mount}
+    </ScaleToFit>
+  );
 }
