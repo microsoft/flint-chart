@@ -50,6 +50,11 @@ First decide which workflow the user is asking for:
   `validate_chart` to check a spec without rendering, `compile_chart` when the
   user wants backend-native JSON, and `list_chart_types` when you need the
   supported chart catalog.
+- **DO** pass `updates` beside the input to `create_chart_view` when the user
+  asks the chart to open in a state: rows to stand out, a note on a mark, a
+  framed range. It is a list of ChartUpdate layers, state not behaviour; the
+  shapes are in `flint://interaction-skill` under "Change the chart". To change an
+  open chart, call `create_chart_view` again with the same input and new `updates`.
 - **Project integration, only when the user asks for code:** add Flint to an
   app, notebook, script, or agentic product, install/import the library, and
   call an assembler in code. Keep the same `ChartAssemblyInput` contract, then

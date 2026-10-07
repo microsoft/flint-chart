@@ -413,15 +413,19 @@ surface.destroy();
 
 Every change from outside is one update, `{ id, ops }`:
 
-| Op | Effect | Shape | Needs |
-| --- | --- | --- | --- |
-| `set-style` | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
-| `set-annotation` | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text } \| null }` | one resolved element |
-| `set-viewport` | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
-| `set-order` | Reorder a discrete axis. List every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
-| `set-overlay` | Draw rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x, y, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
-| `set-freeform-overlay` | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
-| `set-data` | Replace every row the chart draws; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
+| Op | It is for | Effect | Shape | Needs |
+| --- | --- | --- | --- | --- |
+| `set-style` | Highlight, emphasize, fade, or hide marks the chart already draws, a run of line segments included. | Emphasize the targets and mute the rest; recolour; fade; hide. | `{ op, targets: UpdateTarget[], value: StyleSpec }` | marks |
+| `set-annotation` | Label one mark with a note. | Pin a note on one mark; `null` clears it. | `{ op, target: UpdateTarget, value: { text } \| null }` | one resolved element |
+| `set-viewport` | Zoom to, or frame, a range or a region. | Frame a continuous domain. | `{ op, axes: 'x' \| 'y' \| 'xy', value: { x?: [lo, hi], y?: [lo, hi] } }`; on a multi-level map `value: { region: { key } }` | `navigate` or `brush-zoom` mounted on that axis |
+| `set-order` | Sort or rank the categories. | Reorder a discrete axis. List every category in the order wanted. | `{ op, scope: 'category', field, values: unknown[] }` | `drag-reorder` mounted on that axis |
+| `set-overlay` | Add marks the chart does not draw: a reference line, a threshold band, a forecast, a sketch of rows. | Draw rows through the plot's own scales. | `{ op, name, value: { mark, data: { values }, encodings: { x, y, x2?, y2?, order?, color?, text? }, role, interactive?, projectable?, style? } \| null }` | x and y scales |
+| `set-freeform-overlay` | Draw a custom shape with no data behind it. | Draw SVG, or a clone of marks, over the plot. | `{ op, name, value: { coordinateSpace: 'plot' \| 'renderer', body: [{ type: 'svg', content } \| { type: 'clone', targets, transform?, opacity? }] } \| null }` | — |
+| `set-data` | Play or swap the rows the chart draws. | Replace every row the chart draws; the rows carry every encoded field. | `{ op, source: 'main', value: { rows } }` | inline data |
+
+A highlight never adds marks. Use `set-style` with `state: 'emphasized'`,
+never `set-overlay`; an overlay whose rows copy rows the chart already draws is
+wrong.
 
 `StyleSpec` is `{ state?, opacity?, visible?, fill?, stroke?, strokeWidth?,
 mutedOpacity? }`. Two states matter from outside: `emphasized` keeps the
@@ -451,7 +455,9 @@ its fill from the `color` encoding; a `point` takes `style.fill`.
   `size`, …) and matches rows by equality, so `'2007'` and `2007` differ. One
   key may cover many marks (`{ Continent: 'Africa' }` takes every African
   mark); several fields narrow it; an annotation's key must cover one. On a
-  line or area chart, a key on the series field covers the whole line.
+  line or area chart, a key on the series field covers the whole line and a
+  key on the x field covers one segment, so a run of segments is one target
+  per row.
 - A field the chart does not encode never resolves: encode the identity field
   (`detail` on a scatter), or pass elements from `event.target`,
   `state.selected`, or `context.available` through as `{ visual, elements }`.
@@ -460,6 +466,26 @@ its fill from the `color` encoding; a `point` takes `style.fill`.
   copied from it does not resolve, where a key on the encoded fields does.
 - A target that matches nothing is listed in the result, never rebound to a
   near match.
+
+**Values.** A key value, an overlay row, and a viewport bound hold what the
+parsed row holds, not the source text: a CSV `120` is the number `120`, and a
+temporal field (`Year`, `YearMonth`, `Date`, …) is UTC epoch milliseconds, so
+`"2014-01"` and a local-time value match nothing; `Date.UTC(2014, 0, 1)` is
+`1388534400000`. On a discrete axis the value is the category. Overlay rows
+need the fields their mark reads: `line`, `point`, `text` read `x` and `y`;
+`rule` and `rect` read `x`, `y`, `x2`, `y2`. A threshold is one `rule` row
+from the first `x` to the last. An overlay whose rows do not project is
+reported as unsupported.
+
+```json
+{ "id": "agent", "ops": [
+  { "op": "set-style", "value": { "state": "emphasized" },
+    "targets": [{ "select": { "key": { "month": 1388534400000 } } }, { "select": { "key": { "month": 1391212800000 } } }] },
+  { "op": "set-overlay", "name": "threshold", "value": { "mark": "rule", "role": "reference",
+    "data": { "values": [{ "x": 1388534400000, "y": 1e9, "x2": 1785542400000, "y2": 1e9 }] },
+    "encodings": { "x": { "field": "x" }, "y": { "field": "y" }, "x2": { "field": "x2" }, "y2": { "field": "y2" } } } }
+] }
+```
 
 **The result.** `applyUpdate`, `setUpdates`, and `dispatch` return a
 `ChartUpdateResult`: `{ status: 'applied' | 'partially-applied' |
@@ -591,6 +617,39 @@ result.
 
 To stand down: `{ "id": "agent", "ops": [{ "op": "set-style", "targets": [],
 "value": { "state": "normal" } }] }`, or the host calls `clearUpdate('agent')`.
+
+**Without a handle on the chart.** In the MCP chart view there is no
+`applyUpdate` to call. Pass the same layers as the `updates` argument of
+`create_chart_view`, beside the chart input, not inside it:
+
+```json
+{
+  "data": { "values": [ ... ] },
+  "chart_spec": { "chartType": "Bar Chart", "encodings": { "x": "region", "y": "revenue" } },
+  "updates": [
+    { "id": "agent", "ops": [
+      { "op": "set-style", "targets": [{ "select": { "key": { "region": "East" } } }], "value": { "state": "emphasized" } },
+      { "op": "set-annotation", "target": { "select": { "key": { "region": "West" } } }, "value": { "text": "Lowest in Q3" } }
+    ] }
+  ]
+}
+```
+
+The view opens the chart with the layers applied, with the same look as a
+user action. To change an open chart, call `create_chart_view` again with the
+same input and the layers you want now. Rules:
+
+- The argument is state, not behaviour. `interaction_spec` stays as it was;
+  `updates` never goes inside it.
+- Repeat the whole layer each turn, as above. The new list replaces what the
+  previous call declared.
+- The reader's own brush or selection does not survive the new view. The
+  context message reports it in field terms; carry it as a layer when it still
+  serves the reader.
+- Run `validate_chart` with the same `updates` first: a malformed layer is an
+  `invalid_updates` error there. A target that matches nothing, or an op the
+  chart does not mount, is a warning the view shows beside the chart; fix the
+  key or drop the op.
 
 ## Build a bespoke interaction
 

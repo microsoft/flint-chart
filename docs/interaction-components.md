@@ -126,14 +126,17 @@ The selector field must exist in the chart's semantic data. Host-owned updates a
 
 | Operator | Effect |
 |---|---|
-| `set-style` | Emphasize, mute, or hide semantic targets. |
-| `set-annotation` | Add or clear an annotation. |
+| `set-style` | Emphasize, mute, or hide marks the chart draws, a run of line segments included. |
+| `set-annotation` | Add or clear a note on one mark. |
 | `set-viewport` | Change visible continuous domains or a geographic viewport. |
 | `set-order` | Reorder categories. |
-| `set-overlay`, `set-freeform-overlay` | Add guides or freeform overlays. |
-| `set-data` | Replace data represented by a layer. |
+| `set-overlay` | Draw new rows through the chart's scales: `line`, `point`, `text` rows carry `x` and `y`; `rule` and `rect` rows carry `x`, `y`, `x2`, `y2`. |
+| `set-freeform-overlay` | Draw SVG or a clone of marks over the plot. |
+| `set-data` | Replace the rows the chart draws. |
 
-A `ChartUpdate` has an `id` and an `ops` array. A single update can combine several operators. Exact operator fields and support depend on the operator and chart surface.
+A `ChartUpdate` has an `id` and an `ops` array. A single update can combine several operators.
+
+Key values, overlay rows, and viewport bounds hold what the parsed row holds: a number for a numeric field, UTC epoch milliseconds for a temporal field, the category for a discrete one. A target that matches nothing and an overlay whose rows do not project are reported in the `ChartUpdateResult`, never rebound to a near match.
 
 ## Surface lifecycle
 
