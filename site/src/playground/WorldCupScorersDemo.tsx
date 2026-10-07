@@ -34,7 +34,7 @@ const TEAMS_FIXTURE: InteractionDemoFixture = {
       title: 'Goals by team',
       subtitle: `2026 World Cup, top ${TEAM_COUNT} teams, own goals left out`,
       encodings: { x: 'Goals', y: { field: 'Team', sortBy: 'x', sortOrder: 'descending' } },
-      baseSize: { width: 400, height: 380 },
+      baseSize: { width: 400, height: 440 },
     },
     interaction_spec: { interactions: [{ type: 'click-highlight', id: 'team', options: { targets: ['mark'] } }] },
   } as ChartAssemblyInput,
@@ -69,7 +69,6 @@ export function WorldCupScorersDemo() {
           <InteractionDemoChart fixture={TEAMS_FIXTURE} interactions={NO_INTERACTIONS} chartId="world-cup-teams" onChange={handleChange} />
         </section>
         <section className="it-detail-panel" aria-live="polite">
-          <h3 className="it-component-title">Scorers</h3>
           <div className="it-detail-body">
             <div className="it-detail-heading">{team ?? `Top ${TOP_SCORERS} scorers`}</div>
             <p className="it-detail-note">{team ? `${total} goals from ${scorers.length} players` : '2026 World Cup, all teams'}</p>

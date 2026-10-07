@@ -263,6 +263,24 @@ export function drawnLinesUpdate(
         },
       },
     });
+    const drawnRows = path.samples.filter((sample) => sample.year > bounds[subject].startYear);
+    ops.push({
+      op: 'set-overlay',
+      name: `drawn-points-${subject}`,
+      value: drawnRows.length === 0 ? null : {
+        mark: 'point',
+        role: 'drawn-point',
+        data: { values: drawnRows.map((sample) => overlayRow({ Year: sample.year, Score: sample.value })) },
+        encodings: { x: { field: 'Year' }, y: { field: 'Score' } },
+        style: {
+          fill: ink[subject],
+          stroke: '#ffffff',
+          strokeWidth: 1,
+          pointRadius: isActive ? 3 : 2.5,
+          opacity: active && !isActive && !finished ? 0.5 : 1,
+        },
+      },
+    });
     const front = frontSample(path);
     const nearEnd = front.year >= bounds[subject].endYear - 2;
     ops.push({

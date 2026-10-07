@@ -1,13 +1,12 @@
 import { ArticleSection, SelectionChatDemo } from '../playground/InteractiveDataReportLab';
-import { MapSemanticZoomStage } from '../playground/MapSemanticZoomStage';
-import { ELECTION_DATASET } from '../playground/election-semantic-zoom-input';
 import { WorldCupScorersDemo } from '../playground/WorldCupScorersDemo';
 import { PisaDrawStage } from '../playground/PisaDrawStage';
 import { TIME_USE, SELECTION_CHAT } from '../playground/interactive-data-report-content';
-import { BespokeFrame } from '../playground/release-examples/application-demos-extensions';
 import { DemoChartFitContext, type DemoChartFit } from '../playground/InteractionDemoChart';
 import { ConnectedModelsDemo } from '../playground/release-examples/application-demos-connected';
 import { SetWindowDemo } from '../playground/release-examples/application-demos-inbound';
+import { ElectionProfileDemo } from '../playground/release-examples/application-demos-election-profile';
+import { OverviewDetailDemo } from '../playground/release-examples/application-demos-overview-detail';
 import { SiteShell } from '../components/SiteShell';
 import '../playground/interaction-transport.css';
 import '../playground/bespoke-interaction-lab.css';
@@ -47,37 +46,18 @@ export function InteractionApplications() {
                   <p>
                     2024 presidential vote margin by state and county. Zoom the map; once the view narrows
                     enough, the state choropleth becomes a county choropleth at the same place. Click a state
-                    to fly into it.
+                    to fly into it, click a county to read it: the profile beside the map keeps the nation,
+                    adds the state under the centre, and adds the county you picked.
                   </p>
                   <Credit source={{ label: 'US County Level Election Results 08-24, compiled from official state tallies by Tony McGovern', url: 'https://github.com/tonmcg/US_County_Level_Election_Results_08-24' }} />
                   <div className="bespoke-pattern">
                     <strong>Within chart</strong>
-                    <strong>Flint in → Flint out</strong>
+                    <strong>Flint in → Flint out, navigation → custom out</strong>
                   </div>
                 </div>
                 <span className="bespoke-status">Case 01</span>
               </header>
-              <BespokeFrame><MapSemanticZoomStage dataset={ELECTION_DATASET} /></BespokeFrame>
-            </article>
-
-            <article className="bespoke-case bespoke-case--single">
-              <header className="bespoke-case-header">
-                <div>
-                  <h2>You draw it</h2>
-                  <p>
-                    Average PISA scores of the OECD-23 countries, with the lines after 2012 left blank. Pick a
-                    subject and draw its line to 2025; once all three are drawn, the real lines appear and the
-                    chart scores your guess.
-                  </p>
-                  <Credit source={{ label: 'OECD, PISA 2025 Results (Volume I), Table I.D.1', url: 'https://stat.link/urv65o' }} />
-                  <div className="bespoke-pattern">
-                    <strong>Within chart</strong>
-                    <strong>Flint in → Flint out</strong>
-                  </div>
-                </div>
-                <span className="bespoke-status">Case 02</span>
-              </header>
-              <PisaDrawStage theme="economist" ink={PISA_INK} />
+              <ElectionProfileDemo />
             </article>
 
             <article className="bespoke-case bespoke-case--single">
@@ -94,7 +74,7 @@ export function InteractionApplications() {
                     <strong>Flint in → custom out</strong>
                   </div>
                 </div>
-                <span className="bespoke-status">Case 03</span>
+                <span className="bespoke-status">Case 02</span>
               </header>
               <WorldCupScorersDemo />
             </article>
@@ -114,7 +94,7 @@ export function InteractionApplications() {
                     <strong>Flint in → agent context</strong>
                   </div>
                 </div>
-                <span className="bespoke-status">Case 04</span>
+                <span className="bespoke-status">Case 03</span>
               </header>
               <div className="it-page idr-page app-demo-embed"><SelectionChatDemo spec={SELECTION_CHAT} editable={false} /></div>
             </article>
@@ -134,7 +114,7 @@ export function InteractionApplications() {
                     <strong>External in → Flint out</strong>
                   </div>
                 </div>
-                <span className="bespoke-status">Case 05</span>
+                <span className="bespoke-status">Case 04</span>
               </header>
               <div className="it-page idr-page app-demo-embed"><ArticleSection spec={TIME_USE} editable={false} /></div>
             </article>
@@ -152,7 +132,7 @@ export function InteractionApplications() {
                     <strong>External in → set-data</strong>
                   </div>
                 </div>
-                <span className="bespoke-status">Case 06</span>
+                <span className="bespoke-status">Case 05</span>
               </header>
               <SetWindowDemo />
             </article>
@@ -171,9 +151,51 @@ export function InteractionApplications() {
                     <strong>Flint in → Flint out</strong>
                   </div>
                 </div>
-                <span className="bespoke-status">Case 07</span>
+                <span className="bespoke-status">Case 06</span>
               </header>
               <ConnectedModelsDemo />
+            </article>
+
+            <article className="bespoke-case bespoke-case--single">
+              <header className="bespoke-case-header">
+                <div>
+                  <h2>Overview and detail</h2>
+                  <p>
+                    The price of a gallon of regular gasoline in the United States, every week since 2000,
+                    twice. The strip at the bottom holds the whole series under a brush; the interval it covers
+                    becomes the viewport of the chart above, which keeps every row and frames only its x axis
+                    on those weeks. Find the 2008 spike and crash, the spring of 2020, or the record of June
+                    2022; drag the brush along and the detail follows.
+                  </p>
+                  <Credit source={{ label: 'U.S. Energy Information Administration, weekly retail gasoline prices', url: 'https://www.eia.gov/petroleum/gasdiesel/' }} />
+                  <div className="bespoke-pattern">
+                    <strong>Connected view</strong>
+                    <strong>Flint in → set-viewport</strong>
+                  </div>
+                </div>
+                <span className="bespoke-status">Case 07</span>
+              </header>
+              <OverviewDetailDemo />
+            </article>
+
+            <article className="bespoke-case bespoke-case--single">
+              <header className="bespoke-case-header">
+                <div>
+                  <h2>You draw it</h2>
+                  <p>
+                    Average PISA scores of the OECD-23 countries, with the lines after 2012 left blank. Pick a
+                    subject and draw its line to 2025; once all three are drawn, the real lines appear and the
+                    chart scores your guess.
+                  </p>
+                  <Credit source={{ label: 'OECD, PISA 2025 Results (Volume I), Table I.D.1', url: 'https://stat.link/urv65o' }} />
+                  <div className="bespoke-pattern">
+                    <strong>Within chart</strong>
+                    <strong>Flint in → Flint out</strong>
+                  </div>
+                </div>
+                <span className="bespoke-status">Case 08</span>
+              </header>
+              <PisaDrawStage theme="economist" ink={PISA_INK} />
             </article>
           </div>
         </div>

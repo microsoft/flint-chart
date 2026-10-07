@@ -90,9 +90,34 @@
 .app-demo-year-bar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .app-demo-year { flex: 1 1 320px; grid-template-columns: auto 1fr auto; align-items: center; margin: 0; }
 .app-demo-year strong { min-width: 3.2em; text-align: right; }
-.app-demo-year-note { flex: 1 1 260px; margin: 0; }
+.app-demo-year-note { flex: 1 1 200px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-demo-stack-chart { display: grid; place-items: center; }
-.app-demo-play { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 10px; border: 1px solid #176a92; border-radius: 999px; background: #fff; color: #0f4f6e; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.app-demo-play[aria-pressed="true"] { background: #176a92; color: #fff; }
+.app-demo-strip .it-chart-mount { min-height: 0; }
 .app-demo-pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; }
 @media (max-width: 760px) { .app-demo-pair { grid-template-columns: minmax(0, 1fr); } }
+
+/* The electoral tally: one bar, two colours, a line at 270. */
+.app-demo-tally { display: grid; gap: 6px; margin: 10px 0 4px; }
+.app-demo-tally-bar { position: relative; display: flex; height: 22px; border-radius: 4px; overflow: hidden; background: #e4e7ea; }
+.app-demo-tally-bar span { display: block; height: 100%; transition: width 240ms ease; }
+.app-demo-tally-trump { margin-left: auto; }
+.app-demo-tally-line { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: #1f2328; }
+.app-demo-tally-labels { display: flex; justify-content: space-between; font-size: 12px; color: #61676d; }
+.app-demo-tally-labels strong { font-size: 13px; }
+
+/* The semantic-zoom map beside its profile: one fixed height, nothing scrolls or reflows. */
+.app-demo-map-profile { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 16px; height: 508px; }
+.app-demo-map-profile > .app-demo-bespoke { display: grid; align-items: start; min-width: 0; height: 100%; padding: 0; overflow: hidden; box-sizing: border-box; }
+.app-demo-map-profile .ic-flint-dimpvis-shell { padding: 8px; }
+.app-demo-profile-panel { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; height: 508px; box-sizing: border-box; overflow: hidden; padding: 14px; }
+.app-demo-profiles { display: grid; align-content: start; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.app-demo-profile { display: grid; gap: 5px; padding-top: 10px; border-top: 1px solid #e4e7ea; }
+.app-demo-profile:first-child { padding-top: 0; border-top: 0; }
+.app-demo-profile-head { display: grid; gap: 1px; }
+.app-demo-profile-head strong { overflow: hidden; font-size: 13px; line-height: 1.3; color: #1f2328; text-overflow: ellipsis; white-space: nowrap; }
+.app-demo-profile-kind { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #8a9096; }
+.app-demo-profile-bar { height: 12px; }
+.app-demo-profile .app-demo-tally-labels { font-size: 11px; white-space: nowrap; }
+.app-demo-profile .app-demo-tally-labels strong { font-size: 11px; }
+.app-demo-profile-hint { margin: 0; min-height: 2.6em; }
+@media (max-width: 760px) { .app-demo-map-profile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } }

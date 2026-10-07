@@ -57,6 +57,12 @@ const MOBILITY_DATASET: MapDataset = {
   chartId: 'map-semantic-zoom',
 };
 
+/** What the reader has reached on the map: a state (by click or by the state under the centre), a county (by click), or home. */
+export type MapSelection =
+  | { kind: 'state'; key: string }
+  | { kind: 'county'; key: string | number }
+  | { kind: 'home' };
+
 const CLICK_REGION: CanvasInteractionDef = {
   id: CLICK_ID,
   eventSource: clickTrigger,
@@ -66,7 +72,13 @@ const CLICK_REGION: CanvasInteractionDef = {
   },
 };
 
-export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATASET }: { compact?: boolean; dataset?: MapDataset } = {}) {
+export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATASET, onSelect, maxScale = 1 }: {
+  compact?: boolean;
+  dataset?: MapDataset;
+  onSelect?: (selection: MapSelection) => void;
+  /** Largest scale applied to the map's designed size, so a wide frame can enlarge it. */
+  maxScale?: number;
+} = {}) {
   const [level, setLevel] = useState<Level>('state');
   const [lonSpan, setLonSpan] = useState<number | undefined>(undefined);
   const [focusState, setFocusState] = useState<string | undefined>(undefined);
@@ -87,11 +99,16 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
     const { phase, action, operation, geometry, target } = detail.event;
     if (phase === 'start' || phase === 'cancel') return;
     if (detail.interactionId === CLICK_ID) {
-      // A state at the overview level flies in; a county click is a plain
-      // click, and a click on empty map resets through navigate() itself.
-      if (phase !== 'commit' || target?.visual.kind !== 'region' || levelRef.current !== 'state') return;
+      // A state at the overview level flies in; a county click is reported to
+      // the host, and a click on empty map resets through navigate() itself.
+      if (phase !== 'commit' || target?.visual.kind !== 'region') return;
       const code = target.elements[0]?.value?.Region;
+      if (levelRef.current !== 'state') {
+        if (typeof code === 'string' || typeof code === 'number') onSelect?.({ kind: 'county', key: code });
+        return;
+      }
       if (typeof code !== 'string') return;
+      onSelect?.({ kind: 'state', key: code });
       flyTo({ region: { key: { Region: code } } });
       return;
     }
@@ -106,7 +123,11 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
     setLonSpan(home ? undefined : longitudeSpan(geometry.domain));
     const place = geometry.domain?.focus?.Place;
     setFocusState(!home && typeof place === 'string' ? place : undefined);
-  }, [flyTo]);
+    if (home) onSelect?.({ kind: 'home' });
+    else if (phase === 'commit' && levelRef.current === 'county' && typeof geometry.domain?.focus?.Region === 'string') {
+      onSelect?.({ kind: 'state', key: geometry.domain.focus.Region });
+    }
+  }, [flyTo, onSelect]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -167,7 +188,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
         <button type="button" className="ic-pill" onClick={reset}>Reset</button>
       </div>}
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={compact ? 300 : 800} adaptiveHeight={!compact} padding={8}>
+        <ScaleToFit height={compact ? 300 : 800} adaptiveHeight={!compact} padding={8} maxScale={maxScale}>
           <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
         </ScaleToFit>
       </div>

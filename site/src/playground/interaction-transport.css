@@ -60,7 +60,7 @@
 
 .it-workspace-outbound {
   grid-template-columns: minmax(0, 1.28fr) minmax(250px, 0.72fr);
-  min-height: 430px;
+  min-height: 500px;
 }
 
 .it-scorer-list {
@@ -118,6 +118,7 @@
 }
 
 .it-workspace-outbound .it-detail-panel { padding: 22px; contain: size; overflow-y: auto; }
+.it-workspace-outbound .it-detail-body { padding-top: 0; }
 
 .it-component-title {
   margin: 0;

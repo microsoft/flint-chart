@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play } from 'lucide-react';
 import type { ChartAssemblyInput, InteractionEntry } from 'flint-chart';
 import {
   externalInteraction,
@@ -293,8 +292,6 @@ const GDP_FIXTURE: InteractionDemoFixture = {
     },
   } as ChartAssemblyInput,
 };
-/** Milliseconds each year stays on screen while the demo plays. */
-const PLAY_STEP_MS = 600;
 const GDP_INTERACTIONS = controlled<{ year: number }>(({ year }) => [
   { op: 'set-data', source: 'main', value: { rows: gdpRows(year) } },
 ]);
@@ -302,38 +299,9 @@ const GDP_INTERACTIONS = controlled<{ year: number }>(({ year }) => [
 export function SetWindowDemo() {
   const { onSurface, send } = useControl<{ year: number }>('app-demo-window');
   const [year, setYear] = useState(LAST_GDP_YEAR);
-  const [playing, setPlaying] = useState(false);
   const pick = (next: number) => {
     setYear(next);
     send({ year: next });
-  };
-  const pickRef = useRef(pick);
-  pickRef.current = pick;
-  const yearRef = useRef(year);
-  yearRef.current = year;
-
-  // Play walks the years one step at a time and stops at the last one.
-  useEffect(() => {
-    if (!playing) return undefined;
-    const timer = window.setInterval(() => {
-      const next = yearRef.current + 1;
-      if (next > LAST_GDP_YEAR) {
-        setPlaying(false);
-        return;
-      }
-      pickRef.current(next);
-    }, PLAY_STEP_MS);
-    return () => window.clearInterval(timer);
-  }, [playing]);
-
-  const togglePlay = () => {
-    if (playing) {
-      setPlaying(false);
-      return;
-    }
-    // At the end, play starts over from the first year.
-    if (year >= LAST_GDP_YEAR) pick(GDP_YEARS[0]);
-    setPlaying(true);
   };
   const current = gdpIn(year);
   const previous = year > GDP_YEARS[0] ? gdpIn(year - 1) : [];
@@ -343,10 +311,6 @@ export function SetWindowDemo() {
 
   return <div className="app-demo-stack">
     <div className="app-demo-year-bar">
-      <button type="button" className="app-demo-play" onClick={togglePlay} aria-pressed={playing}>
-        {playing ? <Pause size={13} strokeWidth={2.2} aria-hidden="true" /> : <Play size={13} strokeWidth={2.2} aria-hidden="true" />}
-        <span>{playing ? 'Pause' : 'Play'}</span>
-      </button>
       <label className="app-demo-field app-demo-year">
         <span>Year</span>
         <SiteRange min={GDP_YEARS[0]} max={LAST_GDP_YEAR} step={1} value={year} onChange={(event) => pick(Number(event.target.value))} />
@@ -355,7 +319,7 @@ export function SetWindowDemo() {
       <p className="it-detail-note app-demo-year-note">
         {entered.length > 0 || left.length > 0
           ? <>{entered.length > 0 && <>In: {entered.join(', ')}. </>}{left.length > 0 && <>Out: {left.join(', ')}.</>}</>
-          : 'Drag the thumb; the chart redraws with that year\'s ten and re-sorts the bars.'}
+          : 'Drag to pick a year.'}
       </p>
     </div>
     <div className="app-demo-box app-demo-stack-chart">
