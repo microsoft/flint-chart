@@ -10,8 +10,7 @@ import {
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
-import mobility from '../data/county-mobility.json';
-import { COUNTY_ENTER_SPAN, chartInput, isLevel, longitudeSpan, type Level } from './map-semantic-zoom-input';
+import { COUNTY_ENTER_SPAN, chartInput, isLevel, type Level } from './map-semantic-zoom-input';
 import './interaction-candidates.css';
 import './map-semantic-zoom-stage.css';
 
@@ -73,7 +72,6 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
   const mountRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const levelRef = useRef<Level>('state');
-  levelRef.current = level;
 
   /** Fly the viewport to a region, or home with an empty value. */
   const flyTo = useCallback((value: { region: { key: Record<string, unknown> } } | Record<string, never>) => {
@@ -85,7 +83,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
 
   const handleInteraction = useCallback((event: Event) => {
     const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
-    const { phase, action, operation, geometry, target } = detail.event;
+    const { phase, action, geometry, target } = detail.event;
     if (phase === 'start' || phase === 'cancel') return;
     if (detail.interactionId === CLICK_ID) {
       // A state at the overview level flies in; a county click is a plain
@@ -99,13 +97,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
     if (!action.endsWith('-viewport')) return;
     // Every navigation event reports the level the chart settled on; the swap
     // itself already happened inside the chart.
-    if (isLevel(geometry.domain?.level)) setLevel(geometry.domain.level);
-    // A fly home reports each frame as a reset; the span counts down until the last one.
-    const home = operation === 'reset' && phase === 'commit';
-    setLonSpan(home ? undefined : longitudeSpan(geometry.domain));
-    // The state under the plot centre, read from the state layer's joined row.
-    const place = geometry.domain?.focus?.Place;
-    setFocusState(!home && typeof place === 'string' ? place : undefined);
+    if (isLevel(geometry.domain?.level)) levelRef.current = geometry.domain.level;
   }, [flyTo]);
 
   useEffect(() => {
@@ -143,10 +135,6 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
 
   const reset = () => flyTo({});
 
-  const levelLabel = level === 'county'
-    ? `Counties${focusState ? ` - ${focusState}` : ''}`
-    : 'States';
-
   return (
     <div className="ic-flint-dimpvis-shell map-semantic-zoom-shell">
       {!compact && <div className="ic-stage-meta">
@@ -167,7 +155,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
         <button type="button" className="ic-pill" onClick={reset}>Reset</button>
       </div>}
       <div className="ic-flint-dimpvis-panel">
-        <ScaleToFit height={compact ? 300 : 800} minHeight={compact ? 300 : 320} adaptiveHeight={!compact} padding={8}>
+        <ScaleToFit height={compact ? 300 : 800} adaptiveHeight={!compact} padding={8}>
           <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
         </ScaleToFit>
       </div>

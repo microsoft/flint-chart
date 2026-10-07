@@ -43,18 +43,6 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
         file: '../../../docs/theme-spec.md',
       },
       {
-        slug: 'interaction-spec',
-        title: 'Declarative interactions',
-        description: 'List interaction presets in interaction_spec, set their reset gestures, and read what each chart type supports.',
-        file: '../../../docs/interaction-spec.md',
-      },
-      {
-        slug: 'interaction-api',
-        title: 'Programming interactions',
-        description: 'Define bespoke semantic-event handlers and connect external controls using the lower-level interaction API.',
-        file: '../../../docs/interaction-api.md',
-      },
-      {
         slug: 'setup-flint-mcp',
         title: 'Set up Flint MCP',
         description:
@@ -69,6 +57,36 @@ export const DOCUMENTATION_GROUPS: DocGroup[] = [
           'Walk through a Data Formulator-style agent workflow that uses Flint as the semantic chart layer.',
         icon: agentIcon,
         file: '../../../docs/tutorials/agent-workflows.md',
+      },
+    ],
+  },
+  {
+    id: 'interaction',
+    label: 'Interaction',
+    docs: [
+      {
+        slug: 'interaction-introduction',
+        title: 'Introduction',
+        description: 'Understand how presets, semantic events, and chart updates connect charts with your application.',
+        file: '../../../docs/interaction-introduction.md',
+      },
+      {
+        slug: 'interaction-components',
+        title: 'Components',
+        description: 'Listen to semantic events and use the chart update API to connect application state and controls.',
+        file: '../../../docs/interaction-components.md',
+      },
+      {
+        slug: 'interaction-spec',
+        title: 'Declarative spec',
+        description: 'Configure reusable interaction presets in interaction_spec without writing handlers.',
+        file: '../../../docs/interaction-spec.md',
+      },
+      {
+        slug: 'interaction-api',
+        title: 'Programming API',
+        description: 'Use preset factories or create bespoke handlers with the functional interaction API.',
+        file: '../../../docs/interaction-api.md',
       },
     ],
   },

@@ -1,10 +1,10 @@
-# Programming interactions
+# Programming API
 
-Use the lower-level Flint API to create bespoke interactions that map semantic events to update operators, or connect a chart with external tables, widgets, and application state. For predefined behaviors expressed as JSON, see [Declarative interactions](interaction-spec.md).
+Use the functional Flint API to mount reusable interaction presets, create bespoke interactions that map semantic events to update operators, or connect charts with external controls. Start with [Introduction](interaction-introduction.md) for the model, [Components](interaction-components.md) for event listeners and chart updates, or [Declarative spec](interaction-spec.md) for JSON presets.
 
 The compiler resolves raw triggers into **semantic events** that identify chart elements and data, and renders **update operators** on the canvas. You choose the triggers and define the response in a `handle` function, without reverse-engineering rendering logic or manipulating renderer-specific data.
 
-> The examples below use the Vega-Lite interactive surface (`backend: 'vegalite'`), not a static chart assembler.
+> Flint's interaction presets currently support Vega-Lite. Mount your chart with `buildInteractiveChart()` to enable them.
 
 > For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) covers this API as well as the presets: the `ChartUpdate` an application or an agent applies, reading the chart state, linking charts, and bespoke definitions. The MCP server serves it as `flint://interaction-skill`.
 
@@ -25,6 +25,31 @@ await surface.ready;
 ```
 
 A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. Every interaction must have a unique `id`, including when both approaches are used on one chart. A code definition the chart cannot honour throws; an unsupported spec entry is dropped with a warning.
+
+## Use and combine presets
+
+Preset factories return interaction definitions for the `interactions` build option. Configure their behavior through factory options; you do not need a custom `handle` function.
+
+For a country chart with a continuous quantity on its Y axis, combine click highlighting with wheel or pinch zoom:
+
+```ts
+import {
+  buildInteractiveChart,
+  clickHighlight,
+  navigate,
+} from 'flint-chart/interactive';
+
+const surface = buildInteractiveChart(container, input, {
+  backend: 'vegalite',
+  interactions: [
+    clickHighlight({ dimOpacity: 0.2 }),
+    navigate({ axes: 'y', pan: false }),
+  ],
+});
+await surface.ready;
+```
+
+Choose presets supported by the chart's semantics. The [Declarative spec preset catalog](interaction-spec.md#the-presets) describes each preset and its requirements; the functional factories accept the corresponding options. Your app can observe these presets through [semantic event listeners](interaction-components.md#listen-to-events-in-your-application), just as it can observe bespoke interactions.
 
 ## Define a bespoke canvas interaction
 
@@ -117,7 +142,7 @@ Call `dispatch` from the table's row-selection handler. Targets use semantic dat
 
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
-The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`.
+The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
 
 ## Read the chart
 

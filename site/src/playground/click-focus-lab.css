@@ -10,6 +10,7 @@
 
 .cf-heading-title { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
 .cf-heading-title h1 { margin: 0; }
+.cf-heading-title h2 { margin: 0; font-size: 22px; font-weight: 650; line-height: 1.25; }
 .cf-source-toggle { display: inline-flex; gap: 2px; padding: 2px; border-radius: 5px; background: #eef1f3; }
 .cf-source-toggle button { border: 0; border-radius: 3px; padding: 5px 10px; background: transparent; color: #66707a; font: inherit; font-size: 12px; cursor: pointer; }
 .cf-source-toggle button[aria-pressed="true"] { background: #fff; color: #1f2328; box-shadow: 0 1px 2px #00000014; }
@@ -29,6 +30,14 @@
 .cf-interaction-detail ul { display: grid; gap: 4px; margin: 4px 0 0; padding: 0; list-style: none; color: #66707a; font-size: 12px; line-height: 1.5; }
 .cf-interaction-detail code { color: #315d73; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; overflow-wrap: anywhere; }
 .cf-interaction-detail strong { color: #1f2328; font-weight: 600; }
+.cf-preset-description { padding: 12px 14px; border: 1px solid #d8dee4; border-radius: 6px; background: #fff; }
+.ig-content .cf-preset-description p { margin: 0; }
+.ig-content .cf-preset-description ul { gap: 8px; margin: 0; padding-left: 18px; list-style: disc; }
+.ig-content .cf-emitted-events ul { gap: 4px; margin: 0; padding-left: 18px; list-style: disc; }
+.cf-emitted-events-heading { margin-bottom: 4px; }
+.ig-content .cf-emitted-events .cf-events-doc-link { margin: 8px 0 0; color: #4b525a; font-size: 12px; line-height: 1.5; }
+.ig-content .cf-events-doc-link .site-text-link { color: #0067b8; text-decoration-line: underline; text-decoration-color: currentColor; }
+.ig-content .cf-events-doc-link .site-text-link:hover, .ig-content .cf-events-doc-link .site-text-link:focus-visible { color: #004578 !important; text-decoration-thickness: 2px; }
 
 .cf-gallery-spec { width: min(100%, 760px); min-width: 0; }
 .cf-heading-with-code { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start; gap: 24px; }
@@ -40,8 +49,27 @@
 
 .ig-layout { width: 100%; box-sizing: border-box; padding: 28px 24px 48px; }
 .ig-content { width: 100%; min-width: 0; }
+.ig-gallery-header { width: min(100%, 960px); margin: 0 auto 28px; padding-bottom: 20px; border-bottom: 1px solid #d8dee4; }
+.ig-gallery-title-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+.ig-gallery-title-row [role="radiogroup"] { max-width: 100%; box-sizing: border-box; flex-wrap: wrap; }
+.ig-gallery-header h1 { margin: 0; color: #1f2328; font-size: 28px; font-weight: 600; line-height: 1.25; }
+.ig-gallery-header p { max-width: 760px; margin: 10px 0 0; color: #1f2328; font-size: 14px; line-height: 1.65; }
+.ig-gallery-header .site-text-link { color: #0067b8; text-decoration-line: underline; text-decoration-color: currentColor; }
+.ig-gallery-header .site-text-link:hover, .ig-gallery-header .site-text-link:focus-visible { color: #004578 !important; text-decoration-thickness: 2px; }
+.ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { color: #1f2328; font-size: 14px; line-height: 1.65; }
+.ig-content .cf-interaction-detail h2 { font-size: 14px; }
+.ig-content .cf-emitted-events h2 { font-size: 13px; }
+.ig-content .cf-interaction-detail code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; }
+.ig-content .cf-heading .cf-emitted-events ul { font-size: 12px; line-height: 1.5; }
+.ig-content .cf-emitted-events li code { font-size: 11.5px; }
+.ig-content .cf-probe-header p { color: #4b525a; font-size: 12px; line-height: 1.5; }
+@media (max-width: 640px) {
+  .ig-gallery-header h1 { font-size: 26px; line-height: 1.16; }
+  .ig-gallery-header p, .ig-content .cf-heading p, .ig-content .cf-interaction-detail ul { font-size: 15.5px; line-height: 1.6; }
+}
 .ig-article-page { min-height: 100vh; display: flex; flex-direction: column; background: #fff; }
 .ig-article-main { flex: 1; width: 100%; background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px), linear-gradient(0deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px); background-size: 24px 24px; }
+.ig-scroll.dev-shell { --dev-grid-line: rgba(0, 0, 0, 0.02); }
 .ig-article { width: 100%; max-width: 1008px; margin: 0 auto; padding: 62px 24px 72px; box-sizing: border-box; }
 .ig-article > header { max-width: 832px; margin: 0 auto; }
 .ig-article > .ig-overview-intro > h2, .ig-article > .ig-overview-intro > p { max-width: 832px; margin-left: auto; margin-right: auto; }
@@ -425,6 +453,34 @@
   font-size: 14px;
   font-weight: 650;
   letter-spacing: 0;
+}
+
+.cf-probe-header-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.cf-modal-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: 0 0 auto; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #4b525a; cursor: pointer; }
+.cf-modal-icon:hover { background: #edf0f2; color: #1f2328; }
+.cf-modal-icon:disabled { cursor: default; background: transparent; }
+.cf-chart-loading { animation: cf-chart-loading 1s linear infinite; }
+@keyframes cf-chart-loading { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cf-chart-loading { animation: none; } }
+.cf-modal-icon:focus-visible { outline: 2px solid #0067b8; outline-offset: 2px; }
+.cf-chart-modal { position: fixed; inset: 0; margin: auto; width: min(1320px, calc(100vw - 48px)); height: min(820px, calc(100dvh - 48px)); max-width: none; max-height: none; padding: 0; box-sizing: border-box; overflow: hidden; border: 1px solid #d8dee4; border-radius: 8px; background: #fff; color: #1f2328; box-shadow: 0 20px 60px #1f23283d; }
+.cf-chart-modal[open] { display: flex; flex-direction: column; }
+.cf-chart-modal::backdrop { background: #0000006b; }
+.cf-chart-modal > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #d8dee4; }
+.cf-chart-modal > header > div { min-width: 0; }
+.cf-chart-modal h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 600; }
+.cf-chart-modal header p { margin: 4px 0 0; color: #4b525a; font-size: 12.5px; line-height: 1.5; }
+.cf-chart-modal-body { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr); flex: 1; min-height: 0; overflow: hidden; }
+.cf-chart-modal-preview { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 16px; }
+.cf-chart-modal-preview > div { position: relative; flex: 1; min-height: 0; }
+.cf-chart-modal-status { padding-top: 10px; color: #4b525a; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-chart-modal-spec { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-left: 1px solid #d8dee4; }
+.cf-chart-modal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #d8dee4; }
+.cf-chart-modal-code { flex: 1; min-height: 0; overflow: auto; }
+@media (max-width: 900px) {
+  .cf-chart-modal { width: calc(100vw - 24px); height: calc(100dvh - 24px); }
+  .cf-chart-modal-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(300px, 1.15fr) minmax(240px, 0.85fr); overflow: auto; }
+  .cf-chart-modal-spec { border-left: 0; border-top: 1px solid #d8dee4; }
 }
 
 .cf-probe-header p {

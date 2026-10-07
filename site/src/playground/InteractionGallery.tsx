@@ -231,6 +231,7 @@ function representative(generator: () => TestCase[]): TestCase {
 function interactionCase(testCase: TestCase, suffix = ''): InteractionCase {
   return {
     id: `${testCase.chartType}-${testCase.title}${suffix}`,
+    title: testCase.title,
     chartType: testCase.chartType,
     input: testCaseToAssemblyInput(testCase, SIZE) as ChartAssemblyInput,
     expectation: testCase.description || 'Interact with the chart and inspect the resolved semantic target below.',

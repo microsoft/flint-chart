@@ -68,6 +68,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="gallery/:backend?" element={<ChartWall />} />
         <Route path="interactions" element={<FlintInteractive />} />
         <Route path="interactions/gallery" element={<InteractionGallery />} />
+        <Route path="interactions/gallery/:mode" element={<InteractionGallery />} />
         <Route path="interactions/bespoke" element={<BespokeInteractionLab publicPage />} />
         <Route path="interactions/applications" element={<InteractionApplications />} />
         <Route path="interactions/:mode" element={<InteractionGallery />} />

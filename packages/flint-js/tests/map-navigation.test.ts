@@ -143,6 +143,13 @@ describe('map navigation declaration', () => {
 });
 
 describe('geo extent helpers', () => {
+    it.each([[15, 7.5], [-15, -7.5], [50, -25], [-50, 25]])('pins a full-map extent despite overscroll when panned by %s, %s', (dx, dy) => {
+        const extent = guardGeoExtent([[dx, dy], [100 + dx, 50 + dy]], { width: 100, height: 50 }, {
+            ...GUARD, overscrollFraction: 0.15,
+        });
+        extent.flat().forEach((value, index) => expect(value).toBeCloseTo([0, 0, 100, 50][index], 10));
+    });
+
     it('remaps a pixel between extents by the fit\'s scale and offset', () => {
         const base: GeoExtent = [[0, 0], [100, 50]];
         const zoomed: GeoExtent = [[-50, -25], [150, 75]];

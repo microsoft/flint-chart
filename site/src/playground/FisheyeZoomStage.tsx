@@ -8,33 +8,15 @@ import {
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
 import { ScaleToFit } from '../components/ScaleToFit';
+import { PENGUINS, type Penguin } from './bespoke-interaction-data';
 import './fisheye-zoom-stage.css';
 
-type Penguin = {
-  id: string;
-  species: 'Adelie' | 'Chinstrap' | 'Gentoo';
-  flipper: number;
-  mass: number;
-};
 
-const RAW: Array<[Penguin['species'], number, number]> = [
-  ['Adelie', 181, 3750], ['Adelie', 186, 3800], ['Adelie', 195, 3250], ['Adelie', 193, 3450],
-  ['Adelie', 190, 3650], ['Adelie', 181, 3625], ['Adelie', 195, 4675], ['Adelie', 182, 3200],
-  ['Adelie', 191, 3800], ['Adelie', 198, 4400], ['Adelie', 185, 3700],
-  ['Chinstrap', 192, 3500], ['Chinstrap', 196, 3900], ['Chinstrap', 193, 3650],
-  ['Chinstrap', 188, 3525], ['Chinstrap', 197, 3950], ['Chinstrap', 198, 3800],
-  ['Chinstrap', 178, 3300], ['Chinstrap', 207, 4800], ['Chinstrap', 201, 4050],
-  ['Chinstrap', 191, 3550],
-  ['Gentoo', 211, 4500], ['Gentoo', 230, 5700], ['Gentoo', 210, 4450], ['Gentoo', 218, 5700],
-  ['Gentoo', 215, 5400], ['Gentoo', 219, 5550], ['Gentoo', 209, 4800], ['Gentoo', 215, 5000],
-  ['Gentoo', 214, 4650], ['Gentoo', 216, 5550], ['Gentoo', 221, 5950], ['Gentoo', 217, 5250],
-];
 
-const COUNTS: Record<Penguin['species'], number> = { Adelie: 0, Chinstrap: 0, Gentoo: 0 };
-const PENGUINS: Penguin[] = RAW.map(([species, flipper, mass]) => {
-  COUNTS[species] += 1;
-  return { id: `${species.slice(0, 3).toUpperCase()}-${String(COUNTS[species]).padStart(2, '0')}`, species, flipper, mass };
-});
+
+
+
+
 
 const HOVER_ID = 'fisheye-semantic-hover';
 const LOUPE_SIZE = 238;
@@ -284,20 +266,8 @@ export function FisheyeZoomStage() {
 
   return (
     <div className="ic-flint-dimpvis-shell fisheye-shell">
-      <div className="ic-stage-meta">
-        <strong>Flint acquisition → custom presentation</strong>
-        <span>
-          The loupe follows the pointer while Flint resolves the nearest mark and its source record
-          within 28 px. React renders that neighborhood without a Flint chart update.
-        </span>
-      </div>
-      <div className="ic-toolbar">
-        <span className="ic-pill">Uses Flint semantic records</span>
-        <span className="ic-pill">28 px semantic acquisition</span>
-        <span className="ic-pill">0 Flint updates</span>
-      </div>
       <div className="ic-flint-dimpvis-panel fisheye-frame">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+        <ScaleToFit height={540} adaptiveHeight padding={8}>
           <div className="fisheye-chart-stack">
             <div className="ic-flint-dimpvis-mount fisheye-flint-mount" ref={mountRef} />
             <div
@@ -344,9 +314,6 @@ export function FisheyeZoomStage() {
             </div>
           </div>
         </ScaleToFit>
-      </div>
-      <div className="fisheye-source">
-        Flint owns the chart and hover semantics; the loupe is host-rendered. · Horst, Hill &amp; Gorman (2020)
       </div>
     </div>
   );

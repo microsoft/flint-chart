@@ -1,8 +1,8 @@
-# Declarative interactions
+# Declarative spec
 
 Use `interaction_spec` to make a Flint chart interactive with preset behaviors, without writing a custom handler.
 
-For bespoke interaction logic or external application controls, see [Programming interactions](interaction-api.md).
+Start with [Introduction](interaction-introduction.md) for the interaction model. For events and chart updates, see [Components](interaction-components.md). To use preset factories or define bespoke handlers, see [Programming API](interaction-api.md).
 
 > Interactions run on the Vega-Lite interactive surface. Static assemblers do not execute them; `validateChart` reports `interaction_spec` as ignored for static backends.
 

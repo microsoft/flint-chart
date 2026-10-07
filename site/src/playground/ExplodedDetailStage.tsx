@@ -285,27 +285,13 @@ export function FreeformExplodedDetailStage() {
 
   return (
     <div className="ic-flint-dimpvis-shell exploded-detail-shell">
-      <div className="ic-stage-meta">
-        <strong>The same treatment through set-freeform-overlay</strong>
-        <span>
-          A standard Flint inspect event produces the identical focus, clone, bubble, bridge, and
-          eccentric labels as one renderer-space freeform SVG update. Scroll changes the local
-          magnification without zooming the chart.
-        </span>
-      </div>
-      <div className="ic-toolbar">
-        <span className="ic-pill">Flint inspect event</span>
-        <span className="ic-pill">InteractionDef → set-freeform-overlay</span>
-        <span className="ic-pill">Scroll to zoom detail</span>
-      </div>
       <div className="ic-flint-dimpvis-panel exploded-detail-panel">
-        <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+        <ScaleToFit height={540} adaptiveHeight padding={8}>
           <div className="exploded-detail-stack">
             <div className="ic-flint-dimpvis-mount exploded-detail-mount" ref={mountRef} />
           </div>
         </ScaleToFit>
       </div>
-      <div className="exploded-detail-source">NASA POWER · MERRA-2 · 1991–2020 monthly climatology</div>
     </div>
   );
 }

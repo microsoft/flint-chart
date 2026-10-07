@@ -2936,6 +2936,7 @@ export function mountVegaInteractions(
         if (!regionInteraction && !navigationInteraction) container.style.cursor = previousCursor;
     };
     const clearUpdate = async (id: string): Promise<void> => {
+        if (id === regionInteraction?.id) regionGesture?.reset();
         if (!retainedUpdates.delete(id)) return;
         await renderUpdates();
         notifyChange({ phase: 'commit' });

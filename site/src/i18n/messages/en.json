@@ -83,11 +83,28 @@
     },
     "groups": {
       "quick-start": "Quick start",
+      "interaction": "Interaction",
       "introduction": "Language design",
       "reference": "Chart guide",
       "extending": "Development"
     },
     "entries": {
+      "interaction-spec": {
+        "title": "Declarative spec",
+        "description": "Configure reusable interaction presets in interaction_spec without writing handlers."
+      },
+      "interaction-api": {
+        "title": "Programming API",
+        "description": "Use preset factories or create bespoke handlers with the functional interaction API."
+      },
+      "interaction-introduction": {
+        "title": "Introduction",
+        "description": "Understand how presets, semantic events, and chart updates connect charts with your application."
+      },
+      "interaction-components": {
+        "title": "Components",
+        "description": "Listen to semantic events and use the chart update API to connect application state and controls."
+      },
       "getting-started": {
         "title": "Getting started",
         "description": "Install Flint, then make your first chart from a simple DataSpec and ChartSpec."

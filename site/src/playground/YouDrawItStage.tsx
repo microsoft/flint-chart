@@ -280,7 +280,7 @@ export function YouDrawItStage() {
       </div>
       <div className="ydi-stage__workspace">
         <div className="ic-flint-dimpvis-panel">
-          <ScaleToFit height={540} minHeight={400} adaptiveHeight padding={8}>
+          <ScaleToFit height={540} adaptiveHeight padding={8}>
             <div className="ic-flint-dimpvis-mount" ref={mountRef} />
           </ScaleToFit>
         </div>

@@ -74,7 +74,10 @@ export function normalizeTimeboxSelection(selection: TimeboxSelection): TimeboxS
   return { startDate, endDate, minValue, maxValue };
 }
 
-export function prepareTimeboxData(rows: readonly TimeboxInputRow[]): PreparedTimeboxData {
+export function prepareTimeboxData(
+  rows: readonly TimeboxInputRow[],
+  { indexValues = true }: { indexValues?: boolean } = {},
+): PreparedTimeboxData {
   const grouped = new Map<string, TimeboxPoint[]>();
   let minIndexedValue = Number.POSITIVE_INFINITY;
   let maxIndexedValue = Number.NEGATIVE_INFINITY;
@@ -97,7 +100,7 @@ export function prepareTimeboxData(rows: readonly TimeboxInputRow[]): PreparedTi
       const sorted = [...points].sort((left, right) => left.dateMs - right.dateMs);
       const baseline = sorted[0]?.value ?? 1;
       const normalized = sorted.map((point) => {
-        const indexedValue = (point.value / baseline) * 100;
+        const indexedValue = indexValues ? (point.value / baseline) * 100 : point.value;
         minIndexedValue = Math.min(minIndexedValue, indexedValue);
         maxIndexedValue = Math.max(maxIndexedValue, indexedValue);
         return { ...point, indexedValue };
@@ -111,13 +114,16 @@ export function prepareTimeboxData(rows: readonly TimeboxInputRow[]): PreparedTi
     Value: point.value,
     IndexedValue: point.indexedValue,
   })));
-  const valuePadding = Math.max(6, (maxIndexedValue - minIndexedValue) * 0.08);
+  const valuePadding = Math.max(indexValues ? 6 : 1, (maxIndexedValue - minIndexedValue) * 0.08);
   return {
     rows: rowsWithIndex,
     series,
     minDate: new Date(minDateMs),
     maxDate: new Date(maxDateMs),
-    valueDomain: [Math.max(0, minIndexedValue - valuePadding), maxIndexedValue + valuePadding],
+    valueDomain: [
+      indexValues ? Math.max(0, minIndexedValue - valuePadding) : minIndexedValue - valuePadding,
+      maxIndexedValue + valuePadding,
+    ],
   };
 }
 

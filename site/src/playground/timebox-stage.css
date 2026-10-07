@@ -11,6 +11,49 @@
   gap: 8px;
 }
 
+.timebox-update-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 16px;
+  color: #68737c;
+  font-size: 11px;
+}
+
+.timebox-update-status svg {
+  animation: timebox-pending-spin 1s linear infinite;
+}
+
+@keyframes timebox-pending-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timebox-update-status svg {
+    animation: none;
+  }
+}
+
+.timebox-panel {
+  position: relative;
+}
+
+.timebox-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #68737c;
+  font-size: 12px;
+}
+
+.timebox-loading progress {
+  width: 120px;
+  height: 3px;
+  accent-color: #65707a;
+}
+
 .timebox-footer {
   display: flex;
   flex-direction: column;
@@ -19,4 +62,9 @@
   color: #68737c;
   font-size: 11px;
   line-height: 1.45;
+}
+
+.timebox-footer strong {
+  color: #343b41;
+  font-weight: 600;
 }
