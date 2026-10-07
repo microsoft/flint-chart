@@ -670,6 +670,7 @@ interface CanvasInteractionEvent {
   geometry: { plot?, domain?, projection? };
   target: { visual: { kind, role }, elements: [{ value, records? }] } | null;
   modifiers?: { shift, ctrl, meta };
+  description?: { kind, type, content, text };  // on focus-element from accessible-navigation
 }
 ```
 
@@ -679,6 +680,10 @@ interface CanvasInteractionEvent {
   `value.domain.value`.
 - `geometry.domain` is inverted through the plot's scales: a temporal axis
   gives `Date` values; a discrete axis gives the category.
+- `description` arrives on `focus-element` while `accessible-navigation` walks
+  the chart: what the focused element is (`type`, such as "Bar") and what it
+  represents (`content`), with the spoken `text`. The walk's emphasis reports
+  through `onChange` as a `preview`.
 - `geometry.projection.kind === 'path'` during a drag over an overlay with
   `projectable: true`: `segment.start.value` and `segment.end.value` are the
   overlay rows on each side of the pointer and `segment.t` the fraction between
