@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { assembleECharts, assembleVegaLite, type ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import { buildInteractiveChart, type ChartUpdate } from 'flint-chart/interactive';
 import { genEChartsSlopeTests } from 'flint-chart/test-data';
 import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
@@ -189,6 +189,30 @@ function SlopeGym() {
   );
 }
 
+const SPENDING = [
+  1.59, 1.64, 1.85, 1.78, 2.06, 2.27, 2.35, 2.44, 2.47, 2.55, 2.52, 2.73,
+  2.71, 2.68, 2.85, 3.34, 3.10, 3.02, 3.08, 3.23, 3.32, 3.37, 3.19, 3.31,
+  3.27, 3.27, 3.50, 3.80, 4.10, 4.55, 4.92, 5.37,
+];
+
+function spendingInput(chartType = 'Line Chart'): ChartAssemblyInput {
+  return {
+    data: { values: SPENDING.map((Spending, index) => ({
+      Month: `${2024 + Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`,
+      Spending,
+    })) },
+    semantic_types: { Month: 'YearMonth', Spending: 'Quantity' },
+    field_display_names: { Spending: 'Spending ($ billions)' },
+    chart_spec: {
+      chartType,
+      title: 'Data center construction spending has more than tripled since 2024',
+      subtitle: 'United States, monthly construction spending on data centers, 2024 to 2026, billions of dollars',
+      encodings: { x: 'Month', y: 'Spending' },
+      baseSize: { width: 430, height: 270 },
+    },
+  };
+}
+
 function TemporalAxisGym() {
   const host = useRef<HTMLDivElement>(null);
   const [result, setResult] = useState<{ passed: boolean; text: string } | null>(null);
@@ -200,26 +224,7 @@ function TemporalAxisGym() {
     let surface: ReturnType<typeof buildInteractiveChart> | undefined;
     let reference: View | undefined;
     const run = async () => {
-      const spending = [
-        1.59, 1.64, 1.85, 1.78, 2.06, 2.27, 2.35, 2.44, 2.47, 2.55, 2.52, 2.73,
-        2.71, 2.68, 2.85, 3.34, 3.10, 3.02, 3.08, 3.23, 3.32, 3.37, 3.19, 3.31,
-        3.27, 3.27, 3.50, 3.80, 4.10, 4.55, 4.92, 5.37,
-      ];
-      const input: ChartAssemblyInput = {
-        data: { values: spending.map((Spending, index) => ({
-          Month: `${2024 + Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`,
-          Spending,
-        })) },
-        semantic_types: { Month: 'YearMonth', Spending: 'Quantity' },
-        field_display_names: { Spending: 'Spending ($ billions)' },
-        chart_spec: {
-          chartType: 'Line Chart',
-          title: 'Data center construction spending has more than tripled since 2024',
-          subtitle: 'United States, monthly construction spending on data centers, 2024 to 2026, billions of dollars',
-          encodings: { x: 'Month', y: 'Spending' },
-          baseSize: { width: 430, height: 270 },
-        },
-      };
+      const input = spendingInput();
       reference = new View(parse(compile(assembleVegaLite(input) as any).spec), { renderer: 'none' });
       await reference.runAsync();
       if (cancelled) return;
@@ -277,6 +282,106 @@ function TemporalAxisGym() {
   );
 }
 
+const TARGET_MONTH = Date.UTC(2025, 5, 1);
+
+const KEY_VALUE_CASES = [
+  { id: 'source-text', label: 'Source text', code: "key: { Month: '2025-06' }", month: '2025-06' },
+  { id: 'local-time', label: 'Local time', code: 'key: { Month: new Date(2025, 5, 1) }', month: new Date(2025, 5, 1) },
+  { id: 'utc-ms', label: 'UTC milliseconds', code: 'key: { Month: Date.UTC(2025, 5, 1) }', month: TARGET_MONTH },
+] as const;
+
+type KeyValueCase = (typeof KEY_VALUE_CASES)[number];
+
+function describeKey(value: unknown): string {
+  if (value instanceof Date) return `${value.getTime()} (${value.toISOString().slice(0, 16).replace('T', ' ')} UTC)`;
+  if (typeof value === 'number') return `${value} (${new Date(value).toISOString().slice(0, 16).replace('T', ' ')} UTC)`;
+  return JSON.stringify(value);
+}
+
+function TemporalKeyCase({ keyCase }: { keyCase: KeyValueCase }) {
+  const host = useRef<HTMLDivElement>(null);
+  const [result, setResult] = useState<{ passed: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!host.current) return;
+    const container = host.current;
+    let cancelled = false;
+    let surface: ReturnType<typeof buildInteractiveChart> | undefined;
+    const update: ChartUpdate = {
+      id: 'june',
+      ops: [{
+        op: 'set-style',
+        targets: [{ select: { key: { Month: keyCase.month } } }],
+        value: { state: 'emphasized' },
+      }],
+    };
+    const run = async () => {
+      surface = buildInteractiveChart(container, spendingInput('Bar Chart'), {
+        backend: 'vegalite', renderer: 'svg', expressionInterpreter,
+      });
+      await surface.ready;
+      if (cancelled) return;
+      const [outcome] = await surface.setUpdates([update]);
+      if (cancelled) return;
+      const selected = surface.getState()?.selected ?? [];
+      const hit = selected.find((element) => toMs(element.value.Month) === TARGET_MONTH);
+      const passed = outcome?.status === 'applied' && hit !== undefined;
+      setResult({ passed, text: passed
+        ? `Pass: ${outcome.resolvedTargets} target resolved, selected Month = ${describeKey(hit.value.Month)}`
+        : `Fail: ${outcome?.status ?? 'no result'}, ${outcome?.unresolvedTargets.length ?? 1} target matched nothing, `
+          + `rows hold ${describeKey(TARGET_MONTH)}` });
+    };
+    void run().catch(error => {
+      if (!cancelled) setResult({ passed: false, text: `Fail: ${String(error)}` });
+    });
+    return () => {
+      cancelled = true;
+      surface?.destroy();
+      container.replaceChildren();
+    };
+  }, [keyCase]);
+
+  return (
+    <article style={{ ...cardStyle, padding: 10 }} data-case={`temporal-key-${keyCase.id}`}>
+      <h3 style={{ margin: '0 0 2px', fontSize: 13 }}>{keyCase.label}</h3>
+      <code style={{ display: 'block', fontSize: 11, color: siteTheme.textMuted, marginBottom: 4 }}>{keyCase.code}</code>
+      <ScaleToFit height={300} minHeight={200} adaptiveHeight>
+        <div ref={host} />
+      </ScaleToFit>
+      <div role="status" style={{ marginTop: 6, fontSize: 12, color: result ? (result.passed ? '#16794b' : '#b42318') : siteTheme.textMuted }}>
+        {result?.text ?? 'Applying update...'}
+      </div>
+    </article>
+  );
+}
+
+function toMs(value: unknown): number {
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return Date.parse(value);
+  return Number.NaN;
+}
+
+function TemporalValueGym() {
+  return (
+    <section style={{ width: 'min(100%, 1080px)' }} data-gym="temporal-values">
+      <header style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Temporal update values</h2>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: siteTheme.textMuted }}>
+          The same <code>set-style</code> emphasis on June 2025, keyed on the <code>Month</code> field in three value
+          forms. The parsed rows hold UTC epoch milliseconds, so only the last form resolves; the local-time form
+          misses by the browser's offset from UTC.
+        </p>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 10 }}>
+        {KEY_VALUE_CASES.map((keyCase) => (
+          <TemporalKeyCase key={keyCase.id} keyCase={keyCase} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function DebugGym() {
   return (
     <div className="dev-page" style={{ gap: 12 }}>
@@ -293,6 +398,7 @@ export function DebugGym() {
       </div>
       <SlopeGym />
       <TemporalAxisGym />
+      <TemporalValueGym />
     </div>
   );
 }
