@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, Brush, Focus, GripVertical, Keyboard, LayoutGrid, MousePointerClick, Move, Pencil, Ruler, Scan, Table2, UserRound, ZoomIn } from 'lucide-react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import type { CanvasInteractionAction } from 'flint-chart/interactive';
 import { CodeBlock } from '../components/CodeBlock';
 import { MicrosoftDisclosures, SiteNavBar, SiteShell } from '../components/SiteShell';
@@ -600,7 +600,6 @@ export function InteractionGallery() {
   const { mode } = useParams();
   const { pathname } = useLocation();
   const { lp } = useLocale();
-  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [themeId, setThemeId] = useState<string | undefined>(undefined);
   const selected = [...unitInteractionModes, ...compositionInteractionModes].find(item => item.value === mode)
@@ -616,19 +615,6 @@ export function InteractionGallery() {
     <SiteShell>
       <div className="ig-scroll dev-shell" ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: 'auto', fontFamily: siteTheme.fontSans }}>
         <div className="ig-layout">
-          <nav className="cf-action-rail ig-action-rail" aria-label="Interaction navigation">
-            {sections.map((section, index) => (
-              <Fragment key={section.label}>
-                {index > 0 && <div className="cf-action-divider" role="separator" />}
-                {section.modes.map(({ value, label, icon: Icon }) => (
-                  <LocaleLink key={value} to={`/interactions/gallery/${value}`} className={selected?.value === value ? 'active' : undefined}
-                    aria-current={selected?.value === value ? 'page' : undefined}>
-                    <Icon size={15} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>
-                  </LocaleLink>
-                ))}
-              </Fragment>
-            ))}
-          </nav>
           <main className="ig-content">
             <header className="ig-gallery-header">
               <div className="ig-gallery-title-row">
@@ -638,13 +624,18 @@ export function InteractionGallery() {
               <p>This gallery showcases {unitInteractionModes.length + compositionInteractionModes.length} interaction presets that are reusable across chart types. The presets support {sections.length} families of common interactions: {sections.map(section => section.label).join(', ')}.</p>
               <p>You can use these presets directly in a declarative specification or through the functional API in your application. To create bespoke interactions, refer to the <LocaleLink to="/interactions/bespoke" className="site-text-link">Bespoke Interactions page</LocaleLink>.</p>
             </header>
-            <nav className="ig-mobile-nav" aria-label="Interaction navigation">
-              <select aria-label="Interaction" value={selected.value}
-                onChange={event => navigate(lp(`/interactions/gallery/${event.target.value}`))}>
-                {sections.map(section => <optgroup key={section.label} label={section.label}>
-                  {section.modes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-                </optgroup>)}
-              </select>
+            <nav className="cf-action-rail ig-action-rail" aria-label="Interaction navigation">
+              {sections.map((section, index) => (
+                <Fragment key={section.label}>
+                  {index > 0 && <div className="cf-action-divider" role="separator" />}
+                  {section.modes.map(({ value, label, icon: Icon }) => (
+                    <LocaleLink key={value} to={`/interactions/gallery/${value}`} className={selected.value === value ? 'active' : undefined}
+                      aria-current={selected.value === value ? 'page' : undefined}>
+                      <Icon size={15} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>
+                    </LocaleLink>
+                  ))}
+                </Fragment>
+              ))}
             </nav>
             <ClickFocusLab key={selected.value} source="spec" mode={selected.value} embedded
               headingLevel={2}

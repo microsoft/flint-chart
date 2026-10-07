@@ -1511,7 +1511,7 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
           </div>
           <div className="cf-gallery-spec" aria-label={source === 'spec' ? 'Interaction spec pattern' : 'Functional interaction code'}>
             <CodeBlock variant="light" language={source === 'spec' ? 'json' : 'typescript'}
-              customStyle={{ margin: 0, padding: 10, fontSize: 11, lineHeight: 1.4, maxHeight: 320, overflow: 'auto' }}>
+              customStyle={{ margin: 0, padding: 8, fontSize: 10.5, lineHeight: 1.35, maxHeight: 200, overflow: 'auto' }}>
               {source === 'spec' ? specCode : functionalCode}
             </CodeBlock>
           </div>
