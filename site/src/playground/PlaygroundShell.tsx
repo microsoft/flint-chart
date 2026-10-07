@@ -55,6 +55,8 @@ const pages: NavEntry[] = [
     group: 'Release examples',
     children: [
       { to: 'release-examples/1.0.0', label: '1.0.0' },
+      { to: 'release-examples/application-demos', label: 'Application demos' },
+      { to: 'release-examples/test-examples', label: 'Test examples' },
     ],
   },
   {

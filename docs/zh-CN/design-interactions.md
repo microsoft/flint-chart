@@ -83,7 +83,9 @@
 
 ## §2.4 交互层
 
-`buildInteractiveChart(container, input, options)` 返回 `InteractiveChartSurface`：`ready`、`warnings`、`applyUpdate`、`setUpdates`、`clearUpdate`、`dispatch`、`refresh`、`destroy`。容器为每个语义事件派发 `flint-interaction` DOM 事件，携带交互 id 和已解析目标，宿主无需了解预设即可监听。
+`buildInteractiveChart(container, input, options)` 返回 `InteractiveChartSurface`：`ready`、`warnings`、`applyUpdate`、`setUpdates`、`clearUpdate`、`dispatch`、`getState`、`onChange`、`refresh`、`destroy`。容器为每个语义事件派发 `flint-interaction` DOM 事件，携带交互 id 和已解析目标，宿主无需了解预设即可监听。
+
+图表同时拥有自己的状态，宿主直接读取它，而不是回放手势。`getState()` 返回 `ChartState`：被强调的标记（`selected`，含预览；`entries` 按更新 id 区分各自的份额）、被隐藏的图例值、当前视口和分类滚动窗口。每个标记的 `value` 以字段表达它的含义：柱的类别与度量、图例项的通道与值、直方图柱的字段与区间。`onChange(callback)` 在每次渲染后触发，携带 `ChartChange`：阶段（手势进行中为 `preview`，已提交的变更或宿主调用为 `commit`，手势无提交而结束为 `cancel`）、手势自身的命中与几何，以及变更后的状态。DOM 事件是原始手势记录，在图表响应之前触发；`onChange` 是图表所显示的内容，在之后触发。数据行留在宿主一侧：宿主根据值和几何查询自己的数据，图表不交出数据副本。
 
 # §3 规范
 
@@ -252,10 +254,12 @@ options.interactions ──► compose ────────────┤
 | 接纳什么、有哪些警告 | 编译步骤，通过准入 |
 | 命中如何变成行 | 字典，运行时 |
 | 哪个手势重置什么 | 分派器，来自各定义的列表 |
+| 图表此刻显示什么 | 运行时的状态，经由交互层读取 |
 
 # §8 宿主与发现
 
 - **`buildInteractiveChart()`** 从输入读取 `interaction_spec` 并与代码定义合并。MCP 的 `create_chart_view`、站点编辑器与图库在输入含交互条目时经由它挂载，否则静态渲染。
+- **`getState()` 与 `onChange()`** 把图表作为上下文交给宿主。MCP 视图在每次已提交的变更后把状态发给模型；应用面板通过预览实时跟随悬停或刷选。
 - **`validateChart()`** 对装配后的语义运行解析器与准入，在任何渲染之前返回与挂载相同的警告。格式错误的 spec 是 `invalid_interaction_spec` 错误。MCP 的 `validate_chart` 返回同一列表。
 - **`supportedInteractionPresets(def.interactionSupport)`** 列出图表类型按声明支持的预设。`list_chart_types` 按图表类型返回它，Vega-Lite 参考文档打印它。数据仍可能在挂载时移除某一项，指南对此有说明。
 - **交互实验室的覆盖页签**为每种图表类型装配一个代表性用例，展示每种图表类型对每个预设的情况：对该数据生效、类型支持但该数据未确认、或从不提供。

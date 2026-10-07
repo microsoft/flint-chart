@@ -132,13 +132,6 @@
 
 .idr-chat-context-chip svg { flex: none; }
 
-.idr-chat-context-chip.is-selection {
-  border-style: solid;
-  border-color: #cfe3dc;
-  background: #e6f2ee;
-  color: var(--it-accent);
-}
-
 .idr-chat-context-chip.is-agent {
   border-style: solid;
   border-color: #ead9cf;

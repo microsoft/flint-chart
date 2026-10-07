@@ -1,3 +1,4 @@
+import type { DomainGeometry } from '../../core/interaction-contracts';
 import type { RenderHit, SemanticTarget } from '../../core/interaction-semantics';
 import type { PlotAngularSector, PlotPoint, PlotPolygon, PlotRect } from './geometry';
 import type { VisualProjection } from './projections';
@@ -140,27 +141,7 @@ export type PlotGeometry =
         anchor?: PlotPoint;
     };
 
-export interface DomainGeometry {
-    x?: DomainCoordinate;
-    y?: DomainCoordinate;
-    points?: readonly DomainPoint[];
-    /** The detail level a multi-level projected chart draws for this viewport. */
-    level?: string;
-    /**
-     * On a multi-level projected chart, the coarsest-level region under the
-     * plot centre: its feature id and properties plus the joined row fields.
-     */
-    focus?: Record<string, unknown>;
-}
-
-export interface DomainPoint {
-    x?: unknown;
-    y?: unknown;
-}
-
-export type DomainCoordinate =
-    | { kind: 'value'; value: unknown }
-    | { kind: 'interval'; start: unknown; end: unknown };
+export type { DomainCoordinate, DomainGeometry, DomainPoint } from '../../core/interaction-contracts';
 
 export interface CanvasInteractionEvent {
     action: CanvasInteractionAction;

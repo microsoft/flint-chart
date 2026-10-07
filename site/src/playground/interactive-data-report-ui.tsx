@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Check, Plus, Scan, Send, Square, X } from 'lucide-react';
 import type {
-  ChartUpdateOp,
   FlintInteractionEventDetail,
   InteractionContext,
   InteractionDef,
   InteractiveChartSurface,
   SemanticElement,
-  SemanticTarget,
 } from 'flint-chart/interactive';
 import { externalInteraction } from 'flint-chart/interactive';
 import type { InteractionDemoFixture } from './interaction-demo-data';
@@ -21,7 +19,6 @@ import {
   chartRows,
   extractParts,
   levelOf,
-  numeric,
   opClass,
   overlap,
   paragraphsText,
@@ -30,7 +27,6 @@ import {
   presetOf,
   recordsOf,
   rowId,
-  rowsInView,
   rowsOf,
   selectionSentence,
   sentenceRows,
@@ -38,13 +34,11 @@ import {
   toParagraphs,
   type AgentChart,
   type ChartRows,
-  type Domain,
   type Message,
   type Paragraph,
   type Preset,
   type PresetOption,
   type Row,
-  type RowSet,
   type SectionSpec,
   type Sentence,
 } from './interactive-data-report-model';
@@ -73,46 +67,15 @@ import {
  *   - the presets' own updates, keyed by their ids;
  *   - `report-pin`, the sentence the reader pinned (or the slide on show);
  *   - `report-preview`, the sentence under the pointer, cleared on leave.
- * A probe interaction reads the chart's InteractionContext back. The chart state and each
- * sentence both reduce to data rows, and a sentence lights up by the share of rows in common.
+ * Text drives the chart through these layers. The chart reaches the text only on demand:
+ * a probe interaction reads the selection when a question or a sentence needs it.
  */
 const PREVIEW_ID = 'report-preview';
 const PIN_ID = 'report-pin';
 const PROBE_ID = 'report-probe';
-const READ_GUARD = { minVisibleFraction: 0.02, maxVisibleFraction: 1, overscrollFraction: 0 };
-
-interface Viewport {
-  x?: Domain;
-  y?: Domain;
-}
-
-interface ChartSnapshot {
-  selected: readonly SemanticElement[];
-  viewport?: Viewport;
-}
 
 interface ProbePayload {
   receive: (context: InteractionContext) => void;
-}
-
-function toDomain(value: readonly [unknown, unknown] | undefined): Domain | undefined {
-  if (!value) return undefined;
-  const [start, end] = value.map((bound) => Number(numeric(bound)));
-  return Number.isFinite(start) && Number.isFinite(end) ? [Math.min(start, end), Math.max(start, end)] : undefined;
-}
-
-function snapshotOf(context: InteractionContext): ChartSnapshot {
-  const navigation = context.resolveNavigation?.(
-    { phase: 'commit', operation: 'pan', axes: 'xy', delta: { x: 0, y: 0 } },
-    READ_GUARD,
-  );
-  const viewportRange = navigation
-    ? { x: toDomain(navigation.value.x), y: toDomain(navigation.value.y) }
-    : undefined;
-  return {
-    selected: [...context.selected],
-    viewport: viewportRange && (viewportRange.x || viewportRange.y) ? viewportRange : undefined,
-  };
 }
 
 export interface ReportChart {
@@ -138,10 +101,10 @@ export interface ReportChart {
   unpin: () => Promise<void>;
   /** Drops the pin and the presets' own state. */
   clear: () => void;
-  /** Chart -> sentence: the underline classes for a sentence. */
+  /** The underline classes for a sentence: pinned, or under the pointer. */
   classFor: (item: Sentence) => string;
-  /** The records the chart points at right now: what leaves the chart. */
-  selected: Row[];
+  /** The records the chart points at, read when asked: what leaves the chart. */
+  readSelected: () => Promise<Row[]>;
 }
 
 /**
@@ -154,14 +117,10 @@ export function useReportChart(
   onJump?: (item: Sentence) => void,
 ): ReportChart {
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
-  const previewTimer = useRef<number | undefined>(undefined);
   const pinnedRef = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [snapshot, setSnapshot] = useState<ChartSnapshot | null>(null);
-  const [annotated, setAnnotated] = useState<SemanticTarget | null>(null);
-  const [hoverTarget, setHoverTarget] = useState<SemanticTarget | null>(null);
 
   const rows = useMemo(() => chartRows(spec.fixture.input), [spec.fixture]);
   const byId = useMemo(() => new Map(sentences.map((item) => [item.id, item])), [sentences]);
@@ -183,42 +142,23 @@ export function useReportChart(
     }),
   ], [spec.presets]);
 
-  const probe = useCallback(() => {
+  // A read waits for the chart's answer. Nothing is in flight when a question goes out, so
+  // the answer is the state the reader sees.
+  const readSelected = useCallback(async (): Promise<Row[]> => {
     const surface = surfaceRef.current;
-    if (!surface) return;
-    void surface.dispatch(PROBE_ID, {
-      receive: (context: InteractionContext) => setSnapshot(snapshotOf(context)),
+    if (!surface) return [];
+    let elements: readonly SemanticElement[] = [];
+    await surface.dispatch(PROBE_ID, {
+      receive: (context: InteractionContext) => { elements = [...context.selected]; },
     } satisfies ProbePayload).catch(() => undefined);
-  }, []);
-
-  // The runtime applies a preset's update after it emits the event, so read back twice.
-  const probeSoon = useCallback(() => {
-    window.setTimeout(probe, 40);
-    window.setTimeout(probe, 240);
-  }, [probe]);
-
-  const probeThrottled = useCallback(() => {
-    if (previewTimer.current !== undefined) return;
-    previewTimer.current = window.setTimeout(() => {
-      previewTimer.current = undefined;
-      probe();
-    }, 120);
-  }, [probe]);
-
-  useEffect(() => () => {
-    if (previewTimer.current !== undefined) window.clearTimeout(previewTimer.current);
+    return recordsOf(elements, latest.current.rows);
   }, []);
 
   const onSurface = useCallback((surface: InteractiveChartSurface | null) => {
     surfaceRef.current = surface;
     setReady(false);
-    if (surface) {
-      void surface.ready.then(() => {
-        setReady(true);
-        probeSoon();
-      }).catch(() => undefined);
-    }
-  }, [probeSoon]);
+    if (surface) void surface.ready.then(() => setReady(true)).catch(() => undefined);
+  }, []);
 
   const setPinned = useCallback((id: string | null) => {
     pinnedRef.current = id;
@@ -228,24 +168,25 @@ export function useReportChart(
   const unpin = useCallback(async () => {
     setPinned(null);
     await surfaceRef.current?.clearUpdate(PIN_ID);
-    probeSoon();
-  }, [probeSoon, setPinned]);
+  }, [setPinned]);
 
   // One setUpdates call replaces every retained layer in a single render: the chart's own
   // state goes and the sentence lands, so a CSS transition runs straight from one to the other.
   const show = useCallback(async (item: Sentence | null) => {
     const surface = surfaceRef.current;
     if (!surface) return;
-    setAnnotated(null);
     if (!item) {
       setPinned(null);
       await surface.setUpdates([]);
     } else {
-      await surface.setUpdates([{ id: PIN_ID, ops: item.ops }]);
+      const update = { id: PIN_ID, ops: item.ops };
+      const results = await surface.setUpdates([update]);
+      // A target resolves against the marks on the chart. A series the previous slide hid
+      // is back once this slide's own ops have rendered, so a second pass reaches it.
+      if (results.some((result) => result.unresolvedTargets.length > 0)) await surface.setUpdates([update]);
       setPinned(item.id);
     }
-    probeSoon();
-  }, [probeSoon, setPinned]);
+  }, [setPinned]);
 
   const pin = useCallback(async (item: Sentence) => {
     if (pinnedRef.current === item.id) await unpin();
@@ -257,9 +198,7 @@ export function useReportChart(
     const surface = surfaceRef.current;
     if (!surface) return;
     for (const entry of spec.presets) void surface.clearUpdate(entry.def.id);
-    setAnnotated(null);
-    probeSoon();
-  }, [probeSoon, spec.presets, unpin]);
+  }, [spec.presets, unpin]);
 
   // Sentence -> chart, preview layer.
   useEffect(() => {
@@ -267,32 +206,22 @@ export function useReportChart(
     if (!surface) return;
     const item = hoveredId ? byId.get(hoveredId) : undefined;
     if (!item) {
-      // The preview emphasizes rows, so the chart counts them as its own state while it is
-      // up. Read the chart back once the layer goes, or the last reading stays polluted.
-      void surface.clearUpdate(PREVIEW_ID).then(probeSoon);
+      void surface.clearUpdate(PREVIEW_ID);
       return;
     }
     void surface.applyUpdate({ id: PREVIEW_ID, ops: item.ops });
-  }, [byId, hoveredId, probeSoon]);
+  }, [byId, hoveredId]);
 
   const preview = useCallback((id: string) => setHoveredId(id), []);
   const endPreview = useCallback((id: string) => setHoveredId((current) => (current === id ? null : current)), []);
 
-  // Chart -> sentences.
+  // Chart -> text, on two gestures only: a double-click jumps to the sentence about the
+  // mark, and any committed gesture drops the pin, because the reader's hand owns the chart.
   const onSemanticEvent = useCallback((detail: FlintInteractionEventDetail) => {
     const { event, interactionId } = detail;
     const { rows: chart, sentences: items, rowsBySentence: rowsBy, presetOps: ops, onJump: jump } = latest.current;
+    if (event.phase !== 'commit') return;
     const op = ops.get(interactionId);
-    if (event.phase === 'preview' || event.phase === 'start') {
-      if (event.target !== undefined) setHoverTarget(event.target);
-      if (op === 'set-viewport') probeThrottled();
-      return;
-    }
-    if (event.phase === 'cancel') {
-      setHoverTarget(null);
-      return;
-    }
-    setHoverTarget(null);
     const target = event.target ?? null;
     const levelFor = (item: Sentence, elements: readonly SemanticElement[]) =>
       levelOf(overlap(rowsBy.get(item.id) ?? new Set<string>(), rowsOf(elements, chart)));
@@ -305,36 +234,15 @@ export function useReportChart(
         return;
       }
     }
-    // The reader's own hand owns the chart, so a gesture drops the pin. The sentence stays
-    // lit when the gesture points at its rows, by the same overlap as any other state.
     if (op && pinnedRef.current) void unpin();
-    if (op === 'set-annotation') setAnnotated(target);
-    probeSoon();
-  }, [pin, probeSoon, probeThrottled, unpin]);
+  }, [pin, unpin]);
 
-  // The rows the chart points at, per slice of its state. A sentence compares with the slices its ops speak about.
-  const stateRowsByOp = useMemo<Partial<Record<ChartUpdateOp['op'], RowSet>>>(() => ({
-    'set-style': rowsOf(snapshot?.selected ?? [], rows),
-    'set-annotation': rowsOf(annotated?.elements ?? [], rows),
-    'set-viewport': new Set(snapshot?.viewport ? rowsInView(rows, snapshot.viewport).map(rowId) : []),
-  }), [annotated, rows, snapshot]);
-  const hoverRows = useMemo(() => (hoverTarget ? rowsOf(hoverTarget.elements, rows) : null), [hoverTarget, rows]);
-  const selected = useMemo(() => recordsOf(snapshot?.selected ?? [], rows), [rows, snapshot]);
-
-  // A sentence compares with the slices of the chart state its ops speak about.
   const classFor = useCallback((item: Sentence): string => {
     const classes = ['idr-fragment'];
-    const own = rowsBySentence.get(item.id) ?? sentenceRows(item, rows);
-    const state = new Set<string>();
-    for (const op of item.ops) for (const id of stateRowsByOp[op.op] ?? []) state.add(id);
-    const level = levelOf(overlap(own, state));
-    if (pinnedId === item.id || level === 'full') classes.push('is-active');
-    else if (level === 'partial') classes.push('is-related');
-    const hovered = hoverRows ? levelOf(overlap(own, hoverRows)) : null;
-    if (hoveredId === item.id || hovered === 'full') classes.push('is-preview');
-    else if (hovered === 'partial') classes.push('is-preview-related');
+    if (pinnedId === item.id) classes.push('is-active');
+    if (hoveredId === item.id) classes.push('is-preview');
     return classes.join(' ');
-  }, [hoverRows, hoveredId, pinnedId, rows, rowsBySentence, stateRowsByOp]);
+  }, [hoveredId, pinnedId]);
 
   return {
     chartProps: { fixture: spec.fixture, interactions, chartId: `report-${spec.id}`, onSurface, onSemanticEvent },
@@ -349,7 +257,7 @@ export function useReportChart(
     unpin,
     clear,
     classFor,
-    selected,
+    readSelected,
   };
 }
 
@@ -611,7 +519,7 @@ interface AgentChatOptions {
   /** Messages already in the chat when the section mounts, in order, as context for what follows. */
   opening?: readonly Message[];
   /** The records the chart points at when the question goes out. */
-  getSelected: () => Row[];
+  getSelected: () => Promise<Row[]>;
 }
 
 function openingTurns(opening: readonly Message[] = []): ChatTurn[] {
@@ -634,7 +542,7 @@ export function useAgentChat({ spec, connection, opening, getSelected }: AgentCh
   const ask = useCallback(async (question: string) => {
     const trimmed = question.trim();
     if (!trimmed || busy || !connection.apiKey) return;
-    const selected = getSelected();
+    const selected = await getSelected();
     const apiContent = `${trimmed}\n\n---\nContext from the chart:\n${contextText(spec, chart, selected)}`;
     const userId = nextTurnId();
     const about = selectionSentence(`${userId}-selection`, selected, chart);
@@ -707,12 +615,8 @@ interface AgentPanelProps {
   adoptedIds?: ReadonlySet<string>;
 }
 
-/** Always two, so the panel keeps its height when a selection comes and goes. */
-function promptsFor(hasSelection: boolean): [string, string] {
-  return hasSelection
-    ? ['Summarize the selection in a few sentences.', 'How does this selection compare with the rest of the chart?']
-    : ['Describe the main pattern in this chart.', 'Which records stand out, and why?'];
-}
+/** Two questions that read well with or without a selection on the chart. */
+const PROMPTS = ['Describe the main pattern in this chart.', 'Summarize the selected records and compare them with the rest.'];
 
 /** The chat: turns, suggested questions, the selection chip, and the composer. */
 export function AgentPanel({ chat, report, sectionId, connection, onAdopt, adoptedIds }: AgentPanelProps) {
@@ -729,7 +633,6 @@ export function AgentPanel({ chat, report, sectionId, connection, onAdopt, adopt
     }
   }, [chat]);
 
-  const selectedCount = report.selected.length;
   const actionFor = onAdopt
     ? (item: Sentence) => {
       const added = adoptedIds?.has(item.id) ?? false;
@@ -787,26 +690,19 @@ export function AgentPanel({ chat, report, sectionId, connection, onAdopt, adopt
       </div>
 
       <div className="idr-chat-suggestions">
-        {promptsFor(selectedCount > 0).map((prompt) => (
+        {PROMPTS.map((prompt) => (
           <button key={prompt} type="button" disabled={chat.busy || !chat.hasKey} onClick={() => void chat.ask(prompt)}>
             {prompt}
           </button>
         ))}
       </div>
 
-      <div className="idr-chat-context-row" aria-live="polite">
-        {selectedCount > 0 ? (
-          <span className="idr-chat-context-chip is-selection">
-            <Scan size={11} aria-hidden="true" />
-            {`Selected: ${selectedCount} of ${report.rows.rows.length} records go as context`}
-            <button type="button" onClick={report.clear} aria-label="Clear the selection" title="Clear">×</button>
-          </span>
-        ) : (
-          <span className="idr-chat-context-chip">
-            <Scan size={11} aria-hidden="true" />
-            Nothing selected · all {report.rows.rows.length} records go as context
-          </span>
-        )}
+      <div className="idr-chat-context-row">
+        <span className="idr-chat-context-chip">
+          <Scan size={11} aria-hidden="true" />
+          The selection on the chart goes with the question. Nothing selected means the whole chart.
+          <button type="button" onClick={report.clear} aria-label="Clear the selection" title="Clear the selection">×</button>
+        </span>
       </div>
       <form
         className="idr-chat-composer"
@@ -817,7 +713,7 @@ export function AgentPanel({ chat, report, sectionId, connection, onAdopt, adopt
       >
         <textarea
           rows={2}
-          placeholder={selectedCount > 0 ? `Ask about the ${selectedCount} selected…` : 'Ask about this chart…'}
+          placeholder="Ask about this chart, or about what you selected…"
           value={chat.draft}
           onChange={(event) => chat.setDraft(event.target.value)}
           onKeyDown={handleComposerKey}

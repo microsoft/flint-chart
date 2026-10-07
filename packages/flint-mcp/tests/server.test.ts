@@ -234,7 +234,7 @@ describe('MCP server', () => {
 
     const read = await client.readResource({ uri: 'flint://interaction-skill' });
     const skillText = resourceText(read.contents[0]);
-    expect(skillText).toContain('# Flint interaction authoring');
+    expect(skillText).toContain('# flint-chart: interactions on a chart');
     expect(skillText).toContain('bare `interaction_spec`');
   });
 

@@ -163,7 +163,7 @@ export function InteractionArchitectureIllustration() {
         <svg
           viewBox={`0 0 ${layout.canvasWidth} 650`}
           role="img"
-          aria-label="Canvas and external interactions converge on one chart update processor"
+          aria-label="Canvas and external interactions converge on one chart update processor, and the chart state leaves it for the application"
         >
           <defs>
             <marker id={arrow} viewBox="0 0 8 10" refX="7" refY="5" markerWidth="8" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
@@ -247,10 +247,26 @@ export function InteractionArchitectureIllustration() {
 
           <ItemBox x={column.output} y={287} width={layout.width.output} height={layout.height.prominent} title="Chart with effects" />
           <path d={`M${column.apply + layout.width.compactProcess} 333H${column.output}`} className="iai-flow" markerEnd={`url(#${arrow})`} />
+
+          <DetailedItemBox
+            x={column.output - 48}
+            y={472}
+            width={layout.width.output + 48}
+            title="Chart state"
+            lines={[
+              { text: '- Emphasized marks, per update' },
+              { text: '- Hidden series, viewport' },
+              { text: '- Rows behind each mark', emphasis: true },
+            ]}
+          />
+          <path d={`M${column.output + layout.width.output / 2} 379V472`} className="iai-flow" markerEnd={`url(#${arrow})`} />
+          <text x={column.output + layout.width.output / 2 + 12} y="430" className="iai-extension-label">after each change</text>
+          <path d={`M${column.output - 48} 540h-26`} className="iai-flow iai-flow-dashed" markerEnd={`url(#${arrow})`} />
+          <text x={column.output - 84} y="545" textAnchor="end" className="iai-flow-label">read by application</text>
         </svg>
       </div>
       <figcaption>
-        Flint&apos;s interaction architecture reuses chart-specific knowledge in both directions. Canvas input maps rendered marks back to semantic events; chart update specs are then resolved through chart-specific presentation and applied through precompiled renderer stores and signals. Preserving the renderer&apos;s reactive dataflow avoids recompilation during interaction while enabling handlers and application code to express intent without reimplementing chart semantics or backend logic.
+        Flint&apos;s interaction architecture reuses chart-specific knowledge in both directions. Canvas input maps rendered marks back to semantic events; chart update specs are then resolved through chart-specific presentation and applied through precompiled renderer stores and signals. Preserving the renderer&apos;s reactive dataflow avoids recompilation during interaction while enabling handlers and application code to express intent without reimplementing chart semantics or backend logic. After each change the chart reports its state in the same semantic terms, so an application or a model reads what the chart shows instead of replaying the gestures.
       </figcaption>
     </figure>
   );

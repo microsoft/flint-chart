@@ -1,7 +1,7 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
 import { createFloatingPanel } from '../interactive/floating-panel';
-import { isCanvasInteraction, type InteractionDef } from '../interactive/interactions';
+import { isCanvasInteraction, type ChartState, type InteractionContext, type InteractionDef } from '../interactive/interactions';
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
 import {
@@ -231,18 +231,41 @@ export function createVegaInteractiveRenderer(
                             running = false;
                             appliedVersion = version;
                             if (requestedVersion !== appliedVersion) schedule();
+                            else interactionController?.reportChange({ phase: 'commit' });
                         });
                 }, 0);
             };
+
+            const currentWindows = (): ChartState['windows'] => viewports.length === 0
+                ? undefined
+                : Object.fromEntries(viewports.map((viewport) => [viewport.channel, {
+                    start: latestStarts[viewport.channel] ?? 0,
+                    count: viewport.visibleCount,
+                    total: viewport.totalCount,
+                }]));
+            // The state is the controller's own object; the rail windows join it as one more field.
+            const withWindows = <T extends ChartState>(state: T): T => {
+                const windows = currentWindows();
+                if (windows) Object.defineProperty(state, 'windows', { value: windows, enumerable: true });
+                return state;
+            };
+            const fallbackContext = (): InteractionContext => ({
+                chartType: input.chart_spec.chartType,
+                selected: [],
+            });
 
             return {
                 viewports,
                 warnings: interactionPlan?.warnings ?? [],
                 getInteractionContext() {
-                    return interactionController?.getInteractionContext() ?? {
-                        chartType: input.chart_spec.chartType,
-                        selected: [],
-                    };
+                    return interactionController?.getInteractionContext() ?? fallbackContext();
+                },
+                getState() {
+                    return withWindows(interactionController?.getInteractionContext() ?? fallbackContext());
+                },
+                onChange(listener) {
+                    if (!interactionController) return () => {};
+                    return interactionController.onChange((change) => listener({ ...change, state: withWindows(change.state) }));
                 },
                 async applyUpdate(update, options) {
                     if (interactionController) return interactionController.applyUpdate(update, options);

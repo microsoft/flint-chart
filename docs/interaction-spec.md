@@ -10,7 +10,7 @@ Start with [Introduction](interaction-introduction.md) for the interaction model
 
 Choose presets such as `click-highlight` or `navigate`, each with its own options. No custom handler is required: Flint mounts the presets the chart can honour and reports the ones it cannot.
 
-> For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) maps a gesture or an intent to presets and returns one valid `interaction_spec`. The MCP server serves it as `flint://interaction-skill`.
+> For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) covers behaviour on a chart: presets as one valid `interaction_spec`, the `ChartUpdate` an application or an agent applies to a mounted chart, reading the chart state, linking charts, and bespoke interactions. The MCP server serves it as `flint://interaction-skill`.
 
 ## Shape
 

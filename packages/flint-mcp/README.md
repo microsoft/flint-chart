@@ -77,7 +77,7 @@ self-contained HTML bundle served as the
 | `ui://flint-chart/chart-view.html` | resource | Bundled UI for the `create_chart_view` MCP App (live chart + customization panel). |
 | `author_flint_chart` | prompt | Embeds the bundled skill so prompt-aware clients can load the chart-spec rules before tool calls. |
 | `author_flint_theme` | prompt | Embeds the theme-author skill for creating, translating, refining, or reviewing a `ThemeSpec`. |
-| `author_flint_interaction` | prompt | Embeds the interaction-author skill for adding behaviour to a chart, at authoring time or after the chart exists. |
+| `author_flint_interaction` | prompt | Embeds the interaction-author skill: presets as an `interaction_spec`, the `ChartUpdate` for a mounted chart, reading the chart state, linking charts, and bespoke interactions. |
 
 For best results, have your MCP client include `flint://agent-skill` or run the
 `author_flint_chart` prompt before asking the agent to call `create_chart_view`,

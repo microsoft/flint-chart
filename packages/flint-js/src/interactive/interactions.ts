@@ -42,6 +42,10 @@ import {
 import type { CanvasInteractionEvent } from './language/events';
 export type {
     ChartUpdatePresenter,
+    ChartCategoryWindow,
+    ChartHiddenValue,
+    ChartState,
+    ChartStateEntry,
     InteractionContext,
     NavigationDomainGuard,
     NavigationRequest,
@@ -160,7 +164,9 @@ export type GroupBy =
 
 export interface AxisHighlightOptions {
     id?: string;
+    /** Limits the preset to one axis; both discrete axes when unset. */
     axis?: 'x' | 'y';
+    /** Defaults to 'click'. */
     event?: 'hover' | 'click';
     dimOpacity?: number;
     /** Gestures that return this interaction to its neutral state. */
@@ -196,6 +202,7 @@ export interface ClickAnnotateOptions {
 
 export interface LinkedBrushOptions extends SelectOptions {
     groupBy: GroupBy;
+    /** Defaults to 'rectangle'. */
     brush?: 'rectangle' | 'lasso';
 }
 
@@ -209,6 +216,7 @@ export interface HoverGroupFocusOptions {
 
 export interface SelectOptions {
     id?: string;
+    /** The marks the region lists: those it touches, or only those it contains. Defaults to 'intersect'. */
     match?: 'intersect' | 'contain';
     dimOpacity?: number;
     /** Transient region shown during the gesture; false disables visual feedback. */
@@ -218,10 +226,14 @@ export interface SelectOptions {
 }
 
 export interface BrushOptions extends SelectOptions {
+    /** 'stateful' keeps the interval on screen and editable after the drag. Defaults to 'ephemeral'. */
     mode?: 'ephemeral' | 'stateful';
 }
 
-export type AngularBrushOptions = SelectOptions & { mode?: 'ephemeral' | 'stateful' };
+export type AngularBrushOptions = SelectOptions & {
+    /** 'stateful' keeps the sector on screen and editable after the drag. Defaults to 'ephemeral'. */
+    mode?: 'ephemeral' | 'stateful';
+};
 
 export type LassoSelectOptions = SelectOptions;
 
@@ -238,6 +250,7 @@ export interface ContextActivateOptions {
 
 export interface InspectOptions {
     id?: string;
+    /** The axes the pointer reads, with an optional comparison per axis. Defaults to 'xy'. */
     mode?: InspectMode;
     /** Ordered modes cycled by wheel or context-menu gestures; mode is included automatically. */
     cycle?: readonly InspectMode[];
@@ -269,6 +282,7 @@ export interface InspectIndexOptions {
 
 export interface BrushZoomOptions {
     id?: string;
+    /** Defaults to 'xy'. */
     axes?: 'x' | 'y' | 'xy';
     guide?: RegionGuideOptions | false;
     /** Returns the viewport to the full frame. Defaults to ['double-click', 'escape']. */
@@ -281,6 +295,7 @@ export interface BrushZoomOptions {
 
 export interface LongPressOptions {
     id?: string;
+    /** Defaults to 500. */
     holdMs?: number;
     dimOpacity?: number;
     /** Gestures that return this interaction to its neutral state. */
@@ -301,9 +316,13 @@ export interface NavigationTransition {
 
 export interface NavigateOptions {
     id?: string;
+    /** 'available' navigates every axis the chart confirms. Defaults to 'available'. */
     axes?: NavigationAxes | 'available';
+    /** Defaults to true. */
     pan?: boolean;
+    /** Defaults to true. */
     zoom?: boolean;
+    /** Defaults to 0.002. */
     wheelSensitivity?: number;
     domainGuard?: Partial<NavigationDomainGuard>;
     /** Returns the viewport to the full frame. Defaults to ['double-click']. */

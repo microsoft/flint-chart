@@ -4,7 +4,7 @@
 
 每种行为都来自一个**预设（preset）**：Flint 内置的、有名字的交互，例如 `click-highlight` 或 `navigate`。你列出想要的预设和各自的选项，Flint 挂载图表能够支持的那些，并告诉你哪些无法支持。
 
-> 面向 agent：[interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) 把一个手势或一个意图映射到预设，并返回一个有效的 `interaction_spec`。MCP 服务器以 `flint://interaction-skill` 提供它。
+> 面向 agent：[interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) 覆盖图表上的行为：以预设构成一个有效的 `interaction_spec`，应用或 agent 施加到已挂载图表上的 `ChartUpdate`，读取图表状态，联动多个图表，以及自定义交互。MCP 服务器以 `flint://interaction-skill` 提供它。
 
 > `interaction_spec` 只影响 Vega-Lite 交互层。装配器和静态后端不会读取它；对这些后端，`validateChart` 会报告该字段被忽略。
 

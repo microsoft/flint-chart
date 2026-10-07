@@ -6,6 +6,8 @@ The compiler resolves raw triggers into **semantic events** that identify chart 
 
 > Flint's interaction presets currently support Vega-Lite. Mount your chart with `buildInteractiveChart()` to enable them.
 
+> For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) covers this API as well as the presets: the `ChartUpdate` an application or an agent applies, reading the chart state, linking charts, and bespoke definitions. The MCP server serves it as `flint://interaction-skill`.
+
 ## Mount an interactive chart
 
 Import the API from `flint-chart/interactive` and pass a backend and interaction definitions to `buildInteractiveChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`.
@@ -141,6 +143,19 @@ Call `dispatch` from the table's row-selection handler. Targets use semantic dat
 `set-style` controls emphasis or visibility, `set-annotation` adds or clears a label, and `set-viewport` changes the visible domains. Other operators reorder categories, add overlays, or replace data. A single handler can return multiple operators in one update.
 
 The container emits `flint-interaction` events with the interaction id and semantic target. Your application can listen to those events to filter a table or update other widgets; Flint renders only the canvas updates. Applications can also submit operators directly through `surface.applyUpdate()` or `surface.setUpdates()`. See [Components](interaction-components.md) for the event envelope, action families, listener examples, and chart update API.
+
+## Read the chart
+
+The chart owns its state, and a host reads it instead of replaying gestures. `surface.getState()` returns what the chart shows now: the emphasized marks (`selected`, with `entries` per update id), the legend values a toggle hides, the viewport on a chart that navigates, and the category order. Each mark's `value` is the mark in field terms; the host owns the rows and queries them from the value and the gesture's geometry.
+
+`surface.onChange(callback)` fires after every render with a `ChartChange`: the `phase` (`preview` while a gesture runs, `commit` for a committed change or a host call, `cancel` when a gesture ends with nothing), the `interactionId` and `action` behind it, the gesture's own `target` and `geometry`, and the `state` after. The `flint-interaction` event is the raw gesture record, fired before the chart reacts; `onChange` is what the chart shows, fired after. See [Interaction Design](design-interactions.md#24-the-surface) for the state model.
+
+```ts
+const stop = surface.onChange(({ phase, state }) => {
+  if (phase !== 'commit') return;
+  table.filter(state.selected.map((element) => element.value));
+});
+```
 
 ## Lifecycle and cleanup
 

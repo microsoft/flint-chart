@@ -179,6 +179,23 @@ export const penguinsFixture = fixture(
   { x: 'Bill length (mm)', y: 'Flipper length (mm)', color: 'Species', size: 'Body mass (g)', detail: 'Island' },
 );
 
+const revenueByRegion: Record<string, number[]> = {
+  North: [182, 191, 187, 204, 215, 224],
+  South: [141, 139, 152, 158, 171, 169],
+  West: [120, 128, 133, 129, 146, 158],
+};
+const revenueRows = Object.entries(revenueByRegion).flatMap(([Region, revenues]) =>
+  revenues.map((revenue, index) => ({
+    Region, Month: `2024-0${index + 1}-01`, 'Revenue ($K)': revenue,
+  })));
+
+export const revenueFixture = fixture(
+  'revenue', 'Monthly revenue by region', 'Illustrative SaaS revenue snapshot',
+  'Line Chart', revenueRows,
+  { Region: 'Category', Month: 'Date', 'Revenue ($K)': 'Quantity' },
+  { x: 'Month', y: 'Revenue ($K)', color: 'Region' },
+);
+
 export const externalFixtures = [
   salesFixture, countriesFixture, stocksFixture, weatherFixture,
   ganttFixture, lifeFixture, populationFixture, incidentsFixture,
