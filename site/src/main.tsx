@@ -27,8 +27,10 @@ import { LabelExperimentLab } from './playground/LabelExperimentLab';
 import { AxisLabelLab } from './playground/AxisLabelLab';
 import { CalendarAxisLab } from './playground/CalendarAxisLab';
 import { ReleaseExamples100 } from './playground/release-examples/1.0.0';
+import { TestExamples } from './playground/release-examples/test-examples';
 import { OverflowViewportLab } from './playground/OverflowViewportLab';
 import { FlintInteractive, InteractionGallery } from './routes/InteractionGallery';
+import { InteractionApplications } from './routes/InteractionApplications';
 import { ClickFocusLab } from './playground/ClickFocusLab';
 import { InteractionCoverageLab } from './playground/InteractionCoverageLab';
 import { InteractionConflictsLab } from './playground/InteractionConflictsLab';
@@ -67,6 +69,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
         <Route path="interactions" element={<FlintInteractive />} />
         <Route path="interactions/gallery" element={<InteractionGallery />} />
         <Route path="interactions/bespoke" element={<BespokeInteractionLab publicPage />} />
+        <Route path="interactions/applications" element={<InteractionApplications />} />
         <Route path="interactions/:mode" element={<InteractionGallery />} />
         {/* Keep old /wall links working; /gallery is canonical. */}
         <Route path="wall" element={<WallRedirect />} />
@@ -99,6 +102,8 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="release-examples">
             <Route index element={<Navigate to="1.0.0" replace />} />
             <Route path="1.0.0" element={<ReleaseExamples100 />} />
+            <Route path="application-demos" element={<Navigate to={localePath('/interactions/applications', locale)} replace />} />
+            <Route path="test-examples" element={<TestExamples />} />
           </Route>
           <Route path="wrapping-examples" element={<Navigate to="../release-examples/1.0.0" replace />} />
           <Route path="overflow-viewport" element={<OverflowViewportLab />} />

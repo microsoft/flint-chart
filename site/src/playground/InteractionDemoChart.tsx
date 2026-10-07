@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type {
   ChartChange,
+  ChartUpdate,
   FlintInteractionEventDetail,
   InteractionDef,
   InteractiveChartSurface,
@@ -13,6 +14,8 @@ interface InteractionDemoChartProps {
   fixture: InteractionDemoFixture;
   interactions: readonly InteractionDef[];
   chartId: string;
+  /** Retained updates in place when the chart opens. Keep the array stable, or the chart remounts. */
+  updates?: readonly ChartUpdate[];
   onSurface?: (surface: InteractiveChartSurface | null) => void;
   /** The raw gesture record, before the chart reacts. */
   onSemanticEvent?: (detail: FlintInteractionEventDetail) => void;
@@ -24,6 +27,7 @@ export function InteractionDemoChart({
   fixture,
   interactions,
   chartId,
+  updates,
   onSurface,
   onSemanticEvent,
   onChange,
@@ -42,6 +46,7 @@ export function InteractionDemoChart({
       renderer: 'svg',
       interactions,
       chartId,
+      updates,
       expressionInterpreter,
       ariaLabel: fixture.title,
     });
@@ -56,7 +61,7 @@ export function InteractionDemoChart({
       mount.removeEventListener('flint-interaction', handleInteraction);
       surface.destroy();
     };
-  }, [chartId, fixture, interactions, onChange, onSemanticEvent, onSurface]);
+  }, [chartId, fixture, interactions, onChange, onSemanticEvent, onSurface, updates]);
 
   return <div className="it-chart-mount" ref={mountRef} />;
 }

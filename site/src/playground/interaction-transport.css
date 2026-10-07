@@ -63,6 +63,46 @@
   min-height: 430px;
 }
 
+.it-scorer-list {
+  display: grid;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.it-scorer-list li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-top: 1px solid #e9edef;
+}
+
+.it-scorer-rank {
+  color: #7b868e;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.it-scorer-name {
+  color: #303940;
+  font-size: 13px;
+}
+
+.it-scorer-name small {
+  margin-left: 6px;
+  color: #7b868e;
+  font-size: 11px;
+}
+
+.it-scorer-goals {
+  color: var(--it-ink);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .it-workspace-external .it-chart-panel,
 .it-workspace-outbound .it-detail-panel {
   border-left: 1px solid #e9edef;

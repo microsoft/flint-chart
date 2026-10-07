@@ -89,6 +89,7 @@ export function SiteNavBar(_props: { flush?: boolean } = {}) {
             { to: '/gallery', label: t('nav.chartGallery') },
             { to: '/interactions/gallery', label: t('nav.interactionGallery') },
             { to: '/interactions/bespoke', label: t('nav.bespokeInteractions') },
+            { to: '/interactions/applications', label: t('nav.interactionApplications') },
           ]}
         />
         <NavLink

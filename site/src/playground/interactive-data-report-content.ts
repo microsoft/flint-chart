@@ -1,19 +1,28 @@
-import { MousePointerClick, Move, Scan, Target, Timer } from 'lucide-react';
+import { Crosshair, MousePointerClick, Move, Scan, Target, Timer } from 'lucide-react';
 import {
+  brushX,
   clickHighlight,
   doubleActivate,
   hoverGroupFocus,
+  inspect,
+  inspectIndex,
   longPress,
   navigate,
   select,
 } from 'flint-chart/interactive';
-import { countriesFixture } from './interaction-demo-data';
+import type { InteractionDef } from 'flint-chart/interactive';
+import type { ChartAssemblyInput } from 'flint-chart';
+import dataCenters from '../data/data-center-construction.json';
+import timeUse from '../data/time-use-companions.json';
+import { countriesFixture, type InteractionDemoFixture } from './interaction-demo-data';
 import {
   emphasis,
   fullView,
   note,
+  pointNote,
   preset,
   sentence,
+  titleSlide,
   view,
   type Message,
   type SectionSpec,
@@ -23,7 +32,7 @@ import {
 export const COUNTRIES: SectionSpec = {
   id: 'countries',
   title: 'Interactive data report',
-  lede: 'Chart and report can be bi-directionally connected. Hover a sentence to preview it on the chart, or click it to pin it. Interact with the chart, and the sentences that point at the same data rows light up.',
+  lede: 'Hover a sentence to preview it on the chart, or click it to pin it. A gesture on the chart drops the pin and gives the chart back to you.',
   fixture: countriesFixture,
   presets: [
     preset('set-style', 'Click highlight', MousePointerClick, clickHighlight({ id: 'focus', targets: ['mark', 'legend'] })),
@@ -82,6 +91,157 @@ export const SCALES: SectionSpec = {
       sentence('catching-up', 'The 60-to-70-year band holds the three countries still catching up.', view({ y: [58, 72] })),
     ],
   ],
+};
+
+/** A news report on the chart: the paragraph in view applies its update as the reader scrolls. */
+export const ARTICLE: SectionSpec = {
+  id: 'article',
+  title: 'Money buys years, but the price goes up',
+  lede: 'Twelve countries, one chart: income lifts life expectancy fast at the bottom of the scale, and barely at all at the top.',
+  fixture: countriesFixture,
+  presets: [
+    preset('set-style', 'Click highlight', MousePointerClick, clickHighlight({ id: 'focus', targets: ['mark', 'legend'] })),
+    preset('set-viewport', 'Pan & zoom', Move, navigate({ id: 'navigate' })),
+  ],
+  paragraphs: [
+    [
+      sentence('open', 'Lined up by income, the twelve countries in this chart climb from Ethiopia at the bottom left to Japan at the top', fullView('xy')),
+      '. The climb is steep at first and flat at the end: past a certain income, more money buys fewer extra years.',
+    ],
+    [
+      sentence('top', 'Three countries sit above 82 years: Japan, Australia, and Norway', emphasis({ Country: 'Japan' }, { Country: 'Australia' }, { Country: 'Norway' })),
+      '. Two of them are among the richest in the group. The third is not.',
+    ],
+    [
+      sentence('japan', 'Japan leads at 84.2 years on an income of $39,300 per person, less than two-thirds of Norway’s', emphasis({ Country: 'Japan' }), note({ Country: 'Japan' }, '84.2 years')),
+      '.',
+    ],
+    [
+      sentence('rich', 'Above $30,000 the picture is crowded: five countries within six years of one another', view({ x: [30000, 110000] })),
+      '. At this end of the scale, income no longer separates them.',
+    ],
+    [
+      sentence('us', 'The United States is the outlier of the group: the second-richest of the five, and the shortest-lived', view({ x: [30000, 110000] }), note({ Country: 'United States' }, '78.6 years at $62,600')),
+      '.',
+    ],
+    [
+      sentence('poor', 'Below $10,000 the spread opens up: Ethiopia, Nigeria, and India are thirteen years apart', view({ x: [1500, 10000] })),
+      '. Here, a few thousand dollars of income go with years of life.',
+    ],
+    [
+      sentence('nigeria', 'Nigeria sits at the bottom at 54.3 years, twelve years below Ethiopia on more than twice the income', view({ x: [1500, 10000] }), note({ Country: 'Nigeria' }, '54.3 years')),
+      '. Income is not the whole story.',
+    ],
+    [
+      sentence('chile', 'Back at full width, Chile makes the point: 80 years on $25,200 per person, less than half the income of the United States', fullView('xy'), emphasis({ Country: 'Chile' }, { Country: 'United States' })),
+      '.',
+    ],
+  ],
+};
+
+/** Hours per day Americans spend with each kind of companion, by age: the "All people" series of the survey. */
+const timeUseFixture: InteractionDemoFixture = {
+  id: 'time-use',
+  title: 'Who Americans spend their time with, by age',
+  source: timeUse.source,
+  input: {
+    data: { values: timeUse.values.filter((row) => row.Group === 'All people').map(({ Age, Who, Hours }) => ({ Age, Who, Hours })) },
+    semantic_types: { Age: 'Quantity', Who: 'Category', Hours: 'Quantity' },
+    field_display_names: { Hours: 'Hours per day' },
+    chart_spec: {
+      chartType: 'Line Chart',
+      title: 'Who Americans spend their time with, by age',
+      subtitle: 'Hours per day, averages from U.S. surveys between 2010 and 2024',
+      encodings: { x: 'Age', y: 'Hours', color: 'Who' },
+      baseSize: { width: 500, height: 320 },
+      chartProperties: { includeZero_x: false, showPoints: true },
+    },
+  } as ChartAssemblyInput,
+};
+
+/** The Our World in Data article on time use: the title opens, each paragraph zooms to its decades and lights its companions, and the summary closes. */
+export const TIME_USE: SectionSpec = {
+  id: 'time-use',
+  title: 'Who do Americans spend time with over their lives?',
+  lede: 'Family and friends fill the teenage years, children and co-workers the middle decades, and a partner and time alone the later ones.',
+  byline: 'Our World in Data · 30 April 2026',
+  fixture: timeUseFixture,
+  presets: [
+    preset('set-style', 'Click highlight', MousePointerClick, clickHighlight({ id: 'focus', targets: ['legend'] })),
+    preset('set-viewport', 'Pan & zoom', Move, navigate({ id: 'navigate' })),
+  ],
+  paragraphs: [
+    [titleSlide('title', 'Who do Americans spend time with over their lives?', fullView('xy'))],
+    [
+      sentence('teens', 'In their teens, Americans spend a lot of time with friends and family', view({ x: [15, 25] }), emphasis({ Who: 'Family' }, { Who: 'Friends' }), pointNote({ Who: 'Family', Age: 15 }, '4.3 hours a day with family')),
+      '.',
+    ],
+    [
+      sentence('twenties', 'In their 20s, time with friends and family starts to drop off. Instead, Americans begin to spend more time with partners and children', view({ x: [20, 40] }), emphasis({ Who: 'Partner' }, { Who: 'Children' }), pointNote({ Who: 'Children', Age: 39 }, 'Peak at 4.3 hours with children at 39')),
+      '.',
+    ],
+    [
+      sentence('work', 'Throughout their 30s, 40s, and 50s, Americans spend much of their time with coworkers', view({ x: [25, 60] }), emphasis({ Who: 'Co-workers' }), pointNote({ Who: 'Co-workers', Age: 30 }, '3.3 hours a day')),
+      '.',
+    ],
+    [
+      sentence('older', 'As they get older, Americans spend more time alone, but surveys show this “doesn’t necessarily mean they’re lonely”', fullView('xy'), emphasis({ Who: 'Alone' }, { Who: 'Partner' }), pointNote({ Who: 'Alone', Age: 60 }, '7.2 hours a day alone at 60')),
+      '.',
+    ],
+    [sentence('summary', 'Family and friends fill the teenage years, children and co-workers the middle decades, and a partner and time alone the later ones.', fullView('xy'))],
+  ],
+};
+
+/** The scripted exchange of the selection demo: three countries selected, one question, one answer. */
+/** Monthly spending averaged per quarter: 51 points sit apart on the line, where 152 months would hide them. */
+const QUARTERS = (() => {
+  const sums = new Map<string, { total: number; months: number }>();
+  for (const row of dataCenters.values) {
+    const [year, month] = row.month.split('-').map(Number);
+    const quarter = `${year}-Q${Math.floor((month - 1) / 3) + 1}`;
+    const entry = sums.get(quarter) ?? { total: 0, months: 0 };
+    entry.total += row.spending;
+    entry.months += 1;
+    sums.set(quarter, entry);
+  }
+  // Each quarter sits at its first month, so the axis keeps its yearly ticks.
+  return [...sums].map(([quarter, { total, months }]) => {
+    const [year, index] = quarter.split('-Q');
+    return { Month: `${year}-${String((Number(index) - 1) * 3 + 1).padStart(2, '0')}`, Spending: Math.round(total / months / 1e7) / 100 };
+  });
+})();
+
+/** The data center series as the chart beside the scripted chat: points on the line, Economist house style. */
+const dataCentersFixture: InteractionDemoFixture = {
+  id: 'data-centers-chat',
+  title: 'U.S. data center construction spending',
+  source: dataCenters.source,
+  input: {
+    data: { values: QUARTERS },
+    semantic_types: { Month: 'YearMonth', Spending: 'Quantity' },
+    field_display_names: { Spending: 'Monthly spending ($ billions)' },
+    theme_spec: 'economist',
+    chart_spec: {
+      chartType: 'Line Chart',
+      title: 'Data center construction spending has grown thirtyfold since 2014',
+      subtitle: 'United States, quarterly average of monthly construction spending on data centers',
+      encodings: { x: 'Month', y: 'Spending' },
+      baseSize: { width: 520, height: 320 },
+      chartProperties: { showPoints: true },
+    },
+  } as ChartAssemblyInput,
+};
+
+/** The chat about the data center series: the reader asks for the chart, the agent answers with it, and a brush on it becomes context. */
+export const SELECTION_CHAT: SectionSpec & { question: string; interactions: readonly InteractionDef[] } = {
+  id: 'selection-chat',
+  title: 'Selection as context',
+  lede: 'The selection on the chart goes with the next question as its context.',
+  fixture: dataCentersFixture,
+  presets: [],
+  paragraphs: [],
+  question: 'Show me an interactive line chart with this data that I can brush and inspect.',
+  interactions: [brushX({ id: 'brush', mode: 'stateful' }), inspect({ id: 'inspect' })],
 };
 
 /** The agent's chart: point selection only, so a drag is a rectangle and never a pan. */

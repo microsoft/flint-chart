@@ -1,0 +1,118 @@
+.pisa-draw {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+  width: min(100%, 1040px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pisa-draw {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pisa-draw__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 18px 12px;
+  border: 1px solid #e3e6ea;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pisa-draw__mount {
+  position: relative;
+  display: grid;
+  min-height: 420px;
+  place-items: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pisa-draw__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pisa-draw__hint {
+  color: #66707a;
+  font-size: 11px;
+}
+
+.pisa-draw__labels h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #54585a;
+}
+
+.pisa-draw__labels ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pisa-draw__label {
+  display: grid;
+  grid-template-columns: 12px auto;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.pisa-draw__label:hover:not(:disabled) {
+  background: #f6f8fa;
+}
+
+.pisa-draw__label[data-active='true'] {
+  border-color: var(--subject-ink);
+  background: #f1f4f7;
+}
+
+.pisa-draw__label:disabled {
+  cursor: default;
+  color: inherit;
+}
+
+.pisa-draw__swatch {
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--subject-ink);
+}
+
+.pisa-draw__label[data-done='true'] .pisa-draw__swatch {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--subject-ink);
+}
+
+.pisa-draw__status {
+  grid-column: 2;
+  color: #66707a;
+}
+
+.pisa-draw__summary {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #54585a;
+}

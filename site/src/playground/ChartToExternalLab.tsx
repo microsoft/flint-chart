@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { ChartChange, ChartHiddenValue, ChartState, DomainGeometry, InteractionDef, SemanticElement } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
+import { WorldCupScorersDemo } from './WorldCupScorersDemo';
 import {
   countriesFixture,
   ganttFixture,
@@ -490,6 +491,7 @@ export function ChartToExternalLab() {
         <p>Each chart resolves physical geometry into semantic records and reports what it shows after every change. The panel reads that state, or the gesture's own hit while a gesture runs, without inspecting renderer internals.</p>
       </header>
       <div className="it-examples">
+        <WorldCupScorersDemo />
         {demos.map((demo) => <OutboundDemoRow key={demo.id} demo={demo} />)}
       </div>
     </div>
