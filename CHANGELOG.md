@@ -96,6 +96,15 @@ the entries below describe implemented changes, not the remaining checklist.
   navigation preset writes, for hosts that set the same state.
 - `ChartState.annotations` lists reader-made annotations, so a host can
   persist them.
+- `strokeDash` on the ECharts Line Chart, as on the Vega-Lite, Plotly, and
+  Excel line charts. A colour value draws one line per dash value, all in its
+  palette colour, and its one legend entry toggles them all; the dash styles
+  (solid, dashed, dotted, dash-dot) follow the dash values' first appearance
+  in the data, so facet panels agree. The legend lists the colour values, then
+  a gray line sample per dash value, and the axis tooltip names each line by
+  both (`C1 · Limit: 8`). Without colour the lines share one colour under a
+  legend titled by the dash field; with a continuous colour the gray line
+  splits by dash value.
 
 ### Changed
 
