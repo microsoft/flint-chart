@@ -3,6 +3,7 @@ import {
     associateSemanticElementRenderKeys,
     type AxisTargetValue,
     semanticElementRenderKeys,
+    semanticElementSourceRows,
     sourceRecordsForRenderedRecords,
     type ChartInteractionResolver,
     type LegendTargetValue,
@@ -500,18 +501,21 @@ export function nextKeyboardTarget(scene: readonly any[], activeKey: string | un
 export function enrichTargetWithSourceProvenance(
     target: SemanticTarget | null,
     plan: Pick<VegaInteractionPlan,
-        'sourceRecords' | 'provenanceFields' | 'temporalProvenanceFields' | 'rangeProvenance'>,
+        'sourceRecords' | 'provenanceFields' | 'temporalProvenanceFields' | 'rangeProvenance' | 'rowIndexed'>,
 ): SemanticTarget | null {
     if (!target) return null;
     const elements = target.elements.map((element) => {
         const renderedRecords = element.records?.length ? element.records : [element.value];
-        const records = sourceRecordsForRenderedRecords(
-            renderedRecords,
-            plan.sourceRecords,
-            plan.provenanceFields,
-            plan.temporalProvenanceFields,
-            plan.rangeProvenance,
-        );
+        const rows = plan.rowIndexed ? semanticElementSourceRows(element) : undefined;
+        const records = rows
+            ? rows.flatMap((row) => (row <= plan.sourceRecords.length ? [plan.sourceRecords[row - 1]] : []))
+            : sourceRecordsForRenderedRecords(
+                renderedRecords,
+                plan.sourceRecords,
+                plan.provenanceFields,
+                plan.temporalProvenanceFields,
+                plan.rangeProvenance,
+            );
         const value = plan.rangeProvenance.length > 0
             ? { ...element.value, count: records.length }
             : element.value;

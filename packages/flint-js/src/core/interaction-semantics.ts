@@ -32,7 +32,31 @@ export function semanticVisualFamily(role: string | undefined): SemanticVisualFa
 export const MUTED_HOVER_STROKE = 'rgba(71, 82, 92, 0.58)';
 export const MUTED_HOVER_FILL = '#eef1f3';
 
+/** The position of a source row, stamped on each rendered datum by a window transform; 1-based, as Vega's row_number counts. */
+export const INTERACTION_ROW = '__flint_interaction_row';
+
 const renderKeysByElement = new WeakMap<SemanticElement, readonly string[]>();
+const sourceRowsByElement = new WeakMap<SemanticElement, readonly number[]>();
+
+/** The 1-based source positions an element's rendered records carry, when every record carries one. */
+export function semanticElementSourceRows(element: SemanticElement): readonly number[] | undefined {
+    return sourceRowsByElement.get(element);
+}
+
+export function associateSemanticElementSourceRows(
+    element: SemanticElement,
+    rows: readonly number[],
+): SemanticElement {
+    sourceRowsByElement.set(element, [...new Set(rows)].sort((left, right) => left - right));
+    return element;
+}
+
+function sourceRowsOf(data: readonly Record<string, unknown>[]): number[] | undefined {
+    const rows = data.map((datum) => datum[INTERACTION_ROW]);
+    return rows.every((row): row is number => typeof row === 'number' && Number.isInteger(row) && row > 0)
+        ? rows
+        : undefined;
+}
 
 export function semanticElementRenderKeys(element: SemanticElement): readonly string[] {
     return renderKeysByElement.get(element) ?? [];
@@ -117,10 +141,12 @@ export function elementsFromHits(hits: readonly RenderHit[], keyField: string): 
         // strand that vertex as a zero-length stub.
         const endKey = hit.endDatum?.[keyField];
         const renderKeys = typeof endKey === 'string' && !startKeys.has(endKey) ? [key, endKey] : [key];
-        elements.push(associateSemanticElementRenderKeys({
+        const element = associateSemanticElementRenderKeys({
             value: withoutRenderIdentity(hit.datum, keyField),
             records,
-        }, renderKeys));
+        }, renderKeys);
+        const rows = sourceRowsOf(hit.endDatum ? [hit.datum, hit.endDatum] : [hit.datum]);
+        elements.push(rows ? associateSemanticElementSourceRows(element, rows) : element);
     }
     return elements;
 }

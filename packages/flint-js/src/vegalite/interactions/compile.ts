@@ -8,6 +8,7 @@ import {
 } from '../../interactive/interactions';
 import { toCanvasInteractionEvent } from '../../interactive/canvas-interaction';
 import { admitInteractions, navigationAxesFor } from '../../interactive/spec/admission';
+import { INTERACTION_ROW } from '../../core/interaction-semantics';
 import { affordsTarget } from '../../interactive/affordances';
 import { DEFAULT_DIM_OPACITY } from '../../interactive/presets/utils';
 import { INTERACTION_PROVENANCE, type InteractionProvenance } from '../interaction-provenance';
@@ -246,16 +247,46 @@ function instrumentMarks(
     return instrumented;
 }
 
-function inlineRows(spec: Record<string, any>): Record<string, any>[] {
-    if (Array.isArray(spec?.data?.values)) return spec.data.values;
+/** The node that owns the inline rows, searched the way `inlineRows` reads them. */
+function inlineDataNode(spec: Record<string, any>): Record<string, any> | undefined {
+    if (Array.isArray(spec?.data?.values)) return spec;
     for (const property of ['layer', 'hconcat', 'vconcat', 'concat'] as const) {
         if (!Array.isArray(spec[property])) continue;
         for (const child of spec[property]) {
-            const rows = inlineRows(child);
-            if (rows.length > 0) return rows;
+            const node = inlineDataNode(child);
+            if (node && node.data.values.length > 0) return node;
         }
     }
-    return spec.spec && typeof spec.spec === 'object' ? inlineRows(spec.spec) : [];
+    return spec.spec && typeof spec.spec === 'object' ? inlineDataNode(spec.spec) : undefined;
+}
+
+function inlineRows(spec: Record<string, any>): Record<string, any>[] {
+    return inlineDataNode(spec)?.data.values ?? [];
+}
+
+function sameRow(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
+    const fields = Object.keys(left);
+    return fields.length === Object.keys(right).length
+        && fields.every((field) => field in right && Object.is(left[field], right[field]));
+}
+
+/**
+ * Number the inline rows before any other transform, so each rendered datum
+ * names its source row and provenance needs no matching. Only when the inline
+ * rows are the source records, row for row; a template that reshapes its data
+ * keeps the field match.
+ */
+function stampSourceRows(spec: Record<string, any>, sourceRecords: readonly Record<string, unknown>[]): boolean {
+    const node = inlineDataNode(spec);
+    const rows: Record<string, unknown>[] = node?.data.values ?? [];
+    if (!node || rows.length !== sourceRecords.length || !rows.every((row, index) => sameRow(row, sourceRecords[index]))) {
+        return false;
+    }
+    node.transform = [
+        { window: [{ op: 'row_number', as: INTERACTION_ROW }] },
+        ...(Array.isArray(node.transform) ? node.transform : []),
+    ];
+    return true;
 }
 
 function pinChannelDomain(
@@ -461,6 +492,8 @@ export function addVegaLiteInteractions(
         )
         : false;
     if (needsSemanticPresentation && !instrumented) return null;
+    const sourceRecords = templateSemantics.sourceRecords ?? inlineRows(spec).map((record) => ({ ...record }));
+    const rowIndexed = instrumented ? stampSourceRows(spec, sourceRecords) : false;
     if (instrumented) addLocalKeyTransforms(spec, fields, selectableMarks);
     if (instrumented && admitted.some((interaction) => affordsTarget(interaction, 'legend-item'))) {
         pinLegendDomains(spec, templateSemantics.legendFields);
@@ -474,7 +507,8 @@ export function addVegaLiteInteractions(
     }
     return {
         fields,
-        sourceRecords: templateSemantics.sourceRecords ?? inlineRows(spec).map((record) => ({ ...record })),
+        sourceRecords,
+        rowIndexed,
         provenanceFields: templateSemantics.provenanceFields ?? fields,
         temporalProvenanceFields: templateSemantics.temporalProvenanceFields ?? [],
         rangeProvenance: templateSemantics.rangeProvenance ?? [],

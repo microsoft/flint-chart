@@ -61,6 +61,8 @@ export interface VegaInteractionPlan {
     provenanceFields: readonly string[];
     temporalProvenanceFields: readonly string[];
     rangeProvenance: readonly { field: string; startField: string; endField: string }[];
+    /** True when every rendered datum carries its source row's position, so provenance is a lookup. */
+    rowIndexed?: boolean;
     categoryField?: string;
     seriesField?: string;
     resolveGroupValue?: InteractionContext['resolveGroupValue'];

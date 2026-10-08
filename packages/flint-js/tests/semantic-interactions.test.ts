@@ -96,6 +96,7 @@ import { lineChartDef } from '../src/vegalite/templates/line';
 import { bumpChartDef } from '../src/vegalite/templates/bump';
 import { slopeChartDef } from '../src/vegalite/templates/slope';
 import { enrichTargetWithSourceProvenance } from '../src/vegalite/interactions/runtime';
+import { INTERACTION_ROW } from '../src/core/interaction-semantics';
 import { regressionDef } from '../src/vegalite/templates/scatter';
 import { mapDef, choroplethDef } from '../src/vegalite/templates/map';
 import { densityPlotDef } from '../src/vegalite/templates/density';
@@ -330,6 +331,81 @@ describe('Vega-Lite semantic interactions', () => {
             field: 'Duration (min)', range: { start, end }, count: expectedRecords.length,
         });
         expect(enriched?.elements[0].records).toEqual(expectedRecords);
+        view.finalize();
+    });
+
+    it('stamps each inline row with its position so provenance is a lookup', async () => {
+        const sourceRecords = ['2008-06-02', '2008-06-09', '2008-07-07', '2008-07-14'].map((week, index) => ({
+            Week: week, Price: 3.9 + index / 10,
+        }));
+        const spec = assembleVegaLite({
+            data: { values: sourceRecords },
+            semantic_types: { Week: 'Date', Price: 'Quantity' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'Week', y: 'Price' } },
+        } as never) as any;
+        const { plan, compiled } = instrument(spec, [brushX()]);
+        if (!plan?.resolve) throw new Error('Expected an instrumented line plan');
+        expect(plan.rowIndexed).toBe(true);
+        expect(spec.transform[0]).toEqual({ window: [{ op: 'row_number', as: INTERACTION_ROW }] });
+
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const segments = sceneItems(view).filter((item) => item.mark.marktype === 'line');
+        const hit = renderHit(segments[1]);
+        if (!hit) throw new Error('Expected a line segment hit');
+        expect(typeof hit.datum.Week).not.toBe('string');
+        const target = plan.resolve(
+            { gesture: 'click', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY },
+        );
+        const enriched = enrichTargetWithSourceProvenance(target, plan);
+        expect(enriched?.elements[0].records).toEqual([plan.sourceRecords[1], plan.sourceRecords[2]]);
+        expect(enriched?.elements[0].records?.[0]).toBe(plan.sourceRecords[1]);
+        expect(enriched?.elements[0].records).toEqual(sourceRecordsForRenderedRecords(
+            target!.elements[0].records!, plan.sourceRecords, plan.provenanceFields, plan.temporalProvenanceFields, plan.rangeProvenance,
+        ));
+        expect(Object.keys(enriched!.elements[0].value)).not.toContain(INTERACTION_ROW);
+
+        const source = compiled.data.find((dataset: any) => dataset.values?.length === sourceRecords.length)?.name;
+        const swapped = [{ Week: '2020-03-02', Price: 2.4 }, { Week: '2020-03-09', Price: 2.2 }];
+        view.change(source, changeset().remove(() => true).insert(swapped));
+        await view.runAsync();
+        const renumbered = sceneItems(view).filter((item) => item.mark.marktype === 'line');
+        expect(renumbered.map((item) => item.datum[INTERACTION_ROW])).toEqual([1]);
+        view.finalize();
+    });
+
+    it('resolves a folded static series point to its one source row', async () => {
+        const sourceRecords = [2019, 2020, 2021].map((year, index) => ({
+            Year: String(year), Science: 500 + index, Reading: 480 - index,
+        }));
+        const spec = assembleVegaLite({
+            data: { values: sourceRecords },
+            semantic_types: { Year: 'Year', Science: 'Quantity', Reading: 'Quantity' },
+            chart_spec: { chartType: 'Line Chart', encodings: { x: 'Year', y: ['Science', 'Reading'] } },
+        } as never) as any;
+        const { plan, compiled } = instrument(spec, [clickHighlight()]);
+        if (!plan?.resolve) throw new Error('Expected an instrumented static-series plan');
+        expect(plan.rowIndexed).toBe(true);
+
+        const view = new View(parse(compiled), { renderer: 'none' });
+        await view.runAsync();
+        const segments = sceneItems(view).filter((item) => item.mark.marktype === 'line');
+        expect(segments).toHaveLength(4);
+        const hit = renderHit(segments[0]);
+        if (!hit) throw new Error('Expected a segment hit');
+        const target = plan.resolve(
+            { gesture: 'click', role: 'mark', hits: [hit] },
+            { allHits: [hit], keyField: INTERACTION_KEY },
+        );
+        const enriched = enrichTargetWithSourceProvenance(target, plan);
+        const records = enriched?.elements[0].records ?? [];
+        expect(records).toHaveLength(2);
+        expect(new Set(records.map((record) => plan.sourceRecords.indexOf(record))).size).toBe(2);
+        expect(records.every((record) => plan.sourceRecords.includes(record))).toBe(true);
+        expect(records).toEqual(sourceRecordsForRenderedRecords(
+            target!.elements[0].records!, plan.sourceRecords, plan.provenanceFields, plan.temporalProvenanceFields, plan.rangeProvenance,
+        ));
         view.finalize();
     });
 
