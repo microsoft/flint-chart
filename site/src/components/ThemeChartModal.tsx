@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ThemeSpec } from 'flint-chart';
+import type { ChartAssemblyInput, ThemeSpec } from 'flint-chart';
 import type { PreviewCase } from '../shared/preview-cases';
-import { BACKENDS } from '../shared/supported-backends';
 import { siteTheme } from '../shared/theme';
 import { CodeBlock } from './CodeBlock';
 import { ScaleToFit } from './ScaleToFit';
-import { VegaLiteView } from './VegaLiteView';
+import { FlintView } from './FlintView';
 
 export function ThemeChartModal({
   previewCase,
@@ -39,13 +38,6 @@ export function ThemeChartModal({
     }),
     [previewCase, theme, title],
   );
-  const compiled = useMemo(() => {
-    try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(input as any) };
-    } catch (error) {
-      return { ok: false as const, error };
-    }
-  }, [input]);
   const specText = useMemo(
     () => JSON.stringify({ ...input, data: '__FLINT_DATA__' }, null, 2).replace('"__FLINT_DATA__"', '{...}'),
     [input],
@@ -79,11 +71,7 @@ export function ThemeChartModal({
           <section className="theme-chart-modal-preview">
             <div>
               <ScaleToFit fill height={650} padding={24} maxScale={1.9}>
-                {compiled.ok ? (
-                  <VegaLiteView spec={compiled.value} renderer="svg" />
-                ) : (
-                  <pre>{String((compiled.error as Error)?.message ?? compiled.error)}</pre>
-                )}
+                <FlintView spec={input as ChartAssemblyInput} renderer="svg" />
               </ScaleToFit>
             </div>
             <small>{previewCase.source} · {previewCase.license} · {t('themeLab.rows', { count: previewCase.data.length })}</small>

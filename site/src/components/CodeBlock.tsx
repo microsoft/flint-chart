@@ -6,11 +6,13 @@ import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
 import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
 import { siteTheme } from '../shared/theme';
 
 SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('tsx', tsx);
 SyntaxHighlighter.registerLanguage('javascript', javascript);
 SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('json', json);

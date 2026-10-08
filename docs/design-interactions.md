@@ -33,7 +33,7 @@ A Flint chart is three documents in one `ChartAssemblyInput`:
 | `interaction_spec` | how it behaves | the Vega-Lite interactive surface |
 
 The assemblers never read `interaction_spec`. A static render is untouched by it. Only
-`buildInteractiveChart()` does, after the chart is assembled.
+`mountChart()` does, after the chart is assembled.
 
 Behaviour comes from **presets**: named interactions Flint ships, such as `click-highlight`
 or `navigate`. Code reaches a preset through a factory, `clickHighlight({ dimOpacity: 0.2 })`.
@@ -105,7 +105,7 @@ kind of change.
 
 ## §2.4 The surface
 
-`buildInteractiveChart(container, input, options)` returns an `InteractiveChartSurface`:
+`mountChart(container, input, options)` returns an `InteractiveChartSurface`:
 `ready`, `warnings`, `applyUpdate`, `setUpdates`, `clearUpdate`, `dispatch`, `getState`,
 `onChange`, `refresh`, `destroy`. The container emits a `flint-interaction` DOM event for every
 semantic event, with the interaction id and the resolved target, so a host can listen without
@@ -157,7 +157,7 @@ top-level key that is not one of the three, with a hint for the two keys the spe
 `dismiss` and `updates`. Every message names the entry by index and type.
 
 `composeInteractiveOptions()` merges the spec with what code passed to
-`buildInteractiveChart()`: spec entries first, then code; an id shared by both is an error; the
+`mountChart()`: spec entries first, then code; an id shared by both is an error; the
 surface policies come from code when it sets them and from the spec otherwise; a backend that
 runs no interactions ignores the spec with one `info` warning.
 
@@ -354,7 +354,7 @@ Which fact is decided where:
 
 # §8 Hosts and discovery
 
-- **`buildInteractiveChart()`** reads `interaction_spec` from the input and merges it with code
+- **`mountChart()`** reads `interaction_spec` from the input and merges it with code
   definitions. The MCP `create_chart_view`, the site editor, and the site gallery mount through
   it whenever the input carries interaction entries; a static render otherwise.
 - **`getState()` and `onChange()`** give a host the chart as context. The MCP view sends the

@@ -14,7 +14,7 @@ the plan for Plotly is at the end of this document.
 ```ts
 import { accessibleNavigation, legendToggle } from 'flint-chart/interactive';
 
-buildInteractiveChart(host, input, {
+mountChart(host, input, {
     backend: 'vegalite',
     interactions: [accessibleNavigation(), legendToggle()],
 });
@@ -353,7 +353,7 @@ and destruction invalidate pending announcements; late failures are still logged
 
 ## 11. Plotly
 
-Plotly has no interaction runtime in flint-chart: `buildInteractiveChart`
+Plotly has no interaction runtime in flint-chart: `mountChart`
 rejects semantic interactions on any backend other than Vega-Lite. Accessible
 navigation on Plotly therefore needs, in order:
 

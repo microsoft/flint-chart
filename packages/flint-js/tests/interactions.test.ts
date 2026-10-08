@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createChangeFilter } from '../src/interactive/chart-state';
+import { selectionUpdate, viewportUpdate } from '../src/interactive/language/updates';
+import type { ChartState } from '../src/core/interaction-contracts';
 import { parse, View } from 'vega';
 import { axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, lassoSelect, legendToggle, linkedBrush, longPress, navigate, normalizeInteractions, select } from '../src/interactive/interactions';
 import type { ClickHighlightOptions } from '../src/interactive/interactions';
@@ -3613,5 +3616,74 @@ describe('retained viewport precedence', () => {
         retained.set('host-reset', { id: 'host-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] });
         supersedeRetainedViewports(retained, 'host-reset');
         expect(retained.get('host-reset')?.ops).toHaveLength(1);
+    });
+});
+
+describe('chart change reporting', () => {
+    const element = (value: Record<string, unknown>) => ({ value });
+    const state = (selected: Record<string, unknown>[], extra: Partial<ChartState> = {}): ChartState => ({
+        chartType: 'Bar Chart',
+        selected: selected.map(element),
+        ...extra,
+    });
+
+    it('drops a report that moves nothing and names the parts that moved', () => {
+        const filter = createChangeFilter(state([]));
+        expect(filter({ phase: 'commit', source: 'reader', interactionId: 'click', state: state([]) })).toBeNull();
+        const change = filter({ phase: 'commit', source: 'reader', interactionId: 'click', state: state([{ Country: 'Chad' }]) });
+        expect(change?.changed).toEqual(['selected']);
+        expect(change?.previous.selected).toEqual([]);
+        expect(filter({ phase: 'commit', source: 'host', state: state([{ Country: 'Chad' }]) })).toBeNull();
+    });
+
+    it('counts an entry moving from preview to retained as a change', () => {
+        const chad = [element({ Country: 'Chad' })];
+        const filter = createChangeFilter(state([]));
+        const preview = new Map([['click', { layer: 'preview' as const, elements: chad }]]);
+        const retained = new Map([['click', { layer: 'retained' as const, elements: chad }]]);
+        expect(filter({ phase: 'preview', source: 'reader', state: state([{ Country: 'Chad' }], { entries: preview }) })).not.toBeNull();
+        expect(filter({ phase: 'commit', source: 'reader', state: state([{ Country: 'Chad' }], { entries: retained }) })?.changed)
+            .toEqual(['selected']);
+    });
+
+    it('treats a text-only annotation change as a change', () => {
+        const target = { select: { key: { Country: 'Chad' } } };
+        const filter = createChangeFilter(state([], { annotations: [{ id: 'note', target, text: 'Low' }] }));
+        const change = filter({ phase: 'commit', source: 'host', state: state([], { annotations: [{ id: 'note', target, text: 'Lowest' }] }) });
+        expect(change?.changed).toEqual(['annotations']);
+    });
+
+    it('keeps the previous state fixed when the reported state is live', () => {
+        let current = [element({ Country: 'Chad' })];
+        const live = { chartType: 'Bar Chart', get selected() { return current; } } as ChartState;
+        const filter = createChangeFilter(state([]));
+        const first = filter({ phase: 'commit', source: 'reader', state: live });
+        current = [];
+        const second = filter({ phase: 'commit', source: 'reader', state: live });
+        expect(first?.state.selected).toHaveLength(1);
+        expect(second?.previous.selected).toHaveLength(1);
+        expect(second?.state.selected).toHaveLength(0);
+    });
+});
+
+describe('host update helpers', () => {
+    it('builds the emphasis a selection preset writes, from a key or from elements', () => {
+        expect(selectionUpdate('click-group-focus', { Continent: 'Asia' })).toEqual({
+            id: 'click-group-focus',
+            ops: [{ op: 'set-style', targets: [{ select: { key: { Continent: 'Asia' } } }], value: { state: 'emphasized', mutedOpacity: 0.25 } }],
+        });
+        const fromElements = selectionUpdate('select', [{ value: { Country: 'Chad' } }, { value: { Country: 'Nepal' } }], { dimOpacity: 0.3 });
+        expect(fromElements.ops[0]).toMatchObject({ targets: [{ select: { key: { Country: 'Chad' } } }, { select: { key: { Country: 'Nepal' } } }], value: { mutedOpacity: 0.3 } });
+        expect(selectionUpdate('select', null).ops[0]).toEqual({ op: 'set-style', targets: [], value: { state: 'normal' } });
+        expect(selectionUpdate('select', []).ops[0]).toEqual({ op: 'set-style', targets: [], value: { state: 'normal' } });
+    });
+
+    it('builds a viewport update from ranges or from a ChartState viewport, and home from null', () => {
+        expect(viewportUpdate('navigate', { x: [0, 10] }).ops[0]).toEqual({ op: 'set-viewport', axes: 'x', value: { x: [0, 10] } });
+        expect(viewportUpdate('navigate', {
+            x: { kind: 'interval', start: 0, end: 10 },
+            y: { kind: 'interval', start: 2, end: 4 },
+        }).ops[0]).toEqual({ op: 'set-viewport', axes: 'xy', value: { x: [0, 10], y: [2, 4] } });
+        expect(viewportUpdate('navigate', null).ops[0]).toEqual({ op: 'set-viewport', axes: 'xy', value: {} });
     });
 });

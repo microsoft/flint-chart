@@ -333,7 +333,7 @@ export function validateInteractionSpec(
         return [{
             severity: 'info',
             code: 'interactions_ignored',
-            message: `interaction_spec is ignored: backend "${backend}" does not run interactions.`,
+            message: `Interactions are ignored: backend "${backend}" does not run interactions, so the chart renders static.`,
         }];
     }
     try {

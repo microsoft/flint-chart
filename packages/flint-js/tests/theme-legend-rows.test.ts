@@ -6,7 +6,7 @@ import { compile } from 'vega-lite';
 import { parse, View } from 'vega';
 import { assembleVegaLite } from '../src';
 import type { ThemeSpec } from '../src/core/theme/types';
-import { vlWrapLegendText } from '../src/vegalite/instantiate-spec';
+import { enableGuideLabelTooltips, vlWrapLegendText } from '../src/vegalite/instantiate-spec';
 
 /**
  * A chart can need more than one key: one that names the colours and one that
@@ -282,6 +282,17 @@ describe('legend title and entry wrapping', () => {
             expect(labels[0].text).toHaveLength(3);
             expect(labels[0].text.join(' ')).toBe(text);
             expect(labels[0].tooltip).toBe(text);
+            expect(labels[0].mark.interactive).toBe(false);
+            const patched = new View(parse(enableGuideLabelTooltips(compile(spec).spec)), { renderer: 'none' });
+            await patched.runAsync();
+            const patchedLabels: any[] = [];
+            const visitPatched = (item: any): void => {
+                if (item.mark?.role === 'legend-label') patchedLabels.push(item);
+                for (const child of item.items ?? []) visitPatched(child);
+            };
+            visitPatched((patched.scenegraph() as any).root);
+            expect(patchedLabels[0].mark.interactive).toBe(true);
+            patched.finalize();
             const limit = spec.encoding.color.legend.labelLimit;
             expect(limit).toBeGreaterThan(0);
             for (const line of labels[0].text.slice(0, 2)) expect(line.length * 10 * 0.62).toBeLessThanOrEqual(limit);

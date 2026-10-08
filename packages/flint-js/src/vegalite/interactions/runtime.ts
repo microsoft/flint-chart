@@ -42,8 +42,8 @@ import { keyboardTrigger } from '../../interactive/triggers';
 import { normalizeInspectGuideOptions } from '../../interactive/guides';
 import { wheelZoomFactor } from '../../interactive/gestures/navigation';
 import type { CanvasInteractionEvent, DomainGeometry } from '../../interactive/language/events';
-import type { ChartHiddenValue, ChartStateEntry } from '../../core/interaction-contracts';
-import type { ChartChange, ChartUpdateApplyOptions } from '../../interactive/types';
+import type { ChartAnnotation, ChartHiddenValue, ChartStateEntry } from '../../core/interaction-contracts';
+import type { ChartChangeReport, ChartUpdateApplyOptions } from '../../interactive/types';
 import {
     INTERACTION_KEY,
     PATH_KEY_SUFFIX,
@@ -341,9 +341,9 @@ export function mergeRetainedPreview(
 export interface VegaInteractionController {
     getInteractionContext(): import('../../interactive/interactions').InteractionContext;
     /** Hears every change to what the chart shows, with the state after it. */
-    onChange(listener: (change: ChartChange) => void): () => void;
+    onChange(listener: (change: ChartChangeReport) => void): () => void;
     /** Reports a change the renderer made outside the controller, such as a rail scroll. */
-    reportChange(change: Omit<ChartChange, 'state'>): void;
+    reportChange(change: Omit<ChartChangeReport, 'state'>): void;
     applyUpdate(update: ChartUpdate, options?: ChartUpdateApplyOptions): Promise<ChartUpdateResult>;
     setUpdates(updates: readonly ChartUpdate[]): Promise<readonly ChartUpdateResult[]>;
     clearUpdate(id: string): Promise<void>;
@@ -639,12 +639,12 @@ export function mountVegaInteractions(
     const retainedUpdates = new Map<string, ChartUpdate>();
     const previewUpdates = new Map<string, ChartUpdate>();
     const hiddenLegendDomains = new Map<string, { legend: LegendTargetValue; opacity: number }>();
-    const changeListeners = new Set<(change: ChartChange) => void>();
+    const changeListeners = new Set<(change: ChartChangeReport) => void>();
     let lastPreviewKey: string | undefined;
     let hoverCueActive = false;
     // A pointer move on the same mark is not a change. Two previews with one
     // interaction, one target and one domain report once.
-    const notifyChange = (change: Omit<ChartChange, 'state'>): void => {
+    const notifyChange = (change: Omit<ChartChangeReport, 'state'>): void => {
         if (change.phase === 'preview') {
             const key = JSON.stringify([
                 change.interactionId,
@@ -661,7 +661,7 @@ export function mountVegaInteractions(
         const state = context();
         for (const listener of changeListeners) listener({ ...change, state });
     };
-    const changePhase = (phase: 'start' | 'preview' | 'commit' | 'cancel'): ChartChange['phase'] =>
+    const changePhase = (phase: 'start' | 'preview' | 'commit' | 'cancel'): ChartChangeReport['phase'] =>
         phase === 'start' ? 'preview' : phase;
     const selectedElements = new Map<string, import('../../core/interaction-semantics').SemanticElement>();
     const hiddenKeys = new Set<string>();
@@ -856,6 +856,17 @@ export function mountVegaInteractions(
             channel: legend.channel ?? legend.field ?? '',
             value: legend.domain.kind === 'value' ? legend.domain.value : undefined,
         }));
+    const annotationEntries = (): ChartAnnotation[] => {
+        const annotations: ChartAnnotation[] = [];
+        for (const id of new Set([...retainedUpdates.keys(), ...previewUpdates.keys()])) {
+            const update = mergeRetainedPreview(retainedUpdates.get(id), previewUpdates.get(id));
+            for (const op of update?.ops ?? []) {
+                if (op.op !== 'set-annotation' || !op.value) continue;
+                annotations.push({ id, target: op.target, ...(op.value.text !== undefined ? { text: op.value.text } : {}) });
+            }
+        }
+        return annotations;
+    };
     const context = (includeAvailable = true, interaction?: CanvasInteractionDef) => {
         // The scan behind `available` walks the whole scene and resolves
         // provenance for every mark, which a county map turns into hundreds of
@@ -898,6 +909,7 @@ export function mountVegaInteractions(
             get entries() { return stateEntries(); },
             get hidden() { return hiddenValues(); },
             get viewport() { return currentViewport(); },
+            get annotations() { return annotationEntries(); },
             get available() { return scanAvailable(); },
             resolveGroupValue: plan.resolveGroupValue,
             resolveNavigation: navigationController.resolve,
@@ -1365,7 +1377,7 @@ export function mountVegaInteractions(
             if (!landed?.ops.every((op) => op.op === 'set-viewport' && Object.keys(op.value).length === 0)) return;
             retainedUpdates.delete(interaction.id);
             await renderUpdates();
-            notifyChange({ phase: 'commit', interactionId: interaction.id, geometry: { domain: currentViewport() } });
+            notifyChange({ phase: 'commit', source: 'reader', interactionId: interaction.id, geometry: { domain: currentViewport() } });
         });
         return true;
     };
@@ -1471,7 +1483,7 @@ export function mountVegaInteractions(
         );
         const frame = withViewportState(base);
         emitCanvasInteractionEvent(navigationInteraction, frame);
-        notifyChange({ phase, interactionId: navigationInteraction.id, action: frame.action, geometry: frame.geometry });
+        notifyChange({ phase, source: 'reader', interactionId: navigationInteraction.id, action: frame.action, geometry: frame.geometry });
     };
     const dispatch = async (
         interaction: CanvasInteractionDef,
@@ -1497,6 +1509,7 @@ export function mountVegaInteractions(
         await applyInteractionUpdate(interaction, event.phase, request, legendSelection, transition ? { transition } : undefined);
         notifyChange({
             phase: changePhase(event.phase),
+            source: 'reader',
             interactionId: interaction.id,
             action: canvasEvent.action,
             target: canvasEvent.target,
@@ -1541,6 +1554,7 @@ export function mountVegaInteractions(
             emitCanvasInteractionEvent(interaction, moved);
             notifyChange({
                 phase: changePhase(event.phase),
+                source: 'reader',
                 interactionId: interaction.id,
                 action: moved.action,
                 geometry: moved.geometry,
@@ -1672,7 +1686,7 @@ export function mountVegaInteractions(
         void setHover([]);
         if (hoverCueActive) {
             hoverCueActive = false;
-            notifyChange({ phase: 'cancel', action: 'hover-element', target: null });
+            notifyChange({ phase: 'cancel', source: 'reader', action: 'hover-element', target: null });
         }
         if (hoverInteractions.length > 0 && hoverActive) {
             hoverActive = false;
@@ -1821,6 +1835,7 @@ export function mountVegaInteractions(
             hoverCueActive = true;
             notifyChange({
                 phase: 'preview',
+                source: 'reader',
                 interactionId: markHoverPresentationInteractions[0]?.id,
                 action: 'hover-element',
                 target: resolved,
@@ -2152,7 +2167,7 @@ export function mountVegaInteractions(
         }
         if (!changed) return;
         selectedLegend = null;
-        void renderUpdates().then(() => notifyChange({ phase: 'commit' }));
+        void renderUpdates().then(() => notifyChange({ phase: 'commit', source: 'reader' }));
     };
     const resetOnClick = (event: MouseEvent, item: any): void => {
         if (suppressClick || isInteractiveControlTarget(event.target)) return;
@@ -2952,7 +2967,7 @@ export function mountVegaInteractions(
         if (id === regionInteraction?.id) regionGesture?.reset();
         if (!retainedUpdates.delete(id)) return;
         await renderUpdates();
-        notifyChange({ phase: 'commit' });
+        notifyChange({ phase: 'commit', source: 'host' });
     };
     const replaceUpdates = async (
         nextUpdates: readonly ChartUpdate[],
@@ -2965,7 +2980,7 @@ export function mountVegaInteractions(
             results.push(resolved.result);
         }
         await renderUpdates();
-        notifyChange({ phase: 'commit' });
+        notifyChange({ phase: 'commit', source: 'host' });
         return results;
     };
     return {
@@ -2977,7 +2992,7 @@ export function mountVegaInteractions(
         reportChange: notifyChange,
         applyUpdate: async (update, options) => {
             const result = await storeUpdate(update, retainedUpdates, null, options);
-            notifyChange({ phase: 'commit' });
+            notifyChange({ phase: 'commit', source: 'host', interactionId: options?.interactionId });
             return result;
         },
         setUpdates: replaceUpdates,

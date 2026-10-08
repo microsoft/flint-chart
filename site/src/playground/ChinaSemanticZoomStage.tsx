@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import {
-  buildInteractiveChart,
-  navigate,
-  type InteractiveChartSurface,
-} from 'flint-chart/interactive';
+import { navigate } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { loadChinaCensusData, type ChinaCensusData } from './china-semantic-zoom-data';
@@ -79,41 +76,22 @@ function chartInput(census: ChinaCensusData): ChartAssemblyInput {
   } as ChartAssemblyInput;
 }
 
+const INTERACTIONS = [navigate({
+  domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
+  // A click on empty map, not a double-click, flies home.
+  reset: ['click-none'],
+  resetTransition: { duration: FLY_MS },
+})];
+
 export function ChinaSemanticZoomStage() {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
+  const [census, setCensus] = useState<ChinaCensusData | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
-  const flyHome = useCallback(() => {
-    void surfaceRef.current?.applyUpdate(
-      { id: 'china-semantic-zoom-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] },
-      { transition: { duration: FLY_MS } },
-    );
-  }, []);
-
   useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
     let cancelled = false;
-    let surface: InteractiveChartSurface | undefined;
-    void loadChinaCensusData().then(async census => {
-      if (cancelled) return;
-      surface = buildInteractiveChart(mount, chartInput(census), {
-      backend: 'vegalite',
-      renderer: 'canvas',
-      interactions: [navigate({
-        domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
-        // A click on empty map, not a double-click, flies home.
-        reset: ['click-none'],
-        resetTransition: { duration: FLY_MS },
-      })],
-      expressionInterpreter,
-      ariaLabel: '2020 census map of included population and residents aged 65+ in Chinese provinces, prefectures, and counties',
-      chartId: 'china-semantic-zoom',
-      });
-      surfaceRef.current = surface;
-      await surface.ready;
-      if (!cancelled) setStatus('ready');
+    void loadChinaCensusData().then((data) => {
+      if (!cancelled) setCensus(data);
     }).catch((error) => {
       if (cancelled) return;
       setStatus('error');
@@ -121,12 +99,17 @@ export function ChinaSemanticZoomStage() {
     });
     return () => {
       cancelled = true;
-      surfaceRef.current = null;
-      surface?.destroy();
     };
   }, []);
 
-  const reset = () => flyHome();
+  const spec = useMemo(() => census && chartInput(census), [census]);
+
+  const reset = () => {
+    void chartRef.current?.applyUpdate(
+      { id: 'china-semantic-zoom-reset', ops: [{ op: 'set-viewport', axes: 'xy', value: {} }] },
+      { transition: { duration: FLY_MS } },
+    );
+  };
 
   return (
     <div className="ic-flint-dimpvis-shell map-semantic-zoom-shell">
@@ -149,7 +132,22 @@ export function ChinaSemanticZoomStage() {
           {status === 'loading' ? <progress aria-label="Loading census map" /> : 'Census map could not be loaded.'}
         </div>}
         <ScaleToFit height={720} adaptiveHeight padding={8}>
-          <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
+          <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount">
+            {spec && <FlintChart
+              ref={chartRef}
+              spec={spec}
+              interactions={INTERACTIONS}
+              renderer="canvas"
+              expressionInterpreter={expressionInterpreter}
+              ariaLabel="2020 census map of included population and residents aged 65+ in Chinese provinces, prefectures, and counties"
+              chartId="china-semantic-zoom"
+              onRender={() => setStatus('ready')}
+              onError={(error) => {
+                setStatus('error');
+                console.error('China semantic zoom stage failed to build', error);
+              }}
+            />}
+          </div>
         </ScaleToFit>
       </div>
     </div>

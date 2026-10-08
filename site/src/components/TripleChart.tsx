@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TestCase } from 'flint-chart/test-data';
-import { VegaLiteView } from './VegaLiteView';
-import { InteractiveVegaLiteView, hasInteractionEntries } from './InteractiveVegaLiteView';
+import { FlintView } from './FlintView';
+import { hasInteractionEntries } from './InteractiveVegaLiteView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { PlotlyView } from './PlotlyView';
@@ -43,6 +43,7 @@ export function TripleChart({
   const input = useMemo(() => testCaseToAssemblyInput(testCase), [testCase]);
 
   const compiled = useMemo(() => {
+    if (backend === 'vegalite') return { ok: true as const, value: null };
     try {
       return { ok: true as const, value: BACKENDS[backend].assemble(input) };
     } catch (err) {
@@ -129,9 +130,14 @@ export function TripleChart({
       >
         {compiled.ok ? (
           <>
-            {backend === 'vegalite' && (hasInteractionEntries(input)
-              ? <InteractiveVegaLiteView input={input} chartId={`triple-${testCase.chartType}`} />
-              : <VegaLiteView spec={compiled.value} />)}
+            {backend === 'vegalite' && (
+              <FlintView
+                spec={input}
+                renderer={hasInteractionEntries(input) ? 'svg' : 'canvas'}
+                chartId={`triple-${testCase.chartType}`}
+                showWarnings={hasInteractionEntries(input)}
+              />
+            )}
             {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
             {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
             {backend === 'plotly' && <PlotlyView figure={compiled.value} height={320} />}

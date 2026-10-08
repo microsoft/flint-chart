@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import {
-  buildInteractiveChart,
-  rectangleTrigger,
-  type CanvasInteractionDef,
-  type ChartUpdate,
-  type InteractiveChartSurface,
-} from 'flint-chart/interactive';
+import { rectangleTrigger, type CanvasInteractionDef, type ChartUpdate } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import {
   filterRowsByTimebox,
@@ -69,6 +64,7 @@ function chartInput(prepared: PreparedTimeboxData): ChartAssemblyInput {
       furniture: [],
     },
     options: { addTooltips: false },
+    interaction_spec: { interactions: [], assistedTargeting: false, keyboardTargeting: false },
     chart_spec: {
       chartType: 'Line Chart',
       title: 'Daily mean temperature, 2023',
@@ -128,16 +124,11 @@ function styleUpdate(prepared: PreparedTimeboxData, retainedSymbols?: readonly s
 }
 
 export function TimeboxStage() {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
-  const scheduleRef = useRef<((selection: TimeboxSelection | null) => void) | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
   const [prepared, setPrepared] = useState<PreparedTimeboxData | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateError, setUpdateError] = useState<string | null>(null);
   const [selection, setSelection] = useState<TimeboxSelection | null>(null);
-  const [retainedSymbols, setRetainedSymbols] = useState<string[]>([]);
-  const [windowSampleCount, setWindowSampleCount] = useState(0);
+  const [renderedUpdates, setRenderedUpdates] = useState<readonly ChartUpdate[] | null>(null);
   const totalCount = prepared?.series.length ?? 0;
 
   useEffect(() => {
@@ -152,12 +143,29 @@ export function TimeboxStage() {
     return () => { cancelled = true; };
   }, []);
 
+  const spec = useMemo(() => prepared && chartInput(prepared), [prepared]);
+
+  const filtered = useMemo(
+    () => prepared && filterRowsByTimebox(prepared, selection),
+    [prepared, selection],
+  );
+  const retainedSymbols = selection && filtered ? filtered.retainedSymbols : [];
+  // Keyed by the matching cities: an unchanged style applies nothing and fires no
+  // onRender, which would leave the spinner up.
+  const retainedKey = selection ? retainedSymbols.join('\n') : null;
+  const updates = useMemo<ChartUpdate[]>(
+    () => prepared ? [styleUpdate(prepared, selection ? retainedSymbols : undefined)] : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [prepared, retainedKey],
+  );
+  const isUpdating = status === 'ready' && renderedUpdates !== updates;
+
   const timeboxInteraction = useMemo<CanvasInteractionDef>(() => ({
     id: TIMEBOX_INTERACTION_ID,
     eventSource: { ...rectangleTrigger('contain'), mode: 'stateful' },
     reset: ['click-none'],
     onReset() {
-      scheduleRef.current?.(null);
+      setSelection(null);
     },
     affordances: { plot: { cursor: 'region' } },
     handle(event) {
@@ -166,85 +174,15 @@ export function TimeboxStage() {
       if (!nextSelection) return null;
       if (nextSelection.startDate.getTime() === nextSelection.endDate.getTime()
         || nextSelection.minValue === nextSelection.maxValue) return null;
-      scheduleRef.current?.(nextSelection);
+      setSelection(nextSelection);
       return null;
     },
   }), []);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount || !prepared) return undefined;
-    let cancelled = false;
-    const surface = buildInteractiveChart(mount, chartInput(prepared), {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions: [timeboxInteraction],
-      updates: [styleUpdate(prepared)],
-      assistedTargeting: false,
-      keyboardTargeting: false,
-      ariaLabel: 'Daily mean temperatures in Celsius for 12 cities in 2023, with an editable timebox over five-day samples',
-      chartId: 'timebox-stage',
-    });
-    surfaceRef.current = surface;
-    let revision = 0;
-    let pending: { revision: number; selection: TimeboxSelection | null } | null = null;
-    let running = false;
-    async function drainUpdates() {
-      running = true;
-      try {
-        while (pending && !cancelled) {
-          await new Promise<void>(resolve => {
-            requestAnimationFrame(() => { window.setTimeout(resolve, 0); });
-          });
-          if (cancelled || !pending) return;
-          const request = pending;
-          pending = null;
-          const filtered = filterRowsByTimebox(prepared!, request.selection);
-          await surface.applyUpdate(styleUpdate(prepared!, request.selection ? filtered.retainedSymbols : undefined));
-          if (cancelled) return;
-          if (request.revision !== revision) continue;
-          setSelection(request.selection);
-          setRetainedSymbols(request.selection ? filtered.retainedSymbols : []);
-          setWindowSampleCount(filtered.windowSampleCount);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          if (!pending) setUpdateError('Timebox update failed.');
-          console.error('Timebox update failed', error);
-        }
-      } finally {
-        running = false;
-        if (!cancelled) {
-          if (pending) void drainUpdates();
-          else setIsUpdating(false);
-        }
-      }
-    }
-    scheduleRef.current = nextSelection => {
-      pending = { revision: ++revision, selection: nextSelection };
-      setUpdateError(null);
-      setIsUpdating(true);
-      if (!running) void drainUpdates();
-    };
-    void surface.ready.then(() => {
-      if (!cancelled) setStatus('ready');
-    }).catch(error => {
-      if (cancelled) return;
-      setStatus('error');
-      console.error('Timebox weather chart failed to build', error);
-    });
-    return () => {
-      cancelled = true;
-      pending = null;
-      scheduleRef.current = null;
-      surfaceRef.current = null;
-      surface.destroy();
-    };
-  }, [prepared, timeboxInteraction]);
+  const interactions = useMemo(() => [timeboxInteraction], [timeboxInteraction]);
 
   const reset = () => {
-    void surfaceRef.current?.clearUpdate(TIMEBOX_INTERACTION_ID);
-    scheduleRef.current?.(null);
+    void chartRef.current?.clearUpdate(TIMEBOX_INTERACTION_ID);
+    setSelection(null);
   };
 
   return (
@@ -252,7 +190,7 @@ export function TimeboxStage() {
       <div className="ic-toolbar timebox-toolbar">
         <button type="button" className="ic-pill" disabled={status !== 'ready'} onClick={reset}>Reset</button>
         <span className="timebox-update-status" role="status">
-          {isUpdating ? <><LoaderCircle size={13} aria-hidden="true" />Updating...</> : updateError}
+          {isUpdating && <><LoaderCircle size={13} aria-hidden="true" />Updating...</>}
         </span>
       </div>
       <div className="ic-flint-dimpvis-panel timebox-panel">
@@ -262,14 +200,32 @@ export function TimeboxStage() {
             : 'Daily temperatures could not be loaded.'}
         </div>}
         <ScaleToFit height={540} adaptiveHeight padding={8}>
-          <div className="ic-flint-dimpvis-mount timebox-mount" ref={mountRef} />
+          <div className="ic-flint-dimpvis-mount timebox-mount">
+            {spec && <FlintChart
+              ref={chartRef}
+              spec={spec}
+              interactions={interactions}
+              updates={updates}
+              renderer="svg"
+              ariaLabel="Daily mean temperatures in Celsius for 12 cities in 2023, with an editable timebox over five-day samples"
+              chartId="timebox-stage"
+              onRender={() => {
+                setStatus('ready');
+                setRenderedUpdates(updates);
+              }}
+              onError={(error) => {
+                setStatus('error');
+                console.error('Timebox weather chart failed to build', error);
+              }}
+            />}
+          </div>
         </ScaleToFit>
       </div>
       <div className="timebox-footer" aria-live="polite">
-        {selection ? <>
+        {selection && filtered ? <>
           <strong>{retainedSymbols.length} of {totalCount} cities match</strong>
           <span>{retainedSymbols.length ? retainedSymbols.join(', ') : 'No matching cities.'}</span>
-          <span>{windowSampleCount.toLocaleString()} displayed samples checked in the selected interval.</span>
+          <span>{filtered.windowSampleCount.toLocaleString()} displayed samples checked in the selected interval.</span>
         </> : prepared && <span>{totalCount} cities, {prepared.series[0].points.length} displayed samples per city.</span>}
       </div>
     </div>

@@ -477,29 +477,25 @@ export function FlintInteractive() {
           <section className="ig-usage-row" aria-labelledby="ig-usage-app">
             <div className="ig-usage-description">
               <h3 id="ig-usage-app" className="ig-usage-subtitle">2. Build an interactive app with Flint</h3>
-              <p>Build interactive charts in a dashboard, data story, or other application with Flint Interactive Canvas. Your app can read <LocaleLink to="/documentation/interaction-design#24-the-surface">what the chart shows</LocaleLink> with <code>getState()</code>, and respond to chart changes with <code>onChange()</code>, or to the gestures themselves with <code>flint-interaction</code>, for example to filter a table, update another chart, or change application state. To let your app's widgets control how the chart updates, send <LocaleLink to="/documentation/interaction-api#update-operators-and-host-responses">update operators</LocaleLink> to Flint Canvas.</p>
+              <p>Build interactive charts in a dashboard, data story, or other application with Flint Interactive Canvas. Your app can read <LocaleLink to="/documentation/interaction-design#24-the-surface">what the chart shows</LocaleLink> with <code>getState()</code>, and respond to chart changes with <code>onChange</code>, or to the gestures themselves with <code>onInteraction</code>, for example to filter a table, update another chart, or change application state. To let your app's widgets control how the chart updates, send <LocaleLink to="/documentation/interaction-api#update-operators-and-host-responses">update operators</LocaleLink> to Flint Canvas.</p>
               <p>To get started, share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent to generate presets for your app.</p>
             </div>
             <div className="ig-usage-code">
-            <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflowX: 'auto', fontSize: 11 }}>{`import { buildInteractiveChart } from 'flint-chart/interactive';
+            <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflowX: 'auto', fontSize: 11 }}>{`import { FlintChart } from 'flint-chart/react';
 
-const chart = buildInteractiveChart(container, flintSpec, {
-  backend: 'vegalite',
-});
-await chart.ready;
-
-// Respond to what the chart shows during and after changes
-chart.onChange(({ phase, state }) => {
-  const values = state.selected.map(element => element.value);
-  if (phase === 'preview') table.highlight(values);
-  if (phase === 'commit') table.filter(values);
-});
-
-// Respond to the gestures directly
-container.addEventListener('flint-interaction', raw => {
-  const { event } = (raw as CustomEvent).detail;
-  console.log(event.action, event.target?.elements);
-});`}</CodeBlock>
+<FlintChart
+  spec={flintSpec}
+  // Respond to what the chart shows during and after changes
+  onChange={({ phase, state }) => {
+    const values = state.selected.map(element => element.value);
+    if (phase === 'preview') table.highlight(values);
+    if (phase === 'commit') table.filter(values);
+  }}
+  // Respond to the gestures directly
+  onInteraction={({ event }) => {
+    console.log(event.action, event.target?.elements);
+  }}
+/>;`}</CodeBlock>
             </div>
           </section>
           <section className="ig-usage-row" aria-labelledby="ig-usage-bespoke">
@@ -509,10 +505,8 @@ container.addEventListener('flint-interaction', raw => {
               <p>Share the <a href="https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md" target="_blank" rel="noreferrer">interaction-author skill</a> with your coding agent for preset conventions, and use the programming guide and <LocaleLink to="/interactions/bespoke">bespoke interaction examples</LocaleLink> to help it build custom interactions for your app.</p>
             </div>
             <div className="ig-usage-code">
-              <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflow: 'auto', fontSize: 11, maxHeight: 440 }}>{`import {
-  buildInteractiveChart,
-  type CanvasInteractionDef,
-} from 'flint-chart/interactive';
+              <CodeBlock language="typescript" variant="light" customStyle={{ margin: 0, overflow: 'auto', fontSize: 11, maxHeight: 440 }}>{`import { FlintChart } from 'flint-chart/react';
+import type { CanvasInteractionDef } from 'flint-chart/interactive';
 
 const countryDetails: CanvasInteractionDef = {
   id: 'country-details',
@@ -548,13 +542,10 @@ const countryDetails: CanvasInteractionDef = {
   },
 };
 
-const chart = buildInteractiveChart(container, {
-  ...input, interaction_spec: undefined,
-}, {
-  backend: 'vegalite',
-  interactions: [countryDetails],
-});
-await chart.ready;`}</CodeBlock>
+<FlintChart
+  spec={input}
+  interactions={() => [countryDetails]}
+/>;`}</CodeBlock>
             </div>
           </section>
         </section>

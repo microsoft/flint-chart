@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { scaleLinear, scaleUtc } from 'd3';
 import type { ChartAssemblyInput } from 'flint-chart';
-import {
-  buildInteractiveChart,
-  type FlintInteractionEventDetail,
-  type InteractiveChartSurface,
-} from 'flint-chart/interactive';
+import type { ChartUpdate, FlintInteractionEventDetail } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { INDEX_CHART_STOCKS } from '../data/index-chart-stocks';
 import {
@@ -116,7 +113,6 @@ export function IndexChartStage() {
   const [plotBounds, setPlotBounds] = useState(FALLBACK_PLOT_BOUNDS);
   const [cursorX, setCursorX] = useState(() => xScaleForBounds(FALLBACK_PLOT_BOUNDS)(initialState.activeDate));
   const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const plotWidth = Math.max(1, plotBounds.right - plotBounds.left);
   const plotXScale = useMemo(() => (
     scaleUtc()
@@ -146,72 +142,40 @@ export function IndexChartStage() {
   const ruleX = Number.isFinite(cursorX) ? cursorX : activeX;
   const baselineY = yScale(0);
 
-  useEffect(() => {
+  const spec = useMemo(() => chartInput(initialState.indexedRows), [initialState.indexedRows]);
+
+  // Re-indexed rows replace the chart's data; rows are compared by reference, so this applies once per date.
+  const updates = useMemo<ChartUpdate[]>(() => [{
+    id: DATA_UPDATE_ID,
+    ops: [{
+      op: 'set-data',
+      source: 'main',
+      value: { rows: derived.indexedRows as unknown as Record<string, unknown>[] },
+    }],
+  }], [derived.indexedRows]);
+
+  const handleInteraction = useCallback((detail: FlintInteractionEventDetail) => {
+    if (detail.interactionId !== INSPECT_INTERACTION_ID) return;
+    if (detail.event.phase === 'cancel') return;
+
+    const plot = detail.event.geometry.plot;
+    if (plot?.kind === 'point') {
+      const currentBounds = plotBoundsRef.current;
+      const currentWidth = plotWidthRef.current;
+      const currentScale = plotXScaleRef.current;
+      const localX = Math.max(0, Math.min(currentWidth, plot.point.x));
+      const nextCursorX = currentBounds.left + localX;
+      const nextDate = clampDateToPreparedDomain(PREPARED, currentScale.invert(localX));
+      setCursorX(Math.max(currentBounds.left, Math.min(currentBounds.right, nextCursorX)));
+      setActiveDate((current) => (current.getTime() === nextDate.getTime() ? current : nextDate));
+    }
+  }, []);
+
+  // Runs after the first render and after each data update, when the plot may have moved.
+  const handleRender = useCallback(() => {
     const mount = mountRef.current;
-    if (!mount) return undefined;
-
-    const handleInteraction = (event: Event) => {
-      const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
-      if (detail.interactionId !== INSPECT_INTERACTION_ID) return;
-      if (detail.event.phase === 'cancel') return;
-
-      const plot = detail.event.geometry.plot;
-      if (plot?.kind === 'point') {
-        const currentBounds = plotBoundsRef.current;
-        const currentWidth = plotWidthRef.current;
-        const currentScale = plotXScaleRef.current;
-        const localX = Math.max(0, Math.min(currentWidth, plot.point.x));
-        const nextCursorX = currentBounds.left + localX;
-        const nextDate = clampDateToPreparedDomain(PREPARED, currentScale.invert(localX));
-        setCursorX(Math.max(currentBounds.left, Math.min(currentBounds.right, nextCursorX)));
-        setActiveDate((current) => (current.getTime() === nextDate.getTime() ? current : nextDate));
-      }
-    };
-
-    mount.addEventListener('flint-interaction', handleInteraction);
-
-    const surface = buildInteractiveChart(mount, chartInput(initialState.indexedRows), {
-      backend: 'vegalite',
-      renderer: 'svg',
-      ariaLabel: 'Index chart with a movable reference date',
-      chartId: 'index-chart-stage',
-    });
-    surfaceRef.current = surface;
-    void surface.ready.then(() => {
-      if (!mount.isConnected) return;
-      setPlotBounds(measurePlotBounds(mount));
-    });
-
-    return () => {
-      mount.removeEventListener('flint-interaction', handleInteraction);
-      surfaceRef.current = null;
-      surface.destroy();
-    };
-  }, [initialState.indexedRows]);
-
-  useEffect(() => {
-    const surface = surfaceRef.current;
-    if (!surface) return undefined;
-    let cancelled = false;
-
-    void surface.ready.then(async () => {
-      if (cancelled) return;
-      await surface.applyUpdate({
-        id: DATA_UPDATE_ID,
-        ops: [{
-          op: 'set-data',
-          source: 'main',
-          value: { rows: derived.indexedRows as unknown as Record<string, unknown>[] },
-        }],
-      });
-      const mount = mountRef.current;
-      if (mount && mount.isConnected) setPlotBounds(measurePlotBounds(mount));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [derived.indexedRows]);
+    if (mount && mount.isConnected) setPlotBounds(measurePlotBounds(mount));
+  }, []);
 
   useEffect(() => {
     setCursorX(activeX);
@@ -227,7 +191,17 @@ export function IndexChartStage() {
       <div className="ic-flint-dimpvis-panel">
         <ScaleToFit height={540} adaptiveHeight padding={8}>
           <div className="index-chart-stack">
-            <div ref={mountRef} className="ic-flint-dimpvis-mount index-chart-mount" />
+            <div ref={mountRef} className="ic-flint-dimpvis-mount index-chart-mount">
+              <FlintChart
+                spec={spec}
+                updates={updates}
+                renderer="svg"
+                ariaLabel="Index chart with a movable reference date"
+                chartId="index-chart-stage"
+                onInteraction={handleInteraction}
+                onRender={handleRender}
+              />
+            </div>
             <svg
               className="index-chart-overlay"
               viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}

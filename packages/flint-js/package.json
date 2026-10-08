@@ -80,6 +80,16 @@
       "import": "./dist/interactive/index.js",
       "require": "./dist/interactive/index.cjs"
     },
+    "./render": {
+      "types": "./dist/render/index.d.ts",
+      "import": "./dist/render/index.js",
+      "require": "./dist/render/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    },
     "./vegalite/interactive": {
       "types": "./dist/vegalite/interactive.d.ts",
       "import": "./dist/vegalite/interactive.js",
@@ -135,6 +145,7 @@
     "echarts": "^5.0.0 || ^6.0.0",
     "plotly.js": "^2.0.0 || ^3.0.0",
     "plotly.js-dist-min": "^2.0.0 || ^3.0.0",
+    "react": ">=18",
     "vega": "^5.0.0 || ^6.0.0",
     "vega-lite": "^5.0.0 || ^6.0.0",
     "vega-tooltip": "^1.0.0"
@@ -159,6 +170,9 @@
       "optional": true
     },
     "plotly.js-dist-min": {
+      "optional": true
+    },
+    "react": {
       "optional": true
     }
   },

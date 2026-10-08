@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
-import { buildInteractiveChart } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import foodPrices from '../data/cpi-food-prices.json';
 import './retail-drilldown-stage.css';
@@ -28,6 +28,13 @@ const ALL_PRICES: DrillRow[] = foodPrices.values
 const MONTH_COUNT = MONTHS.length;
 const MIN_VISIBLE_MONTHS = 6;
 
+interface MonthWindow {
+  start: number;
+  end: number;
+}
+
+const windowKey = ({ start, end }: MonthWindow) => `${start}-${end}`;
+
 function chartInput(rows: DrillRow[]): ChartAssemblyInput {
   return {
     data: { values: rows },
@@ -52,6 +59,30 @@ function chartInput(rows: DrillRow[]): ChartAssemblyInput {
   };
 }
 
+function ZoomLayer({ range, pending, onReady }: {
+  range: MonthWindow;
+  pending: boolean;
+  onReady: () => void;
+}) {
+  const spec = useMemo(() => chartInput(ALL_PRICES.filter((row) => (
+    row.MonthIndex >= range.start && row.MonthIndex < range.end
+  ))), [range]);
+  return (
+    <div
+      className={pending ? 'retail-drilldown-layer retail-drilldown-layer-pending' : 'retail-drilldown-layer'}
+      style={{ visibility: pending ? 'hidden' : 'visible' }}
+    >
+      <FlintChart
+        spec={spec}
+        renderer="svg"
+        ariaLabel="Monthly U.S. food basket price composition with wheel zoom"
+        chartId="food-price-zoom"
+        onRender={onReady}
+      />
+    </div>
+  );
+}
+
 /**
  * Semantic zoom by re-layout. Each wheel step picks a narrower month window,
  * and Flint compiles a fresh chart for those rows: the bar step, the y domain,
@@ -60,65 +91,9 @@ function chartInput(rows: DrillRow[]): ChartAssemblyInput {
  */
 export function RetailDrilldownStage() {
   const mountRef = useRef<HTMLDivElement>(null);
-  const activeSurfaceRef = useRef<{
-    layer: HTMLDivElement;
-    surface: ReturnType<typeof buildInteractiveChart>;
-  }>();
-  const [windowRange, setWindowRange] = useState({ start: 0, end: MONTH_COUNT });
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
-
-    const rows = ALL_PRICES.filter((row) => (
-      row.MonthIndex >= windowRange.start && row.MonthIndex < windowRange.end
-    ));
-    const layer = document.createElement('div');
-    layer.className = 'retail-drilldown-layer retail-drilldown-layer-pending';
-    layer.style.visibility = 'hidden';
-    mount.append(layer);
-    const surface = buildInteractiveChart(layer, chartInput(rows), {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions: [],
-      ariaLabel: 'Monthly U.S. food basket price composition with wheel zoom',
-      chartId: 'food-price-zoom',
-    });
-    let committed = false;
-    let cancelled = false;
-    void surface.ready
-      .then(() => {
-        if (cancelled || !mount.isConnected) {
-          surface.destroy();
-          layer.remove();
-          return;
-        }
-        const previous = activeSurfaceRef.current;
-        layer.classList.remove('retail-drilldown-layer-pending');
-        layer.style.visibility = 'visible';
-        activeSurfaceRef.current = { layer, surface };
-        committed = true;
-        previous?.surface.destroy();
-        previous?.layer.remove();
-      })
-      .catch(() => {
-        surface.destroy();
-        layer.remove();
-      });
-    return () => {
-      cancelled = true;
-      if (!committed) {
-        surface.destroy();
-        layer.remove();
-      }
-    };
-  }, [windowRange]);
-
-  useEffect(() => () => {
-    activeSurfaceRef.current?.surface.destroy();
-    activeSurfaceRef.current?.layer.remove();
-    activeSurfaceRef.current = undefined;
-  }, []);
+  const [windowRange, setWindowRange] = useState<MonthWindow>({ start: 0, end: MONTH_COUNT });
+  const [shownRange, setShownRange] = useState(windowRange);
+  const layers = windowKey(shownRange) === windowKey(windowRange) ? [shownRange] : [shownRange, windowRange];
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -151,7 +126,17 @@ export function RetailDrilldownStage() {
     <div className="ic-flint-dimpvis-shell retail-drilldown-stage">
       <div className="ic-flint-dimpvis-panel">
         <ScaleToFit height={540} adaptiveHeight>
-          <div ref={mountRef} className="ic-flint-dimpvis-mount retail-drilldown-mount" />
+          <div ref={mountRef} className="ic-flint-dimpvis-mount retail-drilldown-mount">
+            {/* A layer keeps its key when it is promoted, so the chart that just rendered is not mounted again. */}
+            {layers.map((range) => (
+              <ZoomLayer
+                key={windowKey(range)}
+                range={range}
+                pending={range !== shownRange}
+                onReady={() => setShownRange(range)}
+              />
+            ))}
+          </div>
         </ScaleToFit>
       </div>
     </div>

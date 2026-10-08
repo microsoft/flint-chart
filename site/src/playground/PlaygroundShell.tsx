@@ -32,6 +32,7 @@ const pages: NavEntry[] = [
       { to: '/interactions', label: 'Interaction gallery' },
       { to: 'interaction-coverage', label: 'Coverage' },
       { to: 'interaction-conflicts', label: 'Conflict cases' },
+      { to: 'chart-api-design', label: 'API design: FlintChart' },
       { to: 'bespoke-interaction', label: 'Advanced prototypes' },
       { to: 'annotation-lab', label: 'Annotation lab' },
       { to: 'interaction-candidates', label: 'References' },

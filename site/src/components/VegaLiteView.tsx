@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import embed from 'vega-embed';
-import { readCanvasFurniture } from 'flint-chart';
+import { enableGuideLabelTooltips, readCanvasFurniture } from 'flint-chart';
 import type { View } from 'vega';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -28,16 +28,7 @@ export function VegaLiteView({ spec, renderer = 'canvas', onReady }: VegaLiteVie
     embed(host, spec, {
       actions: false,
       renderer: useRenderer,
-      patch: vegaSpec => {
-        const enableGuideTooltips = (node: any): void => {
-          for (const guide of [...(node.legends ?? []), ...(node.axes ?? [])]) {
-            if (guide.encode?.labels?.update?.tooltip) guide.encode.labels.interactive = true;
-          }
-          for (const child of node.marks ?? []) enableGuideTooltips(child);
-        };
-        enableGuideTooltips(vegaSpec);
-        return vegaSpec;
-      },
+      patch: enableGuideLabelTooltips,
     })
       .then((result) => {
         embeddedView = result.view;

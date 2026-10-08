@@ -171,7 +171,7 @@ interface InteractionSpec {
 }
 ```
 
-`buildInteractiveChart()` reads it; the assemblers ignore it. An entry the chart type
+`mountChart()` (alias `buildInteractiveChart()`) and `<FlintChart>` read it; the assemblers ignore it. An entry the chart type
 cannot honour is dropped with an `unsupported_interaction` warning, and `validateChart`
 reports the same warnings before anything renders. `supportedInteractionPresets(def.interactionSupport)`
 lists the presets a template supports by declaration. See [Using interactions](/documentation/interaction-spec).
@@ -396,6 +396,9 @@ Inspect `_warnings` or `ChartWarning` arrays in integration code to surface trun
 | `flint-chart/echarts` | ECharts templates and `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js templates and `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` and input validation helpers |
+| `flint-chart/interactive` | `mountChart`, interaction presets, update helpers |
+| `flint-chart/react` | `<FlintChart>` component (React is an optional peer dependency) |
+| `flint-chart/render` | `renderSvg` for static SVG without a DOM |
 | `flint-chart/test-data` | Gallery generators (`TEST_GENERATORS`) |
 
 ---

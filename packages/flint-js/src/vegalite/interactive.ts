@@ -1,9 +1,12 @@
 import { applyCategoryViewports } from '../core/filter-overflow';
 import type { CategoryViewport, ChartAssemblyInput } from '../core/types';
+import { createChangeFilter } from '../interactive/chart-state';
 import { createFloatingPanel } from '../interactive/floating-panel';
 import { isCanvasInteraction, type ChartState, type InteractionContext, type InteractionDef } from '../interactive/interactions';
 import type { InteractiveRendererAdapter, TargetFeedbackOptions, ViewportState } from '../interactive/types';
 import { assembleVegaLite } from './assemble';
+import { canvasFurnitureMarkup, readCanvasFurniture } from './canvas-furniture';
+import { enableGuideLabelTooltips } from './instantiate-spec';
 import {
     addVegaLiteInteractions,
     collectVegaAxisTargets,
@@ -98,6 +101,29 @@ function windowedInput(
     };
 }
 
+/**
+ * Canvas furniture (such as a masthead tab) sits at absolute canvas pixels that Vega cannot
+ * express. A layer over the rendered chart draws it for either renderer and survives re-renders.
+ */
+function mountCanvasFurniture(container: HTMLElement, items: ReturnType<typeof readCanvasFurniture>): void {
+    const rendered = container.querySelector(':scope > canvas, :scope > svg');
+    if (items.length === 0 || !rendered) return;
+    if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+    // SVG elements have no offsetLeft, so measure rects and undo any CSS scale on an ancestor.
+    const box = container.getBoundingClientRect();
+    const at = rendered.getBoundingClientRect();
+    const scale = container.offsetWidth > 0 ? box.width / container.offsetWidth : 1;
+    const left = (at.left - box.left) / (scale || 1) - container.clientLeft;
+    const top = (at.top - box.top) / (scale || 1) - container.clientTop;
+    const layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    layer.setAttribute('aria-hidden', 'true');
+    layer.setAttribute('class', 'flint-canvas-furniture');
+    layer.style.cssText = `position:absolute;left:${left}px;top:${top}px;`
+        + 'width:1px;height:1px;overflow:visible;pointer-events:none;';
+    layer.innerHTML = canvasFurnitureMarkup(items);
+    rendered.after(layer);
+}
+
 function applyViewportSorts(node: unknown, viewports: CategoryViewport[]): void {
     if (!node || typeof node !== 'object') return;
     const record = node as Record<string, any>;
@@ -113,17 +139,13 @@ export function createVegaInteractiveRenderer(
 ): InteractiveRendererAdapter {
     return {
         async mount(container, input) {
-            const interactiveInput: ChartAssemblyInput = {
-                ...input,
-                options: {
-                    ...input.options,
-                    addTooltips: input.options?.addTooltips ?? true,
-                },
-            };
+            // Tooltips are presentation, so the spec decides: off unless `options.addTooltips` is set.
+            const interactiveInput: ChartAssemblyInput = input;
             const assembled = assembleVegaLite(interactiveInput) as any;
             const viewports = (assembled._viewports ?? []) as CategoryViewport[];
-            const firstInput = windowedInput(interactiveInput, viewports, {});
-            const vlSpec = assembleVegaLite(firstInput) as any;
+            // Only a windowed chart needs its first window assembled again.
+            const firstInput = viewports.length > 0 ? windowedInput(interactiveInput, viewports, {}) : interactiveInput;
+            const vlSpec = viewports.length > 0 ? assembleVegaLite(firstInput) as any : assembled;
             applyViewportSorts(vlSpec, viewports);
             const interactions = options.interactions ?? [];
             const canvasInteractions = interactions.filter(isCanvasInteraction);
@@ -132,7 +154,7 @@ export function createVegaInteractiveRenderer(
                 interactions,
                 options.enableSemanticUpdates,
             );
-            const vegaSpec = compile(vlSpec).spec as any;
+            const vegaSpec = enableGuideLabelTooltips(compile(vlSpec).spec as any);
             if (interactionPlan) {
                 interactionPlan.axisTargets = collectVegaAxisTargets(
                     vegaSpec,
@@ -191,6 +213,7 @@ export function createVegaInteractiveRenderer(
                 tooltip.call(handler, event, item, withoutSemanticInteractionField(value));
             });
             await view.runAsync();
+            mountCanvasFurniture(container, readCanvasFurniture(vlSpec));
             const mountedInteractions = mountedInteractionList(interactions, interactionPlan?.interactions ?? canvasInteractions);
             const interactionController = interactionPlan
                 ? mountVegaInteractions(
@@ -231,7 +254,7 @@ export function createVegaInteractiveRenderer(
                             running = false;
                             appliedVersion = version;
                             if (requestedVersion !== appliedVersion) schedule();
-                            else interactionController?.reportChange({ phase: 'commit' });
+                            else interactionController?.reportChange({ phase: 'commit', source: 'reader' });
                         });
                 }, 0);
             };
@@ -265,7 +288,11 @@ export function createVegaInteractiveRenderer(
                 },
                 onChange(listener) {
                     if (!interactionController) return () => {};
-                    return interactionController.onChange((change) => listener({ ...change, state: withWindows(change.state) }));
+                    const filter = createChangeFilter(withWindows(interactionController.getInteractionContext()));
+                    return interactionController.onChange((report) => {
+                        const change = filter({ ...report, state: withWindows(report.state) });
+                        if (change) listener(change);
+                    });
                 },
                 async applyUpdate(update, options) {
                     if (interactionController) return interactionController.applyUpdate(update, options);

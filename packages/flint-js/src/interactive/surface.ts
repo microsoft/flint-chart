@@ -7,7 +7,7 @@ import type {
     ViewportChannel,
     ViewportState,
 } from './types';
-import { isExternalInteraction } from './interactions';
+import { isExternalInteraction, type FlintInteractionEventDetail } from './interactions';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 
 let generatedChartId = 0;
@@ -313,7 +313,7 @@ export function mountInteractiveChartSurface(
             const update = interaction.handle(payload, renderer.getInteractionContext());
             if (!update) return null;
             if (!renderer.applyUpdate) return unsupportedUpdate(update);
-            return renderer.applyUpdate(update);
+            return renderer.applyUpdate(update, { interactionId });
         },
         applyUpdate: async (update, applyOptions) => {
             await ready;
@@ -343,6 +343,13 @@ export function mountInteractiveChartSurface(
                 active = false;
                 unsubscribe?.();
             };
+        },
+        onInteraction: (callback) => {
+            const listener = (event: Event): void => {
+                callback((event as CustomEvent<FlintInteractionEventDetail>).detail);
+            };
+            root.addEventListener('flint-interaction', listener);
+            return () => root.removeEventListener('flint-interaction', listener);
         },
         refresh: () => {
             if (!destroyed) renderer?.refresh?.();

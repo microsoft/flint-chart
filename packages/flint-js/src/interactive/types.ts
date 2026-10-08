@@ -1,5 +1,5 @@
 import type { CategoryViewport, ChartAssemblyInput, ChartWarning } from '../core/types';
-import type { ChartState, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
+import type { ChartState, FlintInteractionEventDetail, InteractionContext, InteractionDef, SemanticTarget } from './interactions';
 import type { CanvasInteractionAction, CanvasInteractionEvent } from './language/events';
 import type { ChartUpdate, ChartUpdateResult } from './language/updates';
 import type { AssistedTargetingOptions } from '../core/interaction-spec';
@@ -28,15 +28,26 @@ export interface ChartUpdateTransition {
 export interface ChartUpdateApplyOptions {
     composition?: ChartUpdateComposition;
     transition?: ChartUpdateTransition;
+    /** The external interaction behind the update, reported as the change's `interactionId`. */
+    interactionId?: string;
 }
 
 export type ChartChangePhase = 'preview' | 'commit' | 'cancel';
 
-/** One change to what the chart shows, reported after the render with the state it produced. */
+/** Who started a change: a reader's gesture on the chart, or the host's code. */
+export type ChartChangeSource = 'reader' | 'host';
+
+/** The parts of `ChartState` a change can move. */
+export type ChartStateFacet = 'selected' | 'hidden' | 'viewport' | 'windows' | 'categoryOrder' | 'annotations';
+
+/** One change to what the chart shows, reported after the render only when the state differs. */
 export interface ChartChange {
     /** `preview` while a gesture runs, `commit` for a committed change, `cancel` when a gesture ends with none. */
     phase: ChartChangePhase;
-    /** The interaction behind the change; absent for a host call or a reset. */
+    /** `host` for `updates`, `applyUpdate`, `clearUpdate` and `dispatch`; always `commit`. */
+    source: ChartChangeSource;
+    changed: readonly ChartStateFacet[];
+    /** The interaction behind the change: a reader's gesture, or an external interaction run by `dispatch`. */
     interactionId?: string;
     action?: CanvasInteractionAction;
     /** The gesture's own hit: the hovered point, or the marks at an inspected index. */
@@ -44,7 +55,11 @@ export interface ChartChange {
     /** The gesture's geometry: a brushed range, an index value, or the viewport after a move. */
     geometry?: CanvasInteractionEvent['geometry'];
     state: ChartState;
+    previous: ChartState;
 }
+
+/** What a renderer reports before the state comparison fills in `changed` and `previous`. */
+export type ChartChangeReport = Omit<ChartChange, 'changed' | 'previous'>;
 
 export interface InteractiveRenderer {
     viewports: CategoryViewport[];
@@ -88,6 +103,12 @@ export interface BuildInteractiveChartOptions extends InteractiveChartSurfaceOpt
     renderer?: 'canvas' | 'svg';
     expressionInterpreter?: unknown;
     background?: string;
+    /**
+     * Whether a chart with no interactions and no updates still mounts the update runtime,
+     * so `applyUpdate` and `setUpdates` work later. Default `true`. With `false` such a chart
+     * renders static and its updates resolve as `unsupported`. Any interaction or update mounts it.
+     */
+    semanticUpdates?: boolean;
 }
 
 export interface InteractiveChartSurface {
@@ -106,6 +127,8 @@ export interface InteractiveChartSurface {
     getState(): ChartState | undefined;
     /** Hears every change to what the chart shows, after the render; returns the unsubscribe. */
     onChange(callback: (change: ChartChange) => void): () => void;
+    /** Hears every gesture event, whether or not it changes the chart; returns the unsubscribe. */
+    onInteraction(callback: (detail: FlintInteractionEventDetail) => void): () => void;
     refresh(): void;
     destroy(): void;
 }

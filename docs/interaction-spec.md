@@ -38,7 +38,7 @@ Choose presets such as `click-highlight` or `navigate`, each with its own option
 
 An entry has no string shorthand: `"click-highlight"` alone is rejected, `{ "type": "click-highlight" }` is the smallest form.
 
-State is not part of the spec. What the chart shows now, an emphasis, a note, a viewport, an order, arrives as a `ChartUpdate` through the surface (`applyUpdate`, `setUpdates`) or as the `updates` option of `buildInteractiveChart()`. The MCP tools take the same list as an `updates` argument beside the input.
+State is not part of the spec. What the chart shows now, an emphasis, a note, a viewport, an order, arrives as a `ChartUpdate` through the surface (`applyUpdate`, `setUpdates`) or as the `updates` option of `mountChart()`. The MCP tools take the same list as an `updates` argument beside the input.
 
 ## The presets
 
@@ -134,12 +134,12 @@ Two options avoid a conflict before it happens. `click-highlight` takes `targets
 Where to read the warnings:
 
 - `validateChart(input, 'vegalite')` returns them before anything renders, with a malformed spec reported as an `invalid_interaction_spec` error.
-- `buildInteractiveChart(container, input)` exposes them on `surface.warnings` and logs them once to the console.
+- `mountChart(container, input)` exposes them on `surface.warnings` and logs them once to the console.
 - The MCP tool `validate_chart` returns the same list.
 
 A malformed entry is an error, not a drop: an unknown `type`, an option outside `options`, an `id` inside `options`, a missing required option such as `groupBy`, an unknown or unsupported `reset` gesture, or a duplicate `id`.
 
 ## Where it runs
 
-`buildInteractiveChart()` reads `interaction_spec` from the input. The MCP tool `create_chart_view` mounts the same surface, so an agent can ask for behaviour in the same JSON that asks for the chart. The site's editor and gallery mount from the spec too.
+`mountChart()` reads `interaction_spec` from the input. The MCP tool `create_chart_view` mounts the same surface, so an agent can ask for behaviour in the same JSON that asks for the chart. The site's editor and gallery mount from the spec too.
 

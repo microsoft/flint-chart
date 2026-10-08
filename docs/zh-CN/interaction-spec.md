@@ -34,7 +34,7 @@
 
 条目没有字符串简写：单独的 `"click-highlight"` 会被拒绝，`{ "type": "click-highlight" }` 是最小形式。
 
-状态不属于 spec。图表当前显示的内容（强调、注释、视口、顺序）以 `ChartUpdate` 的形式通过交互层（`applyUpdate`、`setUpdates`）或 `buildInteractiveChart()` 的 `updates` 选项施加。MCP 工具以输入旁边的 `updates` 参数接收同样的列表。
+状态不属于 spec。图表当前显示的内容（强调、注释、视口、顺序）以 `ChartUpdate` 的形式通过交互层（`applyUpdate`、`setUpdates`）或 `mountChart()` 的 `updates` 选项施加。MCP 工具以输入旁边的 `updates` 参数接收同样的列表。
 
 ## 预设一览
 
@@ -124,7 +124,7 @@ Interaction "click-highlight" yields legend clicks to "legend-toggle".
 在哪里读取警告：
 
 - `validateChart(input, 'vegalite')` 在渲染前返回它们，格式错误的 spec 以 `invalid_interaction_spec` 错误报告。
-- `buildInteractiveChart(container, input)` 通过 `surface.warnings` 暴露它们，并在控制台记录一次。
+- `mountChart(container, input)` 通过 `surface.warnings` 暴露它们，并在控制台记录一次。
 - MCP 工具 `validate_chart` 返回同一列表。
 
 格式错误的条目是错误而不是丢弃：未知的 `type`、放在 `options` 外的选项、放在 `options` 内的 `id`、缺少 `groupBy` 等必需选项、未知或不支持的 `reset` 手势、重复的 `id`。
@@ -134,17 +134,17 @@ Interaction "click-highlight" yields legend clicks to "legend-toggle".
 spec 条目和工厂调用是同一交互的两种写法：
 
 ```ts
-import { buildInteractiveChart, clickHighlight } from 'flint-chart/interactive';
+import { mountChart, clickHighlight } from 'flint-chart/interactive';
 
 // 来自 spec
-buildInteractiveChart(container, { ...input, interaction_spec: { interactions: [{ type: 'click-highlight', options: { dimOpacity: 0.2 } }] } });
+mountChart(container, { ...input, interaction_spec: { interactions: [{ type: 'click-highlight', options: { dimOpacity: 0.2 } }] } });
 
 // 来自代码
-buildInteractiveChart(container, input, { interactions: [clickHighlight({ dimOpacity: 0.2 })] });
+mountChart(container, input, { interactions: [clickHighlight({ dimOpacity: 0.2 })] });
 ```
 
 两者可以同时出现在一张图表上；spec 条目先挂载。两边使用同一个 `id` 是错误。图表无法支持的代码定义会抛出异常，因为开发者能看到异常；spec 条目则被丢弃，因为智能体读取的是警告。
 
 ## 在哪里生效
 
-`buildInteractiveChart()` 从输入中读取 `interaction_spec`。MCP 工具 `create_chart_view` 挂载同一交互层，因此智能体可以在请求图表的同一份 JSON 中请求行为。站点的编辑器和图库同样从 spec 挂载。
+`mountChart()` 从输入中读取 `interaction_spec`。MCP 工具 `create_chart_view` 挂载同一交互层，因此智能体可以在请求图表的同一份 JSON 中请求行为。站点的编辑器和图库同样从 spec 挂载。

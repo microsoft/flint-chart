@@ -1,12 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { THEME_PRESETS } from 'flint-chart';
+import { THEME_PRESETS, type ChartAssemblyInput } from 'flint-chart';
 import { CodeBlock } from './CodeBlock';
 import { ThemePresetIcon } from './ThemePresetList';
 import { ScaleToFit } from './ScaleToFit';
-import { VegaLiteView } from './VegaLiteView';
-import { BACKENDS } from '../shared/supported-backends';
+import { FlintView } from './FlintView';
 import { PREVIEW_CASES } from '../shared/preview-cases';
 import { siteTheme } from '../shared/theme';
 
@@ -40,16 +39,6 @@ export function ThemeSpecPanel() {
   );
   const display = useMemo(
     () => displaySource(input),
-    [input],
-  );
-  const compiled = useMemo(
-    () => {
-      try {
-        return { ok: true as const, value: BACKENDS.vegalite.assemble(input as any) };
-      } catch (error) {
-        return { ok: false as const, error };
-      }
-    },
     [input],
   );
 
@@ -133,14 +122,7 @@ export function ThemeSpecPanel() {
         <div style={chartColumnStyle}>
           <div style={{ overflow: 'hidden', borderRadius: siteTheme.radius, background: previewCanvas }}>
             <ScaleToFit height={410} padding={8}>
-              {compiled.ok ? (
-                <VegaLiteView spec={compiled.value} renderer="svg" />
-              ) : (
-                <pre style={errorStyle}>
-                  {t('docs.themeSpecPanel.renderError')}{' '}
-                  {String((compiled.error as Error)?.message ?? compiled.error)}
-                </pre>
-              )}
+              <FlintView spec={input as unknown as ChartAssemblyInput} renderer="svg" errorPrefix={t('docs.themeSpecPanel.renderError')} />
             </ScaleToFit>
           </div>
           <p style={chartDescriptionStyle}>
@@ -423,13 +405,6 @@ const chartDescriptionStyle: CSSProperties = {
   lineHeight: 1.5,
 };
 
-const errorStyle: CSSProperties = {
-  maxWidth: 280,
-  margin: 0,
-  color: siteTheme.error,
-  fontSize: 11,
-  whiteSpace: 'pre-wrap',
-};
 
 const responsiveStyles = `
   .theme-preset-summary::-webkit-details-marker {

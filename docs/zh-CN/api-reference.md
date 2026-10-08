@@ -145,7 +145,7 @@ interface InteractionSpec {
 }
 ```
 
-`buildInteractiveChart()` 读取它，装配器忽略它。图表类型无法支持的条目会以 `unsupported_interaction` 警告被丢弃；`validateChart` 在渲染前报告同样的警告。`supportedInteractionPresets(def.interactionSupport)` 列出模板按声明支持的预设。参见[使用交互](/documentation/interaction-spec)。
+`mountChart()`（别名 `buildInteractiveChart()`）与 `<FlintChart>` 读取它，装配器忽略它。图表类型无法支持的条目会以 `unsupported_interaction` 警告被丢弃；`validateChart` 在渲染前报告同样的警告。`supportedInteractionPresets(def.interactionSupport)` 列出模板按声明支持的预设。参见[使用交互](/documentation/interaction-spec)。
 
 ### `chart_spec`
 
@@ -334,6 +334,9 @@ if (!result.valid) {
 | `flint-chart/echarts` | ECharts 模板与 `assembleECharts` |
 | `flint-chart/chartjs` | Chart.js 模板与 `assembleChartjs` |
 | `flint-chart/validate` | `validateChart` 与输入校验辅助函数 |
+| `flint-chart/interactive` | `mountChart`、交互预设与更新辅助函数 |
+| `flint-chart/react` | `<FlintChart>` 组件（React 为可选 peer 依赖） |
+| `flint-chart/render` | `renderSvg`，无需 DOM 即可输出静态 SVG |
 | `flint-chart/test-data` | 图库生成器（`TEST_GENERATORS`） |
 
 ---

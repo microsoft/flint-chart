@@ -1,6 +1,7 @@
 import { useMemo, type CSSProperties } from 'react';
+import type { ChartAssemblyInput } from 'flint-chart';
 import { TEST_GENERATORS } from 'flint-chart/test-data';
-import { VegaLiteView } from './VegaLiteView';
+import { FlintView } from './FlintView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { PlotlyView } from './PlotlyView';
@@ -105,6 +106,13 @@ function preAggregate(input: unknown): unknown {
  */
 export function DocChart({ source, backend = 'vegalite' }: { source: string; backend?: PreviewBackend }) {
   const result = useMemo(() => {
+    // Vega-Lite compiles inside FlintChart, so only the other backends compile here.
+    const compiled = (prepared: unknown) => ({
+      ok: true as const,
+      kind: backend,
+      input: prepared as ChartAssemblyInput,
+      value: backend === 'vegalite' ? null : BACKENDS[backend].assemble(prepared as never),
+    });
     let input: unknown;
     try {
       input = JSON.parse(source);
@@ -125,10 +133,10 @@ export function DocChart({ source, backend = 'vegalite' }: { source: string; bac
         const prepared = input.options
           ? { ...base, options: { ...base.options, ...input.options } }
           : base;
-        return { ok: true as const, kind: backend, value: BACKENDS[backend].assemble(prepared as never) };
+        return compiled(prepared);
       }
       const prepared = preAggregate(input);
-      return { ok: true as const, kind: backend, value: BACKENDS[backend].assemble(prepared as never) };
+      return compiled(prepared);
     } catch (err) {
       return { ok: false as const, err: (err as Error)?.message ?? String(err) };
     }
@@ -145,7 +153,7 @@ export function DocChart({ source, backend = 'vegalite' }: { source: string; bac
   return (
     <figure style={figureStyle}>
       <ScaleToFit height={560} adaptiveHeight>
-        {result.kind === 'vegalite' && <VegaLiteView spec={result.value} />}
+        {result.kind === 'vegalite' && <FlintView spec={result.input} />}
         {result.kind === 'echarts' && <EChartsView option={result.value} constrain={false} />}
         {result.kind === 'chartjs' && <ChartjsView config={result.value} constrain={false} />}
         {result.kind === 'plotly' && <PlotlyView figure={result.value} constrain={false} />}

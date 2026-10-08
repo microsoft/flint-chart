@@ -4,27 +4,59 @@ Use the functional Flint API to mount reusable interaction presets, create bespo
 
 The compiler resolves raw triggers into **semantic events** that identify chart elements and data, and renders **update operators** on the canvas. You choose the triggers and define the response in a `handle` function, without reverse-engineering rendering logic or manipulating renderer-specific data.
 
-> Flint's interaction presets currently support Vega-Lite. Mount your chart with `buildInteractiveChart()` to enable them.
+> Flint's interaction presets currently support Vega-Lite. Mount your chart with `mountChart()`, or render `<FlintChart>` from `flint-chart/react`, to enable them. On another backend the chart renders static with an `interactions_ignored` warning.
 
 > For agents: the [interaction-author skill](https://github.com/microsoft/flint-chart/blob/main/agent-skills/flint-interaction-author/SKILL.md) covers this API as well as the presets: the `ChartUpdate` an application or an agent applies, reading the chart state, linking charts, and bespoke definitions. The MCP server serves it as `flint://interaction-skill`.
 
 ## Mount an interactive chart
 
-Import the API from `flint-chart/interactive` and pass a backend and interaction definitions to `buildInteractiveChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`.
+Import the API from `flint-chart/interactive` and pass a backend and interaction definitions to `mountChart(container, input, { backend, interactions })`. `container` is the chart's DOM element and `input` is your existing `ChartAssemblyInput`. `buildInteractiveChart` is the earlier name of the same function and remains as an alias.
 
 You can use preset factories in code:
 
 ```ts
-import { buildInteractiveChart, clickHighlight } from 'flint-chart/interactive';
+import { mountChart, clickHighlight } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [clickHighlight({ dimOpacity: 0.2 })],
 });
 await surface.ready;
 ```
 
-A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. Every interaction must have a unique `id`, including when both approaches are used on one chart. A code definition the chart cannot honour throws; an unsupported spec entry is dropped with a warning.
+A factory and its declarative preset describe the same behavior. Spec entries mount before code definitions. A code definition with the same `id` as a spec entry replaces that entry, with an `interaction_overridden` info warning. A code definition the chart cannot honour throws; an unsupported spec entry is dropped with a warning. Tooltips are part of the spec, not an interaction: set `options.addTooltips: true` to show them (default `false`).
+
+## Render the chart in React
+
+`flint-chart/react` exports `<FlintChart>`, which mounts the chart through `mountChart` and remounts it when the spec content changes. Rows are compared by reference, so pass the same array to keep the chart mounted. React is an optional peer dependency, needed only for this subpath.
+
+```tsx
+import { FlintChart } from 'flint-chart/react';
+import { clickHighlight } from 'flint-chart/interactive';
+
+<FlintChart
+  spec={input}
+  interactions={[clickHighlight({ dimOpacity: 0.2 })]}
+  width="100%"
+  onChange={(change) => setSelection(change.state.selected)}
+/>;
+```
+
+A spec with no interactions renders a static chart; a chart is interactive only if its spec or the `interactions` prop declares an interaction. A static chart mounts no interaction runtime, so it costs about the same as a plain Vega-Lite embed. To drive a chart without interactions from the host, pass `updates`; even `updates={[]}` mounts the runtime so the ref's `applyUpdate` works. On a static chart `applyUpdate` warns and returns `null`. `interactions` takes preset factories, never JSON entries: an array adds to the spec's `interaction_spec`, and a function `(fromSpec) => definitions` receives the spec's definitions and returns the full list.
+
+| Prop | Purpose |
+|------|---------|
+| `spec` | The `ChartAssemblyInput`, `interaction_spec` included |
+| `interactions` | An array added to the spec's interactions, or a function that returns the full list |
+| `updates` | Host updates, diffed by id: new or changed ids apply, dropped ids clear unless the reader changed them since |
+| `width`, `height`, `fit` | The box the chart fits into. `fit` is `shrink` (default, scale down only), `contain`, or `none`. The box scales the chart; the layout size stays in `chart_spec.baseSize` |
+| `onChange`, `onInteraction` | What the chart shows after a state change, and the raw gesture record |
+| `onRender`, `onWarnings`, `onError` | Mount and update lifecycle |
+| `fallback` | Shown until the chart mounts, including in server rendering |
+
+A ref gives a `FlintChartHandle` with `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and `refresh`. The `selectionUpdate(id, selection)` and `viewportUpdate(id, viewport)` helpers build the updates a selection or navigation preset writes: `selection` takes elements or a field key, and `viewport` takes `[start, end]` per axis or a `ChartState.viewport`. `null` clears the selection or returns the viewport home.
+
+For a static image without a DOM, `renderSvg(input, { backend })` from `flint-chart/render` returns an SVG string for `vegalite` or `echarts`.
 
 ## Use and combine presets
 
@@ -34,12 +66,12 @@ For a country chart with a continuous quantity on its Y axis, combine click high
 
 ```ts
 import {
-  buildInteractiveChart,
+  mountChart,
   clickHighlight,
   navigate,
 } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [
     clickHighlight({ dimOpacity: 0.2 }),
@@ -57,7 +89,7 @@ This example uses a country chart whose data includes a `Country` field. Clickin
 
 ```ts
 import {
-  buildInteractiveChart,
+  mountChart,
   type CanvasInteractionDef,
 } from 'flint-chart/interactive';
 
@@ -86,7 +118,7 @@ const countryDetails: CanvasInteractionDef = {
   },
 };
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [countryDetails],
 });
@@ -106,7 +138,7 @@ An `externalInteraction` has no canvas trigger. The application sends a payload 
 
 ```ts
 import {
-  buildInteractiveChart,
+  mountChart,
   externalInteraction,
 } from 'flint-chart/interactive';
 
@@ -128,7 +160,7 @@ const countrySelection = externalInteraction<{ Country: string }>({
   },
 });
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [countrySelection],
 });
@@ -148,7 +180,7 @@ The container emits `flint-interaction` events with the interaction id and seman
 
 The chart owns its state, and a host reads it instead of replaying gestures. `surface.getState()` returns what the chart shows now: the emphasized marks (`selected`, with `entries` per update id), the legend values a toggle hides, the viewport on a chart that navigates, and the category order. Each mark's `value` is the mark in field terms; the host owns the rows and queries them from the value and the gesture's geometry.
 
-`surface.onChange(callback)` fires after every render with a `ChartChange`: the `phase` (`preview` while a gesture runs, `commit` for a committed change or a host call, `cancel` when a gesture ends with nothing), the `interactionId` and `action` behind it, the gesture's own `target` and `geometry`, and the `state` after. The `flint-interaction` event is the raw gesture record, fired before the chart reacts; `onChange` is what the chart shows, fired after. See [Interaction Design](design-interactions.md#24-the-surface) for the state model.
+`surface.onChange(callback)` fires when the chart's state changes, with a `ChartChange`: the `phase` (`preview` while a gesture runs, `commit` for a committed change or a host call, `cancel` when a gesture ends with nothing), the `source` (`reader` for a gesture, `host` for `applyUpdate`, `clearUpdate`, or `setUpdates`), the `interactionId` and `action` behind it, the gesture's own `target` and `geometry`, the `state` after, the `previous` state, and the facets that `changed` (`selected`, `hidden`, `viewport`, `windows`, `categoryOrder`, `annotations`). A render that changes no facet does not fire it. A gesture that changes nothing, such as an inspected index, reaches the host only through the `flint-interaction` event (`surface.onInteraction`), the raw gesture record fired before the chart reacts. See [Interaction Design](design-interactions.md#24-the-surface) for the state model.
 
 ```ts
 const stop = surface.onChange(({ phase, state }) => {

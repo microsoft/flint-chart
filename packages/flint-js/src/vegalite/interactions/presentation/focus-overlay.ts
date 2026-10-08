@@ -102,6 +102,28 @@ export function areaSpotlightOpacity(
     return selected ? authoredOpacity * 0.9 : currentOpacity;
 }
 
+export interface MarkClipRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+/**
+ * The plot-space rect Vega clips a `clip: true` mark to: its enclosing group.
+ * Vega keeps the out-of-domain items of a clipped mark in the scenegraph, so a
+ * restyle drawn from scene items has to apply the same clip itself.
+ */
+export function markClipRect(item: any): MarkClipRect | undefined {
+    const group = item?.mark?.group;
+    const offset = item?.interactionGeometry?.offset as PlotPoint | undefined;
+    if (item?.mark?.clip !== true || !offset) return undefined;
+    if (typeof group?.width !== 'number' || typeof group?.height !== 'number') return undefined;
+    return { x: offset.x, y: offset.y, width: group.width, height: group.height };
+}
+
+let focusClipSequence = 0;
+
 export function createFocusOverlay({
     view,
     container,
@@ -110,6 +132,7 @@ export function createFocusOverlay({
     containerLayoutSize,
 }: FocusOverlayOptions): FocusOverlayController {
     const focusLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const clipPrefix = `flint-focus-clip-${focusClipSequence += 1}`;
     const pathVisuals = new Map<string, {
         fill?: string;
         fillOpacity: number;
@@ -173,6 +196,29 @@ export function createFocusOverlay({
             height: `${rendererLayout.height}px`,
         });
         focusLayer.setAttribute('viewBox', `0 0 ${space.logicalWidth} ${space.logicalHeight}`);
+        const clipIds = new Map<string, string>();
+        const clipTo = (element: SVGElement, item: any): void => {
+            const rect = markClipRect(item);
+            if (!rect) return;
+            const x = rect.x + space.originX;
+            const y = rect.y + space.originY;
+            const signature = `${x},${y},${rect.width},${rect.height}`;
+            let id = clipIds.get(signature);
+            if (!id) {
+                id = `${clipPrefix}-${clipIds.size}`;
+                clipIds.set(signature, id);
+                const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', id);
+                const clipRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                clipRect.setAttribute('x', String(x));
+                clipRect.setAttribute('y', String(y));
+                clipRect.setAttribute('width', String(rect.width));
+                clipRect.setAttribute('height', String(rect.height));
+                clipPath.append(clipRect);
+                focusLayer.prepend(clipPath);
+            }
+            element.setAttribute('clip-path', `url(#${id})`);
+        };
         const filledClosedMarks = new Set<any>();
         for (const item of items) {
             if (!item.interactionGeometry.closed || filledClosedMarks.has(item.mark)) continue;
@@ -190,6 +236,7 @@ export function createFocusOverlay({
             }).join(' '));
             polygon.setAttribute('fill', style?.fill ?? item.fill ?? '#4c78a8');
             polygon.setAttribute('fill-opacity', String(style?.fillOpacity ?? 1));
+            clipTo(polygon, item);
             focusLayer.append(polygon);
             filledClosedMarks.add(item.mark);
         }
@@ -239,6 +286,7 @@ export function createFocusOverlay({
                 if (hoverStyle?.stroke) shape.setAttribute('stroke', hoverStyle.stroke);
                 if (hoverStyle?.strokeWidth !== undefined) shape.setAttribute('stroke-width', String(hoverStyle.strokeWidth));
             }
+            clipTo(shape, item);
             focusLayer.append(shape);
         }
         if (boundarySegments.length > 0) {

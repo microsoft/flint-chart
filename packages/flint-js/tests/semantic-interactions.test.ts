@@ -79,6 +79,7 @@ import {
     STYLE_SIGNAL,
 } from '../src/vegalite/interactions/stores';
 import {
+    markClipRect,
     mergeContiguousSelectionBounds,
     selectionBoundarySegments,
 } from '../src/vegalite/interactions/presentation/focus-overlay';
@@ -1059,6 +1060,16 @@ describe('Vega-Lite semantic interactions', () => {
         expect(segments).not.toContainEqual({ x1: 20, y1: 10, x2: 20, y2: 20 });
         expect(segments).toContainEqual({ x1: 10, y1: 10, x2: 10, y2: 20 });
         expect(segments).toContainEqual({ x1: 10, y1: 10, x2: 20, y2: 10 });
+    });
+
+    it('clips focus restyles of a clipped mark to its enclosing group', () => {
+        const group = { width: 400, height: 300 };
+        const geometry = { interactionGeometry: { offset: { x: 12, y: 8 } } };
+
+        expect(markClipRect({ ...geometry, mark: { clip: true, group } }))
+            .toEqual({ x: 12, y: 8, width: 400, height: 300 });
+        expect(markClipRect({ ...geometry, mark: { clip: false, group } })).toBeUndefined();
+        expect(markClipRect({ mark: { clip: true, group } })).toBeUndefined();
     });
 
     it('keeps themed line vertices filled when expanding them for interaction', () => {

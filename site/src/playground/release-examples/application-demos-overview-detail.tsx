@@ -5,6 +5,7 @@ import {
   navigate,
   type CanvasInteractionDef,
   type ChartChange,
+  type FlintInteractionEventDetail,
   type InteractionDef,
   type InteractiveChartSurface,
 } from 'flint-chart/interactive';
@@ -84,8 +85,8 @@ const OVERVIEW_INTERACTIONS: readonly InteractionDef[] = [WINDOW_BRUSH];
 type Window = [number, number];
 
 /** The brushed interval in milliseconds, or null when the brush is cleared. */
-function windowOf(change: ChartChange): Window | null {
-  const x = change.interactionId === WINDOW_ID ? change.geometry?.domain?.x : undefined;
+function windowOf(geometry: FlintInteractionEventDetail['event']['geometry']): Window | null {
+  const x = geometry.domain?.x;
   if (x?.kind !== 'interval' || x.start === undefined || x.end === undefined) return null;
   const start = Number(x.start);
   const end = Number(x.end);
@@ -112,16 +113,33 @@ export function OverviewDetailDemo() {
     });
   }, []);
 
+  // The brush emphasizes nothing, so its moves are gesture events, not changes to the chart's state.
+  const onOverviewInteraction = useCallback((detail: FlintInteractionEventDetail) => {
+    const { phase, geometry } = detail.event;
+    if (detail.interactionId !== WINDOW_ID || (phase !== 'commit' && phase !== 'preview')) return;
+    const next = windowOf(geometry);
+    if (phase === 'commit') setWindow(next);
+    frame(next, phase);
+  }, [frame]);
+  // A reset (Escape, a click on the background) is no gesture event: the brush's entry leaves the state.
   const onOverviewChange = useCallback((change: ChartChange) => {
-    if (change.phase !== 'commit' && change.phase !== 'preview') return;
-    const next = windowOf(change);
-    if (change.phase === 'commit') setWindow(next);
-    frame(next, change.phase);
+    if (change.state.entries?.has(WINDOW_ID) || !change.previous.entries?.has(WINDOW_ID)) return;
+    setWindow(null);
+    frame(null, 'commit');
   }, [frame]);
   const onOverviewSurface = useCallback((surface: InteractiveChartSurface | null) => {
     unsubscribe.current?.();
-    unsubscribe.current = surface?.onChange(onOverviewChange);
-  }, [onOverviewChange]);
+    if (!surface) {
+      unsubscribe.current = undefined;
+      return;
+    }
+    const offChange = surface.onChange(onOverviewChange);
+    const offInteraction = surface.onInteraction(onOverviewInteraction);
+    unsubscribe.current = () => {
+      offChange();
+      offInteraction();
+    };
+  }, [onOverviewChange, onOverviewInteraction]);
   const onDetailSurface = useCallback((surface: InteractiveChartSurface | null) => { detail.current = surface; }, []);
 
   const status = useMemo(() => {

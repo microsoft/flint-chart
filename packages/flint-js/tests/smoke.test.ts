@@ -10,6 +10,7 @@ import {
   assembleExcel,
   assembleImageCharts,
 } from '../src';
+import { renderSvg } from '../src/render';
 
 const DATA = [
   { weight: 1.6, mpg: 32, origin: 'JP' },
@@ -32,6 +33,14 @@ const INPUT = {
 };
 
 describe('public API smoke', () => {
+  it('renderSvg renders a static SVG through Vega-Lite and through ECharts', async () => {
+    const vl = await renderSvg(INPUT as any);
+    expect(vl.startsWith('<svg')).toBe(true);
+    expect(vl).toContain('weight');
+    const ec = await renderSvg(INPUT as any, { backend: 'echarts', background: '#ffffff' });
+    expect(ec).toContain('<svg');
+  });
+
   it('assembleVegaLite returns a Vega-Lite spec', () => {
     const spec = assembleVegaLite(INPUT) as any;
     expect(spec).toBeDefined();

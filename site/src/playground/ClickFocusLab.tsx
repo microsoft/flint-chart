@@ -45,6 +45,7 @@ import {
 } from 'flint-chart/interactive';
 import { expressionInterpreter } from 'vega-interpreter';
 import stringify from 'json-stringify-pretty-compact';
+import { flintChartCode, presetFactoryName } from '../shared/flint-chart-code';
 import { CodeBlock } from '../components/CodeBlock';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteRange } from '../components/SiteRange';
@@ -999,24 +1000,16 @@ function InteractionChartModal({ item, mode, themeId, navigationGuard, resetVers
   const [copyError, setCopyError] = useState(false);
   const spec = useMemo(() => modeSpec(mode, item.navigationAxes, navigationGuard, item.groupBy, item.indexInspection), [mode, item, navigationGuard]);
   const input = themeId ? { ...item.input, theme_spec: themeId } : item.input;
-  const factories = spec.interactions.map(entry => entry.type.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase()));
   const code = codeSource === 'spec'
     ? JSON.stringify({ ...input, interaction_spec: spec }, null, 2)
-    : [
-      `import { buildInteractiveChart${factories.length ? `, ${[...new Set(factories)].join(', ')}` : ''} } from 'flint-chart/interactive';`,
-      '',
-      `const chartInput = ${JSON.stringify(input, null, 2)};`,
-      '',
-      "const chart = buildInteractiveChart(container, chartInput, {",
-      "  backend: 'vegalite',",
-      '  interactions: [',
-      ...spec.interactions.map((entry, index) => `    ${factories[index]}(${entry.options ? JSON.stringify(entry.options, null, 2).replace(/\n/g, '\n    ') : ''}),`),
-      '  ],',
-      ...(spec.keyboardTargeting ? ['  keyboardTargeting: true,'] : []),
-      '});',
-      '',
-      'await chart.ready;',
-    ].join('\n');
+    : flintChartCode({
+      presets: spec.interactions.map((entry) => ({
+        factory: presetFactoryName(entry.type),
+        options: entry.options ? JSON.stringify(entry.options, null, 2) : '',
+      })),
+      keyboardTargeting: spec.keyboardTargeting,
+      preamble: [`const chartInput = ${JSON.stringify(input, null, 2)};`],
+    });
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -1348,33 +1341,18 @@ export function ClickFocusLab({ source: initialSource = 'code', mode: selectedMo
     '  }',
     '}',
   ].join('\n');
-  const factoryNames = specPattern.interactions.map(entry =>
-    entry.type.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase()));
-  const functionalCode = [
-    `import { buildInteractiveChart, ${factoryNames.join(', ')} }`,
-    "  from 'flint-chart/interactive';",
-    "import type { FlintInteractionEventDetail } from 'flint-chart/interactive';",
-    '',
-    'const chart = buildInteractiveChart(container, chartInput, {',
-    "  backend: 'vegalite',",
-    '  interactions: [',
-    ...specPattern.interactions.map((entry, index) => {
-      const prefix = `    ${factoryNames[index]}(`;
-      const options = entry.options
-        ? stringify(entry.options, { indent: 2, maxLength: 80 - prefix.length - 2 }).split('\n').join('\n    ')
-        : '';
-      return `${prefix}${options}),`;
+  const functionalCode = flintChartCode({
+    presets: specPattern.interactions.map((entry) => {
+      const factory = presetFactoryName(entry.type);
+      const prefix = `    ${factory}(`;
+      return {
+        factory,
+        options: entry.options ? stringify(entry.options, { indent: 2, maxLength: 80 - prefix.length - 2 }) : '',
+      };
     }),
-    '  ],',
-    ...(specPattern.keyboardTargeting ? ['  keyboardTargeting: true,'] : []),
-    '});',
-    '',
-    '//capture event',
-    "container.addEventListener('flint-interaction', (event) => {",
-    '  const { detail } = event as CustomEvent<FlintInteractionEventDetail>;',
-    '  console.log(detail.event.action, detail.event);',
-    '});',
-  ].join('\n');
+    keyboardTargeting: specPattern.keyboardTargeting,
+    logInteractions: true,
+  });
 
   return (
     <div className="dev-page cf-page">

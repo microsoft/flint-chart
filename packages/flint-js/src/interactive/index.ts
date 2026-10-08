@@ -11,6 +11,8 @@ export type {
     BuildInteractiveChartOptions,
     ChartChange,
     ChartChangePhase,
+    ChartChangeSource,
+    ChartStateFacet,
     ChartUpdateApplyOptions,
     ChartUpdateTransition,
     ChartUpdateComposition,
@@ -24,6 +26,7 @@ export type {
     ViewportState,
 } from './types';
 export type {
+    ChartAnnotation,
     ChartCategoryWindow,
     ChartHiddenValue,
     ChartState,
@@ -126,7 +129,7 @@ export type {
     SemanticTargetRef,
     SemanticTargetSelector,
 } from './language/updates';
-export { matchesSemanticTargetSelector } from './language/updates';
+export { matchesSemanticTargetSelector, selectionUpdate, viewportUpdate } from './language/updates';
 export { accessibleNavigation, axisHighlight, brushAngle, brushX, brushY, brushZoom, clickAnnotate, clickGroupFocus, clickHighlight, contextActivate, doubleActivate, dragReorder, externalInteraction, hoverGroupFocus, inspect, inspectIndex, isCanvasInteraction, isExternalInteraction, lassoSelect, legendToggle, linkedBrush, longPress, navigate, select } from './interactions';
 export type {
     AccessibleNavigationSection,
@@ -179,7 +182,7 @@ export type { ComposedInteractiveOptions } from './spec/compose';
 export type { InteractionAdmission, InteractionAdmissionPlan } from './spec/admission';
 export type { ResolvedInteractionSpec } from './spec/resolve';
 
-export function buildInteractiveChart(
+export function mountChart(
     container: HTMLElement,
     input: ChartAssemblyInput,
     options: BuildInteractiveChartOptions,
@@ -192,18 +195,6 @@ export function buildInteractiveChart(
     const hoverTolerance = Math.max(0, ...canvasInteractions
         .filter((interaction) => interaction.eventSource.gesture === 'hover')
         .map((interaction) => interaction.eventSource.targetTolerance ?? 0));
-    if (backend !== 'vegalite' && interactions.length > 0) {
-        return mountInteractiveChartSurface(
-            container,
-            input,
-            {
-                async mount() {
-                    throw new Error(`Semantic interactions are not supported by backend "${backend}".`);
-                },
-            },
-            { className, ariaLabel, chartId, updates, warnings },
-        );
-    }
     switch (backend) {
         case 'vegalite':
             return mountInteractiveChartSurface(
@@ -215,7 +206,9 @@ export function buildInteractiveChart(
                         return createVegaInteractiveRenderer({
                             renderer,
                             interactions: canvasInteractions,
-                            enableSemanticUpdates: true,
+                            enableSemanticUpdates: (options.semanticUpdates ?? true)
+                                || interactions.length > 0
+                                || (updates?.length ?? 0) > 0,
                             expressionInterpreter,
                             background,
                             assistDistance: assistedTargeting === false
@@ -273,3 +266,7 @@ export function buildInteractiveChart(
             );
     }
 }
+
+/** The former name of `mountChart`. */
+export const buildInteractiveChart = mountChart;
+export type MountChartOptions = BuildInteractiveChartOptions;

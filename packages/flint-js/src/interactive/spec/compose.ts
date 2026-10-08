@@ -22,34 +22,37 @@ type ComposeOptions = Pick<
 >;
 
 /**
- * Merge `input.interaction_spec` with what the code passed to `buildInteractiveChart()`.
+ * Merge `input.interaction_spec` with what the code passed to `mountChart()`.
  *
- * The spec's interactions come first. A code definition cannot replace a spec
- * entry by reusing its id; the collision is an error that names both sources.
- * The targeting policies come from the code when it sets them and from the
- * spec otherwise. A backend that runs no interactions ignores the spec with
- * one `info` warning, unless the code also asked for interactions, in which
- * case the mount fails.
+ * The spec's interactions come first and the code's follow. A code definition
+ * with a spec entry's id replaces that entry, with an `info` warning. The
+ * targeting policies come from the code when it sets them and from the spec
+ * otherwise. A backend that runs no interactions renders the chart static and
+ * drops every interaction with one warning: `info` when only the spec asked,
+ * `warning` when the code did.
  */
 export function composeInteractiveOptions(input: ComposeInput, options: ComposeOptions): ComposedInteractiveOptions {
     const resolved = resolveInteractionSpec(input.interaction_spec);
-    const code = options.interactions ?? [];
+    let code: readonly InteractionDef[] = options.interactions ?? [];
     const warnings: ChartWarning[] = [];
-    let specInteractions = resolved.interactions;
-    if (options.backend !== 'vegalite' && code.length === 0 && specInteractions.length > 0) {
+    const codeIds = new Set(code.map((interaction) => interaction.id));
+    let specInteractions = resolved.interactions.filter((interaction) => {
+        if (!codeIds.has(interaction.id)) return true;
         warnings.push({
             severity: 'info',
+            code: 'interaction_overridden',
+            message: `Interaction "${interaction.id}" from interaction_spec is replaced by the definition passed in code.`,
+        });
+        return false;
+    });
+    if (options.backend !== 'vegalite' && specInteractions.length + code.length > 0) {
+        warnings.push({
+            severity: code.length > 0 ? 'warning' : 'info',
             code: 'interactions_ignored',
-            message: `interaction_spec is ignored: backend "${options.backend}" does not run interactions.`,
+            message: `Interactions are ignored: backend "${options.backend}" does not run interactions, so the chart renders static.`,
         });
         specInteractions = [];
-    }
-    const codeIds = new Set(code.map((interaction) => interaction.id));
-    const shared = specInteractions.find((interaction) => codeIds.has(interaction.id));
-    if (shared) {
-        throw new Error(
-            `Interaction "${shared.id}" is defined in interaction_spec and in options.interactions. Give one of them another id.`,
-        );
+        code = [];
     }
     return {
         interactions: normalizeInteractions([...specInteractions, ...code]),

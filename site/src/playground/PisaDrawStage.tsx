@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
-  buildInteractiveChart,
   externalInteraction,
   lassoTrigger,
   type CanvasInteractionDef,
   type ChartUpdate,
-  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import pisa from '../data/pisa-oecd23-trends.json';
 import { dateToYear, extendPath, type DrawnPath } from './you-draw-it-model';
 import {
   DRAW_INTERACTION_ID,
-  FOCUS_UPDATE_ID,
-  PROMPT_UPDATE_ID,
+  HIDE_UPDATE_ID,
   REVEAL_INTERACTION_ID,
   SUBJECTS,
   allDone,
@@ -52,6 +50,7 @@ const TRUTH_ROWS: TrendRow[] = pisa.average.map((row) => ({
 }));
 const CHART_ROWS = splitRows(TRUTH_ROWS, DRAW_START_YEAR);
 const BOUNDS = boundsBySubject(TRUTH_ROWS, DRAW_START_YEAR, SCORE_DOMAIN);
+const HIDE_FUTURE = hideFutureUpdate();
 
 type ThemeChoice = 'economist' | 'default';
 type RevealPayload = { progress: number };
@@ -98,9 +97,8 @@ function candidatesFromDomainPoints(points: readonly { x?: unknown; y?: unknown 
 }
 
 export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
-  const input = useMemo(() => chartInput(theme, ink), [theme, ink]);
-  const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const spec = useMemo(() => chartInput(theme, ink), [theme, ink]);
+  const chartRef = useRef<FlintChartHandle>(null);
   const committedRef = useRef<PathsBySubject>(anchorPaths(BOUNDS));
   const activeRef = useRef<Subject | null>(null);
   const phaseRef = useRef<DrawPhase>('pick');
@@ -116,96 +114,81 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
     setPhase(next);
   }, []);
 
-  const drawInteraction = useMemo<CanvasInteractionDef>(() => ({
-    id: DRAW_INTERACTION_ID,
-    eventSource: lassoTrigger('contain', false),
-    affordances: { plot: { cursor: 'draw' } },
-    handle(event): ChartUpdate | null {
-      if (event.action !== 'select-lasso') return null;
-      if (event.phase === 'start') return null;
-      const subject = activeRef.current;
-      const locked = phaseRef.current === 'revealing' || phaseRef.current === 'revealed';
-      if (locked || !subject) {
-        // Restate every retained line so the gesture's own preview cannot replace them.
-        return event.phase === 'cancel' ? null : drawnLinesUpdate(committedRef.current, null, BOUNDS, ink, locked);
-      }
-      if (event.phase === 'cancel') {
-        setPaths(committedRef.current);
-        return null;
-      }
-      const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
-      if (candidates.length === 0) {
-        return drawnLinesUpdate(committedRef.current, subject, BOUNDS, ink, false);
-      }
-      const nextPath: DrawnPath = extendPath(committedRef.current[subject], candidates, BOUNDS[subject]);
-      const next: PathsBySubject = { ...committedRef.current, [subject]: nextPath };
-      if (event.phase === 'commit') {
-        committedRef.current = next;
-        if (allDone(next, BOUNDS)) {
-          // The third finished line starts the reveal from React.
-          setRevealRun((run) => run + 1);
+  const updateActive = useCallback((next: Subject | null) => {
+    activeRef.current = next;
+    setActive(next);
+  }, []);
+
+  const interactions = useMemo(() => {
+    const draw: CanvasInteractionDef = {
+      id: DRAW_INTERACTION_ID,
+      eventSource: lassoTrigger('contain', false),
+      affordances: { plot: { cursor: 'draw' } },
+      handle(event): ChartUpdate | null {
+        if (event.action !== 'select-lasso') return null;
+        if (event.phase === 'start') return null;
+        const subject = activeRef.current;
+        const locked = phaseRef.current === 'revealing' || phaseRef.current === 'revealed';
+        if (locked || !subject) {
+          // Restate every retained line so the gesture's own preview cannot replace them.
+          return event.phase === 'cancel' ? null : drawnLinesUpdate(committedRef.current, null, BOUNDS, ink, locked);
         }
-      }
-      setPaths(next);
-      return drawnLinesUpdate(next, subject, BOUNDS, ink, false);
-    },
-  }), [ink]);
-
-  const revealInteraction = useMemo(() => externalInteraction<RevealPayload>({
-    id: REVEAL_INTERACTION_ID,
-    handle({ progress }) {
-      return revealUpdate(TRUTH_ROWS, BOUNDS, ink, progress);
-    },
-  }), [ink]);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
-    const surface = buildInteractiveChart(mount, input, {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions: [drawInteraction, revealInteraction],
-      updates: [hideFutureUpdate(), promptUpdate(activeRef.current, BOUNDS, ink)],
-      ariaLabel: 'You draw it: OECD-23 PISA scores after 2012',
-      chartId: 'pisa-you-draw-it',
-    });
-    surfaceRef.current = surface;
-    // A theme change remounts the chart; restate the retained state on it.
-    void surface.ready.then(async () => {
-      if (surfaceRef.current !== surface) return;
-      if (activeRef.current) await surface.applyUpdate(focusUpdate(activeRef.current));
-      const finished = phaseRef.current === 'revealed';
-      await surface.applyUpdate(drawnLinesUpdate(committedRef.current, activeRef.current, BOUNDS, ink, finished));
-      if (finished) {
-        await surface.clearUpdate(hideFutureUpdate().id);
-        await surface.clearUpdate(PROMPT_UPDATE_ID);
-      }
-    });
-    return () => {
-      surfaceRef.current = null;
-      surface.destroy();
+        if (event.phase === 'cancel') {
+          setPaths(committedRef.current);
+          return null;
+        }
+        const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
+        if (candidates.length === 0) {
+          return drawnLinesUpdate(committedRef.current, subject, BOUNDS, ink, false);
+        }
+        const nextPath: DrawnPath = extendPath(committedRef.current[subject], candidates, BOUNDS[subject]);
+        const next: PathsBySubject = { ...committedRef.current, [subject]: nextPath };
+        if (event.phase === 'commit') {
+          committedRef.current = next;
+          if (allDone(next, BOUNDS)) {
+            // The third finished line starts the reveal from React.
+            setRevealRun((run) => run + 1);
+          }
+        }
+        setPaths(next);
+        return drawnLinesUpdate(next, subject, BOUNDS, ink, false);
+      },
     };
-  }, [drawInteraction, ink, input, revealInteraction]);
+    const reveal = externalInteraction<RevealPayload>({
+      id: REVEAL_INTERACTION_ID,
+      handle({ progress }) {
+        return revealUpdate(TRUTH_ROWS, BOUNDS, ink, progress);
+      },
+    });
+    return [draw, reveal];
+  }, [ink]);
 
-  const pickSubject = useCallback((subject: Subject) => {
+  // The host's layers: hidden future rows, then focus and prompt while drawing.
+  const updates = useMemo(() => {
+    if (phase === 'revealed') return [];
+    if (phase === 'revealing') return [HIDE_FUTURE];
+    return [HIDE_FUTURE, ...(active ? [focusUpdate(active)] : []), promptUpdate(active, BOUNDS, ink)];
+  }, [phase, active, ink]);
+
+  // The drawn lines belong to the draw interaction, and their style follows the
+  // active subject, so restate them on each new chart (a theme change remounts)
+  // and after each change of layers.
+  const restateDrawnLines = useCallback(() => {
+    const locked = phaseRef.current === 'revealing' || phaseRef.current === 'revealed';
+    void chartRef.current?.applyUpdate(drawnLinesUpdate(committedRef.current, activeRef.current, BOUNDS, ink, locked));
+  }, [ink]);
+
+  const pickSubject = (subject: Subject) => {
     if (phaseRef.current === 'revealing' || phaseRef.current === 'revealed') return;
-    activeRef.current = subject;
-    setActive(subject);
+    updateActive(subject);
     updatePhase('drawing');
-    const surface = surfaceRef.current;
-    if (!surface) return;
-    void (async () => {
-      await surface.applyUpdate(focusUpdate(subject));
-      await surface.applyUpdate(promptUpdate(subject, BOUNDS, ink));
-      await surface.applyUpdate(drawnLinesUpdate(committedRef.current, subject, BOUNDS, ink, false));
-    })();
-  }, [ink, updatePhase]);
+  };
 
   useEffect(() => {
     if (revealRun === 0 || revealRun === handledRevealRunRef.current) return undefined;
     handledRevealRunRef.current = revealRun;
-    const surface = surfaceRef.current;
-    if (!surface) return undefined;
+    const chart = chartRef.current;
+    if (!chart) return undefined;
     let cancelled = false;
     let frame = 0;
     const finishedPaths = committedRef.current;
@@ -214,21 +197,16 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
       return score ? [score] : [];
     });
     const start = performance.now();
-    activeRef.current = null;
-    setActive(null);
+    updateActive(null);
     updatePhase('revealing');
-    void (async () => {
-      await surface.clearUpdate(FOCUS_UPDATE_ID);
-      await surface.clearUpdate(PROMPT_UPDATE_ID);
-      await surface.applyUpdate(drawnLinesUpdate(finishedPaths, null, BOUNDS, ink, true));
-    })();
 
     const finish = async () => {
-      await surface.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
       if (cancelled) return;
-      // The real series take over from the overlay along the same path.
-      await surface.clearUpdate(hideFutureUpdate().id);
-      await surface.applyUpdate(clearRevealUpdate());
+      // The real series take over from the overlay along the same path: the
+      // hide layer goes first, then the revealed layers drop it for good.
+      await chart.clearUpdate(HIDE_UPDATE_ID);
+      await chart.applyUpdate(clearRevealUpdate());
       if (cancelled) return;
       setScores(nextScores);
       updatePhase('revealed');
@@ -241,7 +219,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
         await finish();
         return;
       }
-      await surface.dispatch(REVEAL_INTERACTION_ID, { progress });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress });
       if (cancelled) return;
       frame = window.requestAnimationFrame((next) => void tick(next));
     };
@@ -251,24 +229,16 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
       cancelled = true;
       if (frame !== 0) window.cancelAnimationFrame(frame);
     };
-  }, [ink, revealRun, updatePhase]);
+  }, [revealRun, updateActive, updatePhase]);
 
   const reset = () => {
-    const surface = surfaceRef.current;
     committedRef.current = anchorPaths(BOUNDS);
-    activeRef.current = null;
     setPaths(committedRef.current);
-    setActive(null);
+    updateActive(null);
     setScores(null);
     updatePhase('pick');
-    if (!surface) return;
-    void (async () => {
-      await surface.clearUpdate(DRAW_INTERACTION_ID);
-      await surface.clearUpdate(REVEAL_INTERACTION_ID);
-      await surface.clearUpdate(FOCUS_UPDATE_ID);
-      await surface.applyUpdate(hideFutureUpdate());
-      await surface.applyUpdate(promptUpdate(null, BOUNDS, ink));
-    })();
+    void chartRef.current?.clearUpdate(DRAW_INTERACTION_ID);
+    void chartRef.current?.clearUpdate(REVEAL_INTERACTION_ID);
   };
 
   const hint = (() => {
@@ -296,7 +266,18 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
     <div className="pisa-draw">
       <div className="pisa-draw__chart">
         <ScaleToFit height={420} minHeight={300} maxScale={0.85} adaptiveHeight>
-          <div className="pisa-draw__mount" ref={mountRef} />
+          <div className="pisa-draw__mount">
+            <FlintChart
+              ref={chartRef}
+              spec={spec}
+              interactions={interactions}
+              updates={updates}
+              renderer="svg"
+              ariaLabel="You draw it: OECD-23 PISA scores after 2012"
+              chartId="pisa-you-draw-it"
+              onRender={restateDrawnLines}
+            />
+          </div>
         </ScaleToFit>
         <div className="pisa-draw__footer">
           <button type="button" className="ic-pill" onClick={reset}>Reset</button>

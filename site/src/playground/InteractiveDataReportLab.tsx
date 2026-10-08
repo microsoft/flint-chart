@@ -98,6 +98,8 @@ export function ReportSection({ spec, editable }: { spec: SectionSpec; editable?
 /* ---------- 2. the slides: one sentence at a time ---------- */
 
 const SLIDE_MS = 5000;
+/** The mark glide of `.idr-animated` charts; keep in step with interactive-data-report.css. */
+const GLIDE = { glideMs: 500 };
 
 /** The slides of one chart: a sideways scroller, one sentence per page, with the controls under it. */
 interface SlidePanelProps {
@@ -220,7 +222,7 @@ function SlidePanel({ slides, report, vertical = false, header }: SlidePanelProp
 export function SlideSection({ spec }: { spec: SectionSpec }) {
   const { live, presets } = useEditableSpec(spec);
   const slides = useMemo(() => sentencesOf(spec.paragraphs), [spec.paragraphs]);
-  const report = useReportChart(live, slides);
+  const report = useReportChart(live, slides, undefined, GLIDE);
   return (
     <article className="it-example idr-section" id={`section-${spec.id}`}>
       <SectionHeader spec={spec} presets={presets} />
@@ -252,7 +254,7 @@ export function ArticleSection({ spec, editable = true }: { spec: SectionSpec; e
   const slides = useMemo(() => paragraphSlides(spec.paragraphs).map((slide) => (
     slide.kind === 'title' ? { ...slide, detail: slide.detail ?? spec.byline } : slide
   )), [spec.byline, spec.paragraphs]);
-  const report = useReportChart(live, slides);
+  const report = useReportChart(live, slides, undefined, GLIDE);
   // When the title is the first slide, the panel has no fixed header above the slides.
   const header = slides[0]?.kind === 'title' ? undefined : (
     <header className="idr-article-head">
@@ -545,7 +547,7 @@ export function StorySection({ spec, story, onChange }: StorySectionProps) {
   const paragraph = useMemo<Paragraph>(() => story.flatMap((item, index) => (index === 0 ? [item] : [' ', item])), [story]);
   const storySpec = useMemo<SectionSpec>(() => ({ ...live, paragraphs: [paragraph] }), [live, paragraph]);
   const jump = useMemo(() => scrollToSentence(spec.id), [spec.id]);
-  const report = useReportChart(storySpec, story, jump);
+  const report = useReportChart(storySpec, story, jump, GLIDE);
 
   // The reader's own sentence: the chart's selection as an emphasis, with a text to rewrite.
   const addOwn = async () => {

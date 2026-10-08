@@ -96,7 +96,10 @@ export interface ReportChart {
   endPreview: (id: string) => void;
   /** Sentence -> chart, pin layer. A pin replaces the chart's own state; pinning again unpins. */
   pin: (item: Sentence) => Promise<void>;
-  /** Shows exactly one sentence, or none, in a single render: what a slide does. */
+  /**
+   * Shows exactly one sentence, or none: what a slide does. On an animated chart, a
+   * sentence that moves the marks lands in two steps: the move, then the rest.
+   */
   show: (item: Sentence | null) => Promise<void>;
   unpin: () => Promise<void>;
   /** Drops the pin and the presets' own state. */
@@ -107,6 +110,39 @@ export interface ReportChart {
   readSelected: () => Promise<Row[]>;
 }
 
+export interface ReportChartOptions {
+  /**
+   * How long the chart's marks take to glide into a new place, in milliseconds; the host
+   * animates them with CSS. Overlays (an emphasized line, a note) draw where the marks
+   * land, so they wait for the glide. Omit for a chart that does not animate.
+   */
+  glideMs?: number;
+}
+
+/** The ops that move marks, which the host's CSS glides. */
+const movesMarks = (op: Sentence['ops'][number]): boolean => op.op === 'set-viewport' || op.op === 'set-order';
+
+/**
+ * What a sentence shows while its marks glide: the move, and its emphasis with no targets.
+ * An emphasis that names nothing mutes every mark and redraws none on top, so the chart
+ * keeps the muting it lands on, without a pulse to full colour, and no overlay draws early.
+ */
+const glidingOps = (ops: Sentence['ops']): Sentence['ops'] => {
+  const emphasis = ops.find((op) => op.op === 'set-style'
+    && (op.value.state === 'emphasized' || op.value.state === 'focused'));
+  return [
+    ...ops.filter(movesMarks),
+    ...(emphasis?.op === 'set-style' ? [{ ...emphasis, targets: [] }] : []),
+  ];
+};
+
+/** Where a sentence's moving ops put the marks; a viewport reset and no viewport land alike. */
+const placementOf = (ops: Sentence['ops']): string =>
+  JSON.stringify(ops.filter((op) => movesMarks(op) && !(op.op === 'set-viewport' && Object.keys(op.value).length === 0)));
+
+const reducedMotion = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
 /**
  * Binds one chart to a list of sentences. The list may grow while the chart is mounted:
  * the event handler reads it through a ref, so the chart is built once per section.
@@ -115,9 +151,14 @@ export function useReportChart(
   spec: SectionSpec,
   sentences: readonly Sentence[],
   onJump?: (item: Sentence) => void,
+  { glideMs = 0 }: ReportChartOptions = {},
 ): ReportChart {
   const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const pinnedRef = useRef<string | null>(null);
+  // Where `show` last put the marks; null once a gesture has moved them elsewhere.
+  const placementRef = useRef<string | null>(placementOf([]));
+  // Each `show` takes a ticket; a later one retires the steps an earlier one still waits on.
+  const showTicket = useRef(0);
   const [ready, setReady] = useState(false);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -166,27 +207,43 @@ export function useReportChart(
   }, []);
 
   const unpin = useCallback(async () => {
+    showTicket.current += 1;
+    placementRef.current = placementOf([]);
     setPinned(null);
     await surfaceRef.current?.clearUpdate(PIN_ID);
   }, [setPinned]);
 
-  // One setUpdates call replaces every retained layer in a single render: the chart's own
-  // state goes and the sentence lands, so a CSS transition runs straight from one to the other.
+  // setUpdates replaces every retained layer in a single render: the chart's own state goes
+  // and the sentence lands, so a CSS transition runs straight from one to the other. When
+  // the sentence moves the marks, the move goes first with the sentence's muting, which
+  // clears the previous overlays; this sentence's overlays draw once the marks have landed.
   const show = useCallback(async (item: Sentence | null) => {
     const surface = surfaceRef.current;
     if (!surface) return;
+    const ticket = ++showTicket.current;
     if (!item) {
       setPinned(null);
+      placementRef.current = placementOf([]);
       await surface.setUpdates([]);
-    } else {
-      const update = { id: PIN_ID, ops: item.ops };
-      const results = await surface.setUpdates([update]);
-      // A target resolves against the marks on the chart. A series the previous slide hid
-      // is back once this slide's own ops have rendered, so a second pass reaches it.
-      if (results.some((result) => result.unresolvedTargets.length > 0)) await surface.setUpdates([update]);
-      setPinned(item.id);
+      return;
     }
-  }, [setPinned]);
+    const placement = placementOf(item.ops);
+    const glide = reducedMotion() ? 0 : glideMs;
+    if (glide > 0 && placement !== placementRef.current) {
+      placementRef.current = placement;
+      setPinned(item.id);
+      await surface.setUpdates([{ id: PIN_ID, ops: glidingOps(item.ops) }]);
+      await new Promise((resolve) => window.setTimeout(resolve, glide));
+      if (ticket !== showTicket.current) return;
+    }
+    placementRef.current = placement;
+    const update = { id: PIN_ID, ops: item.ops };
+    const results = await surface.setUpdates([update]);
+    // A target resolves against the marks on the chart. A series the previous slide hid
+    // is back once this slide's own ops have rendered, so a second pass reaches it.
+    if (results.some((result) => result.unresolvedTargets.length > 0)) await surface.setUpdates([update]);
+    setPinned(item.id);
+  }, [glideMs, setPinned]);
 
   const pin = useCallback(async (item: Sentence) => {
     if (pinnedRef.current === item.id) await unpin();
@@ -235,6 +292,7 @@ export function useReportChart(
       }
     }
     if (op && pinnedRef.current) void unpin();
+    if (op === 'set-viewport' || op === 'set-order') placementRef.current = null;
   }, [pin, unpin]);
 
   const classFor = useCallback((item: Sentence): string => {

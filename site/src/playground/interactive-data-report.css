@@ -321,7 +321,8 @@
 
 /*
  * Vega keeps one SVG node per mark item and rewrites its attributes on each update, so a
- * transition on those nodes carries a mark from one slide's state to the next.
+ * transition on those nodes carries a mark from one slide's state to the next. The 500ms
+ * is also GLIDE in InteractiveDataReportLab.tsx: overlays wait that long to draw.
  */
 .idr-animated .idr-slide-chart svg.marks path {
   transition: d 500ms ease, transform 500ms ease, opacity 500ms ease;

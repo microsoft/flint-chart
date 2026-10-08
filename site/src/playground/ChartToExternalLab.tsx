@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import type { ChartChange, ChartHiddenValue, ChartState, DomainGeometry, InteractionDef, SemanticElement } from 'flint-chart/interactive';
+import type { ChartChange, ChartHiddenValue, ChartState, DomainGeometry, FlintInteractionEventDetail, InteractionDef, SemanticElement } from 'flint-chart/interactive';
 import { InteractionDemoChart } from './InteractionDemoChart';
 import { WorldCupScorersDemo } from './WorldCupScorersDemo';
 import {
@@ -448,12 +448,33 @@ function useOutboundDemo(demo: OutboundDemo) {
       hidden: change.state.hidden ?? [],
     });
   }, [countsVisible, demo.fixture]);
+  // A gesture that only reads the chart, such as an inspected index, changes no state,
+  // so its live readout comes from the gesture events rather than from onChange.
+  const handleInteraction = useCallback(({ event }: FlintInteractionEventDetail) => {
+    if (event.phase === 'commit') return;
+    setView((previous) => {
+      if (event.phase === 'cancel') return { ...previous, phase: 'cancel', hit: [], hover: [], rows: previous.shown };
+      const hit = valuesOf(event.target?.elements ?? []);
+      const domain = event.geometry.domain ?? previous.domain;
+      const domainX = domain?.x;
+      return {
+        ...previous,
+        phase: 'preview',
+        hit,
+        hover: hit,
+        rows: hit.length > 0 ? hit : previous.shown,
+        x: domainX?.kind === 'value' ? domainX.value : domainX?.start,
+        domain,
+        visible: countsVisible ? null : previous.visible,
+      };
+    });
+  }, [countsVisible]);
   const rendered = demo.gesture === 'click' ? clickPanel(demo, view) : demo.render(view, demo.fixture);
-  return { fixture, handleChange, rendered };
+  return { fixture, handleChange, handleInteraction, rendered };
 }
 
 export function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
-  const { fixture, handleChange, rendered } = useOutboundDemo(demo);
+  const { fixture, handleChange, handleInteraction, rendered } = useOutboundDemo(demo);
 
   return (
     <article className="it-example">
@@ -470,6 +491,7 @@ export function OutboundDemoRow({ demo }: { demo: OutboundDemo }) {
             interactions={NO_CODE_INTERACTIONS}
             chartId={`outbound-${demo.id}`}
             onChange={handleChange}
+            onSemanticEvent={handleInteraction}
           />
         </section>
         <section className="it-detail-panel" aria-live="polite">

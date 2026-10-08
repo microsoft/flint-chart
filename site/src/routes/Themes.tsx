@@ -29,8 +29,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BookOpen, FlaskConical } from 'lucide-react';
 import { THEME_PRESETS, DEFAULT_THEME_ICON } from 'flint-chart';
 import { LocaleLink } from '../i18n/LocaleLink';
-import { BACKENDS } from '../shared/supported-backends';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { SiteShell } from '../components/SiteShell';
 import { ThemeChartModal } from '../components/ThemeChartModal';
@@ -130,13 +129,7 @@ function Tile({
   const title = t(`themes.cases.${c.id}.title`, c.title);
   const blurb = t(`themes.cases.${c.id}.blurb`, c.blurb);
 
-  const compiled = useMemo(() => {
-    try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(c, title, theme)) };
-    } catch (err) {
-      return { ok: false as const, err };
-    }
-  }, [c, title, theme]);
+  const input = useMemo(() => buildInput(c, title, theme), [c, title, theme]);
 
   return (
     <article
@@ -156,13 +149,7 @@ function Tile({
       style={{ padding: 8, borderRadius: 4, minWidth: 0, transition: 'background 120ms ease', cursor: 'zoom-in' }}
     >
       <ScaleToFit height={CHART_H} minHeight={110} adaptiveHeight padding={2}>
-        {compiled.ok ? (
-          <VegaLiteView spec={compiled.value} renderer="svg" />
-        ) : (
-          <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>
-            {String((compiled.err as Error)?.message ?? compiled.err)}
-          </pre>
-        )}
+        <FlintView spec={input} renderer="svg" compact />
       </ScaleToFit>
       {/* Measured to fit in at most two lines, and reserving its height so the
           tiles stay on a common baseline. The clamp is a backstop for a font

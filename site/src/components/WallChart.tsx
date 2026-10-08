@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ThemeSpec } from 'flint-chart';
 import type { TestCase } from 'flint-chart/test-data';
-import { VegaLiteView } from './VegaLiteView';
+import { FlintView } from './FlintView';
 import { EChartsView } from './EChartsView';
 import { ChartjsView } from './ChartjsView';
 import { PlotlyView } from './PlotlyView';
@@ -68,6 +68,7 @@ export function WallChart({
   }, [testCase, canvasSize, chartPropertyOverrides, themeId, themeSpec, useThemeCanvas, backend, headline?.title, headline?.subtitle]);
 
   const compiled = useMemo(() => {
+    if (backend === 'vegalite') return { ok: true as const, value: null };
     try {
       return { ok: true as const, value: BACKENDS[backend].assemble(input) };
     } catch (err) {
@@ -91,7 +92,7 @@ export function WallChart({
     );
   }
 
-  if (backend === 'vegalite') return <VegaLiteView spec={compiled.value} />;
+  if (backend === 'vegalite') return <FlintView spec={input} compact />;
   if (backend === 'echarts') return <EChartsView option={compiled.value} constrain={false} />;
   if (backend === 'plotly') return <PlotlyView figure={compiled.value} constrain={false} />;
   return <ChartjsView config={compiled.value} constrain={false} />;

@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import stringify from 'json-stringify-pretty-compact';
+import { flintChartCode, presetFactoryName } from '../shared/flint-chart-code';
 import { csvParseRows } from 'd3-dsv';
 import gapminderCsv from '../assets/gapminder-five-year.csv?raw';
 import { Accessibility, AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CornerDownLeft, EyeOff, GripVertical, Keyboard, Lasso, Layers3, Link2, Menu, MessageSquareText, MousePointer2, MousePointerClick, Move, MoveHorizontal, MoveVertical, Pause, Play, RotateCcw, Ruler, Scan, Target, Timer, ZoomIn } from 'lucide-react';
@@ -1475,25 +1476,17 @@ export function InteractionGallery({ source: initialSource = 'spec', mode: selec
     return counts;
   }, { ready: 0, unsupported: 0, error: 0, loading: 0 } as Record<ProbeStatus, number>);
   const specPattern = modeSpec(mode, undefined, navigationGuard, '<group-field>', { seriesBy: '<series-field>', displayValue: true });
-  const factoryNames = specPattern.interactions.map(entry =>
-    entry.type.replace(/-([a-z])/g, (_match, letter: string) => letter.toUpperCase()));
-  const functionalCode = [
-    `import { buildInteractiveChart, ${factoryNames.join(', ')} } from 'flint-chart/interactive';`,
-    '',
-    'const chart = buildInteractiveChart(container, chartInput, {',
-    "  backend: 'vegalite',",
-    '  interactions: [',
-    ...specPattern.interactions.map((entry, index) => {
-      const prefix = `    ${factoryNames[index]}(`;
-      const options = entry.options
-        ? stringify(entry.options, { indent: 2, maxLength: 80 - prefix.length - 2 }).split('\n').join('\n    ')
-        : '';
-      return `${prefix}${options}),`;
+  const functionalCode = flintChartCode({
+    presets: specPattern.interactions.map((entry) => {
+      const factory = presetFactoryName(entry.type);
+      const prefix = `    ${factory}(`;
+      return {
+        factory,
+        options: entry.options ? stringify(entry.options, { indent: 2, maxLength: 80 - prefix.length - 2 }) : '',
+      };
     }),
-    '  ],',
-    ...(specPattern.keyboardTargeting ? ['  keyboardTargeting: true,'] : []),
-    '});',
-  ].join('\n');
+    keyboardTargeting: specPattern.keyboardTargeting,
+  });
 
   return (
     <div className="dev-page cf-page">

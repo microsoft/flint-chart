@@ -32,10 +32,18 @@ describe('composeInteractiveOptions', () => {
         expect(composed.updates).toEqual([codeUpdate]);
     });
 
-    it('rejects an id shared by the spec and the code, naming both sources', () => {
-        expect(() => composeInteractiveOptions({ interaction_spec: SPEC }, {
-            backend: 'vegalite', interactions: [navigate({ axes: 'y' })],
-        })).toThrow('Interaction "navigate" is defined in interaction_spec and in options.interactions. Give one of them another id.');
+    it('replaces a spec entry with the code definition that shares its id, with an info warning', () => {
+        const replacement = navigate({ axes: 'y' });
+        const composed = composeInteractiveOptions({ interaction_spec: SPEC }, {
+            backend: 'vegalite', interactions: [replacement],
+        });
+        expect(ids(composed)).toEqual(['legend-toggle', 'navigate']);
+        expect(composed.interactions[1]).toBe(replacement);
+        expect(composed.warnings).toEqual([{
+            severity: 'info',
+            code: 'interaction_overridden',
+            message: 'Interaction "navigate" from interaction_spec is replaced by the definition passed in code.',
+        }]);
     });
 
     it('still rejects a duplicate inside the code list', () => {
@@ -62,16 +70,20 @@ describe('composeInteractiveOptions', () => {
         expect(composed.warnings).toEqual([{
             severity: 'info',
             code: 'interactions_ignored',
-            message: 'interaction_spec is ignored: backend "echarts" does not run interactions.',
+            message: 'Interactions are ignored: backend "echarts" does not run interactions, so the chart renders static.',
         }]);
     });
 
-    it('keeps the code interactions on such a backend, so the mount fails as it does today', () => {
+    it('drops the code interactions on such a backend too, with a warning, so the chart renders static', () => {
         const composed = composeInteractiveOptions({ interaction_spec: SPEC }, {
             backend: 'echarts', interactions: [clickHighlight()],
         });
-        expect(ids(composed)).toEqual(['legend-toggle', 'navigate', 'click-highlight']);
-        expect(composed.warnings).toEqual([]);
+        expect(composed.interactions).toEqual([]);
+        expect(composed.warnings).toEqual([{
+            severity: 'warning',
+            code: 'interactions_ignored',
+            message: 'Interactions are ignored: backend "echarts" does not run interactions, so the chart renders static.',
+        }]);
     });
 
     it('does not warn for a backend that runs no interactions when the spec asks for none', () => {

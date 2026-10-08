@@ -168,9 +168,9 @@ Each backend has its own assembly function. All accept the same
 Interactive renderers are opt-in and shipped separately from the static assembly entry point. The surface owns interaction coordination, viewport state, accessible scroll controls, and renderer lifecycle; the caller supplies only a container and chart input.
 
 ```ts
-import { buildInteractiveChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
+import { mountChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(
+const surface = mountChart(
   container,
   input,
   {
@@ -204,7 +204,35 @@ const countryPicker = externalInteraction<{ country: string }>({
 await surface.dispatch('country-picker', { country: 'Japan' });
 ```
 
-The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions`; `clickHighlight()` focuses configured mark, legend, and discrete-axis targets, Shift/Ctrl/Meta-click toggles targets, and clicking empty plot space clears. Other backends currently reject semantic interactions. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+The facade supports `vegalite`, `echarts`, `chartjs`, and `plotly`, and loads only the selected adapter. Viewport changes retain the backend instance and update it through Vega's dataflow, ECharts `setOption()`, Chart.js `update()`, or Plotly `react()`. Vega-Lite interactions are enabled explicitly through `interactions` or the spec's `interaction_spec`; with neither, the chart is static and mounts no interaction runtime. Pass `semanticUpdates: true` (the default) to keep host updates on a chart without interactions, or `false` to skip the runtime. `clickHighlight()` focuses configured mark, legend, and discrete-axis targets, Shift/Ctrl/Meta-click toggles targets, and clicking empty plot space clears. Other backends render the chart static and drop its interactions with an `interactions_ignored` warning. `buildInteractiveChart` is the earlier name of `mountChart` and remains as an alias. Advanced integrations can use `mountInteractiveChartSurface()` with a custom `InteractiveRendererAdapter`; the surface invokes external handlers, while adapters expose interaction context and apply renderer-neutral updates. Existing `assemble*()` calls, static SVG/PNG rendering, and Excel output do not import or execute the interactive surface; they retain the normal first-window overflow fallback.
+
+### React component
+
+`flint-chart/react` wraps `mountChart` in one component. React is an optional peer dependency, needed only for this subpath.
+
+```tsx
+import { FlintChart } from 'flint-chart/react';
+import { clickHighlight } from 'flint-chart/interactive';
+
+<FlintChart
+  spec={input}                                   // interaction_spec included
+  interactions={[clickHighlight()]}              // added to the spec's interactions
+  width="100%" fit="shrink"                      // the box scales the chart; layout size stays in chart_spec
+  onChange={(change) => setSelection(change.state.selected)}
+/>;
+```
+
+`onChange` fires only when the chart's state changes, with the `source` (`reader` or `host`), the `changed` facets, and the `previous` state. The `updates` prop is diffed by id. The chart remounts when the spec content changes; rows are compared by reference.
+
+### Static SVG
+
+```ts
+import { renderSvg } from 'flint-chart/render';
+
+const svg = await renderSvg(input, { backend: 'vegalite' }); // or 'echarts'
+```
+
+`renderSvg` needs no DOM, for export, images, and server rendering.
 
 ### Input types
 

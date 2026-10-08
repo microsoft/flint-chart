@@ -265,10 +265,10 @@ export function InteractionDashboardLab() {
     }
   }, []);
 
-  // A gesture in one chart routes to the others. The routed writes are host
-  // calls with no interaction id, so they do not route again.
+  // A gesture in one chart routes to the others. Routed writes are host
+  // changes, so they do not route again.
   const routeSelection = useCallback((sourceId: string, change: ChartChange) => {
-    if (change.phase !== 'commit' || !change.interactionId || change.action?.endsWith('-viewport')) return;
+    if (change.phase !== 'commit' || change.source !== 'reader' || !change.interactionId || change.action?.endsWith('-viewport')) return;
     const ids = [...new Set((change.target?.elements ?? []).map((element) => element.value).flatMap(recordObservationIds))]
       .filter((id) => id !== 'undefined');
     dispatchSelection(ids, sourceId);

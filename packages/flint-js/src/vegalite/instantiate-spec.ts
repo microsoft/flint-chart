@@ -1692,3 +1692,21 @@ export function vlApplyTooltips(vgObj: any): void {
     if (!vgObj.config) vgObj.config = {};
     vgObj.config.mark = { ...vgObj.config.mark, tooltip: true };
 }
+
+/**
+ * Lets the full-text tooltips Flint puts on truncated legend and axis labels fire.
+ *
+ * Vega-Lite has no way to mark a guide's labels interactive, so this runs on the
+ * compiled Vega spec. Pass it as vega-embed's `patch` when embedding yourself;
+ * `mountChart` applies it already.
+ */
+export function enableGuideLabelTooltips<T>(vegaSpec: T): T {
+    const visit = (node: any): void => {
+        for (const guide of [...(node?.legends ?? []), ...(node?.axes ?? [])]) {
+            if (guide.encode?.labels?.update?.tooltip) guide.encode.labels.interactive = true;
+        }
+        for (const child of node?.marks ?? []) visit(child);
+    };
+    visit(vegaSpec);
+    return vegaSpec;
+}

@@ -14,7 +14,7 @@
 export { assembleVegaLite, getChartOptions, getChartPivot, getChartTransform } from './assemble';
 
 // VL spec instantiation (Phase 2)
-export { vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
+export { enableGuideLabelTooltips, vlApplyLayoutToSpec, vlApplyTooltips } from './instantiate-spec';
 
 // Canvas-anchored furniture (branding marks drawn onto the rendered SVG)
 export {

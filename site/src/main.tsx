@@ -34,6 +34,7 @@ import { InteractionApplications } from './routes/InteractionApplications';
 import { ClickFocusLab } from './playground/ClickFocusLab';
 import { InteractionCoverageLab } from './playground/InteractionCoverageLab';
 import { InteractionConflictsLab } from './playground/InteractionConflictsLab';
+import { ChartApiDesign } from './playground/ChartApiDesign';
 import { AnnotationLab } from './playground/AnnotationLab';
 import { InteractionDashboardLab } from './playground/InteractionDashboardLab';
 import { InteractionCandidates } from './playground/InteractionCandidates';
@@ -112,6 +113,7 @@ function AppRoutes({ locale }: { locale: Locale }) {
           <Route path="annotation-lab" element={<AnnotationLab />} />
           <Route path="interaction-coverage" element={<InteractionCoverageLab />} />
           <Route path="interaction-conflicts" element={<InteractionConflictsLab />} />
+          <Route path="chart-api-design" element={<ChartApiDesign />} />
           <Route path="pan-zoom" element={<Navigate to={localePath('/interactions/navigate', locale)} replace />} />
           <Route path="interaction-dashboard" element={<InteractionDashboardLab />} />
           <Route path="external-to-chart" element={<ExternalToChartLab />} />

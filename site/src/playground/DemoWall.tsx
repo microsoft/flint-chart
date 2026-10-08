@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { BACKENDS } from '../shared/supported-backends';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { PlotlyView } from '../components/PlotlyView';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { siteTheme } from '../shared/theme';
@@ -83,13 +83,15 @@ const familyOf = (chartType: string) => FAMILY_OF[chartType] ?? 'Points & correl
 
 function CaseCard({ c, themeId }: { c: PreviewCase; themeId: string | undefined }) {
     const backend = pickBackend(c.chartType);
+    const input = useMemo(() => buildInput(c, themeId), [c, themeId]);
     const compiled = useMemo(() => {
+        if (backend === 'vegalite') return { ok: true as const, value: null };
         try {
-            return { ok: true as const, value: BACKENDS[backend].assemble(buildInput(c, themeId)) };
+            return { ok: true as const, value: BACKENDS[backend].assemble(input) };
         } catch (err) {
             return { ok: false as const, err };
         }
-    }, [c, backend, themeId]);
+    }, [input, backend]);
 
     return (
         <article
@@ -101,7 +103,7 @@ function CaseCard({ c, themeId }: { c: PreviewCase; themeId: string | undefined 
             <ScaleToFit height={168} minHeight={110} adaptiveHeight padding={2}>
                 {compiled.ok ? (
                     backend === 'vegalite'
-                        ? <VegaLiteView spec={compiled.value} />
+                        ? <FlintView spec={input} compact />
                         : <PlotlyView figure={compiled.value} constrain={false} />
                 ) : (
                     <pre style={{ color: siteTheme.error, fontSize: 11, whiteSpace: 'pre-wrap', margin: 0 }}>

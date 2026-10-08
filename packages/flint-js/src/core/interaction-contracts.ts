@@ -318,6 +318,13 @@ export interface ChartCategoryWindow {
     readonly total: number;
 }
 
+/** A note an update places on the chart, by the id of that update. */
+export interface ChartAnnotation {
+    readonly id: string;
+    readonly target: UpdateTarget;
+    readonly text?: string;
+}
+
 /** What the chart shows now, in semantic terms. A host reads it; a preset reads its superset. */
 export interface ChartState {
     readonly chartType: string;
@@ -332,6 +339,8 @@ export interface ChartState {
     /** The category window of each rail. */
     readonly windows?: Partial<Record<'x' | 'y', ChartCategoryWindow>>;
     readonly categoryOrder?: readonly unknown[];
+    /** The notes the chart shows now, previews included. */
+    readonly annotations?: readonly ChartAnnotation[];
 }
 
 export interface InteractionContext extends ChartState {

@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BACKENDS } from '../shared/supported-backends';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 import { ScaleToFit } from '../components/ScaleToFit';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 
 type IllustrationSlot = {
   id: string;
@@ -64,21 +63,14 @@ function IllustrationCard({ slot }: { slot: IllustrationSlot }) {
   const title = previewCase ? t(`themes.cases.${previewCase.id}.title`, previewCase.title) : slot.id;
   const result = useMemo(() => {
     if (!previewCase) return { ok: false as const, error: `Missing preview case: ${slot.id}` };
-    try {
-      return {
-        ok: true as const,
-        compiled: BACKENDS.vegalite.assemble(buildInput(previewCase, title, slot.theme)),
-      };
-    } catch (error) {
-      return { ok: false as const, error: String((error as Error)?.message ?? error) };
-    }
+    return { ok: true as const, input: buildInput(previewCase, title, slot.theme) };
   }, [previewCase, slot, title]);
 
   return (
     <article className="diverse-wall-card">
       <ScaleToFit height={170} minHeight={96} adaptiveHeight padding={1}>
         {result.ok
-          ? <VegaLiteView spec={result.compiled} />
+          ? <FlintView spec={result.input} compact />
           : <div className="diverse-wall-error">{result.error}</div>}
       </ScaleToFit>
       <div className="diverse-wall-caption">

@@ -36,9 +36,9 @@ You can configure the same behavior in either form:
 ```
 
 ```ts
-import { buildInteractiveChart, clickHighlight } from 'flint-chart/interactive';
+import { mountChart, clickHighlight } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [clickHighlight()],
 });

@@ -2,7 +2,7 @@
 
 Flint separates semantic events from chart updates. Events describe what the reader interacted with; update operators describe what the chart should render. Your application can consume events and submit updates without accessing renderer-specific marks.
 
-Use these APIs with a chart mounted by `buildInteractiveChart` from `flint-chart/interactive`. Presets can come from `interaction_spec` or functional factories; see [Declarative spec](interaction-spec.md) and [Programming API](interaction-api.md).
+Use these APIs with a chart mounted by `mountChart` from `flint-chart/interactive`. Presets can come from `interaction_spec` or functional factories; see [Declarative spec](interaction-spec.md) and [Programming API](interaction-api.md).
 
 ## Listen to events in your application
 
@@ -12,12 +12,12 @@ This example mounts a country chart and updates an application selection when a 
 
 ```ts
 import {
-  buildInteractiveChart,
+  mountChart,
   clickHighlight,
   type FlintInteractionEventDetail,
 } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   interactions: [clickHighlight()],
 });

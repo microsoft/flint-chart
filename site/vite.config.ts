@@ -12,12 +12,22 @@ export default defineConfig({
   plugins: [react()],
   base,
   resolve: {
+    // flint-chart/react imports React from the library source; one React instance only.
+    dedupe: ['react', 'react-dom'],
     // NOTE: order matters — longer aliases must come first so 'flint-chart/test-data'
     // is matched before the bare 'flint-chart' substring alias.
     alias: [
       {
         find: 'flint-chart/interactive',
         replacement: path.resolve(__dirname, '../packages/flint-js/src/interactive/index.ts'),
+      },
+      {
+        find: 'flint-chart/react',
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/react/index.ts'),
+      },
+      {
+        find: 'flint-chart/render',
+        replacement: path.resolve(__dirname, '../packages/flint-js/src/render/index.ts'),
       },
       {
         find: 'flint-chart/test-data',

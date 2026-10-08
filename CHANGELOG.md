@@ -62,9 +62,42 @@ the entries below describe implemented changes, not the remaining checklist.
   `semantic_types` labels surface as `unknown_semantic_type` warnings, and
   `isRegistered` / `getRegisteredTypes` are exported from `flint-chart/core`
   ([#104](https://github.com/microsoft/flint-chart/issues/104)).
+- `<FlintChart>` from the new `flint-chart/react` subpath (React is an
+  optional peer dependency). `spec` takes the `ChartAssemblyInput` with its
+  `interaction_spec`; `interactions` takes preset factories, as an array added
+  to the spec's interactions or a function `(fromSpec) => definitions` that
+  returns the full list. A chart with no interactions renders static and
+  mounts no interaction runtime; pass `updates` (even `[]`) to drive it from
+  the host. The `updates` prop is diffed by id, and a dropped id is cleared only if the host
+  wrote it last. `width`, `height`, and `fit` (`shrink`, `contain`, `none`)
+  set the box, which scales the chart; the layout size stays in the spec. A
+  ref exposes `applyUpdate`, `clearUpdate`, `dispatch`, `getState`, and
+  `refresh`; `fallback` shows until the chart mounts.
+- `mountChart()`, the new name of `buildInteractiveChart()`, which remains as
+  an alias. Its `semanticUpdates` option (default `true`) keeps host updates
+  on a chart without interactions; `false` skips the interaction runtime. `surface.onInteraction()` hears the raw gesture records.
+- `renderSvg(input, { backend })` from the new `flint-chart/render` subpath
+  returns a static SVG string for Vega-Lite or ECharts without a DOM.
+- `selectionUpdate()` and `viewportUpdate()` build the updates a selection or
+  navigation preset writes, for hosts that set the same state.
+- `ChartState.annotations` lists reader-made annotations, so a host can
+  persist them.
 
 ### Changed
 
+- `onChange` fires only when the chart's state changes, not after every
+  render. A `ChartChange` now carries `source` (`reader` for a gesture, `host`
+  for `applyUpdate`, `clearUpdate`, or `setUpdates`), `changed` (the facets
+  that moved), and `previous`. A gesture that changes nothing, such as an
+  inspected index, reaches the host only through `flint-interaction`.
+- Interactive Vega-Lite mounts no longer turn tooltips on. Tooltips follow the
+  spec's `options.addTooltips` (default `false`), as in static rendering.
+- A code definition with the id of an `interaction_spec` entry now replaces
+  that entry with an `interaction_overridden` info warning. Before, the mount
+  threw.
+- A non-Vega-Lite backend asked for interactions now renders the chart static
+  with an `interactions_ignored` warning. Before, the mount threw when code
+  passed interactions.
 - `CanvasInteractionDef.affordances` is now a required map from the kind of
   hit (`mark`, `legend-item`, `axis-label`, `plot`) to its cursor and hover,
   and it is the only dispatch gate: the runtime sends a hit to an interaction

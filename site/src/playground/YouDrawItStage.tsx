@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeftRight, RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
-  buildInteractiveChart,
   externalInteraction,
   lassoTrigger,
   type CanvasInteractionDef,
   type ChartUpdate,
-  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import {
   COAL_SHARE_ROWS,
@@ -20,7 +19,6 @@ import {
   DRAW_INTERACTION_ID,
   HIDE_UPDATE_ID,
   REVEAL_INTERACTION_ID,
-  SCORE_UPDATE_ID,
   anchorPath,
   clearRevealUpdate,
   dateToYear,
@@ -49,6 +47,8 @@ const VIEW_SIZE = { width: 900, height: 520 };
 const REVEAL_DURATION_MS = 1400;
 const BOUNDS = drawBounds(COAL_SHARE_ROWS, DRAW_START_YEAR, SHARE_DOMAIN);
 const CHART_ROWS = splitRows(COAL_SHARE_ROWS, DRAW_START_YEAR);
+const HIDE_FUTURE = hideFutureUpdate();
+const PROMPT = promptUpdate(BOUNDS, true);
 
 type RevealPayload = { progress: number };
 
@@ -110,14 +110,14 @@ function phaseHint(phase: StagePhase, path: DrawnPath): string {
 }
 
 export function YouDrawItStage() {
-  const input = useMemo(() => chartInput(), []);
-  const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const spec = useMemo(() => chartInput(), []);
+  const chartRef = useRef<FlintChartHandle>(null);
   const committedPathRef = useRef<DrawnPath>(anchorPath(BOUNDS));
   const phaseRef = useRef<StagePhase>('idle');
   const [phase, setPhase] = useState<StagePhase>('idle');
   const [path, setPath] = useState<DrawnPath>(committedPathRef.current);
   const [score, setScore] = useState<GuessScore | null>(null);
+  const [scoreLayer, setScoreLayer] = useState<ChartUpdate | null>(null);
   const [revealRun, setRevealRun] = useState(0);
   const handledRevealRunRef = useRef(0);
 
@@ -126,66 +126,55 @@ export function YouDrawItStage() {
     setPhase(next);
   }, []);
 
-  const drawInteraction = useMemo<CanvasInteractionDef>(() => ({
-    id: DRAW_INTERACTION_ID,
-    eventSource: lassoTrigger('contain', false),
-    affordances: { plot: { cursor: 'draw' } },
-    handle(event): ChartUpdate | null {
-      if (event.action !== 'select-lasso') return null;
-      if (event.phase === 'start') return null;
-      if (phaseRef.current === 'revealing' || phaseRef.current === 'revealed') {
-        // The region gesture parks its own selection preview under this
-        // interaction id, so a stray stroke must restate the finished line
-        // or the commit would promote that preview in its place.
-        return event.phase === 'cancel' ? null : drawnLineUpdate(committedPathRef.current, true, BOUNDS);
-      }
-      if (event.phase === 'cancel') {
-        setPath(committedPathRef.current);
-        updatePhase(committedPathRef.current.samples.length > 1 ? 'drawing' : 'idle');
-        return null;
-      }
-      const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
-      if (candidates.length === 0) {
-        // An empty commit (a click) still has to restate the retained line.
-        return committedPathRef.current.samples.length > 1
-          ? drawnLineUpdate(committedPathRef.current, false)
-          : null;
-      }
-      // The polygon carries every point since the stroke began, so each
-      // preview repaints from the last committed stroke.
-      const next = extendPath(committedPathRef.current, candidates, BOUNDS);
-      if (event.phase === 'commit') committedPathRef.current = next;
-      setPath(next);
-      // A complete line stays editable; only the Finish button reveals.
-      updatePhase(isComplete(next, BOUNDS) ? 'complete' : 'drawing');
-      return drawnLineUpdate(next, false, BOUNDS);
-    },
-  }), [updatePhase]);
-
-  const revealInteraction = useMemo(() => externalInteraction<RevealPayload>({
-    id: REVEAL_INTERACTION_ID,
-    handle({ progress }) {
-      return revealUpdate(COAL_SHARE_ROWS, BOUNDS, progress);
-    },
-  }), []);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
-    const surface = buildInteractiveChart(mount, input, {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions: [drawInteraction, revealInteraction],
-      updates: [hideFutureUpdate(), promptUpdate(BOUNDS, true)],
-      ariaLabel: 'You draw it: share of U.S. electricity from coal',
-      chartId: 'you-draw-it-coal',
-    });
-    surfaceRef.current = surface;
-    return () => {
-      surfaceRef.current = null;
-      surface.destroy();
+  const interactions = useMemo(() => {
+    const draw: CanvasInteractionDef = {
+      id: DRAW_INTERACTION_ID,
+      eventSource: lassoTrigger('contain', false),
+      affordances: { plot: { cursor: 'draw' } },
+      handle(event): ChartUpdate | null {
+        if (event.action !== 'select-lasso') return null;
+        if (event.phase === 'start') return null;
+        if (phaseRef.current === 'revealing' || phaseRef.current === 'revealed') {
+          // The region gesture parks its own selection preview under this
+          // interaction id, so a stray stroke must restate the finished line
+          // or the commit would promote that preview in its place.
+          return event.phase === 'cancel' ? null : drawnLineUpdate(committedPathRef.current, true, BOUNDS);
+        }
+        if (event.phase === 'cancel') {
+          setPath(committedPathRef.current);
+          updatePhase(committedPathRef.current.samples.length > 1 ? 'drawing' : 'idle');
+          return null;
+        }
+        const candidates = candidatesFromDomainPoints(event.geometry.domain?.points);
+        if (candidates.length === 0) {
+          // An empty commit (a click) still has to restate the retained line.
+          return committedPathRef.current.samples.length > 1
+            ? drawnLineUpdate(committedPathRef.current, false)
+            : null;
+        }
+        // The polygon carries every point since the stroke began, so each
+        // preview repaints from the last committed stroke.
+        const next = extendPath(committedPathRef.current, candidates, BOUNDS);
+        if (event.phase === 'commit') committedPathRef.current = next;
+        setPath(next);
+        // A complete line stays editable; only the Finish button reveals.
+        updatePhase(isComplete(next, BOUNDS) ? 'complete' : 'drawing');
+        return drawnLineUpdate(next, false, BOUNDS);
+      },
     };
-  }, [drawInteraction, input, revealInteraction]);
+    const reveal = externalInteraction<RevealPayload>({
+      id: REVEAL_INTERACTION_ID,
+      handle({ progress }) {
+        return revealUpdate(COAL_SHARE_ROWS, BOUNDS, progress);
+      },
+    });
+    return [draw, reveal];
+  }, [updatePhase]);
+
+  // The host's layers: the future stays hidden until the reveal, then the score joins the prompt.
+  const updates = useMemo(() => (
+    phase === 'revealed' ? [PROMPT, ...(scoreLayer ? [scoreLayer] : [])] : [HIDE_FUTURE, PROMPT]
+  ), [phase, scoreLayer]);
 
   useEffect(() => {
     // Only the Finish button advances revealRun, and each run reveals once.
@@ -194,8 +183,8 @@ export function YouDrawItStage() {
     if (revealRun === 0 || revealRun === handledRevealRunRef.current) return undefined;
     if (phaseRef.current !== 'complete') return undefined;
     handledRevealRunRef.current = revealRun;
-    const surface = surfaceRef.current;
-    if (!surface) return undefined;
+    const chart = chartRef.current;
+    if (!chart) return undefined;
     let cancelled = false;
     let frame = 0;
     const finishedPath = committedPathRef.current;
@@ -204,21 +193,19 @@ export function YouDrawItStage() {
     const start = performance.now();
     updatePhase('revealing');
     // Freeze the drawn line: dashed, no front marker.
-    void surface.applyUpdate(drawnLineUpdate(finishedPath, true, BOUNDS));
+    void chart.applyUpdate(drawnLineUpdate(finishedPath, true, BOUNDS));
 
     const finish = async () => {
-      await surface.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress: 1 });
       if (cancelled) return;
-      // The retained hide update goes away after the overlay covers the same
-      // path, so the swap is invisible.
-      await surface.clearUpdate(HIDE_UPDATE_ID);
-      await surface.applyUpdate(clearRevealUpdate());
-      if (nextScore) {
-        const drawnEnd = finishedPath.samples[finishedPath.samples.length - 1].value;
-        await surface.applyUpdate(scoreUpdate(nextScore, COAL_SHARE_ROWS, BOUNDS, drawnEnd));
-      }
+      // The hide layer goes before the overlay that covers the same path, so
+      // the swap is invisible; the revealed layers then drop it for good.
+      await chart.clearUpdate(HIDE_UPDATE_ID);
+      await chart.applyUpdate(clearRevealUpdate());
       if (cancelled) return;
+      const drawnEnd = finishedPath.samples[finishedPath.samples.length - 1].value;
       setScore(nextScore);
+      setScoreLayer(nextScore ? scoreUpdate(nextScore, COAL_SHARE_ROWS, BOUNDS, drawnEnd) : null);
       updatePhase('revealed');
     };
 
@@ -229,7 +216,7 @@ export function YouDrawItStage() {
         await finish();
         return;
       }
-      await surface.dispatch(REVEAL_INTERACTION_ID, { progress });
+      await chart.dispatch(REVEAL_INTERACTION_ID, { progress });
       if (cancelled) return;
       frame = window.requestAnimationFrame((next) => void tick(next));
     };
@@ -247,19 +234,14 @@ export function YouDrawItStage() {
   };
 
   const reset = () => {
-    const surface = surfaceRef.current;
     committedPathRef.current = anchorPath(BOUNDS);
     setPath(committedPathRef.current);
     setScore(null);
+    setScoreLayer(null);
     updatePhase('idle');
-    if (!surface) return;
-    void (async () => {
-      await surface.clearUpdate(DRAW_INTERACTION_ID);
-      await surface.clearUpdate(REVEAL_INTERACTION_ID);
-      await surface.clearUpdate(SCORE_UPDATE_ID);
-      await surface.applyUpdate(hideFutureUpdate());
-      await surface.applyUpdate(promptUpdate(BOUNDS, true));
-    })();
+    // The drawn line and the reveal belong to interactions, not to `updates`.
+    void chartRef.current?.clearUpdate(DRAW_INTERACTION_ID);
+    void chartRef.current?.clearUpdate(REVEAL_INTERACTION_ID);
   };
 
   const front = frontSample(path);
@@ -281,7 +263,17 @@ export function YouDrawItStage() {
       <div className="ydi-stage__workspace">
         <div className="ic-flint-dimpvis-panel">
           <ScaleToFit height={540} adaptiveHeight padding={8}>
-            <div className="ic-flint-dimpvis-mount" ref={mountRef} />
+            <div className="ic-flint-dimpvis-mount">
+              <FlintChart
+                ref={chartRef}
+                spec={spec}
+                interactions={interactions}
+                updates={updates}
+                renderer="svg"
+                ariaLabel="You draw it: share of U.S. electricity from coal"
+                chartId="you-draw-it-coal"
+              />
+            </div>
           </ScaleToFit>
         </div>
         <aside className="ydi-stage__controls" aria-label="Prediction and comparison">

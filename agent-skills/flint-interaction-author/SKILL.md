@@ -236,7 +236,7 @@ Two pairs answer one question twice; keep one of each: `inspect` with
 
 Keep the chart spec as it is. Put the object beside it as `interaction_spec`
 in the same input and call `create_chart_view` again, or
-`buildInteractiveChart(container, input)` in code. The entries mount in order.
+`mountChart(container, input)` in code. The entries mount in order.
 
 An entry the chart cannot honour is dropped with a warning that names the
 entry, what it needed, and the chart type:
@@ -359,9 +359,9 @@ npm install flint-chart vega vega-lite vega-tooltip
 ```
 
 ```ts
-import { buildInteractiveChart, navigate, legendToggle } from 'flint-chart/interactive';
+import { mountChart, navigate, legendToggle } from 'flint-chart/interactive';
 
-const surface = buildInteractiveChart(container, input, {
+const surface = mountChart(container, input, {
   backend: 'vegalite',
   renderer: 'svg',
   interactions: [navigate({ axes: 'x' }), legendToggle()],
@@ -783,7 +783,7 @@ interface CanvasInteractionEvent {
 | Application drives the chart | external in, Flint out | `externalInteraction` plus `dispatch` per frame: a playback year, a reveal progress. |
 | Drag along a path | press, then drag | One `dragTrigger()` definition and one layer. At `start` on a mark it returns the mark's path as a `set-overlay` `line` with `interactive: true, projectable: true` and `order`, plus `set-data` for the current position. On `preview` and `commit` with `geometry.projection` it returns the same two ops for the pointer's position. `intrinsicDomain` on the x and y fields holds the axes still across the swaps. |
 | Freehand stroke | draw | The rows to guess form their own series, and a mount update sets `opacity: 0` on that series, which keeps the axis. `lassoTrigger('contain', false)` with `plot: { cursor: 'draw' }` is the pen: `geometry.domain.points` become the rows of a `set-overlay` line. An `externalInteraction` reveals the truth as an overlay, then the host clears the hide. |
-| Chart-level zoom | wheel | When the layout itself must change (bar step, ticks, domain), filter the rows and `buildInteractiveChart` again in a hidden layer; swap on `ready`. No preset re-lays out. |
+| Chart-level zoom | wheel | When the layout itself must change (bar step, ticks, domain), filter the rows and `mountChart` again in a hidden layer; swap on `ready`. No preset re-lays out. |
 | Semantic zoom on a map | navigate | A Choropleth with `level: 'auto'` or a Map with `levelField` and `levels`, `navigate()`, and `set-viewport { region: { key } }` with a `transition` to fly into a region. Navigation events carry `geometry.domain.level` and `focus`. |
 
 Host-drawn detail, the shape of it:
@@ -894,7 +894,7 @@ Two bar charts share a `Country` field: GDP per country, and population per
 country. A click on one emphasizes the same country on the other.
 
 ```ts
-import { buildInteractiveChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
+import { mountChart, clickHighlight, externalInteraction } from 'flint-chart/interactive';
 
 const linked = externalInteraction<{ countries: string[] }>({
   id: 'linked',
@@ -907,8 +907,8 @@ const linked = externalInteraction<{ countries: string[] }>({
 });
 
 const surfaces = new Map([
-  ['gdp', buildInteractiveChart(gdpEl, gdpInput, { backend: 'vegalite', interactions: [clickHighlight({ targets: ['mark'] }), linked] })],
-  ['population', buildInteractiveChart(popEl, popInput, { backend: 'vegalite', interactions: [clickHighlight({ targets: ['mark'] }), linked] })],
+  ['gdp', mountChart(gdpEl, gdpInput, { backend: 'vegalite', interactions: [clickHighlight({ targets: ['mark'] }), linked] })],
+  ['population', mountChart(popEl, popInput, { backend: 'vegalite', interactions: [clickHighlight({ targets: ['mark'] }), linked] })],
 ]);
 for (const [id, source] of surfaces) {
   source.onChange(({ phase, interactionId, state }) => {

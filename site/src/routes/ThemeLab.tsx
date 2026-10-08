@@ -5,7 +5,7 @@ import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { GitHubIcon, LabIcon, SiteShell } from '../components/SiteShell';
 import { ThemeChartModal } from '../components/ThemeChartModal';
-import { VegaLiteView } from '../components/VegaLiteView';
+import { FlintView } from '../components/FlintView';
 import { LocaleLink } from '../i18n/LocaleLink';
 import { PREVIEW_CASES, type PreviewCase } from '../shared/preview-cases';
 import { BACKENDS } from '../shared/supported-backends';
@@ -353,13 +353,7 @@ function PreviewTile({
   const { t } = useTranslation();
   const title = t(`themes.cases.${previewCase.id}.title`, previewCase.title);
   const blurb = t(`themes.cases.${previewCase.id}.blurb`, previewCase.blurb);
-  const compiled = useMemo(() => {
-    try {
-      return { ok: true as const, value: BACKENDS.vegalite.assemble(buildInput(previewCase, title, theme)) };
-    } catch (error) {
-      return { ok: false as const, error };
-    }
-  }, [previewCase, theme, title]);
+  const input = useMemo(() => buildInput(previewCase, title, theme), [previewCase, theme, title]);
 
   return (
     <article
@@ -376,11 +370,7 @@ function PreviewTile({
       }}
     >
       <ScaleToFit height={CHART_HEIGHT} minHeight={110} adaptiveHeight padding={2}>
-        {compiled.ok ? (
-          <VegaLiteView spec={compiled.value} renderer="svg" />
-        ) : (
-          <pre className="theme-lab-error">{String((compiled.error as Error)?.message ?? compiled.error)}</pre>
-        )}
+        <FlintView spec={input} renderer="svg" compact />
       </ScaleToFit>
       <div className="theme-lab-tile-caption">{blurb}</div>
     </article>

@@ -1,22 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type PointerEvent } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
-  buildInteractiveChart,
   hoverTrigger,
   type CanvasInteractionDef,
   type FlintInteractionEventDetail,
-  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart } from 'flint-chart/react';
 import { ScaleToFit } from '../components/ScaleToFit';
 import { PENGUINS, type Penguin } from './bespoke-interaction-data';
 import './fisheye-zoom-stage.css';
-
-
-
-
-
-
-
 
 const HOVER_ID = 'fisheye-semantic-hover';
 const LOUPE_SIZE = 238;
@@ -62,7 +54,7 @@ const CHART_INPUT: ChartAssemblyInput = {
   },
 };
 
-const HOVER_INTERACTION: CanvasInteractionDef = {
+const INTERACTIONS: CanvasInteractionDef[] = [{
   id: HOVER_ID,
   eventSource: { ...hoverTrigger, defaultAssistDistance: 28, targetTolerance: 28 },
   affordances: { mark: { hover: 'target' } },
@@ -70,7 +62,7 @@ const HOVER_INTERACTION: CanvasInteractionDef = {
     // Acquisition only: the host renders the result without a Flint ChartUpdate.
     return null;
   },
-};
+}];
 
 type LoupePoint = Penguin & {
   x: number;
@@ -201,7 +193,6 @@ export function FisheyeZoomStage() {
   const [lensPosition, setLensPosition] = useState({ x: 450, y: 260 });
   const [bounds, setBounds] = useState<PlotBounds | null>(null);
   const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
   const renderedPointsRef = useRef<ReadonlyMap<string, RenderedPoint>>(new Map());
   const points = useMemo(
     () => focus ? loupePoints(lensPosition, renderedPointsRef.current) : [],
@@ -212,49 +203,30 @@ export function FisheyeZoomStage() {
     [focus, lensPosition],
   );
 
-  useEffect(() => {
+  const handleInteraction = useCallback((detail: FlintInteractionEventDetail) => {
+    if (detail.event.phase !== 'preview') return;
+    const penguin = penguinFromInteraction(detail);
+    if (penguin) setFocus(penguin);
+  }, []);
+
+  // Point positions are read from the rendered marks once the chart is ready.
+  const handleRender = useCallback(() => {
     const mount = mountRef.current;
-    if (!mount) return undefined;
+    if (!mount) return;
+    const rendered = renderedPointPositions(mount);
+    renderedPointsRef.current = rendered;
+    setBounds(renderedPlotBounds(rendered));
+  }, []);
 
-    const handleInteraction = (event: Event) => {
-      const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
-      if (detail.event.phase !== 'preview') return;
-      const penguin = penguinFromInteraction(detail);
-      if (penguin) setFocus(penguin);
-    };
-    const followPointer = (event: globalThis.PointerEvent) => {
-      const rect = mount.getBoundingClientRect();
-      const scaleX = mount.offsetWidth / rect.width;
-      const scaleY = mount.offsetHeight / rect.height;
-      const x = (event.clientX - rect.left) * scaleX;
-      const y = (event.clientY - rect.top) * scaleY;
-      setLensPosition({ x, y });
-    };
-    const clearFocus = () => setFocus(null);
-    mount.addEventListener('flint-interaction', handleInteraction);
-    mount.addEventListener('pointermove', followPointer);
-    mount.addEventListener('pointerleave', clearFocus);
-    const surface = buildInteractiveChart(mount, CHART_INPUT, {
-      backend: 'vegalite',
-      renderer: 'svg',
-      interactions: [HOVER_INTERACTION],
-      ariaLabel: 'Palmer Penguins scatterplot with semantic fisheye detail',
-      chartId: 'fisheye-semantic-scatter',
+  const followPointer = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    const mount = event.currentTarget;
+    const rect = mount.getBoundingClientRect();
+    const scaleX = mount.offsetWidth / rect.width;
+    const scaleY = mount.offsetHeight / rect.height;
+    setLensPosition({
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
     });
-    surfaceRef.current = surface;
-    void surface.ready.then(() => {
-      const rendered = renderedPointPositions(mount);
-      renderedPointsRef.current = rendered;
-      setBounds(renderedPlotBounds(rendered));
-    });
-
-    return () => {
-      mount.removeEventListener('flint-interaction', handleInteraction);
-      mount.removeEventListener('pointermove', followPointer);
-      mount.removeEventListener('pointerleave', clearFocus);
-      surfaceRef.current = null;
-      surface.destroy();
-    };
   }, []);
 
   const lensClip = bounds ? {
@@ -269,7 +241,22 @@ export function FisheyeZoomStage() {
       <div className="ic-flint-dimpvis-panel fisheye-frame">
         <ScaleToFit height={540} adaptiveHeight padding={8}>
           <div className="fisheye-chart-stack">
-            <div className="ic-flint-dimpvis-mount fisheye-flint-mount" ref={mountRef} />
+            <div
+              className="ic-flint-dimpvis-mount fisheye-flint-mount"
+              ref={mountRef}
+              onPointerMove={followPointer}
+              onPointerLeave={() => setFocus(null)}
+            >
+              <FlintChart
+                spec={CHART_INPUT}
+                interactions={INTERACTIONS}
+                renderer="svg"
+                ariaLabel="Palmer Penguins scatterplot with semantic fisheye detail"
+                chartId="fisheye-semantic-scatter"
+                onInteraction={handleInteraction}
+                onRender={handleRender}
+              />
+            </div>
             <div
               className="fisheye-custom-layer"
               data-visible={focus !== null}

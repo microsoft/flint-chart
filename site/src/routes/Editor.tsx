@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { SiteShell } from '../components/SiteShell';
 import { JsonCodeMirror } from '../components/JsonCodeMirror';
 import { ResizeSplit } from '../components/ResizeSplit';
-import { VegaLiteView } from '../components/VegaLiteView';
-import { InteractiveVegaLiteView, hasInteractionEntries } from '../components/InteractiveVegaLiteView';
+import { FlintView } from '../components/FlintView';
+import { hasInteractionEntries } from '../components/InteractiveVegaLiteView';
 import { EChartsView } from '../components/EChartsView';
 import { ChartjsView } from '../components/ChartjsView';
 import { EXAMPLES } from './editor-examples';
@@ -301,9 +301,14 @@ function PreviewPane({
           </pre>
         ) : compiled?.ok ? (
           <>
-            {backend === 'vegalite' && (hasInteractionEntries(parsed.value)
-              ? <InteractiveVegaLiteView input={parsed.value as ChartAssemblyInput} chartId="editor-chart" />
-              : <VegaLiteView spec={compiled.value} />)}
+            {backend === 'vegalite' && (
+              <FlintView
+                spec={parsed.value as ChartAssemblyInput}
+                renderer={hasInteractionEntries(parsed.value) ? 'svg' : 'canvas'}
+                chartId="editor-chart"
+                showWarnings={hasInteractionEntries(parsed.value)}
+              />
+            )}
             {backend === 'echarts' && <EChartsView option={compiled.value} height={320} />}
             {backend === 'chartjs' && <ChartjsView config={compiled.value} height={320} />}
           </>

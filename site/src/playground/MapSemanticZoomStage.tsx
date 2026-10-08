@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ChartAssemblyInput } from 'flint-chart';
 import {
-  buildInteractiveChart,
   clickTrigger,
   navigate,
   type CanvasInteractionDef,
   type FlintInteractionEventDetail,
-  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
 import { expressionInterpreter } from 'vega-interpreter';
 import { ScaleToFit } from '../components/ScaleToFit';
 import mobility from '../data/county-mobility.json';
@@ -82,20 +81,30 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
   const [level, setLevel] = useState<Level>('state');
   const [lonSpan, setLonSpan] = useState<number | undefined>(undefined);
   const [focusState, setFocusState] = useState<string | undefined>(undefined);
-  const mountRef = useRef<HTMLDivElement>(null);
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
   const levelRef = useRef<Level>('state');
 
   /** Fly the viewport to a region, or home with an empty value. */
-  const flyTo = useCallback((value: { region: { key: Record<string, unknown> } } | Record<string, never>) => {
-    void surfaceRef.current?.applyUpdate(
+  const flyTo = (value: { region: { key: Record<string, unknown> } } | Record<string, never>) => {
+    void chartRef.current?.applyUpdate(
       { id: 'map-semantic-zoom-fly', ops: [{ op: 'set-viewport', axes: 'xy', value }] },
       { transition: { duration: FLY_MS } },
     );
-  }, []);
+  };
 
-  const handleInteraction = useCallback((event: Event) => {
-    const detail = (event as CustomEvent<FlintInteractionEventDetail>).detail;
+  const spec = useMemo(() => dataset.input(), [dataset]);
+
+  const interactions = useMemo(() => [
+    navigate({
+      domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
+      // A click on empty map flies home; the bare stage keeps the double-click.
+      reset: dataset.bare ? ['double-click'] : ['click-none'],
+      resetTransition: { duration: FLY_MS },
+    }),
+    CLICK_REGION,
+  ], [dataset.bare]);
+
+  const handleInteraction = (detail: FlintInteractionEventDetail) => {
     const { phase, action, operation, geometry, target } = detail.event;
     if (phase === 'start' || phase === 'cancel') return;
     if (detail.interactionId === CLICK_ID) {
@@ -127,40 +136,7 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
     else if (phase === 'commit' && levelRef.current === 'county' && typeof geometry.domain?.focus?.Region === 'string') {
       onSelect?.({ kind: 'state', key: geometry.domain.focus.Region });
     }
-  }, [flyTo, onSelect]);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
-    mount.addEventListener('flint-interaction', handleInteraction);
-    const surface = buildInteractiveChart(mount, dataset.input(), {
-      backend: 'vegalite',
-      // Thousands of county shapes redraw on every pan/zoom frame; canvas
-      // avoids the per-path SVG DOM churn.
-      renderer: 'canvas',
-      interactions: [
-        navigate({
-          domainGuard: { minVisibleFraction: 0.04, maxVisibleFraction: 1, overscrollFraction: 0 },
-          // A click on empty map flies home; the bare stage keeps the double-click.
-          reset: dataset.bare ? ['double-click'] : ['click-none'],
-          resetTransition: { duration: FLY_MS },
-        }),
-        CLICK_REGION,
-      ],
-      expressionInterpreter,
-      ariaLabel: dataset.ariaLabel,
-      chartId: dataset.chartId,
-    });
-    surfaceRef.current = surface;
-    void surface.ready.catch((error) => {
-      console.error('Semantic zoom stage failed to build', error);
-    });
-    return () => {
-      mount.removeEventListener('flint-interaction', handleInteraction);
-      surfaceRef.current = null;
-      surface.destroy();
-    };
-  }, [handleInteraction, dataset]);
+  };
 
   const reset = () => flyTo({});
 
@@ -189,7 +165,21 @@ export function MapSemanticZoomStage({ compact = false, dataset = MOBILITY_DATAS
       </div>}
       <div className="ic-flint-dimpvis-panel">
         <ScaleToFit height={compact ? 300 : 800} adaptiveHeight={!compact} padding={8} maxScale={maxScale}>
-          <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount" ref={mountRef} />
+          <div className="ic-flint-dimpvis-mount map-semantic-zoom-mount">
+            <FlintChart
+              ref={chartRef}
+              spec={spec}
+              interactions={interactions}
+              // Thousands of county shapes redraw on every pan/zoom frame; canvas
+              // avoids the per-path SVG DOM churn.
+              renderer="canvas"
+              expressionInterpreter={expressionInterpreter}
+              ariaLabel={dataset.ariaLabel}
+              chartId={dataset.chartId}
+              onInteraction={handleInteraction}
+              onError={(error) => console.error('Semantic zoom stage failed to build', error)}
+            />
+          </div>
         </ScaleToFit>
       </div>
       {!dataset.bare && <div className="map-semantic-zoom-credit">
