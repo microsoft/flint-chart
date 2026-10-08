@@ -193,16 +193,32 @@ function pathGeometry(item: any, offsetX: number, offsetY: number, siblingIndex?
     };
 }
 
+/** The datum of every point on a path mark, in draw order. */
+function pathDataOf(mark: any): Record<string, unknown>[] {
+    return (mark.items ?? []).map((pathItem: any) => pathItem.datum).filter(Boolean);
+}
+
 export function sceneItems(view: any): any[] {
     const result: any[] = [];
+    const pathDataByMark = new Map<object, Record<string, unknown>[]>();
     const visit = (item: any, offsetX: number, offsetY: number, siblingIndex?: number): void => {
         if (!item) return;
         if (SUPPORTED_RENDER_MARKS.has(item.mark?.marktype) && keyOfDatum(item.datum) && item.bounds) {
             const interactionGeometry = pathGeometry(item, offsetX, offsetY, siblingIndex);
-            if ((item.mark.marktype === 'line' || item.mark.marktype === 'area') && !interactionGeometry) return;
+            const isPath = item.mark.marktype === 'line' || item.mark.marktype === 'area';
+            if (isPath && !interactionGeometry) return;
             const points = interactionGeometry?.points;
+            let interactionPathData: Record<string, unknown>[] | undefined;
+            if (isPath) {
+                interactionPathData = pathDataByMark.get(item.mark);
+                if (!interactionPathData) {
+                    interactionPathData = pathDataOf(item.mark);
+                    pathDataByMark.set(item.mark, interactionPathData);
+                }
+            }
             result.push({
                 ...item,
+                interactionPathData,
                 x: typeof item.x === 'number' ? item.x + offsetX : item.x,
                 y: typeof item.y === 'number' ? item.y + offsetY : item.y,
                 bounds: points ? {
@@ -637,7 +653,7 @@ export function renderHit(item: any): RenderHit | null {
         datum,
         endDatum: item.interactionGeometry?.endDatum,
         pathData: markType === 'line' || markType === 'area'
-            ? item.mark.items?.map((pathItem: any) => pathItem.datum).filter(Boolean)
+            ? item.interactionPathData ?? pathDataOf(item.mark)
             : undefined,
         source: 'mark',
         markType: item.mark?.marktype,

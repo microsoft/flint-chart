@@ -2303,6 +2303,24 @@ describe('interaction definitions', () => {
             .toBe(`Class A${PATH_KEY_SUFFIX}`);
     });
 
+    it('shares one path data list across the segments of a line, including its last point', () => {
+        const mark: any = { marktype: 'line', items: [] };
+        const points = [1, 2, 3, 4].map((value, index) => ({
+            mark, datum: { [INTERACTION_KEY]: 'Series', value },
+            x: index * 10, y: 50 - value, bounds: { x1: index * 10, x2: index * 10, y1: 50 - value, y2: 50 - value },
+        }));
+        mark.items = points;
+        const view = { scenegraph: () => ({ root: { items: points } }) };
+
+        const segments = sceneItems(view);
+        const hits = segments.map((segment) => renderHit(segment)!);
+
+        expect(segments).toHaveLength(3);
+        expect(new Set(hits.map((hit) => hit.pathData)).size).toBe(1);
+        expect(hits[0].pathData?.map((datum) => datum.value)).toEqual([1, 2, 3, 4]);
+        expect(renderHit(points[3])?.pathData?.map((datum) => datum.value)).toEqual([1, 2, 3, 4]);
+    });
+
     it('excludes connective rules from reorder-owned destination geometry', () => {
         const items = [
             { mark: { marktype: 'rect' }, datum: { [INTERACTION_KEY]: 'B', step: 'B' } },
