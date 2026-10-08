@@ -338,6 +338,17 @@ export function drawnLineUpdate(path: DrawnPath, finished: boolean, bounds?: Dra
     },
     {
       op: 'set-overlay',
+      name: 'drawn-points',
+      value: rows.length < 2 ? null : {
+        mark: 'point',
+        role: 'drawn-point',
+        data: { values: rows.slice(1).map(overlayRow) },
+        encodings: { x: { field: 'Year' }, y: { field: 'Share' } },
+        style: { fill: DRAWN_STROKE, stroke: '#ffffff', strokeWidth: 1, pointRadius: 3 },
+      },
+    },
+    {
+      op: 'set-overlay',
       name: 'drawn-front',
       value: finished ? null : {
         mark: 'point',

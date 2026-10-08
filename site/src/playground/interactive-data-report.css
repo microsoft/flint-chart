@@ -508,7 +508,7 @@
 .idr-chat-window-foot { display: grid; gap: 8px; margin: 0 14px 14px; }
 .idr-chat-window-foot .idr-chat-window-composer { margin: 0; }
 
-.idr-chat-context-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 6px; }
+.idr-chat-context-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; padding: 0 6px; }
 
 .idr-chat-context-chip {
   display: inline-flex;

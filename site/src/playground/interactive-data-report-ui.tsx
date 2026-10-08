@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { Check, Plus, Scan, Send, Square, X } from 'lucide-react';
+import type { ChartAssemblyInput } from 'flint-chart';
+import type { FlintChartHandle } from 'flint-chart/react';
 import type {
   FlintInteractionEventDetail,
   InteractionContext,
@@ -8,7 +10,6 @@ import type {
   SemanticElement,
 } from 'flint-chart/interactive';
 import { externalInteraction } from 'flint-chart/interactive';
-import type { InteractionDemoFixture } from './interaction-demo-data';
 import {
   ANSWER_RULES,
   OPS,
@@ -79,13 +80,15 @@ interface ProbePayload {
 }
 
 export interface ReportChart {
-  /** Spread onto an `InteractionDemoChart`. */
+  /** Spread onto a `FlintChart`; the section adds the renderer and the box. */
   chartProps: {
-    fixture: InteractionDemoFixture;
+    ref: RefObject<FlintChartHandle>;
+    spec: ChartAssemblyInput;
     interactions: InteractionDef[];
     chartId: string;
-    onSurface: (surface: InteractiveChartSurface | null) => void;
-    onSemanticEvent: (detail: FlintInteractionEventDetail) => void;
+    ariaLabel: string;
+    onRender: (surface: InteractiveChartSurface) => void;
+    onInteraction: (detail: FlintInteractionEventDetail) => void;
   };
   rows: ChartRows;
   ready: boolean;
@@ -153,13 +156,14 @@ export function useReportChart(
   onJump?: (item: Sentence) => void,
   { glideMs = 0 }: ReportChartOptions = {},
 ): ReportChart {
-  const surfaceRef = useRef<InteractiveChartSurface | null>(null);
+  const chartRef = useRef<FlintChartHandle>(null);
   const pinnedRef = useRef<string | null>(null);
   // Where `show` last put the marks; null once a gesture has moved them elsewhere.
   const placementRef = useRef<string | null>(placementOf([]));
   // Each `show` takes a ticket; a later one retires the steps an earlier one still waits on.
   const showTicket = useRef(0);
-  const [ready, setReady] = useState(false);
+  // The surface that has rendered; a rebuilt chart is a new one, and the slide on show lands on it again.
+  const [rendered, setRendered] = useState<InteractiveChartSurface | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -186,7 +190,7 @@ export function useReportChart(
   // A read waits for the chart's answer. Nothing is in flight when a question goes out, so
   // the answer is the state the reader sees.
   const readSelected = useCallback(async (): Promise<Row[]> => {
-    const surface = surfaceRef.current;
+    const surface = chartRef.current?.surface;
     if (!surface) return [];
     let elements: readonly SemanticElement[] = [];
     await surface.dispatch(PROBE_ID, {
@@ -195,11 +199,7 @@ export function useReportChart(
     return recordsOf(elements, latest.current.rows);
   }, []);
 
-  const onSurface = useCallback((surface: InteractiveChartSurface | null) => {
-    surfaceRef.current = surface;
-    setReady(false);
-    if (surface) void surface.ready.then(() => setReady(true)).catch(() => undefined);
-  }, []);
+  const onRender = useCallback((surface: InteractiveChartSurface) => setRendered(surface), []);
 
   const setPinned = useCallback((id: string | null) => {
     pinnedRef.current = id;
@@ -210,7 +210,7 @@ export function useReportChart(
     showTicket.current += 1;
     placementRef.current = placementOf([]);
     setPinned(null);
-    await surfaceRef.current?.clearUpdate(PIN_ID);
+    await chartRef.current?.clearUpdate(PIN_ID);
   }, [setPinned]);
 
   // setUpdates replaces every retained layer in a single render: the chart's own state goes
@@ -218,7 +218,7 @@ export function useReportChart(
   // the sentence moves the marks, the move goes first with the sentence's muting, which
   // clears the previous overlays; this sentence's overlays draw once the marks have landed.
   const show = useCallback(async (item: Sentence | null) => {
-    const surface = surfaceRef.current;
+    const surface = chartRef.current?.surface;
     if (!surface) return;
     const ticket = ++showTicket.current;
     if (!item) {
@@ -243,7 +243,7 @@ export function useReportChart(
     // is back once this slide's own ops have rendered, so a second pass reaches it.
     if (results.some((result) => result.unresolvedTargets.length > 0)) await surface.setUpdates([update]);
     setPinned(item.id);
-  }, [glideMs, setPinned]);
+  }, [glideMs, rendered, setPinned]);
 
   const pin = useCallback(async (item: Sentence) => {
     if (pinnedRef.current === item.id) await unpin();
@@ -252,14 +252,14 @@ export function useReportChart(
 
   const clear = useCallback(() => {
     void unpin();
-    const surface = surfaceRef.current;
+    const surface = chartRef.current?.surface;
     if (!surface) return;
     for (const entry of spec.presets) void surface.clearUpdate(entry.def.id);
   }, [spec.presets, unpin]);
 
   // Sentence -> chart, preview layer.
   useEffect(() => {
-    const surface = surfaceRef.current;
+    const surface = chartRef.current?.surface;
     if (!surface) return;
     const item = hoveredId ? byId.get(hoveredId) : undefined;
     if (!item) {
@@ -274,7 +274,7 @@ export function useReportChart(
 
   // Chart -> text, on two gestures only: a double-click jumps to the sentence about the
   // mark, and any committed gesture drops the pin, because the reader's hand owns the chart.
-  const onSemanticEvent = useCallback((detail: FlintInteractionEventDetail) => {
+  const onInteraction = useCallback((detail: FlintInteractionEventDetail) => {
     const { event, interactionId } = detail;
     const { rows: chart, sentences: items, rowsBySentence: rowsBy, presetOps: ops, onJump: jump } = latest.current;
     if (event.phase !== 'commit') return;
@@ -303,9 +303,17 @@ export function useReportChart(
   }, [hoveredId, pinnedId]);
 
   return {
-    chartProps: { fixture: spec.fixture, interactions, chartId: `report-${spec.id}`, onSurface, onSemanticEvent },
+    chartProps: {
+      ref: chartRef,
+      spec: spec.fixture.input,
+      interactions,
+      chartId: `report-${spec.id}`,
+      ariaLabel: spec.fixture.title,
+      onRender,
+      onInteraction,
+    },
     rows,
-    ready,
+    ready: rendered !== null,
     hoveredId,
     pinnedId,
     preview,

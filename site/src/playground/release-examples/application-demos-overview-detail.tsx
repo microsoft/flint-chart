@@ -7,11 +7,10 @@ import {
   type ChartChange,
   type FlintInteractionEventDetail,
   type InteractionDef,
-  type InteractiveChartSurface,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
+import { expressionInterpreter } from 'vega-interpreter';
 import gasoline from '../../data/us-gasoline-prices.json';
-import { DemoChartFitContext, InteractionDemoChart, type DemoChartFit } from '../InteractionDemoChart';
-import type { InteractionDemoFixture } from '../interaction-demo-data';
 
 /*
  * Overview and detail on one weekly series. Both charts hold every week; the
@@ -34,39 +33,38 @@ const FIRST = ROWS[0][WEEK];
 const LAST = ROWS[ROWS.length - 1][WEEK];
 const PEAK = ROWS.reduce((best, row) => (row[PRICE] > best[PRICE] ? row : best));
 const PRICE_DOMAIN: [number, number] = [0, Math.ceil(PEAK[PRICE] * 2) / 2];
+/** The box inside the 832px reading column. canvasSize pins each chart there, so nothing is shrunk and the text keeps its full size. */
+const CHART_WIDTH = 800;
+/** The layout shapes the plot from the data and grows its height sublinearly with the base, so a tall base is what makes the detail tall. */
+const DETAIL_HEIGHT = 800;
+const OVERVIEW_HEIGHT = 160;
+const TYPE = { baseLabelFontSize: 12, baseTitleFontSize: 13 };
 
-function fixture(id: string, title: string | undefined, subtitle: string | undefined, height: number): InteractionDemoFixture {
+function spec(title: string | undefined, subtitle: string | undefined, height: number): ChartAssemblyInput {
   return {
-    id,
-    title: title ?? 'Weekly US regular gasoline price, every week',
-    source: gasoline.source,
-    input: {
-      data: { values: ROWS },
-      semantic_types: {
-        [WEEK]: 'Date',
-        [PRICE]: { semanticType: 'Quantity', intrinsicDomain: PRICE_DOMAIN, unit: '$' },
-      },
-      chart_spec: {
-        chartType: 'Area Chart',
-        ...(title ? { title } : {}),
-        ...(subtitle ? { subtitle } : {}),
-        encodings: { x: WEEK, y: PRICE },
-        baseSize: { width: 900, height },
-      },
-      options: { addTooltips: false },
-    } as ChartAssemblyInput,
-  };
+    data: { values: ROWS },
+    semantic_types: {
+      [WEEK]: 'Date',
+      [PRICE]: { semanticType: 'Quantity', intrinsicDomain: PRICE_DOMAIN, unit: '$' },
+    },
+    chart_spec: {
+      chartType: 'Area Chart',
+      ...(title ? { title } : {}),
+      ...(subtitle ? { subtitle } : {}),
+      encodings: { x: WEEK, y: PRICE },
+      baseSize: { width: CHART_WIDTH, height },
+      canvasSize: { width: CHART_WIDTH, height },
+    },
+    options: { addTooltips: false, ...TYPE },
+  } as ChartAssemblyInput;
 }
 
-const DETAIL_FIXTURE = fixture(
-  DETAIL_ID,
+const DETAIL_SPEC = spec(
   `US regular gasoline, ${FIRST.slice(0, 4)}–${LAST.slice(0, 4)}`,
   'Average retail price per gallon, by week. Drag across the strip below to frame the weeks shown here.',
-  380,
+  DETAIL_HEIGHT,
 );
-const OVERVIEW_FIXTURE = fixture(OVERVIEW_ID, undefined, undefined, 90);
-/** The strip is short, so its box fits it instead of the page's chart height. */
-const OVERVIEW_FIT: DemoChartFit = { height: 240, minHeight: 80, maxScale: 0.85 };
+const OVERVIEW_SPEC = spec(undefined, undefined, OVERVIEW_HEIGHT);
 
 const DETAIL_INTERACTIONS: readonly InteractionDef[] = [navigate({ axes: 'x', pan: false, zoom: false, reset: [] })];
 /** A stateful x brush that keeps its interval on screen but emphasizes nothing: the strip is a thumbnail, and the detail is the emphasis. */
@@ -97,19 +95,16 @@ const longDate = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'shor
 const dollars = (value: number) => `$${value.toFixed(2)}`;
 
 export function OverviewDetailDemo() {
-  const detail = useRef<InteractiveChartSurface | null>(null);
-  const unsubscribe = useRef<(() => void) | undefined>(undefined);
+  const detail = useRef<FlintChartHandle>(null);
   const [window, setWindow] = useState<Window | null>(null);
 
   const frame = useCallback((next: Window | null, phase: ChartChange['phase']) => {
-    const surface = detail.current;
-    if (!surface) return;
     const value = next ? { x: next } : {};
-    void surface.applyUpdate(
+    void detail.current?.applyUpdate(
       { id: FRAME_ID, ops: [{ op: 'set-viewport', axes: 'x', value }] },
       phase === 'commit' ? { transition: { duration: 250 } } : undefined,
     ).then((result) => {
-      if (result.status !== 'applied') console.warn(`${DETAIL_ID}: ${result.status}`, result);
+      if (result && result.status !== 'applied') console.warn(`${DETAIL_ID}: ${result.status}`, result);
     });
   }, []);
 
@@ -127,21 +122,6 @@ export function OverviewDetailDemo() {
     setWindow(null);
     frame(null, 'commit');
   }, [frame]);
-  const onOverviewSurface = useCallback((surface: InteractiveChartSurface | null) => {
-    unsubscribe.current?.();
-    if (!surface) {
-      unsubscribe.current = undefined;
-      return;
-    }
-    const offChange = surface.onChange(onOverviewChange);
-    const offInteraction = surface.onInteraction(onOverviewInteraction);
-    unsubscribe.current = () => {
-      offChange();
-      offInteraction();
-    };
-  }, [onOverviewChange, onOverviewInteraction]);
-  const onDetailSurface = useCallback((surface: InteractiveChartSurface | null) => { detail.current = surface; }, []);
-
   const status = useMemo(() => {
     if (!window) {
       return `Showing every week from ${longDate.format(Date.parse(FIRST))} to ${longDate.format(Date.parse(LAST))}. The record was ${dollars(PEAK[PRICE])} in the week of ${longDate.format(Date.parse(PEAK[WEEK]))}. Drag across the strip below to frame the chart on those weeks.`;
@@ -159,12 +139,25 @@ export function OverviewDetailDemo() {
   return <div className="app-demo-stack">
     <p className="it-detail-note app-demo-year-note">{status}</p>
     <div className="app-demo-box app-demo-stack-chart">
-      <InteractionDemoChart fixture={DETAIL_FIXTURE} interactions={DETAIL_INTERACTIONS} chartId={DETAIL_ID} onSurface={onDetailSurface} />
+      <FlintChart
+        ref={detail}
+        spec={DETAIL_SPEC}
+        interactions={DETAIL_INTERACTIONS}
+        chartId={DETAIL_ID}
+        ariaLabel={`US regular gasoline, ${FIRST.slice(0, 4)}–${LAST.slice(0, 4)}`}
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+      />
     </div>
     <div className="app-demo-box app-demo-stack-chart app-demo-strip">
-      <DemoChartFitContext.Provider value={OVERVIEW_FIT}>
-        <InteractionDemoChart fixture={OVERVIEW_FIXTURE} interactions={OVERVIEW_INTERACTIONS} chartId={OVERVIEW_ID} onSurface={onOverviewSurface} />
-      </DemoChartFitContext.Provider>
+      <FlintChart
+        spec={OVERVIEW_SPEC}
+        interactions={OVERVIEW_INTERACTIONS}
+        chartId={OVERVIEW_ID}
+        ariaLabel="Weekly US regular gasoline price, every week"
+        renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+        onChange={onOverviewChange}
+        onInteraction={onOverviewInteraction}
+      />
     </div>
   </div>;
 }

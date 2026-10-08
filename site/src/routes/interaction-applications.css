@@ -48,11 +48,12 @@
 
 /* The draw stage fills the case width, with the same card rule as the other demos. */
 .ia-page .pisa-draw {
-  grid-template-columns: minmax(0, 1fr) 180px;
+  grid-template-columns: minmax(0, 1fr) 220px;
   gap: 20px;
   width: 100%;
+  align-items: stretch;
 }
-.ia-page .pisa-draw__chart { border-color: #d4d8dc; border-radius: 4px; }
+.ia-page .pisa-draw__chart, .ia-page .pisa-draw__labels { border-color: #d4d8dc; border-radius: 4px; }
 .ia-page .pisa-draw__label { border-radius: 4px; }
 
 @media (max-width: 760px) {
@@ -61,3 +62,14 @@
   .ia-page .idr-article,
   .ia-page .pisa-draw { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* A second run of cases under its own heading. */
+.ia-page .ia-section {
+  width: 100%;
+  max-width: 832px;
+  margin: 24px auto 0;
+  padding-top: 40px;
+  border-top: 2px solid #1f2328;
+}
+.ia-page .ia-section h2 { margin: 0 0 14px; font-size: 26px; line-height: 1.3; font-weight: 700; }
+.ia-page .ia-section p { margin: 0 0 8px; }

@@ -6,12 +6,11 @@ import {
   externalInteraction,
   type ChartChange,
   type InteractionDef,
-  type InteractiveChartSurface,
   type UpdateTarget,
 } from 'flint-chart/interactive';
+import { FlintChart, type FlintChartHandle } from 'flint-chart/react';
+import { expressionInterpreter } from 'vega-interpreter';
 import epoch from '../../data/epoch-ai-models.json';
-import { InteractionDemoChart } from '../InteractionDemoChart';
-import type { InteractionDemoFixture } from '../interaction-demo-data';
 
 /*
  * Two charts on the notable AI models, each driving the other. A brush on the
@@ -63,24 +62,19 @@ const THEME: ChartAssemblyInput['theme_spec'] = {
   legend: { suppressWhenAxisNames: true },
 };
 
-const SCATTER_FIXTURE: InteractionDemoFixture = {
-  id: SCATTER_ID,
-  title: 'Training compute of notable AI models',
-  source: epoch.source,
-  input: {
-    data: { values: MODELS },
-    semantic_types: { Model: 'Category', Company: 'Category', Date: 'Date', 'Training compute (FLOP)': 'Quantity' },
-    chart_spec: {
-      chartType: 'Scatter Plot',
-      title: 'Training compute of notable AI models',
-      subtitle: `${MODELS.length} models from ${COMPANIES.length} companies, by release date`,
-      encodings: { x: 'Date', y: 'Training compute (FLOP)', color: 'Company', detail: 'Model' },
-      baseSize: { width: 430, height: 320 },
-      chartProperties: { logScale_y: true },
-    },
-    theme_spec: THEME,
-  } as ChartAssemblyInput,
-};
+const SCATTER_SPEC = {
+  data: { values: MODELS },
+  semantic_types: { Model: 'Category', Company: 'Category', Date: 'Date', 'Training compute (FLOP)': 'Quantity' },
+  chart_spec: {
+    chartType: 'Scatter Plot',
+    title: 'Training compute of notable AI models',
+    subtitle: `${MODELS.length} models from ${COMPANIES.length} companies, by release date`,
+    encodings: { x: 'Date', y: 'Training compute (FLOP)', color: 'Company', detail: 'Model' },
+    baseSize: { width: 430, height: 320 },
+    chartProperties: { logScale_y: true },
+  },
+  theme_spec: THEME,
+} as ChartAssemblyInput;
 
 /** One bar per company: the models among `models`, with every company kept so the bars never vanish. */
 function countRows(models: readonly Model[]): Record<string, unknown>[] {
@@ -89,23 +83,18 @@ function countRows(models: readonly Model[]): Record<string, unknown>[] {
   return [...counts].map(([Company, Models]) => ({ Company, Models }));
 }
 
-const BARS_FIXTURE: InteractionDemoFixture = {
-  id: BARS_ID,
-  title: 'Models per company',
-  source: epoch.source,
-  input: {
-    data: { values: countRows(MODELS) },
-    semantic_types: { Company: 'Category', Models: 'Count' },
-    chart_spec: {
-      chartType: 'Bar Chart',
-      title: 'Models per company',
-      subtitle: 'In the brushed dates',
-      encodings: { x: 'Models', y: { field: 'Company', sortBy: 'x', sortOrder: 'descending' }, color: 'Company' },
-      baseSize: { width: 330, height: 320 },
-    },
-    theme_spec: THEME,
-  } as ChartAssemblyInput,
-};
+const BARS_SPEC = {
+  data: { values: countRows(MODELS) },
+  semantic_types: { Company: 'Category', Models: 'Count' },
+  chart_spec: {
+    chartType: 'Bar Chart',
+    title: 'Models per company',
+    subtitle: 'In the brushed dates',
+    encodings: { x: 'Models', y: { field: 'Company', sortBy: 'x', sortOrder: 'descending' }, color: 'Company' },
+    baseSize: { width: 330, height: 320 },
+  },
+  theme_spec: THEME,
+} as ChartAssemblyInput;
 
 const SCATTER_INTERACTIONS: readonly InteractionDef[] = [
   brushX({ id: WINDOW_ID, mode: 'stateful', dimOpacity: 0.25 }),
@@ -134,9 +123,8 @@ const modelsOf = (change: ChartChange): string[] =>
   [...new Set((change.target?.elements ?? []).map((element) => (element.value as { Model?: unknown })?.Model).filter((name): name is string => typeof name === 'string'))];
 
 export function ConnectedModelsDemo() {
-  const scatter = useRef<InteractiveChartSurface | null>(null);
-  const bars = useRef<InteractiveChartSurface | null>(null);
-  const unsubscribe = useRef<{ scatter?: () => void; bars?: () => void }>({});
+  const scatter = useRef<FlintChartHandle>(null);
+  const bars = useRef<FlintChartHandle>(null);
   const [window, setWindow] = useState<readonly Model[] | null>(null);
   const [company, setCompany] = useState<string | null>(null);
   const windowRef = useRef<readonly Model[] | null>(null);
@@ -173,17 +161,6 @@ export function ConnectedModelsDemo() {
     lightCompany(name);
   }, [lightCompany]);
 
-  const onScatterSurface = useCallback((surface: InteractiveChartSurface | null) => {
-    unsubscribe.current.scatter?.();
-    scatter.current = surface;
-    unsubscribe.current.scatter = surface?.onChange(onScatterChange);
-  }, [onScatterChange]);
-  const onBarsSurface = useCallback((surface: InteractiveChartSurface | null) => {
-    unsubscribe.current.bars?.();
-    bars.current = surface;
-    unsubscribe.current.bars = surface?.onChange(onBarsChange);
-  }, [onBarsChange]);
-
   const status = useMemo(() => {
     const scope = window ? `${window.length} of ${MODELS.length} models in the brushed dates` : `All ${MODELS.length} models`;
     const lit = company ? `; ${company} lit on the scatter` : '';
@@ -194,10 +171,26 @@ export function ConnectedModelsDemo() {
     <p className="it-detail-note app-demo-year-note">{status}</p>
     <div className="app-demo-pair">
       <div className="app-demo-box app-demo-stack-chart">
-        <InteractionDemoChart fixture={SCATTER_FIXTURE} interactions={SCATTER_INTERACTIONS} chartId={SCATTER_ID} onSurface={onScatterSurface} />
+        <FlintChart
+          ref={scatter}
+          spec={SCATTER_SPEC}
+          interactions={SCATTER_INTERACTIONS}
+          chartId={SCATTER_ID}
+          ariaLabel="Training compute of notable AI models"
+          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+          onChange={onScatterChange}
+        />
       </div>
       <div className="app-demo-box app-demo-stack-chart">
-        <InteractionDemoChart fixture={BARS_FIXTURE} interactions={BARS_INTERACTIONS} chartId={BARS_ID} onSurface={onBarsSurface} />
+        <FlintChart
+          ref={bars}
+          spec={BARS_SPEC}
+          interactions={BARS_INTERACTIONS}
+          chartId={BARS_ID}
+          ariaLabel="Models per company"
+          renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+          onChange={onBarsChange}
+        />
       </div>
     </div>
   </div>;

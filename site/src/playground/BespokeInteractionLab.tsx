@@ -11,6 +11,7 @@ import { YouDrawItStage } from './YouDrawItStage';
 import { MapSemanticZoomStage } from './MapSemanticZoomStage';
 import { ChinaSemanticZoomStage } from './ChinaSemanticZoomStage';
 import { RetailDrilldownStage } from './RetailDrilldownStage';
+import { MovingAverageStage } from './MovingAverageStage';
 import { SiteShell } from '../components/SiteShell';
 import mobility from '../data/county-mobility.json';
 import trajectorySource from './FlintDimpVisStage.tsx?raw';
@@ -23,6 +24,7 @@ import drawSource from './YouDrawItStage.tsx?raw';
 import mapSource from './MapSemanticZoomStage.tsx?raw';
 import chinaSource from './ChinaSemanticZoomStage.tsx?raw';
 import retailSource from './RetailDrilldownStage.tsx?raw';
+import averageSource from './MovingAverageStage.tsx?raw';
 import './bespoke-interaction-lab.css';
 
 function BespokeCode({ title, source }: { title: string; source: string }) {
@@ -234,8 +236,8 @@ export function BespokeInteractionLab({ publicPage = false }: { publicPage?: boo
             <div>
               <h2>You draw it</h2>
               <p>
-                Draw the future part of a line chart with a freehand stroke; the chart reveals the real
-                series and scores the guess.
+                Draw the future part of a line chart with a freehand stroke; once every year is filled, the
+                chart reveals the real series and scores the guess. Double-click to start over.
                 Approximate annual U.S. coal electricity-generation shares from EIA Electric Power Monthly,
                 2000-2024, rounded to one decimal.
               </p>
@@ -248,6 +250,27 @@ export function BespokeInteractionLab({ publicPage = false }: { publicPage?: boo
           </header>
           <YouDrawItStage />
           <BespokeCode title="You draw it" source={drawSource} />
+        </article>
+
+        <article className="bespoke-case bespoke-case--single">
+          <header className="bespoke-case-header">
+            <div>
+              <h2>A moving average line</h2>
+              <p>
+                Drag across months and a reference line moves to their mean; move or resize the brush and the
+                line follows every frame. One definition returns the emphasis and the line together.
+                Average retail price of a dozen eggs, U.S. city average, from
+                {' '}<a href="https://www.bls.gov/cpi/data.htm" target="_blank" rel="noreferrer">BLS average price data</a>.
+              </p>
+              <div className="bespoke-pattern">
+                <strong>Flint in → Flint out</strong>
+                <strong>Stateful brush → set-style + set-overlay</strong>
+              </div>
+            </div>
+            <span className="bespoke-status">Case 10</span>
+          </header>
+          <MovingAverageStage />
+          <BespokeCode title="A moving average line" source={averageSource} />
         </article>
       </div>
     </div>

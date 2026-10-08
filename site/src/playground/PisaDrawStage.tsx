@@ -19,7 +19,6 @@ import {
   anchorPaths,
   boundsBySubject,
   clearRevealUpdate,
-  describeSubjectScore,
   drawnLinesUpdate,
   drawnYears,
   focusUpdate,
@@ -241,26 +240,6 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
     void chartRef.current?.clearUpdate(REVEAL_INTERACTION_ID);
   };
 
-  const hint = (() => {
-    switch (phase) {
-      case 'pick':
-        return 'Click a subject label to start. Each line is drawn on its own; the other two dim while you draw.';
-      case 'drawing': {
-        if (!active) return '';
-        const { drawn, total } = drawnYears(paths[active], BOUNDS[active]);
-        const left = SUBJECTS.filter((subject) => !subjectDone(paths[subject], BOUNDS[subject]) && subject !== active);
-        const progress = drawn === total
-          ? `${active} is complete.`
-          : `${active}: ${drawn} of ${total} years drawn. Press right of ${DRAW_START_YEAR} and move across the years.`;
-        const next = left.length > 0 ? ` Still to draw: ${left.join(', ')}.` : ' Finish this line to reveal the real scores.';
-        return progress + next;
-      }
-      case 'revealing':
-        return 'The real lines grow in through an external interaction, one frame at a time.';
-      case 'revealed':
-        return 'Reset hides the future rows again and clears your lines.';
-    }
-  })();
 
   return (
     <div className="pisa-draw">
@@ -279,10 +258,6 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
             />
           </div>
         </ScaleToFit>
-        <div className="pisa-draw__footer">
-          <button type="button" className="ic-pill" onClick={reset}>Reset</button>
-          <span className="pisa-draw__hint">{hint}</span>
-        </div>
       </div>
       <aside className="pisa-draw__labels" aria-label="Subjects to draw">
         <h2>Draw a subject</h2>
@@ -292,7 +267,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
             const { drawn, total } = drawnYears(paths[subject], BOUNDS[subject]);
             const score = scores?.find((entry) => entry.subject === subject);
             const status = score
-              ? describeSubjectScore(score)
+              ? `${score.meanAbsError.toFixed(1)} points off`
               : done
                 ? 'Complete'
                 : drawn > 0
@@ -317,12 +292,7 @@ export function PisaDrawStage({ theme, ink }: PisaDrawStageProps) {
             );
           })}
         </ul>
-        {scores && (
-          <p className="pisa-draw__summary">
-            Mean error across the three subjects:{' '}
-            {(scores.reduce((sum, score) => sum + score.meanAbsError, 0) / scores.length).toFixed(1)} points.
-          </p>
-        )}
+        <button type="button" className="pisa-draw__reset" onClick={reset} disabled={phase === 'pick'}>Reset</button>
       </aside>
     </div>
   );

@@ -70,13 +70,46 @@
   list-style: none;
 }
 
-.it-scorer-list li {
+.it-scorer-list > li {
+  border-top: 1px solid #e9edef;
+}
+
+.it-scorer-row {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: baseline;
+  width: 100%;
   padding: 6px 0;
-  border-top: 1px solid #e9edef;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.it-scorer-row:hover .it-scorer-name,
+.it-scorer-list > li.is-open .it-scorer-name { color: var(--it-ink); }
+
+.it-scorer-detail {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 8px 30px;
+  padding: 0;
+  list-style: none;
+}
+
+.it-scorer-detail li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #61676d;
+}
+
+.it-scorer-detail strong {
+  color: #303940;
+  font-variant-numeric: tabular-nums;
 }
 
 .it-scorer-rank {

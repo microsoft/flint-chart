@@ -1,0 +1,24 @@
+.moving-average-mount {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding: 8px;
+  border: 1px solid #d8dee4;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.moving-average-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  color: #68737c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.moving-average-footer strong {
+  color: #343b41;
+  font-weight: 600;
+}

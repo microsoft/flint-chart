@@ -85,6 +85,31 @@
 .app-demo-window-track input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #e8f2f7; }
 .app-demo-window-track input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px #e8f2f7; }
 
+/* External control: a year to play, a country to follow, a timeline of events */
+.app-demo-year-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-bottom: 14px; }
+.app-demo-year-row strong { min-width: 3.2em; text-align: left; font-size: 13px; color: #1f2328; }
+.app-demo-year-row .app-demo-play { min-width: 4.6em; }
+.app-demo-field select { padding: 6px 8px; border: 1px solid #d4d8dc; border-radius: 4px; background: #fff; font: inherit; font-size: 13px; color: #1f2328; }
+.app-demo-gdp-panel { display: flex; flex-direction: column; gap: 4px; height: 100%; min-height: 0; }
+.app-demo-gdp-panel .app-demo-year-row { margin-bottom: 18px; }
+.app-demo-gdp-panel .app-demo-field { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; margin-bottom: 18px; font-size: 13px; }
+.app-demo-gdp-panel .app-demo-field strong { grid-column: 1 / -1; font-weight: 500; font-size: 12px; color: #61676d; }
+.app-demo-gdp-panel .it-detail-heading { margin-bottom: 6px; }
+.app-demo-timeline { flex: 1; min-height: 0; overflow-y: auto; margin: 4px 0 0; padding: 2px 0; list-style: none; display: grid; align-content: start; gap: 0; }
+.app-demo-timeline li { position: relative; padding: 0 0 13px 22px; }
+.app-demo-timeline li::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #d4d8dc; }
+.app-demo-timeline li:first-child::before { top: 6px; }
+.app-demo-timeline li:last-child::before { bottom: auto; height: 6px; }
+.app-demo-timeline li::after { content: ''; position: absolute; left: 0; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #176a92; box-shadow: 0 0 0 2px #fff; }
+.app-demo-timeline button { display: grid; grid-template-columns: 3.2em minmax(0, 1fr); gap: 10px; align-items: baseline; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; }
+.app-demo-timeline button span { font-size: 12px; color: #8a9096; font-variant-numeric: tabular-nums; }
+.app-demo-timeline button strong { overflow: hidden; font-size: 13px; font-weight: 500; color: #1f2328; text-overflow: ellipsis; white-space: nowrap; }
+.app-demo-timeline button small { font-size: 11px; line-height: 1.4; color: #61676d; }
+.app-demo-timeline li.is-future button { opacity: 0.45; }
+.app-demo-timeline li.is-future::after { background: #c7cdd2; }
+.app-demo-timeline li.is-current::after { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b9d6e5; }
+.app-demo-timeline li.is-current button strong { color: #0f4f6e; font-weight: 600; }
+
 /* A slider over a full-width chart */
 .app-demo-stack { display: grid; gap: 10px; }
 .app-demo-year-bar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
@@ -96,6 +121,12 @@
 .app-demo-pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; }
 @media (max-width: 760px) { .app-demo-pair { grid-template-columns: minmax(0, 1fr); } }
 
+.app-demo-equation { margin: 0 0 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; color: #1f2328; }
+.app-demo-was { margin-left: 6px; font-weight: 400; font-size: 11px; color: #8a9096; }
+.app-demo-reset { margin-top: 14px; }
+.app-demo-reset:disabled { opacity: 0.45; cursor: default; }
+.app-demo-stats div { grid-template-columns: 96px minmax(0, 1fr); }
+
 /* The electoral tally: one bar, two colours, a line at 270. */
 .app-demo-tally { display: grid; gap: 6px; margin: 10px 0 4px; }
 .app-demo-tally-bar { position: relative; display: flex; height: 22px; border-radius: 4px; overflow: hidden; background: #e4e7ea; }
@@ -104,6 +135,13 @@
 .app-demo-tally-line { position: absolute; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: #1f2328; }
 .app-demo-tally-labels { display: flex; justify-content: space-between; font-size: 12px; color: #61676d; }
 .app-demo-tally-labels strong { font-size: 13px; }
+
+/* Earthquakes: the histogram beside the list. */
+.app-demo-quakes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.app-demo-quake-list { overflow-y: auto; max-height: 320px; }
+.app-demo-quake-list .app-demo-ranking li { align-items: baseline; }
+.app-demo-quake-list .app-demo-ranking small { display: block; color: #8a9096; font-size: 11px; }
+.app-demo-quake-list .app-demo-ranking strong { white-space: nowrap; }
 
 /* The semantic-zoom map beside its profile: one fixed height, nothing scrolls or reflows. */
 .app-demo-map-profile { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 16px; height: 508px; }
@@ -121,3 +159,54 @@
 .app-demo-profile .app-demo-tally-labels strong { font-size: 11px; }
 .app-demo-profile-hint { margin: 0; min-height: 2.6em; }
 @media (max-width: 760px) { .app-demo-map-profile { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; } }
+
+/* Fit a distribution: the two candidate curves and the starting shapes. */
+.app-demo-curves div { grid-template-columns: 136px minmax(0, 1fr); padding: 4px 6px; margin: 0 -6px; border-radius: 4px; }
+.app-demo-curve--better { background: #f4f6f7; }
+.app-demo-curve--better dd { color: #1f2328; font-weight: 600; }
+.app-demo-curves dt { display: flex; align-items: center; gap: 6px; }
+.app-demo-swatch { display: inline-block; width: 16px; border-top: 2px solid currentColor; }
+.app-demo-swatch--dashed { border-top-style: dashed; }
+.app-demo-shapes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.app-demo-panel .app-demo-play { padding: 5px 10px; border: 1px solid #d4d8dc; border-radius: 4px; background: #fff; font: inherit; font-size: 12px; color: #1f2328; cursor: pointer; }
+.app-demo-panel .app-demo-play:hover:not(:disabled) { background: #eef1f3; }
+.app-demo-stats + .it-detail-heading { margin-top: 16px; }
+
+/* Draw the wait: the sketch's reading beside the data's. */
+.app-demo-compare { width: 100%; border-collapse: collapse; font-size: 12px; color: #1f2328; }
+.app-demo-compare th, .app-demo-compare td { padding: 7px 10px 7px 0; text-align: left; border-bottom: 1px solid #e4e7ea; vertical-align: baseline; }
+.app-demo-compare thead th { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7b868e; }
+.app-demo-compare tbody th { width: 24%; white-space: nowrap; font-weight: 500; color: #61676d; }
+.app-demo-compare td { width: 35%; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.app-demo-compare td:nth-child(2) { color: #1f2328; font-weight: 600; }
+.app-demo-compare td:nth-child(3) { color: #d1495b; font-weight: 600; }
+.app-demo-compare td.app-demo-compare-hidden { color: #b8bec4; font-weight: 400; }
+.app-demo-compare-note { margin: 12px 0 0; min-height: 2.8em; }
+.app-demo-compare--sample td:nth-child(3) { color: #8a9096; }
+.app-demo-compare--sample td.app-demo-compare-hidden { color: #b8bec4; }
+
+/* Draw the relationship: the prompt and the strength slider. */
+.app-demo-prompt { margin: 0 0 18px; font-size: 15px; line-height: 1.5; color: #1f2328; }
+.app-demo-prompt em { display: block; margin-top: 8px; font-weight: 600; }
+.app-demo-belief { gap: 12px; }
+.app-demo-belief div { grid-template-columns: 104px minmax(0, 1fr); align-items: baseline; }
+.app-demo-belief dt { font-size: 11px; }
+.app-demo-belief dd { font-size: 15px; line-height: 1.4; }
+.app-demo-strength { display: grid; gap: 8px; margin-top: 22px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7b868e; }
+.app-demo-strength-track { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.app-demo-strength-track small { font-size: 13px; color: #61676d; }
+.app-demo-strength-track input[type="range"] { width: 100%; height: 22px; margin: 0; accent-color: #d1495b; }
+.app-demo-belief + .app-demo-strength + .app-demo-shapes { margin-top: 22px; }
+.app-demo-belief ~ .app-demo-shapes .app-demo-play { padding: 7px 14px; font-size: 13px; }
+.app-demo-sample-chart g.mark-symbol.role-mark path { fill-opacity: 0.4; stroke-opacity: 0.4; }
+.app-demo-compare + .app-demo-shapes { margin-top: 14px; }
+
+/* The Datasaurus shapes as a two-column list, and a compact statistics block under it. */
+.app-demo-shape-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 0 14px; padding: 0; list-style: none; }
+.app-demo-shape-list button { width: 100%; padding: 5px 8px; border: 1px solid #d4d8dc; border-radius: 4px; background: #fff; color: #3d444b; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.app-demo-shape-list button:hover { background: #f4f6f7; }
+.app-demo-shape-list button.is-active { border-color: #e07b39; background: #fdf1e8; color: #8a4a1d; font-weight: 600; }
+.app-demo-stats--large { gap: 10px; }
+.app-demo-stats--large div { grid-template-columns: 110px minmax(0, 1fr); align-items: baseline; }
+.app-demo-stats--large dt { font-size: 11px; }
+.app-demo-stats--large dd { font-size: 16px; font-variant-numeric: tabular-nums; }

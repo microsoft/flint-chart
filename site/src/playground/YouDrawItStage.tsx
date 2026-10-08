@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeftRight, RotateCcw } from 'lucide-react';
 import type { ChartAssemblyInput } from 'flint-chart';
+import type { ChartChange } from 'flint-chart/interactive';
 import {
   externalInteraction,
   lassoTrigger,
@@ -22,14 +22,11 @@ import {
   anchorPath,
   clearRevealUpdate,
   dateToYear,
-  describeScore,
   drawBounds,
   drawnLineUpdate,
   extendPath,
-  frontSample,
   hideFutureUpdate,
   isComplete,
-  missingYears,
   promptUpdate,
   resampleYearly,
   revealUpdate,
@@ -37,7 +34,6 @@ import {
   scoreUpdate,
   splitRows,
   type DrawnPath,
-  type GuessScore,
   type StagePhase,
 } from './you-draw-it-model';
 import './interaction-candidates.css';
@@ -72,7 +68,7 @@ function chartInput(): ChartAssemblyInput {
     chart_spec: {
       chartType: 'Line Chart',
       title: 'Share of U.S. electricity from coal',
-      subtitle: `Percent of net generation, ${YEAR_DOMAIN[0]} to ${YEAR_DOMAIN[1]}. Draw where you think the line went after ${DRAW_START_YEAR}.`,
+      subtitle: `Percent of net generation, ${YEAR_DOMAIN[0]} to ${YEAR_DOMAIN[1]}. Draw where you think the line went after ${DRAW_START_YEAR}; double-click to start over`,
       encodings: { x: 'Year', y: 'Share', color: 'Segment' },
       baseSize: VIEW_SIZE,
       canvasSize: VIEW_SIZE,
@@ -91,32 +87,12 @@ function candidatesFromDomainPoints(points: readonly { x?: unknown; y?: unknown 
   });
 }
 
-function phaseHint(phase: StagePhase, path: DrawnPath): string {
-  switch (phase) {
-    case 'idle':
-      return `Press in the plot after ${DRAW_START_YEAR} and move across the years. Every year takes the value under the pointer; move back to redraw a part.`;
-    case 'drawing': {
-      const missing = missingYears(path, BOUNDS);
-      const total = BOUNDS.endYear - BOUNDS.startYear;
-      return `${total - missing.length} of ${total} years drawn. ${missing.length === 1 ? `Year ${missing[0]} is still empty.` : `Fill ${missing[0]} to ${missing[missing.length - 1]} to finish.`}`;
-    }
-    case 'complete':
-      return `All ${BOUNDS.endYear - BOUNDS.startYear} years drawn. Click Finish drawing to reveal the real line, or keep redrawing.`;
-    case 'revealing':
-      return 'The real line grows in through an external interaction, one frame at a time.';
-    case 'revealed':
-      return 'Reset hides the future rows again and clears your line.';
-  }
-}
-
 export function YouDrawItStage() {
   const spec = useMemo(() => chartInput(), []);
   const chartRef = useRef<FlintChartHandle>(null);
   const committedPathRef = useRef<DrawnPath>(anchorPath(BOUNDS));
   const phaseRef = useRef<StagePhase>('idle');
   const [phase, setPhase] = useState<StagePhase>('idle');
-  const [path, setPath] = useState<DrawnPath>(committedPathRef.current);
-  const [score, setScore] = useState<GuessScore | null>(null);
   const [scoreLayer, setScoreLayer] = useState<ChartUpdate | null>(null);
   const [revealRun, setRevealRun] = useState(0);
   const handledRevealRunRef = useRef(0);
@@ -131,6 +107,7 @@ export function YouDrawItStage() {
       id: DRAW_INTERACTION_ID,
       eventSource: lassoTrigger('contain', false),
       affordances: { plot: { cursor: 'draw' } },
+      reset: ['double-click'],
       handle(event): ChartUpdate | null {
         if (event.action !== 'select-lasso') return null;
         if (event.phase === 'start') return null;
@@ -141,7 +118,6 @@ export function YouDrawItStage() {
           return event.phase === 'cancel' ? null : drawnLineUpdate(committedPathRef.current, true, BOUNDS);
         }
         if (event.phase === 'cancel') {
-          setPath(committedPathRef.current);
           updatePhase(committedPathRef.current.samples.length > 1 ? 'drawing' : 'idle');
           return null;
         }
@@ -156,9 +132,10 @@ export function YouDrawItStage() {
         // preview repaints from the last committed stroke.
         const next = extendPath(committedPathRef.current, candidates, BOUNDS);
         if (event.phase === 'commit') committedPathRef.current = next;
-        setPath(next);
-        // A complete line stays editable; only the Finish button reveals.
-        updatePhase(isComplete(next, BOUNDS) ? 'complete' : 'drawing');
+        const complete = isComplete(next, BOUNDS);
+        updatePhase(complete ? 'complete' : 'drawing');
+        // The stroke that fills the last year reveals the truth as it commits.
+        if (complete && event.phase === 'commit') setRevealRun((run) => run + 1);
         return drawnLineUpdate(next, false, BOUNDS);
       },
     };
@@ -177,7 +154,7 @@ export function YouDrawItStage() {
   ), [phase, scoreLayer]);
 
   useEffect(() => {
-    // Only the Finish button advances revealRun, and each run reveals once.
+    // The completing stroke advances revealRun, and each run reveals once.
     // The ref guard keeps a remount (for example a dev hot reload) from
     // replaying the reveal.
     if (revealRun === 0 || revealRun === handledRevealRunRef.current) return undefined;
@@ -204,7 +181,6 @@ export function YouDrawItStage() {
       await chart.applyUpdate(clearRevealUpdate());
       if (cancelled) return;
       const drawnEnd = finishedPath.samples[finishedPath.samples.length - 1].value;
-      setScore(nextScore);
       setScoreLayer(nextScore ? scoreUpdate(nextScore, COAL_SHARE_ROWS, BOUNDS, drawnEnd) : null);
       updatePhase('revealed');
     };
@@ -228,74 +204,37 @@ export function YouDrawItStage() {
     };
   }, [revealRun, updatePhase]);
 
-  const finishDrawing = () => {
-    if (phaseRef.current !== 'complete') return;
-    setRevealRun((run) => run + 1);
-  };
-
-  const reset = () => {
+  const reset = useCallback(() => {
     committedPathRef.current = anchorPath(BOUNDS);
-    setPath(committedPathRef.current);
-    setScore(null);
     setScoreLayer(null);
     updatePhase('idle');
     // The drawn line and the reveal belong to interactions, not to `updates`.
     void chartRef.current?.clearUpdate(DRAW_INTERACTION_ID);
     void chartRef.current?.clearUpdate(REVEAL_INTERACTION_ID);
-  };
+  }, [updatePhase]);
 
-  const front = frontSample(path);
-  const progress = phase === 'drawing' || phase === 'complete'
-    ? `Last: ${front.year} · ${front.value.toFixed(1)}%`
-    : phase === 'revealed' && score
-      ? `Revealed · ${score.meanAbsError.toFixed(1)} pt mean error`
-      : null;
+  // A double-click is the draw definition's reset gesture; it reports as a reader commit with no interaction.
+  const onChange = useCallback((change: ChartChange) => {
+    if (change.source === 'reader' && change.phase === 'commit' && change.interactionId === undefined) reset();
+  }, [reset]);
 
   return (
     <div className="ic-flint-dimpvis-shell ydi-stage">
-      <div className="ic-stage-meta">
-        <strong>You draw it</strong>
-        <span>
-          The chart shows coal's share of U.S. generation up to {DRAW_START_YEAR}. Draw the rest of the line,
-          then the real values appear and the chart scores your guess.
-        </span>
-      </div>
-      <div className="ydi-stage__workspace">
-        <div className="ic-flint-dimpvis-panel">
-          <ScaleToFit height={540} adaptiveHeight padding={8}>
-            <div className="ic-flint-dimpvis-mount">
-              <FlintChart
-                ref={chartRef}
-                spec={spec}
-                interactions={interactions}
-                updates={updates}
-                renderer="svg"
-                ariaLabel="You draw it: share of U.S. electricity from coal"
-                chartId="you-draw-it-coal"
-              />
-            </div>
-          </ScaleToFit>
-        </div>
-        <aside className="ydi-stage__controls" aria-label="Prediction and comparison">
-          <p className="ydi-stage__guidance">Draw your prediction of the share of U.S. electricity generated from coal after {DRAW_START_YEAR}, then compare it with the actual data.</p>
-          <div className="ydi-stage__actions">
-            <button
-              type="button"
-              className="ydi-stage__compare"
-              disabled={phase !== 'complete'}
-              onClick={finishDrawing}
-            >
-              <ArrowLeftRight size={14} aria-hidden="true" />Compare
-            </button>
-            <button type="button" className="ydi-stage__reset" onClick={reset}>
-              <RotateCcw size={14} aria-hidden="true" />Reset
-            </button>
+      <div className="ic-flint-dimpvis-panel">
+        <ScaleToFit height={540} adaptiveHeight padding={8}>
+          <div className="ic-flint-dimpvis-mount">
+            <FlintChart
+              ref={chartRef}
+              spec={spec}
+              interactions={interactions}
+              updates={updates}
+              renderer="svg"
+              ariaLabel="You draw it: share of U.S. electricity from coal"
+              chartId="you-draw-it-coal"
+              onChange={onChange}
+            />
           </div>
-          <p className="ydi-stage__hint" role="status">
-            {progress ? `${progress} — ` : ''}
-            {phase === 'revealed' && score ? describeScore(score).detail : phaseHint(phase, path)}
-          </p>
-        </aside>
+        </ScaleToFit>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { ArrowUp, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical, Pause, Pencil, Play, Plus, Scan, Sparkles, Trash2, X } from 'lucide-react';
-import { InteractionDemoChart } from './InteractionDemoChart';
+import { FlintChart } from 'flint-chart/react';
+import { expressionInterpreter } from 'vega-interpreter';
 import { AGENT, ARTICLE, COUNTRIES, DEFAULT_STORY, OPENING, SCALES, SELECTION_CHAT, STORY } from './interactive-data-report-content';
 import {
   agentChartOf,
@@ -88,7 +89,7 @@ export function ReportSection({ spec, editable }: { spec: SectionSpec; editable?
           <button type="button" className="it-reset" onClick={report.clear}>Clear chart and pins</button>
         </section>
         <section className="it-chart-panel">
-          <InteractionDemoChart {...report.chartProps} />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
         </section>
       </div>
     </article>
@@ -229,7 +230,7 @@ export function SlideSection({ spec }: { spec: SectionSpec }) {
       <div className="it-workspace idr-slides idr-animated">
         <SlidePanel slides={slides} report={report} />
         <section className="it-chart-panel idr-slide-chart">
-          <InteractionDemoChart {...report.chartProps} />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
         </section>
       </div>
     </article>
@@ -272,7 +273,7 @@ export function ArticleSection({ spec, editable = true }: { spec: SectionSpec; e
       <div className="it-workspace idr-slides idr-article idr-animated">
         <SlidePanel slides={slides} report={report} vertical header={header} />
         <section className="it-chart-panel idr-slide-chart">
-          <InteractionDemoChart {...report.chartProps} />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
         </section>
       </div>
     </article>
@@ -324,19 +325,26 @@ export function SelectionChatDemo({ spec, editable }: { spec: typeof SELECTION_C
           <div className="idr-chat-turn idr-chat-turn-assistant">
             <span className="idr-chat-turn-label">Assistant</span>
             <div className="idr-chat-bubble idr-chat-chart-bubble">
-              <InteractionDemoChart fixture={spec.fixture} interactions={spec.interactions} chartId={spec.id} onChange={onChange} />
+              <FlintChart
+                spec={spec.fixture.input}
+                interactions={spec.interactions}
+                chartId={spec.id}
+                ariaLabel={spec.fixture.title}
+                renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink"
+                onChange={onChange}
+              />
             </div>
           </div>
         </div>
         <div className="idr-chat-window-foot">
-          {range && (
-            <div className="idr-chat-context-chips">
+          <div className="idr-chat-context-chips">
+            {range && (
               <span className="idr-chat-context-chip">
                 <Scan size={12} strokeWidth={2} aria-hidden="true" />
                 <span>Selection: {range}</span>
               </span>
-            </div>
-          )}
+            )}
+          </div>
           <div className="idr-chat-window-composer" aria-hidden="true">
             <span>Interact with the chart and ask questions …</span>
             <span className="idr-chat-window-send"><ArrowUp size={13} strokeWidth={2.2} /></span>
@@ -375,7 +383,7 @@ export function AgentSection({ spec, opening, connection = CONNECTION, storyIds,
       <div className="it-workspace it-workspace-outbound idr-chat-workspace">
         <section className="it-chart-panel idr-chat-chart-panel">
           <div className="idr-chat-chart">
-            <InteractionDemoChart {...report.chartProps} />
+            <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
           </div>
         </section>
         <AgentPanel chat={chat} report={report} sectionId={spec.id} connection={connection} adoptedIds={storyIds} onAdopt={onToggleStory} />
@@ -569,7 +577,7 @@ export function StorySection({ spec, story, onChange }: StorySectionProps) {
       <SectionHeader spec={spec} presets={presets} />
       <div className="it-workspace idr-story idr-animated">
         <section className="it-chart-panel idr-slide-chart">
-          <InteractionDemoChart {...report.chartProps} />
+          <FlintChart {...report.chartProps} renderer="svg" expressionInterpreter={expressionInterpreter} className="it-chart-mount" width="100%" fit="shrink" />
         </section>
         <section className="idr-story-panel" aria-label="Your story">
           <div className="idr-format" role="tablist" aria-label="Story format">
